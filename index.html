@@ -1,976 +1,165 @@
-<!DOCTYPE html> <!-- Defines the document type as HTML5 -->
-<html lang="en"> <!-- Sets the language of the page to English -->
-<head> <!-- Head section: contains metadata and references -->
-  <!--
-    Updated script to remove "Predecessors" from the CSV export and place 
-    "Predecessor Details" at the end of the CSV columns. 
-    No other functionality or features have been changed/removed.
-  -->
-  <meta charset="UTF-8" /> <!-- Specifies the character encoding for the document -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/> <!-- Sets the viewport for responsive design -->
-  <title>Critical Path Tracer</title> <!-- Page title -->
-
-  <!-- Bootstrap 5 CSS -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  /> <!-- Links to the Bootstrap CSS for styling -->
-  <!-- PapaParse for CSV parsing -->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js">
-  </script> <!-- Links to PapaParse library to handle CSV data -->
-  <!-- Bootstrap Icons (for optional icons, e.g. About icon) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Sets character encoding to UTF-8 -->
+  <meta charset="UTF-8" />
+  <!-- Ensures the page scales correctly on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Page title as it appears in the browser tab -->
+  <title>My GitHub Repo Homepage</title>
+  <!-- Link to Bootstrap CSS for styling -->
   <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-  /> <!-- Links to Bootstrap Icons for various icon usage -->
-
-  <style> /* Internal CSS for page styling */
-    /*
-      Neutral color palette and optional dark-mode overrides remain unchanged.
-    */
-    :root {
-      --primary-color: #4b5563; /* Dark neutral grey */
-      --secondary-color: #6b7280; 
-      --accent-color: #9ca3af; 
-      --bg-color: #f3f4f6; 
-      --white-color: #ffffff;
-    }
-
-    /* Dark-mode styling logic remains the same */
-    body.dark-mode {
-      background-color: #000000;
-      color: var(--white-color);
-    }
-    body.dark-mode .navbar {
-      background-color: #333 !important;
-    }
-    body.dark-mode .card {
-      background-color: #222 !important;
-      color: var(--white-color) !important;
-    }
-    body.dark-mode .table-hover tbody tr:hover {
-      background-color: #444 !important;
-    }
-    body.dark-mode .table-light {
-      background-color: #444 !important;
-      color: var(--white-color) !important;
-    }
-    body.dark-mode .btn-outline-danger {
-      border-color: #dc3545;
-      color: #dc3545;
-    }
-    body.dark-mode .btn-outline-danger:hover {
-      background-color: #dc3545;
-      color: var(--white-color);
-    }
-    body.dark-mode .bg-primary, 
-    body.dark-mode .bg-warning, 
-    body.dark-mode .bg-success, 
-    body.dark-mode .bg-info,
-    body.dark-mode .bg-dark {
-      background-color: #444 !important;
-      color: var(--white-color) !important;
-    }
-    body.dark-mode .spinner-border.text-secondary {
-      color: var(--white-color) !important;
-    }
-
-    /* Base body styling remains the same */
-    body { 
-      background-color: var(--bg-color);
-      font-size: 0.9rem; 
-    }
-
-    /* Navbar styling remains the same */
-    .navbar {
-      margin-bottom: 1rem;
-      background-color: var(--primary-color) !important;
-    }
-    .navbar-brand {
-      color: var(--white-color) !important;
-    }
-
-    .container-fluid {
-      padding-top: 1rem;
-    }
-
-    /* Card headers remain with neutral tones and the same class references */
-    .card-header.bg-primary {
-      background-color: var(--primary-color) !important;
-    }
-    .card-header.bg-warning {
-      background-color: #eab308 !important; 
-    }
-    .card-header.bg-success {
-      background-color: #16a34a !important; 
-    }
-    .card-header.bg-info {
-      background-color: #0ea5e9 !important; 
-    }
-    .card-header.bg-dark {
-      background-color: #374151 !important; 
-    }
-
-    /* Log container styling remains the same */
-    .log-container { 
-      max-height: 150px; 
-      overflow-y: auto; 
-      background: #f1f1f1; 
-      padding: 8px; 
-      border-radius: 5px; 
-      font-family: monospace; 
-      font-size: 0.8rem; 
-    }
-
-    /* Light hover effect for activity cards remains the same */
-    .activity-card { 
-      cursor: pointer; 
-      transition: 0.2s; 
-    }
-    .activity-card:hover { 
-      background-color: #e5e7eb; 
-    }
-    .critical-path-list { 
-      min-height: 80px; 
-    }
-    .search-results { 
-      max-height: 200px; 
-      overflow-y: auto; 
-    }
-
-    /* Sortable columns with inline SVG icons for up/down arrows remain unchanged */
-    .sortable {
-      cursor: pointer; 
-      position: relative; 
-      padding-right: 22px; 
-    }
-    .sortable::after {
-      content: '';
-      position: absolute;
-      right: 4px;
-      top: 50%;
-      width: 10px;
-      height: 10px;
-      transform: translateY(-50%);
-      background-repeat: no-repeat;
-      background-size: contain;
-      background-image: url("data:image/svg+xml,%3Csvg fill='gray' width='10' height='10' viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M256 128l128 128H128zM128 256l128 128 128-128z'/%3E%3C/svg%3E");
-    }
-    .sortable.sort-asc::after {
-      background-image: url("data:image/svg+xml,%3Csvg fill='gray' width='10' height='10' viewBox='0 0 448 512'%3E%3Cpath d='M6.4 334.4C12.3 342.2 21.1 346.7 30 346.7H418c8.9 0 17.7-4.5 23.6-12.3c8.6-11.8 6.3-28.3-5.5-37L246.1 138.6c-6-4.5-13.3-6.6-20.5-6.6s-14.5 2.2-20.5 6.6L6.4 297.4C-4.9 306.1-7.2 322.6 6.4 334.4z' /%3E%3C/svg%3E");
-    }
-    .sortable.sort-desc::after {
-      background-image: url("data:image/svg+xml,%3Csvg fill='gray' width='10' height='10' viewBox='0 0 448 512'%3E%3Cpath d='M6.4 177.6C-7.2 189.4-4.9 205.9 6.9 214.6C12.8 222.5 21.5 227 30.4 227H418c8.9 0 17.7-4.5 23.6-12.3c8.6-11.8 6.3-28.3-5.5-37L246.1 46.6c-6-4.5-13.3-6.6-20.5-6.6s-14.5 2.2-20.5 6.6L6.4 177.6z' /%3E%3C/svg%3E");
-    }
-
-    /* 
-      We use fixed table layout and assign explicit px widths to each column.
-      The # of characters displayed is automatically determined
-      by the column width plus text-overflow: ellipsis.
-    */
-    .predecessor-table {
-      table-layout: fixed; /* Ensures columns respect the defined widths */
-      width: 100%;        /* Occupies the entire card width */
-      max-width: 100%;    /* Ensures it doesn't exceed container width */
-    }
-    .predecessor-table th, .predecessor-table td { 
-      font-size: 0.8rem; 
-      padding: 4px; 
-      white-space: nowrap;     /* Keeps text on one line */
-      overflow: hidden;        /* Anything beyond width is hidden */
-      text-overflow: ellipsis; /* Adds the "..." to truncated text */
-    }
-
-    /* Manually set each column's width in px. Characters fitting in each 
-       column vary based on these pixel values and the active font/style. */
-    .predecessor-table th:nth-child(1),
-    .predecessor-table td:nth-child(1) {
-      width: 50px;  /* ID column width in pixels */
-    }
-    .predecessor-table th:nth-child(2),
-    .predecessor-table td:nth-child(2) {
-      width: 300px; /* Name column width in pixels */
-    }
-    .predecessor-table th:nth-child(3),
-    .predecessor-table td:nth-child(3) {
-      width: 40px; /* Start date column width in pixels */
-    }
-    .predecessor-table th:nth-child(4),
-    .predecessor-table td:nth-child(4) {
-      width: 40px; /* Finish date column width in pixels */
-    }
-    .predecessor-table th:nth-child(5),
-    .predecessor-table td:nth-child(5) {
-      width: 40px;  /* TF column width in pixels */
-    }
-    .predecessor-table th:nth-child(6),
-    .predecessor-table td:nth-child(6) {
-      width: 40px;  /* RF column width in pixels */
-    }
-    .predecessor-table th:nth-child(7),
-    .predecessor-table td:nth-child(7) {
-      width: 40px;  /* Const column width in pixels */
-    }
-    .predecessor-table th:nth-child(8),
-    .predecessor-table td:nth-child(8) {
-      width: 40px;  /* Status column width in pixels */
-    }
-    .predecessor-table th:nth-child(9),
-    .predecessor-table td:nth-child(9) {
-      width: 40px;  /* Rel column width in pixels */
-    }
-
-    /* Final path table remains unchanged */
-    .final-path-table th, .final-path-table td { 
-      font-size: 0.8rem; 
-      padding: 4px; 
-    }
-    .card { 
-      margin-bottom: 1rem; 
-      border: none; 
-      border-radius: 8px; 
-    }
-    .card-body { 
-      padding: 0.75rem; 
-      background-color: var(--white-color);
-      border-bottom-left-radius: 8px;
-      border-bottom-right-radius: 8px;
-    }
-    .card-header { 
-      padding: 0.5rem 0.75rem; 
-      font-size: 0.9rem; 
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
-    }
-    .table-sm th, .table-sm td { 
-      padding: 0.25rem; 
-    }
-    .btn-sm { 
-      padding: 0.15rem 0.3rem; 
-      font-size: 0.75rem; 
-    }
-
-    #csvLoadingSpinner {
-      display: none;
-    }
-  </style> <!-- End of internal style block -->
-</head> <!-- End of head section -->
-<body> <!-- Body section starts -->
-  <!-- Navigation bar with placeholder logo and Dark Mode Button -->
-  <nav 
-    class="navbar navbar-expand-lg navbar-dark" 
-    style="background-color: var(--primary-color);" 
-  >
-    <div class="container-fluid"> <!-- Wrapper for navbar content -->
-      <img 
-        src="#" 
-        alt="Logo Placeholder" 
-        style="max-height: 40px; margin-right: 8px;" 
-        id="toolbarLogo" 
-      /> <!-- Placeholder for logo -->
-      <span class="navbar-brand" style="padding-top: 0;">
-        Critical Path Tracer
-      </span> <!-- Brand name/title in the navbar -->
-      <div class="ms-auto d-flex align-items-center"> <!-- Moves items to the end (right) -->
-        <button 
-          id="aboutBtn" 
-          class="btn btn-secondary btn-sm me-2" 
-        >
-          <i class="bi bi-info-circle"></i> About
-        </button> <!-- Button to show an About alert -->
-        <button 
-          id="darkModeBtn" 
-          class="btn btn-danger btn-sm" 
-        >
-          Dark Mode
-        </button> <!-- Button to toggle dark mode -->
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+</head>
+<body class="bg-light">
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <div class="container-fluid">
+      <!-- Brand name or title linking to homepage -->
+      <a class="navbar-brand" href="#">My GitHub Repo</a>
+      <!-- Toggler button for collapsible mobile menu -->
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <!-- Icon for the toggler button -->
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <!-- Collapsible navigation links -->
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <!-- Right-aligned navigation items -->
+        <ul class="navbar-nav ms-auto">
+          <!-- Link to the homepage -->
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="index.html">Home</a>
+          </li>
+          <!-- Link to the "About" page -->
+          <li class="nav-item">
+            <a class="nav-link" href="about.html">About</a>
+          </li>
+        </ul>
       </div>
     </div>
   </nav>
-
-  <div class="container-fluid"> <!-- Main container for the page -->
-    <!-- Page Title -->
-    <h1 
-      class="mb-3 text-primary" 
-      style="color: var(--primary-color) !important;"
-      id="mainTitle"
-    >
-      Critical Path Tracer
-    </h1> <!-- Main title of the page -->
-    
-    <div class="row g-3"> <!-- Row with gutters for layout -->
-      <!-- Left Column: Upload + Search + Tracing -->
-      <div class="col-lg-7"> <!-- 7-column wide section for upload/search/trace -->
-        <!-- Upload -->
-        <div 
-          class="card shadow-sm"
-          id="uploadCard"
-        > <!-- Card for uploading CSV -->
-          <div class="card-header bg-primary text-white">
-            <h6 class="mb-0">1. Upload Schedule (CSV)</h6> <!-- Step 1 heading -->
-          </div>
+  <!-- Main Container for page content -->
+  <div class="container my-5">
+    <!-- Row with cards displayed in columns for different screen breakpoints -->
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      <!-- Card 1 -->
+      <div class="col">
+        <!-- Card container with responsive height -->
+        <div class="card h-100">
+          <!-- Placeholder image for the card -->
+          <img
+            src="https://via.placeholder.com/300x200.png?text=Placeholder+Image"
+            class="card-img-top"
+            alt="Placeholder"
+          />
+          <!-- Body of the card -->
           <div class="card-body">
-            <!-- Input for CSV upload -->
-            <input 
-              type="file" 
-              id="csvUpload" 
-              accept=".csv" 
-              class="form-control form-control-sm"
-              aria-label="Upload your schedule CSV file here to begin"
-            /> <!-- The file input for CSV uploads -->
-            <small class="text-muted">
-              Headers: Activity ID, Start, Finish, Predecessors, Predecessor Details...
-            </small> <!-- Shows expected CSV header info -->
-            <!-- Progress indicator during CSV parse -->
-            <div id="csvLoadingSpinner" class="text-center my-2">
-              <div class="spinner-border text-secondary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div> <!-- Spinner graphic -->
-              <p class="small text-muted">Parsing CSV data...</p> <!-- Spinner label -->
+            <!-- Title for this card -->
+            <h5 class="card-title">P6 Tools</h5>
+            <!-- Short description or summary text -->
+            <p class="card-text">
+         These tools use exports from P6 to do various things.
+            </p>
+            <!-- Container for multiple button links, using Bootstrap classes for spacing -->
+            <div class="d-flex flex-wrap gap-2">
+
+                 <!-- Primary button link -->
+                         <a href="https://kev11wolf.github.io/public/p6tracer.html" class="btn btn-primary">P6 Tracer</a>
+              <!--
+              <!-- Primary button link -->
+                        <!--  <a href="#" class="btn btn-primary">View on GitHub</a>
+              <!-- Additional button link (secondary style) -->
+                       <!--   <a href="#" class="btn btn-secondary">Additional Link 1</a>
+              <!-- Additional button link (success style) -->
+                       <!--   <a href="#" class="btn btn-success">Additional Link 2</a> -->
             </div>
           </div>
         </div>
-
-        <!-- Search -->
-        <div 
-          class="card shadow-sm" 
-          id="searchSection" 
-          style="display:none;"
-        > <!-- Card shown after CSV is loaded -->
-          <div class="card-header bg-success text-white">
-            <h6 class="mb-0">2. Start Tracing</h6> <!-- Step 2 heading -->
-          </div>
+      </div>
+      <!-- Card 2 -->
+      <div class="col">
+        <!-- Card container with responsive height -->
+        <div class="card h-100">
+          <!-- Placeholder image for the card -->
+          <img
+            src="https://via.placeholder.com/300x200.png?text=Placeholder+Image"
+            class="card-img-top"
+            alt="Placeholder"
+          />
+          <!-- Body of the card -->
           <div class="card-body">
-            <!-- Input for searching activities -->
-            <input 
-              type="text" 
-              id="activitySearch" 
-              class="form-control form-control-sm mb-2" 
-              placeholder="Search ID or Name..."
-              aria-label="Search activities by ID or name"
-            /> <!-- Text input to enable live searching of activities -->
-            <!-- Results area for search matches -->
-            <div 
-              id="searchResults" 
-              class="search-results border p-2 bg-white small"
-            ></div> <!-- A container that lists out matching activities -->
-          </div>
-        </div>
-
-        <!-- Tracing Area -->
-        <div 
-          class="card shadow-sm" 
-          id="traceSection" 
-          style="display:none;"
-        > <!-- Card displayed once an activity is selected -->
-          <div class="card-header bg-warning text-dark">
-            <h6 class="mb-0">3. Click Predecessor to Add</h6> <!-- Step 3 heading -->
-          </div>
-          <div class="card-body">
-            <!-- Filter for predecessor table -->
-            <input 
-              type="text" 
-              id="predFilter" 
-              class="form-control form-control-sm mb-2" 
-              placeholder="Filter predecessors..."
-              aria-label="Filter predecessors by ID or name"
-              style="display: none;"
-            /> <!-- Hides initially; shown when predecessors are visible -->
-            <!-- Dynamic predecessor listing -->
-            <div 
-              id="predecessorList" 
-              class="mb-2"
-            ></div> <!-- Will hold the table of predecessors -->
+            <!-- Title for this card -->
+            <h5 class="card-title">Placeholder Title 2</h5>
+            <!-- Short description or summary text -->
+            <p class="card-text">
+              Short description or summary about this project, link, or resource.
+            </p>
+            <!-- Container for multiple button links, using Bootstrap classes for spacing -->
+            <div class="d-flex flex-wrap gap-2">
+                            <!-- Primary button link -->
+                <a href="#" class="btn btn-primary">View on GitHub</a>
+              <!--
+              <!-- Primary button link -->
+                   <!-- <a href="#" class="btn btn-primary">View on GitHub</a>
+              <!-- Additional button link (secondary style) -->
+                <!--    <a href="#" class="btn btn-secondary">Additional Link 1</a>
+              <!-- Additional button link (danger style) -->
+              <!--      <a href="#" class="btn btn-danger">Additional Link 2</a> -->
+              
+            </div>
           </div>
         </div>
       </div>
-
-      <!-- Right Column: Output + Log -->
-      <div class="col-lg-5">
-        <!-- Final Output -->
-        <div 
-          class="card shadow-sm"
-          id="finalPathCard"
-        > <!-- Card for displaying the final critical path -->
-          <div class="card-header bg-info text-white">
-            <h6 class="mb-0">Final Critical Path</h6> <!-- Heading for final path -->
-          </div>
+      <!-- Card 3 -->
+      <div class="col">
+        <!-- Card container with responsive height -->
+        <div class="card h-100">
+          <!-- Placeholder image for the card -->
+          <img
+            src="https://via.placeholder.com/300x200.png?text=Placeholder+Image"
+            class="card-img-top"
+            alt="Placeholder"
+          />
+          <!-- Body of the card -->
           <div class="card-body">
-            <!-- Table listing the final critical path -->
-            <table 
-              class="table table-sm table-hover final-path-table mb-2"
-            >
-              <thead>
-                <tr>
-                  <th>ID</th> <!-- Activity ID header -->
-                  <th>Name</th> <!-- Activity Name header -->
-                  <th>Start</th> <!-- Start date header -->
-                  <th>Finish</th> <!-- Finish date header -->
-                  <th>Total Float</th> <!-- Total Float header -->
-                  <th></th> <!-- Blank header for remove button -->
-                </tr>
-              </thead>
-              <tbody id="criticalPathList"></tbody> <!-- Populated dynamically -->
-            </table>
-            
-            <!-- Export button for CSV of final critical path -->
-            <button 
-              id="exportBtn" 
-              class="btn btn-success w-100 btn-sm" 
-              disabled
-            >
-              Export CSV
-            </button> <!-- Disabled by default, enabled when path is built -->
-            <!-- Clear All button -->
-            <button 
-              id="clearAllBtn" 
-              class="btn btn-warning w-100 btn-sm mt-2" 
-              disabled
-            >
-              Clear All
-            </button> <!-- Clears entire path if needed -->
-          </div>
-        </div>
+            <!-- Title for this card -->
+            <h5 class="card-title">Placeholder Title 3</h5>
+            <!-- Short description or summary text -->
+            <p class="card-text">
+              Short description or summary about this project, link, or resource.
+            </p>
+            <!-- Container for multiple button links, using Bootstrap classes for spacing -->
+            <div class="d-flex flex-wrap gap-2">
 
-        <!-- Log -->
-        <div 
-          class="card shadow-sm"
-          id="logCard"
-        > <!-- Card for logging actions -->
-          <div class="card-header bg-dark text-white">
-            <h6 class="mb-0">Log</h6> <!-- Heading for log section -->
-          </div>
-          <div class="card-body p-0">
-            <!-- Text area for logs, with tips after each log entry -->
-            <pre id="log" class="log-container m-0 p-2"></pre> <!-- Where log messages appear -->
+                  <!-- Primary button link -->
+                      <a href="#" class="btn btn-primary">View on GitHub</a> 
+              <!--
+              <!-- Primary button link -->
+                     <!-- <a href="#" class="btn btn-primary">View on GitHub</a> 
+              <!-- Additional button link (secondary style) -->
+                    <!--  <a href="#" class="btn btn-secondary">Additional Link 1</a>
+              <!-- Additional button link (warning style) -->
+                     <!-- <a href="#" class="btn btn-warning">Additional Link 2</a> -->
+            </div>
           </div>
         </div>
       </div>
+      <!-- Add more cards as needed and include more links within the d-flex container -->
     </div>
   </div>
-
-  <!-- Bootstrap JS bundle -->
-  <script 
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-  </script> <!-- Bootstrap JavaScript Bundle -->
-  <script>
-    // Global data
-    let activities = []; // Full parsed data from CSV
-    let activityMap = {}; // Map of Activity ID → object
-    let criticalPath = []; // Final ordered list for critical path
-    let predSortField = 'Finish'; // Default sort field is Finish
-    let predSortAsc = false; // Default: descending
-
-    // DOM Elements
-    const csvUpload = document.getElementById('csvUpload'); // File input for CSV
-    const searchSection = document.getElementById('searchSection'); // Search card
-    const traceSection = document.getElementById('traceSection'); // Predecessor listing card
-    const activitySearch = document.getElementById('activitySearch'); // Text input for searching
-    const searchResults = document.getElementById('searchResults'); // Displays matching activities
-    const predecessorList = document.getElementById('predecessorList'); // Container for predecessor table
-    const criticalPathList = document.getElementById('criticalPathList'); // Table body for critical path
-    const exportBtn = document.getElementById('exportBtn'); // Export CSV button
-    const log = document.getElementById('log'); // Log output
-    const csvLoadingSpinner = document.getElementById('csvLoadingSpinner'); // Spinner during CSV parse
-    const predFilter = document.getElementById('predFilter'); // Filter for predecessor list
-    const clearAllBtn = document.getElementById('clearAllBtn'); // Button to clear path
-    const aboutBtn = document.getElementById('aboutBtn'); // Button for about info
-    const darkModeBtn = document.getElementById('darkModeBtn'); // Button to toggle Dark Mode
-
-    /**
-     * Appends a message to the log with a timestamp.
-     * Additionally includes a "TIP" to guide the next user action.
-     */
-    function addLog(message, tip = '') {
-      const timestamp = new Date().toLocaleTimeString(); // Current time as HH:MM:SS
-      // If a tip is provided, display it on a new line
-      const logLine = tip ? `[${timestamp}] ${message}\n  TIP: ${tip}\n` : `[${timestamp}] ${message}\n`;
-      log.innerHTML += logLine; // Append new log line
-      log.scrollTop = log.scrollHeight; // Scroll to the bottom
-    }
-
-    // Utility to clean date strings
-    function cleanDate(dateStr) {
-      if (!dateStr) return '';
-      return dateStr.toString().replace(/ A/g, '').replace(/\*/g, '').trim();
-    }
-
-    // Validate CSV columns
-    function validateColumns(data) {
-      const requiredColumns = ['Activity ID', 'Start', 'Finish', 'Predecessors', 'Predecessor Details'];
-      if (data.length === 0) {
-        addLog('No data found in CSV.', 'Please check your file and try again.');
-        alert('CSV is empty. Please upload a valid file.');
-        return false;
-      }
-      const firstRow = Object.keys(data[0]); // Retrieve column names from first row
-      const missingColumns = requiredColumns.filter(col => !firstRow.includes(col)); // Check for missing columns
-      if (missingColumns.length > 0) {
-        addLog('Missing columns: ' + missingColumns.join(', '), 'Make sure CSV has all required columns.');
-        alert('Some required columns are missing: ' + missingColumns.join(', '));
-        return false;
-      }
-      return true;
-    }
-
-    // CSV Upload Handler
-    csvUpload.addEventListener('change', (e) => {
-      const file = e.target.files[0]; // Retrieve the selected file
-      if (!file) return;
-
-      addLog(`File selected: ${file.name}`, 'Wait for the CSV to parse, then search for an activity.');
-      csvLoadingSpinner.style.display = 'block'; // Show spinner
-      
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        worker: true,
-        complete: (result) => {
-          csvLoadingSpinner.style.display = 'none'; // Hide spinner
-          if (result.errors.length) {
-            addLog(`Parse errors: ${result.errors.map(er => er.message).join('; ')}`, 'Check CSV format or try another file.');
-            alert('CSV parsing failed. Check log.');
-            return;
-          }
-          if (!validateColumns(result.data)) return; // Ensure required columns exist
-
-          // Clean up activity data
-          activities = result.data.map(act => ({
-            ...act,
-            'Start': cleanDate(act['Start']),
-            'Finish': cleanDate(act['Finish'])
-          }));
-
-          // Build the map for quick lookup
-          activityMap = {};
-          activities.forEach(act => {
-            const rawID = act['Activity ID'] ? act['Activity ID'] : '';
-            const id = rawID.trim();
-            if (id) {
-              activityMap[id] = act;
-            }
-          });
-
-          addLog(`Loaded ${activities.length} activities.`, 'Try searching for an Activity in "2. Start Tracing".');
-          // Show the search section
-          searchSection.style.display = 'block';
-          traceSection.style.display = 'none';
-          criticalPath = [];
-          updateCriticalPathUI();
-
-          exportBtn.disabled = (criticalPath.length === 0);
-          clearAllBtn.disabled = (criticalPath.length === 0);
-        },
-        error: (err) => {
-          csvLoadingSpinner.style.display = 'none';
-          addLog(`Parse error: ${err}`, 'Consider checking your CSV file and retrying.');
-          alert('Failed to parse CSV.');
-        }
-      });
-    });
-
-    // Searching for activities
-    activitySearch.addEventListener('input', () => {
-      // Retrieve the current search query
-      const query = activitySearch.value.trim().toLowerCase(); 
-      // Clear the previous search results
-      searchResults.innerHTML = ''; 
-      // If nothing is typed, there's no need to show any results
-      if (!query) return;
-
-      // Filter activities to find matches in ID or Name
-      // Removed `.slice(0, 10)` so that ALL matching activities will appear
-      const matches = activities
-        .filter(act => {
-          const id = act['Activity ID'] ? act['Activity ID'].toLowerCase() : '';
-          const name = act['Activity Name'] ? act['Activity Name'].toLowerCase() : '';
-          return (id && id.includes(query)) || (name && name.includes(query));
-        });
-        // .slice(0, 10) was removed to allow all search results to display
-
-      // If no matches found, show a simple message
-      if (matches.length === 0) {
-        searchResults.innerHTML = '<div class="text-muted p-1">No activities found.</div>';
-        return;
-      }
-
-      // Build a clickable result entry for each match
-      matches.forEach(act => {
-        const div = document.createElement('div'); // Container for each matched activity
-        div.className = 'activity-card p-1 border-bottom small'; // Styling
-        const idVal = act['Activity ID'] ? act['Activity ID'] : 'N/A';
-        const nameVal = act['Activity Name'] ? act['Activity Name'] : 'N/A';
-        div.innerHTML = `<strong>${idVal}</strong> - ${nameVal}`; // Display ID and name
-        // Single click to start the trace from the chosen activity
-        div.onclick = () => startCriticalPath(act); 
-        // Append the result entry to the search results container
-        searchResults.appendChild(div);
-      });
-      addLog(`Search results updated for "${query}".`, 'Click an activity to start tracing its predecessors.');
-    });
-
-    // Start tracing from selected activity
-    function startCriticalPath(startAct) {
-      addLog(`Starting trace from: ${startAct['Activity ID']}`, 'Check "3. Click Predecessor to Add" to continue.');
-      criticalPath = [startAct]; // Reset path and initiate with clicked activity
-      updateCriticalPathUI(); // Refresh the path display
-      showPredecessors(startAct); // Display predecessors for the starting activity
-      traceSection.style.display = 'block'; // Reveal the tracing card
-      activitySearch.value = ''; // Clear search input
-      searchResults.innerHTML = ''; // Clear search results
-    }
-
-    // Display predecessors
-    function showPredecessors(currentAct) {
-      predecessorList.innerHTML = ''; // Clear old content
-      predFilter.style.display = 'block'; // Show predecessor filter
-
-      // "Predecessor Details" field is semicolon-separated
-      const predDetails = (currentAct['Predecessor Details'] || '')
-        .split(';')
-        .map(s => s.trim())
-        .filter(Boolean);
-      const predMap = {};
-      predDetails.forEach(d => {
-        const splitted = d.split(':');
-        if (splitted.length >= 2) {
-          const id = splitted[0].trim();
-          const type = splitted[1].trim();
-          predMap[id] = type;
-        }
-      });
-
-      // "Predecessors" field is comma/semicolon delimited
-      const predIds = (currentAct.Predecessors || '')
-        .split(/[,;]/)
-        .map(s => s.trim())
-        .filter(id => id && activityMap[id]);
-
-      if (predIds.length === 0) {
-        predecessorList.innerHTML = '<p class="text-muted small">No predecessors.</p>';
-        addLog(`Activity ${currentAct['Activity ID']} has no predecessors.`, 'You can continue searching or select another activity.');
-        return;
-      }
-
-      addLog(`Found ${predIds.length} predecessor(s) for ${currentAct['Activity ID']}.`, 'Click a predecessor to add it to your path.');
-
-      // Create the table container for predecessors
-      const table = document.createElement('table'); // Create table
-      table.className = 'table table-sm table-bordered predecessor-table'; // Add classes for styling
-      table.innerHTML = `
-        <thead class="table-light">
-          <tr>
-            <th class="sortable" data-sort="Activity ID">ID</th>
-            <th class="sortable" data-sort="Activity Name">Name</th>
-            <th class="sortable" data-sort="Start">Start</th>
-            <th class="sortable" data-sort="Finish">Finish</th>
-            <th class="sortable" data-sort="Total Float">TF</th>
-            <th class="sortable" data-sort="Relationship Free Float">RF</th>
-            <th class="sortable" data-sort="Primary Constraint">Const</th>
-            <th class="sortable" data-sort="Activity Status">Status</th>
-            <th>Rel</th>
-          </tr>
-        </thead>
-        <tbody id="predTableBody"></tbody>
-      `;
-      const tbody = table.querySelector('#predTableBody'); // Table body reference
-      const headers = table.querySelectorAll('.sortable'); // Sortable column headers
-
-      // Attach sorting click handlers for each sortable header
-      headers.forEach(th => {
-        th.addEventListener('click', () => {
-          const field = th.dataset.sort; // Retrieve the field to sort by
-          if (predSortField === field) {
-            predSortAsc = !predSortAsc; // Toggle sort order if same field
-          } else {
-            predSortField = field; // Change field
-            predSortAsc = true; // Default to ascending if field changed
-          }
-          headers.forEach(h => {
-            h.classList.remove('sort-asc', 'sort-desc'); // Clear previous sort classes
-          });
-          th.classList.add(predSortAsc ? 'sort-asc' : 'sort-desc'); // Add current sort class
-          renderPredecessorRows(tbody, predIds, predMap); // Re-render sorted rows
-        });
-      });
-
-      // Initial render of table rows
-      renderPredecessorRows(tbody, predIds, predMap);
-      predecessorList.appendChild(table); // Insert table into the DOM
-
-      // Re-render rows whenever filter input changes
-      predFilter.oninput = () => {
-        renderPredecessorRows(tbody, predIds, predMap);
-      };
-    }
-
-    // Renders the table rows for the predecessor list
-    function renderPredecessorRows(tbody, predIds, predMap) {
-      tbody.innerHTML = ''; // Clear existing rows
-      const filterValue = predFilter.value.trim().toLowerCase(); // Current filter text
-      let filteredIds = predIds; // Start with all IDs
-      if (filterValue) {
-        filteredIds = predIds.filter(pid => {
-          const act = activityMap[pid];
-          const idStr = act['Activity ID'] ? act['Activity ID'].toLowerCase() : '';
-          const nameStr = act['Activity Name'] ? act['Activity Name'].toLowerCase() : '';
-          return idStr.includes(filterValue) || nameStr.includes(filterValue);
-        });
-      }
-      let sortedPreds = filteredIds.map(id => activityMap[id]);
-
-      const statusOrder = { 'Not Started': 0, 'In Progress': 1, 'Completed': 2 };
-
-      // Sorting logic by the chosen field
-      sortedPreds.sort((a, b) => {
-        let valA = (a[predSortField] || '').trim();
-        let valB = (b[predSortField] || '').trim();
-
-        // Sort handling for Activity Status in a custom order
-        if (predSortField === 'Activity Status') {
-          const orderA = statusOrder[valA] !== undefined ? statusOrder[valA] : 999;
-          const orderB = statusOrder[valB] !== undefined ? statusOrder[valB] : 999;
-          return predSortAsc ? (orderA - orderB) : (orderB - orderA);
-        }
-        // Numeric sorts for float columns
-        if (predSortField === 'Total Float' || predSortField === 'Relationship Free Float') {
-          const numA = parseFloat(valA) || 0;
-          const numB = parseFloat(valB) || 0;
-          return predSortAsc ? (numA - numB) : (numB - numA);
-        }
-        // Date sorts for Start/Finish
-        if (predSortField === 'Start' || predSortField === 'Finish') {
-          const dateA = new Date(valA) || 0;
-          const dateB = new Date(valB) || 0;
-          return predSortAsc ? (dateA - dateB) : (dateB - dateA);
-        }
-
-        // Alphabetic sort for other fields
-        valA = valA.toLowerCase();
-        valB = valB.toLowerCase();
-        if (valA < valB) return predSortAsc ? -1 : 1;
-        if (valA > valB) return predSortAsc ? 1 : -1;
-        return 0;
-      });
-
-      // Create each row and assign background color based on status
-      sortedPreds.forEach(pred => {
-        const relType = predMap[pred['Activity ID']] || '—'; // Relationship type from Predecessor Details
-        const row = document.createElement('tr'); // Table row
-        row.className = 'activity-card'; // Style for hover
-        row.style.cursor = 'pointer'; // Pointer cursor on hover
-
-        let bgColor = '#ffffff'; // Default row color
-        const statusStr = (pred['Activity Status'] || '').toLowerCase();
-        if (statusStr === 'in progress') {
-          bgColor = 'rgba(255, 165, 0, 0.15)'; // Light orange for in-progress
-        } else if (statusStr === 'completed') {
-          bgColor = 'rgba(128, 128, 128, 0.15)'; // Light grey for completed
-        }
-        row.style.backgroundColor = bgColor; // Apply background color
-
-        const idVal = pred['Activity ID'] ? pred['Activity ID'] : '—';
-        const nameVal = pred['Activity Name'] ? pred['Activity Name'] : '—';
-        const startVal = pred['Start'] ? pred['Start'] : '—';
-        const finishVal = pred['Finish'] ? pred['Finish'] : '—';
-        const tfVal = pred['Total Float'] ? pred['Total Float'] : '—';
-        const rffVal = pred['Relationship Free Float'] ? pred['Relationship Free Float'] : '—';
-        const constVal = pred['Primary Constraint'] ? pred['Primary Constraint'] : '—';
-        const statusVal = pred['Activity Status'] ? pred['Activity Status'] : '—';
-
-        // Populate row cells
-        row.innerHTML = `
-          <td><strong>${idVal}</strong></td>
-          <td>${nameVal}</td>
-          <td>${startVal}</td>
-          <td>${finishVal}</td>
-          <td>${tfVal}</td>
-          <td>${rffVal}</td>
-          <td>${constVal}</td>
-          <td>${statusVal}</td>
-          <td>${relType}</td>
-        `;
-
-        /*
-          IMPORTANT CHANGE: Converted the predecessor add function from a single click
-          to a double click event as requested.
-        */
-        row.ondblclick = () => addToCriticalPath(pred); // Double-click to add to critical path
-
-        tbody.appendChild(row); // Append the row to the table body
-      });
-    }
-
-    // Adding a predecessor to the path
-    function addToCriticalPath(predAct) {
-      // Check if predecessor is already in the path
-      if (criticalPath.some(a => a['Activity ID'] === predAct['Activity ID'])) {
-        alert('Already in path.');
-        return;
-      }
-      // Insert new predecessor at the front
-      criticalPath.unshift(predAct);
-      addLog(`Added: ${predAct['Activity ID']}`, 'Check "Final Critical Path" to review or remove.');
-      updateCriticalPathUI();
-      showPredecessors(predAct);
-    }
-
-    // Update the critical path UI
-    function updateCriticalPathUI() {
-      criticalPathList.innerHTML = ''; // Clear existing rows
-      criticalPath.forEach((act, i) => {
-        const tr = document.createElement('tr'); // Table row
-        let bgColor = '#ffffff'; // Default color
-        const statusStr = (act['Activity Status'] || '').toLowerCase();
-        if (statusStr === 'in progress') {
-          bgColor = 'rgba(255, 165, 0, 0.15)';
-        } else if (statusStr === 'completed') {
-          bgColor = 'rgba(128, 128, 128, 0.15)';
-        }
-        tr.style.backgroundColor = bgColor; // Apply color
-
-        const idVal = act['Activity ID'] ? act['Activity ID'] : 'N/A';
-        const nameVal = act['Activity Name'] ? act['Activity Name'] : 'N/A';
-        const startVal = act['Start'] ? act['Start'] : 'N/A';
-        const finishVal = act['Finish'] ? act['Finish'] : 'N/A';
-        const tfVal = act['Total Float'] ? act['Total Float'] : 'N/A';
-
-        tr.innerHTML = `
-          <td><strong>${idVal}</strong></td>
-          <td>${nameVal}</td>
-          <td>${startVal}</td>
-          <td>${finishVal}</td>
-          <td>${tfVal}</td>
-          <td>
-            <button 
-              class="btn btn-sm btn-outline-danger" 
-              onclick="removeFromPath(${i})"
-            >
-              <strong style="color:red;">X</strong>
-            </button>
-          </td>
-        `;
-        criticalPathList.appendChild(tr); // Append to the CP table body
-      });
-      exportBtn.disabled = (criticalPath.length === 0); // Export only if path has items
-      clearAllBtn.disabled = (criticalPath.length === 0); // Clear only if path has items
-    }
-
-    // Remove an item from path
-    window.removeFromPath = (index) => {
-      const removed = criticalPath.splice(index, 1)[0]; // Remove from array
-      addLog(`Removed: ${removed['Activity ID']}`, 'You can add it again from the predecessor list if needed.');
-      updateCriticalPathUI();
-
-      // If path still has items, show the last in the list's predecessors
-      if (criticalPath.length > 0) {
-        const lastItem = criticalPath[criticalPath.length - 1];
-        showPredecessors(lastItem);
-      } else {
-        predecessorList.innerHTML = '';
-        traceSection.style.display = 'none';
-      }
-    };
-
-    // Clear all from the CP
-    clearAllBtn.addEventListener('click', () => {
-      addLog('Clearing all activities from the Critical Path.', 'You can start a new trace by searching an activity.');
-      criticalPath = [];
-      updateCriticalPathUI();
-      predecessorList.innerHTML = '';
-      traceSection.style.display = 'none';
-    });
-
-    // Utility function to ensure CSV values with commas or quotes
-    // are wrapped in double quotes and internal quotes are escaped.
-    function sanitizeCSV(val) {
-      if (val == null) val = ''; // Replace null/undefined with empty
-      if (val.includes('"')) {
-        val = val.replace(/"/g, '""'); // Escape internal quotes
-      }
-      if (val.includes(',') || val.includes('"')) {
-        val = `"${val}"`; // Wrap in quotes if commas or quotes found
-      }
-      return val;
-    }
-
-    // Updated export to CSV: removed "Predecessors" and placed "Predecessor Details" last
-    exportBtn.addEventListener('click', () => {
-      if (criticalPath.length === 0) return; // Do nothing if path is empty
-      
-      // Updated headers: removing "Predecessors" and placing "Predecessor Details" at the end
-      const headers = [
-        'Activity ID',
-        'Activity Name',
-        'Start',
-        'Finish',
-        'Total Float',
-        'Activity Status',
-        'Relationship Free Float',
-        'Primary Constraint',
-        'Predecessor Details'
-      ];
-
-      // Build rows in the same order as headers
-      const rows = criticalPath.map(act => {
-        let pdVal = (act['Predecessor Details'] || '').split(';').join(', ');
-        pdVal = sanitizeCSV(pdVal);
-
-        const idVal  = sanitizeCSV(act['Activity ID'] || '');
-        const nameVal = sanitizeCSV(act['Activity Name'] || '');
-        const startVal = sanitizeCSV(act['Start'] || '');
-        const finishVal = sanitizeCSV(act['Finish'] || '');
-        const tfVal = sanitizeCSV(act['Total Float'] || '');
-        const asVal = sanitizeCSV(act['Activity Status'] || '');
-        const rffVal = sanitizeCSV(act['Relationship Free Float'] || '');
-        const pcVal = sanitizeCSV(act['Primary Constraint'] || '');
-
-        return [
-          idVal,
-          nameVal,
-          startVal,
-          finishVal,
-          tfVal,
-          asVal,
-          rffVal,
-          pcVal,
-          pdVal
-        ];
-      });
-
-      // Convert rows to CSV string by joining on commas
-      let csvContent = headers.join(',') + '\n' + rows.map(r => r.join(',')).join('\n');
-
-      // Create a Blob and initiate download
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `critical_path_${criticalPath[0]['Activity ID']}_to_${criticalPath[criticalPath.length-1]['Activity ID']}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      addLog(`Exported ${criticalPath.length} activities to CSV.`, 'Check your downloads and confirm file contents.');
-    });
-
-    // About button
-    aboutBtn.addEventListener('click', () => {
-      alert(
-        "How this tool works:\n\n" +
-        "1. Upload a CSV containing your schedule.\n" +
-        "2. Search for an activity to trace.\n" +
-        "3. Select predecessors to build the critical path.\n" +
-        "4. Export or Clear All as needed.\n\nEnjoy!"
-      );
-      addLog('Opened About info.', 'Close the message and proceed with file upload or searching.');
-    });
-
-    // Dark mode toggle
-    darkModeBtn.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      addLog('Toggled Dark Mode.', 'Toggle again to return to normal mode.');
-    });
-  </script> <!-- End of main script -->
-</body> <!-- End of body -->
-</html> <!-- End of HTML document -->
+  <!-- Script for Bootstrap's JavaScript components (includes Popper) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
+</body>
+</html>
