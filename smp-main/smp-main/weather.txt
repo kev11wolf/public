@@ -1,0 +1,186 @@
+<!--
+  NWS (api.weather.gov) Weather Widget
+  - Current conditions (nearest observation station)
+  - 7‑day (daytime) forecast
+  Location: Augusta National Golf Club (33.5025, -82.0200)
+  Docs: Points → Forecast / Stations → Observations flow
+    https://www.weather.gov/documentation/services-web-api
+    https://github.com/weather-gov/api/discussions/478
+-->
+<section id="nws-widget" style="
+  font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; max-width: 780px;
+  background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.06);">
+  <header style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+    https://fav.farm/🇺🇸
+    <h3 style="margin:0;font-size:18px;">Augusta National · NWS Weather</h3>
+  </header>
+
+  <!-- Current conditions -->
+  <div id="nws-now" style="
+      display:flex;align-items:center;gap:14px;min-height:48px;
+      border-bottom:1px solid #f3f4f6;padding-bottom:12px;margin-bottom:12px;">
+    <div id="nws-now-icon" style="font-size:34px;">⏳</div>
+    <div id="nws-now-text" style="flex:1;color:#111827;">Loading current conditions…</div>
+  </div>
+
+  <!-- 7-day forecast -->
+  <div>
+    <div style="font-weight:600;margin:0 0 8px 2px;">7‑Day Forecast</div>
+    <div id="nws-forecast" style="
+        display:grid;grid-template-columns: repeat(7, minmax(100px,1fr)); gap:10px;">
+      <!-- Cards injected by JS -->
+    </div>
+  </div>
+
+  <footer style="margin-top:12px;font-size:12px;color:#6b7280;">
+    Source: https://api.weather.gov National Weather Service API</a>
+  </footer>
+</section>
+
+<script>
+(async () => {
+  // === CONFIG ===
+  const LAT = 33.5025, LON = -82.0200; // Augusta National Golf Club (Wikipedia)
+  const API = "https://api.weather.gov";
+  const HEADERS = {
+    // Browsers include a User-Agent automatically; NWS asks for identification.
+    // We set Accept to GeoJSON per docs.
+    "Accept": "application/geo+json",
+    "Cache-Control": "no-cache"
+  };
+
+  // === DOM ===
+  const $nowIcon = document.getElementById("nws-now-icon");
+  const $nowText = document.getElementById("nws-now-text");
+  const $fx = document.getElementById("nws-forecast");
+
+  // === Helpers ===
+  const prefixIcon = (url) => {
+    // NWS has changed icon handling at times; ensure absolute URL
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    return `${API}${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+  const emojiFromText = (t = "") => {
+    const s = t.toLowerCase();
+    if (s.includes("thunder")) return "⛈️";
+    if (s.includes("snow") || s.includes("sleet")) return "🌨️";
+    if (s.includes("rain") || s.includes("shower") || s.includes("drizzle")) return "🌧️";
+    if (s.includes("fog") || s.includes("mist") || s.includes("haze")) return "🌫️";
+    if (s.includes("wind") || s.includes("breezy")) return "💨";
+    if (s.includes("cloud")) return "⛅";
+    if (s.includes("sunny") || s.includes("clear")) return "☀️";
+    return "🌤️";
+  };
+  const toFixed = (n, d=0) => (typeof n === "number" && isFinite(n)) ? n.toFixed(d) : null;
+  const cToF = c => c == null ? null : (c * 9/5 + 32);
+  const msToMph = ms => ms == null ? null : (ms * 2.236936);
+  const kmhToMph = kmh => kmh == null ? null : (kmh * 0.621371);
+
+  async function getJSON(url) {
+    const res = await fetch(url, { headers: HEADERS, cache: "no-store" });
+    if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
+    return res.json();
+  }
+
+  try {
+    // 1) Discover forecast & stations for this point
+    const points = await getJSON(`${API}/points/${LAT},${LON}`);
+    const forecastUrl = points?.properties?.forecast;
+    const stationsUrl = points?.properties?.observationStations;
+    if (!forecastUrl || !stationsUrl) throw new Error("NWS points response missing URLs");
+
+    // 2) Forecast: take next 7 *daytime* periods; if <7, fill from remaining periods
+    const forecast = await getJSON(forecastUrl);
+    const periods = Array.isArray(forecast?.properties?.periods) ? forecast.properties.periods : [];
+    let days = periods.filter(p => p.isDaytime);
+    if (days.length < 7) {
+      const extra = periods.filter(p => !p.isDaytime);
+      // merge and sort by startTime
+      const all = [...days, ...extra].sort((a,b) => new Date(a.startTime) - new Date(b.startTime));
+      // take distinct day names in order
+      const seen = new Set();
+      days = all.filter(p => {
+        const dname = (p.name || p.startTime || "").split(" ")[0];
+        if (seen.has(dname)) return false;
+        seen.add(dname);
+        return p.isDaytime || days.length < 7;
+      });
+    }
+    days = days.slice(0, 7);
+
+    $fx.innerHTML = days.map(p => {
+      const iconUrl = prefixIcon(p.icon);
+      const ico = iconUrl
+        ? `${iconUrl}`
+        : `<div style="font-size:30px;">${emojiFromText(p.shortForecast)}</div>`;
+      const precip = (p.probabilityOfPrecipitation && typeof p.probabilityOfPrecipitation.value === "number")
+        ? `${p.probabilityOfPrecipitation.value}%` : "";
+      const wind = [p.windSpeed, p.windDirection].filter(Boolean).join(" ");
+      return `
+        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:10px;
+                    display:flex;flex-direction:column;align-items:center;text-align:center;">
+          <div style="font-weight:600;margin-bottom:4px;">${p.name}</div>
+          ${ico}
+          <div style="font-size:12px;color:#6b7280;margin:6px 0 8px;">${p.shortForecast || ""}</div>
+          <div style="font-weight:700;">${p.temperature}°${p.temperatureUnit || "F"}</div>
+          ${precip ? `<div style="font-size:12px;color:#2563eb;margin-top:4px;">${precip} precip</div>` : ``}
+          ${wind ? `<div style="font-size:12px;color:#6b7280;margin-top:6px;">${wind}</div>` : ``}
+        </div>`;
+    }).join("");
+
+    // 3) Current conditions: iterate stations until we find a valid latest observation
+    const stationList = await getJSON(stationsUrl);
+    const stations = Array.isArray(stationList?.features) ? stationList.features : [];
+    let obs = null, stationId = null;
+    for (const feat of stations.slice(0, 10)) { // try up to first 10 stations
+      const idGuess = feat?.properties?.stationIdentifier || (feat?.id ? feat.id.split("/").pop() : null);
+      if (!idGuess) continue;
+      try {
+        const candidate = await getJSON(`${API}/stations/${idGuess}/observations/latest?require_qc=false`);
+        if (candidate?.properties && candidate.properties.temperature && candidate.properties.temperature.value != null) {
+          obs = candidate.properties;
+          stationId = idGuess;
+          break;
+        }
+      } catch (_) {
+        // try next station
+      }
+    }
+    if (!obs) throw new Error("No recent observations with temperature found");
+
+    const tempF = cToF(obs.temperature.value);
+    let windMph = null;
+    const ws = obs.windSpeed;
+    if (ws && typeof ws.value === "number") {
+      const unit = ws.unitCode || "";
+      windMph = unit.includes("m_s") ? msToMph(ws.value)
+              : unit.includes("km_h") ? kmhToMph(ws.value)
+              : null;
+    }
+    const rh = toFixed(obs.relativeHumidity?.value, 0);
+    const updated = obs.timestamp ? new Date(obs.timestamp).toLocaleString() : "";
+    const nowIconUrl = prefixIcon(obs.icon);
+    $nowIcon.innerHTML = nowIconUrl
+      ? `${nowIconUrl}`
+      : emojiFromText(obs.textDescription || "Weather");
+
+    const parts = [];
+    parts.push(`<strong>${obs.textDescription || "Current conditions"}</strong>`);
+    if (tempF != null) parts.push(`${Math.round(tempF)}°F`);
+    if (rh != null) parts.push(`RH ${rh}%`);
+    if (windMph != null) parts.push(`Wind ${Math.round(windMph)} mph`);
+    $nowText.innerHTML =
+      parts.join(" · ")
+      + (updated ? `<div style="color:#6b7280;font-size:12px;margin-top:4px;">Updated ${updated} · Station ${stationId}</div>` : "");
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("nws-now-icon").textContent = "⚠️";
+    document.getElementById("nws-now-text").textContent =
+      "Couldn’t load NWS data. If this persists, check the browser console and CORS/network status.";
+    document.getElementById("nws-forecast").innerHTML = "";
+  }
+})();
+</script>

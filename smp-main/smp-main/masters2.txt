@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <!-- Google Fonts for Libre Baskerville and Roboto -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Bootstrap CDN for responsiveness -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Sommerville Masters Pool Leaderboard</title>
+  <style>
+    body {
+      font-family: 'Roboto', 'Helvetica', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f7f5ef;
+      line-height: 1.5;
+    }
+    header {
+      background-color: #003525;
+      background-size: cover;
+      background-position: center;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    header h1 {
+      z-index: 1;
+      font-size: 1.6em;
+      margin-left: 0px;
+      font-family: 'Libre Baskerville', 'Times New Roman', serif;
+    }
+    .logo {
+      display: block;
+      margin: 0 auto;
+      max-width: 20%;
+      width: auto;
+      height: auto;
+      max-height: 50px;
+      object-fit: contain;
+    }
+    .timer,
+    .updates,
+    #weather-widget,
+    #golf-leaderboard,
+    #pool-leaderboard,
+    .slideshow,
+    #historical-winners,
+    #sommerville-registration {
+      background-color: #fff;
+      padding: 15px;
+      text-align: center;
+      margin: 30px auto;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .update-image,
+    .summary-image {
+      display: block;
+      margin: 16px auto 0 auto;
+      max-height: 200px;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+      border-radius: 5px;
+    }
+    main {
+      padding: 20px;
+      text-align: center;
+    }
+    section {
+      margin-bottom: 30px;
+    }
+    h2 {
+      color: #003525;
+      text-align: center;
+      font-size: 1.4em;
+      margin: 10px 0;
+      font-family: 'Libre Baskerville', 'Times New Roman', serif;
+    }
+    .expand {
+      display: none;
+      margin-top: 5px;
+      padding: 5px;
+      background-color: #e5ffe5;
+      border-radius: 3px;
+      font-size: 0.85em;
+    }
+    .golf-icon {
+      width: 15px;
+      height: 15px;
+      background-image: url('https://i.etsystatic.com/16454555/r/il/f205d2/4762277869/il_570xN.4762277869_89g1.jpg');
+      background-size: contain;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+    footer {
+      background-color: #003525;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+    .feedback-button {
+      background-color: #fff;
+      color: #004c00;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 3px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .slideshow img {
+      max-width: 300px;
+      max-height: 200px;
+      border-radius: 3px;
+      display: block;
+      margin: 0 auto;
+      transition: opacity 0.5s ease; /* Fade animation */
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px auto;
+    }
+    th,
+    td {
+      padding: 8px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      text-align: center;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    th {
+      background-color: #003525;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background-color: #f7f5ef;
+    }
+    .collapse-btn {
+      margin: 5px 0;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      background: #e5ffe5;
+      color: #003300;
+      border: 1px solid #003300;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+    .slideshow {
+      width: calc(100% - 50px);
+      max-width: calc(100% - 50px);
+      height: 200px;
+      overflow: hidden;
+      margin: 0 auto;
+      position: relative;
+    }
+    .slideshow img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .winner {
+      color: #F6C915;
+      font-weight: bold;
+    }
+    /* Mobile optimizations */
+    @media (max-width: 576px) {
+      header h1 { font-size: 1.2em; margin-top: 10px; }
+      .logo { max-width: 50%; }
+    }
+  </style>
+</head>
+<!-- Sticky Audio Player Controls -->
+<div id="audio-controls" style="
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    background: rgba(255,255,255,0.9);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    z-index: 999;
+">
+  <button id="play-pause" style="padding: 6px 12px;">⏯️ </button>
+  <button id="volume-down" style="padding: 6px 12px;">🔉-</button>
+  <button id="volume-up" style="padding: 6px 12px;">🔊+</button>
+  <div id="audio-status" style="font-weight: light; color: green; margin-left: 10px;"></div>
+</div>
+<body>
+<header>
+  <a href="https://kev11wolf.github.io/SMP/">
+    <img src="https://esagcs.org/wp-content/uploads/2023/03/The-Masters.jpg" alt="Logo" class="logo" loading="lazy">
+  </a>
+  <h1>Sommerville Masters Pool</h1>
+</header>
+<main class="container">
+  <div class="row">
+    <section class="col-md-6 timer" id="countdown-timer">
+      <h2>Time left 'til 2026 Masters</h2>
+      <p id="time-left"></p>
+    </section>
+    <section class="col-md-6" id="weather-widget">
+      <h2>Augusta, GA Weather</h2>
+      <div id="weather-current" style="margin-bottom: 15px;">
+        Loading current weather…
+      </div>
+      <div id="weather-forecast">
+        Loading 7-day forecast…
+      </div>
+    </section>
+  </div>
+  <section class="updates">
+    <h2>News + Updates</h2>
+    <p>Thanks for playing! See you all in 2026.</p>
+    <img src="https://i.postimg.cc/wjy1wZ2X/2025-masters.png" alt="Update Placeholder" class="update-image" loading="lazy">
+  </section>
+  <section id="sommerville-registration">
+    <h2 style="color: #003300; font-size: 1.2em; margin: 10px 0; font-family: Libre Baskerville, Times New Roman, serif;">
+      Sommerville Masters Pool Registration
+    </h2>
+    <p style="color: #003300; margin-bottom: 10px; font-family: Helvetica, Arial, sans-serif;">
+      Click the button below to submit your selections!
+    </p>
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSeFdQqMiI8_6rMCRZCMvR5AMDjgjY1Uyq_V2_GUGkQk1tJ6ag/viewform?usp=header"
+       style="display: inline-block; text-decoration: none; background-color: #003525; color: #fff; padding: 10px 15px; border-radius: 3px; font-family: Helvetica, Arial, sans-serif; font-size: 14px;">
+      Pick your players!
+    </a>
+  </section>
+  <section class="slideshow">
+    <img id="slideshow-image" src="" alt="Slideshow Image" loading="lazy">
+  </section>
+  <section id="pool-leaderboard">
+    <h2>Pool Participants Leaderboard</h2>
+    <button id="toggle-pool-button" class="collapse-btn">Collapse</button>
+    <table id="pool-table" class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Points</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Pool participants will be inserted here -->
+      </tbody>
+    </table>
+  </section>
+  <section id="golf-leaderboard">
+    <h2>Golf Players Leaderboard</h2>
+    <button id="toggle-button" class="collapse-btn">Show More</button>
+    <table id="golf-table" class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Golf players will be inserted here -->
+      </tbody>
+    </table>
+  </section>
+  <section id="historical-winners">
+    <h2>Sommerville Masters Pool Past Champions</h2>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Name</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>2025</td>
+          <td>Jason</td>
+        </tr>
+        <tr>
+          <td>2024</td>
+          <td>Blake</td>
+        </tr>
+        <tr>
+          <td>2023</td>
+          <td>Brandon E.</td>
+        </tr>
+        <tr>
+          <td>2022</td>
+          <td>Dima</td>
+        </tr>
+        <tr>
+          <td>2021</td>
+          <td>Zach K.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+  <div id="chatango-container" style="position: fixed; bottom: 20px; right: 20px;">
+    <script id="cid0020000416183938966" data-cfasync="false" async src="//st.chatango.com/js/gz/emb.js"
+            style="width: 250px;height: 350px;">
+      {"handle":"sommerville-masters","arch":"js","styles":{"b":100,"c":"000000","d":"000000","l":"FFFFFF","m":"FFFFFF","p":"10","r":100,"fwtickm":1}}
+    </script>
+  </div>
+</main>
+<footer>
+  <p>Website created by K-Dawg.</p>
+  <button class="feedback-button" onclick="sendFeedback()">Submit Website Feedback</button>
+  <p>
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+      <title>Masters wordmark</title>
+      <defs>
+        <linearGradient id="badgeFill" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#FAD84E"/>
+          <stop offset="100%" stop-color="#F6C915"/>
+        </linearGradient>
+        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="rgba(0,0,0,.25)"/>
+        </filter>
+        <style>
+          .word {
+            font-family: "Libre Baskerville", Baskerville, "Times New Roman", serif;
+            font-style: italic;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+          }
+        </style>
+      </defs>
+      <rect x="1.5" y="1.5" width="61" height="61" rx="6" ry="6" fill="url(#badgeFill)" stroke="#106d3b" stroke-width="2"
+            filter="url(#softShadow)"/>
+      <text x="30" y="39" class="word" fill="#106d3b" font-size="18" text-anchor="middle" textLength="44"
+            lengthAdjust="spacingAndGlyphs">MASTERS</text>
+      <g transform="translate(52,18)">
+        <path d="M0 0 L0 18" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M0 0 L9 3 L0 6 Z" fill="#D62828" stroke="#9c1f1f" stroke-width="0.7" stroke-linejoin="round"/>
+        <ellipse cx="-1.5" cy="18.5" rx="2.8" ry="1.1" fill="#0b0b0b" opacity="0.2"/>
+      </g>
+    </svg>
+  </p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Audio
+  const audio = new Audio("https://raw.githubusercontent.com/kev11wolf/Sommerville-Masters-Pool/main/Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Masters%20Theme%20Song%20On%20Repeat(1).mp3");
+  audio.loop = true;
+  audio.volume = 0.5;
+  const playPauseBtn = document.getElementById('play-pause');
+  const volumeUpBtn = document.getElementById('volume-up');
+  const volumeDownBtn = document.getElementById('volume-down');
+  const audioStatus = document.getElementById('audio-status');
+  let isPlaying = false;
+  playPauseBtn.onclick = () => {
+    if (!isPlaying) {
+      audio.play().catch(() => {
+        alert('Click the play button to start the music.');
+      });
+    } else {
+      audio.pause();
+    }
+  };
+  audio.onplay = () => {
+    isPlaying = true;
+    playPauseBtn.textContent = '⏸️ Pause';
+    audioStatus.textContent = 'Masters Theme Song Playing ▶️';
+  };
+  audio.onpause = () => {
+    isPlaying = false;
+    playPauseBtn.textContent = '⏯️ Play';
+    audioStatus.textContent = 'Masters Theme Song paused ⏸️';
+  };
+  volumeUpBtn.onclick = () => {
+    if (audio.volume < 1) {
+      audio.volume = Math.min(1, audio.volume + 0.1);
+    }
+  };
+  volumeDownBtn.onclick = () => {
+    if (audio.volume > 0) {
+      audio.volume = Math.max(0, audio.volume - 0.1);
+    }
+  };
+  window.onload = () => {
+    audio.play().catch(() => {
+      console.log('Auto-play blocked. Use the play button.');
+    });
+  };
+</script>
+<!-- Countdown and feedback -->
+<script>
+  function updateCountdown() {
+    const futureDate = new Date("2026-04-09").getTime();
+    const now = new Date().getTime();
+    const timeLeft = futureDate - now;
+    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+    document.getElementById("time-left").textContent =
+      `${days} Days ${hours} Hours ${minutes} Minutes ${seconds} Seconds`;
+  }
+  setInterval(updateCountdown, 1000);
+  function sendFeedback() {
+    const feedback = prompt("Please enter your feedback:");
+    if (feedback) {
+      window.location.href =
+        `mailto:kev11wolf@gmail.com?subject=Website Feedback&body=${encodeURIComponent(feedback)}`;
+    }
+  }
+</script>
+<!-- Slideshow and leaderboards -->
+<script>
+  document.addEventListener('DOMContentLoaded', async function() {
+    const images = [
+      'https://i.insider.com/5ac3ca737a74af24008b45c7?width=1000&format=jpeg',
+      'https://media.stewarttravel.co.uk/media/repository/Golf/golfcourses/USA/Georgia/AugustaNational/Augusta-National.jpg',
+      'https://static01.nyt.com/images/2025/05/12/multimedia/12nat-masters-photos-rory-win-sunday-chtq/12nat-masters-photos-rory-win-sunday-chtq-articleLarge.jpg',
+      'https://images2.minutemediacdn.com/image/upload/c_crop,w_8025,h_4514,x_0,y_167/c_fill,w_720,ar_16:9,f_auto,q_auto,g_auto/images/ImagnImages/mmsport/si/01jabn4qvj71gpkb0kzy.jpg',
+      'https://golfweek.usatoday.com/gcdn/authoring/authoring-images/2025/04/10/SGLF/83022855007-usatsi-25892403.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1685967.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-83123181.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1074391880-1.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1145859172.jpg',
+      'https://o90934w8.cdn.imgeng.in/wp-content/uploads/2015/04/amen-corner.jpg',
+      'https://media.cnn.com/api/v1/images/stellar/prod/170223113519-tiger-augusta-azaleas.jpg',
+      'https://o90934w8.cdn.imgeng.in/wp-content/uploads/2015/04/amen-corner.jpg',
+      'https://www.liveabout.com/thmb/KqYZccVwvG6HOodBXslj-yYRDk4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/augusta-national-azalea-rory-58272e685f9b58d5b15309db-5c251adf46e0fb0001e72d82.jpg',
+      'https://e0.365dm.com/18/04/768x432/skysports-tiger-woods-masters_4271003.jpg?20180401182508'
+    ];
+    let currentImageIndex = 0;
+    const slideshowImage = document.getElementById('slideshow-image');
+    slideshowImage.src = images[currentImageIndex];
+    function cycleSlideshow() {
+      currentImageIndex = (currentImageIndex + 1) % images.length;
+      slideshowImage.style.opacity = 0;
+      setTimeout(() => {
+        slideshowImage.src = images[currentImageIndex];
+        slideshowImage.style.opacity = 1;
+      }, 500);
+    }
+    setInterval(cycleSlideshow, 3000);
+
+    // Fetch Golf Scores
+    async function fetchGolfScores() {
+      try {
+        const response = await fetch('https://www.masters.com/en_US/scores/feeds/scores.json');
+        const json = await response.json();
+        let players = json.data.player || [];
+        // Sort by to_par (topar), handling strings like 'E', '+1', '-2'
+        players.sort((a, b) => {
+          const scoreA = a.topar === 'E' ? 0 : parseInt(a.topar) || 0;
+          const scoreB = b.topar === 'E' ? 0 : parseInt(b.topar) || 0;
+          return scoreA - scoreB;
+        });
+        return players;
+      } catch (error) {
+        console.error('Error fetching golf scores:', error);
+        // Fallback hardcoded data
+        return [
+          {first_name: 'Rory', last_name: 'McIlroy', topar: '-11', total: '277', today: '1', round1: {total: '72'}, round2: {total: '66'}, round3: {total: '66'}, round4: {total: '73'}},
+          // ... add more fallback if needed
+        ];
+      }
+    }
+
+    // Fetch Pool Scores
+    async function fetchPoolScores(golfPlayers) {
+      try {
+        // Replace with your actual published CSV URL from Google Sheets
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/{YOUR_SHEET_ID}/pub?output=csv';
+        const csvResponse = await fetch(csvUrl);
+        const csvText = await csvResponse.text();
+        const rows = csvText.split('\n').map(row => row.split(','));
+        const participants = rows.slice(1).map(row => ({
+          name: row[0],
+          selected: row.slice(1).map(name => name.trim())
+        }));
+        participants.forEach(part => {
+          part.points = part.selected.reduce((sum, selName) => {
+            const matchedPlayer = golfPlayers.find(p => `${p.first_name} ${p.last_name}`.toLowerCase().includes(selName.toLowerCase()));
+            const score = matchedPlayer ? (matchedPlayer.topar === 'E' ? 0 : parseInt(matchedPlayer.topar.replace('+', '')) || 0) : 0;
+            return sum + score;
+          }, 0);
+        });
+        participants.sort((a, b) => a.points - b.points);
+        return participants;
+      } catch (error) {
+        console.error('Error fetching pool data:', error);
+        // Fallback hardcoded
+        return [
+          {name: 'K-Dawg', points: -13, selected: ['Scottie Scheffler', 'Bryson DeChambeau', 'Sahith Theegala', 'Patrick Cantlay', 'Phil Mickelson', 'Cameron Young']},
+          // ... add more
+        ];
+      }
+    }
+
+    // Update Golf Table
+    function updateGolfTable(players, limit = 10) {
+      const tbody = document.querySelector('#golf-table tbody');
+      tbody.innerHTML = '';
+      const displayPlayers = limit ? players.slice(0, limit) : players;
+      displayPlayers.forEach(player => {
+        const tr = document.createElement('tr');
+        const nameTd = document.createElement('td');
+        nameTd.innerHTML = `${player.first_name} ${player.last_name}`;
+        const scoreTd = document.createElement('td');
+        scoreTd.textContent = player.topar;
+        tr.appendChild(nameTd);
+        tr.appendChild(scoreTd);
+        // Click to expand rounds
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', () => {
+          let expandRow = tr.nextElementSibling;
+          if (expandRow && expandRow.classList.contains('expand-row')) {
+            expandRow.remove();
+          } else {
+            expandRow = document.createElement('tr');
+            expandRow.classList.add('expand-row');
+            const expandTd = document.createElement('td');
+            expandTd.colSpan = 2;
+            expandTd.innerHTML = `
+              <div class="expand">
+                Round 1: ${player.round1?.total || 'N/A'}<br>
+                Round 2: ${player.round2?.total || 'N/A'}<br>
+                Round 3: ${player.round3?.total || 'N/A'}<br>
+                Round 4: ${player.round4?.total || 'N/A'}
+              </div>
+            `;
+            expandRow.appendChild(expandTd);
+            tr.after(expandRow);
+          }
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Update Pool Table
+    function updatePoolTable(participants) {
+      const tbody = document.querySelector('#pool-table tbody');
+      tbody.innerHTML = '';
+      participants.forEach(part => {
+        const tr = document.createElement('tr');
+        const nameTd = document.createElement('td');
+        nameTd.innerHTML = part.name;
+        const pointsTd = document.createElement('td');
+        pointsTd.textContent = part.points;
+        if (part.points < 0) pointsTd.classList.add('winner'); // Highlight negative (good) scores
+        tr.appendChild(nameTd);
+        tr.appendChild(pointsTd);
+        // Click to expand selected players
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', () => {
+          let expandRow = tr.nextElementSibling;
+          if (expandRow && expandRow.classList.contains('expand-row')) {
+            expandRow.remove();
+          } else {
+            expandRow = document.createElement('tr');
+            expandRow.classList.add('expand-row');
+            const expandTd = document.createElement('td');
+            expandTd.colSpan = 2;
+            const playerList = part.selected.map(sel => `<div>${sel}</div>`).join('');
+            expandTd.innerHTML = `<div class="expand"><strong>Selected Players:</strong>${playerList}</div>`;
+            expandRow.appendChild(expandTd);
+            tr.after(expandRow);
+          }
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Load data
+    const golfPlayers = await fetchGolfScores();
+    const poolParticipants = await fetchPoolScores(golfPlayers);
+
+    // Initial updates
+    updateGolfTable(golfPlayers, 10);
+    updatePoolTable(poolParticipants);
+
+    // Toggle buttons
+    const toggleBtn = document.getElementById('toggle-button');
+    let golfExpanded = false;
+    toggleBtn.onclick = () => {
+      golfExpanded = !golfExpanded;
+      updateGolfTable(golfPlayers, golfExpanded ? null : 10);
+      toggleBtn.textContent = golfExpanded ? 'Show Less' : 'Show More';
+    };
+
+    const poolToggleBtn = document.getElementById('toggle-pool-button');
+    let poolExpanded = true;
+    poolToggleBtn.onclick = () => {
+      poolExpanded = !poolExpanded;
+      const poolTable = document.getElementById('pool-table');
+      poolTable.style.display = poolExpanded ? 'table' : 'none';
+      poolToggleBtn.textContent = poolExpanded ? 'Collapse' : 'Expand';
+    };
+
+    // Refresh scores every 60 seconds
+    setInterval(async () => {
+      const newGolf = await fetchGolfScores();
+      const newPool = await fetchPoolScores(newGolf);
+      updateGolfTable(newGolf, golfExpanded ? null : 10);
+      updatePoolTable(newPool);
+    }, 60000);
+  });
+</script>
+<!-- Weather Script -->
+<script>
+  (async function(){
+    const weatherCurrent = document.getElementById("weather-current");
+    const weatherForecast = document.getElementById("weather-forecast");
+    const lat = 33.5025, lon = -82.02;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_mean,weathercode&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
+    const weatherCodeMap = {
+      0: "Clear sky",
+      1: "Mainly clear",
+      2: "Partly cloudy",
+      3: "Overcast",
+      45: "Foggy",
+      48: "Depositing rime fog",
+      51: "Light drizzle",
+      53: "Moderate drizzle",
+      55: "Dense drizzle",
+      56: "Freezing drizzle",
+      57: "Freezing drizzle",
+      61: "Slight rain",
+      63: "Moderate rain",
+      65: "Heavy rain",
+      66: "Freezing rain",
+      67: "Freezing rain",
+      71: "Slight snowfall",
+      73: "Moderate snowfall",
+      75: "Heavy snowfall",
+      77: "Snow grains",
+      80: "Light rain showers",
+      81: "Moderate rain showers",
+      82: "Violent rain showers",
+      85: "Slight snow showers",
+      86: "Heavy snow showers",
+      95: "Thunderstorm",
+      96: "Thunders. w/ slight hail",
+      99: "Thunders. w/ heavy hail"
+    };
+    const weatherEmojiMap = {
+      0: "☀️",
+      1: "🌤️",
+      2: "⛅",
+      3: "☁️",
+      45: "🌫️",
+      48: "🌫️",
+      51: "🌧️",
+      53: "🌧️",
+      55: "🌧️",
+      56: "🌧️",
+      57: "🌧️",
+      61: "🌧️",
+      63: "🌧️",
+      65: "🌧️",
+      66: "🌧️",
+      67: "🌧️",
+      71: "❄️",
+      73: "❄️",
+      75: "❄️",
+      77: "❄️",
+      80: "🌧️",
+      81: "🌧️",
+      82: "🌧️",
+      85: "❄️",
+      86: "❄️",
+      95: "⛈️",
+      96: "⛈️",
+      99: "⛈️"
+    };
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Open-Meteo fetch failed: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.current_weather) {
+        const cw = data.current_weather;
+        const codeText = weatherCodeMap[cw.weathercode] || "Unknown";
+        const emoji = weatherEmojiMap[cw.weathercode] || "❓";
+        weatherCurrent.innerHTML = `
+          <strong>Currently:</strong> ${emoji} ${cw.temperature}°F | ${codeText} | Wind ${cw.windspeed} mph
+        `;
+      } else {
+        weatherCurrent.textContent = "No current weather data.";
+      }
+      if (data.daily && data.daily.time) {
+        const { time, temperature_2m_max, temperature_2m_min, precipitation_probability_mean, weathercode } = data.daily;
+        let forecastHTML = "";
+        for (let i = 0; i < time.length; i++) {
+          const dateObj = new Date(time[i]);
+          const dayName = dateObj.toLocaleDateString(undefined, { weekday: "short" });
+          const codeTx = weatherCodeMap[weathercode[i]] || "Unknown";
+          const emoji = weatherEmojiMap[weathercode[i]] || "❓";
+          forecastHTML += `
+            <div style="display:inline-block;border:1px solid #ccc;border-radius:6px;padding:8px;margin:4px;min-width:110px;">
+              <div><strong>${dayName}</strong></div>
+              <div style="font-size:1.2em;margin:4px 0;">${emoji}</div>
+              <div style="font-size:0.9em;color:#333;">${codeTx}</div>
+              <div style="font-size:0.9em;color:#333;margin-top:6px;">High: ${temperature_2m_max[i]}°F</div>
+              <div style="font-size:0.9em;color:#333;">Low: ${temperature_2m_min[i]}°F</div>
+              <div style="font-size:0.9em;color:#333;">Precip: ${precipitation_probability_mean[i]}%</div>
+            </div>
+          `;
+        }
+        weatherForecast.innerHTML = forecastHTML;
+      } else {
+        weatherForecast.textContent = "No forecast data.";
+      }
+    } catch (err) {
+      weatherCurrent.textContent = "Could not load weather data.";
+      weatherForecast.textContent = "";
+      console.error(err);
+    }
+  })();
+</script>
+</body>
+</html>
