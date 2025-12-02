@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML, CSS, and JavaScript 101: Beginner's Guide</title>
+    <style>
+        /* CSS Reset for consistency */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Color Theme: Light pastels and neutrals */
+        :root {
+            --bg-color: #f9f9f9; /* Subtle neutral background */
+            --text-color: #333333; /* Dark text for readability */
+            --accent-color: #6a9fb5; /* Soft blue pastel accent */
+            --secondary-accent: #a8dadc; /* Lighter pastel for highlights */
+            --code-bg: #e8f1f2; /* Very light code background */
+            --border-color: #d3d3d3; /* Subtle borders */
+            --white-space: 2rem; /* Ample white space */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            font-size: 16px;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        /* Fixed Navigation Sidebar */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: #ffffff;
+            border-right: 1px solid var(--border-color);
+            padding: var(--white-space);
+            overflow-y: auto;
+        }
+
+        #sidebar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        #sidebar ul {
+            list-style: none;
+        }
+
+        #sidebar li {
+            margin-bottom: 0.5rem;
+        }
+
+        #sidebar a {
+            text-decoration: none;
+            color: var(--text-color);
+            transition: color 0.3s;
+        }
+
+        #sidebar a:hover {
+            color: var(--accent-color);
+        }
+
+        /* Main Content */
+        #main-content {
+            margin-left: 250px;
+            padding: var(--white-space);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h1, h2, h3 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        /* Collapsible Sections */
+        details {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            cursor: pointer;
+        }
+
+        summary {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        /* Code Blocks with Syntax Highlighting */
+        pre {
+            background-color: var(--code-bg);
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            color: #d63384; /* Pink for code text */
+        }
+
+        pre code {
+            color: inherit;
+        }
+
+        /* Simple syntax highlighting */
+        .keyword { color: #007bff; } /* Blue for keywords */
+        .string { color: #28a745; } /* Green for strings */
+        .comment { color: #6c757d; } /* Gray for comments */
+
+        /* Interactive Elements */
+        button {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        button:hover {
+            background-color: var(--secondary-accent);
+        }
+
+        /* Demo Areas */
+        .demo {
+            border: 1px dashed var(--border-color);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #ffffff;
+        }
+
+        /* Visual Aids: Placeholder for diagrams */
+        .diagram {
+            background-color: var(--secondary-accent);
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+        }
+
+        .diagram::before {
+            content: "Diagram Placeholder";
+            font-style: italic;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            #sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            #main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav id="sidebar">
+        <h2>Navigation</h2>
+        <ul>
+            <li><a href="#introduction">Introduction</a></li>
+            <li><a href="#html-basics">HTML Basics</a></li>
+            <li><a href="#css-basics">CSS Basics</a></li>
+            <li><a href="#js-basics">JavaScript Basics</a></li>
+            <li><a href="#best-practices">Best Practices</a></li>
+            <li><a href="#conclusion">Conclusion</a></li>
+        </ul>
+    </nav>
+
+    <main id="main-content">
+        <header>
+            <h1>HTML, CSS, and JavaScript 101: Beginner's Guide</h1>
+            <p>Welcome to this comprehensive guide designed for absolute beginners. We'll start from the basics and build up your skills step by step.</p>
+        </header>
+
+        <section id="introduction">
+            <h2>Introduction to Web Development</h2>
+            <p>Web development involves creating websites using three core technologies: HTML for structure, CSS for styling, and JavaScript for interactivity.</p>
+            <details>
+                <summary>Why Learn These?</summary>
+                <p>HTML, CSS, and JS are the building blocks of the web. Mastering them opens doors to creating your own sites and understanding how the internet works.</p>
+            </details>
+            <div class="diagram">Visual: Browser rendering HTML/CSS/JS layers</div>
+        </section>
+
+        <section id="html-basics">
+            <h2>HTML Basics</h2>
+            <p>HTML (HyperText Markup Language) is used to create the structure of a web page.</p>
+
+            <h3>Step 1: Basic HTML Structure</h3>
+            <p>Every HTML document starts with a doctype and includes html, head, and body tags.</p>
+            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;My Page&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Hello, World!&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+            <details>
+                <summary>Tutorial: Create Your First HTML File</summary>
+                <ol>
+                    <li>Open a text editor (like Notepad).</li>
+                    <li>Copy the code above.</li>
+                    <li>Save as index.html.</li>
+                    <li>Open in a browser.</li>
+                </ol>
+            </details>
+
+            <h3>Common HTML Elements</h3>
+            <p>Headings: Use &lt;h1&gt; to &lt;h6&gt; for titles.</p>
+            <pre><code>&lt;h1&gt;Main Title&lt;/h1&gt;
+&lt;h2&gt;Subtitle&lt;/h2&gt;</code></pre>
+
+            <p>Paragraphs and Links:</p>
+            <pre><code>&lt;p&gt;This is a paragraph.&lt;/p&gt;
+&lt;a href="https://example.com"&gt;Link&lt;/a&gt;</code></pre>
+
+            <p>Images:</p>
+            <pre><code>&lt;img src="image.jpg" alt="Description"&gt;</code></pre>
+
+            <p>Lists:</p>
+            <pre><code>&lt;ul&gt;
+    &lt;li&gt;Item 1&lt;/li&gt;
+    &lt;li&gt;Item 2&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+
+            <h3>Forms</h3>
+            <p>Basic form example:</p>
+            <pre><code>&lt;form&gt;
+    &lt;input type="text" placeholder="Name"&gt;
+    &lt;button type="submit"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+
+            <div class="demo">
+                <form>
+                    <input type="text" placeholder="Try typing here">
+                    <button type="button">Demo Button</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="css-basics">
+            <h2>CSS Basics</h2>
+            <p>CSS (Cascading Style Sheets) styles your HTML elements.</p>
+
+            <h3>Adding CSS</h3>
+            <p>Inline, internal, or external. We'll use internal for this guide.</p>
+            <pre><code>&lt;style&gt;
+body { background-color: lightblue; }
+&lt;/style&gt;</code></pre>
+
+            <h3>Selectors and Properties</h3>
+            <p>Select by tag, class, or ID.</p>
+            <pre><code>p { color: red; }
+.class-name { font-size: 20px; }
+#id-name { background: yellow; }</code></pre>
+
+            <details>
+                <summary>Tutorial: Style a Paragraph</summary>
+                <p>Add the CSS above to your HTML and see the changes.</p>
+            </details>
+
+            <h3>Box Model</h3>
+            <p>Every element is a box with content, padding, border, margin.</p>
+            <div class="diagram">Visual: Box Model Diagram</div>
+
+            <pre><code>div {
+    padding: 10px;
+    border: 1px solid black;
+    margin: 20px;
+}</code></pre>
+
+            <h3>Layout: Flexbox</h3>
+            <pre><code>.container {
+    display: flex;
+    justify-content: space-between;
+}</code></pre>
+
+            <div class="demo" style="display: flex; justify-content: space-between;">
+                <div style="background: var(--secondary-accent); padding: 10px;">Item 1</div>
+                <div style="background: var(--secondary-accent); padding: 10px;">Item 2</div>
+            </div>
+
+            <h3>Responsive Design</h3>
+            <p>Use media queries.</p>
+            <pre><code>@media (max-width: 600px) {
+    body { font-size: 14px; }
+}</code></pre>
+        </section>
+
+        <section id="js-basics">
+            <h2>JavaScript Basics</h2>
+            <p>JavaScript adds interactivity to your pages.</p>
+
+            <h3>Adding JS</h3>
+            <pre><code>&lt;script&gt;
+alert('Hello, World!');
+&lt;/script&gt;</code></pre>
+
+            <h3>Variables and Data Types</h3>
+            <pre><code>let name = 'John'; // String
+const age = 30; // Number
+let isStudent = true; // Boolean</code></pre>
+
+            <h3>Functions</h3>
+            <pre><code>function greet() {
+    console.log('Hello!');
+}
+greet();</code></pre>
+
+            <details>
+                <summary>Tutorial: Simple Function</summary>
+                <p>Add to your script and check the console.</p>
+            </details>
+
+            <h3>DOM Manipulation</h3>
+            <p>Change HTML with JS.</p>
+            <pre><code>document.getElementById('demo').innerHTML = 'Changed!';</code></pre>
+
+            <div id="js-demo" class="demo">Original Text</div>
+            <button onclick="changeText()">Change Text</button>
+
+            <h3>Events</h3>
+            <p>Respond to user actions.</p>
+            <pre><code>button.addEventListener('click', function() {
+    alert('Clicked!');
+});</code></pre>
+        </section>
+
+        <section id="best-practices">
+            <h2>Best Practices</h2>
+            <ul>
+                <li>Use semantic HTML (e.g., &lt;header&gt;, &lt;nav&gt;).</li>
+                <li>Keep CSS modular with classes.</li>
+                <li>Write clean, commented JS.</li>
+                <li>Test on multiple devices.</li>
+            </ul>
+        </section>
+
+        <section id="conclusion">
+            <h2>Conclusion</h2>
+            <p>You've covered the basics! Practice by building small projects.</p>
+        </section>
+    </main>
+
+    <script>
+        function changeText() {
+            document.getElementById('js-demo').innerHTML = 'Text Changed with JS!';
+        }
+    </script>
+</body>
+</html>
