@@ -1,0 +1,119 @@
+You are a world-class philosopher, theologian, designer, and full-stack developer combined. Your mission is to create a complete, standalone, breathtakingly beautiful, single-page (or cleanly separated multi-file) interactive website titled:
+
+“Philosophy & Theology 101 – A Modern Journey into Meaning, Existence, and the Human Condition”
+
+The site must feel like a premium digital humanities masterpiece — think “The School of Life + Stanford Encyclopedia of Philosophy + a calm Notion page + Ryōsuke Yamada’s aesthetic,” but far more immersive, visual, and emotionally resonant.
+
+### Core Requirements (exactly like before, but adapted)
+- 100% self-contained (only minimal reliable CDNs allowed: Google Fonts, Prism.js or Highlight.js for quotes/code, Font Awesome 6, and canvas-confetti for celebration moments)
+- Vanilla HTML5, modern CSS (Flexbox, Grid, CSS variables, clamp(), container queries), vanilla ES6+ JavaScript only — no frameworks
+- Fully responsive from 320px mobile to 4K, flawless on phones
+- Light, serene, contemplative aesthetic:
+   - Background: #faf9f7 (warm parchment) or #f8f9fc
+   - Cards: #ffffff with subtle drop shadows and very slight border (#e8e1d9)
+   - Accent palette: deep terracotta #c95d4e, sage green #5d8470, muted gold #b8860b, soft indigo #5d5fef
+   - Typography: “Cormorant Garamond” or “Lora” for headings and long quotes, “Inter” for body, “JetBrains Mono” for any code-like excerpts
+   - Generous whitespace, calm animations, micro-interactions that feel like turning pages in an ancient book
+
+### Overall Structure & Visual Design
+- Fixed elegant left sidebar (collapsible on mobile) with:
+  - Minimalist logo (an open book + quill or ∞ symbol)
+  - Smooth-scroll table of contents with tasteful icons
+  - Reading progress bar (subtle line that fills)
+  - “Night reflection mode” (dark mode with sepia tones)
+  - Quote of the day in the footer of the sidebar
+- Main content: max-width 860px, centered, luxurious line-height
+- Every section begins with a large, evocative hero image or illustration (use Unsplash placeholders or simple SVG art)
+- Pull-quotes in beautiful calligraphy-style boxes
+- Timelines, family trees, and comparison tables as interactive SVGs
+
+### Complete Table of Contents (every section must be deep, poetic, and rigorous)
+1. Welcome to the Great Questions  
+   - Why philosophy & theology still matter in 2025  
+   - How to read difficult texts without fear  
+   - The difference between seeking truth and seeking comfort
+
+2. Ancient Foundations  
+   - Pre-Socratics, Socrates, Plato, Aristotle  
+   - Stoicism (Epictetus, Marcus Aurelius, Seneca)  
+   - Eastern parallels: Lao Tzu, Buddha, Confucius
+
+3. Medieval & Religious Philosophy  
+   - Augustine, Aquinas, Maimonides, Al-Ghazali  
+   - Problem of evil, proofs for God, faith vs reason  
+   - Mysticism (Meister Eckhart, Rumi, Teresa of Ávila)
+
+4. The Birth of Modern Doubt  
+   - Descartes (“I think, therefore I am”)  
+   - Pascal’s Wager  
+   - Spinoza, Leibniz
+
+5. Enlightenment & Its Shadows  
+   - Kant’s Copernican revolution  
+   - Voltaire, Rousseau, Hume  
+   - The death of God (Nietzsche preview)
+
+6. 19th-Century Earthquake  
+   - Hegel, Schopenhauer, Kierkegaard (deep dive)  
+   - Marx and the critique of religion  
+   - Dostoevsky as philosopher-novelist (Notes from Underground, Brothers Karamazov excerpts)
+
+7. Existentialism – Core Focus (extra long & emotional)  
+   - Kierkegaard’s leap of faith  
+   - Nietzsche – God is dead, Übermensch, eternal recurrence  
+   - Sartre – existence precedes essence, radical freedom, bad faith  
+   - Camus – the absurd, Sisyphus, revolt  
+   - Simone de Beauvoir – ethics of ambiguity, oppression & freedom
+
+8. Humanism & Meaning Without God (second core focus)  
+   - Renaissance humanism: Erasmus’ Praise of Folly (full analysis)  
+   - Secular humanism manifesto  
+   - Erich Fromm, Viktor Frankl (Man’s Search for Meaning)  
+   - Albert Camus & André Malraux again  
+   - Contemporary voices: Mark Manson (The Subtle Art…, Everything Is F*cked), Yuval Noah Harari, Alain de Botton
+
+9. 20th–21st Century Branches  
+   - Phenomenology (Husserl, Heidegger, Merleau-Ponty)  
+   - Postmodernism (Foucault, Derrida, Lyotard)  
+   - Analytic vs Continental split  
+   - Philosophy of mind, AI, transhumanism
+
+10. Theology After Modernity  
+    - Liberal theology, Death of God movement  
+    - Karl Barth, Dietrich Bonhoeffer  
+    - Liberation theology, feminist theology, queer theology  
+    - Zen, Sufism, and perennial philosophy (Aldous Huxley)
+
+11. Living the Questions – Practical Philosophy  
+    - Stoic daily practices  
+    - Existential psychotherapy  
+    - How to build your own coherent worldview  
+    - Journal prompts inspired by every major thinker
+
+12. Capstone: “My Personal Philosophy” Interactive Builder  
+    - Step-by-step guided questionnaire mixing all traditions  
+    - At the end, generate a beautiful one-page “Manifesto of Meaning” the user can download as PDF
+
+### Interactive & Emotional Features
+- Every major thinker gets a minimalist portrait card that flips to reveal a key quote + 3-minute audio summary (use placeholder <audio> with calm voice)
+- Timeline of Western thought (horizontal scrollable SVG)
+- “Compare Two Thinkers” tool (drag Sartre vs Epictetus, Erasmus vs Nietzsche, etc.)
+- Highlight any quote → floating “Save to my journal” button → stored in localStorage
+- Reading mode with sepia background, focus mode, font size slider
+- On completing the capstone: canvas-confetti + calming music snippet
+
+### Technical Excellence (same high bar)
+- Perfect semantic HTML5 + ARIA labels  
+- BEM or logical CSS naming, mobile-first, container queries  
+- Zero console errors, fast loading  
+- All quotes and excerpts properly attributed with publication year
+
+### Output Format
+Return clearly labeled code blocks:
+```html
+index.html
+CSSstyles.css
+JavaScriptscript.js
+(and any tiny additional files: prism.css, prism.js, confetti.min.js, optional audio files as data URIs or placeholders)
+The final site must feel like walking through a quiet cathedral of ideas — profound, beautiful, slightly melancholic, ultimately hopeful. When someone finishes it, they should feel they have truly wrestled with the deepest questions of existence and come out braver, clearer, and kinder.
+Make it the most soulful digital philosophy experience ever created.
