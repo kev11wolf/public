@@ -1,0 +1,1103 @@
+<!DOCTYPE html> <!-- Defines the document type as HTML5 -->
+<html lang="en"> <!-- Sets the language of the page to English -->
+<head> <!-- Head section: contains metadata and references -->
+  <meta charset="UTF-8" /> <!-- Specifies the character encoding for the document -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/> <!-- Sets the viewport for responsive design -->
+  <title>P6 Offline Viewer (Spin-off)</title> <!-- Page title -->
+
+  <!-- Bootstrap 5 CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  /> <!-- Links to the Bootstrap CSS for styling -->
+
+  <!-- PapaParse for CSV parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script> <!-- Links to PapaParse library to handle CSV data -->
+
+  <!-- Bootstrap Icons (for optional icons, e.g. About icon) -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+  /> <!-- Links to Bootstrap Icons for various icon usage -->
+
+  <style>
+    /* Internal CSS for page styling */
+
+    /* 
+      Updated root palette to a sleeker, neutral theme while retaining
+      the dark-mode logic further below.
+    */
+    :root {
+      --primary-color: #222831;    /* Dark, sleek neutral */
+      --secondary-color: #393E46;  /* Secondary shade of neutral gray */
+      --accent-color: #9CA3AF;     /* Subtle accent color */
+      --bg-color: #EEEEEE;         /* Light neutral background */
+      --white-color: #FFFFFF;      /* White text or backgrounds */
+      --dark-background: #1E1E1E;  /* Dark mode background */
+      --dark-card-bg: #2C2C2C;     /* Dark mode card background */
+      --dark-text-color: #DCDCDC;  /* Dark mode text color */
+      --hover-color: #E5E7EB;      /* Hover highlight */
+    }
+
+    /* Expanded dark mode styling. 
+       These classes ensure we can transform the UI to dark mode 
+       with minimal color conflicts.
+    */
+    body.dark-mode {
+      background-color: var(--dark-background);
+      color: var(--dark-text-color);
+    }
+    body.dark-mode .navbar {
+      background-color: var(--dark-card-bg) !important;
+    }
+    body.dark-mode .card {
+      background-color: var(--dark-card-bg) !important;
+      color: var(--dark-text-color) !important;
+    }
+    body.dark-mode .table-hover tbody tr:hover {
+      background-color: #444 !important;
+    }
+    body.dark-mode .table-light {
+      background-color: #555 !important;
+      color: var(--dark-text-color) !important;
+    }
+    body.dark-mode .spinner-border.text-secondary {
+      color: var(--dark-text-color) !important;
+    }
+    body.dark-mode .bg-primary,
+    body.dark-mode .bg-warning,
+    body.dark-mode .bg-success,
+    body.dark-mode .bg-info,
+    body.dark-mode .bg-dark {
+      background-color: #444 !important;
+      color: var(--dark-text-color) !important;
+    }
+    body.dark-mode .btn,
+    body.dark-mode .btn-sm {
+      color: var(--dark-text-color) !important;
+    }
+    body.dark-mode .activity-card:hover {
+      background-color: #555 !important;
+    }
+
+    /*
+      Base body styling: updated background
+      color for a neutral, modern look. 
+      Retains animated transitions.
+    */
+    body {
+      background-color: var(--bg-color);
+      font-size: 0.9rem;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* Navbar: refined color for a production-ready look. */
+    .navbar {
+      margin-bottom: 1rem;
+      background-color: var(--primary-color) !important;
+    }
+    .navbar-brand {
+      color: var(--white-color) !important;
+    }
+
+    /* Cards: 90% viewport width, centered. */
+    .card {
+      width: 90vw;
+      margin: 0 auto;
+      margin-bottom: 1rem;
+      border: none;
+      border-radius: 8px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .card-body {
+      padding: 0.75rem;
+      background-color: var(--white-color);
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .card-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* Log container for messages or tips. */
+    .log-container {
+      max-height: 150px;
+      overflow-y: auto;
+      background: #f1f1f1;
+      padding: 8px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+
+    /* Activity card hover effect. */
+    .activity-card {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .activity-card:hover {
+      background-color: var(--hover-color);
+    }
+
+    /* Buttons, filters, etc. with slight hover styling. */
+    .btn:hover,
+    .filter-input:hover {
+      opacity: 0.95;
+    }
+
+    /* Search results container with scroll. */
+    .search-results {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    /* Predecessor/Successor tables. */
+    .relation-table {
+      table-layout: fixed;
+      width: 100%;
+      max-width: 100%;
+      cursor: pointer;
+    }
+    .relation-table th,
+    .relation-table td {
+      font-size: 0.8rem;
+      padding: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: background-color 0.2s ease;
+    }
+    .relation-table th i {
+      font-size: 0.7rem;
+      opacity: 0.6;
+      margin-left: 4px;
+    }
+
+    /* Fixed column widths to keep display consistent. */
+    .relation-table th:nth-child(1),
+    .relation-table td:nth-child(1) {
+      width: 50px;
+    }
+    .relation-table th:nth-child(2),
+    .relation-table td:nth-child(2) {
+      width: 150px;
+    }
+    .relation-table th:nth-child(3),
+    .relation-table td:nth-child(3) {
+      width: 80px;
+    }
+    .relation-table th:nth-child(4),
+    .relation-table td:nth-child(4) {
+      width: 80px;
+    }
+    .relation-table th:nth-child(5),
+    .relation-table td:nth-child(5) {
+      width: 100px;
+    }
+    .relation-table th:nth-child(6),
+    .relation-table td:nth-child(6) {
+      width: 70px;
+    }
+    .relation-table th:nth-child(7),
+    .relation-table td:nth-child(7) {
+      width: 90px;
+    }
+    .relation-table th:nth-child(8),
+    .relation-table td:nth-child(8) {
+      width: 100px;
+    }
+
+    /* Filter input styling for tables. */
+    .filter-input {
+      width: 100%;
+      margin-bottom: 6px;
+      font-size: 0.8rem;
+    }
+
+    /* Spinner hidden by default, shown when parsing CSV. */
+    #csvLoadingSpinner {
+      display: none;
+    }
+
+    /*
+      Color coding for Activity Type (grey/green).
+      Classes used in JavaScript to color rows.
+    */
+    .type-start-milestone,
+    .type-finish-milestone,
+    .type-loe {
+      background-color: #d3d3d3 !important; /* light grey highlight */
+    }
+    .type-task-dependent {
+      background-color: #d2f2d2 !important; /* light green highlight */
+    }
+  </style> <!-- End of internal style block -->
+</head> <!-- End of head section -->
+
+<body> <!-- Body section starts -->
+
+  <!-- Navigation bar -->
+  <nav
+    class="navbar navbar-expand-lg navbar-dark"
+    style="background-color: var(--primary-color);"
+  >
+    <div class="container-fluid"> <!-- Wrapper for navbar content -->
+      <!-- Inline SVG as logo -->
+      <svg
+        style="max-height: 40px; margin-right: 8px;"
+        viewBox="0 0 24 24"
+        fill="white"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M19 3H18V1H16V3H8V1H6V3H5C3.897 3 3 3.897 3 5V21C3 22.103 3.897 23 5 23H19C20.103 23 21 22.103 21 21V5C21 3.897 20.103 3 19 3ZM19 21H5V8H19V21Z"
+        />
+      </svg>
+      <span class="navbar-brand" style="padding-top: 0;">P6 Offline Viewer</span>
+      <!-- Brand name/title in the navbar -->
+
+      <div class="ms-auto d-flex align-items-center">
+        <!-- Right-aligned buttons -->
+        <button id="aboutBtn" class="btn btn-secondary btn-sm me-2">
+          <i class="bi bi-info-circle"></i>
+          About
+        </button> <!-- Button to show an About alert -->
+
+        <button id="darkModeBtn" class="btn btn-danger btn-sm">
+          Dark Mode
+        </button> <!-- Button to toggle dark mode -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- Single row / column for main content. Cards are 90% wide (see .card rules). -->
+  <div class="row g-3">
+    <div class="col-12">
+      <!-- 1) Upload Section -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h6 class="mb-0">1. Upload Schedule (CSV)</h6>
+        </div>
+        <div class="card-body">
+          <input
+            type="file"
+            id="csvUpload"
+            accept=".csv"
+            class="form-control form-control-sm"
+            aria-label="Upload your schedule CSV file here to begin"
+          /> <!-- File input for CSV upload -->
+          <small class="text-muted">
+            Headers: Activity ID, Activity Name, Start, Finish, Predecessors, Predecessor Details...
+          </small>
+          <div id="csvLoadingSpinner" class="text-center my-2">
+            <!-- Spinner shown during CSV parse -->
+            <div class="spinner-border text-secondary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="small text-muted">Parsing CSV data...</p>
+          </div>
+        </div>
+      </div>
+      <!-- End Upload Section -->
+
+      <!-- 2) Search for an Activity -->
+      <div class="card shadow-sm" id="searchSection" style="display:none;">
+        <div class="card-header bg-success text-white">
+          <h6 class="mb-0">2. Search for an Activity</h6>
+        </div>
+        <div class="card-body">
+          <input
+            type="text"
+            id="activitySearch"
+            class="form-control form-control-sm mb-2"
+            placeholder="Search ID or Name..."
+            aria-label="Search activities by ID or name"
+          /> <!-- Search box -->
+          <div id="searchResults" class="search-results border p-2 bg-white small">
+            <!-- Populated with matching activities -->
+          </div>
+        </div>
+      </div>
+      <!-- End Search Section -->
+
+      <!-- 3) Critical Path Tracer Card -->
+      <div class="card shadow-sm" id="cpTracer" style="display:none;">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">3. Critical Path Tracer</h6>
+        </div>
+        <div class="card-body">
+          <!-- Table for showing the built CP -->
+          <table class="table table-sm table-hover" id="cpTable">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Start</th>
+                <th>Finish</th>
+                <th>Total Float</th>
+                <th></th> <!-- remove button column -->
+              </tr>
+            </thead>
+            <tbody id="cpTableBody"></tbody> <!-- CP Rows appended here -->
+          </table>
+
+          <!-- Buttons to manage the critical path array -->
+          <button id="clearCPBtn" class="btn btn-warning btn-sm">Clear CP</button>
+          <button id="resetCPBtn" class="btn btn-secondary btn-sm">Reset to Start</button>
+        </div>
+      </div>
+      <!-- End CP Tracer Card -->
+
+      <!-- 4) Predecessors & Successors -->
+      <div class="card shadow-sm" id="detailSection" style="display:none;">
+        <div class="card-header bg-warning text-dark">
+          <h6 class="mb-0">4. View Predecessors & Successors</h6>
+        </div>
+        <div class="card-body">
+          <!-- Predecessors on top -->
+          <h6>Predecessors</h6>
+          <input
+            type="text"
+            placeholder="Filter Predecessors..."
+            class="filter-input"
+            id="predFilter"
+          /> <!-- Filter for predecessors -->
+          <div id="predecessorList"></div> <!-- Populated with predecessor rows -->
+
+          <!-- Successors below -->
+          <h6 class="mt-3">Successors</h6>
+          <input
+            type="text"
+            placeholder="Filter Successors..."
+            class="filter-input"
+            id="succFilter"
+          /> <!-- Filter for successors -->
+          <div id="successorList"></div> <!-- Populated with successor rows -->
+        </div>
+      </div>
+      <!-- End detailSection -->
+
+      <!-- 
+        Gantt Section (REMOVED PER REQUEST):
+        Entire card for Timeline Overview (ganttSection) 
+        has been removed, along with references in JS.
+      -->
+
+      <!-- Log Card: remains at bottom -->
+      <div class="card shadow-sm" id="logCard">
+        <div class="card-header bg-dark text-white">
+          <h6 class="mb-0">Log</h6>
+        </div>
+        <div class="card-body p-0">
+          <pre id="log" class="log-container m-0 p-2"></pre>
+        </div>
+      </div>
+      <!-- End Log Card -->
+    </div>
+  </div>
+
+  <!-- Bootstrap JS bundle -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  ></script> <!-- Bootstrap JavaScript Bundle -->
+
+  <script>
+    // ---------------------------------------------------
+    // Global Variables and DOM Element References
+    // ---------------------------------------------------
+    let activities = []; // Will hold all parsed activities from the CSV
+    let activityMap = {}; // Maps Activity ID -> activity object
+    let selectedActivity = null; // Currently selected activity in the UI
+    let criticalPath = []; // Array for building the CP
+
+    // Sorting states for Predecessors/Successors
+    let sortState = {
+      pred: { field: 'Finish', asc: false },
+      succ: { field: 'Finish', asc: false }
+    };
+
+    // References to DOM elements
+    const csvUpload = document.getElementById('csvUpload'); // CSV upload input
+    const searchSection = document.getElementById('searchSection'); // Search card
+    const detailSection = document.getElementById('detailSection'); // Predecessor/Successor card
+    const cpTracer = document.getElementById('cpTracer'); // CP Tracer card
+    const activitySearch = document.getElementById('activitySearch'); // Search text input
+    const searchResults = document.getElementById('searchResults'); // Container for search matches
+    const predecessorList = document.getElementById('predecessorList'); // Table area for predecessors
+    const successorList = document.getElementById('successorList'); // Table area for successors
+    const predFilter = document.getElementById('predFilter'); // Filter input for predecessors
+    const succFilter = document.getElementById('succFilter'); // Filter input for successors
+    const log = document.getElementById('log'); // Log area
+    const csvLoadingSpinner = document.getElementById('csvLoadingSpinner'); // Spinner shown while parsing
+
+    // CP Table references
+    const cpTableBody = document.getElementById('cpTableBody'); // Body of CP table
+    const clearCPBtn = document.getElementById('clearCPBtn'); // Button to clear CP
+    const resetCPBtn = document.getElementById('resetCPBtn'); // Button to reset CP to start
+
+    // About / Dark Mode buttons
+    const aboutBtn = document.getElementById('aboutBtn'); // About button
+    const darkModeBtn = document.getElementById('darkModeBtn'); // Dark mode toggle
+
+    // ---------------------------------------------------
+    // Utility / Logging / Date parsing
+    // ---------------------------------------------------
+
+    // Adds a message to the log container, with optional TIP
+    function addLog(message, tip = '') {
+      const timestamp = new Date().toLocaleTimeString();
+      const logLine = tip
+        ? `[${timestamp}] ${message}\n TIP: ${tip}\n`
+        : `[${timestamp}] ${message}\n`;
+      log.innerHTML += logLine;
+      log.scrollTop = log.scrollHeight; // Auto-scroll log
+    }
+
+    // Cleans up date strings from CSV
+    function cleanDate(dateStr) {
+      if (!dateStr) return '';
+      return dateStr.toString().replace(/ A/g, '').replace(/\*/g, '').trim();
+    }
+
+    // Parses a date string into a JS Date object, returns null if invalid
+    function parseDate(dateStr) {
+      if (!dateStr) return null;
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    // Validates CSV columns for required headers
+    function validateColumns(data) {
+      const requiredColumns = [
+        'Activity ID',
+        'Start',
+        'Finish',
+        'Predecessors',
+        'Predecessor Details'
+      ];
+      if (data.length === 0) {
+        addLog('No data found in CSV.', 'Please check your file and try again.');
+        alert('CSV is empty. Please upload a valid file.');
+        return false;
+      }
+      const firstRow = Object.keys(data[0]);
+      const missingColumns = requiredColumns.filter(col => !firstRow.includes(col));
+      if (missingColumns.length > 0) {
+        addLog(
+          'Missing columns: ' + missingColumns.join(', '),
+          'Make sure CSV has all required columns.'
+        );
+        alert('Some required columns are missing: ' + missingColumns.join(', '));
+        return false;
+      }
+      return true;
+    }
+
+    // Finds relationship type by scanning "Predecessor Details"
+    // for the matching activity ID
+    function parseRelationshipType(sourceAct, targetID) {
+      const detailStr = sourceAct['Predecessor Details'] || '';
+      const chunks = detailStr.split(';').map(x => x.trim()).filter(Boolean);
+      for (const c of chunks) {
+        const parts = c.split(':').map(x => x.trim());
+        if (parts.length >= 2) {
+          const pID = parts[0];
+          const rel = parts[1];
+          if (pID === targetID) {
+            return rel;
+          }
+        }
+      }
+      return '—';
+    }
+
+    // Sorts an array of activities by the chosen field, ascending or descending
+    function sortActivities(arr, field, ascending) {
+      arr.sort((a, b) => {
+        const valA = (a[field] || '').toLowerCase();
+        const valB = (b[field] || '').toLowerCase();
+
+        // Handle numeric or date fields
+        if (field === 'Total Float') {
+          const numA = parseFloat(valA) || 0;
+          const numB = parseFloat(valB) || 0;
+          return ascending ? numA - numB : numB - numA;
+        }
+        if (field === 'Start' || field === 'Finish') {
+          const dateA = parseDate(valA) || 0;
+          const dateB = parseDate(valB) || 0;
+          return ascending ? dateA - dateB : dateB - dateA;
+        }
+
+        // Default string comparison
+        if (valA < valB) return ascending ? -1 : 1;
+        if (valA > valB) return ascending ? 1 : -1;
+        return 0;
+      });
+    }
+
+    // Filters an array of activities by user query
+    function filterActivities(arr, query) {
+      if (!query) return arr;
+      const q = query.toLowerCase();
+      return arr.filter(act => {
+        return Object.values(act).some(val => {
+          if (!val) return false;
+          return val.toString().toLowerCase().includes(q);
+        });
+      });
+    }
+
+    // Returns a class name to color code a row by activity type
+    function getRowClassByType(actType) {
+      if (!actType) return '';
+      const lower = actType.toLowerCase();
+      if (
+        lower.includes('start milestone') ||
+        lower.includes('finish milestone') ||
+        lower.includes('loe')
+      ) {
+        return 'type-loe'; // treat these as grey
+      }
+      if (lower.includes('task dependent')) {
+        return 'type-task-dependent';
+      }
+      return '';
+    }
+
+    // Returns a background color for a cell based on total float range
+    function getFloatShading(tf, minTF, maxTF) {
+      if (minTF === maxTF) {
+        // no gradient if only one item or same value
+        return '';
+      }
+      const val = parseFloat(tf);
+      if (isNaN(val)) return '';
+
+      // ratio from 0..1
+      let ratio = (val - minTF) / (maxTF - minTF);
+
+      // invert so smaller float => more red
+      ratio = 1 - ratio;
+
+      // simple approach: saturate from white => red
+      const R = 255; // always red channel
+      const G = Math.floor(255 - 255 * ratio);
+      const B = Math.floor(255 - 255 * ratio);
+
+      return `rgb(${R}, ${G}, ${B}, 0.7)`;
+    }
+
+    // ---------------------------------------------------
+    // CSV Upload and Parsing
+    // ---------------------------------------------------
+    csvUpload.addEventListener('change', (e) => {
+      // When user selects a CSV
+      const file = e.target.files[0];
+      if (!file) return; // no file
+
+      addLog(`File selected: ${file.name}`, 'Wait for parsing, then search for an activity.');
+      csvLoadingSpinner.style.display = 'block'; // show spinner
+
+      // Use PapaParse to read CSV
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        worker: true,
+        complete: (result) => {
+          // Called when parsing is done
+          csvLoadingSpinner.style.display = 'none'; // hide spinner
+
+          if (result.errors.length) {
+            // If any parse errors occurred
+            addLog(
+              `Parse errors: ${result.errors.map(er => er.message).join('; ')}`,
+              'Check CSV format or try another file.'
+            );
+            alert('CSV parsing failed. Check log.');
+            return;
+          }
+
+          // Validate required columns
+          if (!validateColumns(result.data)) return;
+
+          // Clean dates and prepare data
+          activities = result.data.map(act => ({
+            ...act,
+            'Start': cleanDate(act['Start']),
+            'Finish': cleanDate(act['Finish'])
+          }));
+
+          // Build ID->activity map
+          activityMap = {};
+          activities.forEach(act => {
+            const rawID = act['Activity ID'] ? act['Activity ID'] : '';
+            const id = rawID.trim();
+            if (id) {
+              activityMap[id] = act;
+            }
+          });
+
+          addLog(
+            `Loaded ${activities.length} activities.`,
+            'Search for an Activity in Step 2.'
+          );
+
+          // Show search card, hide the rest until an activity is chosen
+          searchSection.style.display = 'block';
+          cpTracer.style.display = 'none';
+          detailSection.style.display = 'none';
+          // Gantt removed: no references to it
+        },
+        error: (err) => {
+          // Error callback
+          csvLoadingSpinner.style.display = 'none';
+          addLog(`Parse error: ${err}`, 'Check your CSV file and try again.');
+          alert('Failed to parse CSV.');
+        }
+      });
+    });
+
+    // ---------------------------------------------------
+    // Searching for Activities
+    // ---------------------------------------------------
+    activitySearch.addEventListener('input', () => {
+      // As user types, filter activities
+      const query = activitySearch.value.trim().toLowerCase();
+      searchResults.innerHTML = ''; // clear old matches
+      if (!query) return;
+
+      // Filter by ID or Name
+      const matches = activities.filter(act => {
+        const id = act['Activity ID'] ? act['Activity ID'].toLowerCase() : '';
+        const name = act['Activity Name'] ? act['Activity Name'].toLowerCase() : '';
+        return (id.includes(query) || name.includes(query));
+      });
+
+      if (matches.length === 0) {
+        searchResults.innerHTML = '<div class="text-muted p-1">No activities found.</div>';
+        return;
+      }
+
+      // Build result list
+      matches.forEach(act => {
+        const div = document.createElement('div');
+        div.className = 'activity-card p-1 border-bottom small';
+        const idVal = act['Activity ID'] || 'N/A';
+        const nameVal = act['Activity Name'] || 'N/A';
+        div.innerHTML = `<strong>${idVal}</strong> - ${nameVal}`;
+        // On click, user selects that activity
+        div.onclick = () => selectActivity(act);
+        searchResults.appendChild(div);
+      });
+
+      addLog(
+        `Search results updated for "${query}".`,
+        'Click an activity to begin building a CP and see Predecessors/Successors.'
+      );
+    });
+
+    // ---------------------------------------------------
+    // Selecting an Activity
+    // ---------------------------------------------------
+    function selectActivity(act) {
+      // Called when user clicks on a search result or a row via double-click
+      selectedActivity = act;
+      addLog(
+        `Activity selected: ${act['Activity ID']}`,
+        'Now a CP can be built; see Predecessors and Successors below.'
+      );
+
+      // Clear search UI
+      activitySearch.value = '';
+      searchResults.innerHTML = '';
+
+      // Reset CP to just this activity
+      criticalPath = [act];
+      updateCPUI();
+
+      // Show CP Tracer & detail
+      searchSection.style.display = 'block';
+      cpTracer.style.display = 'block';
+      detailSection.style.display = 'block';
+
+      // Gantt removed: was previously `ganttSection.style.display = 'block'; drawGanttOverview(act);`
+      // Show Predecessors & Successors
+      showPredecessors(act);
+      showSuccessors(act);
+    }
+
+    // ---------------------------------------------------
+    // Critical Path Tracer Logic
+    // ---------------------------------------------------
+    function updateCPUI() {
+      // Rebuild the CP table
+      cpTableBody.innerHTML = ''; // clear
+      criticalPath.forEach((cpAct, idx) => {
+        const tr = document.createElement('tr');
+
+        // Retrieve values from the activity object
+        const idVal = cpAct['Activity ID'] || '—';
+        const nameVal = cpAct['Activity Name'] || '—';
+        const startVal = cpAct['Start'] || '—';
+        const finishVal = cpAct['Finish'] || '—';
+        const tfVal = cpAct['Total Float'] || '—';
+
+        // Build row HTML
+        tr.innerHTML = `
+          <td><strong>${idVal}</strong></td>
+          <td>${nameVal}</td>
+          <td>${startVal}</td>
+          <td>${finishVal}</td>
+          <td>${tfVal}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-danger" onclick="removeFromCP(${idx})"> X </button>
+          </td>
+        `;
+
+        // Color code row by activity type
+        const actType = (cpAct['Activity Type'] || '').toLowerCase();
+        const rowClass = getRowClassByType(actType);
+        if (rowClass) {
+          tr.classList.add(rowClass);
+        }
+
+        cpTableBody.appendChild(tr);
+      });
+    }
+
+    // Remove an entry from the CP array
+    window.removeFromCP = (index) => {
+      const removed = criticalPath.splice(index, 1);
+      addLog(`Removed from CP: ${removed[0]['Activity ID']}`);
+      updateCPUI();
+    };
+
+    // Clear CP entirely
+    clearCPBtn.addEventListener('click', () => {
+      criticalPath = [];
+      addLog('Cleared entire CP.', 'Re-select an activity or reset to start if needed.');
+      updateCPUI();
+    });
+
+    // Reset CP to the originally selected activity
+    resetCPBtn.addEventListener('click', () => {
+      if (selectedActivity) {
+        criticalPath = [selectedActivity];
+        addLog('Reset CP to initial selected activity.', 'You can add more from Predecessors again.');
+        updateCPUI();
+      }
+    });
+
+    // Adds an activity to CP if SHIFT-clicked in the predecessor/successor lists
+    function addActivityToCP(act) {
+      // If it's already in CP, skip
+      if (criticalPath.some(a => a['Activity ID'] === act['Activity ID'])) {
+        alert('Already in CP.');
+        return;
+      }
+      criticalPath.push(act);
+      addLog(`Added to CP: ${act['Activity ID']}`);
+      updateCPUI();
+    }
+
+    // ---------------------------------------------------
+    // Show Predecessors
+    // ---------------------------------------------------
+    function showPredecessors(currentAct) {
+      // Clear display
+      predecessorList.innerHTML = '';
+
+      // Get raw predecessor IDs from CSV
+      const rawPreds = (currentAct['Predecessors'] || '')
+        .split(/[,;]/)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      // Only valid if ID is in the map
+      let validPreds = rawPreds.filter(id => activityMap[id]);
+      if (validPreds.length === 0) {
+        predecessorList.innerHTML = '<p class="text-muted small">No predecessors.</p>';
+        return;
+      }
+
+      // Convert to array of predecessor activity objects
+      let predArray = validPreds.map(pid => activityMap[pid]);
+
+      // Filter by user input
+      const filterVal = predFilter.value.trim().toLowerCase();
+      predArray = filterActivities(predArray, filterVal);
+
+      // Sort
+      const field = sortState.pred.field;
+      const asc = sortState.pred.asc;
+      sortActivities(predArray, field, asc);
+
+      // Determine min & max total float
+      let floats = predArray.map(p => parseFloat(p['Total Float']) || 0);
+      const minTF = Math.min(...floats);
+      const maxTF = Math.max(...floats);
+
+      // Build table
+      const table = document.createElement('table');
+      table.className = 'table table-sm table-bordered relation-table table-hover';
+      table.innerHTML = `
+        <thead class="table-light">
+          <tr>
+            <th data-col="Activity ID">ID <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Activity Name">Name <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Start">Start <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Finish">Finish <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Primary Constraint">Primary Constraint <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Total Float">Total Float <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Activity Type">Activity Type <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Relationship Type">Relationship Type <i class="bi bi-arrows-expand"></i></th>
+          </tr>
+        </thead>
+        <tbody id="predTableBody"></tbody>
+      `;
+      const tbody = table.querySelector('#predTableBody');
+
+      // Create rows
+      predArray.forEach(predAct => {
+        const row = document.createElement('tr');
+        row.className = 'activity-card';
+
+        // Double-click => re-select that predecessor
+        row.ondblclick = () => selectActivity(predAct);
+
+        // SHIFT-click => add to CP
+        row.onclick = (ev) => {
+          if (ev.shiftKey) {
+            addActivityToCP(predAct);
+          }
+        };
+
+        // Retrieve fields
+        const idVal = predAct['Activity ID'] || '—';
+        const nameVal = predAct['Activity Name'] || '—';
+        const startVal = predAct['Start'] || '—';
+        const finishVal = predAct['Finish'] || '—';
+        const pcVal = predAct['Primary Constraint'] || '—';
+        const tfVal = predAct['Total Float'] || '—';
+        const typeVal = predAct['Activity Type'] || '—';
+        const relType = parseRelationshipType(currentAct, idVal);
+
+        // Fill row
+        row.innerHTML = `
+          <td><strong>${idVal}</strong></td>
+          <td>${nameVal}</td>
+          <td>${startVal}</td>
+          <td>${finishVal}</td>
+          <td>${pcVal}</td>
+          <td>${tfVal}</td>
+          <td>${typeVal}</td>
+          <td>${relType}</td>
+        `;
+
+        // Apply color coding for activity type
+        const rowClass = getRowClassByType(typeVal);
+        if (rowClass) {
+          row.classList.add(rowClass);
+        }
+
+        // Shade the Total Float cell
+        const cellTF = row.querySelector('td:nth-child(6)');
+        if (cellTF && tfVal !== '—') {
+          cellTF.style.backgroundColor = getFloatShading(
+            parseFloat(tfVal),
+            minTF,
+            maxTF
+          );
+        }
+
+        tbody.appendChild(row);
+      });
+
+      // Append table to predecessorList
+      predecessorList.appendChild(table);
+
+      // Enable sorting by clicking headers
+      const headers = table.querySelectorAll('th[data-col]');
+      headers.forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.getAttribute('data-col');
+          if (sortState.pred.field === col) {
+            sortState.pred.asc = !sortState.pred.asc;
+          } else {
+            sortState.pred.field = col;
+            sortState.pred.asc = true;
+          }
+          showPredecessors(currentAct);
+        });
+      });
+    }
+
+    // ---------------------------------------------------
+    // Show Successors
+    // ---------------------------------------------------
+    function showSuccessors(currentAct) {
+      // Clear any existing table
+      successorList.innerHTML = '';
+
+      // Get all activities whose Predecessors contain currentAct's ID
+      const currentID = currentAct['Activity ID'] || '';
+      const successors = activities.filter(act => {
+        const rawPreds = (act['Predecessors'] || '')
+          .split(/[,;]/)
+          .map(s => s.trim());
+        return rawPreds.includes(currentID);
+      });
+
+      if (successors.length === 0) {
+        successorList.innerHTML = '<p class="text-muted small">No successors.</p>';
+        return;
+      }
+
+      let succArray = successors; // potential successors
+
+      // Filter by user input
+      const filterVal = succFilter.value.trim().toLowerCase();
+      succArray = filterActivities(succArray, filterVal);
+
+      // Sort
+      const field = sortState.succ.field;
+      const asc = sortState.succ.asc;
+      sortActivities(succArray, field, asc);
+
+      // Determine min & max float
+      let floats = succArray.map(s => parseFloat(s['Total Float']) || 0);
+      const minTF = Math.min(...floats);
+      const maxTF = Math.max(...floats);
+
+      // Build table
+      const table = document.createElement('table');
+      table.className = 'table table-sm table-bordered relation-table table-hover';
+      table.innerHTML = `
+        <thead class="table-light">
+          <tr>
+            <th data-col="Activity ID">ID <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Activity Name">Name <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Start">Start <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Finish">Finish <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Primary Constraint">Primary Constraint <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Total Float">Total Float <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Activity Type">Activity Type <i class="bi bi-arrows-expand"></i></th>
+            <th data-col="Relationship Type">Relationship Type <i class="bi bi-arrows-expand"></i></th>
+          </tr>
+        </thead>
+        <tbody id="succTableBody"></tbody>
+      `;
+      const tbody = table.querySelector('#succTableBody');
+
+      // Populate rows
+      succArray.forEach(succAct => {
+        const row = document.createElement('tr');
+        row.className = 'activity-card';
+
+        // Double-click => re-select as current
+        row.ondblclick = () => selectActivity(succAct);
+
+        // SHIFT-click => add to CP
+        row.onclick = (ev) => {
+          if (ev.shiftKey) {
+            addActivityToCP(succAct);
+          }
+        };
+
+        const idVal = succAct['Activity ID'] || '—';
+        const nameVal = succAct['Activity Name'] || '—';
+        const startVal = succAct['Start'] || '—';
+        const finishVal = succAct['Finish'] || '—';
+        const pcVal = succAct['Primary Constraint'] || '—';
+        const tfVal = succAct['Total Float'] || '—';
+        const typeVal = succAct['Activity Type'] || '—';
+        const relType = parseRelationshipType(succAct, currentID);
+
+        row.innerHTML = `
+          <td><strong>${idVal}</strong></td>
+          <td>${nameVal}</td>
+          <td>${startVal}</td>
+          <td>${finishVal}</td>
+          <td>${pcVal}</td>
+          <td>${tfVal}</td>
+          <td>${typeVal}</td>
+          <td>${relType}</td>
+        `;
+
+        // Color by activity type
+        const rowClass = getRowClassByType(typeVal);
+        if (rowClass) {
+          row.classList.add(rowClass);
+        }
+
+        // Float shading
+        const cellTF = row.querySelector('td:nth-child(6)');
+        if (cellTF && tfVal !== '—') {
+          cellTF.style.backgroundColor = getFloatShading(
+            parseFloat(tfVal),
+            minTF,
+            maxTF
+          );
+        }
+
+        tbody.appendChild(row);
+      });
+
+      // Append table to successorList
+      successorList.appendChild(table);
+
+      // Sorting on header click
+      const headers = table.querySelectorAll('th[data-col]');
+      headers.forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.getAttribute('data-col');
+          if (sortState.succ.field === col) {
+            sortState.succ.asc = !sortState.succ.asc;
+          } else {
+            sortState.succ.field = col;
+            sortState.succ.asc = true;
+          }
+          showSuccessors(currentAct);
+        });
+      });
+    }
+
+    // Re-render on filter input
+    predFilter.addEventListener('input', () => {
+      if (selectedActivity) showPredecessors(selectedActivity);
+    });
+    succFilter.addEventListener('input', () => {
+      if (selectedActivity) showSuccessors(selectedActivity);
+    });
+
+    // ---------------------------------------------------
+    // About / Dark Mode
+    // ---------------------------------------------------
+    aboutBtn.addEventListener('click', () => {
+      // Show a simple alert with usage tips
+      alert(
+        "P6 Offline Viewer\n\n" +
+        "1. Upload a CSV containing your schedule.\n" +
+        "2. Search for an activity by ID or Name.\n" +
+        "3. Build a CP in the 'Critical Path Tracer' (Shift-click a predecessor/successor row to add).\n" +
+        "4. Double-click any row to jump to that activity.\n" +
+        "5. Filter or sort columns. Negative or smallest total float is darkest red.\n" +
+        "6. Enjoy!"
+      );
+      addLog('Opened About info.');
+    });
+
+    darkModeBtn.addEventListener('click', () => {
+      // Toggles dark mode by adding/removing the .dark-mode class on body
+      document.body.classList.toggle('dark-mode');
+      addLog('Toggled Dark Mode.', 'Light <-> Dark theme switched.');
+    });
+  </script> <!-- End of main script -->
+</body> <!-- End of body -->
+</html>
