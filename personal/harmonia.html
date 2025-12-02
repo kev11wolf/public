@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Harmonia – Key & Mode Explorer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    :root { --primary-glow: #0d6efd; }
+    body { transition: background 0.4s ease, color 0.4s ease; }
+    .card { transition: transform 0.2s, box-shadow 0.3s; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 20px 30px rgba(0,0,0,0.15) !important; }
+    .fretboard { user-select: none; }
+    .dot { transition: all 0.2s; }
+    .dot:hover { transform: scale(1.3); }
+    .staff-container svg { width: 100%; height: auto; }
+    .chord-card { cursor: pointer; }
+    .mode-btn.active { background: var(--bs-primary); color: white; }
+    .progression-step { opacity: 0.6; transition: all 0.3s; }
+    .progression-step.active { opacity: 1; transform: scale(1.1); font-weight: bold; }
+    .staff-line { stroke: #000; stroke-width: 1; } /* Ensure staff lines are visible in black */
+    .note-head { fill: #000; }
+    .ledger { stroke: #000; stroke-width: 1; }
+  </style>
+</head>
+<body class="bg-body text-body">
+
+<div class="container py-5">
+  <header class="text-center mb-5">
+    <h1 class="display-4 fw-bold">Harmonia</h1>
+    <p class="lead">Explore Keys, Modes, Chords & Real Songs</p>
+    <button id="themeToggle" class="btn btn-outline-secondary position-fixed top-0 end-0 m-3 z-3">
+      <i class="bi bi-moon-stars-fill"></i>
+    </button>
+  </header>
+
+  <!-- Controls -->
+  <div class="row g-4 mb-5">
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Root Key</h5>
+          <select id="rootSelect" class="form-select form-select-lg"></select>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Mode</h5>
+          <div class="btn-group flex-wrap" role="group" id="modeButtons"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scale Info -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <h4 id="scaleName" class="mb-3"></h4>
+      <p id="scaleNotes" class="lead"></p>
+      <p id="modeDescription" class="text-muted"></p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Chords -->
+    <div class="col-xl-7">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Chords in Scale</h5>
+          <button class="btn btn-sm btn-outline-primary" id="playScale">Play Scale</button>
+        </div>
+        <div class="card-body">
+          <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" id="chordContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guitar Fretboard -->
+    <div class="col-xl-5">
+      <div class="card shadow-sm h-100">
+        <div class="card-header"><h5 class="mb-0">Guitar Fretboard</h5></div>
+        <div class="card-body text-center">
+          <svg id="fretboard" width="100%" height="260" viewBox="0 0 800 260" class="fretboard"></svg>
+          <div class="mt-3" id="currentChordName"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grand Staff (Pure SVG - NO EXTERNAL LIB) -->
+  <div class="card mt-4 shadow-sm">
+    <div class="card-header"><h5 class="mb-0" id="staffTitle">Grand Staff – Current Chord</h5></div>
+    <div class="card-body">
+      <div id="staff" class="staff-container">
+        <svg width="100%" height="280" viewBox="0 0 800 280"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Example Progression + Real Song -->
+  <div class="card mt-4 shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Example Progression in <span id="progName"></span></h5>
+      <button class="btn btn-sm btn-success" id="playProgression">Play Progression</button>
+    </div>
+    <div class="card-body">
+      <p class="text-muted small" id="progDesc"></p>
+      <p class="fw-bold text-primary" id="realSongExample"></p>
+      <div class="d-flex flex-wrap gap-3 justify-content-center" id="progressionContainer"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ========== MUSIC THEORY DATA ==========
+/* Array of note names in semitone order */
+const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+/* Modes, each with intervals, a short description, an example progression, and a real-world example. */
+const MODES = [
+  { name: "Ionian (Major)",     intervals: [0,2,4,5,7,9,11], desc: "Bright, happy. The standard major scale.",     prog: "I–IV–V–I",   song: "e.g., 'Let It Be' – C Major" },
+  { name: "Dorian",             intervals: [0,2,3,5,7,9,10], desc: "Minor with a raised 6th. Jazz, folk, rock.",   prog: "i–IV–VII",  song: "e.g., 'Oye Como Va' – A Dorian" },
+  { name: "Phrygian",           intervals: [0,1,3,5,7,8,10], desc: "Spanish/flamenco feel. Minor with flat 2nd.",  prog: "i–bII–bVII", song: "e.g., 'Misirlou' – E Phrygian" },
+  { name: "Lydian",             intervals: [0,2,4,6,7,9,11], desc: "Dreamy, floating. Major with raised 4th.",     prog: "I–II–V",     song: "e.g., 'Flying' (The Beatles) – F Lydian" },
+  { name: "Mixolydian",         intervals: [0,2,4,5,7,9,10], desc: "Major with flat 7th. Blues, rock, folk.",      prog: "I–VII–IV",   song: "e.g., 'Sweet Home Alabama' – G Mixolydian" },
+  { name: "Aeolian (Natural Minor)", intervals: [0,2,3,5,7,8,10], desc: "Sad, melancholic. The natural minor scale.", prog: "i–VI–III–VII", song: "e.g., 'Stairway to Heaven' – A Minor" },
+  { name: "Locrian",            intervals: [0,1,3,5,6,8,10], desc: "Dark, unstable. Rarely used as a tonal center.", prog: "i–bII–bVII",   song: "Rarely used tonally" }
+];
+
+// Chord qualities for the 7 scale degrees in a diatonic context
+const CHORD_QUALITIES = ["", "m", "m", "", "", "m", "dim"];
+
+// Standard guitar tuning from low to high, along with the max fret we consider
+const GUITAR_TUNING = ["E", "B", "G", "D", "A", "E"];
+const FRETS = 5;
+
+// Common chord shapes (root-based) for quick display on fretboard
+const GUITAR_SHAPES = {
+  "C": [0,3,2,0,1,0], "Cm": [0,3,5,5,4,3], "D": [2,2,2,0,3,2], "Dm": [1,2,3,2,1,1],
+  "E": [0,0,1,2,2,0], "Em": [0,0,0,0,2,0], "F": [1,2,3,2,1,1], "G": [3,0,0,0,3,3],
+  "A": [0,0,2,2,2,0], "Am": [0,0,2,2,1,0], "B": [2,2,4,4,4,2], "Bdim": [1,2,3,2,0,1]
+};
+
+// ========== STATE ==========
+let currentRoot = 0;    // Stores the index of currently selected root note
+let currentMode = 0;    // Stores the index of currently selected mode
+
+// ========== DOM Elements ==========
+const rootSelect = document.getElementById("rootSelect");
+const modeButtons = document.getElementById("modeButtons");
+const scaleName = document.getElementById("scaleName");
+const scaleNotes = document.getElementById("scaleNotes");
+const modeDescription = document.getElementById("modeDescription");
+const chordContainer = document.getElementById("chordContainer");
+const currentChordName = document.getElementById("currentChordName");
+const staffTitle = document.getElementById("staffTitle");
+const progressionContainer = document.getElementById("progressionContainer");
+const progName = document.getElementById("progName");
+const progDesc = document.getElementById("progDesc");
+const realSongExample = document.getElementById("realSongExample");
+const playProgressionBtn = document.getElementById("playProgression");
+
+// ========== INITIALIZE ==========
+function init() {
+  // Populate root select dropdown with note names
+  NOTES.forEach((note, i) => {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = note;
+    if (i === 0) opt.selected = true;
+    rootSelect.appendChild(opt);
+  });
+
+  // Create mode buttons dynamically
+  MODES.forEach((mode, i) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn btn-outline-primary mode-btn me-2 mb-2";
+    // Show only the first word (e.g., "Ionian", "Dorian") but retain full name as title
+    btn.textContent = mode.name.split(" ")[0];
+    btn.title = mode.name;
+    btn.onclick = () => setMode(i);
+    modeButtons.appendChild(btn);
+  });
+  // Activate the first mode button by default
+  modeButtons.children[0].classList.add("active");
+
+  // Draw the initial fretboard
+  drawFretboard();
+
+  // Draw an empty staff initially
+  drawEmptyStaff();
+
+  // Handle changes in root selection
+  rootSelect.addEventListener("change", (e) => {
+    currentRoot = parseInt(e.target.value);
+    updateAll();
+  });
+
+  // Play Scale button event
+  document.getElementById("playScale").addEventListener("click", playScale);
+
+  // Play Progression button
+  playProgressionBtn.addEventListener("click", playCurrentProgression);
+
+  // Theme toggle (light/dark)
+  document.getElementById("themeToggle").addEventListener("click", () => {
+    const isDark = document.documentElement.getAttribute("data-bs-theme") === "dark";
+    document.documentElement.setAttribute("data-bs-theme", isDark ? "light" : "dark");
+    document.querySelector("#themeToggle i").classList.toggle("bi-moon-stars-fill");
+    document.querySelector("#themeToggle i").classList.toggle("bi-sun-fill");
+  });
+
+  // Update everything once on load
+  updateAll();
+}
+init();
+
+// ========== CORE LOGIC ==========
+
+/* 
+  Returns the array of notes (indices in 0-11 range) for the current mode 
+  starting at the currently selected root.
+*/
+function getScaleNotes() {
+  return MODES[currentMode].intervals.map(i => (currentRoot + i) % 12);
+}
+
+/* 
+  Helper to get note name from an index (0-11). 
+*/
+function noteName(index) {
+  return NOTES[index % 12];
+}
+
+/*
+  Updates all displayed information whenever root or mode changes.
+*/
+function updateAll() {
+  const scale = getScaleNotes();          // Get note indices in current scale
+  const rootName = noteName(currentRoot); // Name of the root note
+  const mode = MODES[currentMode];        // Current mode data
+
+  // Update top scale info
+  scaleName.textContent = `${rootName} ${mode.name}`;
+  scaleNotes.textContent = scale.map(i => noteName(i)).join(" → ");
+  modeDescription.textContent = mode.desc;
+
+  // Render chord list
+  renderChords(scale);
+
+  // Render example progression
+  renderExampleProgression(scale);
+
+  // Redraw staff lines as empty each time
+  drawEmptyStaff();
+
+  // Highlight the scale on the fretboard
+  highlightScaleOnFretboard(scale);
+}
+
+/*
+  Sets the current mode based on user button click.
+*/
+function setMode(index) {
+  currentMode = index;
+  // Remove 'active' from all mode buttons
+  document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+  // Add 'active' to the clicked mode button
+  modeButtons.children[index].classList.add("active");
+  updateAll();
+}
+
+// ========== CHORD RENDERING ==========
+
+/*
+  Renders chords that belong to the current scale in the UI.
+*/
+function renderChords(scaleNotes) {
+  chordContainer.innerHTML = "";
+
+  // For each degree in the scale, build a triad chord
+  scaleNotes.forEach((noteIdx, degree) => {
+    // Root, third, fifth – within the scale
+    const root = noteIdx;
+    const third = scaleNotes[(degree + 2) % 7];
+    const fifth = scaleNotes[(degree + 4) % 7];
+
+    // Determine chord root name
+    const chordRoot = noteName(root);
+
+    // Identify chord quality based on the diatonic location (simple approach)
+    const quality = degree === 6 ? "dim" : (degree === 1 || degree === 2 || degree === 5) ? "m" : "";
+    const triad = `${chordRoot}${quality}`;
+
+    // Create DOM card for the chord
+    const card = document.createElement("div");
+    card.className = "col";
+    card.innerHTML = `
+      <div class="card chord-card h-100 text-center shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-1">${triad}</h6>
+        </div>
+      </div>
+    `;
+    // When clicking a chord, display it on fretboard and staff
+    card.querySelector(".chord-card").onclick = () => {
+      showChordOnFretboardAndStaff(triad, [root, third, fifth].map(noteName));
+    };
+    chordContainer.appendChild(card);
+  });
+}
+
+// ========== EXAMPLE PROGRESSION + REAL SONG ==========
+
+/* 
+  Converts a single Roman numeral chord symbol (like "I", "i", "bII", etc.)
+  into a 0-based scale degree (0 = I or i, 1 = II or ii, etc.).
+  Handles 'b' (flat) by subtracting one semitone from the scale note.
+*/
+function parseRoman(roman) {
+  // Trim spaces
+  roman = roman.trim();
+
+  // Assume normal offset is 0, but if 'b' is present, offset is -1 semitone
+  let offset = 0;
+  if (roman.includes("b")) {
+    offset = -1;
+    roman = roman.replace("b", "");
+  }
+
+  // Convert to uppercase for consistent mapping
+  roman = roman.toUpperCase();
+
+  // Convert Roman numerals to digits: "I"->1, "II"->2, "III"->3, "IV"->4, "V"->5, "VI"->6, "VII"->7
+  // This won't handle every edge case, but works with the provided progressions.
+  const replaced = roman
+    .replace("I", "1")
+    .replace("II", "2")
+    .replace("III", "3")
+    .replace("IV", "4")
+    .replace("V", "5")
+    .replace("VI", "6")
+    .replace("VII", "7");
+
+  // Convert the number to 0-based degree
+  const base = parseInt(replaced) - 1; // "1" => 0, "2" => 1, etc.
+
+  // If something fails, just return 0 (I)
+  if (isNaN(base)) return 0;
+
+  // Return the final degree including any flat offset, wrapped in 0-6
+  return (base + offset + 7) % 7;
+}
+
+/*
+  Renders an example progression for the current mode in the current key,
+  along with a real-world song reference.
+*/
+function renderExampleProgression(scaleNotes) {
+  // Get current mode object and root note name
+  const mode = MODES[currentMode];
+  const rootName = noteName(currentRoot);
+
+  // Update text displays
+  progName.textContent = `${rootName} ${mode.name}`;
+  progDesc.textContent = mode.prog;
+  // Provide a short summary referencing the real song example
+  realSongExample.textContent =
+    `A real world example: ${mode.song}. Adapt this to ${rootName} ${mode.name} with progression: ${mode.prog}`;
+
+  // Clear out any previous progression
+  progressionContainer.innerHTML = "";
+
+  // Split the progression string by "–"
+  const chordSymbols = mode.prog.split("–");
+
+  // For each Roman numeral, determine the scale degree and build the chord name
+  chordSymbols.forEach(symbol => {
+    const deg = parseRoman(symbol);                 // Convert, e.g. "I" -> 0, "bII" -> 1, etc.
+    const rootIdx = scaleNotes[deg];                // The actual note index (0-11) in the scale
+    // Determine chord quality from the diatonic context
+    const name = noteName(rootIdx) + (deg === 6 ? "dim" : [1,2,5].includes(deg) ? "m" : "");
+    
+    // Create a DOM element to show each chord in the progression
+    const el = document.createElement("div");
+    el.className = "progression-step badge bg-primary fs-4 p-3";
+    el.textContent = name;
+    el.dataset.deg = deg; // Store which scale degree for playback highlighting
+    progressionContainer.appendChild(el);
+  });
+}
+
+/*
+  Plays the current progression chord by chord, with a brief highlight to show which chord is active.
+*/
+function playCurrentProgression() {
+  const scale = getScaleNotes();         // The scale array for the current key + mode
+  const steps = progressionContainer.children; // Chords in the progression
+
+  let i = 0; // index to iterate chords
+
+  // Recursive function to play each chord in sequence
+  const playStep = () => {
+    // Deactivate the previous chord visual
+    if (i > 0) steps[i-1].classList.remove("active");
+
+    // If we've played all chords, stop
+    if (i >= steps.length) return;
+
+    // Activate the current chord visually
+    steps[i].classList.add("active");
+
+    // Get the degree from the dataset
+    const deg = parseInt(steps[i].dataset.deg);
+
+    // Note indices for root, third, fifth
+    const notes = [
+      scale[deg],
+      scale[(deg + 2) % 7],
+      scale[(deg + 4) % 7]
+    ].map(noteName);
+
+    // Show chord on fretboard & staff
+    showChordOnFretboardAndStaff(notes.join("–"), notes);
+
+    // Play as an arpeggio
+    playChordArpeggio(notes);
+
+    i++;
+    // Move to next chord after a delay
+    setTimeout(playStep, 1400);
+  };
+  playStep();
+}
+
+// ========== GUITAR FRETBOARD ==========
+
+/*
+  Draws the guitar fretboard: 6 strings, up to specified frets.
+*/
+function drawFretboard() {
+  const svg = document.getElementById("fretboard");
+  svg.innerHTML = ""; // Clear previous
+  const ns = "http://www.w3.org/2000/svg";
+
+  // Draw 6 strings
+  for (let s = 0; s < 6; s++) {
+    const y = 50 + s * 40;  // y position for the string line
+    const line = document.createElementNS(ns, "line");
+    line.setAttribute("x1", 50);
+    line.setAttribute("x2", 750);
+    line.setAttribute("y1", y);
+    line.setAttribute("y2", y);
+    line.setAttribute("stroke", s < 3 ? "#555" : "#777");
+    line.setAttribute("stroke-width", s < 3 ? 4 : 2);
+    svg.appendChild(line);
+
+    // Label the string with tuning note name on the left
+    const text = document.createElementNS(ns, "text");
+    text.setAttribute("x", 25);
+    text.setAttribute("y", y + 6);
+    text.textContent = GUITAR_TUNING[5 - s]; 
+    svg.appendChild(text);
+  }
+
+  // Draw fret lines
+  for (let f = 0; f <= FRETS; f++) {
+    const x = 100 + f * 120;
+    const line = document.createElementNS(ns, "line");
+    line.setAttribute("x1", x);
+    line.setAttribute("x2", x);
+    line.setAttribute("y1", 50);
+    line.setAttribute("y2", 250);
+    line.setAttribute("stroke", f === 0 ? "#333" : "#999");
+    line.setAttribute("stroke-width", f === 0 ? 8 : 2);
+    svg.appendChild(line);
+  }
+}
+
+/*
+  Highlights all scale notes on the fretboard to visualize the current scale.
+*/
+function highlightScaleOnFretboard(scaleNotes) {
+  const svg = document.getElementById("fretboard");
+  // Remove old highlights
+  svg.querySelectorAll(".scale-dot").forEach(d => d.remove());
+
+  // For each note in the scale, find matching fret positions
+  scaleNotes.forEach(note => {
+    for (let string = 0; string < 6; string++) {
+      const open = NOTES.indexOf(GUITAR_TUNING[string]);
+      for (let fret = 0; fret <= 12; fret++) {
+        if ((open + fret) % 12 === note) {
+          const x = 100 + fret * 120;
+          const y = 50 + string * 40;
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.classList.add("scale-dot");
+          circle.setAttribute("cx", x);
+          circle.setAttribute("cy", y);
+          circle.setAttribute("r", 14);
+          circle.setAttribute("fill", "rgba(13,110,253,0.3)");
+          circle.setAttribute("stroke", "#0d6efd");
+          circle.setAttribute("stroke-width", 3);
+          svg.appendChild(circle);
+        }
+      }
+    }
+  });
+}
+
+/*
+  Displays a chord name on the fretboard (using known shapes if available),
+  and draws the chord’s notes on the staff.
+*/
+function showChordOnFretboardAndStaff(chordName, noteNames) {
+  // Update text above fretboard
+  currentChordName.textContent = chordName;
+  // Update staff title
+  staffTitle.textContent = `Grand Staff – ${chordName}`;
+
+  const svg = document.getElementById("fretboard");
+  // Remove previous chord dots
+  svg.querySelectorAll(".chord-dot, .chord-text").forEach(el => el.remove());
+
+  // Attempt to fetch a known chord shape if it exists
+  const base = chordName.split(/[^A-Za-z]/)[0];
+  const shape = GUITAR_SHAPES[chordName] || GUITAR_SHAPES[base] || [0, 0, 0, 0, 0, 0];
+
+  // Draw chord shape on fretboard
+  shape.forEach((fret, stringIdx) => {
+    if (fret === 0) return; // 0 means open or no press, skip drawing
+    const string = 5 - stringIdx; // invert because we stored tuning in reverse
+    const x = 100 + fret * 120;
+    const y = 50 + string * 40;
+
+    // The chord-dot circle
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.classList.add("chord-dot", "dot");
+    circle.setAttribute("cx", x);
+    circle.setAttribute("cy", y);
+    circle.setAttribute("r", 16);
+    circle.setAttribute("fill", "#0d6efd");
+    svg.appendChild(circle);
+
+    // A text marker in the middle of the circle
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.classList.add("chord-text");
+    text.setAttribute("x", x);
+    text.setAttribute("y", y + 6);
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("font-weight", "bold");
+    text.setAttribute("fill", "white");
+    text.textContent = "•";
+    svg.appendChild(text);
+  });
+
+  // Finally, draw these notes on the staff
+  drawNotesOnStaff(noteNames);
+}
+
+// ========== PURE SVG GRAND STAFF (NO EXTERNAL LIB) ==========
+
+/*
+  Clears and draws the basic lines (treble and bass) for the grand staff.
+*/
+function drawEmptyStaff() {
+  const svg = document.querySelector("#staff svg");
+  svg.innerHTML = ""; // Clear previous staff
+  const ns = "http://www.w3.org/2000/svg";
+
+  // Draw two staves: treble (top) and bass (bottom)
+  for (let staff = 0; staff < 2; staff++) {
+    // Y offset: top staff at ~40, bottom staff at ~160
+    const yOffset = staff === 0 ? 40 : 160;
+
+    // Each staff has 5 lines
+    for (let i = 0; i < 5; i++) {
+      const line = document.createElementNS(ns, "line");
+      line.classList.add("staff-line"); // ensures stroke, etc.
+      line.setAttribute("x1", 20);
+      line.setAttribute("x2", 780);
+      line.setAttribute("y1", yOffset + i * 15);
+      line.setAttribute("y2", yOffset + i * 15);
+      svg.appendChild(line);
+    }
+  }
+
+  // Treble clef text symbol (G-clef). Roughly placed near top staff
+  svg.innerHTML += `<text x="40" y="70" font-size="80" font-family="serif">𝄞</text>`;
+  // Bass clef text symbol (F-clef). Roughly placed near bottom staff
+  svg.innerHTML += `<text x="40" y="200" font-size="80" font-family="serif">𝄢</text>`;
+}
+
+/*
+  Draws each note in noteNames on the staff. This is a simple offset approach 
+  that places them either on the treble or bass staff. 
+*/
+function drawNotesOnStaff(noteNames) {
+  // First, reset staff lines
+  drawEmptyStaff();
+  const svg = document.querySelector("#staff svg");
+  const ns = "http://www.w3.org/2000/svg";
+
+  // Helper function to map a note name (like "C4") to a Y coordinate
+  // In this simplified approach, we just anchor everything around middle
+  // and place them either on the top or bottom staff depending on guess.
+  const noteToY = (name) => {
+    // Basic mapping from letter to staff lines. This is just for demonstration,
+    // so it's quite approximate.
+    const map = { "C": 6, "D": 5.5, "E": 5, "F": 4.5, "G": 4, "A": 3.5, "B": 3 };
+    // We'll assume "4" is around middle staff area
+    let steps = map[name[0]] + (name[1] === "#" ? -0.5 : 0);
+    return 120 - steps * 7.5; // scale to staff spacing
+  };
+
+  // Place each note
+  noteNames.forEach((n, i) => {
+    // We'll assume everything is "4" for demonstration
+    const computedY = noteToY(n + "4");
+
+    // If the note is fairly high, keep it on top staff; if low, offset to bottom:
+    // We do a manual threshold check for splitting top/bottom staff
+    const staffY = (computedY < 40) ? computedY : (computedY > 100 ? computedY + 60 : computedY);
+
+    // Create the note head
+    const circle = document.createElementNS(ns, "ellipse");
+    circle.classList.add("note-head");
+    circle.setAttribute("cx", 150 + i * 120); // horizontal spacing per note
+    circle.setAttribute("cy", staffY);
+    circle.setAttribute("rx", 12);
+    circle.setAttribute("ry", 9);
+    svg.appendChild(circle);
+
+    // Ledger lines if note is far outside the staff
+    if (staffY < 40 || staffY > 220) {
+      const ledger = document.createElementNS(ns, "line");
+      ledger.classList.add("ledger");
+      ledger.setAttribute("x1", 130 + i * 120);
+      ledger.setAttribute("x2", 170 + i * 120);
+      ledger.setAttribute("y1", staffY);
+      ledger.setAttribute("y2", staffY);
+      svg.appendChild(ledger);
+    }
+  });
+}
+
+// ========== AUDIO ==========
+
+/*
+  AudioContext for sound generation. We'll create it on first use.
+*/
+let audioCtx;
+
+/*
+  A dictionary mapping note names in 4th octave to approximate frequencies.
+*/
+const NOTE_FREQS = {
+  "C4": 261.63, "C#4": 277.18, "D4": 293.66, "D#4": 311.13, "E4": 329.63,
+  "F4": 349.23, "F#4": 369.99, "G4": 392,    "G#4": 415.3,  "A4": 440,
+  "A#4": 466.16,"B4": 493.88, "C5": 523.25
+};
+
+/*
+  Plays a single note (triangle wave) for a short duration.
+*/
+function playNote(freq, dur = 0.8) {
+  if (!audioCtx) audioCtx = new AudioContext();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  // Set oscillator type/frequency
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+  // Fade-out envelope
+  gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+
+  // Connect and start
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + dur);
+}
+
+/*
+  Plays the current scale ascending, one note at a time.
+*/
+function playScale() {
+  getScaleNotes().forEach((n, i) => {
+    const note = noteName(n) + "4"; // Simple approach: all in 4th octave
+    setTimeout(() => {
+      playNote(NOTE_FREQS[note] || 440);
+    }, i * 400);
+  });
+}
+
+/*
+  Plays each note of a chord in quick succession.
+*/
+function playChordArpeggio(notes) {
+  notes.forEach((n, i) => {
+    const key = n + "4";
+    setTimeout(() => {
+      playNote(NOTE_FREQS[key] || 440);
+    }, i * 200);
+  });
+}
+</script>
+</body>
+</html>
