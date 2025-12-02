@@ -1,0 +1,109 @@
+You are a world-class full-stack developer, UI/UX designer, and technical educator combined. Your task is to create a complete, standalone, single-file (or multi-file if explicitly separated) interactive “HTML, CSS & JavaScript 101 – The Ultimate Beginner’s Guide” website that feels like a premium modern learning platform (similar to freeCodeCamp + Scrimba + MDN, but prettier and more cohesive).
+
+### Core Requirements
+- The entire project must be 100% self-contained (no external CDN dependencies except for one optional syntax highlighter like Prism.js or Highlight.js and Font Awesome 6 for icons). Prefer local assets or minimal reliable CDNs.
+- Use only vanilla HTML5, CSS3 (Flexbox + Grid + custom properties), and vanilla JavaScript (ES6+). No frameworks (React, Vue, Tailwind, Bootstrap, etc.).
+- Must be fully responsive from 320px mobile to 4K desktop.
+- Must look modern, clean, and joyful with a light pastel theme:
+  - Primary palette: #f8f9fc (background), #ffffff (cards), #e6f0ff (soft blue), #fff0f8 (soft pink), #f0fff0 (soft mint)
+  - Accent colors: #5d5fef (indigo), #ff6b6b (coral) for interactive elements
+  - Neutral text: #2d3748 and #4a5568
+  - Use Google Fonts: “Inter” for body, “JetBrains Mono” for code
+
+### Overall Structure & Navigation
+Create a beautiful single-page application-like experience with:
+1. Fixed left sidebar (collapsible on mobile) containing:
+   - Logo + site title at top
+   - Smooth-scroll navigation menu with section icons (Font Awesome)
+   - Progress tracker (percentage + checked items)
+   - Dark/light mode toggle
+   - “Back to top” button at bottom
+2. Main content area with generous whitespace and max-width 1000px centered
+3. Sticky header with current section title that appears on scroll
+4. Mobile hamburger menu that slides in the sidebar
+
+### Complete Table of Contents (every section must exist and be richly detailed)
+1. Welcome to Web Development
+   - What you’ll build, why learn these three technologies, career paths
+2. Setting Up Your Workspace
+   - VS Code, Live Server, browser dev tools tutorial
+3. HTML Fundamentals
+   - What is HTML?, document structure, semantic tags
+   - Headings, paragraphs, lists, links, images, tables
+   - Forms & inputs (all major types)
+   - HTML5 semantic elements (header, nav, main, section, article, aside, footer)
+   - Accessibility basics (alt, labels, ARIA if simple)
+4. HTML Project: Build a Personal Portfolio Landing Page (complete markup
+5. CSS Fundamentals
+   - How CSS works (cascade, specificity, inheritance)
+   - Selectors (type, class, ID, attribute, pseudo-classes/elements)
+   - Box model in depth with interactive diagram
+   - Colors, units (px, rem, em, %, vw/vh), typography
+   - Flexbox complete guide with live playground
+   - CSS Grid complete guide with live playground
+   - Positioning (static, relative, absolute, fixed, sticky)
+   - Transitions, transforms, animations (with @keyframes examples)
+   - Custom properties (CSS variables)
+   - Responsive design: mobile-first, media queries, breakpoints
+6. CSS Project: Style the Portfolio from section 4 into a stunning one-page site
+7. JavaScript Basics
+   - Adding JS to page (script tag, defer), console.log
+   - Variables (var, let, const), data types, typeof
+   - Operators, template literals
+   - Conditionals (if/else, switch), loops (for, while, forEach)
+   - Functions (declaration, expression, arrow, parameters, return)
+   - Arrays & objects (methods, destructuring, spread)
+   - DOM manipulation (querySelector, getElementById, classList, textContent, innerHTML)
+   - Events (click, submit, keypress, mouseover, etc.) with live examples
+   - Event delegation
+8. Intermediate JavaScript
+   - Scope, hoisting, closures (explained simply)
+   - this keyword basics
+   - Fetch API & basic JSON handling
+   - Async/await vs .then()
+   - LocalStorage for persistence
+9. JavaScript Mini-Projects (each with full code + live demo inside the page):
+   - Interactive FAQ accordion
+   - Modal image gallery
+   - Todo list with add/delete + localStorage
+   - Dark mode toggle (already in sidebar but show the code)
+   - Live search filter
+   - Form validation with regex
+10. Putting It All Together – Final Capstone Project
+    - Multi-section personal website with responsive navigation, hero, about, skills (progress bars), portfolio grid, contact form with validation, smooth scrolling, animated counters, back-to-top, etc.
+11. Next Steps & Resources
+    - How to host for free (Vercel, Netlify, GitHub Pages)
+    - Further learning roadmap
+    - Useful tools & extensions
+
+### UI/UX Details You Must Implement
+- Every code block uses Prism.js syntax highlighting with line numbers and a “Copy” button that shows “Copied!” for 2 seconds
+- Collapsible sections using <details><summary> or JS toggles with smooth height animation
+- Interactive playgrounds for Flexbox, Grid, and DOM examples (editable live preview)
+- Progressively disclosed explanations (“Show me how”, “Why this way?”, “Common mistakes” toggles)
+- Illustrated diagrams (SVG or canvas) for box model, specificity, event bubbling, Flexbox axes, Grid template areas
+- Tooltips on technical terms
+- Keyboard navigation & focus styles for accessibility
+- Smooth scrolling (scroll-behavior: smooth)
+- Animated page load (simple fade-in)
+- 3D hover effects on cards/buttons (subtle scale + shadow)
+- Confetti explosion when user completes the final project (using canvas-confetti library via CDN)
+
+### Technical Excellence
+- Semantic HTML5 with proper landmarks and ARIA where needed
+- BEM or similar logical CSS class naming
+- CSS organized with table of contents comments and mobile-first approach
+- JavaScript modular (separate concerns, comments, no globals when possible)
+- Fast loading: inline critical CSS, defer non-critical JS
+- Zero console errors or warnings
+
+### Output Format
+Return the complete code as separate clearly labeled files inside markdown code blocks:
+```html
+index.html
+CSSstyles.css
+JavaScriptscript.js
+(plus any additional files such as prism.css, prism.js, confetti.min.js if used)
+The final result must be something a complete beginner can save as index.html, open in a browser, and immediately have a gorgeous, fully functional, interactive 6–8 hour beginner web development course with projects they can proudly show in their portfolio.
+Make it so beautiful and well-structured that even experienced developers say “Wow, I wish I had this when I started.”
+textThis is your masterpiece — go all out.
