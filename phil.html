@@ -1,0 +1,337 @@
+<!DOCTYPE html> <!-- Declares the document type as HTML5 for modern browsers -->
+<html lang="en"> <!-- Sets the language of the document to English -->
+<head> <!-- Begins the head section containing metadata -->
+    <meta charset="UTF-8"> <!-- Specifies UTF-8 character encoding for proper text rendering -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Ensures responsive design for mobile devices -->
+    <meta name="description" content="An extensive explorer of philosophy and theology fields, with comparisons, key figures, and texts."> <!-- Adds a meta description for SEO -->
+    <title>Philosophy & Theology Explorer</title> <!-- Sets the title of the page displayed in the browser tab -->
+    <style> <!-- Begins the embedded CSS styles for the website -->
+        /* Global styles */ <!-- Comment for global CSS section -->
+        body { <!-- Styles the body element -->
+            font-family: 'Arial', sans-serif; <!-- Uses Arial font with sans-serif fallback -->
+            background-color: #f4f7fa; <!-- Light blue-gray background for light palette -->
+            color: #333; <!-- Dark gray text color for readability -->
+            margin: 0; <!-- Removes default margins -->
+            padding: 0; <!-- Removes default padding -->
+            line-height: 1.6; <!-- Sets line height for better readability -->
+        }
+        header { <!-- Styles the header element -->
+            background-color: #ffffff; <!-- White background for header -->
+            padding: 20px; <!-- Adds padding inside header -->
+            text-align: center; <!-- Centers text in header -->
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); <!-- Adds subtle shadow for depth -->
+        }
+        h1 { <!-- Styles h1 headings -->
+            color: #4a90e2; <!-- Blue color for main heading -->
+        }
+        nav { <!-- Styles the navigation element -->
+            margin: 20px 0; <!-- Adds vertical margin -->
+        }
+        nav a { <!-- Styles navigation links -->
+            margin: 0 15px; <!-- Adds horizontal margin between links -->
+            text-decoration: none; <!-- Removes underline from links -->
+            color: #4a90e2; <!-- Blue color for links -->
+            font-weight: bold; <!-- Makes links bold -->
+        }
+        nav a:hover { <!-- Styles hover state for navigation links -->
+            color: #357abd; <!-- Darker blue on hover -->
+        }
+        section { <!-- Styles section elements -->
+            max-width: 1200px; <!-- Limits maximum width for content -->
+            margin: 20px auto; <!-- Centers section with auto margins -->
+            padding: 20px; <!-- Adds padding inside sections -->
+            background-color: #ffffff; <!-- White background for sections -->
+            border-radius: 8px; <!-- Rounds corners for modern look -->
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); <!-- Adds subtle shadow -->
+        }
+        h2 { <!-- Styles h2 headings -->
+            color: #6a9bd8; <!-- Lighter blue for subheadings -->
+        }
+        .field { <!-- Class for individual field sections -->
+            margin-bottom: 30px; <!-- Adds bottom margin between fields -->
+            padding: 15px; <!-- Adds internal padding for fields -->
+            border-left: 4px solid #4a90e2; <!-- Adds a blue left border for visual appeal -->
+        }
+        .field h3 { <!-- Styles h3 in fields -->
+            color: #4a90e2; <!-- Blue for field titles -->
+        }
+        ul { <!-- Styles unordered lists -->
+            list-style-type: disc; <!-- Uses disc bullets -->
+            padding-left: 20px; <!-- Indents lists -->
+        }
+        #comparator { <!-- ID for comparator section -->
+            display: flex; <!-- Uses flexbox for layout -->
+            flex-direction: column; <!-- Stacks elements vertically -->
+            align-items: center; <!-- Centers items horizontally -->
+        }
+        select { <!-- Styles select dropdowns -->
+            margin: 10px; <!-- Adds margin around selects -->
+            padding: 10px; <!-- Adds padding inside selects -->
+            border: 1px solid #ddd; <!-- Light border -->
+            border-radius: 4px; <!-- Rounds corners -->
+            background-color: #f9f9f9; <!-- Light gray background -->
+            width: 300px; <!-- Sets fixed width for selects -->
+        }
+        button { <!-- Styles buttons -->
+            padding: 10px 20px; <!-- Adds padding inside button -->
+            background-color: #4a90e2; <!-- Blue background -->
+            color: white; <!-- White text -->
+            border: none; <!-- Removes border -->
+            border-radius: 4px; <!-- Rounds corners -->
+            cursor: pointer; <!-- Changes cursor to pointer on hover -->
+        }
+        button:hover { <!-- Styles button hover -->
+            background-color: #357abd; <!-- Darker blue on hover -->
+        }
+        #comparison-result { <!-- ID for comparison output -->
+            margin-top: 20px; <!-- Adds top margin -->
+            width: 100%; <!-- Full width -->
+            text-align: left; <!-- Left aligns text -->
+            padding: 15px; <!-- Adds padding for result -->
+            background-color: #f9f9f9; <!-- Light background for result -->
+            border-radius: 4px; <!-- Rounds corners -->
+        }
+        footer { <!-- Styles footer -->
+            text-align: center; <!-- Centers text -->
+            padding: 10px; <!-- Adds padding -->
+            background-color: #ffffff; <!-- White background -->
+            margin-top: 20px; <!-- Adds top margin -->
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); <!-- Adds shadow -->
+        }
+        /* Responsive design */ <!-- Comment for responsive CSS -->
+        @media (max-width: 768px) { <!-- Media query for screens <= 768px -->
+            section { <!-- Adjusts sections for mobile -->
+                padding: 10px; <!-- Reduces padding -->
+            }
+            select, button { <!-- Adjusts form elements for mobile -->
+                width: 100%; <!-- Full width -->
+                margin: 10px 0; <!-- Stacks vertically -->
+            }
+        }
+    </style> <!-- Ends the CSS styles -->
+</head> <!-- Ends the head section -->
+<body> <!-- Begins the body section containing visible content -->
+    <header> <!-- Header for site title and navigation -->
+        <h1>Philosophy & Theology Explorer</h1> <!-- Main site title -->
+        <nav> <!-- Navigation menu -->
+            <a href="#fields">Fields</a> <!-- Link to fields section -->
+            <a href="#comparator">Compare & Contrast</a> <!-- Link to comparator section -->
+        </nav> <!-- Ends navigation -->
+    </header> <!-- Ends header -->
+    <section id="fields"> <!-- Section for listing fields -->
+        <h2>Main Fields of Philosophy and Theology</h2> <!-- Heading for fields -->
+        <div class="field"> <!-- Div for Metaphysics field -->
+            <h3>Metaphysics</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Metaphysics examines the most general features of reality, such as existence, objects and their properties, wholes and their parts, space and time, events, and causation. It addresses fundamental questions like "Why is there something rather than nothing?" and "Of what does reality ultimately consist?" It is divided into general metaphysics (being as such) and specific metaphysics (different kinds of being). Key topics include ontology (concepts like being, becoming, and reality), philosophical cosmology (the essence of the world as a whole), identity (how entities remain the same despite change), and distinctions between particulars and universals. It also explores whether reality consists only of physical things or includes mental and abstract entities, and implications for free will and determinism.</p> <!-- Detailed description -->
+            <p>Key Philosophers: Aristotle, Immanuel Kant, Gottfried Wilhelm Leibniz, Martin Heidegger, David Lewis.</p> <!-- Key philosophers -->
+            <p>Key Texts: Aristotle's "Metaphysics", René Descartes' "Meditations on First Philosophy", Immanuel Kant's "Critique of Pure Reason", Gottfried Wilhelm Leibniz's "Monadology", Martin Heidegger's "Being and Time".</p> <!-- Key texts -->
+        </div> <!-- Ends Metaphysics -->
+        <div class="field"> <!-- Div for Epistemology field -->
+            <h3>Epistemology</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Epistemology, or theory of knowledge, studies what knowledge is, how it arises, its limits, and its value. It examines the nature of truth, belief, justification, and rationality, addressing questions like "By what method(s) can one acquire knowledge?" and "How is truth established?" It focuses on declarative knowledge (facts), practical knowledge (skills), and knowledge by acquaintance (direct familiarity). Key areas include the analysis of knowledge (e.g., the justified true belief model and the Gettier problem), sources of knowledge (perception, introspection, memory, inference, testimony), and responses to the regress problem (infinite regress or circular reasoning) via foundationalism (self-justifying sources) and coherentism (beliefs justified by coherence with others). It also deals with philosophical skepticism, which doubts claims to knowledge due to the demand for absolute certainty.</p> <!-- Detailed description -->
+            <p>Key Philosophers: Plato, René Descartes, John Locke, Edmund Gettier, W.V.O. Quine.</p> <!-- Key philosophers -->
+            <p>Key Texts: Plato's "Theaetetus", René Descartes' "Meditations on First Philosophy", John Locke's "An Essay Concerning Human Understanding", Edmund Gettier's "Is Justified True Belief Knowledge?", W.V.O. Quine's "Epistemology Naturalized".</p> <!-- Key texts -->
+        </div> <!-- Ends Epistemology -->
+        <div class="field"> <!-- Div for Ethics field -->
+            <h3>Ethics</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Ethics, or moral philosophy, investigates what constitutes right conduct, the moral evaluation of character traits and institutions, and the standards of morality for living a good life. It addresses questions like "Are moral obligations relative?" and "What gives life meaning?" It is divided into meta-ethics (nature and sources of morality, meaning of ethical concepts, moral relativism), normative ethics (theories distinguishing right from wrong, obligations and rights), and applied ethics (consequences in specific situations like workplace or medical decisions). Contemporary normative ethics includes consequentialism (actions judged by outcomes, e.g., utilitarianism maximizing happiness), deontology (duties like not lying, regardless of consequences), and virtue ethics (actions conforming to virtuous character traits like generosity).</p> <!-- Detailed description -->
+            <p>Key Philosophers: Aristotle, Immanuel Kant, John Stuart Mill, Friedrich Nietzsche, Elizabeth Anscombe.</p> <!-- Key philosophers -->
+            <p>Key Texts: Aristotle's "Nicomachean Ethics", Immanuel Kant's "Groundwork of the Metaphysics of Morals", John Stuart Mill's "Utilitarianism", Friedrich Nietzsche's "On the Genealogy of Morality", Elizabeth Anscombe's "Modern Moral Philosophy".</p> <!-- Key texts -->
+        </div> <!-- Ends Ethics -->
+        <div class="field"> <!-- Div for Logic field -->
+            <h3>Logic</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Logic studies correct reasoning, distinguishing good arguments from bad ones. It is divided into formal logic (using symbolic languages to examine argument structure for validity) and informal logic (non-formal criteria like content and context). Key forms include deductive arguments (valid if premises ensure conclusion, e.g., modus ponens: "If P then Q; P; therefore Q"), inductive reasoning (generalizations from cases, e.g., "All observed ravens are black, so all ravens are black"), and abductive reasoning (best explanation, e.g., diagnosing disease from symptoms). It also covers fallacies (formal errors in structure; informal errors in content/context).</p> <!-- Detailed description -->
+            <p>Key Philosophers: Aristotle, Gottlob Frege, Bertrand Russell, Ludwig Wittgenstein, W.V.O. Quine.</p> <!-- Key philosophers -->
+            <p>Key Texts: Aristotle's "Organon", Gottlob Frege's "Begriffsschrift", Bertrand Russell's "Principia Mathematica", Ludwig Wittgenstein's "Tractatus Logico-Philosophicus", W.V.O. Quine's "Methods of Logic".</p> <!-- Key texts -->
+        </div> <!-- Ends Logic -->
+        <div class="field"> <!-- Div for Aesthetics field -->
+            <h3>Aesthetics</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Aesthetics studies the nature and appreciation of beauty and other aesthetic properties like the sublime, encompassing critical reflection on art, culture, and nature. It addresses whether beauty is objective or subjective, the nature of aesthetic experiences and judgments, the essence of works of art and their creation. It is broader than philosophy of art, including natural beauty.</p> <!-- Detailed description -->
+            <p>Key Philosophers: Plato, Immanuel Kant, Georg Wilhelm Friedrich Hegel, Arthur Schopenhauer, John Dewey.</p> <!-- Key philosophers -->
+            <p>Key Texts: Plato's "The Republic" (Book X on mimēsis), Immanuel Kant's "Critique of Judgment", Georg Wilhelm Friedrich Hegel's "Lectures on Aesthetics", Arthur Schopenhauer's "The World as Will and Representation", John Dewey's "Art as Experience".</p> <!-- Key texts -->
+        </div> <!-- Ends Aesthetics -->
+        <div class="field"> <!-- Div for Political Philosophy field -->
+            <h3>Political Philosophy</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Political philosophy inquires into fundamental principles governing political systems and societies, examining the nature and purpose of government, its forms, and legitimate use of power (vs. violence). It addresses distribution of power, social goods, legal rights, and topics like justice, liberty, equality, sovereignty, and nationalism. It differs from political science by focusing on normative matters and is often a subfield of ethics. Influential schools include liberalism, conservatism, socialism, and anarchism.</p> <!-- Detailed description -->
+            <p>Key Philosophers: Plato, Aristotle, Thomas Hobbes, John Rawls, Karl Marx.</p> <!-- Key philosophers -->
+            <p>Key Texts: Plato's "The Republic", Aristotle's "Politics", Thomas Hobbes' "Leviathan", John Rawls' "A Theory of Justice", Karl Marx's "The Communist Manifesto".</p> <!-- Key texts -->
+        </div> <!-- Ends Political Philosophy -->
+        <div class="field"> <!-- Div for Philosophy of Mind field -->
+            <h3>Philosophy of Mind</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: The philosophy of mind studies mental phenomena and their relation to the physical world, including conscious and unconscious states like beliefs, desires, intentions, feelings, sensations, and free will. It addresses the mind-body problem (how mind and matter relate), with views like materialism (matter fundamental), idealism (mind fundamental), dualism (distinct entities), and functionalism (mental states as causal roles). It also explores the hard problem of consciousness (how physical brains produce subjective experiences).</p> <!-- Detailed description -->
+            <p>Key Philosophers: René Descartes, John Locke, David Hume, Gilbert Ryle, Daniel Dennett.</p> <!-- Key philosophers -->
+            <p>Key Texts: René Descartes' "Meditations on First Philosophy", John Locke's "An Essay Concerning Human Understanding", David Hume's "A Treatise of Human Nature", Gilbert Ryle's "The Concept of Mind", Daniel Dennett's "Consciousness Explained".</p> <!-- Key texts -->
+        </div> <!-- Ends Philosophy of Mind -->
+        <div class="field"> <!-- Div for Philosophy of Language field -->
+            <h3>Philosophy of Language</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: The philosophy of language examines the nature and function of language, including meaning, reference, and truth. It answers how words relate to things, how language affects thought and understanding, and how sentences get meaning. It divides into truth-conditional theories (formal conditions for truth) and speech act theory (suitability of use). It relates to logic and linguistics, prominent in analytic philosophy.</p> <!-- Detailed description -->
+            <p>Key Philosophers: Gottlob Frege, Bertrand Russell, Ludwig Wittgenstein, Noam Chomsky, J.L. Austin.</p> <!-- Key philosophers -->
+            <p>Key Texts: Gottlob Frege's "On Sense and Reference", Bertrand Russell's "On Denoting", Ludwig Wittgenstein's "Philosophical Investigations", Noam Chomsky's "Syntactic Structures", J.L. Austin's "How to Do Things with Words".</p> <!-- Key texts -->
+        </div> <!-- Ends Philosophy of Language -->
+        <div class="field"> <!-- Div for Philosophy of Science field -->
+            <h3>Philosophy of Science</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: The philosophy of science reflects on science's fundamental concepts, assumptions, and problems, distinguishing it from pseudoscience. It examines methods, how they produce knowledge, underlying assumptions, and implications. Questions include "What counts as an adequate explanation?", "Are scientific laws mere regularities?", and "Can special sciences reduce to general ones?" It divides into philosophy of natural and social sciences, overlapping with metaphysics and epistemology.</p> <!-- Detailed description -->
+            <p>Key Philosophers: Karl Popper, Thomas Kuhn, Paul Feyerabend, Imre Lakatos, Larry Laudan.</p> <!-- Key philosophers -->
+            <p>Key Texts: Karl Popper's "The Logic of Scientific Discovery", Thomas Kuhn's "The Structure of Scientific Revolutions", Paul Feyerabend's "Against Method", Imre Lakatos' "The Methodology of Scientific Research Programmes", Larry Laudan's "Progress and Its Problems".</p> <!-- Key texts -->
+        </div> <!-- Ends Philosophy of Science -->
+        <div class="field"> <!-- Div for Existentialism field -->
+            <h3>Existentialism</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Existentialism emphasizes individual existence, freedom, and choice, often in contrast to essentialism or determinism. It explores themes like authenticity, absurdity, anxiety, and the human condition, rejecting traditional religious or metaphysical absolutes. It arose in the 19th-20th centuries, influenced by phenomenology and skepticism.</p> <!-- Detailed description -->
+            <p>Key Philosophers: Søren Kierkegaard, Friedrich Nietzsche, Jean-Paul Sartre, Martin Heidegger, Simone de Beauvoir, Fyodor Dostoevsky.</p> <!-- Key philosophers, including Fyodor -->
+            <p>Key Texts: Søren Kierkegaard's "Fear and Trembling", Friedrich Nietzsche's "Thus Spoke Zarathustra", Jean-Paul Sartre's "Being and Nothingness", Martin Heidegger's "Being and Time", Simone de Beauvoir's "The Ethics of Ambiguity", Fyodor Dostoevsky's "The Brothers Karamazov".</p> <!-- Key texts, including Dostoevsky -->
+            <p>Fyodor Dostoevsky's Beliefs and Field: Dostoevsky's philosophical views are rooted in humanism, emphasizing the human condition in troubled political, social, and spiritual atmospheres. He explored themes of good and evil, free will, redemption through suffering, the search for meaning, the nature of faith vs. atheism, and criticism of rationalism and nihilism. His works suggest that true goodness comes through suffering and that lack of faith leads to societal destruction. Influenced by Orthodox Christianity, he wrestled with questions of individual freedom, responsibility, and the existence of God.</p> <!-- Detailed section for Fyodor Dostoevsky -->
+        </div> <!-- Ends Existentialism -->
+        <div class="field"> <!-- Div for Phenomenology field -->
+            <h3>Phenomenology</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Phenomenology investigates the structures of experience and consciousness, focusing on how things appear to us (the "things themselves"). It uses phenomenological reduction (epochē) to bracket assumptions about reality, aiming for rigorous description of appearances. It emphasizes first-person experience and essences, influencing existentialism and hermeneutics.</p> <!-- Detailed description -->
+            <p>Key Philosophers: Edmund Husserl, Martin Heidegger, Maurice Merleau-Ponty, Max Scheler, Jean-Paul Sartre.</p> <!-- Key philosophers -->
+            <p>Key Texts: Edmund Husserl's "Logical Investigations", Martin Heidegger's "Being and Time", Maurice Merleau-Ponty's "Phenomenology of Perception", Max Scheler's "Formalism in Ethics and Non-Formal Ethics of Values", Jean-Paul Sartre's "The Transcendence of the Ego".</p> <!-- Key texts -->
+        </div> <!-- Ends Phenomenology -->
+        <div class="field"> <!-- Div for Christian Theology field -->
+            <h3>Christian Theology</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Christian theology is the study of Christian belief and practice, concentrating on the texts of the Old Testament and New Testament, as well as Christian tradition. It involves biblical exegesis, rational analysis, and argument to understand Christian tenets, make comparisons with other traditions, defend Christianity against objections, facilitate church reforms, propagate Christianity, or address present situations using Christian resources. It is defined by Thomas Aquinas as constituted by what is taught by God, teaches of God, and leads to God, encompassing theophanic revelation, systematic study of divine nature and religious belief, and the spiritual path. It may also involve rational study of doctrines, coherence of biblical and traditional language, and claims.</p> <!-- Detailed description -->
+            <p>Key Theologians/Philosophers: Thomas Aquinas, Augustine of Hippo, Tertullian, Boethius, Friedrich Schleiermacher.</p> <!-- Key figures -->
+            <p>Key Texts: "The City of God" by Augustine, "Summa Theologica" by Thomas Aquinas, "The Sentences" by Peter Lombard, "Institutes of the Christian Religion" by John Calvin, "On the Trinity" by Augustine.</p> <!-- Key texts -->
+        </div> <!-- Ends Christian Theology -->
+        <div class="field"> <!-- Div for Islamic Theology field -->
+            <h3>Islamic Theology (Kalam)</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Islamic theological discussion, known as Kalam, parallels Christian theological discussion but does not hold the leading place in Muslim thought that theology does in Christianity. It involves investigation and elaboration of Sharia or Fiqh, with Kalam focusing on rational defense of Islamic doctrines, cosmology, and attributes of God. It addresses revelation, the nature of divinity, and interaction with the natural world, using philosophical and argumentative methods to explain and critique religious topics.</p> <!-- Detailed description -->
+            <p>Key Theologians/Philosophers: Al-Ghazali, Ibn Sina (Avicenna), Al-Farabi, Malik ibn Anas, Al-Ash'ari.</p> <!-- Key figures -->
+            <p>Key Texts: "The Incoherence of the Philosophers" by Al-Ghazali, "Tahafut al-Falasifah" by Al-Ghazali, "Metaphysics" by Ibn Sina, "Ihya Ulum al-Din" by Al-Ghazali, "Al-Muwatta" by Malik ibn Anas.</p> <!-- Key texts -->
+        </div> <!-- Ends Islamic Theology -->
+        <div class="field"> <!-- Div for Jewish Theology field -->
+            <h3>Jewish Theology</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Jewish theology has developed within the context of the Jewish community and synagogue, particularly after the destruction of the Second Temple, emphasizing rabbinical discussion of Jewish law and Midrash (rabbinic biblical commentaries). It is linked to ethics, influencing behavior, and involves reflection on divinity, revelation, and the nature of God without a centralized political authority. It uses analysis to understand religious topics, defend traditions, and explore divine interaction with the world.</p> <!-- Detailed description -->
+            <p>Key Theologians/Philosophers: Maimonides, Philo of Alexandria, Saadia Gaon, Martin Buber, Emil Fackenheim.</p> <!-- Key figures -->
+            <p>Key Texts: "Guide for the Perplexed" by Maimonides, "The Mishneh Torah" by Maimonides, "Emunot ve-De'ot" by Saadia Gaon, "I and Thou" by Martin Buber, "The Star of Redemption" by Franz Rosenzweig.</p> <!-- Key texts -->
+        </div> <!-- Ends Jewish Theology -->
+        <div class="field"> <!-- Div for Hindu Theology/Philosophy field -->
+            <h3>Hindu Theology/Philosophy (Vedanta)</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Hindu philosophy includes numerous traditions of speculation on the universe, God (as Brahman, Paramatma, Ishvara, or Bhagavan), and the atman (soul), under the term darśana ('viewpoint'). The most influential is Vedanta and its sub-schools, each presenting theories of Ishvara (Supreme Lord). Vaishnava theology classifies manifestations of gods; Shaivism includes dualistic and non-dualistic strands; Shakta traditions posit a feminine deity as ultimate. It involves philosophical analysis of divinity, ultimate reality, and ethical implications, using rational and experiential methods.</p> <!-- Detailed description -->
+            <p>Key Theologians/Philosophers: Adi Shankara, Ramanuja, Madhva, Ramananda, Swami Vivekananda.</p> <!-- Key figures -->
+            <p>Key Texts: "Brahma Sutras" by Badarayana, Upanishads (various), "Bhagavad Gita", "Vedanta Sutras with Commentary" by Adi Shankara, "The Gospel of Ramakrishna" by Ramakrishna.</p> <!-- Key texts -->
+        </div> <!-- Ends Hindu Theology/Philosophy -->
+        <div class="field"> <!-- Div for Buddhist Theology/Philosophy field -->
+            <h3>Buddhist Theology/Philosophy</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Buddhism lacks a conception of a Creator God, so some prefer "Buddhist philosophy" over "theology," but theology is applicable to discussions on Buddhahood, ultimate reality, and divinity. It includes "buddhology," studying the nature of a Buddha, with Mahayana's Trikaya doctrine (three Buddha bodies) central. It involves investigation of the world, nature of reality, and paths to enlightenment, using philosophical theories without assuming a theos, addressing epistemology, revelation, and ethics.</p> <!-- Detailed description -->
+            <p>Key Theologians/Philosophers: Nagarjuna, Asanga, Vasubandhu, Louis de La Vallée-Poussin, Jose Ignacio Cabezon.</p> <!-- Key figures -->
+            <p>Key Texts: "Mulamadhyamakakarika" by Nagarjuna, "Abhidharmakosha" by Vasubandhu, "Lotus Sutra", "Milinda Panha", "The Fundamental Wisdom of the Middle Way" by Nagarjuna.</p> <!-- Key texts -->
+        </div> <!-- Ends Buddhist Theology/Philosophy -->
+        <div class="field"> <!-- Div for Humanism field -->
+            <h3>Humanism (Renaissance Theology)</h3> <!-- Field title -->
+            <p>Main Ideas and Topics: Emphasis on human potential, classical learning, reform in education and church, free will, and ad fontes (back to sources). Humanism combines Christian thought with classical traditions, promoting tolerance, education, and internal reform.</p> <!-- Detailed description -->
+            <p>Key Philosophers/Theologians: Desiderius Erasmus, Thomas More, Petrarch, Lorenzo Valla, Marsilio Ficino.</p> <!-- Key figures, including Erasmus -->
+            <p>Key Texts: "In Praise of Folly" by Erasmus, "Utopia" by More, "On Pleasure" by Valla, "Theologia Platonica" by Ficino, "Letters" by Petrarch.</p> <!-- Key texts -->
+            <p>Desiderius Erasmus's Beliefs and Field: Erasmus was a Dutch Renaissance humanist, theologian, and scholar who advocated for church reform without schism, emphasized inner piety over external rituals, and promoted the study of classical texts and the Bible in original languages. His field bridges theology and philosophy, focusing on Christian humanism, free will (against Luther's predestination), pacifism, and the compatibility of faith and reason. He believed in an individual's capacity for self-improvement through education and critiqued church corruption while advocating tolerance and biblical humanism.</p> <!-- Detailed section for Erasmus -->
+        </div> <!-- Ends Humanism -->
+    </section> <!-- Ends fields section -->
+    <section id="comparator"> <!-- Section for comparison tool -->
+        <h2>Compare & Contrast Two Branches</h2> <!-- Heading for comparator -->
+        <select id="field1"> <!-- First dropdown for selecting field -->
+            <option value="">Select First Field</option> <!-- Default option -->
+            <option value="Metaphysics">Metaphysics</option> <!-- Option -->
+            <option value="Epistemology">Epistemology</option> <!-- Option -->
+            <option value="Ethics">Ethics</option> <!-- Option -->
+            <option value="Logic">Logic</option> <!-- Option -->
+            <option value="Aesthetics">Aesthetics</option> <!-- Option -->
+            <option value="Political Philosophy">Political Philosophy</option> <!-- Option -->
+            <option value="Philosophy of Mind">Philosophy of Mind</option> <!-- Option -->
+            <option value="Philosophy of Language">Philosophy of Language</option> <!-- Option -->
+            <option value="Philosophy of Science">Philosophy of Science</option> <!-- Option -->
+            <option value="Existentialism">Existentialism</option> <!-- Option -->
+            <option value="Phenomenology">Phenomenology</option> <!-- Option -->
+            <option value="Christian Theology">Christian Theology</option> <!-- Option -->
+            <option value="Islamic Theology">Islamic Theology</option> <!-- Option -->
+            <option value="Jewish Theology">Jewish Theology</option> <!-- Option -->
+            <option value="Hindu Theology">Hindu Theology</option> <!-- Option -->
+            <option value="Buddhist Theology">Buddhist Theology</option> <!-- Option -->
+            <option value="Humanism">Humanism</option> <!-- Option -->
+        </select> <!-- Ends first select -->
+        <select id="field2"> <!-- Second dropdown for selecting field -->
+            <option value="">Select Second Field</option> <!-- Default option -->
+            <option value="Metaphysics">Metaphysics</option> <!-- Option -->
+            <option value="Epistemology">Epistemology</option> <!-- Option -->
+            <option value="Ethics">Ethics</option> <!-- Option -->
+            <option value="Logic">Logic</option> <!-- Option -->
+            <option value="Aesthetics">Aesthetics</option> <!-- Option -->
+            <option value="Political Philosophy">Political Philosophy</option> <!-- Option -->
+            <option value="Philosophy of Mind">Philosophy of Mind</option> <!-- Option -->
+            <option value="Philosophy of Language">Philosophy of Language</option> <!-- Option -->
+            <option value="Philosophy of Science">Philosophy of Science</option> <!-- Option -->
+            <option value="Existentialism">Existentialism</option> <!-- Option -->
+            <option value="Phenomenology">Phenomenology</option> <!-- Option -->
+            <option value="Christian Theology">Christian Theology</option> <!-- Option -->
+            <option value="Islamic Theology">Islamic Theology</option> <!-- Option -->
+            <option value="Jewish Theology">Jewish Theology</option> <!-- Option -->
+            <option value="Hindu Theology">Hindu Theology</option> <!-- Option -->
+            <option value="Buddhist Theology">Buddhist Theology</option> <!-- Option -->
+            <option value="Humanism">Humanism</option> <!-- Option -->
+        </select> <!-- Ends second select -->
+        <button onclick="compareFields()">Compare</button> <!-- Button to trigger comparison -->
+        <div id="comparison-result"></div> <!-- Div to display comparison result -->
+    </section> <!-- Ends comparator section -->
+    <footer> <!-- Footer section -->
+        <p>&copy; 2025 Philosophy & Theology Explorer. All rights reserved.</p> <!-- Copyright notice -->
+    </footer> <!-- Ends footer -->
+    <script> <!-- Begins embedded JavaScript -->
+        // Data for comparisons <!-- Comment for comparisons data -->
+        const comparisons = { <!-- Object holding comparison data -->
+            'Metaphysics-Epistemology': 'Metaphysics and Epistemology are foundational branches of philosophy, but they differ in focus. Metaphysics investigates the nature of reality and existence itself, dealing with questions about what exists beyond our perceptions, such as the essence of being, causality, and the possibility of free will. In contrast, Epistemology examines how we come to know about reality, focusing on the nature, sources, and limits of knowledge, including concepts like justification, belief, and skepticism. Similarities include their interdependence: metaphysical claims often rely on epistemological methods to validate them, and epistemological inquiries can lead to metaphysical conclusions about the nature of truth and reality. However, Metaphysics is more ontological (about being), while Epistemology is more methodological (about knowing).', <!-- Detailed comparison -->
+            'Metaphysics-Ethics': 'Metaphysics explores the fundamental nature of reality, including existence and causality, providing a groundwork for understanding the world in which ethical actions occur. Ethics, on the other hand, deals with moral principles and how individuals should act within that reality. Similarities lie in their shared concern for human existence and values; metaphysical views on free will, for instance, directly impact ethical theories like determinism vs. libertarianism. Contrasts arise as Metaphysics is descriptive of what is, while Ethics is prescriptive of what ought to be, often applying metaphysical insights to practical moral dilemmas.', <!-- Detailed comparison -->
+            'Metaphysics-Logic': 'Metaphysics delves into the essence of being and reality, while Logic provides the tools for reasoning about such essences through valid argumentation and inference. Both are abstract and foundational, with Logic often serving as a method to explore metaphysical questions, such as in ontological arguments for God\'s existence. Differences include Metaphysics\' focus on content (what exists) versus Logic\'s emphasis on form (how to reason correctly), though they intersect in areas like modal logic, which deals with possibility and necessity in reality.', <!-- Detailed comparison -->
+            'Metaphysics-Aesthetics': 'Metaphysics concerns the fundamental structure of reality, including abstract entities, while Aesthetics explores beauty, art, and sensory experiences as part of that reality. Similarities: Both contemplate the nature of existence—Aesthetics often questions if beauty is an objective property (metaphysical realism) or subjective. Contrasts: Metaphysics is broad and ontological, whereas Aesthetics is specific to perceptual and emotional responses, though metaphysical views on idealism can influence aesthetic theories.', <!-- Detailed comparison -->
+            'Metaphysics-Political Philosophy': 'Metaphysics examines ultimate reality and human nature, which underpins Political Philosophy\'s inquiries into governance, justice, and society. Similarities: Metaphysical views on human essence (e.g., rational beings) inform political theories like social contract. Contrasts: Metaphysics is theoretical about existence, while Political Philosophy applies it normatively to power structures and rights.', <!-- Detailed comparison -->
+            'Metaphysics-Philosophy of Mind': 'Both deal with fundamental aspects of existence; Metaphysics broadly with reality, Philosophy of Mind specifically with mental phenomena. Similarities: The mind-body problem is central to both. Contrasts: Metaphysics encompasses all being, while Philosophy of Mind focuses on consciousness and its relation to physicality.', <!-- Detailed comparison -->
+            'Metaphysics-Philosophy of Language': 'Metaphysics explores reality, while Philosophy of Language examines how language represents it. Similarities: Questions of reference and meaning tie into metaphysical realism. Contrasts: One is about being, the other about expression.', <!-- Detailed comparison -->
+            'Metaphysics-Philosophy of Science': 'Metaphysics questions ultimate reality, Philosophy of Science the foundations of scientific knowledge. Similarities: Both address laws of nature. Contrasts: Metaphysics is speculative, Science philosophy empirical.', <!-- Detailed comparison -->
+            'Metaphysics-Existentialism': 'Metaphysics seeks objective truths about existence, Existentialism emphasizes subjective individual experience. Similarities: Both ponder being. Contrasts: Objective vs. personal.', <!-- Detailed comparison -->
+            'Metaphysics-Phenomenology': 'Metaphysics investigates reality beyond appearances, Phenomenology describes appearances as they are experienced. Similarities: Both explore structures of existence. Contrasts: Objective ontology vs. subjective description.', <!-- Detailed comparison -->
+            'Metaphysics-Christian Theology': 'Metaphysics philosophically probes reality using reason, Christian Theology explores divine reality through revelation and faith. Similarities: Both address ultimate being (e.g., God as necessary being). Contrasts: Reason-based vs. faith-based, with Theology incorporating scripture.', <!-- Detailed comparison -->
+            'Metaphysics-Islamic Theology': 'Both pursue ultimate reality; Metaphysics through philosophy, Islamic Theology (Kalam) through rational defense of Quranic doctrines. Similarities: Cosmology and attributes of God. Contrasts: Philosophical vs. revelatory.', <!-- Detailed comparison -->
+            'Metaphysics-Jewish Theology': 'Metaphysics examines being rationally, Jewish Theology reflects on God via law and commentary. Similarities: Ethical implications of existence. Contrasts: Abstract vs. communal.', <!-- Detailed comparison -->
+            'Metaphysics-Hindu Theology': 'Metaphysics and Hindu Vedanta both speculate on ultimate reality (Brahman). Similarities: Non-dualism. Contrasts: Western reason vs. experiential.', <!-- Detailed comparison -->
+            'Metaphysics-Buddhist Theology': 'Metaphysics seeks essence, Buddhist Philosophy denies inherent existence. Similarities: Reality investigation. Contrasts: Essentialism vs. emptiness.', <!-- Detailed comparison -->
+            'Metaphysics-Humanism': 'Metaphysics broad on reality, Humanism human-centered. Similarities: Human place in cosmos. Contrasts: Universal vs. anthropocentric.', <!-- Detailed comparison -->
+            'Epistemology-Ethics': 'Epistemology on knowing truth, Ethics on moral action based on knowledge. Similarities: Justification in both. Contrasts: Theoretical vs. practical.', <!-- Detailed comparison -->
+            'Epistemology-Logic': 'Both involve reasoning; Logic as tool for Epistemological validation. Similarities: Rational inquiry. Contrasts: Sources of knowledge vs. forms of argument.', <!-- Detailed comparison -->
+            'Epistemology-Aesthetics': 'Epistemology on knowledge acquisition, Aesthetics on perceptual judgments. Similarities: Role of senses. Contrasts: Fact vs. value.', <!-- Detailed comparison -->
+            'Epistemology-Political Philosophy': 'Epistemology examines knowledge, Political Philosophy applies it to societal truths. Similarities: Justification of beliefs in governance. Contrasts: Individual vs. collective.', <!-- Detailed comparison -->
+            'Epistemology-Philosophy of Mind': 'Epistemology deals with knowing, Philosophy of Mind with mental states enabling it. Similarities: Consciousness in knowledge. Contrasts: Process vs. substrate.', <!-- Detailed comparison -->
+            'Epistemology-Philosophy of Language': 'Both explore how language conveys knowledge. Similarities: Meaning and truth. Contrasts: General knowledge vs. linguistic.', <!-- Detailed comparison -->
+            'Epistemology-Philosophy of Science': 'Epistemology foundational to Science philosophy\'s methods. Similarities: Empirical justification. Contrasts: Broad vs. scientific-specific.', <!-- Detailed comparison -->
+            'Epistemology-Existentialism': 'Epistemology objective, Existentialism subjective knowing through experience. Similarities: Limits of knowledge. Contrasts: Certainty vs. angst.', <!-- Detailed comparison -->
+            'Epistemology-Phenomenology': 'Epistemology on sources, Phenomenology on experienced knowledge. Similarities: First-person perspective. Contrasts: Justification vs. description.', <!-- Detailed comparison -->
+            'Epistemology-Christian Theology': 'Epistemology rational, Christian Theology includes revelation. Similarities: Truth seeking. Contrasts: Reason vs. faith.', <!-- Detailed comparison -->
+            'Epistemology-Islamic Theology': 'Similar in rational defense, but Islamic adds divine revelation. Contrasts: Secular vs. religious sources.', <!-- Detailed comparison -->
+            'Epistemology-Jewish Theology': 'Epistemology analytical, Jewish communal via texts. Similarities: Ethical knowledge. Contrasts: Universal vs. traditional.', <!-- Detailed comparison -->
+            'Epistemology-Hindu Theology': 'Epistemology Western, Hindu experiential pramanas. Similarities: Valid cognition. Contrasts: Methods differ.', <!-- Detailed comparison -->
+            'Epistemology-Buddhist Theology': 'Both address knowing reality. Similarities: Skepticism. Contrasts: Foundational vs. interdependent.', <!-- Detailed comparison -->
+            'Epistemology-Humanism': 'Both emphasize human reason and education. Similarities: Self-improvement. Contrasts: General vs. reformative.', <!-- Detailed comparison -->
+            // Additional comparisons for new fields... (abbreviated for space; in full script, expand similarly) <!-- Comment -->
+            'Ethics-Political Philosophy': 'Ethics provides moral foundations for Political Philosophy\'s societal applications. Similarities: Justice and rights. Contrasts: Individual vs. collective morality.', <!-- Example -->
+            // ... Add more as needed for all pairs, but for draft, representative ones <!-- Comment -->
+            // Reverse keys for symmetry <!-- Comment for reverse -->
+            'Epistemology-Metaphysics': 'See Metaphysics-Epistemology', <!-- Reverse -->
+            // ... Similarly for all <!-- Comment -->
+        }; <!-- Ends comparisons object -->
+
+        function compareFields() { <!-- Function to handle comparison -->
+            const field1 = document.getElementById('field1').value; <!-- Gets value of first select -->
+            const field2 = document.getElementById('field2').value; <!-- Gets value of second select -->
+            let key = `${field1}-${field2}`; <!-- Creates key for lookup -->
+            const resultDiv = document.getElementById('comparison-result'); <!-- Gets result div -->
+            if (comparisons[key + '-reverse']) key += '-reverse'; <!-- Handles potential reverse if defined -->
+            if (field1 && field2 && field1 !== field2 && comparisons[key]) { <!-- Checks if valid and different -->
+                let comparison = comparisons[key]; <!-- Gets comparison text -->
+                if (comparison.startsWith('See ')) { <!-- Handles see references -->
+                    const refKey = comparison.substring(4); <!-- Extracts reference -->
+                    comparison = comparisons[refKey]; <!-- Gets referenced text -->
+                }
+                resultDiv.innerHTML = `<h3>Comparison between ${field1} and ${field2}</h3><p>${comparison}</p>`; <!-- Displays -->
+            } else { <!-- Else for invalid -->
+                resultDiv.innerHTML = '<p>Please select two different fields. Detailed comparison may not be available for all pairs in this draft.</p>'; <!-- Message -->
+            }
+        } <!-- Ends function -->
+    </script> <!-- Ends JavaScript -->
+</body> <!-- Ends body -->
+</html> <!-- Ends HTML document -->
