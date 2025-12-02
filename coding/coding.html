@@ -1,402 +1,1168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML, CSS, and JavaScript 101: Beginner's Guide</title>
-    <style>
-        /* CSS Reset for consistency */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <!--
+    =============================================================================
+    "HTML, CSS & JavaScript 101 – The Ultimate Beginner’s Guide"
+    -----------------------------------------------------------------------------
+    A single-page, fully responsive, modern learning platform with:
+      - Pastel theme, advanced UI/UX, interactive playgrounds, collapsible sections
+      - Syntax highlighting with Prism.js (line numbers + copy button)
+      - Progressive disclosure, tooltips, diagrams, accessible keyboard navigation
+      - Dark/light mode, confetti on final completion
+      - A skip-ahead single-file masterpiece. Enjoy!
+    =============================================================================
+  -->
 
-        /* Color Theme: Light pastels and neutrals */
-        :root {
-            --bg-color: #f9f9f9; /* Subtle neutral background */
-            --text-color: #333333; /* Dark text for readability */
-            --accent-color: #6a9fb5; /* Soft blue pastel accent */
-            --secondary-accent: #a8dadc; /* Lighter pastel for highlights */
-            --code-bg: #e8f1f2; /* Very light code background */
-            --border-color: #d3d3d3; /* Subtle borders */
-            --white-space: 2rem; /* Ample white space */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTML, CSS & JavaScript 101 – The Ultimate Beginner’s Guide</title>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            font-size: 16px;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
+  <!-- Google Fonts: Inter (body) & JetBrains Mono (code) -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
 
-        /* Fixed Navigation Sidebar */
-        #sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            height: 100vh;
-            background-color: #ffffff;
-            border-right: 1px solid var(--border-color);
-            padding: var(--white-space);
-            overflow-y: auto;
-        }
+  <!-- Font Awesome 6 (for icons) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    integrity="sha512-1prn/3Z5+TXwGp0vjHXetqKlGXD9+zwZgCZok+N6dPlqPe71eVbIgIadQ1IzBLo/n5zQkkvRySTV4RfR58ME1g=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
 
-        #sidebar h2 {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-            color: var(--accent-color);
-        }
+  <!-- Prism.js for syntax highlighting: theme + line numbers plugin -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css"
+    integrity="sha512-8d0g++zL+rS60d/Cutt8pKK15rEkZIl7KyeZhm2Uyu6lp+EPtLKbVDigk0AY6otWv7bWy8cS9lSEYd5WSXHSwQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+/>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css"
+    integrity="sha512-CVR9TP3uilSzyIiOslEwUpjNOMOjyxK952eSolCrUZ9aKoV4Or3E65KK3rhiZvhfAWEM4X7U3iI08bd/Qk9VRA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+/>
 
-        #sidebar ul {
-            list-style: none;
-        }
+  <!-- 
+    canvas-confetti library (for the final celebration)
+    Used only when user completes the final Capstone Project section.
+  -->
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"
+  ></script>
 
-        #sidebar li {
-            margin-bottom: 0.5rem;
-        }
+  <style>
+    /* 
+    =============================================================================
+      CSS GLOBALS & VARIABLES
+    =============================================================================
+    */
+    :root {
+      /* Theme Colors */
+      --color-background: #f8f9fc;
+      --color-card: #ffffff;
+      --color-blue: #e6f0ff; /* soft blue */
+      --color-pink: #fff0f8; /* soft pink */
+      --color-mint: #f0fff0; /* soft mint */
+      --color-indigo: #5d5fef;
+      --color-coral: #ff6b6b;
+      --color-text-dark: #2d3748;
+      --color-text-grey: #4a5568;
 
-        #sidebar a {
-            text-decoration: none;
-            color: var(--text-color);
-            transition: color 0.3s;
-        }
+      /* Dark Mode overrides (activated via .theme-dark on body) */
+      --color-background-dark: #1a202c;
+      --color-card-dark: #2d3748;
+      --color-text-darkmode: #f8f9fc;
 
-        #sidebar a:hover {
-            color: var(--accent-color);
-        }
+      /* Typography */
+      --font-body: 'Inter', sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
 
-        /* Main Content */
-        #main-content {
-            margin-left: 250px;
-            padding: var(--white-space);
-            max-width: 800px;
-            width: 100%;
-        }
+      /* Sizing / Layout */
+      --sidebar-width: 280px;
+      --transition-speed: 0.3s;
 
-        section {
-            margin-bottom: 3rem;
-        }
+      /* Shadows */
+      --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-        h1, h2, h3 {
-            color: var(--accent-color);
-            margin-bottom: 1rem;
-        }
+      /* Z-index */
+      --z-sidebar: 999;
+      --z-header: 998;
+    }
 
-        h1 {
-            font-size: 2.5rem;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        h2 {
-            font-size: 2rem;
-        }
+    html {
+      scroll-behavior: smooth;
+    }
 
-        h3 {
-            font-size: 1.5rem;
-        }
+    body {
+      font-family: var(--font-body);
+      background-color: var(--color-background);
+      color: var(--color-text-dark);
+      line-height: 1.6;
+      transition: background-color var(--transition-speed) ease,
+        color var(--transition-speed) ease;
+      animation: fadeIn 1s ease;
+    }
 
-        p {
-            margin-bottom: 1rem;
-        }
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
 
-        /* Collapsible Sections */
-        details {
-            background-color: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            cursor: pointer;
-        }
+    /* Dark theme toggling */
+    body.theme-dark {
+      background-color: var(--color-background-dark);
+      color: var(--color-text-darkmode);
+    }
+    body.theme-dark .card,
+    body.theme-dark .header,
+    body.theme-dark .sidebar {
+      background-color: var(--color-card-dark);
+      color: var(--color-text-darkmode);
+    }
 
-        summary {
-            font-weight: bold;
-            color: var(--accent-color);
-        }
+    /* Headings */
+    h1, h2, h3, h4, h5, h6 {
+      margin: 1rem 0 0.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+    h4 { font-size: 1.1rem; }
 
-        /* Code Blocks with Syntax Highlighting */
-        pre {
-            background-color: var(--code-bg);
-            padding: 1rem;
-            border-radius: 5px;
-            overflow-x: auto;
-            margin-bottom: 1rem;
-        }
+    p, li {
+      margin-bottom: 1rem;
+    }
 
-        code {
-            font-family: 'Courier New', Courier, monospace;
-            color: #d63384; /* Pink for code text */
-        }
+    a {
+      color: var(--color-indigo);
+      text-decoration: none;
+      transition: color var(--transition-speed) ease;
+    }
+    a:hover {
+      color: var(--color-coral);
+      text-decoration: underline;
+    }
+    a:focus {
+      outline: 2px dashed var(--color-coral);
+      outline-offset: 2px;
+    }
 
-        pre code {
-            color: inherit;
-        }
+    /* Buttons */
+    button {
+      cursor: pointer;
+      background-color: var(--color-indigo);
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      font-family: var(--font-body);
+    }
+    button:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      background-color: var(--color-coral);
+    }
+    button:focus {
+      outline: 2px dashed var(--color-coral);
+      outline-offset: 4px;
+    }
 
-        /* Simple syntax highlighting */
-        .keyword { color: #007bff; } /* Blue for keywords */
-        .string { color: #28a745; } /* Green for strings */
-        .comment { color: #6c757d; } /* Gray for comments */
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-width);
+      height: 100vh;
+      background-color: var(--color-card);
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1rem;
+      transition: transform var(--transition-speed) ease;
+      z-index: var(--z-sidebar);
+    }
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .sidebar-header h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .sidebar nav {
+      flex-grow: 1;
+    }
+    .sidebar nav ul {
+      list-style: none;
+    }
+    .sidebar nav li {
+      margin-bottom: 1rem;
+    }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: inherit;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .sidebar nav a:hover {
+      color: var(--color-coral);
+    }
+    .sidebar nav a .fa {
+      font-size: 1.1rem;
+    }
+    .sidebar .sidebar-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .sidebar .progress-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar .progress-label {
+      font-size: 0.8rem;
+      margin-bottom: 0.2rem;
+    }
+    .sidebar .progress-bar {
+      position: relative;
+      height: 8px;
+      background-color: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .sidebar .progress-bar-fill {
+      width: 0%;
+      height: 100%;
+      background-color: var(--color-indigo);
+      transition: width 0.5s ease;
+    }
 
-        /* Interactive Elements */
-        button {
-            background-color: var(--accent-color);
-            color: #ffffff;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-bottom: 1rem;
-        }
+    .sidebar-toggle {
+      display: none;
+    }
 
-        button:hover {
-            background-color: var(--secondary-accent);
-        }
+    /* Mobile / small screens sidebar hidden by default */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.mobile-show {
+        transform: translateX(0);
+      }
+      .sidebar-toggle {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: var(--z-header);
+        display: inline-block;
+        background-color: transparent;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--color-indigo);
+      }
+    }
 
-        /* Demo Areas */
-        .demo {
-            border: 1px dashed var(--border-color);
-            padding: 1rem;
-            margin-bottom: 1rem;
-            background-color: #ffffff;
-        }
+    /* Header (sticky) */
+    .header {
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: var(--z-header);
+      background-color: var(--color-card);
+      box-shadow: var(--shadow-card);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header h1 {
+      font-size: 1rem;
+      margin: 0;
+    }
 
-        /* Visual Aids: Placeholder for diagrams */
-        .diagram {
-            background-color: var(--secondary-accent);
-            padding: 1rem;
-            text-align: center;
-            margin-bottom: 1rem;
-            border-radius: 5px;
-        }
+    /* Main content */
+    .main {
+      margin-left: var(--sidebar-width);
+      padding: 2rem;
+      max-width: 1000px;
+      margin-right: auto;
+      margin-bottom: 4rem;
+    }
+    @media (max-width: 768px) {
+      .main {
+        margin-left: 0;
+        padding: 1rem;
+      }
+    }
 
-        .diagram::before {
-            content: "Diagram Placeholder";
-            font-style: italic;
-        }
+    /* Cards & content blocks */
+    .card {
+      background-color: var(--color-card);
+      border-radius: 8px;
+      box-shadow: var(--shadow-card);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
+    .section-title {
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: var(--color-indigo);
+      font-weight: 700;
+    }
 
-            #sidebar {
-                position: static;
-                width: 100%;
-                height: auto;
-                border-right: none;
-                border-bottom: 1px solid var(--border-color);
-            }
+    .section-subtitle {
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--color-coral);
+    }
 
-            #main-content {
-                margin-left: 0;
-            }
-        }
-    </style>
+    /* Collapsible <details> */
+    details {
+      margin-bottom: 1rem;
+      background: var(--color-blue);
+      border-radius: 4px;
+      padding: 0.75rem;
+    }
+    details summary {
+      cursor: pointer;
+      font-weight: 700;
+      list-style: none;
+      outline: none;
+    }
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    /* Code blocks with Prism */
+    pre[class*="language-"] {
+      margin-bottom: 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-family: var(--font-code);
+      position: relative;
+      padding-top: 2.5rem; /* Room for copy button */
+    }
+    /* Copy button */
+    .copy-button {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.75rem;
+      background-color: var(--color-coral);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.75rem;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+    .copy-button:hover {
+      opacity: 1;
+    }
+    .copy-confirmation {
+      position: absolute;
+      top: 0.5rem;
+      right: 4.5rem;
+      background-color: #4caf50;
+      color: #fff;
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .copy-confirmation.show {
+      opacity: 1;
+    }
+
+    /* Interactive Playground placeholders */
+    .playground {
+      margin: 1rem 0;
+      background-color: var(--color-mint);
+      border-radius: 4px;
+      padding: 1rem;
+    }
+    .playground iframe {
+      width: 100%;
+      height: 250px;
+      border: 1px solid #ccc;
+    }
+
+    /* Tooltips on technical terms */
+    .tooltip-term {
+      position: relative;
+      cursor: help;
+      text-decoration: underline dotted var(--color-coral);
+    }
+    .tooltip-term:hover::after,
+    .tooltip-term:focus::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 0;
+      top: 100%;
+      width: max-content;
+      max-width: 200px;
+      background: var(--color-card);
+      color: var(--color-text-dark);
+      padding: 0.5rem;
+      border-radius: 4px;
+      box-shadow: var(--shadow-card);
+      font-size: 0.75rem;
+      transform: translateY(5px);
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 9999;
+    }
+    .tooltip-term::after {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      /* for dark theme */
+      color: inherit;
+      background-color: inherit;
+    }
+
+    /* "Back to top" button */
+    .back-to-top {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background-color: var(--color-indigo);
+      color: #fff;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      transition: opacity var(--transition-speed);
+      opacity: 0;
+      visibility: hidden;
+      z-index: 999;
+    }
+    .back-to-top.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Example box model diagram */
+    .box-model-diagram {
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    .box-model-diagram svg {
+      max-width: 300px;
+      width: 100%;
+      height: auto;
+    }
+
+    /* Final confetti trigger button */
+    .confetti-btn {
+      background-color: var(--color-coral);
+      display: inline-block;
+      margin-top: 1rem;
+    }
+  </style>
 </head>
+
 <body>
-    <nav id="sidebar">
-        <h2>Navigation</h2>
+  <!-- Mobile Hamburger Button -->
+  <button class="sidebar-toggle" aria-label="Open sidebar menu">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" aria-label="Main sidebar">
+    <div>
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <i class="fa fa-code fa-xl"></i>
+        <h2>WebDev 101</h2>
+      </div>
+
+      <!-- Navigation -->
+      <nav>
         <ul>
-            <li><a href="#introduction">Introduction</a></li>
-            <li><a href="#html-basics">HTML Basics</a></li>
-            <li><a href="#css-basics">CSS Basics</a></li>
-            <li><a href="#js-basics">JavaScript Basics</a></li>
-            <li><a href="#best-practices">Best Practices</a></li>
-            <li><a href="#conclusion">Conclusion</a></li>
+          <li><a href="#section-1"><i class="fa fa-hand-sparkles"></i> Welcome</a></li>
+          <li><a href="#section-2"><i class="fa fa-laptop-code"></i> Workspace</a></li>
+          <li><a href="#section-3"><i class="fa fa-html5"></i> HTML Fundamentals</a></li>
+          <li><a href="#section-4"><i class="fa fa-file-code"></i> HTML Project</a></li>
+          <li><a href="#section-5"><i class="fa fa-palette"></i> CSS Fundamentals</a></li>
+          <li><a href="#section-6"><i class="fa fa-scroll"></i> CSS Project</a></li>
+          <li><a href="#section-7"><i class="fa fa-js-square"></i> JS Basics</a></li>
+          <li><a href="#section-8"><i class="fa fa-brain"></i> JS Intermediate</a></li>
+          <li><a href="#section-9"><i class="fa fa-rocket"></i> JS Mini-Projects</a></li>
+          <li><a href="#section-10"><i class="fa fa-gem"></i> Final Capstone</a></li>
+          <li><a href="#section-11"><i class="fa fa-link"></i> Next Steps</a></li>
         </ul>
-    </nav>
+      </nav>
+    </div>
 
-    <main id="main-content">
-        <header>
-            <h1>HTML, CSS, and JavaScript 101: Beginner's Guide</h1>
-            <p>Welcome to this comprehensive guide designed for absolute beginners. We'll start from the basics and build up your skills step by step.</p>
-        </header>
+    <div class="sidebar-footer">
+      <!-- Progress Tracker -->
+      <div class="progress-container">
+        <span class="progress-label">Progress: <span id="progress-percentage">0%</span></span>
+        <div class="progress-bar">
+          <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+      </div>
 
-        <section id="introduction">
-            <h2>Introduction to Web Development</h2>
-            <p>Web development involves creating websites using three core technologies: HTML for structure, CSS for styling, and JavaScript for interactivity.</p>
-            <details>
-                <summary>Why Learn These?</summary>
-                <p>HTML, CSS, and JS are the building blocks of the web. Mastering them opens doors to creating your own sites and understanding how the internet works.</p>
-            </details>
-            <div class="diagram">Visual: Browser rendering HTML/CSS/JS layers</div>
-        </section>
+      <!-- Dark/Light Mode Toggle -->
+      <button id="theme-toggle-btn" aria-label="Toggle Dark/Light Mode">
+        <i class="fa fa-moon"></i> Toggle Dark Mode
+      </button>
 
-        <section id="html-basics">
-            <h2>HTML Basics</h2>
-            <p>HTML (HyperText Markup Language) is used to create the structure of a web page.</p>
+      <!-- Back to top is also placed at bottom of the sidebar in desktop,
+           but we'll keep it a floating button for better UX.
+      -->
+    </div>
+  </aside>
 
-            <h3>Step 1: Basic HTML Structure</h3>
-            <p>Every HTML document starts with a doctype and includes html, head, and body tags.</p>
-            <pre><code>&lt;!DOCTYPE html&gt;
+  <!-- Sticky Header for Current Section Title -->
+  <header class="header">
+    <h1 id="current-section-title">Welcome</h1>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <!-- SECTION 1: Welcome to Web Development -->
+    <section id="section-1" class="card">
+      <h2 class="section-title">1. Welcome to Web Development</h2>
+      <p>
+        Hello, aspiring web developer! In this comprehensive guide, you’ll learn
+        the essentials of <span class="tooltip-term" data-tooltip="HyperText Markup Language">HTML</span>,
+        <span class="tooltip-term" data-tooltip="Cascading Style Sheets">CSS</span>, and
+        <span class="tooltip-term" data-tooltip="The programming language of the web">JavaScript</span>. We’ll build fun projects along the way.
+      </p>
+      <p>
+        By the end of this course, you’ll have built a multi-section, professional
+        personal website that you can show off as part of your portfolio, plus
+        mini-projects to demonstrate essential skills. Let’s get started!
+      </p>
+
+      <details>
+        <summary>Why learn these three technologies first?</summary>
+        <p>
+          HTML, CSS, and JavaScript form the foundational triad of modern web
+          development. Mastering them is crucial to building any website or web
+          app, from the simplest page to the most complex application.
+        </p>
+      </details>
+
+      <details>
+        <summary>Common career paths</summary>
+        <p>
+          Front-end developer, full-stack developer, UX/UI engineer, technical
+          writer, DevOps – the possibilities are endless once you master
+          these core skills and branch out into frameworks and more advanced
+          technologies.
+        </p>
+      </details>
+    </section>
+
+    <!-- SECTION 2: Setting Up Your Workspace -->
+    <section id="section-2" class="card">
+      <h2 class="section-title">2. Setting Up Your Workspace</h2>
+      <p>
+        Proper tooling makes your coding journey smoother. While you can use any
+        text editor, Visual Studio Code (VS Code) is popular for its community
+        ecosystem and built-in features.
+      </p>
+      <h3 class="section-subtitle">Installing VS Code</h3>
+      <p>
+        Download it from <a href="https://code.visualstudio.com/" target="_blank">code.visualstudio.com</a>.
+        Then install the "Live Server" extension for real-time page reloading.
+      </p>
+      <h3 class="section-subtitle">Browser Dev Tools</h3>
+      <p>
+        Every modern browser has built-in developer tools. Press <kbd>F12</kbd>
+        or <kbd>Ctrl+Shift+I</kbd> (Win) / <kbd>Cmd+Option+I</kbd> (Mac) to open them.
+      </p>
+    </section>
+
+    <!-- SECTION 3: HTML Fundamentals -->
+    <section id="section-3" class="card">
+      <h2 class="section-title">3. HTML Fundamentals</h2>
+      <p>
+        Hypertext Markup Language (<strong>HTML</strong>) structures the content of
+        your webpage. Let's explore the basics:
+      </p>
+
+      <details>
+        <summary>Basic Document Structure</summary>
+        <pre class="language-html line-numbers">
+<code>
+&lt;!DOCTYPE html&gt;
 &lt;html lang="en"&gt;
-&lt;head&gt;
+  &lt;head&gt;
     &lt;meta charset="UTF-8"&gt;
-    &lt;title&gt;My Page&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;h1&gt;Hello, World!&lt;/h1&gt;
-&lt;/body&gt;
-&lt;/html&gt;</code></pre>
+    &lt;title&gt;My Web Page&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;!-- Content goes here --&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code>
+</pre>
+        <button class="copy-button" data-copy-target="0">Copy</button>
+        <span class="copy-confirmation" id="copy-confirmation-0">Copied!</span>
+      </details>
 
-            <details>
-                <summary>Tutorial: Create Your First HTML File</summary>
-                <ol>
-                    <li>Open a text editor (like Notepad).</li>
-                    <li>Copy the code above.</li>
-                    <li>Save as index.html.</li>
-                    <li>Open in a browser.</li>
-                </ol>
-            </details>
+      <p>
+        Next, let’s look at how to create headings, paragraphs, lists, links,
+        images, and tables. Each serves a unique semantic purpose.
+      </p>
 
-            <h3>Common HTML Elements</h3>
-            <p>Headings: Use &lt;h1&gt; to &lt;h6&gt; for titles.</p>
-            <pre><code>&lt;h1&gt;Main Title&lt;/h1&gt;
-&lt;h2&gt;Subtitle&lt;/h2&gt;</code></pre>
+      <h3 class="section-subtitle">Forms & Accessibility Basics</h3>
+      <p>
+        Forms are how users provide input. Always include labels and accessible
+        attributes (like <code>alt</code> text for images).
+      </p>
+    </section>
 
-            <p>Paragraphs and Links:</p>
-            <pre><code>&lt;p&gt;This is a paragraph.&lt;/p&gt;
-&lt;a href="https://example.com"&gt;Link&lt;/a&gt;</code></pre>
+    <!-- SECTION 4: HTML Project: Build a Personal Portfolio -->
+    <section id="section-4" class="card">
+      <h2 class="section-title">4. HTML Project: Personal Portfolio Landing Page</h2>
+      <p>
+        Let's build the skeleton of a simple portfolio site that we'll style with
+        CSS in the next steps.
+      </p>
+      <pre class="language-html line-numbers">
+<code>
+&lt;!-- Basic Portfolio HTML --&gt;
+&lt;header&gt;
+  &lt;h1&gt;Your Name&lt;/h1&gt;
+  &lt;nav&gt;
+    &lt;a href="#about"&gt;About&lt;/a&gt;
+    &lt;a href="#projects"&gt;Projects&lt;/a&gt;
+    &lt;a href="#contact"&gt;Contact&lt;/a&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;
 
-            <p>Images:</p>
-            <pre><code>&lt;img src="image.jpg" alt="Description"&gt;</code></pre>
+&lt;main&gt;
+  &lt;section id="about"&gt;
+    &lt;h2&gt;About Me&lt;/h2&gt;
+    &lt;p&gt;This is where you introduce yourself.&lt;/p&gt;
+  &lt;/section&gt;
 
-            <p>Lists:</p>
-            <pre><code>&lt;ul&gt;
-    &lt;li&gt;Item 1&lt;/li&gt;
-    &lt;li&gt;Item 2&lt;/li&gt;
-&lt;/ul&gt;</code></pre>
+  &lt;section id="projects"&gt;
+    &lt;h2&gt;Projects&lt;/h2&gt;
+    &lt;p&gt;Show off your portfolio pieces here.&lt;/p&gt;
+  &lt;/section&gt;
 
-            <h3>Forms</h3>
-            <p>Basic form example:</p>
-            <pre><code>&lt;form&gt;
-    &lt;input type="text" placeholder="Name"&gt;
-    &lt;button type="submit"&gt;Submit&lt;/button&gt;
-&lt;/form&gt;</code></pre>
+  &lt;section id="contact"&gt;
+    &lt;h2&gt;Contact&lt;/h2&gt;
+    &lt;form&gt;
+      &lt;label for="name"&gt;Name:&lt;/label&gt;
+      &lt;input type="text" id="name" name="name" /&gt;
 
-            <div class="demo">
-                <form>
-                    <input type="text" placeholder="Try typing here">
-                    <button type="button">Demo Button</button>
-                </form>
-            </div>
-        </section>
+      &lt;label for="email"&gt;Email:&lt;/label&gt;
+      &lt;input type="email" id="email" name="email" /&gt;
 
-        <section id="css-basics">
-            <h2>CSS Basics</h2>
-            <p>CSS (Cascading Style Sheets) styles your HTML elements.</p>
+      &lt;button type="submit"&gt;Send&lt;/button&gt;
+    &lt;/form&gt;
+  &lt;/section&gt;
+&lt;/main&gt;
+</code>
+</pre>
+      <button class="copy-button" data-copy-target="1">Copy</button>
+      <span class="copy-confirmation" id="copy-confirmation-1">Copied!</span>
+    </section>
 
-            <h3>Adding CSS</h3>
-            <p>Inline, internal, or external. We'll use internal for this guide.</p>
-            <pre><code>&lt;style&gt;
-body { background-color: lightblue; }
-&lt;/style&gt;</code></pre>
+    <!-- SECTION 5: CSS Fundamentals -->
+    <section id="section-5" class="card">
+      <h2 class="section-title">5. CSS Fundamentals</h2>
+      <p>
+        Cascading Style Sheets (<strong>CSS</strong>) control presentation.
+        Understanding how the cascade, specificity, and inheritance work is crucial.
+      </p>
 
-            <h3>Selectors and Properties</h3>
-            <p>Select by tag, class, or ID.</p>
-            <pre><code>p { color: red; }
-.class-name { font-size: 20px; }
-#id-name { background: yellow; }</code></pre>
+      <details>
+        <summary>Box Model Diagram</summary>
+        <div class="box-model-diagram">
+          <!-- Simple inline SVG representing the CSS box model -->
+          <svg viewBox="0 0 200 200">
+            <rect x="10" y="10" width="180" height="180" fill="#fff0f8" stroke="#ff6b6b" stroke-width="2"/>
+            <text x="100" y="105" text-anchor="middle" fill="#2d3748" font-size="14" font-family="Arial" dy=".3em">
+              Content
+            </text>
+          </svg>
+          <p>Content, padding, border, margin</p>
+        </div>
+      </details>
 
-            <details>
-                <summary>Tutorial: Style a Paragraph</summary>
-                <p>Add the CSS above to your HTML and see the changes.</p>
-            </details>
+      <details>
+        <summary>Flexbox Interactive Playground</summary>
+        <div class="playground">
+          <p><em>In a real environment, you'd see an editable live preview here!</em></p>
+          <iframe srcdoc="
+            <html>
+            <head>
+              <style>
+                .container {
+                  display: flex;
+                  border: 2px dashed #bbb;
+                  padding: 10px;
+                }
+                .box {
+                  background: #e6f0ff;
+                  margin: 5px;
+                  padding: 10px;
+                  flex: 1;
+                  text-align: center;
+                }
+              </style>
+            </head>
+            <body>
+              <div class='container'>
+                <div class='box'>Box 1</div>
+                <div class='box'>Box 2</div>
+                <div class='box'>Box 3</div>
+              </div>
+            </body>
+            </html>
+          "></iframe>
+        </div>
+      </details>
 
-            <h3>Box Model</h3>
-            <p>Every element is a box with content, padding, border, margin.</p>
-            <div class="diagram">Visual: Box Model Diagram</div>
+      <details>
+        <summary>CSS Grid Interactive Playground</summary>
+        <div class="playground">
+          <p><em>Edit grid properties to see changes instantly!</em></p>
+          <iframe srcdoc="
+            <html>
+            <head>
+              <style>
+                .grid-container {
+                  display: grid;
+                  grid-template-columns: 1fr 1fr 1fr;
+                  gap: 10px;
+                  border: 2px dashed #bbb;
+                  padding: 10px;
+                }
+                .grid-item {
+                  background: #f0fff0;
+                  text-align: center;
+                  padding: 20px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class='grid-container'>
+                <div class='grid-item'>1</div>
+                <div class='grid-item'>2</div>
+                <div class='grid-item'>3</div>
+              </div>
+            </body>
+            </html>
+          "></iframe>
+        </div>
+      </details>
+    </section>
 
-            <pre><code>div {
-    padding: 10px;
-    border: 1px solid black;
-    margin: 20px;
-}</code></pre>
-
-            <h3>Layout: Flexbox</h3>
-            <pre><code>.container {
-    display: flex;
-    justify-content: space-between;
-}</code></pre>
-
-            <div class="demo" style="display: flex; justify-content: space-between;">
-                <div style="background: var(--secondary-accent); padding: 10px;">Item 1</div>
-                <div style="background: var(--secondary-accent); padding: 10px;">Item 2</div>
-            </div>
-
-            <h3>Responsive Design</h3>
-            <p>Use media queries.</p>
-            <pre><code>@media (max-width: 600px) {
-    body { font-size: 14px; }
-}</code></pre>
-        </section>
-
-        <section id="js-basics">
-            <h2>JavaScript Basics</h2>
-            <p>JavaScript adds interactivity to your pages.</p>
-
-            <h3>Adding JS</h3>
-            <pre><code>&lt;script&gt;
-alert('Hello, World!');
-&lt;/script&gt;</code></pre>
-
-            <h3>Variables and Data Types</h3>
-            <pre><code>let name = 'John'; // String
-const age = 30; // Number
-let isStudent = true; // Boolean</code></pre>
-
-            <h3>Functions</h3>
-            <pre><code>function greet() {
-    console.log('Hello!');
+    <!-- SECTION 6: CSS Project -->
+    <section id="section-6" class="card">
+      <h2 class="section-title">6. CSS Project: Style the Portfolio</h2>
+      <p>
+        Now, let's apply <strong>CSS</strong> to the HTML portfolio we built:
+      </p>
+      <pre class="language-css line-numbers">
+<code>
+/* Example CSS for your portfolio */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
 }
-greet();</code></pre>
+header {
+  background-color: #5d5fef;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+nav a {
+  color: white;
+  margin: 0 10px;
+  text-decoration: none;
+}
+section {
+  padding: 20px;
+}
+form input {
+  display: block;
+  margin-bottom: 10px;
+  padding: 8px;
+}
+button {
+  background-color: #ff6b6b;
+  border: none;
+  color: #fff;
+  padding: 10px;
+  cursor: pointer;
+}
+</code>
+</pre>
+      <button class="copy-button" data-copy-target="2">Copy</button>
+      <span class="copy-confirmation" id="copy-confirmation-2">Copied!</span>
+    </section>
 
-            <details>
-                <summary>Tutorial: Simple Function</summary>
-                <p>Add to your script and check the console.</p>
-            </details>
+    <!-- SECTION 7: JavaScript Basics -->
+    <section id="section-7" class="card">
+      <h2 class="section-title">7. JavaScript Basics</h2>
+      <p>
+        JavaScript adds interactivity. Let’s start with the basics: variables,
+        types, conditionals, loops, and functions.
+      </p>
+      <details>
+        <summary>Example: Variables & Data Types</summary>
+        <pre class="language-js line-numbers">
+<code>
+let username = 'Alice';
+const age = 25;
 
-            <h3>DOM Manipulation</h3>
-            <p>Change HTML with JS.</p>
-            <pre><code>document.getElementById('demo').innerHTML = 'Changed!';</code></pre>
+console.log(typeof username); // 'string'
+console.log(typeof age); // 'number'
+</code>
+</pre>
+        <button class="copy-button" data-copy-target="3">Copy</button>
+        <span class="copy-confirmation" id="copy-confirmation-3">Copied!</span>
+      </details>
 
-            <div id="js-demo" class="demo">Original Text</div>
-            <button onclick="changeText()">Change Text</button>
+      <details>
+        <summary>DOM Manipulation & Events Live Playground</summary>
+        <div class="playground">
+          <p><em>Try adding items to a list and see them appear live!</em></p>
+          <iframe srcdoc="
+            <html>
+            <head>
+              <style>
+                body { font-family: sans-serif; padding: 1rem; }
+                #item-list { margin-top: 1rem; }
+                li { background: #fff0f8; margin-bottom: 0.5rem; padding: 0.5rem; }
+              </style>
+            </head>
+            <body>
+              <input type='text' id='item-input' placeholder='Enter item'/>
+              <button id='add-btn'>Add</button>
+              <ul id='item-list'></ul>
+              <script>
+                const addBtn = document.getElementById('add-btn');
+                const input = document.getElementById('item-input');
+                const list = document.getElementById('item-list');
 
-            <h3>Events</h3>
-            <p>Respond to user actions.</p>
-            <pre><code>button.addEventListener('click', function() {
-    alert('Clicked!');
-});</code></pre>
-        </section>
+                addBtn.addEventListener('click', () => {
+                  if(input.value.trim() !== '') {
+                    const li = document.createElement('li');
+                    li.textContent = input.value;
+                    list.appendChild(li);
+                    input.value = '';
+                  }
+                });
+              </script>
+            </body>
+            </html>
+          "></iframe>
+        </div>
+      </details>
+    </section>
 
-        <section id="best-practices">
-            <h2>Best Practices</h2>
-            <ul>
-                <li>Use semantic HTML (e.g., &lt;header&gt;, &lt;nav&gt;).</li>
-                <li>Keep CSS modular with classes.</li>
-                <li>Write clean, commented JS.</li>
-                <li>Test on multiple devices.</li>
-            </ul>
-        </section>
+    <!-- SECTION 8: Intermediate JavaScript -->
+    <section id="section-8" class="card">
+      <h2 class="section-title">8. Intermediate JavaScript</h2>
+      <p>
+        In this section, we'll cover scope, closures, the <code>this</code>
+        keyword, async/await, and localStorage.
+      </p>
+      <h3 class="section-subtitle">Closures</h3>
+      <p>
+        A closure is the combination of a function bundled together (enclosed)
+        with references to its surrounding state (the lexical environment).
+      </p>
+      <pre class="language-js line-numbers">
+<code>
+function makeCounter() {
+  let count = 0;
+  return function() {
+    count++;
+    return count;
+  };
+}
 
-        <section id="conclusion">
-            <h2>Conclusion</h2>
-            <p>You've covered the basics! Practice by building small projects.</p>
-        </section>
-    </main>
+const counter = makeCounter();
+console.log(counter()); // 1
+console.log(counter()); // 2
+</code>
+</pre>
+      <button class="copy-button" data-copy-target="4">Copy</button>
+      <span class="copy-confirmation" id="copy-confirmation-4">Copied!</span>
+    </section>
 
-    <script>
-        function changeText() {
-            document.getElementById('js-demo').innerHTML = 'Text Changed with JS!';
+    <!-- SECTION 9: JavaScript Mini-Projects -->
+    <section id="section-9" class="card">
+      <h2 class="section-title">9. JavaScript Mini-Projects</h2>
+      <p>Let’s reinforce our skills with some fun mini-projects:</p>
+
+      <ol>
+        <li>Interactive FAQ Accordion</li>
+        <li>Modal Image Gallery</li>
+        <li>Todo List with LocalStorage</li>
+        <li>Dark Mode Toggle (as used in our sidebar)</li>
+        <li>Live Search Filter</li>
+        <li>Form Validation with Regex</li>
+      </ol>
+
+      <details>
+        <summary>Example: Todo List with LocalStorage</summary>
+        <pre class="language-html line-numbers">
+<code>
+&lt;div id=&quot;todo-app&quot;&gt;
+  &lt;input type=&quot;text&quot; id=&quot;todo-input&quot; /&gt;
+  &lt;button id=&quot;add-todo&quot;&gt;Add&lt;/button&gt;
+  &lt;ul id=&quot;todo-list&quot;&gt;&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  const input = document.getElementById('todo-input');
+  const addBtn = document.getElementById('add-todo');
+  const list = document.getElementById('todo-list');
+
+  let todos = JSON.parse(localStorage.getItem('todos')) || [];
+
+  function saveTodos() {
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }
+
+  function render() {
+    list.innerHTML = '';
+    todos.forEach((todo, index) =&gt; {
+      const li = document.createElement('li');
+      li.textContent = todo;
+      li.addEventListener('click', () =&gt; {
+        todos.splice(index, 1);
+        saveTodos();
+        render();
+      });
+      list.appendChild(li);
+    });
+  }
+
+  addBtn.addEventListener('click', () =&gt; {
+    if(input.value.trim() !== '') {
+      todos.push(input.value.trim());
+      input.value = '';
+      saveTodos();
+      render();
+    }
+  });
+
+  render();
+&lt;/script&gt;
+</code>
+</pre>
+        <button class="copy-button" data-copy-target="5">Copy</button>
+        <span class="copy-confirmation" id="copy-confirmation-5">Copied!</span>
+      </details>
+    </section>
+
+    <!-- SECTION 10: Putting It All Together – Final Capstone Project -->
+    <section id="section-10" class="card">
+      <h2 class="section-title">10. Final Capstone Project</h2>
+      <p>
+        Congratulations on reaching the final challenge! Build a multi-section
+        personal website with a hero, about, skills (progress bars), portfolio,
+        contact form, smooth scrolling, and back-to-top.
+      </p>
+      <p>
+        Once you’ve completed and tested your site,
+        <strong>click the button below to celebrate!</strong>
+      </p>
+      <button class="confetti-btn" id="confetti-btn">
+        I'm Done, Celebrate!
+      </button>
+    </section>
+
+    <!-- SECTION 11: Next Steps & Resources -->
+    <section id="section-11" class="card">
+      <h2 class="section-title">11. Next Steps & Resources</h2>
+      <p>
+        You’ve built a strong foundation. Now you can explore advanced topics,
+        frameworks (React, Vue), or backend development (Node.js, databases).
+      </p>
+      <ul>
+        <li>Free hosting: Netlify, GitHub Pages, Vercel</li>
+        <li>Further learning: MDN docs, freeCodeCamp, YouTube channels</li>
+        <li>Useful tools: Code Sandboxes, browser extensions for debugging</li>
+      </ul>
+      <p>
+        Keep building, keep learning! This is just the start of your journey.
+      </p>
+    </section>
+  </main>
+
+  <!-- Back to Top Button -->
+  <div class="back-to-top" id="back-to-top" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+  </div>
+
+  <!-- Prism.js (JS) + line-numbers plugin -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"
+    integrity="sha512-6ne5uAAF+P50tyT6bxCEf53z7K3/0AQ4LuVm2STIzcywIJB0p09WeYHHcEhyS7PXIqw6INexEEmPRVjCFvsPDQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"
+    integrity="sha512-8cp0+5l+Kes6+qA2+Dx5Cmo6Z5GA2/r4x47tZUbd3E7P9l79Pe4pv3p7960v65hX/sy+82QIv0ZQv6BfAkZXA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+
+  <script>
+    // =========================================================================
+    // MAIN JS SCRIPTS
+    // =========================================================================
+
+    // Sidebar toggle (mobile)
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    const sidebar = document.querySelector('.sidebar');
+
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('mobile-show');
+    });
+
+    // Theme Toggle (Dark/Light Mode)
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('theme-dark');
+    });
+
+    // Sticky header: update current section title on scroll
+    const sections = document.querySelectorAll('section');
+    const currentSectionTitle = document.getElementById('current-section-title');
+
+    function onScroll() {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        if (pageYOffset >= (sectionTop - 50)) {
+          current = section.getAttribute('id');
         }
-    </script>
+      });
+
+      // update header text
+      const currentSection = document.querySelector(`#${current} .section-title`);
+      if(currentSection) {
+        currentSectionTitle.textContent = currentSection.textContent;
+      }
+
+      // show/hide back to top
+      const backToTop = document.getElementById('back-to-top');
+      if(window.scrollY > 300) {
+        backToTop.classList.add('show');
+      } else {
+        backToTop.classList.remove('show');
+      }
+
+      updateProgressBar();
+    }
+
+    window.addEventListener('scroll', onScroll);
+
+    // Back to top button
+    const backToTopBtn = document.getElementById('back-to-top');
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Progress bar tracking
+    function updateProgressBar() {
+      // Count how many sections are 'visited' in terms of scroll
+      let sectionsPassed = 0;
+      sections.forEach(section => {
+        if(window.scrollY + (window.innerHeight / 2) >= section.offsetTop) {
+          sectionsPassed++;
+        }
+      });
+      const percentage = Math.round((sectionsPassed / sections.length) * 100);
+      document.getElementById('progress-percentage').textContent = percentage + '%';
+      document.getElementById('progress-bar-fill').style.width = percentage + '%';
+    }
+
+    // Copy button logic for code blocks
+    const copyButtons = document.querySelectorAll('.copy-button');
+    copyButtons.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        const targetIndex = btn.getAttribute('data-copy-target');
+        const codeBlocks = document.querySelectorAll('pre code');
+        const code = codeBlocks[targetIndex].innerText;
+        navigator.clipboard.writeText(code).then(() => {
+          const confirmation = document.getElementById(`copy-confirmation-${targetIndex}`);
+          confirmation.classList.add('show');
+          setTimeout(() => {
+            confirmation.classList.remove('show');
+          }, 2000);
+        });
+      });
+    });
+
+    // Confetti on final project completion
+    const confettiBtn = document.getElementById('confetti-btn');
+    if(confettiBtn) {
+      confettiBtn.addEventListener('click', () => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+        confetti({
+          particleCount: 100,
+          spread: 120,
+          origin: { y: 0.65 }
+        });
+      });
+    }
+
+    // Initially run onScroll to set default states
+    onScroll();
+  </script>
 </body>
 </html>
