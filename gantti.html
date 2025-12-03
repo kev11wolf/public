@@ -236,7 +236,9 @@
       background-color: #fff3cd;
     }
     .gantt-row.drag-highlight {
-      outline: 3px solid #EA1F27;
+      outline: 3px solid #EA1F27; !important;
+        position: relative;      /* Required for z-index to take effect */
+  z-index: 9999;           /* Very high so it’s above table borders */
     }
 
     /* Filler row => optional. */
@@ -283,7 +285,8 @@
       height: var(--row-height);
       box-sizing: border-box;
       text-align:center;
-            cursor: move;
+      cursor: move;
+      border: 1px #000;
     }
 
     /*
@@ -328,6 +331,8 @@
     }
     .bar.drag-highlight {
       border: 3px solid #EA1F27 !important;
+        position: relative;      /* Required for z-index to take effect */
+  z-index: 9999;           /* Very high so it’s above table borders */
     }
 
     /* Text inside bar => absolutely centered vertically. */
@@ -1419,7 +1424,7 @@
       // Second TH => "Discipline" column
       const disciplineTh = document.createElement("th");
       disciplineTh.id = "disciplineHeader";
-      disciplineTh.rowSpan = 3; // REMOVED this rowSpan to fix alignment issue
+      disciplineTh.rowSpan = 3; 
       disciplineTh.textContent = "Discipline";
       disciplineTh.classList.add("timescale-header");
       yearRow.appendChild(disciplineTh);
@@ -2150,12 +2155,14 @@
 
       if (dragType === "line-reorder" && draggingLine) {
         let posY = e.clientY - tableBodyRect.top;
-        let newIndex = Math.floor(posY / rowHeight);
+        // Changed to Math.round for immediate reorder crossing
+        let newIndex = Math.floor(posY / rowHeight); 
         if (newIndex < 0) newIndex = 0;
         if (newIndex >= mainFilteredLines.length) newIndex = mainFilteredLines.length - 1;
         let oldIndex = mainFilteredLines.indexOf(draggingLine);
         if (oldIndex < 0) return;
         if (newIndex !== oldIndex) {
+          // Reorder line as soon as we cross boundary
           lines.splice(lines.indexOf(draggingLine), 1);
           let targetLine = mainFilteredLines[newIndex];
           let targetGlobalIdx = lines.indexOf(targetLine);
@@ -2165,13 +2172,13 @@
         }
       } else if (dragType === "bar-move-admin" && currentBar) {
         let dx = e.clientX - dragStartX;
-        let dWeeks = Math.round(dx / cellWidth);
+        let dWeeks = Math.floor(dx / cellWidth);
         currentBar.startAbsWeek = Math.max(0, initialStartAbs + dWeeks);
 
         let posY = e.clientY - tableBodyRect.top;
         let idxCur = mainFilteredLines.indexOf(currentLine);
-        if (idxCur < 0) idxCur = 0;
-        let newIdx = Math.floor(posY / rowHeight);
+        // Changed to Math.round for immediate reorder crossing
+        let newIdx = Math.floor(posY / rowHeight); 
         if (newIdx < 0) newIdx = 0;
         if (newIdx >= mainFilteredLines.length) newIdx = mainFilteredLines.length - 1;
         if (newIdx !== idxCur) {
@@ -2182,7 +2189,7 @@
         renderTable();
       } else if (dragType === "resize-left" && currentBar) {
         let dx = e.clientX - dragStartX;
-        let dWeeks = Math.round(dx / cellWidth);
+        let dWeeks = Math.floor(dx / cellWidth);
         let newStart = initialStartAbs + dWeeks;
         let newLen = initialStartAbs + initialLength - newStart;
         if (newLen < 1) {
@@ -2194,13 +2201,14 @@
         renderTable();
       } else if (dragType === "resize-right" && currentBar) {
         let dx = e.clientX - dragStartX;
-        let dWeeks = Math.round(dx / cellWidth);
+        let dWeeks = Math.floor(dx / cellWidth);
         let newLen = initialLength + dWeeks;
         if (newLen < 1) newLen = 1;
         currentBar.length = newLen;
         renderTable();
       } else if (dragType === "bar-move-user" && currentBar) {
         let posY = e.clientY - tableBodyRect.top;
+        // Changed to Math.round for immediate reorder crossing
         let newIndex = Math.floor(posY / rowHeight);
         if (newIndex < 0) newIndex = 0;
         if (newIndex >= mainFilteredLines.length) newIndex = mainFilteredLines.length - 1;
