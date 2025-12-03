@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guitar Lick Generator</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        label {
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+            gap: 5px;
+        }
+        select, button {
+            padding: 10px 15px;
+            background-color: #333333;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        select:hover, button:hover {
+            background-color: #444444;
+        }
+        button {
+            background-color: #007bff;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #tab {
+            background-color: #222222;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+            overflow-x: auto;
+            font-size: 16px;
+            line-height: 1.2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Guitar Lick Generator</h1>
+        <form id="form">
+            <label>
+                Key
+                <select id="key">
+                    <option value="C">C</option>
+                    <option value="C#">C#</option>
+                    <option value="D">D</option>
+                    <option value="D#">D#</option>
+                    <option value="E">E</option>
+                    <option value="F">F</option>
+                    <option value="F#">F#</option>
+                    <option value="G">G</option>
+                    <option value="G#">G#</option>
+                    <option value="A">A</option>
+                    <option value="A#">A#</option>
+                    <option value="B">B</option>
+                </select>
+            </label>
+            <label>
+                Mode
+                <select id="mode">
+                    <option value="major">Major</option>
+                    <option value="minor">Natural Minor</option>
+                    <option value="major_pentatonic">Major Pentatonic</option>
+                    <option value="minor_pentatonic">Minor Pentatonic</option>
+                    <option value="blues">Blues</option>
+                </select>
+            </label>
+            <label>
+                Genre (Optional)
+                <select id="genre">
+                    <option value="none">None</option>
+                    <option value="blues">Blues</option>
+                    <option value="rock">Rock</option>
+                    <option value="metal">Metal</option>
+                    <option value="jazz">Jazz</option>
+                    <option value="funk">Funk</option>
+                </select>
+            </label>
+            <button type="submit">Generate Lick</button>
+        </form>
+        <div id="tab"></div>
+    </div>
+
+    <script>
+        const chrom = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const stringStarts = [4, 11, 7, 2, 9, 4]; // high e, B, G, D, A, low E (indices in chrom)
+        const modes = {
+            major: [0, 2, 4, 5, 7, 9, 11],
+            minor: [0, 2, 3, 5, 7, 8, 10],
+            major_pentatonic: [0, 2, 4, 7, 9],
+            minor_pentatonic: [0, 3, 5, 7, 10],
+            blues: [0, 3, 5, 6, 7, 10]
+        };
+
+        function getScale(root, mode) {
+            const rootIndex = chrom.indexOf(root);
+            const intervals = modes[mode];
+            return intervals.map(i => (rootIndex + i) % 12);
+        }
+
+        function getScalePositions(scaleIndices, minFret = 0, maxFret = 12) {
+            const positions = [];
+            for (let s = 0; s < 6; s++) {
+                for (let f = minFret; f <= maxFret; f++) {
+                    const noteIndex = (stringStarts[s] + f) % 12;
+                    if (scaleIndices.includes(noteIndex)) {
+                        positions.push({ string: s, fret: f });
+                    }
+                }
+            }
+            return positions;
+        }
+
+        function getNextPosition(curr, positions) {
+            let candidates = positions.filter(p => 
+                Math.abs(p.string - curr.string) <= 2 && Math.abs(p.fret - curr.fret) <= 5
+            );
+            if (candidates.length === 0) candidates = positions;
+            return candidates[Math.floor(Math.random() * candidates.length)];
+        }
+
+        function generateSequence(positions, genre) {
+            if (positions.length === 0) return [];
+            const numNotes = 32; // 4 notes per bar, 8 bars
+            const seq = [];
+            let curr = positions[Math.floor(Math.random() * positions.length)];
+            seq.push({ string: curr.string, fret: curr.fret, connect: null, bend: false });
+
+            const connectProb = { blues: 0.4, rock: 0.3, metal: 0.5, jazz: 0.2, funk: 0.1, none: 0 }[genre] || 0;
+            const bendProb = { blues: 0.2, rock: 0.1, metal: 0.05, jazz: 0.05, funk: 0, none: 0 }[genre] || 0;
+
+            for (let i = 1; i < numNotes; i++) {
+                const next = getNextPosition(curr, positions);
+                let connect = null;
+                let bend = false;
+
+                if (next.string === curr.string && Math.abs(next.fret - curr.fret) >= 1 && Math.abs(next.fret - curr.fret) <= 4 && Math.random() < connectProb) {
+                    if (next.fret > curr.fret) {
+                        connect = Math.random() < 0.5 ? 'h' : '/';
+                    } else {
+                        connect = Math.random() < 0.5 ? 'p' : '\\';
+                    }
+                } else {
+                    bend = Math.random() < bendProb;
+                }
+
+                seq.push({ string: next.string, fret: next.fret, connect: connect, bend: bend });
+                curr = next;
+            }
+            return seq;
+        }
+
+        function buildTab(sequence) {
+            const lineLabels = ['e|', 'B|', 'G|', 'D|', 'A|', 'E|'];
+            let lines = lineLabels.map(label => label);
+            const notesPerBar = 4;
+            const numBars = 8;
+
+            for (let i = 0; i < sequence.length; i++) {
+                const note = sequence[i];
+                const fretStr = note.fret.toString() + (note.bend ? 'b' : '');
+                const len = fretStr.length;
+
+                if (i > 0) {
+                    if (note.connect) {
+                        for (let j = 0; j < 6; j++) {
+                            lines[j] += note.connect;
+                        }
+                    } else {
+                        for (let j = 0; j < 6; j++) {
+                            lines[j] += '-';
+                        }
+                    }
+                }
+
+                for (let j = 0; j < 6; j++) {
+                    if (j === note.string) {
+                        lines[j] += fretStr;
+                    } else {
+                        lines[j] += '-'.repeat(len);
+                    }
+                }
+
+                if ((i + 1) % notesPerBar === 0 && (i + 1) / notesPerBar < numBars) {
+                    for (let j = 0; j < 6; j++) {
+                        lines[j] += '-|';
+                    }
+                }
+            }
+
+            // Add final bar line
+            for (let j = 0; j < 6; j++) {
+                lines[j] += '-|';
+            }
+
+            return lines;
+        }
+
+        document.getElementById('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const key = document.getElementById('key').value;
+            const mode = document.getElementById('mode').value;
+            const genre = document.getElementById('genre').value;
+
+            const scaleIndices = getScale(key, mode);
+            const positions = getScalePositions(scaleIndices);
+            const sequence = generateSequence(positions, genre);
+            const lines = buildTab(sequence);
+
+            document.getElementById('tab').innerHTML = lines.join('\n');
+        });
+    </script>
+</body>
+</html>
