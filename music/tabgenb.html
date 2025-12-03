@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Advanced Guitar Lick Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* ================================
+       CSS: Modern, minimalist design
+       ================================ */
+
+    :root {
+      /* Light theme colors */
+      --color-bg-light: #ffffff;
+      --color-text-light: #333333;
+      --color-primary-light: #4677f5;
+      --color-accent-light: #ffc107;
+
+      /* Dark theme colors */
+      --color-bg-dark: #1d1d1d;
+      --color-text-dark: #eeeeee;
+      --color-primary-dark: #7aa2f7;
+      --color-accent-dark: #fbbf24;
+
+      /* Default (light) */
+      --color-bg: var(--color-bg-light);
+      --color-text: var(--color-text-light);
+      --color-primary: var(--color-primary-light);
+      --color-accent: var(--color-accent-light);
+
+      --transition-speed: 0.2s;
+      --font-family: "Helvetica Neue", sans-serif;
+    }
+
+    /* Dark theme class toggles the variable overrides */
+    .dark-theme {
+      --color-bg: var(--color-bg-dark);
+      --color-text: var(--color-text-dark);
+      --color-primary: var(--color-primary-dark);
+      --color-accent: var(--color-accent-dark);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-family);
+      transition: background-color var(--transition-speed),
+                  color var(--transition-speed);
+    }
+
+    header {
+      text-align: center;
+      padding: 1rem;
+      background: var(--color-primary);
+      color: #fff;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    h1, h2, h3, h4 {
+      margin-bottom: 0.5rem;
+    }
+
+    .controls-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .control-group label {
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+
+    select, input[type="number"], button {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid var(--color-primary);
+      border-radius: 4px;
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      transition: background-color var(--transition-speed), 
+                  color var(--transition-speed),
+                  border var(--transition-speed);
+    }
+
+    button:hover {
+      background-color: var(--color-primary);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .summary-card {
+      border: 1px solid var(--color-primary);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background-color: rgba(0, 0, 0, 0.03);
+    }
+
+    .summary-card h2 {
+      margin-top: 0;
+    }
+
+    .tab-container {
+      white-space: pre;
+      font-family: monospace;
+      background-color: #fafafa;
+      border: 1px solid var(--color-primary);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .chord-progression {
+      font-style: italic;
+      margin-bottom: 1rem;
+    }
+
+    .theme-toggle {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .feedback-container {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .feedback-container button {
+      background-color: var(--color-accent);
+      border: 1px solid var(--color-accent);
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+      background: var(--color-primary);
+      color: #fff;
+    }
+
+    @media (max-width: 600px) {
+      .controls-container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Advanced Guitar Lick Generator</h1>
+  </header>
+
+  <main>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+      <label for="themeSwitch">Light/Dark Theme:</label>
+      <input type="checkbox" id="themeSwitch" />
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-container">
+      <!-- Key Selection -->
+      <div class="control-group">
+        <label for="keySelect">Key:</label>
+        <select id="keySelect">
+          <option value="C">C</option>
+          <option value="C#">C# / Db</option>
+          <option value="D">D</option>
+          <option value="D#">D# / Eb</option>
+          <option value="E">E</option>
+          <option value="F">F</option>
+          <option value="F#">F# / Gb</option>
+          <option value="G">G</option>
+          <option value="G#">G# / Ab</option>
+          <option value="A">A</option>
+          <option value="A#">A# / Bb</option>
+          <option value="B">B</option>
+        </select>
+      </div>
+
+      <!-- Mode Selection -->
+      <div class="control-group">
+        <label for="modeSelect">Mode:</label>
+        <select id="modeSelect">
+          <option value="ionian">Ionian (Major)</option>
+          <option value="dorian">Dorian</option>
+          <option value="phrygian">Phrygian</option>
+          <option value="lydian">Lydian</option>
+          <option value="mixolydian">Mixolydian</option>
+          <option value="aeolian">Aeolian (Natural Minor)</option>
+          <option value="locrian">Locrian</option>
+        </select>
+      </div>
+
+      <!-- Tone/Genre Selection -->
+      <div class="control-group">
+        <label for="toneSelect">Tone/Genre:</label>
+        <select id="toneSelect">
+          <option value="rock">Rock</option>
+          <option value="blues">Blues</option>
+          <option value="jazz">Jazz</option>
+          <option value="metal">Metal</option>
+          <option value="country">Country</option>
+          <option value="funk">Funk</option>
+          <option value="pop">Pop</option>
+        </select>
+      </div>
+
+      <!-- Difficulty Selection -->
+      <div class="control-group">
+        <label for="difficultySelect">Difficulty:</label>
+        <select id="difficultySelect">
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </div>
+
+      <!-- Scale Type Selection -->
+      <div class="control-group">
+        <label for="scaleTypeSelect">Scale Type:</label>
+        <select id="scaleTypeSelect">
+          <option value="diatonic">Diatonic (7-note modes)</option>
+          <option value="pentatonic">Pentatonic</option>
+          <option value="blues">Blues Scale</option>
+          <option value="harmonicMinor">Harmonic Minor</option>
+          <option value="melodicMinor">Melodic Minor</option>
+        </select>
+      </div>
+
+      <!-- Number of Bars -->
+      <div class="control-group">
+        <label for="barsInput">Number of Bars:</label>
+        <input type="number" id="barsInput" min="1" value="8" />
+      </div>
+    </div>
+
+    <!-- Generate Button -->
+    <button id="generateBtn">Generate Lick</button>
+
+    <!-- Summary Card -->
+    <div id="summaryCard" class="summary-card" style="display: none;">
+      <h2>Lick Summary</h2>
+      <p id="summaryInfo"></p>
+      <p id="moodDescription"></p>
+      <p id="intervalExplanation"></p>
+    </div>
+
+    <!-- Chord Progression Display -->
+    <div id="chordProgression" class="chord-progression"></div>
+
+    <!-- ASCII Tab Container -->
+    <div id="tabContainer" class="tab-container"></div>
+
+    <!-- Audio Playback Controls -->
+    <button id="playAudioBtn" style="display:none;">Play Lick</button>
+
+    <!-- Feedback Buttons -->
+    <div class="feedback-container" style="display:none;">
+      <button id="feedbackEasyBtn">Too Easy</button>
+      <button id="feedbackDissonantBtn">Sounds Dissonant</button>
+      <span id="feedbackMessage"></span>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2023 Advanced Guitar Lick Generator</p>
+  </footer>
+
+  <script>
+    /********************************************************************
+     * Advanced Guitar Lick Generator
+     * Author: (Your Name Here)
+     * Description: This script generates 8-bar (or user-set) guitar licks
+     *              based on user-input key, mode, tone/genre, difficulty,
+     *              scale type, and advanced music theory constructs.
+     ********************************************************************/
+
+    // ================ Theme Toggle Logic ================
+    const bodyElement = document.body;
+    const themeSwitch = document.getElementById("themeSwitch");
+    themeSwitch.addEventListener("change", () => {
+      bodyElement.classList.toggle("dark-theme");
+    });
+
+    // ================ UI Elements ================
+    const generateBtn         = document.getElementById("generateBtn");
+    const keySelect           = document.getElementById("keySelect");
+    const modeSelect          = document.getElementById("modeSelect");
+    const toneSelect          = document.getElementById("toneSelect");
+    const difficultySelect    = document.getElementById("difficultySelect");
+    const scaleTypeSelect     = document.getElementById("scaleTypeSelect");
+    const barsInput           = document.getElementById("barsInput");
+    const summaryCard         = document.getElementById("summaryCard");
+    const summaryInfo         = document.getElementById("summaryInfo");
+    const moodDescription     = document.getElementById("moodDescription");
+    const intervalExplanation = document.getElementById("intervalExplanation");
+    const chordProgressionEl  = document.getElementById("chordProgression");
+    const tabContainer        = document.getElementById("tabContainer");
+    const playAudioBtn        = document.getElementById("playAudioBtn");
+    const feedbackEasyBtn     = document.getElementById("feedbackEasyBtn");
+    const feedbackDissonantBtn= document.getElementById("feedbackDissonantBtn");
+    const feedbackMessage     = document.getElementById("feedbackMessage");
+    const feedbackContainer   = document.querySelector(".feedback-container");
+
+    // =============== Music Theory Data ===============
+    // Basic note frequencies for 12TET, reference A4 = 440 Hz
+    // We'll map notes to frequencies (we'll only go up to a certain range for simplicity).
+    // In an actual production environment, you'd expand or calculate on the fly.
+    const noteFrequencyMap = {
+      "E2": 82.41, "F2": 87.31, "F#2": 92.50, "G2": 98.00, "G#2": 103.83,
+      "A2": 110.00, "A#2": 116.54, "B2": 123.47,
+      "C3": 130.81, "C#3": 138.59, "D3": 146.83, "D#3": 155.56, "E3": 164.81,
+      "F3": 174.61, "F#3": 185.00, "G3": 196.00, "G#3": 207.65,
+      "A3": 220.00, "A#3": 233.08, "B3": 246.94,
+      "C4": 261.63, "C#4": 277.18, "D4": 293.66, "D#4": 311.13, "E4": 329.63,
+      "F4": 349.23, "F#4": 369.99, "G4": 392.00, "G#4": 415.30,
+      "A4": 440.00, "A#4": 466.16, "B4": 493.88,
+      "C5": 523.25, "C#5": 554.37, "D5": 587.33, "D#5": 622.25, "E5": 659.25,
+      "F5": 698.46, "F#5": 739.99, "G5": 783.99, "G#5": 830.61,
+      "A5": 880.00, "A#5": 932.33, "B5": 987.77,
+      "C6": 1046.50
+    };
+
+    // Semitone offsets from major scale intervals:
+    // Ionian (Major Scale): W - W - H - W - W - W - H
+    // Let's store intervals for common modes & advanced scales
+    // (Root is considered 0 semitones offset)
+    const scaleIntervals = {
+      ionian:         [0, 2, 4, 5, 7, 9, 11],
+      dorian:         [0, 2, 3, 5, 7, 9, 10],
+      phrygian:       [0, 1, 3, 5, 7, 8, 10],
+      lydian:         [0, 2, 4, 6, 7, 9, 11],
+      mixolydian:     [0, 2, 4, 5, 7, 9, 10],
+      aeolian:        [0, 2, 3, 5, 7, 8, 10],
+      locrian:        [0, 1, 3, 5, 6, 8, 10],
+
+      // Common additional scales:
+      pentatonic:     [0, 2, 4, 7, 9],          // major pentatonic
+      blues:          [0, 3, 5, 6, 7, 10],      // blues hex scale in a minor context
+      harmonicMinor:  [0, 2, 3, 5, 7, 8, 11],
+      melodicMinor:   [0, 2, 3, 5, 7, 9, 11]
+    };
+
+    // Note name to semitone offset from C
+    // C -> 0, C# -> 1, D -> 2, D# -> 3, E -> 4, F -> 5, F# -> 6, etc.
+    const noteToSemitone = {
+      "C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3,
+      "E": 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "G#": 8, "Ab": 8,
+      "A": 9, "A#": 10, "Bb": 10, "B": 11
+    };
+
+    // For mood and interval explanation
+    const modeDescriptions = {
+      ionian:  {
+        mood: "Bright, happy, and stable sound typical of major tonalities.",
+        intervals: "Whole steps at 2, 2, 1, 2, 2, 2 before a final half step."
+      },
+      dorian:  {
+        mood: "Minor flavor with a natural 6, giving a bluesy or jazzy character.",
+        intervals: "Similar to natural minor but with a raised 6th scale degree."
+      },
+      phrygian: {
+        mood: "Dark, Spanish-flavored scale with a semitone right after the root.",
+        intervals: "Half step immediately after root, providing a distinctly moody vibe."
+      },
+      lydian: {
+        mood: "Dreamy and floating, due to the raised 4th scale degree.",
+        intervals: "Major scale structure but with a #4 giving a bright, ethereal color."
+      },
+      mixolydian: {
+        mood: "Major-flavored with a flattened 7th, common in rock and blues.",
+        intervals: "Similar to Ionian but with a b7, great for dominant chord vamps."
+      },
+      aeolian: {
+        mood: "The natural minor scale—dark, somber, but very versatile.",
+        intervals: "Minor 3rd, minor 6th, and minor 7th set the melancholic tone."
+      },
+      locrian: {
+        mood: "Tense and unresolved, due to the diminished 5th from the root.",
+        intervals: "Half step at the root and a diminished 5th, often used in jazz contexts."
+      },
+      pentatonic: {
+        mood: "Universal scale—works well in rock, blues, pop, with fewer “avoid” notes.",
+        intervals: "Five notes, removing half steps, very consonant and easy to use."
+      },
+      blues: {
+        mood: "Soulful, gritty feel with the blue note (the flattened 5th).",
+        intervals: "Hex scale with an added b5 providing a signature 'bluesy' tension."
+      },
+      harmonicMinor: {
+        mood: "Dramatic and exotic, often used in classical and neo-classical metal.",
+        intervals: "Raised 7th from the natural minor, creating a leading tone for V chords."
+      },
+      melodicMinor: {
+        mood: "Smooth minor scale with both a raised 6 and 7 ascending, jazz favorite.",
+        intervals: "Ascends like a major scale with a minor 3rd, often reverts to natural minor descending."
+      }
+    };
+
+    /**************************************************************************
+     * Helper Functions
+     **************************************************************************/
+
+    /**
+     * getScaleNotes - returns an array of note names (like C4, D4, etc.) that fit
+     * the chosen key and scale type. We'll generate a range covering a couple octaves.
+     *
+     * @param {string} rootNote - e.g., "C"
+     * @param {string} mode - "ionian", "dorian", etc.
+     * @return {array} array of note names (like "C3", "D3", etc.)
+     */
+    function getScaleNotes(rootNote, mode) {
+      const intervals = scaleIntervals[mode];
+      // Convert root note (e.g., "G") to its semitone offset from "C"
+      let offset = noteToSemitone[rootNote];
+      if (offset === undefined) offset = 0; // fallback to C
+
+      // We'll generate notes from E2 to around C6
+      const noteNames = Object.keys(noteFrequencyMap);
+      // Filter out frequencies that align with scale intervals relative to root
+      // We'll do a modulo 12 check to see if (noteSemitone - rootSemitone) % 12 is in intervals
+      const validNotes = noteNames.filter((n) => {
+        // Extract the letter+accidental part (like G#) and octave from n
+        // e.g. n = "G#3"
+        const matched = n.match(/^([A-G][#b]?)(\d)$/);
+        if (!matched) return false;
+        let noteLetter = matched[1];
+        const octave = parseInt(matched[2], 10);
+
+        // Convert noteLetter to semitone
+        let noteLetterOffset = noteToSemitone[noteLetter];
+        if (noteLetterOffset === undefined) return false;
+
+        // Calculate total semitone from C0
+        // octave * 12 + noteLetterOffset, but we'll compare relative to the root
+        let totalSemitone = octave * 12 + noteLetterOffset;
+        let rootBase       = 0 + offset; // for simplicity assume root at "CX" base
+        // We'll compare them by ignoring difference in base octaves
+        let semitoneDiff = (totalSemitone - rootBase) % 12;
+        if (semitoneDiff < 0) semitoneDiff += 12;
+
+        return intervals.includes(semitoneDiff);
+      });
+      return validNotes;
+    }
+
+    /**
+     * generateRandomLick - main function to create random notes & rhythms
+     * based on user settings, returning an object describing each note,
+     * plus an ASCII tab representation.
+     *
+     * @param {array} scaleNotes - array of valid note names
+     * @param {string} difficulty - affect complexity of intervals/rhythm
+     * @param {number} bars - number of measures to generate
+     * @return {object} { tab, notesArray }
+     */
+    function generateRandomLick(scaleNotes, difficulty, bars = 8) {
+      // We'll generate a set number of beats. Let's assume 4 beats per bar => total beats = 4 * bars
+      // We'll place notes randomly in those 4 * bars beats, or sub-beats
+      // Difficulty influences how we choose durations (quarter, eighth, syncopations, triplets) and intervals
+
+      const totalBeats = 4 * bars;
+      // We'll store note objects like { pitch: 'G3', startBeat: 0, duration: 1, string: '...', fret: ... }
+      let notesArray = [];
+
+      // Difficulty-based durations
+      let possibleDurations;
+      if (difficulty === "beginner") {
+        // simpler rhythms: mostly quarter, eighth
+        possibleDurations = [1, 0.5]; 
+      } else if (difficulty === "intermediate") {
+        // add dotted eighth or triplet illusions (let's simplify for demonstration)
+        possibleDurations = [1, 0.5, 0.5, 1.5]; 
+      } else {
+        // advanced: more syncopations, shorter durations
+        possibleDurations = [1, 0.5, 0.5, 0.25, 1.5, 0.75];
+      }
+
+      let currentBeat = 0;
+      while (currentBeat < totalBeats) {
+        // pick a random duration
+        const duration = possibleDurations[Math.floor(Math.random() * possibleDurations.length)];
+        if (currentBeat + duration > totalBeats) {
+          // if this note would exceed total length, break
+          break;
+        }
+        // pick a note from scale
+        const pitch = scaleNotes[Math.floor(Math.random() * scaleNotes.length)];
+
+        // For advanced or int, maybe bigger leaps in pitch
+        // For beginner, smaller leaps => we won't strictly track previous pitch, but could for realism
+        // We'll store the note
+        notesArray.push({
+          pitch,
+          startBeat: currentBeat,
+          duration
+        });
+
+        currentBeat += duration;
+      }
+
+      // Next, create ASCII tab from notes in standard tuning
+      // We'll do a simplistic approach: EADGBe lines
+      const strings = ["E4", "B3", "G3", "D3", "A2", "E2"]; 
+      let tabLines = [
+        "e|--------------------------------------------------------------------------------|",
+        "B|--------------------------------------------------------------------------------|",
+        "G|--------------------------------------------------------------------------------|",
+        "D|--------------------------------------------------------------------------------|",
+        "A|--------------------------------------------------------------------------------|",
+        "E|--------------------------------------------------------------------------------|"
+      ];
+      // Each measure we'll try to show 16 columns (for simplicity).
+      // We can place characters in columns. We'll do total columns = bars * 16
+      const columns = bars * 16;
+      // We'll parse each note's timing into a column
+
+      function findClosestStringAndFret(note) {
+        // We find a string option for the note by comparing freq
+        // This is simplistic: pick the string that can host the note
+        // For example, if note is G3 = 196 Hz, we see which open string is <= that frequency
+        // Then we find the fret offset. If not possible, pick another string
+        let freq = noteFrequencyMap[note];
+        if (!freq) return { stringIndex: 0, fret: 0 }; // fallback
+
+        // Strings in standard tuning: E2->82.41, A2->110, D3->146.83, G3->196, B3->246.94, E4->329.63
+        // We'll try from high e down to see if we can find a fret within 12-15 frets or so
+        let bestStringIndex = 0;
+        let bestFret = 0;
+        let found = false;
+        // We'll search up to 15th fret for demonstration
+        for (let s = 0; s < strings.length; s++) {
+          let openFreq = noteFrequencyMap[strings[s]];
+          if (!openFreq) continue;
+          // The ratio of the desired freq to the open string freq
+          // each fret is about a semitone, freq is multiplied by 2^(fret/12)
+          // fret = 12 * log2(noteFreq / openFreq)
+          let possibleFret = Math.round(12 * (Math.log2(freq / openFreq)));
+          if (possibleFret >= 0 && possibleFret <= 15) {
+            bestStringIndex = s;
+            bestFret = possibleFret;
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          // fallback, place on high e, fret 0
+          return { stringIndex: 0, fret: 0 };
+        }
+        return { stringIndex: bestStringIndex, fret: bestFret };
+      }
+
+      // We'll define beats => columns (each quarter note = 4 columns => total 4 beats bar = 16 columns)
+      // So startBeat => columnIndex = startBeat * 4
+      // We'll place the fret number in that column for the correct string
+      notesArray.forEach(n => {
+        const colIndex = Math.floor(n.startBeat * 4);
+        const { stringIndex, fret } = findClosestStringAndFret(n.pitch);
+        let line = tabLines[stringIndex];
+        // Convert to array for manipulation
+        let lineArr = line.split("");
+        let position = 2 + colIndex; // accounting for the "e|" offset
+        // Check if position is within array
+        if (position < lineArr.length) {
+          // place fret number
+          // If fret is multiple digits and we don't have enough space, just place a single digit
+          let fretStr = fret.toString();
+          for (let i = 0; i < fretStr.length; i++) {
+            if (position + i < lineArr.length) {
+              lineArr[position + i] = fretStr[i];
+            }
+          }
+        }
+        tabLines[stringIndex] = lineArr.join("");
+      });
+
+      let asciiTab = tabLines.join("\n");
+      return { tab: asciiTab, notesArray };
+    }
+
+    /**
+     * generateChordProgression - optional chord progression demonstration
+     * For advanced usage, we might do I - IV - V or ii - V - I etc. based on mode.
+     * We'll do a simple demonstration.
+     */
+    function generateChordProgression(rootNote, mode, bars) {
+      // For demonstration, let's do a 4-chord loop repeated
+      // If Ionian, do I - IV - V - vi
+      // If Aeolian, do i - VI - VII - iv, etc.
+      // This is just an approximate approach:
+
+      let chordProg = "";
+
+      const majorKeyChords = ["I", "ii", "iii", "IV", "V", "vi", "vii°"];
+      const minorKeyChords = ["i", "ii°", "III", "iv", "v", "VI", "VII"];
+
+      if (mode === "ionian" || mode === "lydian" || mode === "mixolydian") {
+        // treat as major
+        chordProg = `${rootNote} ${majorKeyChords[0]} - ${majorKeyChords[3]} - ${majorKeyChords[4]} - ${majorKeyChords[5]}`;
+      } else {
+        // treat as minor
+        chordProg = `${rootNote} ${minorKeyChords[0]} - ${minorKeyChords[5]} - ${minorKeyChords[6]} - ${minorKeyChords[3]}`;
+      }
+      return chordProg + "  (repeats)";
+    }
+
+    /**
+     * playLick - simple audio playback using Web Audio API
+     * We'll just create an oscillator for the pitch of each note in sequence
+     * for demonstration. In a real scenario, you'd prefer a MIDI plugin or sample-based approach.
+     */
+    async function playLick(notesArray, tempo=120) {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      // each quarter note at tempo=120 is 0.5s
+      const quarterNoteDuration = 60 / tempo;
+
+      for (let i = 0; i < notesArray.length; i++) {
+        const note = notesArray[i];
+        const freq = noteFrequencyMap[note.pitch];
+        if (!freq) continue;
+
+        const startTime = audioCtx.currentTime + (note.startBeat * quarterNoteDuration);
+        const duration = note.duration * quarterNoteDuration;
+
+        // create oscillator
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        // scheduled start/stop
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      }
+      // Let the audio context finish
+      // Not strictly necessary but approach to keep reference
+    }
+
+    // =============== Main Generate Button Handler ===============
+    generateBtn.addEventListener("click", () => {
+      const root = keySelect.value.replace(/#\/.*/, "#"); // unify #/b to one
+      const mode = modeSelect.value;
+      const tone = toneSelect.value;
+      const difficulty = difficultySelect.value;
+      const scaleType = scaleTypeSelect.value;
+      const bars = parseInt(barsInput.value) || 8;
+
+      // Build scale mode first. If scaleType = 'diatonic', we use the mode. Otherwise override
+      let scaleMode = scaleType;
+      if (scaleType === "diatonic") {
+        scaleMode = mode; 
+      }
+
+      // Prepare scale
+      const scaleNotes = getScaleNotes(root, scaleMode);
+
+      // Generate lick
+      const { tab, notesArray } = generateRandomLick(scaleNotes, difficulty, bars);
+
+      // Populate summary card
+      summaryCard.style.display = "block";
+      const modeName = (scaleType === "diatonic") ? mode : scaleType;
+      summaryInfo.textContent = `Key: ${root} | Mode: ${mode} | Tone/Genre: ${tone} | Scale Type: ${scaleType} | Difficulty: ${difficulty}`;
+      // Mood + interval explanation
+      const desc = modeDescriptions[modeName] || {};
+      moodDescription.textContent = `Mood: ${desc.mood || "N/A"}`;
+      intervalExplanation.textContent = `Intervals/Tensions: ${desc.intervals || "N/A"}`;
+
+      // Generate chord progression
+      const chordProg = generateChordProgression(root, mode, bars);
+      chordProgressionEl.textContent = `Suggested Progression: ${chordProg}`;
+
+      // ASCII Tab
+      tabContainer.textContent = tab;
+
+      // Show play button and feedback
+      playAudioBtn.style.display = "inline-block";
+      feedbackContainer.style.display = "flex";
+      feedbackMessage.textContent = "";
+    });
+
+    // =============== Audio Playback ===============
+    playAudioBtn.addEventListener("click", () => {
+      // We'll scan the current ASCII tab or store the last notes array in closure
+      // For simplicity, we'll keep a reference from the last generation if we store it globally.
+      // We'll do a quick hack: re-generate the lick from the current inputs (short-lifetime approach).
+      const root = keySelect.value.replace(/#\/.*/, "#");
+      const mode = modeSelect.value;
+      const difficulty = difficultySelect.value;
+      const scaleType = scaleTypeSelect.value;
+      const bars = parseInt(barsInput.value) || 8;
+      let scaleMode = scaleType;
+      if (scaleType === "diatonic") {
+        scaleMode = mode;
+      }
+      const scaleNotes = getScaleNotes(root, scaleMode);
+      const { notesArray } = generateRandomLick(scaleNotes, difficulty, bars);
+      playLick(notesArray, 120); // default tempo 120 BPM
+    });
+
+    // =============== Feedback Buttons ===============
+    feedbackEasyBtn.addEventListener("click", () => {
+      feedbackMessage.textContent = "Thanks for your feedback! Try raising the difficulty level.";
+    });
+    feedbackDissonantBtn.addEventListener("click", () => {
+      feedbackMessage.textContent = "Try a different scale or mode for a smoother sound!";
+    });
+  </script>
+</body>
+</html>
