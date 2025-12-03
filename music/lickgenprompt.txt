@@ -1,0 +1,57 @@
+You are both a professional musician/music teacher and a full-stack web developer. Please produce a complete, production-ready HTML/JavaScript/CSS code solution that:
+
+Overall Functionality
+Creates a versatile guitar lick generator capable of producing 8-bar licks.
+Allows the user to choose a Key, a Mode, and a Tone/Genre.
+Integrates additional scales/modes beyond the typical diatonic modes (e.g., harmonic minor, melodic minor, pentatonic, blues, etc.).
+Implements Difficulty Level options (beginner, intermediate, advanced) that affect the complexity of intervals, rhythms, and technical challenges (like bends or slides).
+Once selections are made, automatically generates a relevant and cohesive guitar lick.
+Advanced Music Theory Integration
+Incorporate scale patterns, modal intervals, chord/scale relationships, voice leading, and passing tones to build musically compelling licks.
+Ensure the generated lick adheres to the key, mode, and scale type chosen by the user (e.g., if G Dorian is chosen, reflect its intervals).
+Use rhythmic variety (syncopations, rests, dotted notes, triplets, etc.) based on the difficulty setting.
+Offer an optional chord progression or context behind the lick to show how it fits in a harmonic setting.
+User Interface & Modern Design
+Provide a modern, sleek, and intuitive design with a well-chosen color palette.
+Make the interface clearly structured and responsive to different screen sizes (desktop, tablet, mobile).
+Include labeled dropdown menus for:
+Key
+Mode
+Tone/Genre
+(New) Difficulty
+(New) Scale Type (optional advanced modes)
+Display a Generate Lick button (or equivalent) to trigger the production of the tab.
+Support a light/dark theme toggle if possible.
+Automatic Summary Card
+After generating a lick, provide a summary card with:
+Key, Mode, Tone/Genre, Scale Type, and Difficulty level.
+A brief emotional/mood explanation typical of that scale/mode.
+A short, user-friendly explanation of the characteristic intervals or tensions that define the chosen scale/mode.
+Audio Playback & Visual Enhancements
+Integrate an audio playback feature (via Web Audio API or MIDI) for users to hear the generated lick.
+Optionally display a dynamic fretboard or highlight string/fret positions for a more visual learning experience.
+Technical & Production Readiness
+Implement robust code structure with clearly separated HTML, CSS, and JavaScript (or inline if necessary) but well-commented and maintainable.
+Ensure the generator logic is performant and handles edge cases gracefully (e.g., validating user input).
+Include comments explaining your approach:
+How the difficulty setting adjusts rhythmic/interval complexity.
+How the selected scale type (harmonic minor, pentatonic, etc.) impacts note choices.
+Why certain musical patterns are used to convey characteristic moods.
+Interactive Learning Options
+Present brief music theory insights as tooltips or short paragraphs (e.g., “G Dorian includes a b3 and a natural 6, giving it a minor, yet almost jazzy feel.”).
+Offer a simple rating or feedback mechanism for the generated lick (e.g., “Too easy” or “Sounds dissonant”) that could be extended to refine future generations.
+Expanded Practice Features
+Allow the user to specify the number of bars (4, 8, 12, etc.) beyond the default 8 if they desire.
+Incorporate an optional multi-measure motif or pattern approach (like call-and-response phrases).
+Provide an easy way to export or save the generated lick (e.g., copyable text, downloadable PDF, or local storage).
+Final Output Format
+Present the completion as a fully functional code solution containing all front-end components and logic in a single or multi-file format that can be copied and run in a browser.
+Use ASCII-based guitar tab notation to display the 8-bar (or user-defined length) phrases.
+Confirm that the layout scales gracefully for smaller screens.
+Final Goal
+Deliver an advanced, multi-faceted guitar lick generator—complete with robust music theory underpinnings, dynamic UI, user-friendly features, and an optional audio playback engine—that allows guitarists of all skill levels to explore a broad range of keys, modes, and techniques.
+
+Response Format
+
+Provide your complete, commented HTML/JS/CSS code in a single response.
+Make sure it’s ready for direct copy-paste into a file structure and works correctly in a browser with no major changes.
