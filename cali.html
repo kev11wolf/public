@@ -1,267 +1,392 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
 <title>California Vacation Cooking Schedule 2025</title>
-<!-- Bootstrap 5 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-<!-- Google Fonts for a modern look -->
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384‑VjEe0nX1QbM1pTgZ8c9Y2gkVYF5V6c5XQzWcXcH9Kc8FJp7G/9VgZs0f+M3a6c5n"
+      crossorigin="anonymous">
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap"
+      rel="stylesheet">
+
 <style>
-  body {
-    font-family: 'Montserrat', sans-serif;
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    color: #fff;
-  }
-
-  h1 {
-    font-weight: 700;
-    margin-bottom: 1rem;
-  }
-
-  /* Calendar style */
-  .calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .header-row {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    text-align: center;
-    font-weight: 700;
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .day-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  }
-
-  .day-card:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-3px);
-  }
-
-  .day-card h5 {
-    margin-bottom: 0.5rem;
-  }
-
-  /* Instructions styling */
-  #meal-instructions {
-    background: rgba(255,255,255,0.1);
-    padding: 1rem;
-    border-radius: 8px;
-    max-height: 400px;
-    overflow-y: auto;
-  }
-
-  /* Responsive adjustments */
-  @media(max-width: 768px) {
-    .calendar {
-      grid-template-columns: repeat(2, 1fr);
+    :root {
+        --bg-gradient: linear-gradient(135deg, #0d0d1a, #1a1a33);
+        --card-bg: rgba(255,255,255,.08);
+        --card-bg-hover: rgba(255,255,255,.15);
+        --text-primary: #f0f0f0;
+        --text-muted: #b0b0c0;
+        --accent: #ffcc00;
     }
-  }
+
+    body {
+        font-family: 'Montserrat', sans-serif;
+        background: var(--bg-gradient);
+        color: var(--text-primary);
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+
+    h1 {
+        font-weight: 600;
+        margin-bottom: 2rem;
+        text-align: center;
+        color: var(--accent);
+    }
+
+    .weekday-header {
+        font-weight: 600;
+        text-align: center;
+        color: var(--accent);
+        margin-bottom: .5rem;
+    }
+
+    .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: .75rem;
+    }
+
+    .day-card {
+        background: var(--card-bg);
+        border-radius: .5rem;
+        padding: .75rem;
+        text-align: center;
+        cursor: pointer;
+        transition: background .2s, transform .2s;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: var(--text-primary);
+    }
+
+    .day-card:hover {
+        background: var(--card-bg-hover);
+        transform: translateY(-2px);
+    }
+
+    .day-card.outside-trip {
+        opacity: .4;
+        cursor: default;
+    }
+
+    .day-card .date {
+        font-size: .9rem;
+        color: var(--text-muted);
+        margin-top: .25rem;
+    }
+
+    .instructions-card {
+        background: var(--card-bg);
+        border-radius: .5rem;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        color: var(--text-primary);
+    }
+
+    .instructions-card h2 {
+        color: var(--accent);
+        margin-bottom: 1rem;
+    }
+
+    .instructions-card ul {
+        padding-left: 1.25rem;
+    }
+
+    .instructions-card li {
+        margin-bottom: .5rem;
+    }
+
+    @media (max-width: 576px) {
+        .calendar {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 </style>
 </head>
 <body>
+
 <div class="container py-4">
-  <h1 class="text-center mb-4">California Vacation Cooking Schedule 2025</h1>
-  <!-- Calendar with Weekday Headers -->
-  <div class="header-row" id="weekday-headers">
-    <!-- Headers will be inserted here -->
-  </div>
-  <div class="calendar" id="calendar">
-    <!-- Days will be generated here -->
-  </div>
-  <h2 class="mt-4 mb-3 text-center">Meal Instructions</h2>
-  <div id="instructions" class="mx-auto" style="max-width: 900px;">
-    <div class="card bg-dark text-white">
-      <div class="card-body" id="meal-instructions">
-        <p class="text-center">Select a day to see the detailed recipe and instructions.</p>
-      </div>
+
+    <h1>California Vacation Cooking Schedule 2025</h1>
+
+    <!-- Weekday Header Row -->
+    <div class="row weekday-header">
+        <div class="col-1 col-sm-1 text-center">Sun</div>
+        <div class="col-1 col-sm-1 text-center">Mon</div>
+        <div class="col-1 col-sm-1 text-center">Tue</div>
+        <div class="col-1 col-sm-1 text-center">Wed</div>
+        <div class="col-1 col-sm-1 text-center">Thu</div>
+        <div class="col-1 col-sm-1 text-center">Fri</div>
+        <div class="col-1 col-sm-1 text-center">Sat</div>
     </div>
-  </div>
+
+    <!-- Calendar Grid -->
+    <div class="calendar" id="calendar"></div>
+
+    <!-- Instructions Panel -->
+    <div class="instructions-card" id="instructions">
+        <p class="text-muted">Select a day to view the recipe and cooking instructions.</p>
+    </div>
 </div>
 
-<!-- Bootstrap 5 JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-const startDate = new Date('2025-12-18'); // Wednesday
-const daysCount = 11; // from Dec 18 to Dec 28 inclusive
+/* ---------- 1️⃣ DATE CALCULATIONS ---------- */
+const tripStart = new Date(2025, 11, 18); // Dec 18, 2025 (month is 0‑based)
+const tripEnd   = new Date(2025, 11, 28); // Dec 28, 2025
 
-// Define the week headers
-const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+// Find the Sunday before (or same day as) the trip start – calendar must start on Sunday
+const startOfWeek = new Date(tripStart);
+startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // go back to Sunday
 
-// Populate weekday headers
-const headerContainer = document.getElementById('weekday-headers');
-weekdays.forEach(day => {
-  const headerDiv = document.createElement('div');
-  headerDiv.className = 'text-center fw-bold text-uppercase';
-  headerDiv.innerText = day;
-  headerContainer.appendChild(headerDiv);
-});
+// Find the Saturday after (or same day as) the trip end – we want a full rectangle of weeks
+const endOfWeek = new Date(tripEnd);
+endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay())); // forward to Saturday
 
-// Recipes data remains the same
+/* ---------- 2️⃣ RECIPE DATA ---------- */
 const recipes = {
-  'Smoked Pork Butt': {
-    ingredients: [
-      '5-8 lb pork butt (pork shoulder)',
-      'Dry rub (brown sugar, paprika, salt, pepper, garlic powder, onion powder, cayenne)',
-      'Applewood or hickory wood chips',
-      'Water or apple juice (for mop or spray)',
-      'BBQ sauce (optional)'
-    ],
-    steps: `
-1. Prepare the pork butt: Trim excess fat and apply the dry rub generously all over the meat.
-2. Preheat Weber kettle to 225°F (107°C), set up for indirect cooking with vents.
-3. Add wood chips (preferably applewood or hickory for a sweet, smoky flavor) to the coals for smoke.
-4. Place pork on the grill grates, fat side up, and insert a reliable meat thermometer probe.
-5. Smoke until internal temperature reaches 165°F (74°C), then wrap in foil or butcher paper.
-6. Continue cooking until internal temp reaches 195-205°F (90-96°C). To avoid the stall, maintain steady temp and consider wrapping early at 165-170°F.
-7. Rest the meat for at least 30 minutes before pulling apart.
-8. Serve with BBQ sauce if desired.
-    `
-  },
-  'Beer Brats': {
-    ingredients: [
-      '6-8 bratwurst sausages',
-      '1 can (12 oz) of beer (lager or pilsner)',
-      'Onion slices (optional)',
-      'Beer and onion in a skillet or grill pan'
-    ],
-    steps: `
-1. Preheat grill to medium heat (~350°F / 175°C).
-2. In a skillet, combine beer and onions, bring to simmer.
-3. Add bratwurst and simmer for 10-15 minutes until partially cooked.
-4. Transfer sausages to the grill.
-5. Grill for 5-7 minutes, turning occasionally until browned.
-6. Serve hot on buns with toppings.
-    `
-  },
-  'Smash Burgers': {
-    ingredients: [
-      '1 lb ground beef (80/20)',
-      'Salt and pepper',
-      'Burger buns',
-      'Cheese slices (optional)',
-      'Lettuce, tomato, pickles, condiments'
-    ],
-    steps: `
-1. Preheat your grill or skillet to high heat (~450°F / 232°C).
-2. Form beef into loose balls (~4 oz).
-3. Place the ball on the hot griddle or skillet.
-4. Smash the beef with a spatula until thin (~1/4 inch thickness).
-5. Season with salt and pepper.
-6. Cook for 2-3 minutes, then flip.
-7. Add cheese during the last minute if desired.
-8. Assemble with buns and toppings.
-    `
-  },
-  'Smoked Brisket': {
-    ingredients: [
-      '10-12 lb beef brisket',
-      'Dry rub (paprika, salt, black pepper, garlic powder, onion powder, cayenne)',
-      'Wood chips for smoking (hickory or oak recommended)'
-    ],
-    steps: `
-1. Trim excess fat and apply dry rub all over the brisket.
-2. Preheat smoker or Weber to 225°F (107°C), add hickory or oak wood chips for robust smoke flavor.
-3. Place brisket fat side up on the grill.
-4. Smoke until internal temp reaches 165°F (74°C). At this point, you can wrap to push through the stall.
-5. Continue smoking until the internal temp reaches 195-203°F (90-96°C). To avoid the stall, maintain steady temperature, monitor closely.
-6. Rest the brisket wrapped in foil for at least 1 hour.
-7. Slice against the grain and serve.
-    `
-  },
-  'Grilled Chicken & Steak Tacos': {
-    ingredients: [
-      '2 chicken breasts',
-      '2 steaks (sirloin or flank)',
-      'Taco tortillas',
-      'Toppings: lettuce, cheese, salsa, sour cream, cilantro',
-      'Marinade or seasoning for chicken and steak'
-    ],
-    steps: `
-1. Marinate chicken and steak with spices or marinade for at least 1 hour.
-2. Preheat grill to high (~450°F / 232°C).
-3. Grill chicken for 6-8 minutes per side until fully cooked.
-4. Grill steak for 4-6 minutes per side for medium-rare.
-5. Rest the meat for 5 minutes, then slice thin.
-6. Warm tortillas on the grill for 30 seconds per side.
-7. Assemble tacos with sliced meat and toppings.
-8. Serve immediately.
-    `
-  }
+    "Smoked Pork Butt": {
+        title: "Smoked Pork Butt (Pulled Pork)",
+        ingredients: [
+            "5‑lb pork shoulder (bone‑in or boneless)",
+            "2 Tbsp kosher salt",
+            "2 Tbsp brown sugar",
+            "1 Tbsp paprika",
+            "1 Tbsp black pepper",
+            "1 Tbsp garlic powder",
+            "1 Tbsp onion powder",
+            "½ Tbsp cayenne (optional)",
+            "Applewood or hickory wood chips"
+        ],
+        steps: [
+            "Trim excess fat, then apply a generous dry rub (all ingredients except wood).",
+            "Preheat smoker to **225 °F** and add applewood/hickory.",
+            "Place pork butt on the grill grate, fat side up.",
+            "Smoke until internal temperature reaches **165‑170 °F** (≈ 5‑6 h).",
+            "Wrap tightly in butcher paper or foil – this speeds the stall.",
+            "Return to smoker and continue until **195‑205 °F** (≈ 2‑3 h more).",
+            "Remove, let rest 30‑45 min, then shred with forks.",
+            "Serve with coleslaw, pickles, and buns."
+        ],
+        tips: [
+            "Maintain a steady **225 °F** throughout – use a good controller or digital smoker.",
+            "A digital probe (instant‑read) helps watch the stall (150‑170 °F).",
+            "Applewood gives a sweet flavor; hickory adds a stronger smoke."
+        ]
+    },
+
+    "Beer Brats": {
+        title: "Beer‑Braised Bratwurst",
+        ingredients: [
+            "12 bratwurst links",
+            "2 cups lager or ale",
+            "1 large onion, sliced",
+            "2 Tbsp butter",
+            "1 Tbsp mustard seeds",
+            "Olive oil",
+            "Buns, sauerkraut, mustard (optional)"
+        ],
+        steps: [
+            "In a large skillet, melt butter and sauté onions until translucent.",
+            "Add mustard seeds, then lay bratwurst in the pan.",
+            "Pour beer over the brats, bring to a simmer, cover, and cook 15‑20 min.",
+            "Remove brats, increase heat, and brown them on each side (2‑3 min).",
+            "Serve on buns with onions, sauerkraut, and mustard."
+        ],
+        tips: [
+            "Use a robust lager for a richer flavor.",
+            "Don’t over‑cook – the internal temperature should hit **160 °F**."
+        ]
+    },
+
+    "Smash Burgers": {
+        title: "Smash Burgers",
+        ingredients: [
+            "1 lb ground beef (80/20)",
+            "Salt & pepper",
+            "4 burger buns",
+            "Cheddar slices",
+            "Pickles, lettuce, tomato, onion",
+            "Butter (for buns)",
+            "Oil (high‑smoke‑point)"
+        ],
+        steps: [
+            "Form the meat into 4 loose balls (≈ 4 oz each).",
+            "Heat a cast‑iron skillet or griddle to **high** (≈ 450‑500 °F).",
+            "Place a ball, let sit 30 s, then smash with a spatula until thin.",
+            "Season with salt & pepper, cook 2‑3 min, flip, add cheese, cook another minute.",
+            "Toast buns in butter, assemble with toppings."
+        ],
+        tips: [
+            "A thin patty creates that coveted crust – don’t over‑handle the meat.",
+            "Use a heavy spatula for an even smash."
+        ]
+    },
+
+    "Smoked Brisket": {
+        title: "Smoked Beef Brisket",
+        ingredients: [
+            "10‑lb whole packer brisket (point + flat)",
+            "2 Tbsp kosher salt",
+            "2 Tbsp black pepper",
+            "1 Tbsp garlic powder",
+            "1 Tbsp onion powder",
+            "Hickory or oak wood chunks",
+            "Apple juice (optional for spritz)"
+        ],
+        steps: [
+            "Trim excess fat, leaving ~¼‑inch cap.",
+            "Mix salt, pepper, garlic & onion powder – apply liberally.",
+            "Pre‑heat smoker to **225 °F**, add hickory/oak.",
+            "Place brisket fat‑side up; smoke until internal temp hits **165‑170 °F** (≈ 6‑8 h).",
+            "Spritz with apple juice every hour (optional).",
+            "Wrap tightly in butcher paper or foil – this gets you through the stall.",
+            "Return to smoker and cook until **195‑203 °F** (≈ 2‑3 h more).",
+            "Rest wrapped for 1‑2 h, then slice against the grain."
+        ],
+        tips: [
+            "Consistent **225 °F** is key – fluctuations > 15 °F will lengthen cook time.",
+            "The stall (150‑170 °F) is normal; wrapping accelerates it.",
+            "Resting lets juices redistribute for juicy slices."
+        ]
+    },
+
+    "Tacos": {
+        title: "Grilled Chicken & Steak Tacos",
+        ingredients: [
+            "1 lb chicken breast, thinly sliced",
+            "1 lb flank steak, thinly sliced",
+            "2 Tbsp olive oil",
+            "1 Tbsp chili powder",
+            "1 tsp cumin",
+            "1 tsp smoked paprika",
+            "Salt & pepper",
+            "12 small corn tortillas",
+            "Toppings: cilantro, diced onion, lime wedges, salsa, avocado"
+        ],
+        steps: [
+            "Toss chicken and steak in oil + spices; let rest 15 min.",
+            "Grill over high heat (≈ 450 °F) – chicken 4‑5 min, steak 3‑4 min per side.",
+            "Let rest 5 min, then slice thinly.",
+            "Warm tortillas on the grill, then fill with meat and desired toppings."
+        ],
+        tips: [
+            "Oak or hickory woods give a nice char for the steak.",
+            "Slice against the grain for tender steak bites."
+        ]
+    }
 };
 
-const calendarContainer = document.getElementById('calendar');
+/* ---------- 3️⃣ CALENDAR BUILD ---------- */
+const calendarEl = document.getElementById('calendar');
+const instructionsEl = document.getElementById('instructions');
 
-function formatDate(date) {
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const d = new Date(date);
-  return `${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`;
+function isInTrip(date) {
+    return date >= tripStart && date <= tripEnd;
 }
 
-// Generate calendar days with specific dates
-for (let i = 0; i < daysCount; i++) {
-  const currentDate = new Date(startDate);
-  currentDate.setDate(startDate.getDate() + i);
-  const dayName = weekdays[currentDate.getDay()]; // Sunday - Saturday
-  const dateNum = currentDate.getMonth() + 1 + '/' + currentDate.getDate();
-
-  // Assign meal based on date (Christmas day on Dec 25)
-  let mealName = '';
-  if (currentDate.toISOString().slice(0,10) === '2025-12-25') {
-    mealName = 'Smoked Brisket';
-  } else {
-    // Placeholder for other days
-    mealName = Object.keys(recipes)[i] || 'Placeholder';
-  }
-
-  const col = document.createElement('div');
-  col.className = 'day-card';
-  col.innerHTML = `
-    <h5>${dayName}</h5>
-    <p class="mb-0">${dateNum}</p>
-    <p class="small">${mealName}</p>
-  `;
-  col.addEventListener('click', () => {
-    displayInstructions(mealName);
-  });
-  document.getElementById('calendar').appendChild(col);
+/* Helper to format date as M/D */
+function formatMD(date) {
+    return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
+/* Assign meals – a simple round‑robin with a forced special on Dec 25 */
+function getMealFor(date) {
+    const iso = date.toISOString().split('T')[0]; // e.g. 2025-12-25
+    // Special case
+    if (iso === '2025-12-25') return 'Smoked Brisket';
+
+    const meals = [
+        'Smoked Pork Butt',
+        'Beer Brats',
+        'Smash Burgers',
+        'Tacos'
+    ];
+
+    // Determine index based on days offset from trip start
+    const offset = Math.floor((date - tripStart) / (1000 * 60 * 60 * 24));
+    if (offset < 0 || offset > (tripEnd - tripStart) / (1000 * 60 * 60 * 24)) {
+        return null; // outside trip
+    }
+    return meals[offset % meals.length];
+}
+
+/* Build all day cards from startOfWeek to endOfWeek */
+for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
+    const card = document.createElement('div');
+    const current = new Date(d); // copy
+
+    const inTrip = isInTrip(current);
+    const meal = inTrip ? getMealFor(current) : null;
+
+    card.className = 'day-card' + (inTrip ? '' : ' outside-trip');
+    card.dataset.date = current.toISOString();
+
+    // Card content
+    const weekday = current.toLocaleDateString('en-US', { weekday: 'short' });
+    const title = document.createElement('div');
+    title.textContent = weekday;
+    title.style.fontWeight = '600';
+    card.appendChild(title);
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'date';
+    dateEl.textContent = formatMD(current);
+    card.appendChild(dateEl);
+
+    if (inTrip && meal) {
+        const mealEl = document.createElement('div');
+        mealEl.textContent = meal;
+        mealEl.style.marginTop = '.4rem';
+        mealEl.style.fontSize = '.85rem';
+        mealEl.style.fontStyle = 'italic';
+        card.appendChild(mealEl);
+    }
+
+    // Click handler only for trip days
+    if (inTrip && meal) {
+        card.addEventListener('click', () => displayInstructions(meal));
+    }
+
+    calendarEl.appendChild(card);
+}
+
+/* ---------- 4️⃣ DISPLAY INSTRUCTIONS ---------- */
 function displayInstructions(mealName) {
-  const instructionsDiv = document.getElementById('meal-instructions');
-  if (recipes[mealName]) {
     const recipe = recipes[mealName];
-    instructionsDiv.innerHTML = `
-      <h3 class="mb-3">${mealName}</h3>
-      <h4>Ingredients:</h4>
-      <ul>
-        ${recipe.ingredients.map(ing => `<li>${ing}</li>`).join('')}
-      </ul>
-      <h4>Cooking Tips & Details:</h4>
-      <p><strong>Temperature Tips:</strong> For pork butt and brisket, maintain a steady smoker temperature of 225°F. To avoid the stall (which occurs around 150-170°F), wrap the meat in foil or butcher paper once it hits 165-170°F to push through the stall more efficiently.</p>
-      <p><strong>Key Internal Temperatures:</strong> Pork butt: 195-205°F for pull-apart tenderness; Brisket: 195-203°F for slicing.</p>
-      <p><strong>Wood Pairing Recommendations:</strong> Use applewood or hickory for pork and brisket for a sweet, smoky flavor. Use oak or hickory for steak and chicken for robust flavor. For sausage, fruit woods like apple or cherry complement the flavors.</p>
-      <h4>Steps:</h4>
-      <pre>${recipe.steps}</pre>
+    if (!recipe) {
+        instructionsEl.innerHTML = `<p class="text-muted">No recipe found for "${mealName}".</p>`;
+        return;
+    }
+
+    const html = `
+        <h2>${recipe.title}</h2>
+        <h5>Ingredients</h5>
+        <ul>${recipe.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+
+        <h5>Steps</h5>
+        <ol>${recipe.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+
+        ${recipe.tips && recipe.tips.length
+            ? `<h5>Tips & Techniques</h5><ul>${recipe.tips.map(t => `<li>${t}</li>`).join('')}</ul>`
+            : ''
+        }
     `;
-  } else {
-    instructionsDiv.innerHTML = '<p>Recipe details coming soon!</p>';
-  }
+
+    instructionsEl.innerHTML = html;
 }
+
+/* ---------- 5️⃣ INITIAL STATE ---------- */
+instructionsEl.innerHTML = `<p class="text-muted">Select a day to view the recipe and cooking instructions.</p>`;
 </script>
+
 </body>
 </html>
