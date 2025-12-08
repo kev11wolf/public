@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>P6 Delay Forensic Analyzer (Stats + Slippage Column)</title>
+
+  <!-- 
+    =========================================================
+    P6 Delay Forensic Analyzer
+    - Added a stats card above the Comparison Results table, 
+      showing baseline/current/delta for various metrics 
+      (# of activities, # completed, # in progress, etc.).
+    - Inserted "Slippage (days)" as a column right after 
+      Finish (Current) in the table and CSV export.
+    - Retained all existing features (histogram, filtering, 
+      date formatting for Start/Finish, CSV/PDF exports, etc.).
+    =========================================================
+  -->
+
+  <!-- Bootstrap & Tabulator CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+  <link
+    href="https://cdn.jsdelivr.net/npm/tabulator-tables@5.4.4/dist/css/tabulator.min.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* Basic styling for layout and visuals */
+    body {
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    .file-upload-container {
+      margin-bottom: 1rem;
+    }
+    .file-upload-label {
+      margin-right: 0.5rem;
+      font-weight: 600;
+    }
+    .card {
+      margin-bottom: 1rem;
+    }
+    .red-text {
+      color: #dc3545; /* Danger color */
+      font-weight: bold;
+    }
+    .slippage-positive {
+      color: #dc3545;
+      font-weight: bold;
+    }
+    .chart-container {
+      width: 100%;
+      max-width: 700px;
+      margin: auto;
+    }
+    /* We set a fixed height for the table so it can scroll vertically */
+    #comparisonTable {
+      height: 600px;
+    }
+    pre#log {
+      max-height: 200px;
+      overflow: auto;
+      background: #eef;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1 class="text-center">P6 Delay Forensic Analyzer (Stats + Slippage Column)</h1>
+  <p class="text-center">
+    Compare Baseline vs Current schedules (CSV/XLSX).  
+    All processing is done locally in your browser.
+  </p>
+
+  <!-- Upload Row -->
+  <div class="row file-upload-container">
+    <div class="col-md-6 mt-2">
+      <label for="baselineFile" class="file-upload-label">Baseline Schedule:</label>
+      <input type="file" id="baselineFile" accept=".csv,.xlsx,.xls" />
+    </div>
+    <div class="col-md-6 mt-2">
+      <label for="currentFile" class="file-upload-label">Current Schedule:</label>
+      <input type="file" id="currentFile" accept=".csv,.xlsx,.xls" />
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="row mt-3 gy-3">
+    <div class="col-md-4">
+      <div class="form-group">
+        <label for="wbsFilter">Filter by WBS/RBS/Process Area:</label>
+        <input
+          type="text"
+          id="wbsFilter"
+          class="form-control"
+          placeholder="e.g. 'WBS-01' or 'Process Area'"
+        />
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="form-group">
+        <label for="slippageThreshold">Slippage threshold (days):</label>
+        <input
+          type="number"
+          id="slippageThreshold"
+          class="form-control"
+          value="0"
+        />
+      </div>
+    </div>
+    <div class="col-md-4">
+      <label for="changeTypeFilter">Change Type Filter:</label>
+      <select id="changeTypeFilter" class="form-select">
+        <option value="">All Changes</option>
+        <option value="slippage">Slippage</option>
+        <option value="changedFields">Changed Fields</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Analyze + Exports -->
+  <div class="row mt-4 mb-3">
+    <div class="col-md-6">
+      <button id="analyzeBtn" class="btn btn-primary w-100">Analyze</button>
+    </div>
+    <div class="col-md-3">
+      <button id="exportCsvBtn" class="btn btn-secondary w-100">Export CSV</button>
+    </div>
+    <div class="col-md-3">
+      <button id="exportPdfBtn" class="btn btn-danger w-100">Export PDF</button>
+    </div>
+  </div>
+
+  <!-- Stats Card (new) -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="mb-0">Schedule Stats</h3>
+    </div>
+    <div class="card-body">
+      <!-- We'll build a small table with columns: Metric, Baseline, Current, Delta -->
+      <table class="table table-bordered" id="statsTable">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Baseline</th>
+            <th>Current</th>
+            <th>Delta</th>
+          </tr>
+        </thead>
+        <tbody id="statsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Results Table -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="mb-0">Comparison Results</h3>
+    </div>
+    <div class="card-body">
+      <!-- We use Tabulator with a fixed height for vertical scroll -->
+      <div id="comparisonTable" class="tabulator"></div>
+    </div>
+  </div>
+
+  <!-- Summary & Charts -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="mb-0">Summary & Charts</h3>
+    </div>
+    <div class="card-body">
+      <p><strong>Total Project Delay (days):</strong> <span id="totalDelay">0</span></p>
+      <p><strong>Top 10 Impacted Activities:</strong></p>
+      <ol id="topImpactedList"></ol>
+      <hr />
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <!-- The histogram for status changes -->
+          <h5 class="text-center">Status Change Histogram</h5>
+          <p class="text-muted text-center">
+            Compares Baseline vs Current "Activity Status" to see:  
+            1) Not Started → In Progress  
+            2) In Progress → Completed  
+            3) Not Started → Completed
+          </p>
+          <div class="chart-container">
+            <canvas id="statusHistogram"></canvas>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <h5 class="text-center">Slippage Heatmap</h5>
+          <p class="text-muted text-center">
+            Color-coded by severity (0-5 / 6-10 / 11-20 / &gt;20)
+          </p>
+          <div class="chart-container">
+            <canvas id="slippageHeatmap"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Panel -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="mb-0">Log</h3>
+    </div>
+    <div class="card-body">
+      <pre id="log"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- JS Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tabulator-tables@5.4.4/dist/js/tabulator.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+/*******************************************************************
+ * Logging Utility
+ * Appends a timestamped message to our log panel for debug
+ *******************************************************************/
+function logMessage(msg) {
+  const logEl = document.getElementById("log");
+  logEl.textContent += (new Date().toLocaleTimeString() + " - " + msg + "\n");
+}
+
+/*******************************************************************
+ * Global Variables
+ *******************************************************************/
+let baselineData = [];      // baseline schedule array
+let currentData = [];       // current schedule array
+let comparisonData = [];    // for the final table
+let baselineLoaded = false;
+let currentLoaded = false;
+let comparisonTable = null;
+let slippageHeatmapChart = null;
+let statusHistogramChart = null;
+
+/*******************************************************************
+ * finalFieldsList
+ * Baseline/Current columns we display. We'll insert "Slippage (days)"
+ * after "Finish (Current)" as requested.
+ *******************************************************************/
+const finalFieldsList = [
+  "Project ID", 
+  "Activity ID",
+  "Activity Name",
+  "Start",
+  "Finish",
+  "Predecessors",
+  "Successors",
+  "Activity Status",
+  "Total Float",
+  "Activity Type",
+  "Primary Constraint",
+  "Primary Constraint Date"
+];
+
+/*******************************************************************
+ * helper function: excelDateToJS
+ * converts an Excel serial date to a JS Date
+ *******************************************************************/
+function excelDateToJS(serial) {
+  let utc_days = serial - 25569;
+  let utc_value = utc_days * 86400 * 1000;
+  let date_info = new Date(utc_value);
+  return date_info;
+}
+
+/*******************************************************************
+ * formatDate
+ * turns a JS Date into mm/dd/yyyy string
+ *******************************************************************/
+function formatDate(dt){
+  if(!dt || isNaN(dt)) return "";
+  let mm = dt.getMonth() + 1;
+  let dd = dt.getDate();
+  let yyyy = dt.getFullYear();
+  return mm.toString().padStart(2,'0') + "/" +
+         dd.toString().padStart(2,'0') + "/" + yyyy;
+}
+
+/*******************************************************************
+ * parseDate (for slippage calc)
+ * tries mm/dd/yyyy or yyyy-mm-dd
+ *******************************************************************/
+function parseDate(dateStr) {
+  if(!dateStr) return null;
+  let str = String(dateStr).trim();
+  let parts = str.split(/[-/]/);
+  if(parts.length === 3) {
+    if(parseInt(parts[0]) > 12) {
+      return new Date(+parts[0], +parts[1]-1, +parts[2]);
+    } else {
+      return new Date(+parts[2], +parts[0]-1, +parts[1]);
+    }
+  }
+  let d = new Date(str);
+  return isNaN(d) ? null : d;
+}
+
+/*******************************************************************
+ * dateDiffInDays
+ *******************************************************************/
+function dateDiffInDays(d1, d2) {
+  if(!d1 || !d2 || isNaN(d1) || isNaN(d2)) return 0;
+  return Math.round((d2 - d1) / (1000 * 3600 * 24));
+}
+
+/*******************************************************************
+ * parseFile
+ * - reads CSV or XLSX
+ * - if "Start" or "Finish" are numeric => convert to mm/dd/yyyy
+ *******************************************************************/
+function parseFile(file, callback) {
+  let name = file.name.toLowerCase();
+  if(name.endsWith(".csv")) {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: results => {
+        results.data.forEach(row => {
+          if(typeof row["Start"] === "number" && !isNaN(row["Start"])){
+            let dt = excelDateToJS(row["Start"]);
+            row["Start"] = formatDate(dt);
+          }
+          if(typeof row["Finish"] === "number" && !isNaN(row["Finish"])){
+            let dt = excelDateToJS(row["Finish"]);
+            row["Finish"] = formatDate(dt);
+          }
+        });
+        callback(results.data);
+      },
+      error: err => {
+        logMessage("Error parsing CSV: " + err.toString());
+        callback([]);
+      }
+    });
+  } else if(name.endsWith(".xlsx") || name.endsWith(".xls")) {
+    let reader = new FileReader();
+    reader.onload = e => {
+      try {
+        let data = new Uint8Array(e.target.result);
+        let wb = XLSX.read(data, { type: "array" });
+        let sheetName = wb.SheetNames[0];
+        let ws = wb.Sheets[sheetName];
+        let jsonData = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        if(jsonData.length < 2) {
+          logMessage("No data rows found in XLS(X).");
+          callback([]);
+          return;
+        }
+        let headers = jsonData[0];
+        let out = [];
+        for(let i = 1; i < jsonData.length; i++){
+          let rowArr = jsonData[i];
+          let rowObj = {};
+          for(let j=0; j<headers.length; j++){
+            let colName = headers[j];
+            let cellVal = (rowArr[j] != null) ? rowArr[j] : "";
+            if((colName==="Start" || colName==="Finish") 
+               && typeof cellVal==="number" 
+               && !isNaN(cellVal)){
+              let dt = excelDateToJS(cellVal);
+              rowObj[colName] = formatDate(dt);
+            } else {
+              rowObj[colName] = cellVal;
+            }
+          }
+          out.push(rowObj);
+        }
+        callback(out);
+      } catch(err2) {
+        logMessage("Error reading XLS(X): " + err2.toString());
+        callback([]);
+      }
+    };
+    reader.onerror = err => {
+      logMessage("Error reading XLS(X): " + err.toString());
+      callback([]);
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    logMessage("Unsupported file format: " + name);
+    callback([]);
+  }
+}
+
+/*******************************************************************
+ * File input event handlers
+ *******************************************************************/
+document.getElementById("baselineFile").addEventListener("change", e => {
+  if(e.target.files.length < 1) return;
+  let file = e.target.files[0];
+  logMessage("Parsing Baseline file: " + file.name);
+  parseFile(file, data => {
+    baselineData = data;
+    baselineLoaded = true;
+    logMessage("Baseline file loaded. Rows: " + data.length);
+  });
+});
+
+document.getElementById("currentFile").addEventListener("change", e => {
+  if(e.target.files.length < 1) return;
+  let file = e.target.files[0];
+  logMessage("Parsing Current file: " + file.name);
+  parseFile(file, data => {
+    currentData = data;
+    currentLoaded = true;
+    logMessage("Current file loaded. Rows: " + data.length);
+  });
+});
+
+/*******************************************************************
+ * addSlippageColumn
+ * Insert "Slippage (days)" column right after "Finish (Current)".
+ *******************************************************************/
+function addSlippageColumn(baseColumns) {
+  let outCols = [];
+  for(let col of baseColumns){
+    outCols.push(col);
+    // if col title is "Finish (Current)", then immediately push Slippage 
+    if(col.title==="Finish (Current)"){
+      outCols.push({
+        title: "Slippage (days)",
+        field: "Slippage (days)",
+        widthGrow: 1,
+        maxWidth: 100,
+        resizable: true,
+        formatter: function(cell){
+          let val = cell.getValue();
+          if(val>0){
+            return `<span class="slippage-positive">${val}</span>`;
+          }
+          return val || "0";
+        }
+      });
+    }
+  }
+  return outCols;
+}
+
+/*******************************************************************
+ * Table columns: side-by-side for finalFieldsList 
+ *******************************************************************/
+function buildColumnsForFinalFields() {
+  let columns = [];
+  finalFieldsList.forEach(field => {
+    columns.push({
+      title: field + " (Baseline)",
+      field: field + " (Baseline)",
+      formatter: compareFormatter(field + " (Baseline)", field + " (Current)"),
+      widthGrow: 1,
+      maxWidth: 100,
+      resizable: true
+    });
+    columns.push({
+      title: field + " (Current)",
+      field: field + " (Current)",
+      formatter: compareFormatter(field + " (Current)", field + " (Baseline)"),
+      widthGrow: 1,
+      maxWidth: 100,
+      resizable: true
+    });
+  });
+  return columns;
+}
+
+/*******************************************************************
+ * compareFormatter
+ *******************************************************************/
+function compareFormatter(fieldA, fieldB) {
+  return cell => {
+    let rowData = cell.getRow().getData();
+    let valA = String(rowData[fieldA] || "").trim();
+    let valB = String(rowData[fieldB] || "").trim();
+    if(valA!==valB && valA && valB){
+      return `<span class="red-text">${valA}</span>`;
+    }
+    return valA;
+  };
+}
+
+/*******************************************************************
+ * Stats calculation
+ * We'll define a function to compute required stats for 
+ * a given schedule data set (array of row objs).
+ *******************************************************************/
+function computeStats(scheduleData){
+  // The user wants:
+  // # of activities, # of completed, # in progress, # of completed (again),
+  // # of start milestones, # of finish milestones, # of LOEs, # of task deps,
+  // latest finish date, etc.
+  // We'll assume "Activity Status" for completed or in progress,
+  // "Activity Type" for "Start Milestone", "Finish Milestone", "LOE", "Task Dependent"
+  // We'll do a second "completed2" for the repeated
+  // We'll track them in an object, then return it.
+  let stats = {
+    totalActivities: 0,
+    completed1: 0,    // # of completed activities
+    inProgress: 0,    // # of in progress
+    completed2: 0,    // # of completed activities repeated
+    startMilestones: 0,
+    finishMilestones: 0,
+    loes: 0,
+    taskDeps: 0,
+    latestFinish: null,  // We'll store a date
+  };
+
+  scheduleData.forEach(row => {
+    stats.totalActivities++;
+    // Activity Status
+    let status = String(row["Activity Status"] || "").toLowerCase();
+    if(status==="completed"){
+      stats.completed1++;
+      stats.completed2++; // since user repeated
+    }
+    else if(status==="in progress"){
+      stats.inProgress++;
+    }
+    // Activity Type
+    let type = String(row["Activity Type"] || "").toLowerCase();
+    if(type==="start milestone"){
+      stats.startMilestones++;
+    }
+    else if(type==="finish milestone"){
+      stats.finishMilestones++;
+    }
+    else if(type==="loe"){
+      stats.loes++;
+    }
+    else if(type==="task dependent"){
+      stats.taskDeps++;
+    }
+    // Check Finish date for latest
+    let fin = parseDate(row["Finish"]);
+    if(fin && (!stats.latestFinish || fin>stats.latestFinish)){
+      stats.latestFinish = fin;
+    }
+  });
+  return stats;
+}
+
+/*******************************************************************
+ * displayStats
+ * Renders the stats in the statsTableBody
+ *******************************************************************/
+function displayStats(baselineStats, currentStats){
+  let tbody = document.getElementById("statsTableBody");
+  tbody.innerHTML = "";
+
+  // We'll define them in an array so we can loop
+  let rowsDef = [
+    {label: "# of activities",           base: baselineStats.totalActivities, 
+     curr: currentStats.totalActivities, key: "totalActivities"},
+    {label: "# of completed activities", base: baselineStats.completed1, 
+     curr: currentStats.completed1,      key: "completed1"},
+    {label: "# of in progress activities", 
+     base: baselineStats.inProgress, 
+     curr: currentStats.inProgress,      key: "inProgress"},
+    {label: "# of completed activities", 
+     base: baselineStats.completed2, 
+     curr: currentStats.completed2,      key: "completed2"},
+    {label: "# of start milestones", base: baselineStats.startMilestones, 
+     curr: currentStats.startMilestones, key: "startMilestones"},
+    {label: "# of finish milestones", base: baselineStats.finishMilestones, 
+     curr: currentStats.finishMilestones, key: "finishMilestones"},
+    {label: "# of LOEs", base: baselineStats.loes, 
+     curr: currentStats.loes, key: "loes"},
+    {label: "# of task dependent activities", base: baselineStats.taskDeps, 
+     curr: currentStats.taskDeps, key: "taskDeps"},
+    {
+      label: "latest finish date of any activity", 
+      base: baselineStats.latestFinish, 
+      curr: currentStats.latestFinish, 
+      key: "latestFinish"
+    },
+  ];
+
+  rowsDef.forEach(row => {
+    let tr = document.createElement("tr");
+    let tdMetric = document.createElement("td");
+    let tdBase = document.createElement("td");
+    let tdCurr = document.createElement("td");
+    let tdDelta = document.createElement("td");
+
+    tdMetric.textContent = row.label;
+
+    // If it's the latest finish date, we display date strings 
+    // and compute delta in days
+    if(row.key==="latestFinish"){
+      tdBase.textContent = row.base ? formatDate(row.base) : "";
+      tdCurr.textContent = row.curr ? formatDate(row.curr) : "";
+      if(row.base && row.curr){
+        let dd = dateDiffInDays(row.base, row.curr);
+        tdDelta.textContent = dd >= 0 ? `+${dd} days` : `${dd} days`;
+      } else {
+        tdDelta.textContent = "";
+      }
+    } else {
+      tdBase.textContent = row.base;
+      tdCurr.textContent = row.curr;
+      let diff = row.curr - row.base;
+      if(diff>0){
+        tdDelta.textContent = `+${diff}`;
+      } else if(diff<0){
+        tdDelta.textContent = `${diff}`;
+      } else {
+        tdDelta.textContent = "0";
+      }
+    }
+
+    tr.appendChild(tdMetric);
+    tr.appendChild(tdBase);
+    tr.appendChild(tdCurr);
+    tr.appendChild(tdDelta);
+    tbody.appendChild(tr);
+  });
+}
+
+/*******************************************************************
+ * performAnalysis
+ * merges baseline/current, calculates slippage, 
+ * build comparisonData
+ *******************************************************************/
+function performAnalysis() {
+  logMessage("Performing analysis...");
+
+  // Build a map of baseline by Activity ID
+  let baselineMap = {};
+  baselineData.forEach(b => {
+    let bId = String(b["Activity ID"] || "").trim();
+    if(bId) {
+      baselineMap[bId] = b;
+    }
+  });
+
+  comparisonData = [];
+  // For each current row
+  currentData.forEach(c => {
+    let cId = String(c["Activity ID"] || "").trim();
+    let b = baselineMap[cId] || null;
+
+    // side-by-side
+    let rowObj = {};
+    finalFieldsList.forEach(f => {
+      let baseVal = b ? b[f] : "";
+      let currVal = c ? c[f] : "";
+      rowObj[f + " (Baseline)"] = String(baseVal==null ? "" : baseVal);
+      rowObj[f + " (Current)"]  = String(currVal==null ? "" : currVal);
+    });
+
+    // Slippage calc
+    let baseFinishDate = parseDate(b ? b["Finish"] : "");
+    let currFinishDate = parseDate(c ? c["Finish"] : "");
+    let slipDays = dateDiffInDays(baseFinishDate, currFinishDate);
+    rowObj["Slippage (days)"] = (slipDays>0)? slipDays : 0;
+
+    comparisonData.push(rowObj);
+  });
+
+  logMessage("Analysis complete. Comparison records: " + comparisonData.length);
+}
+
+/*******************************************************************
+ * buildTableAndCharts
+ * also calls displayStats for the new stats card
+ *******************************************************************/
+function buildTableAndCharts() {
+  logMessage("Building table & charts...");
+
+  // 1) Compute stats for baseline, current
+  let baselineStats = computeStats(baselineData);
+  let currentStats = computeStats(currentData);
+  // 2) Display them
+  displayStats(baselineStats, currentStats);
+
+  // 3) destroy old table if any
+  if(comparisonTable) {
+    comparisonTable.destroy();
+  }
+
+  // 4) Build columns, insert "Slippage (days)" after "Finish (Current)"
+  let baseCols = buildColumnsForFinalFields();
+  let tableColumns = addSlippageColumn(baseCols);
+
+  // 5) create Tabulator
+  comparisonTable = new Tabulator("#comparisonTable", {
+    layout: "fitDataStretch",
+    data: comparisonData,
+    columns: tableColumns,
+    height: "600px",
+    tableBuilt: function(){
+      filterAndRefresh(); // apply filter after build
+    },
+  });
+
+  // Summaries
+  let totalDelay = comparisonData.reduce((acc, row) => acc + (row["Slippage (days)"] || 0), 0);
+  document.getElementById("totalDelay").innerText = totalDelay;
+
+  // Top 10 impacted
+  let sorted = [...comparisonData].sort((a, b) => b["Slippage (days)"] - a["Slippage (days)"]);
+  let top10 = sorted.slice(0, 10);
+  let topImpList = document.getElementById("topImpactedList");
+  topImpList.innerHTML = "";
+  top10.forEach(item => {
+    let actIdBase = item["Activity ID (Baseline)"] || "";
+    let actIdCurr = item["Activity ID (Current)"] || "";
+    let actId = actIdBase.trim() ? actIdBase : actIdCurr;
+    if(!actId) actId = "(No ID)";
+
+    let actNameBase = item["Activity Name (Baseline)"] || "";
+    let actNameCurr = item["Activity Name (Current)"] || "";
+    let actName = actNameBase.trim() ? actNameBase : actNameCurr;
+    let slip = item["Slippage (days)"];
+    let li = document.createElement("li");
+    li.textContent = `${actId} - ${actName} (Slipped ${slip} days)`;
+    topImpList.appendChild(li);
+  });
+
+  // #1 Slippage Heatmap
+  if(slippageHeatmapChart) slippageHeatmapChart.destroy();
+  let slipVals = comparisonData.map(d => d["Slippage (days)"]);
+  let bins = [0,0,0,0];
+  slipVals.forEach(s => {
+    if(s <= 5) bins[0]++;
+    else if(s <= 10) bins[1]++;
+    else if(s <= 20) bins[2]++;
+    else bins[3]++;
+  });
+  let heatCtx = document.getElementById("slippageHeatmap").getContext("2d");
+  slippageHeatmapChart = new Chart(heatCtx, {
+    type: "bar",
+    data: {
+      labels: ["0-5","6-10","11-20",">20"],
+      datasets: [{
+        label: "# of Activities",
+        data: bins,
+        backgroundColor: ["#fff5f5","#ffd6d6","#ffb3b3","#ff8080"]
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero:true },
+        y: { title: { display:true, text: "Slippage Range (days)" } }
+      }
+    }
+  });
+
+  // #2 Status Change Histogram
+  if(statusHistogramChart) statusHistogramChart.destroy();
+  let notStartedToInProgress = 0;
+  let inProgressToCompleted = 0;
+  let notStartedToCompleted = 0;
+
+  comparisonData.forEach(row => {
+    let baseStatus = String(row["Activity Status (Baseline)"] || "").toLowerCase();
+    let currStatus = String(row["Activity Status (Current)"] || "").toLowerCase();
+
+    if(baseStatus==="not started" && currStatus==="in progress"){
+      notStartedToInProgress++;
+    }
+    if(baseStatus==="in progress" && currStatus==="completed"){
+      inProgressToCompleted++;
+    }
+    if(baseStatus==="not started" && currStatus==="completed"){
+      notStartedToCompleted++;
+    }
+  });
+  let statusCtx = document.getElementById("statusHistogram").getContext("2d");
+  statusHistogramChart = new Chart(statusCtx, {
+    type: "bar",
+    data: {
+      labels: ["NotStarted→InProgress","InProgress→Completed","NotStarted→Completed"],
+      datasets: [{
+        label: "# of Activities Changed",
+        data: [notStartedToInProgress,inProgressToCompleted,notStartedToCompleted],
+        backgroundColor: ["#4aa0eb","#4feb80","#ebbf4f"]
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: { title: { display:true, text: "Status Change" } },
+        y: { beginAtZero:true, title: { display:true, text: "# of Activities" } }
+      },
+      plugins: {
+        legend: { display:false }
+      }
+    }
+  });
+
+  logMessage("Table & charts built. notStarted→InProgress=" + notStartedToInProgress + 
+    ", inProgress→Completed=" + inProgressToCompleted +
+    ", notStarted→Completed=" + notStartedToCompleted);
+}
+
+/*******************************************************************
+ * filterAndRefresh
+ * sets Tabulator's custom filter function
+ *******************************************************************/
+function filterAndRefresh() {
+  if(!comparisonTable) return;
+
+  let wbsVal = document.getElementById("wbsFilter").value.trim().toLowerCase();
+  let slipVal = parseInt(document.getElementById("slippageThreshold").value, 10) || 0;
+  let changeType = document.getElementById("changeTypeFilter").value;
+
+  comparisonTable.setFilter((data) => {
+    // 1) WBS filter
+    if(wbsVal){
+      let found = false;
+      for(let key in data){
+        let strVal = String(data[key]||"").toLowerCase();
+        if(strVal.includes(wbsVal)){
+          found = true;
+          break;
+        }
+      }
+      if(!found) return false;
+    }
+    // 2) Slippage filter
+    if(changeType==="slippage"){
+      if(data["Slippage (days)"]<=slipVal){
+        return false;
+      }
+    }
+    // 3) changedFields filter
+    if(changeType==="changedFields"){
+      let hasDifference = false;
+      finalFieldsList.forEach(f=>{
+        let baseVal = String(data[f + " (Baseline)"]||"").trim();
+        let currVal = String(data[f + " (Current)"]||"").trim();
+        if(baseVal!==currVal){
+          hasDifference = true;
+        }
+      });
+      if(!hasDifference) return false;
+    }
+
+    return true;
+  });
+}
+
+/*******************************************************************
+ * Button Handlers
+ *******************************************************************/
+document.getElementById("analyzeBtn").addEventListener("click", () => {
+  if(!baselineLoaded || !currentLoaded) {
+    alert("Please load both Baseline and Current files first.");
+    return;
+  }
+  if(!baselineData.length || !currentData.length) {
+    alert("One of your files is empty or failed to parse. Check logs and file content.");
+    return;
+  }
+  performAnalysis();
+  buildTableAndCharts();
+});
+
+// filter changes
+document.getElementById("wbsFilter").addEventListener("input", filterAndRefresh);
+document.getElementById("slippageThreshold").addEventListener("input", filterAndRefresh);
+document.getElementById("changeTypeFilter").addEventListener("change", filterAndRefresh);
+
+/*******************************************************************
+ * CSV Export
+ * Now includes Slippage (days) as well, since it's in the object
+ *******************************************************************/
+document.getElementById("exportCsvBtn").addEventListener("click", () => {
+  if(!comparisonData.length){
+    alert("No data to export. Please analyze first.");
+    return;
+  }
+  let allData = comparisonData; // includes Slippage
+  let csvStr = convertToCSV(allData);
+  let blob = new Blob([csvStr], { type: "text/csv;charset=utf-8;" });
+  let url = URL.createObjectURL(blob);
+  let link = document.createElement("a");
+  link.href= url;
+  link.setAttribute("download","P6_Comparison_Report.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
+
+/*******************************************************************
+ * convertToCSV
+ *******************************************************************/
+function convertToCSV(arr){
+  if(!arr.length) return "";
+  let keys = Object.keys(arr[0]);
+  let lines = [keys.join(",")];
+  for(let i=0; i< arr.length; i++){
+    let row = keys.map(k => `"${String(arr[i][k] || "").replace(/"/g,'""')}"`);
+    lines.push(row.join(","));
+  }
+  return lines.join("\r\n");
+}
+
+/*******************************************************************
+ * PDF Export
+ *******************************************************************/
+document.getElementById("exportPdfBtn").addEventListener("click", async()=>{
+  if(!comparisonData.length){
+    alert("No data to export. Please analyze first.");
+    return;
+  }
+  const { jsPDF }= window.jspdf;
+  let pdf= new jsPDF("p","pt","a4");
+
+  pdf.setFontSize(16);
+  pdf.text("P6 Delay Forensic Analyzer - Comparison Report",40,40);
+
+  pdf.setFontSize(12);
+  pdf.text(`Total Project Delay (days): ${document.getElementById("totalDelay").textContent}`,40,70);
+
+  // Top 10 impacted
+  let items= document.getElementById("topImpactedList").children;
+  let str="";
+  for(let i=0; i<items.length; i++){
+    str+= `${i+1}. ${items[i].textContent}\n`;
+  }
+  let splitted= pdf.splitTextToSize("Top 10 Impacted Activities:\n"+str,500);
+  pdf.text(splitted,40,90);
+
+  // Table screenshot
+  let tableEl= document.getElementById("comparisonTable");
+  tableEl.style.height="auto";
+  tableEl.style.maxHeight="none";
+  await html2canvas(tableEl).then((canvas)=>{
+    let imgData= canvas.toDataURL("image/png");
+    let imgWidth=530;
+    let imgHeight= (canvas.height* imgWidth)/canvas.width;
+    pdf.addImage(imgData,"PNG",40,150,imgWidth,imgHeight);
+  });
+
+  // new page for charts
+  pdf.addPage();
+  pdf.text("Charts",40,40);
+
+  // Status Change histogram
+  let statusCanvas= document.getElementById("statusHistogram");
+  let statusImg= statusCanvas.toDataURL("image/png");
+  pdf.addImage(statusImg,"PNG",40,60,250,200);
+
+  // Slippage heatmap
+  let heatCanvas = document.getElementById("slippageHeatmap");
+  let heatImg= heatCanvas.toDataURL("image/png");
+  pdf.addImage(heatImg,"PNG",300,60,250,200);
+
+  pdf.save("P6_Comparison_Report.pdf");
+});
+</script>
+</body>
+</html>
