@@ -1,0 +1,53 @@
+### Prompt for Tool 7: Delay / Disruption Fridge Magnet (Forensic Mini-Tool)
+
+"Create a complete, standalone HTML file that implements an offline, client-side tool called 'P6 Delay Forensic Analyzer'. The tool should allow users to upload two Primavera P6 schedule exports (in XLSX or CSV format, assuming standard columns like Activity ID, Activity Name, Start, Finish, Total Float, Predecessors, Successors, Constraints, WBS, RBS from both a baseline/pre-event schedule and a current/post-event schedule). 
+
+Key features:
+- Side-by-side comparison: Display differences in a tabular view with columns for Activity ID, Name, Baseline Start/Finish, Current Start/Finish, Slippage (in days, highlighted red if >0), Logic Changes (added/deleted/modified relationships), Added Constraints (type and date), Broken Logic (out-of-sequence activities), and Impact Summary per WBS/RBS (total slipped days aggregated).
+- Auto-detection: Automatically highlight slipped activities (where current finish > baseline finish), flag new constraints or modified logic, identify out-of-sequence progress, and calculate net impact in days for each WBS/RBS level.
+- Interactive filters: Allow filtering by WBS/RBS, slippage threshold (e.g., >5 days), or type of change (logic, constraints, etc.).
+- Export options: One-click export to CSV or PDF of the full comparison report, including a summary section with total project delay and top 10 impacted activities.
+- Visual aids: Include a simple bar chart showing delay distribution by WBS, and a heatmap for slippage severity.
+
+Tech stack: Use HTML5, CSS (with Bootstrap 5 for responsive design), JavaScript (vanilla or with libraries like PapaParse for CSV/XLSX parsing, Tabulator for interactive tables, Chart.js for charts, jsPDF and html2canvas for PDF export). Ensure everything runs locally without servers; store data in memory or localStorage. Design a modern, card-based UI with a clean dashboard layout: upload sections at top, results table in middle, charts/summary at bottom. Make it mobile-friendly and accessible. Provide the full code in a single index.html file, with inline CSS/JS for easy deployment on GitHub Pages or local use. Include comments in the code for key sections."
+
+### Prompt for Tool 9: Change Order / Variation Log + EVM Impact Calculator
+
+"Develop a full, self-contained HTML application named 'Change Order EVM Tracker' that serves as an offline register for managing project change orders/variations while integrating with Primavera P6 exports for Earned Value Management (EVM) impact analysis. The tool should handle a log of changes (approved, pending, rejected) and automatically calculate their effects on EVM metrics.
+
+Core features:
+- Change Log Interface: A editable table for entering change details like CO Number, Description, Submitted Date, Status (Approved/Pending/Rejected), Cost Impact, Schedule Impact (days), Affected Activities (linkable Activity IDs), and Notes.
+- EVM Integration: Upload a P6 export (XLSX/CSV with columns for Activity ID, BL Project Cost, Actual Cost, Remaining Cost, % Complete, SPI, CPI). The tool links changes to specific activities/WBS, then recalculates updated EVM indices (SPI, CPI, TCPI, EAC, VAC) and forecasts (new completion date, total cost at completion).
+- Impact Visualization: Show before/after EVM charts (S-curves for cost/schedule variance), a pie chart for change impacts by category (cost vs. schedule), and a timeline of changes affecting the critical path.
+- Automation: Auto-sum impacts across all changes, flag high-risk ones (e.g., >10% budget impact), and generate a report summarizing cumulative effects on project forecasts.
+- Data Persistence: Use localStorage to save the change log and linked P6 data across sessions; include import/export to JSON/CSV.
+- Export: Generate PDF reports of the log with EVM impacts, using customizable templates.
+
+Use HTML5, Bootstrap 5 for UI (card-based with tabs for Log, EVM Calc, Reports), JavaScript with libraries: PapaParse for file parsing, Tabulator for dynamic tables, Chart.js for visuals, Moment.js for dates, jsPDF for exports. Keep it fully client-side, no backend. Provide the complete code as a single index.html with embedded CSS/JS, commented for clarity, and optimized for desktop/mobile use."
+
+### Prompt for Tool 11: Full Offline Client-Side Schedule Viewer + Red-Lining Tool
+
+"Build a comprehensive, standalone HTML tool called 'Offline P6 Schedule Viewer & Red-Liner' that allows uploading Primavera P6 XER files (or XLSX/CSV exports) and displays an interactive Gantt chart superior to P6's native view, with red-lining/markup capabilities for annotations.
+
+Main functionalities:
+- Schedule Parsing: Parse XER/XML or CSV/XLSX to extract activities (ID, Name, Start, Finish, Duration, % Complete, Relationships, WBS, Resources), then render a zoomable, scrollable Gantt chart with bars colored by status (critical=red, near-critical=orange, normal=blue), milestones as diamonds, and relationships as arrows.
+- Interactive Viewing: Support drag-to-zoom, pan, search by ID/Name/WBS, group/collapse by WBS, filter by critical path or float, and hover tooltips with details.
+- Red-Lining Tools: Markup mode with freehand draw, text annotations, arrows, highlights, and shapes (all in colors like red for issues); undo/redo stack; annotations linked to specific activities.
+- Export: Save annotated Gantt as PNG image or PDF (with layers for annotations), or export modified schedule back to CSV.
+- Additional Views: Include resource histograms, S-curves, and a table view synced with the Gantt.
+
+Tech: HTML5 canvas for Gantt rendering, Bootstrap 5 for layout (dashboard with tabs: Gantt, Table, Resources), JavaScript libraries like xml2json or PapaParse for parsing, d3.js or Chart.js for Gantt/histograms (fallback to custom if needed), Fabric.js for canvas markups, jsPDF/html2canvas for exports, Moment.js for dates. Fully local/offline operation. Deliver as one index.html file with inline styles/scripts, well-commented, responsive design for all devices."
+
+### Prompt for Tool 12: Earned Value “What-If” Scenario Modeler
+
+"Create an all-in-one HTML web app titled 'EVM What-If Simulator' for client-side Earned Value analysis using P6 data. It enables users to model scenarios by adjusting future performance and view projected outcomes, including a lightweight Monte Carlo simulation.
+
+Key elements:
+- Data Input: Upload P6 export (XLSX/CSV with Activity ID, BL Cost, Actual Cost, Remaining Cost/Duration, % Complete, SPI/CPI current).
+- Scenario Controls: Sliders/dropdowns to adjust future SPI/CPI (e.g., 0.8-1.2), productivity multipliers per WBS, add scope changes (extra cost/days), or resource adjustments.
+- Calculations: Instantly recompute EAC, ETC, VAC, TCPI, forecasted completion date, and variance at completion based on changes.
+- Monte Carlo Lite: Run 100-500 simulations with randomized variances (user-defined ranges for SPI/CPI uncertainty), output percentile outcomes (e.g., P50/P90 completion dates/costs) in a distribution chart.
+- Visuals: Before/after S-curves, bar charts for key metrics, probability curves from Monte Carlo, and a summary dashboard with risk levels (green/yellow/red).
+- Save/Load: Store scenarios in localStorage; export results to CSV/PDF.
+
+Stack: HTML5, Bootstrap 5 for intuitive UI (cards with inputs on left, results on right), JS with PapaParse for imports, Chart.js for all graphs, Math.js or custom for EVM formulas and Monte Carlo (simple random sampling), jsPDF for reports, Moment.js for scheduling. No servers; everything offline. Provide the full, production-ready index.html with embedded CSS/JS, extensive comments, and mobile optimization."
