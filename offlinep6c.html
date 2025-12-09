@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>P6 Offline Viewer (Spin-off)</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <!-- PapaParse for CSV -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- Bootstrap Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+  />
+
+  <style>
+    :root {
+      --primary-color: #222831;
+      --secondary-color: #393E46;
+      --accent-color: #9CA3AF;
+      --bg-color: #EEEEEE;
+      --white-color: #FFFFFF;
+
+      --dark-background: #121212;
+      --dark-card-bg: #1E1E1E;
+      --dark-text-color: #E0E0E0;
+      --hover-color: #E5E7EB;
+    }
+
+    body.dark-mode {
+      background-color: var(--dark-background);
+      color: var(--dark-text-color);
+    }
+    body.dark-mode .navbar {
+      background-color: var(--dark-card-bg) !important;
+    }
+    body.dark-mode .card {
+      background-color: var(--dark-card-bg) !important;
+      color: var(--dark-text-color) !important;
+    }
+    body.dark-mode .table-hover tbody tr:hover {
+      background-color: #333 !important;
+    }
+    body.dark-mode .table-light {
+      background-color: #2C2C2C !important;
+      color: var(--dark-text-color) !important;
+    }
+    body.dark-mode .spinner-border.text-secondary {
+      color: var(--dark-text-color) !important;
+    }
+    body.dark-mode .bg-primary,
+    body.dark-mode .bg-warning,
+    body.dark-mode .bg-success,
+    body.dark-mode .bg-info,
+    body.dark-mode .bg-dark {
+      background-color: #2C2C2C !important;
+      color: var(--dark-text-color) !important;
+    }
+    body.dark-mode .btn,
+    body.dark-mode .btn-sm {
+      color: var(--dark-text-color) !important;
+    }
+    body.dark-mode .activity-card:hover {
+      background-color: #333 !important;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      font-size: 0.9rem;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .navbar {
+      margin-bottom: 1rem;
+      background-color: var(--primary-color) !important;
+    }
+    .navbar-brand {
+      color: var(--white-color) !important;
+    }
+
+    .card {
+      width: 90vw;
+      margin: 0 auto;
+      margin-bottom: 1rem;
+      border: none;
+      border-radius: 8px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .card-body {
+      padding: 0.75rem;
+      background-color: var(--white-color);
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .card-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .log-container {
+      max-height: 150px;
+      overflow-y: auto;
+      background: #f1f1f1;
+      padding: 8px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+
+    .activity-card {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .activity-card:hover {
+      background-color: var(--hover-color);
+    }
+
+    .btn:hover,
+    .filter-input:hover {
+      opacity: 0.95;
+    }
+
+    .search-results {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .relation-table {
+      table-layout: fixed;
+      width: 100%;
+      max-width: 100%;
+      cursor: pointer;
+    }
+    .relation-table th,
+    .relation-table td {
+      font-size: 0.8rem;
+      padding: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: background-color 0.2s ease;
+    }
+    .relation-table th:nth-child(1),
+    .relation-table td:nth-child(1) { width: 50px; }
+    .relation-table th:nth-child(2),
+    .relation-table td:nth-child(2) { width: 200px; }
+    .relation-table th:nth-child(3),
+    .relation-table td:nth-child(3),
+    .relation-table th:nth-child(4),
+    .relation-table td:nth-child(4),
+    .relation-table th:nth-child(5),
+    .relation-table td:nth-child(5),
+    .relation-table th:nth-child(6),
+    .relation-table td:nth-child(6),
+    .relation-table th:nth-child(7),
+    .relation-table td:nth-child(7),
+    .relation-table th:nth-child(8),
+    .relation-table td:nth-child(8),
+    .relation-table th:nth-child(9),
+    .relation-table td:nth-child(9),
+    .relation-table th:nth-child(10),
+    .relation-table td:nth-child(10),
+    .relation-table th:nth-child(11),
+    .relation-table td:nth-child(11) { width: 50px; }
+
+    .filter-input {
+      width: 100%;
+      margin-bottom: 6px;
+      font-size: 0.8rem;
+    }
+
+    #csvLoadingSpinner {
+      display: none;
+    }
+
+    .type-start-milestone,
+    .type-finish-milestone,
+    .type-loe {
+      background-color: #d3d3d3 !important;
+    }
+    .type-task-dependent {
+      background-color: #d2f2d2 !important;
+    }
+
+    .critical-row {
+      outline: 2px solid #dc3545;
+    }
+    .near-critical-row {
+      outline: 2px dashed #fd7e14;
+    }
+
+    .help-icon {
+      cursor: pointer;
+      margin-left: 4px;
+      color: #6c757d;
+    }
+
+    /* Mini Gantt timeline for current path */
+    #cpGanttContainer {
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 4px;
+      background-color: #f8f9fa;
+      overflow-x: auto;
+    }
+    body.dark-mode #cpGanttContainer {
+      background-color: #2c2c2c;
+    }
+
+    .gantt-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 300px;
+    }
+
+    .gantt-header {
+      display: flex;
+      align-items: center;
+      font-size: 0.75rem;
+      color: #6c757d;
+      margin-bottom: 2px;
+    }
+
+    .gantt-header-label {
+      width: 130px;
+      flex-shrink: 0;
+    }
+
+    .gantt-header-scale {
+      flex: 1;
+      position: relative;
+      height: 16px;
+    }
+
+    .gantt-header-scale-line {
+      position: absolute;
+      top: 8px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #dee2e6;
+    }
+
+    .gantt-header-ticks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+    }
+
+    .gantt-row {
+      display: flex;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .gantt-row-label {
+      width: 130px;
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .gantt-row-bar-wrapper {
+      flex: 1;
+      position: relative;
+      height: 18px;
+    }
+
+    .gantt-row-bar {
+      position: absolute;
+      top: 3px;
+      height: 12px;
+      border-radius: 3px;
+      background-color: #0d6efd;
+      opacity: 0.9;
+    }
+
+    .gantt-row-bar.critical {
+      background-color: #dc3545;
+    }
+
+    .gantt-row-bar.near-critical {
+      background-color: #fd7e14;
+    }
+
+    .gantt-row-bar.loe {
+      background-color: #6c757d;
+    }
+
+    /* Milestone as diamond on the timeline */
+    .gantt-row-bar.milestone {
+      width: 12px !important;
+      height: 12px;
+      border-radius: 0;
+      transform: translateY(1px) rotate(45deg);
+      left: calc(var(--left-percent) - 6px) !important; /* center diamond on date */
+    }
+
+    body.dark-mode .gantt-header-scale-line {
+      background: #444;
+    }
+    body.dark-mode .gantt-header {
+      color: #adb5bd;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <svg
+        style="max-height: 40px; margin-right: 8px;"
+        viewBox="0 0 24 24"
+        fill="white"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M19 3H18V1H16V3H8V1H6V3H5C3.897 3 3 3.897 3 5V21C3 22.103 3.897 23 5 23H19C20.103 23 21 22.103 21 21V5C21 3.897 20.103 3 19 3ZM19 21H5V8H19V21Z"
+        />
+      </svg>
+      <span class="navbar-brand" style="padding-top: 0;">P6 Offline Viewer</span>
+
+      <div class="ms-auto d-flex align-items-center">
+        <button id="helpBtn" class="btn btn-outline-light btn-sm me-2">
+          <i class="bi bi-question-circle"></i>
+          Help
+        </button>
+        <button id="aboutBtn" class="btn btn-secondary btn-sm me-2">
+          <i class="bi bi-info-circle"></i>
+          About
+        </button>
+        <button id="darkModeBtn" class="btn btn-danger btn-sm me-2">
+          Dark
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main layout -->
+  <div class="row g-3">
+    <div class="col-12">
+      <!-- (1) Upload Section -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">1. Upload Schedule (CSV)</h6>
+          <small class="text-white-50">Local only – no data is sent anywhere</small>
+        </div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <input
+                type="file"
+                id="csvUpload"
+                accept=".csv"
+                class="form-control form-control-sm"
+              />
+              <small class="text-muted">
+                Expected headers: Activity ID, Activity Name, Start, Finish, Predecessors, Predecessor Details, Activity Type, Activity Status, Primary Constraint, Total Float.
+              </small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label mb-1">Critical / Near-critical configuration</label>
+              <div class="d-flex flex-wrap gap-2">
+                <div class="input-group input-group-sm" style="max-width: 180px;">
+                  <span class="input-group-text">Critical TF ≤</span>
+                  <input type="number" id="criticalThreshold" class="form-control" value="0" />
+                  <span class="input-group-text">days</span>
+                </div>
+                <div class="input-group input-group-sm" style="max-width: 260px;">
+                  <span class="input-group-text">Near-critical TF ≤</span>
+                  <input type="number" id="nearCriticalThreshold" class="form-control" value="5" />
+                  <span class="input-group-text">days</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="csvLoadingSpinner" class="text-center my-2">
+            <div class="spinner-border text-secondary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="small text-muted mb-0">Parsing CSV data...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- (2) Search for an Activity -->
+      <div class="card shadow-sm" id="searchSection" style="visibility:hidden;">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">2. Select End Activity</h6>
+          <small class="text-white-75">This is your “target” activity for the path</small>
+        </div>
+        <div class="card-body">
+          <input
+            type="text"
+            id="activitySearch"
+            class="form-control form-control-sm mb-2"
+            placeholder="Search by ID or Name..."
+          />
+          <div id="searchResults" class="search-results border p-2 bg-white small"></div>
+        </div>
+      </div>
+
+      <!-- (3) Critical Path Tracer -->
+      <div class="card shadow-sm" id="cpTracer" style="visibility:hidden;">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">
+            3. Critical Path Tracer
+            <i id="relFFHelp" class="bi bi-question-circle help-icon" title="Explain Rel FF"></i>
+          </h6>
+          <small class="text-white-75" id="cpSummary">No path yet</small>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-2">
+            <button id="clearCPBtn" class="btn btn-warning btn-sm">Clear CP</button>
+            <button id="resetCPBtn" class="btn btn-secondary btn-sm">Reset to End Activity</button>
+            <button id="exportCPBtn" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-download"></i> Export CP to CSV
+            </button>
+          </div>
+
+          <!-- Mini Gantt timeline for current path -->
+          <div id="cpGanttContainer">
+            <div class="small text-muted mb-1">Timeline for current path</div>
+            <div id="cpGanttTimeline" class="gantt-timeline"></div>
+          </div>
+
+          <div class="table-responsive mt-2">
+            <table class="table table-sm table-hover" id="cpTable">
+              <thead class="table-light">
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Start</th>
+                  <th>Finish</th>
+                  <th>Status</th>
+                  <th>Total Float</th>
+                  <th>
+                    Rel FF
+                    <i class="bi bi-question-circle help-icon" title="Relationship Free Float for this step"></i>
+                  </th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="cpTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- (4) Predecessors & Successors -->
+      <div class="card shadow-sm" id="detailSection" style="visibility:hidden;">
+        <div class="card-header bg-warning text-dark">
+          <h6 class="mb-0">4. View Predecessors & Successors</h6>
+        </div>
+        <div class="card-body">
+          <h6>Predecessors</h6>
+          <div class="d-flex flex-wrap gap-2 mb-1">
+            <input
+              type="text"
+              placeholder="Filter Predecessors..."
+              class="filter-input"
+              id="predFilter"
+            />
+            <div class="form-check form-check-inline small">
+              <input class="form-check-input" type="checkbox" id="predCriticalOnly">
+              <label class="form-check-label" for="predCriticalOnly">Critical only</label>
+            </div>
+            <div class="form-check form-check-inline small">
+              <input class="form-check-input" type="checkbox" id="predNearCriticalOnly">
+              <label class="form-check-label" for="predNearCriticalOnly">Near-critical only</label>
+            </div>
+          </div>
+          <div id="predecessorList"></div>
+
+          <h6 class="mt-3">Successors</h6>
+          <div class="d-flex flex-wrap gap-2 mb-1">
+            <input
+              type="text"
+              placeholder="Filter Successors..."
+              class="filter-input"
+              id="succFilter"
+            />
+            <div class="form-check form-check-inline small">
+              <input class="form-check-input" type="checkbox" id="succCriticalOnly">
+              <label class="form-check-label" for="succCriticalOnly">Critical only</label>
+            </div>
+            <div class="form-check form-check-inline small">
+              <input class="form-check-input" type="checkbox" id="succNearCriticalOnly">
+              <label class="form-check-label" for="succNearCriticalOnly">Near-critical only</label>
+            </div>
+          </div>
+          <div id="successorList"></div>
+        </div>
+      </div>
+
+      <!-- Log card -->
+      <div class="card shadow-sm" id="logCard">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">Log</h6>
+          <small class="text-white-50" id="dataQualitySummary">No file loaded</small>
+        </div>
+        <div class="card-body p-0">
+          <pre id="log" class="log-container m-0 p-2"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Main Script -->
+  <script>
+    const P6Viewer = {
+      activities: [],
+      activityMap: {},
+      selectedActivity: null,
+      endActivity: null,
+      criticalPath: [],
+      sortState: {
+        pred: { field: 'Finish', asc: false, relFFMode: 0 },
+        succ: { field: 'Finish', asc: false, relFFMode: 0 }
+      },
+      dataQuality: {
+        total: 0,
+        missingDates: 0,
+        missingTypes: 0,
+        duplicateIds: 0
+      },
+      config: {
+        colActivityId: 'Activity ID',
+        colActivityName: 'Activity Name',
+        colStart: 'Start',
+        colFinish: 'Finish',
+        colPredecessors: 'Predecessors',
+        colPredDetails: 'Predecessor Details',
+        colActType: 'Activity Type',
+        colStatus: 'Activity Status',
+        colPrimConst: 'Primary Constraint',
+        colTotalFloat: 'Total Float',
+        criticalThreshold: 0,
+        nearCriticalThreshold: 5
+      }
+    };
+
+    // DOM references
+    const csvUpload = document.getElementById('csvUpload');
+    const searchSection = document.getElementById('searchSection');
+    const detailSection = document.getElementById('detailSection');
+    const cpTracer = document.getElementById('cpTracer');
+    const activitySearch = document.getElementById('activitySearch');
+    const searchResults = document.getElementById('searchResults');
+    const predecessorList = document.getElementById('predecessorList');
+    const successorList = document.getElementById('successorList');
+    const predFilter = document.getElementById('predFilter');
+    const succFilter = document.getElementById('succFilter');
+    const log = document.getElementById('log');
+    const csvLoadingSpinner = document.getElementById('csvLoadingSpinner');
+    const cpTableBody = document.getElementById('cpTableBody');
+    const clearCPBtn = document.getElementById('clearCPBtn');
+    const resetCPBtn = document.getElementById('resetCPBtn');
+    const exportCPBtn = document.getElementById('exportCPBtn');
+    const aboutBtn = document.getElementById('aboutBtn');
+    const helpBtn = document.getElementById('helpBtn');
+    const darkModeBtn = document.getElementById('darkModeBtn');
+    const relFFHelp = document.getElementById('relFFHelp');
+    const cpSummary = document.getElementById('cpSummary');
+    const dataQualitySummary = document.getElementById('dataQualitySummary');
+    const predCriticalOnly = document.getElementById('predCriticalOnly');
+    const predNearCriticalOnly = document.getElementById('predNearCriticalOnly');
+    const succCriticalOnly = document.getElementById('succCriticalOnly');
+    const succNearCriticalOnly = document.getElementById('succNearCriticalOnly');
+    const criticalThresholdInput = document.getElementById('criticalThreshold');
+    const nearCriticalThresholdInput = document.getElementById('nearCriticalThreshold');
+    const cpGanttTimeline = document.getElementById('cpGanttTimeline');
+
+    // -------------------------------------------------
+    // Utility / Logging
+    // -------------------------------------------------
+    function addLog(message, tip = '') {
+      const timestamp = new Date().toLocaleTimeString();
+      const logLine = tip
+        ? `[${timestamp}] ${message}\nTIP: ${tip}\n`
+        : `[${timestamp}] ${message}\n`;
+      log.textContent += logLine;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function updateConfigFromInputs() {
+      P6Viewer.config.criticalThreshold = parseFloat(criticalThresholdInput.value) || 0;
+      P6Viewer.config.nearCriticalThreshold = parseFloat(nearCriticalThresholdInput.value) || 5;
+    }
+
+    function cleanDate(dateStr) {
+      if (!dateStr) return '';
+      return dateStr.replace(/ A/g, '').replace(/\*/g, '').trim();
+    }
+
+    function parseDate(dateStr) {
+      if (!dateStr) return null;
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function isValidDate(d) {
+      return d instanceof Date && !isNaN(d);
+    }
+
+    function validateColumns(data, cfg) {
+      const required = [
+        cfg.colActivityId,
+        cfg.colStart,
+        cfg.colFinish,
+        cfg.colPredecessors,
+        cfg.colPredDetails
+      ];
+      if (data.length === 0) {
+        addLog('No data found in CSV.', 'Please check file and try again.');
+        alert('CSV is empty.');
+        return false;
+      }
+      const firstRow = Object.keys(data[0]);
+      const missing = required.filter(col => !firstRow.includes(col));
+      if (missing.length > 0) {
+        addLog(`Missing columns: ${missing.join(', ')}`, 'Check CSV format or export layout.');
+        alert('Some required columns are missing: ' + missing.join(', '));
+        return false;
+      }
+      return true;
+    }
+
+    function parseRelationshipType(sourceAct, targetId, cfg) {
+      const detailStr = sourceAct[cfg.colPredDetails] || '';
+      const chunks = detailStr.split(';').map(x => x.trim()).filter(Boolean);
+      for (const c of chunks) {
+        const parts = c.split(':').map(x => x.trim());
+        if (parts.length >= 2) {
+          const pID = parts[0];
+          const rel = parts[1];
+          if (pID === targetId) {
+            return rel;
+          }
+        }
+      }
+      return '—';
+    }
+
+    function customSortRelFF(arr, col, mode) {
+      arr.sort((a, b) => {
+        const valA = parseFloat(a[col]) || 0;
+        const valB = parseFloat(b[col]) || 0;
+        if (mode === 0) return valA - valB;
+        if (mode === 1) return valB - valA;
+        return Math.abs(valA) - Math.abs(valB);
+      });
+    }
+
+    function sortActivities(arr, field, ascending, relFFMode, cfg) {
+      if (field === 'Rel FF') {
+        customSortRelFF(arr, 'Rel FF', relFFMode);
+        return;
+      }
+      arr.sort((a, b) => {
+        const rawA = a[field] ?? '';
+        const rawB = b[field] ?? '';
+        const valA = rawA.toString().toLowerCase();
+        const valB = rawB.toString().toLowerCase();
+
+        if (field === cfg.colTotalFloat) {
+          const numA = parseFloat(valA) || 0;
+          const numB = parseFloat(valB) || 0;
+          return ascending ? numA - numB : numB - numA;
+        }
+        if (field === cfg.colStart || field === cfg.colFinish) {
+          const dateA = parseDate(valA) || 0;
+          const dateB = parseDate(valB) || 0;
+          return ascending ? dateA - dateB : dateB - dateA;
+        }
+        if (valA < valB) return ascending ? -1 : 1;
+        if (valA > valB) return ascending ? 1 : -1;
+        return 0;
+      });
+    }
+
+    function filterActivities(arr, query) {
+      if (!query) return arr;
+      const q = query.toLowerCase();
+      return arr.filter(act => {
+        return Object.values(act).some(val => {
+          if (!val) return false;
+          return val.toString().toLowerCase().includes(q);
+        });
+      });
+    }
+
+    function getRowClassByType(typeVal) {
+      if (!typeVal) return '';
+      const lower = typeVal.toLowerCase();
+      if (lower.includes('start milestone') || lower.includes('finish milestone') || lower.includes('loe')) {
+        return 'type-loe';
+      }
+      if (lower.includes('task dependent')) {
+        return 'type-task-dependent';
+      }
+      return '';
+    }
+
+    function getFloatShading(tf, minTF, maxTF) {
+      if (minTF === maxTF) return '';
+      const val = parseFloat(tf);
+      if (isNaN(val)) return '';
+      let ratio = (val - minTF) / (maxTF - minTF);
+      ratio = 1 - ratio;
+      const R = 255;
+      const G = Math.floor(255 - 255 * ratio);
+      const B = Math.floor(255 - 255 * ratio);
+      return `rgb(${R}, ${G}, ${B}, 0.7)`;
+    }
+
+    function classifyByFloat(tfStr, cfg) {
+      const val = parseFloat(tfStr);
+      if (isNaN(val)) return 'normal';
+      if (val <= cfg.criticalThreshold) return 'critical';
+      if (val <= cfg.nearCriticalThreshold) return 'near-critical';
+      return 'normal';
+    }
+
+    // -------------------------------------------------
+    // Relationship Free Float
+    // -------------------------------------------------
+    function computeRelationshipFreeFloat(currentAct, predAct, cfg) {
+      const MS_PER_DAY = 1000 * 3600 * 24;
+
+      const currType = (currentAct[cfg.colActType] || '').toLowerCase();
+      const predType = (predAct[cfg.colActType] || '').toLowerCase();
+
+      const currStart = parseDate(currentAct[cfg.colStart]);
+      const currFinish = parseDate(currentAct[cfg.colFinish]);
+      const predStart = parseDate(predAct[cfg.colStart]);
+      const predFinish = parseDate(predAct[cfg.colFinish]);
+
+      if (currType.includes('loe') || predType.includes('loe')) {
+        return 'N/A';
+      }
+
+      if (currType.includes('finish milestone') && predType.includes('finish milestone')) {
+        if (!isValidDate(currFinish) || !isValidDate(predFinish)) return '0.0';
+        return ((currFinish - predFinish) / MS_PER_DAY).toFixed(1);
+      }
+
+      if (currType.includes('start milestone') && predType.includes('start milestone')) {
+        if (!isValidDate(currStart) || !isValidDate(predStart)) return '0.0';
+        return ((currStart - predStart) / MS_PER_DAY).toFixed(1);
+      }
+
+      if (currType.includes('finish milestone') && predType.includes('task dependent')) {
+        if (!isValidDate(currFinish) || !isValidDate(predFinish)) return '0.0';
+        return ((currFinish - predFinish) / MS_PER_DAY).toFixed(1);
+      }
+
+      if (currType.includes('start milestone') && predType.includes('task dependent')) {
+        if (!isValidDate(currStart) || !isValidDate(predFinish)) return '0.0';
+        return ((currStart - predFinish) / MS_PER_DAY).toFixed(1);
+      }
+
+      if (currType.includes('task dependent') && predType.includes('finish milestone')) {
+        if (!isValidDate(currStart) || !isValidDate(predFinish)) return '0.0';
+        return ((currStart - predFinish) / MS_PER_DAY).toFixed(1);
+      }
+
+      if (currType.includes('task dependent') && predType.includes('start milestone')) {
+        if (!isValidDate(currStart) || !isValidDate(predStart)) return '0.0';
+        return ((currStart - predStart) / MS_PER_DAY).toFixed(1);
+      }
+
+      if (currType.includes('task dependent') && predType.includes('task dependent')) {
+        if (!isValidDate(currStart) || !isValidDate(predFinish)) return '0.0';
+        return ((currStart - predFinish) / MS_PER_DAY).toFixed(1);
+      }
+
+      return 'N/A';
+    }
+
+    // -------------------------------------------------
+    // CSV Upload
+    // -------------------------------------------------
+    csvUpload.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      updateConfigFromInputs();
+      addLog(`File selected: ${file.name}`, 'Wait for parsing. Large schedules can take a moment.');
+      csvLoadingSpinner.style.display = 'block';
+      P6Viewer.dataQuality = { total: 0, missingDates: 0, missingTypes: 0, duplicateIds: 0 };
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        worker: true,
+        complete: result => {
+          csvLoadingSpinner.style.display = 'none';
+          if (result.errors.length) {
+            addLog(
+              `Parse errors: ${result.errors.map(er => er.message).join('; ')}`,
+              'Check CSV format. Often caused by stray quotes or delimiters.'
+            );
+            alert('CSV parse errors present. Check log.');
+            return;
+          }
+
+          if (!validateColumns(result.data, P6Viewer.config)) return;
+
+          const cfg = P6Viewer.config;
+          const map = {};
+          const activities = [];
+          const idSet = new Set();
+
+          result.data.forEach(raw => {
+            const act = { ...raw };
+
+            act[cfg.colActivityId] = (act[cfg.colActivityId] || '').trim();
+            act[cfg.colStart] = cleanDate(act[cfg.colStart]);
+            act[cfg.colFinish] = cleanDate(act[cfg.colFinish]);
+
+            const idVal = act[cfg.colActivityId];
+            if (!idVal) return;
+
+            if (idSet.has(idVal)) {
+              P6Viewer.dataQuality.duplicateIds += 1;
+            }
+            idSet.add(idVal);
+
+            const startD = parseDate(act[cfg.colStart]);
+            const finishD = parseDate(act[cfg.colFinish]);
+            if (!isValidDate(startD) || !isValidDate(finishD)) {
+              P6Viewer.dataQuality.missingDates += 1;
+            }
+
+            if (!act[cfg.colActType]) {
+              P6Viewer.dataQuality.missingTypes += 1;
+            }
+
+            P6Viewer.dataQuality.total += 1;
+            map[idVal] = act;
+            activities.push(act);
+          });
+
+          P6Viewer.activities = activities;
+          P6Viewer.activityMap = map;
+          P6Viewer.selectedActivity = null;
+          P6Viewer.endActivity = null;
+          P6Viewer.criticalPath = [];
+
+          updateDataQualitySummary();
+          addLog(`Loaded ${activities.length} activities.`, 'Step 2: pick an end activity and start tracing.');
+          searchSection.style.visibility = 'visible';
+          cpTracer.style.visibility = 'hidden';
+          detailSection.style.visibility = 'hidden';
+          updateCPGantt();
+        },
+        error: err => {
+          csvLoadingSpinner.style.display = 'none';
+          addLog(`Parse error: ${err}`, 'Check your CSV encoding and delimiters.');
+          alert('Failed to parse CSV.');
+        }
+      });
+    });
+
+    function updateDataQualitySummary() {
+      const dq = P6Viewer.dataQuality;
+      if (!dq.total) {
+        dataQualitySummary.textContent = 'No schedule loaded';
+        return;
+      }
+      dataQualitySummary.textContent =
+        `Activities: ${dq.total} | Missing/invalid dates: ${dq.missingDates} | Missing types: ${dq.missingTypes} | Duplicate IDs: ${dq.duplicateIds}`;
+    }
+
+    // -------------------------------------------------
+    // Searching / end activity selection
+    // -------------------------------------------------
+    activitySearch.addEventListener('input', () => {
+      const cfg = P6Viewer.config;
+      const query = activitySearch.value.trim().toLowerCase();
+      searchResults.innerHTML = '';
+      if (!query) return;
+
+      const matches = P6Viewer.activities.filter(act => {
+        const idStr = (act[cfg.colActivityId] || '').toLowerCase();
+        const nameStr = (act[cfg.colActivityName] || '').toLowerCase();
+        return idStr.includes(query) || nameStr.includes(query);
+      });
+
+      if (!matches.length) {
+        searchResults.innerHTML = '<div class="text-muted p-1">No matches found.</div>';
+        return;
+      }
+
+      matches.forEach(act => {
+        const div = document.createElement('div');
+        div.className = 'activity-card p-1 border-bottom small';
+        const idVal = act[cfg.colActivityId] || 'N/A';
+        const nameVal = act[cfg.colActivityName] || 'N/A';
+        div.innerHTML = `<strong>${idVal}</strong> - ${nameVal}`;
+        div.onclick = () => {
+          P6Viewer.endActivity = act;
+          P6Viewer.selectedActivity = act;
+          P6Viewer.criticalPath = [act];
+
+          addLog(`End activity selected: ${act[cfg.colActivityId]}`, 'Double-click predecessors to walk the path back.');
+          searchResults.innerHTML = '';
+          activitySearch.value = '';
+
+          searchSection.style.visibility = 'visible';
+          cpTracer.style.visibility = 'visible';
+          detailSection.style.visibility = 'visible';
+
+          updateCPUI();
+          showPredecessors(act);
+          showSuccessors(act);
+        };
+        searchResults.appendChild(div);
+      });
+
+      addLog(`Search updated for "${query}".`);
+    });
+
+    // -------------------------------------------------
+    // CP Tracer and path management
+    // -------------------------------------------------
+    function updateCPSummary() {
+      const cfg = P6Viewer.config;
+      if (!P6Viewer.criticalPath.length) {
+        cpSummary.textContent = 'No path yet';
+        return;
+      }
+      const endAct = P6Viewer.endActivity;
+      const startAct = P6Viewer.criticalPath[P6Viewer.criticalPath.length - 1];
+      const tf = endAct ? (endAct[cfg.colTotalFloat] || '—') : '—';
+      cpSummary.textContent =
+        `Path length: ${P6Viewer.criticalPath.length} | Start: ${(startAct && startAct[cfg.colActivityId]) || '—'} → End: ${(endAct && endAct[cfg.colActivityId]) || '—'} | End TF: ${tf}`;
+    }
+
+    function updateCPUI() {
+      const cfg = P6Viewer.config;
+      const cp = P6Viewer.criticalPath;
+      cpTableBody.innerHTML = '';
+
+      cp.forEach((cpAct, idx) => {
+        const row = document.createElement('tr');
+        const idVal = cpAct[cfg.colActivityId] || '—';
+        const nameVal = cpAct[cfg.colActivityName] || '—';
+        const startVal = cpAct[cfg.colStart] || '—';
+        const finishVal = cpAct[cfg.colFinish] || '—';
+        const statusVal = cpAct[cfg.colStatus] || '—';
+        const tfVal = cpAct[cfg.colTotalFloat] || '—';
+
+        let relFFVal = '—';
+        if (idx + 1 < cp.length) {
+          const predAct = cp[idx + 1];
+          relFFVal = computeRelationshipFreeFloat(cpAct, predAct, cfg);
+        }
+
+        const floatClass = classifyByFloat(tfVal, cfg);
+        if (floatClass === 'critical') row.classList.add('critical-row');
+        if (floatClass === 'near-critical') row.classList.add('near-critical-row');
+
+        const typeClass = getRowClassByType(cpAct[cfg.colActType] || '');
+        if (typeClass) row.classList.add(typeClass);
+
+        row.innerHTML = `
+          <td><strong>${idVal}</strong></td>
+          <td>${nameVal}</td>
+          <td>${startVal}</td>
+          <td>${finishVal}</td>
+          <td>${statusVal}</td>
+          <td>${tfVal}</td>
+          <td>${relFFVal}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-danger" data-cp-remove="${idx}">X</button>
+          </td>
+        `;
+        cpTableBody.appendChild(row);
+      });
+
+      cpTableBody.querySelectorAll('button[data-cp-remove]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const index = parseInt(btn.getAttribute('data-cp-remove'), 10);
+          removeFromCP(index);
+        });
+      });
+
+      updateCPSummary();
+      updateCPGantt();
+    }
+
+    function removeFromCP(index) {
+      const cfg = P6Viewer.config;
+      const cp = P6Viewer.criticalPath;
+      if (!cp[index]) return;
+
+      const removed = cp.splice(index, 1);
+      addLog(`Removed from CP: ${removed[0][cfg.colActivityId]}`);
+
+      if (cp.length > 0) {
+        const lastAct = cp[cp.length - 1];
+        P6Viewer.selectedActivity = lastAct;
+        showPredecessors(lastAct);
+        showSuccessors(lastAct);
+      } else {
+        P6Viewer.selectedActivity = P6Viewer.endActivity;
+        predecessorList.innerHTML = '';
+        successorList.innerHTML = '';
+        detailSection.style.visibility = P6Viewer.endActivity ? 'visible' : 'hidden';
+      }
+      updateCPUI();
+    }
+
+    clearCPBtn.addEventListener('click', () => {
+      P6Viewer.criticalPath = [];
+      addLog('Cleared entire CP.', 'Select an end activity again to start a new path.');
+      updateCPUI();
+      P6Viewer.selectedActivity = P6Viewer.endActivity;
+      predecessorList.innerHTML = '';
+      successorList.innerHTML = '';
+      detailSection.style.visibility = P6Viewer.endActivity ? 'visible' : 'hidden';
+    });
+
+    resetCPBtn.addEventListener('click', () => {
+      if (P6Viewer.endActivity) {
+        P6Viewer.criticalPath = [P6Viewer.endActivity];
+        P6Viewer.selectedActivity = P6Viewer.endActivity;
+        addLog('Reset CP to end activity.', 'Re-add any needed predecessors.');
+        updateCPUI();
+        showPredecessors(P6Viewer.endActivity);
+        showSuccessors(P6Viewer.endActivity);
+      }
+    });
+
+    function addToCP(newAct) {
+      const cfg = P6Viewer.config;
+      const cp = P6Viewer.criticalPath;
+      const found = cp.find(a => a[cfg.colActivityId] === newAct[cfg.colActivityId]);
+      if (!found) {
+        cp.push(newAct);
+        P6Viewer.selectedActivity = newAct;
+        addLog(`Added ${newAct[cfg.colActivityId]} to CP.`, 'Continue walking predecessors or reset if you went too far.');
+        updateCPUI();
+        showPredecessors(newAct);
+        showSuccessors(newAct);
+      }
+    }
+
+    // -------------------------------------------------
+    // Mini Gantt for current path
+    // -------------------------------------------------
+    function updateCPGantt() {
+      const cfg = P6Viewer.config;
+      const cp = P6Viewer.criticalPath;
+      cpGanttTimeline.innerHTML = '';
+
+      if (!cp.length) {
+        return;
+      }
+
+      const tasks = cp
+        .map(act => {
+          const start = parseDate(act[cfg.colStart]);
+          const finish = parseDate(act[cfg.colFinish]);
+          return { act, start, finish };
+        })
+        .filter(t => isValidDate(t.start) && isValidDate(t.finish));
+
+      if (!tasks.length) return;
+
+      const minStart = tasks.reduce((min, t) => (t.start < min ? t.start : min), tasks[0].start);
+      const maxFinish = tasks.reduce((max, t) => (t.finish > max ? t.finish : max), tasks[0].finish);
+
+      const totalMs = maxFinish - minStart || 1;
+
+      const header = document.createElement('div');
+      header.className = 'gantt-header';
+
+      const label = document.createElement('div');
+      label.className = 'gantt-header-label';
+      label.textContent = 'Dates';
+      header.appendChild(label);
+
+      const scale = document.createElement('div');
+      scale.className = 'gantt-header-scale';
+
+      const scaleLine = document.createElement('div');
+      scaleLine.className = 'gantt-header-scale-line';
+      scale.appendChild(scaleLine);
+
+      const ticks = document.createElement('div');
+      ticks.className = 'gantt-header-ticks';
+
+      const tickCount = 4;
+      for (let i = 0; i <= tickCount; i++) {
+        const tick = document.createElement('div');
+        const ms = totalMs * (i / tickCount);
+        const d = new Date(minStart.getTime() + ms);
+        tick.textContent = d.toLocaleDateString();
+        ticks.appendChild(tick);
+      }
+      scale.appendChild(ticks);
+      header.appendChild(scale);
+
+      cpGanttTimeline.appendChild(header);
+
+      cp.forEach(act => {
+        const row = document.createElement('div');
+        row.className = 'gantt-row';
+
+        const rowLabel = document.createElement('div');
+        rowLabel.className = 'gantt-row-label';
+        const idVal = act[cfg.colActivityId] || '';
+        const nameVal = act[cfg.colActivityName] || '';
+        rowLabel.textContent = `${idVal} ${nameVal}`;
+        row.appendChild(rowLabel);
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'gantt-row-bar-wrapper';
+
+        const start = parseDate(act[cfg.colStart]);
+        const finish = parseDate(act[cfg.colFinish]);
+        if (isValidDate(start) && isValidDate(finish)) {
+          const bar = document.createElement('div');
+          bar.className = 'gantt-row-bar';
+
+          const offsetMs = start - minStart;
+          const durationMs = finish - start || 24 * 3600 * 1000;
+          const leftPercent = (offsetMs / totalMs) * 100;
+          const widthPercent = (durationMs / totalMs) * 100;
+
+          // store left percent on CSS custom property for milestone centering
+          bar.style.setProperty('--left-percent', leftPercent + '%');
+          bar.style.left = leftPercent + '%';
+          bar.style.width = widthPercent + '%';
+
+          const typeVal = (act[cfg.colActType] || '').toLowerCase();
+          const floatClass = classifyByFloat(act[cfg.colTotalFloat], cfg);
+
+          if (floatClass === 'critical') bar.classList.add('critical');
+          if (floatClass === 'near-critical') bar.classList.add('near-critical');
+
+          if (typeVal.includes('loe')) bar.classList.add('loe');
+          if (typeVal.includes('start milestone') || typeVal.includes('finish milestone')) {
+            bar.classList.add('milestone');
+          }
+
+          bar.title = `${idVal} | ${nameVal}\n${start.toLocaleDateString()} - ${finish.toLocaleDateString()}`;
+          wrapper.appendChild(bar);
+        }
+
+        row.appendChild(wrapper);
+        cpGanttTimeline.appendChild(row);
+      });
+    }
+
+    // -------------------------------------------------
+    // Predecessors
+    // -------------------------------------------------
+    function showPredecessors(currentAct) {
+      const cfg = P6Viewer.config;
+      predecessorList.innerHTML = '';
+      if (!currentAct) return;
+
+      const rawPreds = (currentAct[cfg.colPredecessors] || '')
+        .split(/[,;]/)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      let validPreds = rawPreds
+        .filter(id => P6Viewer.activityMap[id])
+        .map(pid => P6Viewer.activityMap[pid]);
+
+      if (!validPreds.length) {
+        predecessorList.innerHTML = '<p class="text-muted small">No predecessors.</p>';
+        return;
+      }
+
+      const filterVal = predFilter.value.trim().toLowerCase();
+      validPreds = filterActivities(validPreds, filterVal);
+
+      validPreds.forEach(predAct => {
+        predAct['Relationship Type'] = parseRelationshipType(currentAct, predAct[cfg.colActivityId], cfg);
+        predAct['Rel FF'] = computeRelationshipFreeFloat(currentAct, predAct, cfg);
+      });
+
+      const field = P6Viewer.sortState.pred.field;
+      const asc = P6Viewer.sortState.pred.asc;
+      const relFFMode = P6Viewer.sortState.pred.relFFMode;
+      sortActivities(validPreds, field, asc, relFFMode, cfg);
+
+      const floats = validPreds.map(p => parseFloat(p[cfg.colTotalFloat]) || 0);
+      const minTF = Math.min(...floats);
+      const maxTF = Math.max(...floats);
+
+      const table = document.createElement('table');
+      table.className = 'table table-sm table-bordered relation-table table-hover';
+      table.innerHTML = `
+        <thead class="table-light">
+          <tr>
+            <th data-col="${cfg.colActivityId}">ID</th>
+            <th data-col="${cfg.colActivityName}">Name</th>
+            <th data-col="${cfg.colStart}">Start</th>
+            <th data-col="${cfg.colFinish}">Finish</th>
+            <th data-col="${cfg.colStatus}">Status</th>
+            <th data-col="${cfg.colPrimConst}">Primary Constraint</th>
+            <th data-col="${cfg.colTotalFloat}">Total Float</th>
+            <th data-col="${cfg.colActType}">Activity Type</th>
+            <th data-col="Relationship Type">Rel Type</th>
+            <th data-col="Rel FF">Rel FF</th>
+          </tr>
+        </thead>
+        <tbody id="predTableBody"></tbody>
+      `;
+      const tbody = table.querySelector('#predTableBody');
+
+      validPreds.forEach(predAct => {
+        const row = document.createElement('tr');
+        row.className = 'activity-card';
+
+        const idVal = predAct[cfg.colActivityId] || '—';
+        const nameVal = predAct[cfg.colActivityName] || '—';
+        const startVal = predAct[cfg.colStart] || '—';
+        const finishVal = predAct[cfg.colFinish] || '—';
+        const statusVal = predAct[cfg.colStatus] || '—';
+        const pcVal = predAct[cfg.colPrimConst] || '—';
+        const tfVal = predAct[cfg.colTotalFloat] || '—';
+        const typeVal = predAct[cfg.colActType] || '—';
+        const relTypeVal = predAct['Relationship Type'] || '—';
+        const relFFVal = predAct['Rel FF'] || 'N/A';
+
+        const typeClass = getRowClassByType(typeVal);
+        if (typeClass) row.classList.add(typeClass);
+
+        const floatClass = classifyByFloat(tfVal, cfg);
+        if (floatClass === 'critical') row.classList.add('critical-row');
+        if (floatClass === 'near-critical') row.classList.add('near-critical-row');
+
+        if (predCriticalOnly.checked && floatClass !== 'critical') return;
+        if (predNearCriticalOnly.checked && floatClass !== 'near-critical') return;
+
+        row.ondblclick = () => {
+          addToCP(predAct);
+        };
+
+        row.innerHTML = `
+          <td><strong>${idVal}</strong></td>
+          <td>${nameVal}</td>
+          <td>${startVal}</td>
+          <td>${finishVal}</td>
+          <td>${statusVal}</td>
+          <td>${pcVal}</td>
+          <td>${tfVal}</td>
+          <td>${typeVal}</td>
+          <td>${relTypeVal}</td>
+          <td>${relFFVal}</td>
+        `;
+
+        const cellTF = row.querySelector('td:nth-child(7)');
+        if (cellTF && tfVal !== '—') {
+          cellTF.style.backgroundColor = getFloatShading(parseFloat(tfVal), minTF, maxTF);
+        }
+
+        tbody.appendChild(row);
+      });
+
+      predecessorList.appendChild(table);
+
+      const headers = table.querySelectorAll('th[data-col]');
+      headers.forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.getAttribute('data-col');
+          if (col === 'Rel FF') {
+            if (P6Viewer.sortState.pred.field === 'Rel FF') {
+              P6Viewer.sortState.pred.relFFMode = (P6Viewer.sortState.pred.relFFMode + 1) % 3;
+            } else {
+              P6Viewer.sortState.pred.field = 'Rel FF';
+              P6Viewer.sortState.pred.relFFMode = 0;
+            }
+          } else {
+            if (P6Viewer.sortState.pred.field === col) {
+              P6Viewer.sortState.pred.asc = !P6Viewer.sortState.pred.asc;
+            } else {
+              P6Viewer.sortState.pred.field = col;
+              P6Viewer.sortState.pred.asc = true;
+            }
+          }
+          showPredecessors(currentAct);
+        });
+      });
+    }
+
+    // -------------------------------------------------
+    // Successors
+    // -------------------------------------------------
+    function showSuccessors(currentAct) {
+      const cfg = P6Viewer.config;
+      successorList.innerHTML = '';
+      if (!currentAct) return;
+
+      const currID = currentAct[cfg.colActivityId] || '';
+      let successors = P6Viewer.activities.filter(act => {
+        const rawPreds = (act[cfg.colPredecessors] || '')
+          .split(/[,;]/)
+          .map(s => s.trim());
+        return rawPreds.includes(currID);
+      });
+
+      if (!successors.length) {
+        successorList.innerHTML = '<p class="text-muted small">No successors.</p>';
+        return;
+      }
+
+      const filterVal = succFilter.value.trim().toLowerCase();
+      successors = filterActivities(successors, filterVal);
+
+      successors.forEach(succAct => {
+        succAct['Relationship Type'] = parseRelationshipType(succAct, currID, cfg);
+      });
+
+      const field = P6Viewer.sortState.succ.field;
+      const asc = P6Viewer.sortState.succ.asc;
+      const relFFMode = P6Viewer.sortState.succ.relFFMode;
+      sortActivities(successors, field, asc, relFFMode, cfg);
+
+      const floats = successors.map(s => parseFloat(s[cfg.colTotalFloat]) || 0);
+      const minTF = Math.min(...floats);
+      const maxTF = Math.max(...floats);
+
+      const table = document.createElement('table');
+      table.className = 'table table-sm table-bordered relation-table table-hover';
+      table.innerHTML = `
+        <thead class="table-light">
+          <tr>
+            <th data-col="${cfg.colActivityId}">ID</th>
+            <th data-col="${cfg.colActivityName}">Name</th>
+            <th data-col="${cfg.colStart}">Start</th>
+            <th data-col="${cfg.colFinish}">Finish</th>
+            <th data-col="${cfg.colStatus}">Status</th>
+            <th data-col="${cfg.colPrimConst}">Primary Constraint</th>
+            <th data-col="${cfg.colTotalFloat}">Total Float</th>
+            <th data-col="${cfg.colActType}">Activity Type</th>
+            <th data-col="Relationship Type">Rel Type</th>
+          </tr>
+        </thead>
+        <tbody id="succTableBody"></tbody>
+      `;
+      const tbody = table.querySelector('#succTableBody');
+
+      successors.forEach(succAct => {
+        const row = document.createElement('tr');
+        row.className = 'activity-card';
+
+        const idVal = succAct[cfg.colActivityId] || '—';
+        const nameVal = succAct[cfg.colActivityName] || '—';
+        const startVal = succAct[cfg.colStart] || '—';
+        const finishVal = succAct[cfg.colFinish] || '—';
+        const statusVal = succAct[cfg.colStatus] || '—';
+        const pcVal = succAct[cfg.colPrimConst] || '—';
+        const tfVal = succAct[cfg.colTotalFloat] || '—';
+        const typeVal = succAct[cfg.colActType] || '—';
+        const relTypeVal = succAct['Relationship Type'] || '—';
+
+        const typeClass = getRowClassByType(typeVal);
+        if (typeClass) row.classList.add(typeClass);
+
+        const floatClass = classifyByFloat(tfVal, cfg);
+        if (floatClass === 'critical') row.classList.add('critical-row');
+        if (floatClass === 'near-critical') row.classList.add('near-critical-row');
+
+        if (succCriticalOnly.checked && floatClass !== 'critical') return;
+        if (succNearCriticalOnly.checked && floatClass !== 'near-critical') return;
+
+        row.ondblclick = () => {
+          P6Viewer.selectedActivity = succAct;
+          showPredecessors(succAct);
+          showSuccessors(succAct);
+        };
+
+        row.innerHTML = `
+          <td><strong>${idVal}</strong></td>
+          <td>${nameVal}</td>
+          <td>${startVal}</td>
+          <td>${finishVal}</td>
+          <td>${statusVal}</td>
+          <td>${pcVal}</td>
+          <td>${tfVal}</td>
+          <td>${typeVal}</td>
+          <td>${relTypeVal}</td>
+        `;
+
+        const cellTF = row.querySelector('td:nth-child(7)');
+        if (cellTF && tfVal !== '—') {
+          cellTF.style.backgroundColor = getFloatShading(parseFloat(tfVal), minTF, maxTF);
+        }
+
+        tbody.appendChild(row);
+      });
+
+      successorList.appendChild(table);
+
+      const headers = table.querySelectorAll('th[data-col]');
+      headers.forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.getAttribute('data-col');
+          if (col === 'Rel FF') {
+          } else {
+            if (P6Viewer.sortState.succ.field === col) {
+              P6Viewer.sortState.succ.asc = !P6Viewer.sortState.succ.asc;
+            } else {
+              P6Viewer.sortState.succ.field = col;
+              P6Viewer.sortState.succ.asc = true;
+            }
+          }
+          showSuccessors(currentAct);
+        });
+      });
+    }
+
+    // -------------------------------------------------
+    // Filters
+    // -------------------------------------------------
+    predFilter.addEventListener('input', () => {
+      if (P6Viewer.selectedActivity) {
+        showPredecessors(P6Viewer.selectedActivity);
+      }
+    });
+    succFilter.addEventListener('input', () => {
+      if (P6Viewer.selectedActivity) {
+        showSuccessors(P6Viewer.selectedActivity);
+      }
+    });
+
+    predCriticalOnly.addEventListener('change', () => {
+      if (P6Viewer.selectedActivity) showPredecessors(P6Viewer.selectedActivity);
+    });
+    predNearCriticalOnly.addEventListener('change', () => {
+      if (P6Viewer.selectedActivity) showPredecessors(P6Viewer.selectedActivity);
+    });
+    succCriticalOnly.addEventListener('change', () => {
+      if (P6Viewer.selectedActivity) showSuccessors(P6Viewer.selectedActivity);
+    });
+    succNearCriticalOnly.addEventListener('change', () => {
+      if (P6Viewer.selectedActivity) showSuccessors(P6Viewer.selectedActivity);
+    });
+
+    criticalThresholdInput.addEventListener('change', () => {
+      updateConfigFromInputs();
+      updateCPUI();
+      if (P6Viewer.selectedActivity) {
+        showPredecessors(P6Viewer.selectedActivity);
+        showSuccessors(P6Viewer.selectedActivity);
+      }
+    });
+    nearCriticalThresholdInput.addEventListener('change', () => {
+      updateConfigFromInputs();
+      updateCPUI();
+      if (P6Viewer.selectedActivity) {
+        showPredecessors(P6Viewer.selectedActivity);
+        showSuccessors(P6Viewer.selectedActivity);
+      }
+    });
+
+    // -------------------------------------------------
+    // About / Help / Dark Mode
+    // -------------------------------------------------
+    aboutBtn.addEventListener('click', () => {
+      alert(
+        "P6 Offline Viewer\n\n" +
+        "Workflow:\n" +
+        "1. Load a P6 CSV export (local only).\n" +
+        "2. Pick an end activity and start the path.\n" +
+        "3. Double-click predecessors to walk back through logic; the CP table and mini timeline update.\n" +
+        "4. Use Total Float thresholds to highlight critical / near-critical activities.\n" +
+        "   - Solid red border = critical (TF ≤ Critical TF threshold).\n" +
+        "   - Dashed orange border = near-critical (TF ≤ Near-critical TF threshold).\n" +
+        "5. Milestones are rendered as diamonds on the mini timeline; tasks are horizontal bars.\n" +
+        "6. Export the CP table for reporting.\n"
+      );
+      addLog('Opened About info.');
+    });
+
+    helpBtn.addEventListener('click', () => {
+      alert(
+        "How to read this viewer:\n\n" +
+        "- End Activity: the activity you care about; its Total Float is shown in the CP header.\n" +
+        "- Critical / Near-critical: controlled by the TF thresholds. Red solid border = critical. Orange dashed border = near-critical.\n" +
+        "- Mini timeline: shows path activities in time; diamonds are milestones, bars are tasks; color follows criticality.\n" +
+        "- Rel FF: day gap between current activity and its predecessor, with dates chosen based on Activity Type.\n"
+      );
+      addLog('Opened Help panel.');
+    });
+
+    relFFHelp.addEventListener('click', () => {
+      alert(
+        "Relationship Free Float (Rel FF)\n\n" +
+        "Rel FF measures the time gap between a current activity and its predecessor.\n" +
+        "The specific dates used depend on Activity Type (task, start milestone, finish milestone, LOE).\n" +
+        "LOE relationships are reported as N/A, and task-to-task links use current start minus predecessor finish in days.\n"
+      );
+      addLog('Viewed Rel FF explanation.');
+    });
+
+    darkModeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      darkModeBtn.textContent = isDark ? 'Light' : 'Dark';
+      addLog('Toggled Dark Mode.', 'Use what is easier on your eyes for long reviews.');
+    });
+
+    // -------------------------------------------------
+    // Export CP to CSV
+    // -------------------------------------------------
+    exportCPBtn.addEventListener('click', () => {
+      const cfg = P6Viewer.config;
+      if (!P6Viewer.criticalPath.length) {
+        alert('No critical path to export.');
+        return;
+      }
+
+      const rows = [];
+      rows.push([
+        'Sequence',
+        cfg.colActivityId,
+        cfg.colActivityName,
+        cfg.colStart,
+        cfg.colFinish,
+        cfg.colStatus,
+        cfg.colTotalFloat,
+        'Rel FF'
+      ]);
+
+      const cp = P6Viewer.criticalPath;
+      cp.forEach((act, idx) => {
+        let relFFVal = '—';
+        if (idx + 1 < cp.length) {
+          relFFVal = computeRelationshipFreeFloat(act, cp[idx + 1], cfg);
+        }
+        rows.push([
+          idx + 1,
+          act[cfg.colActivityId] || '',
+          act[cfg.colActivityName] || '',
+          act[cfg.colStart] || '',
+          act[cfg.colFinish] || '',
+          act[cfg.colStatus] || '',
+          act[cfg.colTotalFloat] || '',
+          relFFVal
+        ]);
+      });
+
+      const csvContent = rows
+        .map(r =>
+          r
+            .map(v => {
+              const s = v == null ? '' : v.toString();
+              if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+                return '"' + s.replace(/"/g, '""') + '"';
+              }
+              return s;
+            })
+            .join(',')
+        )
+        .join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const endId = P6Viewer.endActivity ? P6Viewer.endActivity[cfg.colActivityId] : 'CP';
+      a.download = `P6_CP_${endId}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      addLog('Exported CP table to CSV.', 'Attach this to status decks or share with stakeholders.');
+    });
+  </script>
+</body>
+</html>
