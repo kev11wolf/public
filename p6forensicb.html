@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>P6 Delay Forensic Analyzer Pro</title>
+  
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+  
+  <!-- Tabulator -->
+  <link href="https://cdn.jsdelivr.net/npm/tabulator-tables@5.4.4/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet" />
+  
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --success-color: #198754;
+      --danger-color: #dc3545;
+      --warning-color: #ffc107;
+      --info-color: #0dcaf0;
+    }
+    
+    /* Dark mode support */
+    [data-bs-theme="dark"] {
+      --bs-body-bg: #212529;
+      --bs-body-color: #dee2e6;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px 0;
+    }
+    
+    .main-container {
+      background: var(--bs-body-bg);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 0;
+      overflow: hidden;
+    }
+    
+    /* Header */
+    .app-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      position: relative;
+    }
+    
+    .app-header h1 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 2rem;
+    }
+    
+    .app-header .subtitle {
+      opacity: 0.9;
+      margin-top: 0.5rem;
+    }
+    
+    .theme-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+    }
+    
+    /* Step Indicator */
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin: 2rem 0;
+      padding: 0 2rem;
+    }
+    
+    .step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      opacity: 0.5;
+      transition: all 0.3s;
+    }
+    
+    .step.active {
+      opacity: 1;
+    }
+    
+    .step.completed {
+      opacity: 1;
+    }
+    
+    .step-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--bs-secondary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.5rem;
+      font-size: 1.5rem;
+      transition: all 0.3s;
+    }
+    
+    .step.active .step-circle {
+      background: var(--primary-color);
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(13, 110, 253, 0.5);
+    }
+    
+    .step.completed .step-circle {
+      background: var(--success-color);
+    }
+    
+    .step::before {
+      content: '';
+      position: absolute;
+      top: 25px;
+      left: 50%;
+      width: 100%;
+      height: 2px;
+      background: var(--bs-secondary);
+      z-index: -1;
+    }
+    
+    .step:last-child::before {
+      display: none;
+    }
+    
+    .step.completed::before {
+      background: var(--success-color);
+    }
+    
+    /* File Upload Zone */
+    .upload-zone {
+      border: 3px dashed var(--bs-border-color);
+      border-radius: 15px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: pointer;
+      background: var(--bs-body-bg);
+    }
+    
+    .upload-zone:hover {
+      border-color: var(--primary-color);
+      background: rgba(13, 110, 253, 0.05);
+    }
+    
+    .upload-zone.dragover {
+      border-color: var(--success-color);
+      background: rgba(25, 135, 84, 0.1);
+      transform: scale(1.02);
+    }
+    
+    .upload-zone.loaded {
+      border-color: var(--success-color);
+      background: rgba(25, 135, 84, 0.05);
+    }
+    
+    .upload-icon {
+      font-size: 3rem;
+      color: var(--bs-secondary);
+      margin-bottom: 1rem;
+    }
+    
+    .upload-zone.loaded .upload-icon {
+      color: var(--success-color);
+    }
+    
+    /* Metric Cards */
+    .metric-card {
+      background: var(--bs-body-bg);
+      border-radius: 15px;
+      padding: 1.5rem;
+      height: 100%;
+      border: 1px solid var(--bs-border-color);
+      transition: all 0.3s;
+    }
+    
+    .metric-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .metric-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .metric-icon.primary { background: rgba(13, 110, 253, 0.1); color: var(--primary-color); }
+    .metric-icon.success { background: rgba(25, 135, 84, 0.1); color: var(--success-color); }
+    .metric-icon.danger { background: rgba(220, 53, 69, 0.1); color: var(--danger-color); }
+    .metric-icon.warning { background: rgba(255, 193, 7, 0.1); color: var(--warning-color); }
+    
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0.5rem 0;
+    }
+    
+    .metric-label {
+      color: var(--bs-secondary);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .metric-delta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+    
+    .metric-delta.positive {
+      background: rgba(220, 53, 69, 0.1);
+      color: var(--danger-color);
+    }
+    
+    .metric-delta.negative {
+      background: rgba(25, 135, 84, 0.1);
+      color: var(--success-color);
+    }
+    
+    .metric-delta.neutral {
+      background: rgba(108, 117, 125, 0.1);
+      color: var(--bs-secondary);
+    }
+    
+    /* Filter Bar */
+    .filter-bar {
+      background: var(--bs-body-bg);
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--bs-border-color);
+    }
+    
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      animation: slideIn 0.3s;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .filter-chip .btn-close {
+      --bs-btn-close-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e");
+      opacity: 1;
+    }
+    
+    /* Table Container */
+    .table-container {
+      background: var(--bs-body-bg);
+      border-radius: 15px;
+      padding: 1.5rem;
+      border: 1px solid var(--bs-border-color);
+    }
+    
+    #comparisonTable {
+      height: 600px;
+    }
+    
+    .tabulator {
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(5px);
+    }
+    
+    .loading-content {
+      text-align: center;
+      color: white;
+    }
+    
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 5px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Chart Cards */
+    .chart-card {
+      background: var(--bs-body-bg);
+      border-radius: 15px;
+      padding: 1.5rem;
+      border: 1px solid var(--bs-border-color);
+      height: 100%;
+    }
+    
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .chart-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    /* Collapsible Sections */
+    .section-header {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      background: var(--bs-body-bg);
+      border-radius: 15px;
+      margin-bottom: 1rem;
+      border: 1px solid var(--bs-border-color);
+      transition: all 0.3s;
+    }
+    
+    .section-header:hover {
+      background: rgba(13, 110, 253, 0.05);
+    }
+    
+    .section-header i {
+      transition: transform 0.3s;
+    }
+    
+    .section-header.collapsed i {
+      transform: rotate(-90deg);
+    }
+    
+    /* Toast Notifications */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .app-header h1 {
+        font-size: 1.5rem;
+      }
+      
+      .step-indicator {
+        padding: 0 1rem;
+      }
+      
+      .step-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+      
+      .metric-value {
+        font-size: 1.5rem;
+      }
+      
+      .upload-zone {
+        padding: 1rem;
+      }
+    }
+    
+    /* Accessibility */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+    
+    /* Slippage Colors */
+    .slippage-none { color: var(--success-color); font-weight: 600; }
+    .slippage-low { color: var(--warning-color); font-weight: 600; }
+    .slippage-medium { color: #fd7e14; font-weight: 600; }
+    .slippage-high { color: var(--danger-color); font-weight: 700; }
+    
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+      }
+      
+      .main-container {
+        box-shadow: none;
+      }
+      
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay d-none">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <h3>Analyzing Schedule Data...</h3>
+      <p id="loadingMessage">Processing your files</p>
+    </div>
+  </div>
+  
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+  
+  <div class="container">
+    <div class="main-container">
+      <!-- Header -->
+      <div class="app-header">
+        <button class="btn btn-light btn-sm theme-toggle no-print" id="themeToggle" aria-label="Toggle dark mode">
+          <i class="bi bi-moon-fill"></i>
+        </button>
+        <h1><i class="bi bi-graph-up-arrow me-2"></i>P6 Delay Forensic Analyzer Pro</h1>
+        <p class="subtitle mb-0">Advanced Schedule Comparison & Delay Analysis Tool</p>
+      </div>
+      
+      <!-- Main Content -->
+      <div class="p-4">
+        <!-- Step Indicator -->
+        <div class="step-indicator no-print">
+          <div class="step active" id="step1">
+            <div class="step-circle"><i class="bi bi-upload"></i></div>
+            <div class="step-label">Upload Files</div>
+          </div>
+          <div class="step" id="step2">
+            <div class="step-circle"><i class="bi bi-sliders"></i></div>
+            <div class="step-label">Configure</div>
+          </div>
+          <div class="step" id="step3">
+            <div class="step-circle"><i class="bi bi-gear"></i></div>
+            <div class="step-label">Analyze</div>
+          </div>
+          <div class="step" id="step4">
+            <div class="step-circle"><i class="bi bi-download"></i></div>
+            <div class="step-label">Export</div>
+          </div>
+        </div>
+        
+        <!-- Upload Section -->
+        <div class="row mb-4" id="uploadSection">
+          <div class="col-md-6 mb-3">
+            <div class="upload-zone" id="baselineZone" role="button" tabindex="0" aria-label="Upload baseline schedule">
+              <input type="file" id="baselineFile" class="d-none" accept=".csv,.xlsx,.xls" aria-label="Baseline file input" />
+              <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
+              <h5>Baseline Schedule</h5>
+              <p class="text-muted mb-2">Drag & drop or click to upload</p>
+              <small class="text-muted">Supports CSV, XLSX files</small>
+              <div class="mt-3 d-none" id="baselineInfo">
+                <div class="alert alert-success mb-0">
+                  <i class="bi bi-check-circle me-2"></i>
+                  <span id="baselineFileName"></span>
+                  <span class="badge bg-success ms-2" id="baselineRows"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="upload-zone" id="currentZone" role="button" tabindex="0" aria-label="Upload current schedule">
+              <input type="file" id="currentFile" class="d-none" accept=".csv,.xlsx,.xls" aria-label="Current file input" />
+              <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
+              <h5>Current Schedule</h5>
+              <p class="text-muted mb-2">Drag & drop or click to upload</p>
+              <small class="text-muted">Supports CSV, XLSX files</small>
+              <div class="mt-3 d-none" id="currentInfo">
+                <div class="alert alert-success mb-0">
+                  <i class="bi bi-check-circle me-2"></i>
+                  <span id="currentFileName"></span>
+                  <span class="badge bg-success ms-2" id="currentRows"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="text-center">
+              <button class="btn btn-outline-primary no-print" id="loadSampleBtn">
+                <i class="bi bi-file-earmark-text me-2"></i>Try with Sample Data
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="row mb-4 no-print" id="actionSection">
+          <div class="col-md-6 mb-2">
+            <button class="btn btn-primary btn-lg w-100" id="analyzeBtn" disabled>
+              <i class="bi bi-play-circle me-2"></i>Analyze Schedules
+            </button>
+          </div>
+          <div class="col-md-6 mb-2">
+            <div class="btn-group w-100" role="group">
+              <button class="btn btn-success" id="exportCsvBtn" disabled>
+                <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export CSV
+              </button>
+              <button class="btn btn-danger" id="exportPdfBtn" disabled>
+                <i class="bi bi-file-earmark-pdf me-2"></i>Export PDF
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Results Section (hidden initially) -->
+        <div id="resultsSection" class="d-none">
+          <!-- Key Metrics -->
+          <div class="mb-4">
+            <h3 class="mb-3"><i class="bi bi-speedometer2 me-2"></i>Key Metrics</h3>
+            <div class="row g-3" id="metricsGrid"></div>
+          </div>
+          
+          <!-- Filter Bar -->
+          <div class="filter-bar no-print">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filters</h5>
+              <button class="btn btn-sm btn-outline-secondary" id="clearFiltersBtn">
+                <i class="bi bi-x-circle me-1"></i>Clear All
+              </button>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">WBS / Process Area</label>
+                <input type="text" class="form-control" id="wbsFilter" placeholder="Search..." />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Slippage Threshold (days)</label>
+                <input type="number" class="form-control" id="slippageThreshold" value="0" min="0" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Change Type</label>
+                <select class="form-select" id="changeTypeFilter">
+                  <option value="">All Changes</option>
+                  <option value="slippage">Slippage Only</option>
+                  <option value="changedFields">Changed Fields</option>
+                </select>
+              </div>
+            </div>
+            <div class="filter-chips" id="filterChips"></div>
+          </div>
+          
+          <!-- Comparison Table -->
+          <div class="table-container mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0"><i class="bi bi-table me-2"></i>Schedule Comparison (<span id="tableRowCount">0</span> activities)</h5>
+              <div class="btn-group btn-group-sm no-print">
+                <button class="btn btn-outline-secondary" id="columnToggleBtn" data-bs-toggle="modal" data-bs-target="#columnModal">
+                  <i class="bi bi-layout-three-columns me-1"></i>Columns
+                </button>
+              </div>
+            </div>
+            <div id="comparisonTable"></div>
+          </div>
+          
+          <!-- Charts Section -->
+          <div class="mb-4">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#chartsSection">
+              <h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Visualizations</h5>
+              <i class="bi bi-chevron-down"></i>
+            </div>
+            <div class="collapse show" id="chartsSection">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="chart-card">
+                    <div class="chart-header">
+                      <h6 class="chart-title">Status Change Analysis</h6>
+                      <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Shows progression of activity status changes"></i>
+                    </div>
+                    nvas id="statusHistogram" heightt="300"></canvas>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="chart-card">
+                    <div class="chart-header">
+                      <h6 class="chart-title">Slippage Distribution</h6>
+                      <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Activities grouped by delay severity"></i>
+                    </div>
+                    nvas id=""slippageHeatmap" height="300"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Top Impacted Activities -->
+          <div class="mb-4">
+            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#topActivitiesSection">
+              <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Top 10 Impacted Activities</h5>
+              <i class="bi bi-chevron-down"></i>
+            </div>
+            <div class="collapse show" id="topActivitiesSection">
+              <div class="chart-card">
+                <ol id="topImpactedList" class="list-group list-group-numbered"></ol>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Detailed Stats -->
+          <div class="mb-4">
+            <div class="section-header collapsed" data-bs-toggle="collapse" data-bs-target="#detailedStatsSection">
+              <h5 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Detailed Statistics</h5>
+              <i class="bi bi-chevron-down"></i>
+            </div>
+            <div class="collapse" id="detailedStatsSection">
+              <div class="chart-card">
+                <div class="table-responsive">
+                  <table class="table table-hover" id="statsTable">
+                    <thead>
+                      <tr>
+                        <th>Metric</th>
+                        <th>Baseline</th>
+                        <th>Current</th>
+                        <th>Delta</th>
+                      </tr>
+                    </thead>
+                    <tbody id="statsTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Column Toggle Modal -->
+  <div class="modal fade" id="columnModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Customize Columns</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="columnCheckboxes"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="applyColumnsBtn">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- JavaScript Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@5.4.4/dist/js/tabulator.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  
+  <script>
+    // ==================== GLOBAL STATE ====================
+    const AppState = {
+      baselineData: [],
+      currentData: [],
+      comparisonData: [],
+      baselineLoaded: false,
+      currentLoaded: false,
+      analysisComplete: false,
+      comparisonTable: null,
+      charts: {
+        status: null,
+        slippage: null
+      },
+      visibleColumns: new Set(),
+      filterState: {
+        wbs: '',
+        slippage: 0,
+        changeType: ''
+      }
+    };
+    
+    // Field definitions
+    const FIELDS = [
+      "Project ID", "Activity ID", "Activity Name", "Start", "Finish",
+      "Predecessors", "Successors", "Activity Status", "Total Float",
+      "Activity Type", "Primary Constraint", "Primary Constraint Date"
+    ];
+    
+    // ==================== UTILITY FUNCTIONS ====================
+    function showToast(message, type = 'success') {
+      const toastEl = document.createElement('div');
+      toastEl.className = `toast align-items-center text-bg-${type} border-0`;
+      toastEl.setAttribute('role', 'alert');
+      toastEl.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      `;
+      document.getElementById('toastContainer').appendChild(toastEl);
+      const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+      toast.show();
+      toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+    }
+    
+    function showLoading(show, message = 'Processing...') {
+      const overlay = document.getElementById('loadingOverlay');
+      const messageEl = document.getElementById('loadingMessage');
+      if (show) {
+        messageEl.textContent = message;
+        overlay.classList.remove('d-none');
+      } else {
+        overlay.classList.add('d-none');
+      }
+    }
+    
+    function updateSteps(activeStep) {
+      for (let i = 1; i <= 4; i++) {
+        const step = document.getElementById(`step${i}`);
+        step.classList.remove('active', 'completed');
+        if (i < activeStep) step.classList.add('completed');
+        if (i === activeStep) step.classList.add('active');
+      }
+    }
+    
+    function excelDateToJS(serial) {
+      const utc_days = serial - 25569;
+      const utc_value = utc_days * 86400 * 1000;
+      return new Date(utc_value);
+    }
+    
+    function formatDate(dt) {
+      if (!dt || isNaN(dt)) return "";
+      const mm = String(dt.getMonth() + 1).padStart(2, '0');
+      const dd = String(dt.getDate()).padStart(2, '0');
+      const yyyy = dt.getFullYear();
+      return `${mm}/${dd}/${yyyy}`;
+    }
+    
+    function parseDate(dateStr) {
+      if (!dateStr) return null;
+      const str = String(dateStr).trim();
+      const parts = str.split(/[-/]/);
+      if (parts.length === 3) {
+        if (parseInt(parts[0]) > 12) {
+          return new Date(+parts[0], +parts[1] - 1, +parts[2]);
+        } else {
+          return new Date(+parts[2], +parts[0] - 1, +parts[1]);
+        }
+      }
+      const d = new Date(str);
+      return isNaN(d) ? null : d;
+    }
+    
+    function dateDiffInDays(d1, d2) {
+      if (!d1 || !d2 || isNaN(d1) || isNaN(d2)) return 0;
+      return Math.round((d2 - d1) / (1000 * 3600 * 24));
+    }
+    
+    // ==================== FILE PARSING ====================
+    function parseFile(file, callback) {
+      const name = file.name.toLowerCase();
+      
+      if (name.endsWith('.csv')) {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            results.data.forEach(row => {
+              if (typeof row["Start"] === "number" && !isNaN(row["Start"])) {
+                row["Start"] = formatDate(excelDateToJS(row["Start"]));
+              }
+              if (typeof row["Finish"] === "number" && !isNaN(row["Finish"])) {
+                row["Finish"] = formatDate(excelDateToJS(row["Finish"]));
+              }
+            });
+            callback(results.data);
+          },
+          error: (err) => {
+            showToast(`Error parsing CSV: ${err}`, 'danger');
+            callback([]);
+          }
+        });
+      } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, { type: "array" });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1 });
+            
+            if (jsonData.length < 2) {
+              showToast('No data rows found in file', 'warning');
+              callback([]);
+              return;
+            }
+            
+            const headers = jsonData[0];
+            const out = [];
+            
+            for (let i = 1; i < jsonData.length; i++) {
+              const rowArr = jsonData[i];
+              const rowObj = {};
+              
+              for (let j = 0; j < headers.length; j++) {
+                const colName = headers[j];
+                let cellVal = (rowArr[j] != null) ? rowArr[j] : "";
+                
+                if ((colName === "Start" || colName === "Finish") && 
+                    typeof cellVal === "number" && !isNaN(cellVal)) {
+                  cellVal = formatDate(excelDateToJS(cellVal));
+                }
+                
+                rowObj[colName] = cellVal;
+              }
+              out.push(rowObj);
+            }
+            callback(out);
+          } catch (err) {
+            showToast(`Error reading Excel file: ${err}`, 'danger');
+            callback([]);
+          }
+        };
+        reader.onerror = () => {
+          showToast('Error reading file', 'danger');
+          callback([]);
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        showToast('Unsupported file format', 'warning');
+        callback([]);
+      }
+    }
+    
+    // ==================== DRAG & DROP ====================
+    function setupDragDrop(zoneId, fileInputId, dataKey) {
+      const zone = document.getElementById(zoneId);
+      const input = document.getElementById(fileInputId);
+      
+      zone.addEventListener('click', () => input.click());
+      zone.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') input.click();
+      });
+      
+      zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.classList.add('dragover');
+      });
+      
+      zone.addEventListener('dragleave', () => {
+        zone.classList.remove('dragover');
+      });
+      
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+          input.files = e.dataTransfer.files;
+          input.dispatchEvent(new Event('change'));
+        }
+      });
+      
+      input.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+          const file = e.target.files[0];
+          showLoading(true, `Loading ${file.name}...`);
+          
+          parseFile(file, (data) => {
+            showLoading(false);
+            
+            if (data.length > 0) {
+              AppState[dataKey] = data;
+              AppState[`${dataKey.replace('Data', '')}Loaded`] = true;
+              
+              zone.classList.add('loaded');
+              document.getElementById(`${dataKey.replace('Data', '')}Info`).classList.remove('d-none');
+              document.getElementById(`${dataKey.replace('Data', '')}FileName`).textContent = file.name;
+              document.getElementById(`${dataKey.replace('Data', '')}Rows`).textContent = `${data.length} rows`;
+              
+              showToast(`${file.name} loaded successfully`, 'success');
+              
+              if (AppState.baselineLoaded && AppState.currentLoaded) {
+                document.getElementById('analyzeBtn').disabled = false;
+                updateSteps(2);
+              }
+            }
+          });
+        }
+      });
+    }
+    
+    // ==================== SAMPLE DATA ====================
+    function generateSampleData() {
+      const statuses = ['Not Started', 'In Progress', 'Completed'];
+      const types = ['Task Dependent', 'Start Milestone', 'Finish Milestone', 'LOE'];
+      const wbs = ['WBS-01', 'WBS-02', 'WBS-03', 'WBS-04'];
+      
+      const generateSchedule = (isBaseline) => {
+        return Array.from({ length: 50 }, (_, i) => {
+          const startDate = new Date(2024, 0, 1 + i * 2);
+          const duration = Math.floor(Math.random() * 20) + 5;
+          const finishDate = new Date(startDate);
+          finishDate.setDate(finishDate.getDate() + duration);
+          
+          // Add slippage to current schedule
+          if (!isBaseline && Math.random() > 0.5) {
+            const slippage = Math.floor(Math.random() * 15);
+            finishDate.setDate(finishDate.getDate() + slippage);
+          }
+          
+          return {
+            "Project ID": "PRJ-001",
+            "Activity ID": `ACT-${String(i + 1).padStart(3, '0')}`,
+            "Activity Name": `Activity ${i + 1} - ${['Design', 'Construction', 'Testing', 'Review'][Math.floor(Math.random() * 4)]}`,
+            "Start": formatDate(startDate),
+            "Finish": formatDate(finishDate),
+            "Predecessors": i > 0 ? `ACT-${String(i).padStart(3, '0')}` : '',
+            "Successors": i < 49 ? `ACT-${String(i + 2).padStart(3, '0')}` : '',
+            "Activity Status": statuses[Math.floor(Math.random() * statuses.length)],
+            "Total Float": Math.floor(Math.random() * 10),
+            "Activity Type": types[Math.floor(Math.random() * types.length)],
+            "Primary Constraint": "As Soon As Possible",
+            "Primary Constraint Date": "",
+            "WBS": wbs[Math.floor(Math.random() * wbs.length)]
+          };
+        });
+      };
+      
+      AppState.baselineData = generateSchedule(true);
+      AppState.currentData = generateSchedule(false);
+      AppState.baselineLoaded = true;
+      AppState.currentLoaded = true;
+      
+      document.getElementById('baselineZone').classList.add('loaded');
+      document.getElementById('currentZone').classList.add('loaded');
+      document.getElementById('baselineInfo').classList.remove('d-none');
+      document.getElementById('currentInfo').classList.remove('d-none');
+      document.getElementById('baselineFileName').textContent = 'Sample Baseline Data';
+      document.getElementById('currentFileName').textContent = 'Sample Current Data';
+      document.getElementById('baselineRows').textContent = '50 rows';
+      document.getElementById('currentRows').textContent = '50 rows';
+      document.getElementById('analyzeBtn').disabled = false;
+      
+      showToast('Sample data loaded successfully', 'success');
+      updateSteps(2);
+    }
+    
+    // ==================== ANALYSIS ====================
+    function computeStats(scheduleData) {
+      const stats = {
+        totalActivities: 0,
+        completed: 0,
+        inProgress: 0,
+        notStarted: 0,
+        startMilestones: 0,
+        finishMilestones: 0,
+        loes: 0,
+        taskDeps: 0,
+        latestFinish: null
+      };
+      
+      scheduleData.forEach(row => {
+        stats.totalActivities++;
+        
+        const status = String(row["Activity Status"] || "").toLowerCase();
+        if (status === "completed") stats.completed++;
+        else if (status === "in progress") stats.inProgress++;
+        else stats.notStarted++;
+        
+        const type = String(row["Activity Type"] || "").toLowerCase();
+        if (type === "start milestone") stats.startMilestones++;
+        else if (type === "finish milestone") stats.finishMilestones++;
+        else if (type === "loe") stats.loes++;
+        else if (type === "task dependent") stats.taskDeps++;
+        
+        const fin = parseDate(row["Finish"]);
+        if (fin && (!stats.latestFinish || fin > stats.latestFinish)) {
+          stats.latestFinish = fin;
+        }
+      });
+      
+      return stats;
+    }
+    
+    function performAnalysis() {
+      showLoading(true, 'Analyzing schedule data...');
+      updateSteps(3);
+      
+      setTimeout(() => {
+        const baselineMap = {};
+        AppState.baselineData.forEach(b => {
+          const bId = String(b["Activity ID"] || "").trim();
+          if (bId) baselineMap[bId] = b;
+        });
+        
+        AppState.comparisonData = [];
+        AppState.currentData.forEach(c => {
+          const cId = String(c["Activity ID"] || "").trim();
+          const b = baselineMap[cId] || null;
+          
+          const rowObj = {};
+          FIELDS.forEach(f => {
+            rowObj[f + " (Baseline)"] = String(b ? (b[f] ?? '') : '');
+            rowObj[f + " (Current)"] = String(c ? (c[f] ?? '') : '');
+          });
+          
+          const baseFinish = parseDate(b ? b["Finish"] : "");
+          const currFinish = parseDate(c ? c["Finish"] : "");
+          const slipDays = dateDiffInDays(baseFinish, currFinish);
+          rowObj["Slippage (days)"] = slipDays > 0 ? slipDays : 0;
+          
+          AppState.comparisonData.push(rowObj);
+        });
+        
+        AppState.analysisComplete = true;
+        showLoading(false);
+        
+        displayResults();
+        showToast('Analysis completed successfully', 'success');
+        updateSteps(4);
+      }, 500);
+    }
+    
+    // ==================== DISPLAY RESULTS ====================
+    function displayResults() {
+      const baseStats = computeStats(AppState.baselineData);
+      const currStats = computeStats(AppState.currentData);
+      
+      displayMetricCards(baseStats, currStats);
+      displayDetailedStats(baseStats, currStats);
+      buildTable();
+      buildCharts();
+      displayTopActivities();
+      
+      document.getElementById('resultsSection').classList.remove('d-none');
+      document.getElementById('exportCsvBtn').disabled = false;
+      document.getElementById('exportPdfBtn').disabled = false;
+      
+      // Initialize tooltips
+      const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      tooltips.forEach(el => new bootstrap.Tooltip(el));
+    }
+    
+    function displayMetricCards(baseStats, currStats) {
+      const totalDelay = AppState.comparisonData.reduce((acc, row) => 
+        acc + (row["Slippage (days)"] || 0), 0);
+      
+      const activitiesWithSlippage = AppState.comparisonData.filter(row => 
+        row["Slippage (days)"] > 0).length;
+      
+      const completionRate = currStats.totalActivities > 0 
+        ? Math.round((currStats.completed / currStats.totalActivities) * 100) 
+        : 0;
+      
+      const progressChange = currStats.inProgress - baseStats.inProgress;
+      
+      const metrics = [
+        {
+          icon: 'bi-exclamation-triangle',
+          iconClass: 'danger',
+          label: 'Total Delay',
+          value: `${totalDelay}`,
+          unit: 'days',
+          delta: totalDelay,
+          deltaType: totalDelay > 0 ? 'positive' : 'neutral'
+        },
+        {
+          icon: 'bi-activity',
+          iconClass: 'warning',
+          label: 'Activities with Slippage',
+          value: activitiesWithSlippage,
+          unit: '',
+          delta: activitiesWithSlippage,
+          deltaType: activitiesWithSlippage > 0 ? 'positive' : 'neutral'
+        },
+        {
+          icon: 'bi-check-circle',
+          iconClass: 'success',
+          label: 'Completion Rate',
+          value: `${completionRate}%`,
+          unit: '',
+          delta: currStats.completed - baseStats.completed,
+          deltaType: (currStats.completed - baseStats.completed) > 0 ? 'negative' : 'neutral'
+        },
+        {
+          icon: 'bi-graph-up',
+          iconClass: 'primary',
+          label: 'In Progress',
+          value: currStats.inProgress,
+          unit: '',
+          delta: progressChange,
+          deltaType: progressChange > 0 ? 'negative' : progressChange < 0 ? 'positive' : 'neutral'
+        }
+      ];
+      
+      const grid = document.getElementById('metricsGrid');
+      grid.innerHTML = metrics.map(m => `
+        <div class="col-md-3 col-sm-6">
+          <div class="metric-card">
+            <div class="metric-icon ${m.iconClass}">
+              <i class="${m.icon}"></i>
+            </div>
+            <div class="metric-label">${m.label}</div>
+            <div class="metric-value">${m.value} <small class="text-muted">${m.unit}</small></div>
+            ${m.delta !== 0 ? `
+              <span class="metric-delta ${m.deltaType}">
+                <i class="bi bi-${m.delta > 0 ? 'arrow-up' : 'arrow-down'}"></i>
+                ${Math.abs(m.delta)} from baseline
+              </span>
+            ` : '<span class="metric-delta neutral">No change</span>'}
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function displayDetailedStats(baseStats, currStats) {
+      const rows = [
+        { label: "Total Activities", base: baseStats.totalActivities, curr: currStats.totalActivities },
+        { label: "Completed Activities", base: baseStats.completed, curr: currStats.completed },
+        { label: "In Progress Activities", base: baseStats.inProgress, curr: currStats.inProgress },
+        { label: "Not Started Activities", base: baseStats.notStarted, curr: currStats.notStarted },
+        { label: "Start Milestones", base: baseStats.startMilestones, curr: currStats.startMilestones },
+        { label: "Finish Milestones", base: baseStats.finishMilestones, curr: currStats.finishMilestones },
+        { label: "LOE Activities", base: baseStats.loes, curr: currStats.loes },
+        { label: "Task Dependent Activities", base: baseStats.taskDeps, curr: currStats.taskDeps },
+        { 
+          label: "Latest Finish Date", 
+          base: baseStats.latestFinish ? formatDate(baseStats.latestFinish) : 'N/A',
+          curr: currStats.latestFinish ? formatDate(currStats.latestFinish) : 'N/A',
+          isDate: true
+        }
+      ];
+      
+      const tbody = document.getElementById('statsTableBody');
+      tbody.innerHTML = rows.map(row => {
+        let delta = '';
+        if (row.isDate) {
+          if (baseStats.latestFinish && currStats.latestFinish) {
+            const days = dateDiffInDays(baseStats.latestFinish, currStats.latestFinish);
+            delta = days > 0 ? `<span class="text-danger">+${days} days</span>` : 
+                    days < 0 ? `<span class="text-success">${days} days</span>` : '0';
+          } else {
+            delta = 'N/A';
+          }
+        } else {
+          const diff = row.curr - row.base;
+          delta = diff > 0 ? `<span class="text-danger">+${diff}</span>` : 
+                  diff < 0 ? `<span class="text-success">${diff}</span>` : '0';
+        }
+        
+        return `
+          <tr>
+            <td><strong>${row.label}</strong></td>
+            <td>${row.base}</td>
+            <td>${row.curr}</td>
+            <td>${delta}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+    
+    function buildTable() {
+      if (AppState.comparisonTable) {
+        AppState.comparisonTable.destroy();
+      }
+      
+      const columns = [];
+      
+      FIELDS.forEach(field => {
+        columns.push({
+          title: `${field} (Baseline)`,
+          field: `${field} (Baseline)`,
+          widthGrow: 1,
+          headerFilter: "input",
+          formatter: (cell) => {
+            const rowData = cell.getRow().getData();
+            const baseVal = rowData[`${field} (Baseline)`];
+            const currVal = rowData[`${field} (Current)`];
+            if (baseVal !== currVal && baseVal && currVal) {
+              return `<span class="text-danger fw-bold">${baseVal}</span>`;
+            }
+            return baseVal || '-';
+          }
+        });
+        
+        columns.push({
+          title: `${field} (Current)`,
+          field: `${field} (Current)`,
+          widthGrow: 1,
+          headerFilter: "input",
+          formatter: (cell) => {
+            const rowData = cell.getRow().getData();
+            const baseVal = rowData[`${field} (Baseline)`];
+            const currVal = rowData[`${field} (Current)`];
+            if (baseVal !== currVal && baseVal && currVal) {
+              return `<span class="text-danger fw-bold">${currVal}</span>`;
+            }
+            return currVal || '-';
+          }
+        });
+      });
+      
+      columns.push({
+        title: "Slippage (days)",
+        field: "Slippage (days)",
+        width: 120,
+        headerFilter: "input",
+        formatter: (cell) => {
+          const val = cell.getValue();
+          if (val === 0) return '<span class="slippage-none">0</span>';
+          if (val <= 5) return `<span class="slippage-low">${val}</span>`;
+          if (val <= 10) return `<span class="slippage-medium">${val}</span>`;
+          return `<span class="slippage-high">${val}</span>`;
+        }
+      });
+      
+      // Initialize visible columns
+      AppState.visibleColumns = new Set(columns.map(c => c.field));
+      
+      AppState.comparisonTable = new Tabulator("#comparisonTable", {
+        data: AppState.comparisonData,
+        columns: columns,
+        layout: "fitDataStretch",
+        height: "600px",
+        pagination: true,
+        paginationSize: 50,
+        paginationSizeSelector: [25, 50, 100, 200],
+        movableColumns: true,
+        responsiveLayout: "collapse",
+        dataFiltered: function(filters, rows) {
+          document.getElementById('tableRowCount').textContent = rows.length;
+        }
+      });
+      
+      document.getElementById('tableRowCount').textContent = AppState.comparisonData.length;
+      setupColumnToggle(columns);
+    }
+    
+    function setupColumnToggle(columns) {
+      const container = document.getElementById('columnCheckboxes');
+      container.innerHTML = columns.map(col => `
+        <div class="form-check">
+          <input class="form-check-input column-toggle" type="checkbox" 
+                 value="${col.field}" id="col_${col.field.replace(/\s+/g, '_')}" checked>
+          <label class="form-check-label" for="col_${col.field.replace(/\s+/g, '_')}">
+            ${col.title}
+          </label>
+        </div>
+      `).join('');
+      
+      document.getElementById('applyColumnsBtn').addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('.column-toggle');
+        const visible = new Set();
+        
+        checkboxes.forEach(cb => {
+          if (cb.checked) visible.add(cb.value);
+        });
+        
+        AppState.comparisonTable.getColumns().forEach(col => {
+          if (visible.has(col.getField())) {
+            col.show();
+          } else {
+            col.hide();
+          }
+        });
+        
+        AppState.visibleColumns = visible;
+        bootstrap.Modal.getInstance(document.getElementById('columnModal')).hide();
+        showToast('Column visibility updated', 'success');
+      });
+    }
+    
+    function buildCharts() {
+      // Slippage Distribution
+      const slipBins = [0, 0, 0, 0];
+      AppState.comparisonData.forEach(row => {
+        const s = row["Slippage (days)"];
+        if (s <= 5) slipBins[0]++;
+        else if (s <= 10) slipBins[1]++;
+        else if (s <= 20) slipBins[2]++;
+        else slipBins[3]++;
+      });
+      
+      if (AppState.charts.slippage) AppState.charts.slippage.destroy();
+      
+      const slipCtx = document.getElementById('slippageHeatmap').getContext('2d');
+      AppState.charts.slippage = new Chart(slipCtx, {
+        type: 'bar',
+        data: {
+          labels: ['0-5 days', '6-10 days', '11-20 days', '>20 days'],
+          datasets: [{
+            label: '# of Activities',
+            data: slipBins,
+            backgroundColor: [
+              'rgba(25, 135, 84, 0.8)',
+              'rgba(255, 193, 7, 0.8)',
+              'rgba(253, 126, 20, 0.8)',
+              'rgba(220, 53, 69, 0.8)'
+            ],
+            borderColor: [
+              'rgba(25, 135, 84, 1)',
+              'rgba(255, 193, 7, 1)',
+              'rgba(253, 126, 20, 1)',
+              'rgba(220, 53, 69, 1)'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { 
+              beginAtZero: true,
+              grid: { display: false }
+            }
+          }
+        }
+      });
+      
+      // Status Changes
+      let notStartedToInProgress = 0;
+      let inProgressToCompleted = 0;
+      let notStartedToCompleted = 0;
+      
+      AppState.comparisonData.forEach(row => {
+        const baseStatus = String(row["Activity Status (Baseline)"] || "").toLowerCase();
+        const currStatus = String(row["Activity Status (Current)"] || "").toLowerCase();
+        
+        if (baseStatus === "not started" && currStatus === "in progress") notStartedToInProgress++;
+        if (baseStatus === "in progress" && currStatus === "completed") inProgressToCompleted++;
+        if (baseStatus === "not started" && currStatus === "completed") notStartedToCompleted++;
+      });
+      
+      if (AppState.charts.status) AppState.charts.status.destroy();
+      
+      const statusCtx = document.getElementById('statusHistogram').getContext('2d');
+      AppState.charts.status = new Chart(statusCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Not Started → In Progress', 'In Progress → Completed', 'Not Started → Completed'],
+          datasets: [{
+            label: '# of Activities',
+            data: [notStartedToInProgress, inProgressToCompleted, notStartedToCompleted],
+            backgroundColor: [
+              'rgba(13, 110, 253, 0.8)',
+              'rgba(25, 135, 84, 0.8)',
+              'rgba(255, 193, 7, 0.8)'
+            ],
+            borderColor: [
+              'rgba(13, 110, 253, 1)',
+              'rgba(25, 135, 84, 1)',
+              'rgba(255, 193, 7, 1)'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { 
+              beginAtZero: true,
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+    
+    function displayTopActivities() {
+      const sorted = [...AppState.comparisonData]
+        .sort((a, b) => b["Slippage (days)"] - a["Slippage (days)"])
+        .slice(0, 10);
+      
+      const list = document.getElementById('topImpactedList');
+      list.innerHTML = sorted.map(item => {
+        const actId = item["Activity ID (Current)"] || item["Activity ID (Baseline)"] || "N/A";
+        const actName = item["Activity Name (Current)"] || item["Activity Name (Baseline)"] || "N/A";
+        const slip = item["Slippage (days)"];
+        
+        let badgeClass = 'bg-success';
+        if (slip > 20) badgeClass = 'bg-danger';
+        else if (slip > 10) badgeClass = 'bg-warning';
+        else if (slip > 5) badgeClass = 'bg-info';
+        
+        return `
+          <li class="list-group-item d-flex justify-content-between align-items-start">
+            <div class="ms-2 me-auto">
+              <div class="fw-bold">${actId}</div>
+              ${actName}
+            </div>
+            <span class="badge ${badgeClass} rounded-pill">${slip} days</span>
+          </li>
+        `;
+      }).join('');
+    }
+    
+    // ==================== FILTERS ====================
+    function applyFilters() {
+      if (!AppState.comparisonTable) return;
+      
+      const wbs = document.getElementById('wbsFilter').value.trim().toLowerCase();
+      const slipThreshold = parseInt(document.getElementById('slippageThreshold').value) || 0;
+      const changeType = document.getElementById('changeTypeFilter').value;
+      
+      AppState.filterState = { wbs, slippage: slipThreshold, changeType };
+      
+      AppState.comparisonTable.setFilter((data) => {
+        // WBS filter
+        if (wbs) {
+          let found = false;
+          for (let key in data) {
+            if (String(data[key] || "").toLowerCase().includes(wbs)) {
+              found = true;
+              break;
+            }
+          }
+          if (!found) return false;
+        }
+        
+        // Slippage filter
+        if (changeType === "slippage" && data["Slippage (days)"] <= slipThreshold) {
+          return false;
+        }
+        
+        // Changed fields filter
+        if (changeType === "changedFields") {
+          let hasDiff = false;
+          FIELDS.forEach(f => {
+            if (data[`${f} (Baseline)`] !== data[`${f} (Current)`]) {
+              hasDiff = true;
+            }
+          });
+          if (!hasDiff) return false;
+        }
+        
+        return true;
+      });
+      
+      updateFilterChips();
+    }
+    
+    function updateFilterChips() {
+      const container = document.getElementById('filterChips');
+      const chips = [];
+      
+      if (AppState.filterState.wbs) {
+        chips.push({ label: `WBS: ${AppState.filterState.wbs}`, key: 'wbs' });
+      }
+      if (AppState.filterState.slippage > 0) {
+        chips.push({ label: `Slippage > ${AppState.filterState.slippage} days`, key: 'slippage' });
+      }
+      if (AppState.filterState.changeType) {
+        const label = AppState.filterState.changeType === 'slippage' ? 'Slippage Only' : 'Changed Fields';
+        chips.push({ label, key: 'changeType' });
+      }
+      
+      container.innerHTML = chips.map(chip => `
+        <div class="filter-chip">
+          ${chip.label}
+          <button class="btn-close" onclick="removeFilter('${chip.key}')"></button>
+        </div>
+      `).join('');
+    }
+    
+    function removeFilter(key) {
+      if (key === 'wbs') document.getElementById('wbsFilter').value = '';
+      if (key === 'slippage') document.getElementById('slippageThreshold').value = '0';
+      if (key === 'changeType') document.getElementById('changeTypeFilter').value = '';
+      applyFilters();
+    }
+    
+    function clearAllFilters() {
+      document.getElementById('wbsFilter').value = '';
+      document.getElementById('slippageThreshold').value = '0';
+      document.getElementById('changeTypeFilter').value = '';
+      applyFilters();
+    }
+    
+    // ==================== EXPORTS ====================
+    function exportCSV() {
+      const data = AppState.comparisonTable.getData();
+      const headers = Object.keys(data[0]);
+      
+      const csvContent = [
+        headers.join(','),
+        ...data.map(row => headers.map(h => `"${String(row[h] || '').replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `P6_Analysis_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      
+      showToast('CSV exported successfully', 'success');
+    }
+    
+    function exportPDF() {
+      showLoading(true, 'Generating PDF...');
+      
+      setTimeout(() => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'pt', 'a4');
+        
+        doc.setFontSize(18);
+        doc.text('P6 Delay Forensic Analysis Report', 40, 40);
+        
+        doc.setFontSize(12);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 60);
+        
+        const totalDelay = AppState.comparisonData.reduce((acc, row) => 
+          acc + (row["Slippage (days)"] || 0), 0);
+        doc.text(`Total Project Delay: ${totalDelay} days`, 40, 80);
+        
+        // Add charts
+        const statusCanvas = document.getElementById('statusHistogram');
+        const slipCanvas = document.getElementById('slippageHeatmap');
+        
+        doc.addImage(statusCanvas.toDataURL(), 'PNG', 40, 100, 350, 200);
+        doc.addImage(slipCanvas.toDataURL(), 'PNG', 400, 100, 350, 200);
+        
+        doc.save(`P6_Analysis_${new Date().toISOString().slice(0, 10)}.pdf`);
+        
+        showLoading(false);
+        showToast('PDF exported successfully', 'success');
+      }, 500);
+    }
+    
+    // ==================== THEME TOGGLE ====================
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-bs-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      
+      html.setAttribute('data-bs-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      
+      const icon = document.querySelector('#themeToggle i');
+      icon.className = newTheme === 'light' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+      
+      // Rebuild charts to match theme
+      if (AppState.analysisComplete) {
+        buildCharts();
+      }
+    }
+    
+    // ==================== INITIALIZATION ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      // Setup drag & drop
+      setupDragDrop('baselineZone', 'baselineFile', 'baselineData');
+      setupDragDrop('currentZone', 'currentFile', 'currentData');
+      
+      // Load saved theme
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-bs-theme', savedTheme);
+      const icon = document.querySelector('#themeToggle i');
+      icon.className = savedTheme === 'light' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+      
+      // Event listeners
+      document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+      document.getElementById('loadSampleBtn').addEventListener('click', generateSampleData);
+      document.getElementById('analyzeBtn').addEventListener('click', performAnalysis);
+      document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
+      document.getElementById('exportPdfBtn').addEventListener('click', exportPDF);
+      
+      // Filters
+      document.getElementById('wbsFilter').addEventListener('input', applyFilters);
+      document.getElementById('slippageThreshold').addEventListener('input', applyFilters);
+      document.getElementById('changeTypeFilter').addEventListener('change', applyFilters);
+      document.getElementById('clearFiltersBtn').addEventListener('click', clearAllFilters);
+      
+      // Make removeFilter available globally
+      window.removeFilter = removeFilter;
+      
+      showToast('Welcome to P6 Delay Forensic Analyzer Pro', 'success');
+    });
+  </script>
+</body>
+</html>
