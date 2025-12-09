@@ -5,7 +5,7 @@
 <title>California Vacation Cooking Schedule 2025</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Bootstrap 5 CSS -->
+<!-- Bootstrap 5 -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384‑VjEe0nX1QbM1pTgZ8c9Y2gkVYF5V6c5XQzWcXcH9Kc8FJp7G/9VgZs0f+M3a6c5n"
@@ -16,40 +16,39 @@
       rel="stylesheet">
 
 <style>
-    :root {
-        --bg-gradient: linear-gradient(135deg, #0d0d1a, #1a1a33);
-        --card-bg: rgba(255,255,255,.08);
-        --card-bg-hover: rgba(255,255,255,.15);
-        --text-primary: #f0f0f0;
-        --text-muted: #b0b0c0;
-        --accent: #ffcc00;
-        --sidebar-bg: rgba(0,0,0,.4);
-        --drag-hint: rgba(255,255,255,.2);
-        --drop-success: rgba(0,200,0,.3);
+    :root{
+        --bg-gradient:linear-gradient(135deg,#0d0d1a,#1a1a33);
+        --card-bg:rgba(255,255,255,.08);
+        --card-bg-hover:rgba(255,255,255,.15);
+        --text-primary:#f0f0f0;
+        --text-muted:#b0b0c0;
+        --accent:#ffcc00;
+        --sidebar-bg:rgba(0,0,0,.4);
+        --drag-hint:rgba(255,255,255,.2);
+        --drop-success:rgba(0,200,0,.3);
     }
-
-    body {
-        font-family: 'Montserrat', sans-serif;
-        background: var(--bg-gradient);
-        color: var(--text-primary);
-        min-height: 100vh;
-        margin: 0;
+    body{
+        font-family:'Montserrat',sans-serif;
+        background:var(--bg-gradient);
+        color:var(--text-primary);
+        min-height:100vh;
+        margin:0;
     }
-
-    h1 {font-weight:600;margin-bottom:2rem;text-align:center;color:var(--accent);}
-
-    .wrapper {display:flex;gap:1rem;padding:1rem;}
-    .sidebar {
-        flex:0 0 200px;
+    h1{font-weight:600;margin-bottom:2rem;text-align:center;color:var(--accent);}
+    .wrapper{display:flex;gap:1rem;padding:1rem;}
+    .sidebar{
+        flex:0 0 220px;
         background:var(--sidebar-bg);
         border-radius:.5rem;
         padding:.75rem;
         max-height:calc(100vh - 4rem);
         overflow-y:auto;
     }
-    .sidebar h4 {margin-top:0;color:var(--accent);text-align:center;}
-    .search-box {width:100%;margin-bottom:.5rem;padding:.35rem .5rem;border:none;border-radius:.3rem;}
-    .recipe-item {
+    .sidebar h4{margin-top:0;color:var(--accent);text-align:center;}
+    .search-box{
+        width:100%;margin-bottom:.5rem;padding:.35rem .5rem;border:none;border-radius:.3rem;
+    }
+    .recipe-item{
         background:var(--card-bg);
         border-radius:.4rem;
         padding:.5rem .75rem;
@@ -59,17 +58,18 @@
         font-size:.9rem;
         text-align:center;
         color:var(--text-primary);
+        touch-action:none;               /* needed for pointer events */
     }
-    .recipe-item:active {cursor:grabbing;}
-    .recipe-item.dragging {opacity:.5;}
+    .recipe-item:active{cursor:grabbing;}
+    .recipe-item.dragging{opacity:.5;}
 
-    .calendar {
+    .calendar{
         flex:1;
         display:grid;
         grid-template-columns:repeat(7,1fr);
         gap:.75rem;
     }
-    .day-card {
+    .day-card{
         background:var(--card-bg);
         border-radius:.5rem;
         padding:.75rem;
@@ -83,10 +83,10 @@
         color:var(--text-primary);
         position:relative;
     }
-    .day-card:hover {background:var(--card-bg-hover);transform:translateY(-2px);}
-    .day-card.outside-trip {opacity:.4;cursor:default;}
-    .day-card .date {font-size:.9rem;color:var(--text-muted);margin-top:.25rem;}
-    .day-card .assigned-recipe {
+    .day-card:hover{background:var(--card-bg-hover);transform:translateY(-2px);}
+    .day-card.outside-trip{opacity:.4;cursor:default;}
+    .day-card .date{font-size:.9rem;color:var(--text-muted);margin-top:.25rem;}
+    .day-card .assigned-recipe{
         margin-top:.4rem;
         font-size:.85rem;
         font-style:italic;
@@ -94,19 +94,15 @@
         position:relative;
         padding-right:1.2rem;
     }
-    .day-card .clear-btn {
-        position:absolute;
-        top:2px;right:4px;
-        color:#fff;
-        cursor:pointer;
-        font-weight:bold;
+    .day-card .clear-btn{
+        position:absolute;top:2px;right:4px;color:#fff;cursor:pointer;font-weight:bold;
     }
-    .day-card.drag-over {outline:2px dashed var(--accent);background:var(--drag-hint);}
+    .day-card.drag-over{outline:2px dashed var(--accent);background:var(--drag-hint);}
     .day-card.drop-success::after{
         content:"";
         position:absolute;top:0;left:0;width:100%;height:100%;
         background:var(--drop-success);
-        animation:flash 0.8s forwards;
+        animation:flash .8s forwards;
     }
     @keyframes flash{0%{opacity:1}100%{opacity:0}}
 
@@ -128,8 +124,11 @@
         .calendar{grid-template-columns:repeat(2,1fr);}
         .offcanvas-body{padding:0;}
     }
+    @media (max-width:576px){
+        .calendar{grid-template-columns:repeat(1,1fr);}
+    }
 
-    /* ---------- Print Styles ---------- */
+    /* ---------- Print ---------- */
     @media print{
         body{background:white;color:black;}
         .offcanvas,.btn,.search-box,.clear-btn,.weekday-header,.instructions-card{display:none!important;}
@@ -146,7 +145,7 @@
 <div class="container py-4">
     <h1>California Vacation Cooking Schedule 2025</h1>
 
-    <!-- Toolbar (Export / Import / Add Recipe) -->
+    <!-- Toolbar -->
     <div class="d-flex flex-wrap gap-2 mb-3">
         <button class="btn btn-sm btn-outline-light" data-bs-toggle="offcanvas"
                 data-bs-target="#offcanvasRecipes" aria-controls="offcanvasRecipes">
@@ -169,7 +168,7 @@
         <input type="file" id="importFile" accept=".json" style="display:none;">
     </div>
 
-    <!-- Offcanvas – holds the recipe palette on small screens -->
+    <!-- Offcanvas – recipe palette for phones -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasRecipes"
          aria-labelledby="offcanvasRecipesLabel">
         <div class="offcanvas-header">
@@ -178,25 +177,24 @@
                     data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <aside class="sidebar" id="recipePalette">
-                <input type="text" class="form-control search-box" id="searchBox"
+            <aside class="sidebar" id="recipePaletteMobile">
+                <input type="text" class="form-control search-box" id="searchBoxMobile"
                        placeholder="Search recipes…">
-                <!-- palette items injected by JS -->
+                <!-- items injected by JS -->
             </aside>
         </div>
     </div>
 
     <!-- Main layout (sidebar visible on larger screens) -->
     <div class="wrapper">
-        <!-- Sidebar for larger screens (hidden on xs via CSS) -->
         <aside class="sidebar d-none d-md-block" id="recipePaletteDesktop">
             <input type="text" class="form-control search-box" id="searchBoxDesktop"
                    placeholder="Search recipes…">
-            <!-- items injected by JS (same function works for both containers) -->
+            <!-- items injected by JS -->
         </aside>
 
         <section class="flex-grow-1">
-            <!-- Weekday Header Row -->
+            <!-- Weekday header -->
             <div class="row weekday-header">
                 <div class="col-1 text-center">Sun</div>
                 <div class="col-1 text-center">Mon</div>
@@ -207,17 +205,17 @@
                 <div class="col-1 text-center">Sat</div>
             </div>
 
-            <!-- Calendar Grid -->
+            <!-- Calendar -->
             <div class="calendar" id="calendar"></div>
 
-            <!-- Instructions Panel -->
+            <!-- Instructions -->
             <div class="instructions-card" id="instructions">
                 <p class="text-muted">Select a day to view the recipe and cooking instructions.</p>
             </div>
         </section>
     </div>
 
-    <!-- ---------- Add Custom Recipe Modal ---------- -->
+    <!-- Add Recipe Modal -->
     <div class="modal fade" id="addRecipeModal" tabindex="-1"
          aria-labelledby="addRecipeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -229,26 +227,16 @@
                 </div>
                 <div class="modal-body">
                     <form id="addRecipeForm">
-                        <div class="mb-3">
-                            <label class="form-label">Recipe Key (unique, e.g. “Veggie Chili”)</label>
-                            <input type="text" class="form-control" id="newKey" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Title (displayed in instructions)</label>
-                            <input type="text" class="form-control" id="newTitle" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Ingredients (one per line)</label>
-                            <textarea class="form-control" id="newIngredients" rows="4" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Steps (one per line)</label>
-                            <textarea class="form-control" id="newSteps" rows="4" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Tips (optional, one per line)</label>
-                            <textarea class="form-control" id="newTips" rows="3"></textarea>
-                        </div>
+                        <div class="mb-3"><label class="form-label">Recipe Key (unique)</label>
+                            <input type="text" class="form-control" id="newKey" required></div>
+                        <div class="mb-3"><label class="form-label">Title</label>
+                            <input type="text" class="form-control" id="newTitle" required></div>
+                        <div class="mb-3"><label class="form-label">Ingredients (one per line)</label>
+                            <textarea class="form-control" id="newIngredients" rows="4" required></textarea></div>
+                        <div class="mb-3"><label class="form-label">Steps (one per line)</label>
+                            <textarea class="form-control" id="newSteps" rows="4" required></textarea></div>
+                        <div class="mb-3"><label class="form-label">Tips (optional, one per line)</label>
+                            <textarea class="form-control" id="newTips" rows="3"></textarea></div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -260,14 +248,14 @@
         </div>
     </div>
 
-    <!-- Printable full recipe list (hidden on screen) -->
+    <!-- Hidden printable list -->
     <div class="print-recipes d-none">
         <h2>All Recipes</h2>
         <div id="allRecipesPrint"></div>
     </div>
 </div>
 
-<!-- Bootstrap 5 JS + Popper -->
+<!-- Bootstrap bundle (popper) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384‑ENjdO4Dr2bkBIFxQpeoYz1Hk8U5g4U7f0l2J8VIZjnM7E5VQZ0ZVnY4e+1m5K5pG"
         crossorigin="anonymous"></script>
@@ -276,14 +264,14 @@
 /* ==============================================================
    1️⃣  DATE CALCULATIONS
    ============================================================== */
-const tripStart = new Date(2025, 11, 18); // Dec 18, 2025 (0‑based month)
-const tripEnd   = new Date(2025, 11, 28); // Dec 28, 2025
+const tripStart = new Date(2025, 11, 18);   // Dec 18 2025
+const tripEnd   = new Date(2025, 11, 28);   // Dec 28 2025
 
-// Calendar must start on the Sunday before the trip
+// start on the Sunday before the trip
 const startOfWeek = new Date(tripStart);
 startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
 
-// End on the Saturday after the trip
+// end on the Saturday after the trip
 const endOfWeek = new Date(tripEnd);
 endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
 
@@ -320,6 +308,7 @@ let recipes = {
             "Applewood gives a sweet flavor; hickory adds a stronger smoke."
         ]
     },
+
     "Beer Brats": {
         title: "Beer‑Braised Bratwurst",
         ingredients: [
@@ -343,6 +332,7 @@ let recipes = {
             "Don’t over‑cook – the internal temperature should hit **160 °F**."
         ]
     },
+
     "Smash Burgers": {
         title: "Smash Burgers",
         ingredients: [
@@ -366,6 +356,7 @@ let recipes = {
             "Use a heavy spatula for an even smash."
         ]
     },
+
     "Smoked Brisket": {
         title: "Smoked Beef Brisket",
         ingredients: [
@@ -393,6 +384,7 @@ let recipes = {
             "Resting lets juices redistribute for juicy slices."
         ]
     },
+
     "Tacos": {
         title: "Grilled Chicken & Steak Tacos",
         ingredients: [
@@ -425,67 +417,99 @@ let recipes = {
 const calendarEl   = document.getElementById('calendar');
 const instructions = document.getElementById('instructions');
 const paletteDesktop = document.getElementById('recipePaletteDesktop');
-const paletteOffcanvas = document.getElementById('recipePalette'); // same content
-let assignments = {};               // {"2025-12-19":"Beer Brats"}
+const paletteMobile  = document.getElementById('recipePaletteMobile');
+let assignments = {};                     // {"2025-12-19":"Beer Brats"}
 const STORAGE_KEY = 'vacation-cook-assignments';
 
 /* --------------------------------------------------------------
-   4️⃣  LOAD / SAVE ASSIGNMENTS (localStorage) – keeps data
+   4️⃣  PERSISTENCE (localStorage)
    -------------------------------------------------------------- */
-function loadAssignments() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-        try {
-            assignments = JSON.parse(stored);
-        } catch (e) { console.error('Corrupt assignment data', e); }
+function loadAssignments(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw){
+        try{ assignments = JSON.parse(raw); }
+        catch(e){ console.error('bad assignment data',e); }
     }
 }
-function saveAssignments() {
+function saveAssignments(){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
 }
 
 /* --------------------------------------------------------------
-   5️⃣  BUILD RECIPE PALETTE (draggable items)
+   5️⃣  RECIPE PALETTE (pointer‑based drag)
    -------------------------------------------------------------- */
-function createPaletteItem(name) {
+function createPaletteItem(name){
     const div = document.createElement('div');
     div.className = 'recipe-item';
     div.textContent = name;
-    div.draggable = true;
     div.dataset.recipe = name;
 
-    // drag events -------------------------------------------------
-    div.addEventListener('dragstart', ev => {
-        ev.dataTransfer.setData('text/plain', name);
-        ev.dataTransfer.effectAllowed = 'move';
-        div.classList.add('dragging');
-    });
-    div.addEventListener('dragend', () => div.classList.remove('dragging'));
+    // ---- pointer‑based drag (works on mouse & touch) ----
+    let ghost = null;
+    const startDrag = ev => {
+        ev.preventDefault();                     // stop native text‑selection, etc.
+        const recipe = div.dataset.recipe;
+        ghost = div.cloneNode(true);
+        ghost.classList.add('dragging');
+        ghost.style.position = 'fixed';
+        ghost.style.left = ev.clientX + 'px';
+        ghost.style.top  = ev.clientY + 'px';
+        ghost.style.pointerEvents = 'none';
+        ghost.style.opacity = '0.8';
+        document.body.appendChild(ghost);
 
+        const move = me => {
+            ghost.style.left = me.clientX + 'px';
+            ghost.style.top  = me.clientY + 'px';
+        };
+        const end = me => {
+            document.removeEventListener('pointermove', move);
+            document.removeEventListener('pointerup', end);
+            ghost.remove();
+            ghost = null;
+
+            const dropTarget = document.elementFromPoint(me.clientX, me.clientY);
+            const dayCard = dropTarget?.closest('.day-card');
+            if (dayCard && !dayCard.classList.contains('outside-trip')){
+                // assign
+                const iso = dayCard.dataset.iso;
+                assignments[iso] = recipe;
+                saveAssignments();
+                updateCardAssignment(dayCard, recipe);
+                // flash feedback
+                dayCard.classList.add('drop-success');
+                setTimeout(()=>dayCard.classList.remove('drop-success'),800);
+            }
+        };
+        document.addEventListener('pointermove', move);
+        document.addEventListener('pointerup', end);
+    };
+    div.addEventListener('pointerdown', startDrag);
     return div;
 }
 
-function buildPalette() {
-    // Clear existing (important for import/clear)
+function buildPalette(){
+    // Clear both containers and add fresh search boxes
     paletteDesktop.innerHTML = '<input type="text" class="form-control search-box" id="searchBoxDesktop" placeholder="Search recipes…">';
-    paletteOffcanvas.innerHTML = '<input type="text" class="form-control search-box" id="searchBox" placeholder="Search recipes…">';
+    paletteMobile.innerHTML  = '<input type="text" class="form-control search-box" id="searchBoxMobile" placeholder="Search recipes…">';
 
-    Object.keys(recipes).forEach(name => {
+    Object.keys(recipes).forEach(name=>{
         const item = createPaletteItem(name);
+        // clone for each container
         paletteDesktop.appendChild(item.cloneNode(true));
-        paletteOffcanvas.appendChild(item.cloneNode(true));
+        paletteMobile.appendChild(item.cloneNode(true));
     });
 }
 
 /* --------------------------------------------------------------
-   6️⃣  SEARCH / FILTER RECIPE LIST
+   6️⃣  SEARCH / FILTER
    -------------------------------------------------------------- */
-function attachSearch(boxId, container) {
+function attachSearch(boxId, container){
     const box = document.getElementById(boxId);
-    box.addEventListener('input', () => {
+    box.addEventListener('input',()=>{
         const term = box.value.trim().toLowerCase();
         const items = container.querySelectorAll('.recipe-item');
-        items.forEach(it => {
+        items.forEach(it=>{
             const txt = it.dataset.recipe.toLowerCase();
             it.style.display = txt.includes(term) ? '' : 'none';
         });
@@ -495,24 +519,19 @@ function attachSearch(boxId, container) {
 /* --------------------------------------------------------------
    7️⃣  CALENDAR BUILD
    -------------------------------------------------------------- */
-function isInTrip(date) {
-    return date >= tripStart && date <= tripEnd;
-}
-function formatMD(date) {
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-}
-function getDefaultMeal(date) {
+function isInTrip(date){ return date>=tripStart && date<=tripEnd; }
+function formatMD(date){ return `${date.getMonth()+1}/${date.getDate()}`; }
+function getDefaultMeal(date){
     const iso = date.toISOString().split('T')[0];
-    if (iso === '2025-12-25') return 'Smoked Brisket';
+    if (iso==='2025-12-25') return 'Smoked Brisket';
     const meals = ['Smoked Pork Butt','Beer Brats','Smash Burgers','Tacos'];
-    const offset = Math.floor((date - tripStart) / (1000*60*60*24));
-    if (offset < 0 || offset > (tripEnd - tripStart)/(1000*60*60*24))
-        return null;
-    return meals[offset % meals.length];
+    const offset = Math.floor((date-tripStart)/(1000*60*60*24));
+    if (offset<0 || offset> (tripEnd-tripStart)/(1000*60*60*24)) return null;
+    return meals[offset%meals.length];
 }
 
-/* Build every day card */
-for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
+/* Build calendar */
+for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate()+1)){
     const cur = new Date(d);
     const iso = cur.toISOString();
 
@@ -520,74 +539,49 @@ for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) 
     card.className = 'day-card' + (isInTrip(cur) ? '' : ' outside-trip');
     card.dataset.iso = iso;
 
-    // Header (weekday)
-    const weekday = cur.toLocaleDateString('en-US', { weekday: 'short' });
+    // Weekday name
+    const weekday = cur.toLocaleDateString('en-US',{weekday:'short'});
     const head = document.createElement('div');
     head.textContent = weekday;
-    head.style.fontWeight = '600';
+    head.style.fontWeight='600';
     card.appendChild(head);
 
     // Date number
     const dateEl = document.createElement('div');
-    dateEl.className = 'date';
+    dateEl.className='date';
     dateEl.textContent = formatMD(cur);
     card.appendChild(dateEl);
 
     // Default assignment (if any)
-    if (isInTrip(cur)) {
+    if (isInTrip(cur)){
         const def = getDefaultMeal(cur);
-        if (def) {
-            assignments[iso] = def;
-        }
+        if (def) assignments[iso] = def;
     }
 
-    // Assigned recipe label (if present)
-    if (assignments[iso]) {
+    // Show assigned recipe (if any)
+    if (assignments[iso]){
         const lbl = document.createElement('div');
-        lbl.className = 'assigned-recipe';
+        lbl.className='assigned-recipe';
         lbl.textContent = assignments[iso];
 
         const clear = document.createElement('span');
-        clear.className = 'clear-btn';
-        clear.title = 'Remove assignment';
-        clear.textContent = '×';
-        clear.addEventListener('click', ev => {
-            ev.stopPropagation();               // don’t trigger card click
+        clear.className='clear-btn';
+        clear.title='Remove assignment';
+        clear.textContent='×';
+        clear.addEventListener('click',ev=>{
+            ev.stopPropagation();
             delete assignments[iso];
             saveAssignments();
-            lbl.remove();                       // remove label
+            lbl.remove();
         });
         lbl.appendChild(clear);
         card.appendChild(lbl);
     }
 
-    // Click → show instructions (if recipe assigned)
-    card.addEventListener('click', () => {
+    // Click to view recipe
+    card.addEventListener('click',()=>{
         const meal = assignments[card.dataset.iso];
         if (meal) displayInstructions(meal);
-    });
-
-    // Drag‑over / drop handling
-    card.addEventListener('dragover', ev => {
-        ev.preventDefault();
-        ev.dataTransfer.dropEffect = 'move';
-        card.classList.add('drag-over');
-    });
-    card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
-    card.addEventListener('drop', ev => {
-        ev.preventDefault();
-        card.classList.remove('drag-over');
-
-        const recipeName = ev.dataTransfer.getData('text/plain');
-        if (!recipeName || !(recipeName in recipes)) return;
-
-        // Assign / overwrite
-        assignments[iso] = recipeName;
-        saveAssignments();
-        updateCardAssignment(card, recipeName);
-        // visual flash
-        card.classList.add('drop-success');
-        setTimeout(() => card.classList.remove('drop-success'), 800);
     });
 
     calendarEl.appendChild(card);
@@ -596,21 +590,21 @@ for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) 
 /* --------------------------------------------------------------
    8️⃣  UPDATE CARD AFTER DROP / CLEAR
    -------------------------------------------------------------- */
-function updateCardAssignment(card, recipeName) {
-    // Remove any old label
+function updateCardAssignment(card, recipeName){
+    // Remove old label if present
     const old = card.querySelector('.assigned-recipe');
     if (old) old.remove();
 
     // New label
     const lbl = document.createElement('div');
-    lbl.className = 'assigned-recipe';
+    lbl.className='assigned-recipe';
     lbl.textContent = recipeName;
 
     const clear = document.createElement('span');
-    clear.className = 'clear-btn';
-    clear.title = 'Remove assignment';
-    clear.textContent = '×';
-    clear.addEventListener('click', ev => {
+    clear.className='clear-btn';
+    clear.title='Remove assignment';
+    clear.textContent='×';
+    clear.addEventListener('click',ev=>{
         ev.stopPropagation();
         delete assignments[card.dataset.iso];
         saveAssignments();
@@ -623,20 +617,20 @@ function updateCardAssignment(card, recipeName) {
 /* --------------------------------------------------------------
    9️⃣  DISPLAY RECIPE IN INSTRUCTIONS PANEL
    -------------------------------------------------------------- */
-function displayInstructions(mealName) {
+function displayInstructions(mealName){
     const recipe = recipes[mealName];
-    if (!recipe) {
+    if (!recipe){
         instructions.innerHTML = `<p class="text-muted">No recipe found for "${mealName}".</p>`;
         return;
     }
     const html = `
         <h2>${recipe.title}</h2>
         <h5>Ingredients</h5>
-        <ul>${recipe.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+        <ul>${recipe.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
         <h5>Steps</h5>
-        <ol>${recipe.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+        <ol>${recipe.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
         ${recipe.tips && recipe.tips.length
-            ? `<h5>Tips & Techniques</h5><ul>${recipe.tips.map(t => `<li>${t}</li>`).join('')}</ul>`
+            ? `<h5>Tips & Techniques</h5><ul>${recipe.tips.map(t=>`<li>${t}</li>`).join('')}</ul>`
             : ''
         }
     `;
@@ -644,11 +638,11 @@ function displayInstructions(mealName) {
 }
 
 /* --------------------------------------------------------------
-   🔟  EXPORT / IMPORT HANDLERS
+   🔟  EXPORT / IMPORT
    -------------------------------------------------------------- */
-document.getElementById('exportBtn').addEventListener('click', () => {
-    const dataStr = JSON.stringify(assignments, null, 2);
-    const blob = new Blob([dataStr], {type: 'application/json'});
+document.getElementById('exportBtn').addEventListener('click',()=>{
+    const data = JSON.stringify(assignments, null, 2);
+    const blob = new Blob([data],{type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -656,66 +650,55 @@ document.getElementById('exportBtn').addEventListener('click', () => {
     a.click();
     URL.revokeObjectURL(url);
 });
-
-document.getElementById('importBtn').addEventListener('click', () => {
+document.getElementById('importBtn').addEventListener('click',()=>{
     document.getElementById('importFile').click();
 });
-
-document.getElementById('importFile').addEventListener('change', ev => {
+document.getElementById('importFile').addEventListener('change',ev=>{
     const file = ev.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = e => {
-        try {
+    reader.onload = e=>{
+        try{
             const imported = JSON.parse(e.target.result);
-            // simple validation – keys must be ISO dates and values must be known recipes
-            for (const [date, rec] of Object.entries(imported)) {
+            for (const [date, rec] of Object.entries(imported)){
                 if (rec in recipes) assignments[date] = rec;
             }
             saveAssignments();
-            // Refresh calendar UI
-            document.querySelectorAll('.day-card').forEach(card => {
+            // refresh UI
+            document.querySelectorAll('.day-card').forEach(card=>{
                 const iso = card.dataset.iso;
-                if (assignments[iso]) {
-                    updateCardAssignment(card, assignments[iso]);
-                } else {
+                if (assignments[iso]) updateCardAssignment(card, assignments[iso]);
+                else{
                     const old = card.querySelector('.assigned-recipe');
                     if (old) old.remove();
                 }
             });
-        } catch (err) {
-            alert('Failed to import JSON: ' + err);
+        }catch(err){
+            alert('Import failed: '+err);
         }
     };
     reader.readAsText(file);
-    // Reset input so the same file can be selected again later
-    ev.target.value = '';
+    ev.target.value=''; // allow re‑select same file later
 });
 
 /* --------------------------------------------------------------
    1️⃣1️⃣  ADD CUSTOM RECIPE
    -------------------------------------------------------------- */
-document.getElementById('saveRecipeBtn').addEventListener('click', () => {
-    const key = document.getElementById('newKey').value.trim();
+document.getElementById('saveRecipeBtn').addEventListener('click',()=>{
+    const key   = document.getElementById('newKey').value.trim();
     const title = document.getElementById('newTitle').value.trim();
-    const ingredients = document.getElementById('newIngredients').value.trim().split('\n').filter(Boolean);
+    const ing   = document.getElementById('newIngredients').value.trim().split('\n').filter(Boolean);
     const steps = document.getElementById('newSteps').value.trim().split('\n').filter(Boolean);
-    const tips = document.getElementById('newTips').value.trim().split('\n').filter(Boolean);
+    const tips  = document.getElementById('newTips').value.trim().split('\n').filter(Boolean);
 
-    if (!key || !title || !ingredients.length || !steps.length) {
-        alert('Please fill in the required fields.');
+    if (!key || !title || !ing.length || !steps.length){
+        alert('Please fill in all required fields.');
         return;
     }
-    if (key in recipes) {
-        if (!confirm('A recipe with this key already exists. Overwrite?')) return;
-    }
+    if (key in recipes && !confirm('Recipe key already exists – overwrite?')) return;
 
-    recipes[key] = {title, ingredients, steps, tips};
-
-    // Re‑build the palette (adds the new item)
-    buildPalette();
-
-    // Close modal & reset form
+    recipes[key] = {title, ingredients:ing, steps, tips};
+    buildPalette();                     // refresh palette with new item
     const modal = bootstrap.Modal.getInstance(document.getElementById('addRecipeModal'));
     modal.hide();
     document.getElementById('addRecipeForm').reset();
@@ -724,20 +707,20 @@ document.getElementById('saveRecipeBtn').addEventListener('click', () => {
 /* --------------------------------------------------------------
    1️⃣2️⃣  PRINT‑FRIENDLY RECIPE LIST
    -------------------------------------------------------------- */
-function buildPrintRecipes() {
+function buildPrintRecipes(){
     const container = document.getElementById('allRecipesPrint');
-    container.innerHTML = '';
-    Object.entries(recipes).forEach(([key, rec]) => {
+    container.innerHTML='';
+    Object.values(recipes).forEach(rec=>{
         const div = document.createElement('div');
-        div.style.marginBottom = '1.5rem';
+        div.style.marginBottom='1.5rem';
         div.innerHTML = `
             <h3>${rec.title}</h3>
             <strong>Ingredients:</strong>
-            <ul>${rec.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+            <ul>${rec.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
             <strong>Steps:</strong>
-            <ol>${rec.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+            <ol>${rec.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
             ${rec.tips && rec.tips.length
-                ? `<strong>Tips:</strong><ul>${rec.tips.map(t => `<li>${t}</li>`).join('')}</ul>`
+                ? `<strong>Tips:</strong><ul>${rec.tips.map(t=>`<li>${t}</li>`).join('')}</ul>`
                 : ''
             }
         `;
@@ -746,20 +729,18 @@ function buildPrintRecipes() {
 }
 
 /* --------------------------------------------------------------
-   1️⃣3️⃣  INITIALISE PAGE
+   1️⃣3️⃣  INITIALISE
    -------------------------------------------------------------- */
 loadAssignments();
 buildPalette();
 attachSearch('searchBoxDesktop', paletteDesktop);
-attachSearch('searchBox', paletteOffcanvas);
-buildPrintRecipes();               // hidden div for print view
+attachSearch('searchBoxMobile',  paletteMobile);
+buildPrintRecipes();
 
-// After assignments are loaded, ensure UI reflects them
-document.querySelectorAll('.day-card').forEach(card => {
+/* After assignments are loaded, make sure UI reflects them */
+document.querySelectorAll('.day-card').forEach(card=>{
     const iso = card.dataset.iso;
-    if (assignments[iso]) {
-        updateCardAssignment(card, assignments[iso]);
-    }
+    if (assignments[iso]) updateCardAssignment(card, assignments[iso]);
 });
 </script>
 </body>
