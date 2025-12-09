@@ -5,7 +5,7 @@
 <title>California Vacation Cooking Schedule 2025</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Bootstrap 5 -->
+<!-- Bootstrap 5 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384‑VjEe0nX1QbM1pTgZ8c9Y2gkVYF5V6c5XQzWcXcH9Kc8FJp7G/9VgZs0f+M3a6c5n"
@@ -23,6 +23,9 @@
         --text-primary: #f0f0f0;
         --text-muted: #b0b0c0;
         --accent: #ffcc00;
+        --sidebar-bg: rgba(0,0,0,.4);
+        --drag-hint: rgba(255,255,255,.2);
+        --drop-success: rgba(0,200,0,.3);
     }
 
     body {
@@ -31,128 +34,263 @@
         color: var(--text-primary);
         min-height: 100vh;
         margin: 0;
-        padding: 0;
     }
 
-    h1 {
-        font-weight: 600;
-        margin-bottom: 2rem;
-        text-align: center;
-        color: var(--accent);
-    }
+    h1 {font-weight:600;margin-bottom:2rem;text-align:center;color:var(--accent);}
 
-    .weekday-header {
-        font-weight: 600;
-        text-align: center;
-        color: var(--accent);
-        margin-bottom: .5rem;
+    .wrapper {display:flex;gap:1rem;padding:1rem;}
+    .sidebar {
+        flex:0 0 200px;
+        background:var(--sidebar-bg);
+        border-radius:.5rem;
+        padding:.75rem;
+        max-height:calc(100vh - 4rem);
+        overflow-y:auto;
     }
+    .sidebar h4 {margin-top:0;color:var(--accent);text-align:center;}
+    .search-box {width:100%;margin-bottom:.5rem;padding:.35rem .5rem;border:none;border-radius:.3rem;}
+    .recipe-item {
+        background:var(--card-bg);
+        border-radius:.4rem;
+        padding:.5rem .75rem;
+        margin:.4rem 0;
+        cursor:grab;
+        user-select:none;
+        font-size:.9rem;
+        text-align:center;
+        color:var(--text-primary);
+    }
+    .recipe-item:active {cursor:grabbing;}
+    .recipe-item.dragging {opacity:.5;}
 
     .calendar {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: .75rem;
+        flex:1;
+        display:grid;
+        grid-template-columns:repeat(7,1fr);
+        gap:.75rem;
     }
-
     .day-card {
-        background: var(--card-bg);
-        border-radius: .5rem;
-        padding: .75rem;
-        text-align: center;
-        cursor: pointer;
-        transition: background .2s, transform .2s;
-        min-height: 100px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        color: var(--text-primary);
+        background:var(--card-bg);
+        border-radius:.5rem;
+        padding:.75rem;
+        text-align:center;
+        cursor:pointer;
+        transition:background .2s,transform .2s;
+        min-height:100px;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        color:var(--text-primary);
+        position:relative;
+    }
+    .day-card:hover {background:var(--card-bg-hover);transform:translateY(-2px);}
+    .day-card.outside-trip {opacity:.4;cursor:default;}
+    .day-card .date {font-size:.9rem;color:var(--text-muted);margin-top:.25rem;}
+    .day-card .assigned-recipe {
+        margin-top:.4rem;
+        font-size:.85rem;
+        font-style:italic;
+        color:var(--accent);
+        position:relative;
+        padding-right:1.2rem;
+    }
+    .day-card .clear-btn {
+        position:absolute;
+        top:2px;right:4px;
+        color:#fff;
+        cursor:pointer;
+        font-weight:bold;
+    }
+    .day-card.drag-over {outline:2px dashed var(--accent);background:var(--drag-hint);}
+    .day-card.drop-success::after{
+        content:"";
+        position:absolute;top:0;left:0;width:100%;height:100%;
+        background:var(--drop-success);
+        animation:flash 0.8s forwards;
+    }
+    @keyframes flash{0%{opacity:1}100%{opacity:0}}
+
+    .instructions-card{
+        background:var(--card-bg);
+        border-radius:.5rem;
+        padding:1.5rem;
+        margin-top:2rem;
+        color:var(--text-primary);
+    }
+    .instructions-card h2{color:var(--accent);margin-bottom:1rem;}
+
+    .weekday-header{font-weight:600;text-align:center;color:var(--accent);margin-bottom:.5rem;}
+    .weekday-header .col-1{padding:0;}
+
+    @media (max-width:768px){
+        .wrapper{flex-direction:column;}
+        .sidebar{flex:0 0 auto;width:100%;max-height:none;}
+        .calendar{grid-template-columns:repeat(2,1fr);}
+        .offcanvas-body{padding:0;}
     }
 
-    .day-card:hover {
-        background: var(--card-bg-hover);
-        transform: translateY(-2px);
-    }
-
-    .day-card.outside-trip {
-        opacity: .4;
-        cursor: default;
-    }
-
-    .day-card .date {
-        font-size: .9rem;
-        color: var(--text-muted);
-        margin-top: .25rem;
-    }
-
-    .instructions-card {
-        background: var(--card-bg);
-        border-radius: .5rem;
-        padding: 1.5rem;
-        margin-top: 2rem;
-        color: var(--text-primary);
-    }
-
-    .instructions-card h2 {
-        color: var(--accent);
-        margin-bottom: 1rem;
-    }
-
-    .instructions-card ul {
-        padding-left: 1.25rem;
-    }
-
-    .instructions-card li {
-        margin-bottom: .5rem;
-    }
-
-    @media (max-width: 576px) {
-        .calendar {
-            grid-template-columns: repeat(2, 1fr);
-        }
+    /* ---------- Print Styles ---------- */
+    @media print{
+        body{background:white;color:black;}
+        .offcanvas,.btn,.search-box,.clear-btn,.weekday-header,.instructions-card{display:none!important;}
+        .day-card{border:1px solid #000;background:transparent;color:black;}
+        .day-card .assigned-recipe{color:black;}
+        .calendar{grid-template-columns:repeat(7,1fr);}
+        .print-recipes{page-break-before:always;}
+        .print-recipes h2{color:#000;}
     }
 </style>
 </head>
 <body>
 
 <div class="container py-4">
-
     <h1>California Vacation Cooking Schedule 2025</h1>
 
-    <!-- Weekday Header Row -->
-    <div class="row weekday-header">
-        <div class="col-1 col-sm-1 text-center">Sun</div>
-        <div class="col-1 col-sm-1 text-center">Mon</div>
-        <div class="col-1 col-sm-1 text-center">Tue</div>
-        <div class="col-1 col-sm-1 text-center">Wed</div>
-        <div class="col-1 col-sm-1 text-center">Thu</div>
-        <div class="col-1 col-sm-1 text-center">Fri</div>
-        <div class="col-1 col-sm-1 text-center">Sat</div>
+    <!-- Toolbar (Export / Import / Add Recipe) -->
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <button class="btn btn-sm btn-outline-light" data-bs-toggle="offcanvas"
+                data-bs-target="#offcanvasRecipes" aria-controls="offcanvasRecipes">
+            <i class="bi bi-list"></i> Recipes
+        </button>
+
+        <button class="btn btn-sm btn-outline-light" id="exportBtn">
+            <i class="bi bi-download"></i> Export
+        </button>
+
+        <button class="btn btn-sm btn-outline-light" id="importBtn">
+            <i class="bi bi-upload"></i> Import
+        </button>
+
+        <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal"
+                data-bs-target="#addRecipeModal">
+            <i class="bi bi-plus"></i> Add Recipe
+        </button>
+
+        <input type="file" id="importFile" accept=".json" style="display:none;">
     </div>
 
-    <!-- Calendar Grid -->
-    <div class="calendar" id="calendar"></div>
+    <!-- Offcanvas – holds the recipe palette on small screens -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasRecipes"
+         aria-labelledby="offcanvasRecipesLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasRecipesLabel">Recipes</h5>
+            <button type="button" class="btn-close btn-close-white"
+                    data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <aside class="sidebar" id="recipePalette">
+                <input type="text" class="form-control search-box" id="searchBox"
+                       placeholder="Search recipes…">
+                <!-- palette items injected by JS -->
+            </aside>
+        </div>
+    </div>
 
-    <!-- Instructions Panel -->
-    <div class="instructions-card" id="instructions">
-        <p class="text-muted">Select a day to view the recipe and cooking instructions.</p>
+    <!-- Main layout (sidebar visible on larger screens) -->
+    <div class="wrapper">
+        <!-- Sidebar for larger screens (hidden on xs via CSS) -->
+        <aside class="sidebar d-none d-md-block" id="recipePaletteDesktop">
+            <input type="text" class="form-control search-box" id="searchBoxDesktop"
+                   placeholder="Search recipes…">
+            <!-- items injected by JS (same function works for both containers) -->
+        </aside>
+
+        <section class="flex-grow-1">
+            <!-- Weekday Header Row -->
+            <div class="row weekday-header">
+                <div class="col-1 text-center">Sun</div>
+                <div class="col-1 text-center">Mon</div>
+                <div class="col-1 text-center">Tue</div>
+                <div class="col-1 text-center">Wed</div>
+                <div class="col-1 text-center">Thu</div>
+                <div class="col-1 text-center">Fri</div>
+                <div class="col-1 text-center">Sat</div>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div class="calendar" id="calendar"></div>
+
+            <!-- Instructions Panel -->
+            <div class="instructions-card" id="instructions">
+                <p class="text-muted">Select a day to view the recipe and cooking instructions.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- ---------- Add Custom Recipe Modal ---------- -->
+    <div class="modal fade" id="addRecipeModal" tabindex="-1"
+         aria-labelledby="addRecipeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content text-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addRecipeModalLabel">Add Custom Recipe</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRecipeForm">
+                        <div class="mb-3">
+                            <label class="form-label">Recipe Key (unique, e.g. “Veggie Chili”)</label>
+                            <input type="text" class="form-control" id="newKey" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Title (displayed in instructions)</label>
+                            <input type="text" class="form-control" id="newTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ingredients (one per line)</label>
+                            <textarea class="form-control" id="newIngredients" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Steps (one per line)</label>
+                            <textarea class="form-control" id="newSteps" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tips (optional, one per line)</label>
+                            <textarea class="form-control" id="newTips" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveRecipeBtn">Save Recipe</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable full recipe list (hidden on screen) -->
+    <div class="print-recipes d-none">
+        <h2>All Recipes</h2>
+        <div id="allRecipesPrint"></div>
     </div>
 </div>
 
+<!-- Bootstrap 5 JS + Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384‑ENjdO4Dr2bkBIFxQpeoYz1Hk8U5g4U7f0l2J8VIZjnM7E5VQZ0ZVnY4e+1m5K5pG"
+        crossorigin="anonymous"></script>
+
 <script>
-/* ---------- 1️⃣ DATE CALCULATIONS ---------- */
-const tripStart = new Date(2025, 11, 18); // Dec 18, 2025 (month is 0‑based)
+/* ==============================================================
+   1️⃣  DATE CALCULATIONS
+   ============================================================== */
+const tripStart = new Date(2025, 11, 18); // Dec 18, 2025 (0‑based month)
 const tripEnd   = new Date(2025, 11, 28); // Dec 28, 2025
 
-// Find the Sunday before (or same day as) the trip start – calendar must start on Sunday
+// Calendar must start on the Sunday before the trip
 const startOfWeek = new Date(tripStart);
-startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // go back to Sunday
+startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
 
-// Find the Saturday after (or same day as) the trip end – we want a full rectangle of weeks
+// End on the Saturday after the trip
 const endOfWeek = new Date(tripEnd);
-endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay())); // forward to Saturday
+endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
 
-/* ---------- 2️⃣ RECIPE DATA ---------- */
-const recipes = {
+/* ==============================================================
+   2️⃣  RECIPE DATA (initial set)
+   ============================================================== */
+let recipes = {
     "Smoked Pork Butt": {
         title: "Smoked Pork Butt (Pulled Pork)",
         ingredients: [
@@ -182,7 +320,6 @@ const recipes = {
             "Applewood gives a sweet flavor; hickory adds a stronger smoke."
         ]
     },
-
     "Beer Brats": {
         title: "Beer‑Braised Bratwurst",
         ingredients: [
@@ -206,7 +343,6 @@ const recipes = {
             "Don’t over‑cook – the internal temperature should hit **160 °F**."
         ]
     },
-
     "Smash Burgers": {
         title: "Smash Burgers",
         ingredients: [
@@ -230,7 +366,6 @@ const recipes = {
             "Use a heavy spatula for an even smash."
         ]
     },
-
     "Smoked Brisket": {
         title: "Smoked Beef Brisket",
         ingredients: [
@@ -258,7 +393,6 @@ const recipes = {
             "Resting lets juices redistribute for juicy slices."
         ]
     },
-
     "Tacos": {
         title: "Grilled Chicken & Steak Tacos",
         ingredients: [
@@ -285,108 +419,348 @@ const recipes = {
     }
 };
 
-/* ---------- 3️⃣ CALENDAR BUILD ---------- */
-const calendarEl = document.getElementById('calendar');
-const instructionsEl = document.getElementById('instructions');
+/* ==============================================================
+   3️⃣  GLOBAL STATE
+   ============================================================== */
+const calendarEl   = document.getElementById('calendar');
+const instructions = document.getElementById('instructions');
+const paletteDesktop = document.getElementById('recipePaletteDesktop');
+const paletteOffcanvas = document.getElementById('recipePalette'); // same content
+let assignments = {};               // {"2025-12-19":"Beer Brats"}
+const STORAGE_KEY = 'vacation-cook-assignments';
 
+/* --------------------------------------------------------------
+   4️⃣  LOAD / SAVE ASSIGNMENTS (localStorage) – keeps data
+   -------------------------------------------------------------- */
+function loadAssignments() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+        try {
+            assignments = JSON.parse(stored);
+        } catch (e) { console.error('Corrupt assignment data', e); }
+    }
+}
+function saveAssignments() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
+}
+
+/* --------------------------------------------------------------
+   5️⃣  BUILD RECIPE PALETTE (draggable items)
+   -------------------------------------------------------------- */
+function createPaletteItem(name) {
+    const div = document.createElement('div');
+    div.className = 'recipe-item';
+    div.textContent = name;
+    div.draggable = true;
+    div.dataset.recipe = name;
+
+    // drag events -------------------------------------------------
+    div.addEventListener('dragstart', ev => {
+        ev.dataTransfer.setData('text/plain', name);
+        ev.dataTransfer.effectAllowed = 'move';
+        div.classList.add('dragging');
+    });
+    div.addEventListener('dragend', () => div.classList.remove('dragging'));
+
+    return div;
+}
+
+function buildPalette() {
+    // Clear existing (important for import/clear)
+    paletteDesktop.innerHTML = '<input type="text" class="form-control search-box" id="searchBoxDesktop" placeholder="Search recipes…">';
+    paletteOffcanvas.innerHTML = '<input type="text" class="form-control search-box" id="searchBox" placeholder="Search recipes…">';
+
+    Object.keys(recipes).forEach(name => {
+        const item = createPaletteItem(name);
+        paletteDesktop.appendChild(item.cloneNode(true));
+        paletteOffcanvas.appendChild(item.cloneNode(true));
+    });
+}
+
+/* --------------------------------------------------------------
+   6️⃣  SEARCH / FILTER RECIPE LIST
+   -------------------------------------------------------------- */
+function attachSearch(boxId, container) {
+    const box = document.getElementById(boxId);
+    box.addEventListener('input', () => {
+        const term = box.value.trim().toLowerCase();
+        const items = container.querySelectorAll('.recipe-item');
+        items.forEach(it => {
+            const txt = it.dataset.recipe.toLowerCase();
+            it.style.display = txt.includes(term) ? '' : 'none';
+        });
+    });
+}
+
+/* --------------------------------------------------------------
+   7️⃣  CALENDAR BUILD
+   -------------------------------------------------------------- */
 function isInTrip(date) {
     return date >= tripStart && date <= tripEnd;
 }
-
-/* Helper to format date as M/D */
 function formatMD(date) {
     return `${date.getMonth() + 1}/${date.getDate()}`;
 }
-
-/* Assign meals – a simple round‑robin with a forced special on Dec 25 */
-function getMealFor(date) {
-    const iso = date.toISOString().split('T')[0]; // e.g. 2025-12-25
-    // Special case
+function getDefaultMeal(date) {
+    const iso = date.toISOString().split('T')[0];
     if (iso === '2025-12-25') return 'Smoked Brisket';
-
-    const meals = [
-        'Smoked Pork Butt',
-        'Beer Brats',
-        'Smash Burgers',
-        'Tacos'
-    ];
-
-    // Determine index based on days offset from trip start
-    const offset = Math.floor((date - tripStart) / (1000 * 60 * 60 * 24));
-    if (offset < 0 || offset > (tripEnd - tripStart) / (1000 * 60 * 60 * 24)) {
-        return null; // outside trip
-    }
+    const meals = ['Smoked Pork Butt','Beer Brats','Smash Burgers','Tacos'];
+    const offset = Math.floor((date - tripStart) / (1000*60*60*24));
+    if (offset < 0 || offset > (tripEnd - tripStart)/(1000*60*60*24))
+        return null;
     return meals[offset % meals.length];
 }
 
-/* Build all day cards from startOfWeek to endOfWeek */
+/* Build every day card */
 for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
+    const cur = new Date(d);
+    const iso = cur.toISOString();
+
     const card = document.createElement('div');
-    const current = new Date(d); // copy
+    card.className = 'day-card' + (isInTrip(cur) ? '' : ' outside-trip');
+    card.dataset.iso = iso;
 
-    const inTrip = isInTrip(current);
-    const meal = inTrip ? getMealFor(current) : null;
+    // Header (weekday)
+    const weekday = cur.toLocaleDateString('en-US', { weekday: 'short' });
+    const head = document.createElement('div');
+    head.textContent = weekday;
+    head.style.fontWeight = '600';
+    card.appendChild(head);
 
-    card.className = 'day-card' + (inTrip ? '' : ' outside-trip');
-    card.dataset.date = current.toISOString();
-
-    // Card content
-    const weekday = current.toLocaleDateString('en-US', { weekday: 'short' });
-    const title = document.createElement('div');
-    title.textContent = weekday;
-    title.style.fontWeight = '600';
-    card.appendChild(title);
-
+    // Date number
     const dateEl = document.createElement('div');
     dateEl.className = 'date';
-    dateEl.textContent = formatMD(current);
+    dateEl.textContent = formatMD(cur);
     card.appendChild(dateEl);
 
-    if (inTrip && meal) {
-        const mealEl = document.createElement('div');
-        mealEl.textContent = meal;
-        mealEl.style.marginTop = '.4rem';
-        mealEl.style.fontSize = '.85rem';
-        mealEl.style.fontStyle = 'italic';
-        card.appendChild(mealEl);
+    // Default assignment (if any)
+    if (isInTrip(cur)) {
+        const def = getDefaultMeal(cur);
+        if (def) {
+            assignments[iso] = def;
+        }
     }
 
-    // Click handler only for trip days
-    if (inTrip && meal) {
-        card.addEventListener('click', () => displayInstructions(meal));
+    // Assigned recipe label (if present)
+    if (assignments[iso]) {
+        const lbl = document.createElement('div');
+        lbl.className = 'assigned-recipe';
+        lbl.textContent = assignments[iso];
+
+        const clear = document.createElement('span');
+        clear.className = 'clear-btn';
+        clear.title = 'Remove assignment';
+        clear.textContent = '×';
+        clear.addEventListener('click', ev => {
+            ev.stopPropagation();               // don’t trigger card click
+            delete assignments[iso];
+            saveAssignments();
+            lbl.remove();                       // remove label
+        });
+        lbl.appendChild(clear);
+        card.appendChild(lbl);
     }
+
+    // Click → show instructions (if recipe assigned)
+    card.addEventListener('click', () => {
+        const meal = assignments[card.dataset.iso];
+        if (meal) displayInstructions(meal);
+    });
+
+    // Drag‑over / drop handling
+    card.addEventListener('dragover', ev => {
+        ev.preventDefault();
+        ev.dataTransfer.dropEffect = 'move';
+        card.classList.add('drag-over');
+    });
+    card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+    card.addEventListener('drop', ev => {
+        ev.preventDefault();
+        card.classList.remove('drag-over');
+
+        const recipeName = ev.dataTransfer.getData('text/plain');
+        if (!recipeName || !(recipeName in recipes)) return;
+
+        // Assign / overwrite
+        assignments[iso] = recipeName;
+        saveAssignments();
+        updateCardAssignment(card, recipeName);
+        // visual flash
+        card.classList.add('drop-success');
+        setTimeout(() => card.classList.remove('drop-success'), 800);
+    });
 
     calendarEl.appendChild(card);
 }
 
-/* ---------- 4️⃣ DISPLAY INSTRUCTIONS ---------- */
+/* --------------------------------------------------------------
+   8️⃣  UPDATE CARD AFTER DROP / CLEAR
+   -------------------------------------------------------------- */
+function updateCardAssignment(card, recipeName) {
+    // Remove any old label
+    const old = card.querySelector('.assigned-recipe');
+    if (old) old.remove();
+
+    // New label
+    const lbl = document.createElement('div');
+    lbl.className = 'assigned-recipe';
+    lbl.textContent = recipeName;
+
+    const clear = document.createElement('span');
+    clear.className = 'clear-btn';
+    clear.title = 'Remove assignment';
+    clear.textContent = '×';
+    clear.addEventListener('click', ev => {
+        ev.stopPropagation();
+        delete assignments[card.dataset.iso];
+        saveAssignments();
+        lbl.remove();
+    });
+    lbl.appendChild(clear);
+    card.appendChild(lbl);
+}
+
+/* --------------------------------------------------------------
+   9️⃣  DISPLAY RECIPE IN INSTRUCTIONS PANEL
+   -------------------------------------------------------------- */
 function displayInstructions(mealName) {
     const recipe = recipes[mealName];
     if (!recipe) {
-        instructionsEl.innerHTML = `<p class="text-muted">No recipe found for "${mealName}".</p>`;
+        instructions.innerHTML = `<p class="text-muted">No recipe found for "${mealName}".</p>`;
         return;
     }
-
     const html = `
         <h2>${recipe.title}</h2>
         <h5>Ingredients</h5>
         <ul>${recipe.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
-
         <h5>Steps</h5>
         <ol>${recipe.steps.map(s => `<li>${s}</li>`).join('')}</ol>
-
         ${recipe.tips && recipe.tips.length
             ? `<h5>Tips & Techniques</h5><ul>${recipe.tips.map(t => `<li>${t}</li>`).join('')}</ul>`
             : ''
         }
     `;
-
-    instructionsEl.innerHTML = html;
+    instructions.innerHTML = html;
 }
 
-/* ---------- 5️⃣ INITIAL STATE ---------- */
-instructionsEl.innerHTML = `<p class="text-muted">Select a day to view the recipe and cooking instructions.</p>`;
-</script>
+/* --------------------------------------------------------------
+   🔟  EXPORT / IMPORT HANDLERS
+   -------------------------------------------------------------- */
+document.getElementById('exportBtn').addEventListener('click', () => {
+    const dataStr = JSON.stringify(assignments, null, 2);
+    const blob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'vacation-cook-assignments.json';
+    a.click();
+    URL.revokeObjectURL(url);
+});
 
+document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('importFile').click();
+});
+
+document.getElementById('importFile').addEventListener('change', ev => {
+    const file = ev.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const imported = JSON.parse(e.target.result);
+            // simple validation – keys must be ISO dates and values must be known recipes
+            for (const [date, rec] of Object.entries(imported)) {
+                if (rec in recipes) assignments[date] = rec;
+            }
+            saveAssignments();
+            // Refresh calendar UI
+            document.querySelectorAll('.day-card').forEach(card => {
+                const iso = card.dataset.iso;
+                if (assignments[iso]) {
+                    updateCardAssignment(card, assignments[iso]);
+                } else {
+                    const old = card.querySelector('.assigned-recipe');
+                    if (old) old.remove();
+                }
+            });
+        } catch (err) {
+            alert('Failed to import JSON: ' + err);
+        }
+    };
+    reader.readAsText(file);
+    // Reset input so the same file can be selected again later
+    ev.target.value = '';
+});
+
+/* --------------------------------------------------------------
+   1️⃣1️⃣  ADD CUSTOM RECIPE
+   -------------------------------------------------------------- */
+document.getElementById('saveRecipeBtn').addEventListener('click', () => {
+    const key = document.getElementById('newKey').value.trim();
+    const title = document.getElementById('newTitle').value.trim();
+    const ingredients = document.getElementById('newIngredients').value.trim().split('\n').filter(Boolean);
+    const steps = document.getElementById('newSteps').value.trim().split('\n').filter(Boolean);
+    const tips = document.getElementById('newTips').value.trim().split('\n').filter(Boolean);
+
+    if (!key || !title || !ingredients.length || !steps.length) {
+        alert('Please fill in the required fields.');
+        return;
+    }
+    if (key in recipes) {
+        if (!confirm('A recipe with this key already exists. Overwrite?')) return;
+    }
+
+    recipes[key] = {title, ingredients, steps, tips};
+
+    // Re‑build the palette (adds the new item)
+    buildPalette();
+
+    // Close modal & reset form
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addRecipeModal'));
+    modal.hide();
+    document.getElementById('addRecipeForm').reset();
+});
+
+/* --------------------------------------------------------------
+   1️⃣2️⃣  PRINT‑FRIENDLY RECIPE LIST
+   -------------------------------------------------------------- */
+function buildPrintRecipes() {
+    const container = document.getElementById('allRecipesPrint');
+    container.innerHTML = '';
+    Object.entries(recipes).forEach(([key, rec]) => {
+        const div = document.createElement('div');
+        div.style.marginBottom = '1.5rem';
+        div.innerHTML = `
+            <h3>${rec.title}</h3>
+            <strong>Ingredients:</strong>
+            <ul>${rec.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+            <strong>Steps:</strong>
+            <ol>${rec.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+            ${rec.tips && rec.tips.length
+                ? `<strong>Tips:</strong><ul>${rec.tips.map(t => `<li>${t}</li>`).join('')}</ul>`
+                : ''
+            }
+        `;
+        container.appendChild(div);
+    });
+}
+
+/* --------------------------------------------------------------
+   1️⃣3️⃣  INITIALISE PAGE
+   -------------------------------------------------------------- */
+loadAssignments();
+buildPalette();
+attachSearch('searchBoxDesktop', paletteDesktop);
+attachSearch('searchBox', paletteOffcanvas);
+buildPrintRecipes();               // hidden div for print view
+
+// After assignments are loaded, ensure UI reflects them
+document.querySelectorAll('.day-card').forEach(card => {
+    const iso = card.dataset.iso;
+    if (assignments[iso]) {
+        updateCardAssignment(card, assignments[iso]);
+    }
+});
+</script>
 </body>
 </html>
