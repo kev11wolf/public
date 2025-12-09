@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Meal Planning Schedule</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384‑VjEe0nX1QbM1pTgZ8c9Y2gkVYF5V6c5XQzWcXcH9Kc8FJp7G/9VgZs0f+M3a6c5n"
+      crossorigin="anonymous">
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap"
+      rel="stylesheet">
+
+<style>
+    :root{
+        --bg-gradient:linear-gradient(135deg,#0d0d1a,#1a1a33);
+        --card-bg:rgba(255,255,255,.08);
+        --card-bg-hover:rgba(255,255,255,.15);
+        --text-primary:#f0f0f0;
+        --text-muted:#b0b0c0;
+        --accent:#ffcc00;
+        --sidebar-bg:rgba(0,0,0,.4);
+        --drag-hint:rgba(255,255,255,.2);
+        --drop-success:rgba(0,200,0,.3);
+    }
+    body{
+        font-family:'Montserrat',sans-serif;
+        background:var(--bg-gradient);
+        color:var(--text-primary);
+        min-height:100vh;
+        margin:0;
+    }
+    h1{font-weight:600;margin-bottom:2rem;text-align:center;color:var(--accent);}
+    .wrapper{display:flex;gap:1rem;padding:1rem;}
+    .sidebar{
+        flex:0 0 220px;
+        background:var(--sidebar-bg);
+        border-radius:.5rem;
+        padding:.75rem;
+        max-height:calc(100vh - 4rem);
+        overflow-y:auto;
+    }
+    .sidebar h4{margin-top:0;color:var(--accent);text-align:center;}
+    .search-box{
+        width:100%;margin-bottom:.5rem;padding:.35rem .5rem;border:none;border-radius:.3rem;
+    }
+    .recipe-item{
+        background:var(--card-bg);
+        border-radius:.4rem;
+        padding:.5rem .75rem;
+        margin:.4rem 0;
+        cursor:grab;
+        user-select:none;
+        font-size:.9rem;
+        text-align:center;
+        color:var(--text-primary);
+        touch-action:none;
+    }
+    .recipe-item:active{cursor:grabbing;}
+    .recipe-item.dragging{opacity:.5;}
+
+    .calendar{
+        flex:1;
+        display:grid;
+        grid-template-columns:repeat(7,1fr);
+        gap:.75rem;
+    }
+    .day-card{
+        background:var(--card-bg);
+        border-radius:.5rem;
+        padding:.75rem;
+        text-align:center;
+        cursor:pointer;
+        transition:background .2s,transform .2s;
+        min-height:100px;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        color:var(--text-primary);
+        position:relative;
+    }
+    .day-card:hover{background:var(--card-bg-hover);transform:translateY(-2px);}
+    .day-card.outside-month{opacity:.4;cursor:default;}
+    .day-card .date{font-size:.9rem;color:var(--text-muted);margin-top:.25rem;}
+    .day-card .assigned-recipe{
+        margin-top:.4rem;
+        font-size:.85rem;
+        font-style:italic;
+        color:var(--accent);
+        position:relative;
+        padding-right:1.2rem;
+    }
+    .day-card .clear-btn{
+        position:absolute;top:2px;right:4px;color:#fff;cursor:pointer;font-weight:bold;
+    }
+    .day-card.drag-over{outline:2px dashed var(--accent);background:var(--drag-hint);}
+    .day-card.drop-success::after{
+        content:"";
+        position:absolute;top:0;left:0;width:100%;height:100%;
+        background:var(--drop-success);
+        animation:flash .8s forwards;
+    }
+    @keyframes flash{0%{opacity:1}100%{opacity:0}}
+
+    .instructions-card{
+        background:var(--card-bg);
+        border-radius:.5rem;
+        padding:1.5rem;
+        margin-top:2rem;
+        color:var(--text-primary);
+    }
+    .instructions-card h2{color:var(--accent);margin-bottom:1rem;}
+
+    .weekday-header{font-weight:600;text-align:center;color:var(--accent);margin-bottom:.5rem;}
+    .weekday-header .col-1{padding:0;}
+
+    @media (max-width:768px){
+        .wrapper{flex-direction:column;}
+        .sidebar{flex:0 0 auto;width:100%;max-height:none;}
+        .calendar{grid-template-columns:repeat(2,1fr);}
+        .offcanvas-body{padding:0;}
+    }
+    @media (max-width:576px){
+        .calendar{grid-template-columns:repeat(1,1fr);}
+    }
+
+    /* ---------- Print ---------- */
+    @media print{
+        body{background:white;color:black;}
+        .offcanvas,.btn,.search-box,.clear-btn,.weekday-header,.instructions-card{display:none!important;}
+        .day-card{border:1px solid #000;background:transparent;color:black;}
+        .day-card .assigned-recipe{color:black;}
+        .calendar{grid-template-columns:repeat(7,1fr);}
+        .print-recipes{page-break-before:always;}
+        .print-recipes h2{color:#000;}
+    }
+</style>
+</head>
+<body>
+
+<div class="container py-4">
+    <h1>Meal Planning Schedule</h1>
+
+    <!-- Toolbar -->
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <button class="btn btn-sm btn-outline-light" data-bs-toggle="offcanvas"
+                data-bs-target="#offcanvasRecipes" aria-controls="offcanvasRecipes">
+            <i class="bi bi-list"></i> Recipes
+        </button>
+
+        <button class="btn btn-sm btn-outline-light" id="exportBtn">
+            <i class="bi bi-download"></i> Export
+        </button>
+
+        <button class="btn btn-sm btn-outline-light" id="importBtn">
+            <i class="bi bi-upload"></i> Import
+        </button>
+
+        <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal"
+                data-bs-target="#addRecipeModal">
+            <i class="bi bi-plus"></i> Add Recipe
+        </button>
+
+        <!-- Month selector (native month picker) -->
+        <div class="ms-auto d-flex align-items-center">
+            <label for="monthPicker" class="me-2 mb-0 text-light">Month:</label>
+            <input type="month" id="monthPicker" class="form-control form-control-sm"
+                   style="max-width:150px;">
+        </div>
+
+        <input type="file" id="importFile" accept=".json" style="display:none;">
+    </div>
+
+    <!-- Offcanvas – recipe palette for phones -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasRecipes"
+         aria-labelledby="offcanvasRecipesLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasRecipesLabel">Recipes</h5>
+            <button type="button" class="btn-close btn-close-white"
+                    data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <aside class="sidebar" id="recipePaletteMobile">
+                <input type="text" class="form-control search-box" id="searchBoxMobile"
+                       placeholder="Search recipes…">
+            </aside>
+        </div>
+    </div>
+
+    <!-- Main layout (sidebar visible on larger screens) -->
+    <div class="wrapper">
+        <aside class="sidebar d-none d-md-block" id="recipePaletteDesktop">
+            <input type="text" class="form-control search-box" id="searchBoxDesktop"
+                   placeholder="Search recipes…">
+        </aside>
+
+        <section class="flex-grow-1">
+            <!-- Weekday header -->
+            <div class="row weekday-header">
+                <div class="col-1 text-center">Sun</div>
+                <div class="col-1 text-center">Mon</div>
+                <div class="col-1 text-center">Tue</div>
+                <div class="col-1 text-center">Wed</div>
+                <div class="col-1 text-center">Thu</div>
+                <div class="col-1 text-center">Fri</div>
+                <div class="col-1 text-center">Sat</div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="calendar" id="calendar"></div>
+
+            <!-- Instructions -->
+            <div class="instructions-card" id="instructions">
+                <p class="text-muted">Select a day to view the recipe and cooking instructions.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add Recipe Modal -->
+    <div class="modal fade" id="addRecipeModal" tabindex="-1"
+         aria-labelledby="addRecipeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content text-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addRecipeModalLabel">Add Custom Recipe</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRecipeForm">
+                        <div class="mb-3"><label class="form-label">Recipe Key (unique)</label>
+                            <input type="text" class="form-control" id="newKey" required></div>
+                        <div class="mb-3"><label class="form-label">Title</label>
+                            <input type="text" class="form-control" id="newTitle" required></div>
+                        <div class="mb-3"><label class="form-label">Ingredients (one per line)</label>
+                            <textarea class="form-control" id="newIngredients" rows="4" required></textarea></div>
+                        <div class="mb-3"><label class="form-label">Steps (one per line)</label>
+                            <textarea class="form-control" id="newSteps" rows="4" required></textarea></div>
+                        <div class="mb-3"><label class="form-label">Tips (optional, one per line)</label>
+                            <textarea class="form-control" id="newTips" rows="3"></textarea></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveRecipeBtn">Save Recipe</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden printable list -->
+    <div class="print-recipes d-none">
+        <h2>All Recipes</h2>
+        <div id="allRecipesPrint"></div>
+    </div>
+</div>
+
+<!-- Bootstrap bundle (includes Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384‑ENjdO4Dr2bkBIFxQpeoYz1Hk8U5g4U7f0l2J8VIZjnM7E5VQZ0ZVnY4e+1m5K5pG"
+        crossorigin="anonymous"></script>
+
+<script>
+/* ==============================================================
+   1️⃣  CONSTANTS & LOCAL STORAGE KEYS
+   ============================================================== */
+const RECIPES_KEY     = 'meal-planner-recipes';
+const ASSIGNMENTS_KEY = 'meal-planner-assignments';
+
+/* ==============================================================
+   2️⃣  DEFAULT RECIPE DATA
+   ============================================================== */
+let defaultRecipes = {
+    "Smoked Pork Butt": {
+        title: "Smoked Pork Butt (Pulled Pork)",
+        ingredients: [
+            "5‑lb pork shoulder (bone‑in or boneless)",
+            "2 Tbsp kosher salt",
+            "2 Tbsp brown sugar",
+            "1 Tbsp paprika",
+            "1 Tbsp black pepper",
+            "1 Tbsp garlic powder",
+            "1 Tbsp onion powder",
+            "½ Tbsp cayenne (optional)",
+            "Applewood or hickory wood chips"
+        ],
+        steps: [
+            "Trim excess fat, then apply a generous dry rub (all ingredients except wood).",
+            "Preheat smoker to **225 °F** and add applewood/hickory.",
+            "Place pork butt on the grill grate, fat side up.",
+            "Smoke until internal temperature reaches **165‑170 °F** (≈ 5‑6 h).",
+            "Wrap tightly in butcher paper or foil – this speeds the stall.",
+            "Return to smoker and continue until **195‑205 °F** (≈ 2‑3 h more).",
+            "Remove, let rest 30‑45 min, then shred with forks.",
+            "Serve with coleslaw, pickles, and buns."
+        ],
+        tips: [
+            "Maintain a steady **225 °F** throughout – use a good controller or digital smoker.",
+            "A digital probe (instant‑read) helps watch the stall (150‑170 °F).",
+            "Applewood gives a sweet flavor; hickory adds a stronger smoke."
+        ]
+    },
+    "Beer Brats": {
+        title: "Beer‑Braised Bratwurst",
+        ingredients: [
+            "12 bratwurst links",
+            "2 cups lager or ale",
+            "1 large onion, sliced",
+            "2 Tbsp butter",
+            "1 Tbsp mustard seeds",
+            "Olive oil",
+            "Buns, sauerkraut, mustard (optional)"
+        ],
+        steps: [
+            "In a large skillet, melt butter and sauté onions until translucent.",
+            "Add mustard seeds, then lay bratwurst in the pan.",
+            "Pour beer over the brats, bring to a simmer, cover, and cook 15‑20 min.",
+            "Remove brats, increase heat, and brown them on each side (2‑3 min).",
+            "Serve on buns with onions, sauerkraut, and mustard."
+        ],
+        tips: [
+            "Use a robust lager for a richer flavor.",
+            "Don’t over‑cook – the internal temperature should hit **160 °F**."
+        ]
+    },
+    "Smash Burgers": {
+        title: "Smash Burgers",
+        ingredients: [
+            "1 lb ground beef (80/20)",
+            "Salt & pepper",
+            "4 burger buns",
+            "Cheddar slices",
+            "Pickles, lettuce, tomato, onion",
+            "Butter (for buns)",
+            "Oil (high‑smoke‑point)"
+        ],
+        steps: [
+            "Form the meat into 4 loose balls (≈ 4 oz each).",
+            "Heat a cast‑iron skillet or griddle to **high** (≈ 450‑500 °F).",
+            "Place a ball, let sit 30 s, then smash with a spatula until thin.",
+            "Season with salt & pepper, cook 2‑3 min, flip, add cheese, cook another minute.",
+            "Toast buns in butter, assemble with toppings."
+        ],
+        tips: [
+            "A thin patty creates that coveted crust – don’t over‑handle the meat.",
+            "Use a heavy spatula for an even smash."
+        ]
+    },
+    "Smoked Brisket": {
+        title: "Smoked Beef Brisket",
+        ingredients: [
+            "10‑lb whole packer brisket (point + flat)",
+            "2 Tbsp kosher salt",
+            "2 Tbsp black pepper",
+            "1 Tbsp garlic powder",
+            "1 Tbsp onion powder",
+            "Hickory or oak wood chunks",
+            "Apple juice (optional for spritz)"
+        ],
+        steps: [
+            "Trim excess fat, leaving ~¼‑inch cap.",
+            "Mix salt, pepper, garlic & onion powder – apply liberally.",
+            "Pre‑heat smoker to **225 °F**, add hickory/oak.",
+            "Place brisket fat‑side up; smoke until internal temp hits **165‑170 °F** (≈ 6‑8 h).",
+            "Spritz with apple juice every hour (optional).",
+            "Wrap tightly in butcher paper or foil – this gets you through the stall.",
+            "Return to smoker and cook until **195‑203 °F** (≈ 2‑3 h more).",
+            "Rest wrapped for 1‑2 h, then slice against the grain."
+        ],
+        tips: [
+            "Consistent **225 °F** is key – fluctuations > 15 °F will lengthen cook time.",
+            "The stall (150‑170 °F) is normal; wrapping accelerates it.",
+            "Resting lets juices redistribute for juicy slices."
+        ]
+    },
+    "Tacos": {
+        title: "Grilled Chicken & Steak Tacos",
+        ingredients: [
+            "1 lb chicken breast, thinly sliced",
+            "1 lb flank steak, thinly sliced",
+            "2 Tbsp olive oil",
+            "1 Tbsp chili powder",
+            "1 tsp cumin",
+            "1 tsp smoked paprika",
+            "Salt & pepper",
+            "12 small corn tortillas",
+            "Toppings: cilantro, diced onion, lime wedges, salsa, avocado"
+        ],
+        steps: [
+            "Toss chicken and steak in oil + spices; let rest 15 min.",
+            "Grill over high heat (≈ 450 °F) – chicken 4‑5 min, steak 3‑4 min per side.",
+            "Let rest 5 min, then slice thinly.",
+            "Warm tortillas on the grill, then fill with meat and desired toppings."
+        ],
+        tips: [
+            "Oak or hickory woods give a nice char for the steak.",
+            "Slice against the grain for tender steak bites."
+        ]
+    }
+};
+
+/* ==============================================================
+   3️⃣  GLOBAL STATE
+   ============================================================== */
+let recipes      = {};               // key → recipe object
+let assignments = {};               // isoDate → recipeKey
+const calendarEl   = document.getElementById('calendar');
+const instructions = document.getElementById('instructions');
+const paletteDesktop = document.getElementById('recipePaletteDesktop');
+const paletteMobile  = document.getElementById('recipePaletteMobile');
+const monthPicker    = document.getElementById('monthPicker');
+
+/* ==============================================================
+   4️⃣  LOCAL STORAGE HELPERS
+   ============================================================== */
+function loadFromStorage(){
+    const rec = localStorage.getItem(RECIPES_KEY);
+    const asg = localStorage.getItem(ASSIGNMENTS_KEY);
+    recipes = rec ? JSON.parse(rec) : defaultRecipes;
+    assignments = asg ? JSON.parse(asg) : {};
+}
+function saveToStorage(){
+    localStorage.setItem(RECIPES_KEY, JSON.stringify(recipes));
+    localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(assignments));
+}
+
+/* ==============================================================
+   5️⃣  RECIPE PALETTE (pointer‑based drag)
+   ============================================================== */
+function createPaletteItem(key){
+    const div = document.createElement('div');
+    div.className = 'recipe-item';
+    div.textContent = key;
+    div.dataset.recipe = key;
+
+    // ----- pointer‑drag (mouse & touch) -----
+    let ghost = null;
+    const startDrag = ev => {
+        ev.preventDefault();
+        const recipe = div.dataset.recipe;
+        ghost = div.cloneNode(true);
+        ghost.classList.add('dragging');
+        ghost.style.position = 'fixed';
+        ghost.style.left = ev.clientX + 'px';
+        ghost.style.top  = ev.clientY + 'px';
+        ghost.style.pointerEvents = 'none';
+        ghost.style.opacity = '0.8';
+        document.body.appendChild(ghost);
+
+        const move = me => {
+            ghost.style.left = me.clientX + 'px';
+            ghost.style.top  = me.clientY + 'px';
+        };
+        const end = me => {
+            document.removeEventListener('pointermove', move);
+            document.removeEventListener('pointerup', end);
+            ghost.remove();
+            ghost = null;
+
+            const target = document.elementFromPoint(me.clientX, me.clientY);
+            const dayCard = target?.closest('.day-card');
+            if (dayCard && !dayCard.classList.contains('outside-month')){
+                const iso = dayCard.dataset.iso;
+                assignments[iso] = recipe;
+                saveToStorage();
+                updateCardAssignment(dayCard, recipe);
+                dayCard.classList.add('drop-success');
+                setTimeout(()=>dayCard.classList.remove('drop-success'),800);
+            }
+        };
+        document.addEventListener('pointermove', move);
+        document.addEventListener('pointerup', end);
+    };
+    div.addEventListener('pointerdown', startDrag);
+    return div;
+}
+function buildPalette(){
+    // clear both containers (keep the search boxes)
+    paletteDesktop.innerHTML = '<input type="text" class="form-control search-box" id="searchBoxDesktop" placeholder="Search recipes…">';
+    paletteMobile.innerHTML  = '<input type="text" class="form-control search-box" id="searchBoxMobile" placeholder="Search recipes…">';
+
+    Object.keys(recipes).forEach(key=>{
+        const item = createPaletteItem(key);
+        paletteDesktop.appendChild(item.cloneNode(true));
+        paletteMobile.appendChild(item.cloneNode(true));
+    });
+}
+
+/* ==============================================================
+   6️⃣  SEARCH / FILTER
+   ============================================================== */
+function attachSearch(boxId, container){
+    const box = document.getElementById(boxId);
+    box.addEventListener('input',()=>{
+        const term = box.value.trim().toLowerCase();
+        const items = container.querySelectorAll('.recipe-item');
+        items.forEach(it=>{
+            const txt = it.dataset.recipe.toLowerCase();
+            it.style.display = txt.includes(term) ? '' : 'none';
+        });
+    });
+}
+
+/* ==============================================================
+   7️⃣  CALENDAR BUILD
+   ============================================================== */
+function buildCalendarFor(year, month){   // month = 0‑based
+    calendarEl.innerHTML = '';
+
+    // first day of month
+    const firstOfMonth = new Date(year, month, 1);
+    // last day of month
+    const lastOfMonth  = new Date(year, month+1, 0);
+
+    // start on the Sunday before (or same day)
+    const start = new Date(firstOfMonth);
+    start.setDate(start.getDate() - start.getDay());
+
+    // end on the Saturday after (or same day)
+    const end = new Date(lastOfMonth);
+    end.setDate(end.getDate() + (6 - end.getDay()));
+
+    // loop through every day in the displayed range
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)){
+        const cur = new Date(d);
+        const iso = cur.toISOString().split('T')[0];
+
+        const card = document.createElement('div');
+        card.className = 'day-card' + (cur.getMonth()===month ? '' : ' outside-month');
+        card.dataset.iso = iso;
+
+        // Weekday name
+        const weekday = cur.toLocaleDateString('en-US',{weekday:'short'});
+        const head = document.createElement('div');
+        head.textContent = weekday;
+        head.style.fontWeight='600';
+        card.appendChild(head);
+
+        // Date number (M/D)
+        const dateEl = document.createElement('div');
+        dateEl.className='date';
+        dateEl.textContent = `${cur.getMonth()+1}/${cur.getDate()}`;
+        card.appendChild(dateEl);
+
+        // Show assigned recipe if any
+        if (assignments[iso]){
+            const lbl = document.createElement('div');
+            lbl.className='assigned-recipe';
+            lbl.textContent = assignments[iso];
+
+            const clear = document.createElement('span');
+            clear.className='clear-btn';
+            clear.title='Remove assignment';
+            clear.textContent='×';
+            clear.addEventListener('click',ev=>{
+                ev.stopPropagation();
+                delete assignments[iso];
+                saveToStorage();
+                lbl.remove();
+            });
+            lbl.appendChild(clear);
+            card.appendChild(lbl);
+        }
+
+        // Click to view recipe
+        card.addEventListener('click',()=>{
+            const meal = assignments[card.dataset.iso];
+            if (meal) displayInstructions(meal);
+        });
+
+        calendarEl.appendChild(card);
+    }
+}
+
+/* ==============================================================
+   8️⃣  DISPLAY RECIPE IN INSTRUCTIONS PANEL
+   ============================================================== */
+function displayInstructions(recipeKey){
+    const rec = recipes[recipeKey];
+    if (!rec){
+        instructions.innerHTML = `<p class="text-muted">No recipe found for "${recipeKey}".</p>`;
+        return;
+    }
+    const html = `
+        <h2>${rec.title}</h2>
+        <h5>Ingredients</h5>
+        <ul>${rec.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
+        <h5>Steps</h5>
+        <ol>${rec.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+        ${rec.tips && rec.tips.length
+            ? `<h5>Tips & Techniques</h5><ul>${rec.tips.map(t=>`<li>${t}</li>`).join('')}</ul>`
+            : ''
+        }
+    `;
+    instructions.innerHTML = html;
+}
+
+/* ==============================================================
+   9️⃣  EXPORT / IMPORT (recipes + assignments)
+   ============================================================== */
+document.getElementById('exportBtn').addEventListener('click',()=>{
+    const payload = {
+        recipes:      recipes,
+        assignments:  assignments
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'meal-planner-data.json';
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+document.getElementById('importBtn').addEventListener('click',()=>{
+    document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change',ev=>{
+    const file = ev.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e=>{
+        try{
+            const data = JSON.parse(e.target.result);
+            if (data.recipes)  recipes = data.recipes;
+            if (data.assignments) assignments = data.assignments;
+            saveToStorage();
+            buildPalette();
+            attachSearch('searchBoxDesktop', paletteDesktop);
+            attachSearch('searchBoxMobile',  paletteMobile);
+            // rebuild calendar for the currently selected month
+            const [y,m] = monthPicker.value.split('-').map(Number);
+            if (!isNaN(y) && !isNaN(m)) buildCalendarFor(y, m-1);
+        }catch(err){
+            alert('Import failed: '+err);
+        }
+    };
+    reader.readAsText(file);
+    ev.target.value=''; // allow re‑select same file later
+});
+
+/* ==============================================================
+   1️⃣0️⃣  ADD CUSTOM RECIPE
+   ============================================================== */
+document.getElementById('saveRecipeBtn').addEventListener('click',()=>{
+    const key   = document.getElementById('newKey').value.trim();
+    const title = document.getElementById('newTitle').value.trim();
+    const ing   = document.getElementById('newIngredients').value.trim().split('\n').filter(Boolean);
+    const steps = document.getElementById('newSteps').value.trim().split('\n').filter(Boolean);
+    const tips  = document.getElementById('newTips').value.trim().split('\n').filter(Boolean);
+
+    if (!key || !title || !ing.length || !steps.length){
+        alert('Please fill in all required fields.');
+        return;
+    }
+    if (key in recipes && !confirm('Recipe key already exists – overwrite?')) return;
+
+    recipes[key] = {title, ingredients:ing, steps, tips};
+    saveToStorage();
+    buildPalette();
+    attachSearch('searchBoxDesktop', paletteDesktop);
+    attachSearch('searchBoxMobile',  paletteMobile);
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addRecipeModal'));
+    modal.hide();
+    document.getElementById('addRecipeForm').reset();
+});
+
+/* ==============================================================
+   1️⃣1️⃣  PRINT‑FRIENDLY RECIPE LIST
+   ============================================================== */
+function buildPrintRecipes(){
+    const container = document.getElementById('allRecipesPrint');
+    container.innerHTML = '';
+    Object.values(recipes).forEach(rec=>{
+        const div = document.createElement('div');
+        div.style.marginBottom='1.5rem';
+        div.innerHTML = `
+            <h3>${rec.title}</h3>
+            <strong>Ingredients:</strong>
+            <ul>${rec.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
+            <strong>Steps:</strong>
+            <ol>${rec.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+            ${rec.tips && rec.tips.length
+                ? `<strong>Tips:</strong><ul>${rec.tips.map(t=>`<li>${t}</li>`).join('')}</ul>`
+                : ''
+            }
+        `;
+        container.appendChild(div);
+    });
+}
+
+/* ==============================================================
+   1️⃣2️⃣  MONTH PICKER LOGIC
+   ============================================================== */
+function initMonthPicker(){
+    const today = new Date();
+    const iso = today.toISOString().substr(0,7); // "YYYY-MM"
+    monthPicker.value = iso;
+    monthPicker.addEventListener('change',()=>{   // fires when user selects a new month
+        const [y,m] = monthPicker.value.split('-').map(Number);
+        if (!isNaN(y) && !isNaN(m)) buildCalendarFor(y, m-1);
+    });
+}
+
+/* ==============================================================
+   1️⃣3️⃣  INITIALISE APP
+   ============================================================== */
+loadFromStorage();
+buildPalette();
+attachSearch('searchBoxDesktop', paletteDesktop);
+attachSearch('searchBoxMobile',  paletteMobile);
+buildPrintRecipes();
+initMonthPicker();                                 // sets default month & builds calendar
+// Build calendar for the default month (already called inside initMonthPicker)
+
+/* --------------------------------------------------------------
+   END OF SCRIPT
+-------------------------------------------------------------- */
+</script>
+</body>
+</html>
