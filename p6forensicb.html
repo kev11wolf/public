@@ -3,137 +3,94 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>P6 Delay Forensic Analyzer Pro</title>
-  
-  <!-- Bootstrap 5.3 -->
+  <meta name="description" content="Advanced P6 Delay Forensic Analyzer with AI-powered insights" />
+  <meta name="theme-color" content="#667eea" />
+  <link rel="manifest" href="#" id="pwa-manifest" />
+  <title>P6 Delay Forensic Analyzer Ultimate</title>
+
+  <!-- External Libraries -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
-  
-  <!-- Tabulator -->
   <link href="https://cdn.jsdelivr.net/npm/tabulator-tables@5.4.4/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet" />
-  
+
   <style>
     :root {
-      --primary-color: #0d6efd;
-      --success-color: #198754;
-      --danger-color: #dc3545;
-      --warning-color: #ffc107;
-      --info-color: #0dcaf0;
+      --primary: #667eea;
+      --secondary: #764ba2;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --dark: #1f2937;
+      --light: #f9fafb;
     }
-    
-    /* Dark mode support */
-    [data-bs-theme="dark"] {
-      --bs-body-bg: #212529;
-      --bs-body-color: #dee2e6;
-    }
-    
+
+    * { box-sizing: border-box; }
+
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       min-height: 100vh;
       padding: 20px 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
+
     .main-container {
       background: var(--bs-body-bg);
       border-radius: 20px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      padding: 0;
       overflow: hidden;
     }
-    
+
     /* Header */
     .app-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       color: white;
       padding: 2rem;
       position: relative;
     }
-    
+
     .app-header h1 {
       margin: 0;
       font-weight: 700;
       font-size: 2rem;
     }
-    
-    .app-header .subtitle {
-      opacity: 0.9;
-      margin-top: 0.5rem;
-    }
-    
+
     .theme-toggle {
       position: absolute;
       top: 1rem;
       right: 1rem;
     }
-    
-    /* Step Indicator */
-    .step-indicator {
-      display: flex;
-      justify-content: space-between;
-      margin: 2rem 0;
-      padding: 0 2rem;
+
+    /* Navigation Tabs */
+    .main-nav {
+      background: var(--bs-body-bg);
+      border-bottom: 2px solid var(--bs-border-color);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
-    
-    .step {
-      flex: 1;
-      text-align: center;
-      position: relative;
-      opacity: 0.5;
+
+    .main-nav .nav-link {
+      color: var(--bs-secondary);
+      padding: 1rem 1.5rem;
+      border: none;
+      border-bottom: 3px solid transparent;
       transition: all 0.3s;
     }
-    
-    .step.active {
-      opacity: 1;
+
+    .main-nav .nav-link:hover {
+      background: rgba(102, 126, 234, 0.1);
+      border-bottom-color: var(--primary);
     }
-    
-    .step.completed {
-      opacity: 1;
+
+    .main-nav .nav-link.active {
+      color: var(--primary);
+      background: rgba(102, 126, 234, 0.1);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
     }
-    
-    .step-circle {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: var(--bs-secondary);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 0.5rem;
-      font-size: 1.5rem;
-      transition: all 0.3s;
-    }
-    
-    .step.active .step-circle {
-      background: var(--primary-color);
-      transform: scale(1.1);
-      box-shadow: 0 0 20px rgba(13, 110, 253, 0.5);
-    }
-    
-    .step.completed .step-circle {
-      background: var(--success-color);
-    }
-    
-    .step::before {
-      content: '';
-      position: absolute;
-      top: 25px;
-      left: 50%;
-      width: 100%;
-      height: 2px;
-      background: var(--bs-secondary);
-      z-index: -1;
-    }
-    
-    .step:last-child::before {
-      display: none;
-    }
-    
-    .step.completed::before {
-      background: var(--success-color);
-    }
-    
-    /* File Upload Zone */
+
+    /* Upload Zone */
     .upload-zone {
       border: 3px dashed var(--bs-border-color);
       border-radius: 15px;
@@ -143,184 +100,77 @@
       cursor: pointer;
       background: var(--bs-body-bg);
     }
-    
+
     .upload-zone:hover {
-      border-color: var(--primary-color);
-      background: rgba(13, 110, 253, 0.05);
-    }
-    
-    .upload-zone.dragover {
-      border-color: var(--success-color);
-      background: rgba(25, 135, 84, 0.1);
+      border-color: var(--primary);
+      background: rgba(102, 126, 234, 0.05);
       transform: scale(1.02);
     }
-    
+
     .upload-zone.loaded {
-      border-color: var(--success-color);
-      background: rgba(25, 135, 84, 0.05);
+      border-color: var(--success);
+      background: rgba(16, 185, 129, 0.05);
     }
-    
-    .upload-icon {
-      font-size: 3rem;
-      color: var(--bs-secondary);
-      margin-bottom: 1rem;
-    }
-    
-    .upload-zone.loaded .upload-icon {
-      color: var(--success-color);
-    }
-    
+
     /* Metric Cards */
     .metric-card {
       background: var(--bs-body-bg);
       border-radius: 15px;
       padding: 1.5rem;
-      height: 100%;
       border: 1px solid var(--bs-border-color);
       transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
     }
-    
+
     .metric-card:hover {
       transform: translateY(-5px);
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
-    
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
     .metric-icon {
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      font-size: 1.8rem;
       margin-bottom: 1rem;
     }
-    
-    .metric-icon.primary { background: rgba(13, 110, 253, 0.1); color: var(--primary-color); }
-    .metric-icon.success { background: rgba(25, 135, 84, 0.1); color: var(--success-color); }
-    .metric-icon.danger { background: rgba(220, 53, 69, 0.1); color: var(--danger-color); }
-    .metric-icon.warning { background: rgba(255, 193, 7, 0.1); color: var(--warning-color); }
-    
+
     .metric-value {
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-weight: 700;
       margin: 0.5rem 0;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    
-    .metric-label {
-      color: var(--bs-secondary);
-      font-size: 0.875rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .metric-delta {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-top: 0.5rem;
-    }
-    
-    .metric-delta.positive {
-      background: rgba(220, 53, 69, 0.1);
-      color: var(--danger-color);
-    }
-    
-    .metric-delta.negative {
-      background: rgba(25, 135, 84, 0.1);
-      color: var(--success-color);
-    }
-    
-    .metric-delta.neutral {
-      background: rgba(108, 117, 125, 0.1);
-      color: var(--bs-secondary);
-    }
-    
-    /* Filter Bar */
-    .filter-bar {
-      background: var(--bs-body-bg);
-      border-radius: 15px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      border: 1px solid var(--bs-border-color);
-    }
-    
-    .filter-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-    
-    .filter-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      background: var(--primary-color);
-      color: white;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      animation: slideIn 0.3s;
-    }
-    
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    .filter-chip .btn-close {
-      --bs-btn-close-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e");
-      opacity: 1;
-    }
-    
-    /* Table Container */
-    .table-container {
-      background: var(--bs-body-bg);
-      border-radius: 15px;
-      padding: 1.5rem;
-      border: 1px solid var(--bs-border-color);
-    }
-    
-    #comparisonTable {
-      height: 600px;
-    }
-    
-    .tabulator {
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    
-    /* Loading Overlay */
+
+    /* Loading */
     .loading-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.7);
+      inset: 0;
+      background: rgba(0,0,0,0.8);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 9999;
-      backdrop-filter: blur(5px);
+      backdrop-filter: blur(10px);
     }
-    
-    .loading-content {
-      text-align: center;
-      color: white;
-    }
-    
+
     .loading-spinner {
       width: 80px;
       height: 80px;
@@ -328,426 +178,704 @@
       border-top-color: white;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
     }
-    
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    
-    /* Chart Cards */
+
+    /* Charts */
     .chart-card {
       background: var(--bs-body-bg);
       border-radius: 15px;
       padding: 1.5rem;
       border: 1px solid var(--bs-border-color);
-      height: 100%;
-    }
-    
-    .chart-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       margin-bottom: 1.5rem;
     }
-    
-    .chart-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      margin: 0;
+
+    /* Gantt Chart */
+    .gantt-container {
+      overflow-x: auto;
+      background: white;
+      border-radius: 10px;
+      padding: 1rem;
     }
-    
-    /* Collapsible Sections */
-    .section-header {
-      cursor: pointer;
-      user-select: none;
+
+    .gantt-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 1rem 1.5rem;
-      background: var(--bs-body-bg);
-      border-radius: 15px;
-      margin-bottom: 1rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .gantt-label {
+      width: 200px;
+      padding-right: 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .gantt-timeline {
+      flex: 1;
+      height: 30px;
+      position: relative;
+    }
+
+    .gantt-bar {
+      position: absolute;
+      height: 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      font-size: 0.75rem;
+      color: white;
+      font-weight: 600;
+    }
+
+    .gantt-bar.baseline {
+      background: rgba(59, 130, 246, 0.6);
+      border: 2px solid #3b82f6;
+    }
+
+    .gantt-bar.current {
+      background: rgba(239, 68, 68, 0.6);
+      border: 2px solid #ef4444;
+      top: 0;
+    }
+
+    /* Network Diagram */
+    #networkDiagram {
+      width: 100%;
+      height: 600px;
       border: 1px solid var(--bs-border-color);
+      border-radius: 10px;
+    }
+
+    /* Calendar Heatmap */
+    .calendar-heatmap {
+      display: grid;
+      grid-template-columns: repeat(53, 1fr);
+      gap: 3px;
+      margin: 1rem 0;
+    }
+
+    .calendar-day {
+      aspect-ratio: 1;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .calendar-day:hover {
+      transform: scale(1.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .calendar-day.level-0 { background: #ebedf0; }
+    .calendar-day.level-1 { background: #9be9a8; }
+    .calendar-day.level-2 { background: #40c463; }
+    .calendar-day.level-3 { background: #30a14e; }
+    .calendar-day.level-4 { background: #216e39; }
+
+    /* 3D Canvas */
+    #canvas3d {
+      width: 100%;
+      height: 600px;
+      border-radius: 10px;
+    }
+
+    /* Recommendations */
+    .recommendation-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .recommendation-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .recommendation-icon {
+      width: 50px;
+      height: 50px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Report Builder */
+    .report-widget {
+      background: var(--bs-body-bg);
+      border: 2px dashed var(--bs-border-color);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      cursor: move;
       transition: all 0.3s;
     }
-    
-    .section-header:hover {
-      background: rgba(13, 110, 253, 0.05);
+
+    .report-widget:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
     }
-    
-    .section-header i {
-      transition: transform 0.3s;
+
+    .report-widget.dragging {
+      opacity: 0.5;
     }
-    
-    .section-header.collapsed i {
-      transform: rotate(-90deg);
+
+    .report-canvas {
+      min-height: 400px;
+      border: 2px dashed var(--bs-border-color);
+      border-radius: 15px;
+      padding: 2rem;
+      background: var(--light);
     }
-    
-    /* Toast Notifications */
+
+    /* What-If Scenario */
+    .scenario-editor {
+      background: var(--bs-body-bg);
+      border: 1px solid var(--bs-border-color);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Benchmarking */
+    .benchmark-bar {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .benchmark-label {
+      width: 150px;
+      font-weight: 600;
+    }
+
+    .benchmark-track {
+      flex: 1;
+      height: 30px;
+      background: #e5e7eb;
+      border-radius: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .benchmark-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: width 1s ease;
+    }
+
+    .benchmark-marker {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: #ef4444;
+    }
+
+    /* Toast */
     .toast-container {
       position: fixed;
       top: 20px;
       right: 20px;
       z-index: 10000;
     }
-    
+
     /* Responsive */
     @media (max-width: 768px) {
-      .app-header h1 {
-        font-size: 1.5rem;
-      }
-      
-      .step-indicator {
-        padding: 0 1rem;
-      }
-      
-      .step-circle {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-      }
-      
-      .metric-value {
-        font-size: 1.5rem;
-      }
-      
-      .upload-zone {
-        padding: 1rem;
-      }
+      .app-header h1 { font-size: 1.5rem; }
+      .metric-value { font-size: 2rem; }
+      .gantt-label { width: 120px; }
     }
-    
-    /* Accessibility */
-    .visually-hidden {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0,0,0,0);
-      white-space: nowrap;
-      border: 0;
+
+    /* Dark mode adjustments */
+    [data-bs-theme="dark"] .gantt-container {
+      background: #1f2937;
     }
-    
-    /* Slippage Colors */
-    .slippage-none { color: var(--success-color); font-weight: 600; }
-    .slippage-low { color: var(--warning-color); font-weight: 600; }
-    .slippage-medium { color: #fd7e14; font-weight: 600; }
-    .slippage-high { color: var(--danger-color); font-weight: 700; }
-    
-    /* Print Styles */
-    @media print {
-      body {
-        background: white;
-      }
-      
-      .main-container {
-        box-shadow: none;
-      }
-      
-      .no-print {
-        display: none !important;
-      }
+
+    [data-bs-theme="dark"] .calendar-day.level-0 {
+      background: #374151;
+    }
+
+    [data-bs-theme="dark"] .report-canvas {
+      background: #1f2937;
     }
   </style>
 </head>
 <body>
-  <!-- Loading Overlay -->
-  <div id="loadingOverlay" class="loading-overlay d-none">
-    <div class="loading-content">
-      <div class="loading-spinner"></div>
-      <h3>Analyzing Schedule Data...</h3>
-      <p id="loadingMessage">Processing your files</p>
+  <!-- PWA Install Prompt -->
+  <div id="installPrompt" class="d-none alert alert-info position-fixed bottom-0 start-50 translate-middle-x m-3" style="z-index: 9998;">
+    <div class="d-flex align-items-center justify-content-between">
+      <span><i class="bi bi-cloud-download me-2"></i>Install app for offline use</span>
+      <div>
+        <button class="btn btn-sm btn-primary me-2" id="installBtn">Install</button>
+        <button class="btn btn-sm btn-secondary" id="dismissInstallBtn">Dismiss</button>
+      </div>
     </div>
   </div>
-  
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay d-none">
+    <div class="text-center text-white">
+      <div class="loading-spinner mx-auto mb-3"></div>
+      <h3 id="loadingMessage">Processing...</h3>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
-  
-  <div class="container">
+
+  <div class="container-fluid">
     <div class="main-container">
       <!-- Header -->
       <div class="app-header">
-        <button class="btn btn-light btn-sm theme-toggle no-print" id="themeToggle" aria-label="Toggle dark mode">
+        <button class="btn btn-light btn-sm theme-toggle" id="themeToggle">
           <i class="bi bi-moon-fill"></i>
         </button>
-        <h1><i class="bi bi-graph-up-arrow me-2"></i>P6 Delay Forensic Analyzer Pro</h1>
-        <p class="subtitle mb-0">Advanced Schedule Comparison & Delay Analysis Tool</p>
+        <h1><i class="bi bi-graph-up-arrow me-2"></i>P6 Delay Forensic Analyzer Ultimate</h1>
+        <p class="mb-0 opacity-90">AI-Powered Schedule Analysis with Advanced Visualizations</p>
       </div>
-      
-      <!-- Main Content -->
-      <div class="p-4">
-        <!-- Step Indicator -->
-        <div class="step-indicator no-print">
-          <div class="step active" id="step1">
-            <div class="step-circle"><i class="bi bi-upload"></i></div>
-            <div class="step-label">Upload Files</div>
-          </div>
-          <div class="step" id="step2">
-            <div class="step-circle"><i class="bi bi-sliders"></i></div>
-            <div class="step-label">Configure</div>
-          </div>
-          <div class="step" id="step3">
-            <div class="step-circle"><i class="bi bi-gear"></i></div>
-            <div class="step-label">Analyze</div>
-          </div>
-          <div class="step" id="step4">
-            <div class="step-circle"><i class="bi bi-download"></i></div>
-            <div class="step-label">Export</div>
-          </div>
-        </div>
-        
-        <!-- Upload Section -->
-        <div class="row mb-4" id="uploadSection">
-          <div class="col-md-6 mb-3">
-            <div class="upload-zone" id="baselineZone" role="button" tabindex="0" aria-label="Upload baseline schedule">
-              <input type="file" id="baselineFile" class="d-none" accept=".csv,.xlsx,.xls" aria-label="Baseline file input" />
-              <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
-              <h5>Baseline Schedule</h5>
-              <p class="text-muted mb-2">Drag & drop or click to upload</p>
-              <small class="text-muted">Supports CSV, XLSX files</small>
-              <div class="mt-3 d-none" id="baselineInfo">
-                <div class="alert alert-success mb-0">
-                  <i class="bi bi-check-circle me-2"></i>
-                  <span id="baselineFileName"></span>
-                  <span class="badge bg-success ms-2" id="baselineRows"></span>
+
+      <!-- Main Navigation -->
+      <nav class="main-nav">
+        <ul class="nav nav-tabs border-0" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#uploadTab">
+              <i class="bi bi-upload me-2"></i>Upload
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dashboardTab">
+              <i class="bi bi-speedometer2 me-2"></i>Dashboard
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ganttTab">
+              <i class="bi bi-calendar-range me-2"></i>Gantt & Timeline
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#networkTab">
+              <i class="bi bi-diagram-3 me-2"></i>Network
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#analyticsTab">
+              <i class="bi bi-bar-chart-line me-2"></i>Analytics
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#whatifTab">
+              <i class="bi bi-lightning me-2"></i>What-If
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#aiTab">
+              <i class="bi bi-robot me-2"></i>AI Insights
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reportTab">
+              <i class="bi bi-file-earmark-text me-2"></i>Reports
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Tab Content -->
+      <div class="tab-content p-4">
+        <!-- Upload Tab -->
+        <div class="tab-pane fade show active" id="uploadTab">
+          <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+              <div class="upload-zone" id="baselineZone">
+                <input type="file" id="baselineFile" class="d-none" accept=".csv,.xlsx,.xls" />
+                <div class="upload-icon fs-1 text-primary mb-3"><i class="bi bi-cloud-upload"></i></div>
+                <h5>Baseline Schedule</h5>
+                <p class="text-muted">Drag & drop or click</p>
+                <div id="baselineInfo" class="d-none mt-3">
+                  <span class="badge bg-success"><i class="bi bi-check-circle"></i> <span id="baselineFileName"></span></span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="upload-zone" id="currentZone">
+                <input type="file" id="currentFile" class="d-none" accept=".csv,.xlsx,.xls" />
+                <div class="upload-icon fs-1 text-warning mb-3"><i class="bi bi-cloud-upload"></i></div>
+                <h5>Current Schedule</h5>
+                <p class="text-muted">Drag & drop or click</p>
+                <div id="currentInfo" class="d-none mt-3">
+                  <span class="badge bg-success"><i class="bi bi-check-circle"></i> <span id="currentFileName"></span></span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="upload-zone" id="additionalZone">
+                <input type="file" id="additionalFile" class="d-none" accept=".csv,.xlsx,.xls" multiple />
+                <div class="upload-icon fs-1 text-info mb-3"><i class="bi bi-cloud-plus"></i></div>
+                <h5>Additional Versions</h5>
+                <p class="text-muted">For trend analysis</p>
+                <div id="additionalInfo" class="d-none mt-3">
+                  <span class="badge bg-success"><i class="bi bi-check-circle"></i> <span id="additionalCount">0</span> files</span>
                 </div>
               </div>
             </div>
           </div>
-          <div class="col-md-6 mb-3">
-            <div class="upload-zone" id="currentZone" role="button" tabindex="0" aria-label="Upload current schedule">
-              <input type="file" id="currentFile" class="d-none" accept=".csv,.xlsx,.xls" aria-label="Current file input" />
-              <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
-              <h5>Current Schedule</h5>
-              <p class="text-muted mb-2">Drag & drop or click to upload</p>
-              <small class="text-muted">Supports CSV, XLSX files</small>
-              <div class="mt-3 d-none" id="currentInfo">
-                <div class="alert alert-success mb-0">
-                  <i class="bi bi-check-circle me-2"></i>
-                  <span id="currentFileName"></span>
-                  <span class="badge bg-success ms-2" id="currentRows"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-12">
-            <div class="text-center">
-              <button class="btn btn-outline-primary no-print" id="loadSampleBtn">
-                <i class="bi bi-file-earmark-text me-2"></i>Try with Sample Data
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Action Buttons -->
-        <div class="row mb-4 no-print" id="actionSection">
-          <div class="col-md-6 mb-2">
-            <button class="btn btn-primary btn-lg w-100" id="analyzeBtn" disabled>
+
+          <div class="text-center">
+            <button class="btn btn-outline-primary me-2" id="loadSampleBtn">
+              <i class="bi bi-file-earmark-text me-2"></i>Load Sample Data
+            </button>
+            <button class="btn btn-primary btn-lg" id="analyzeBtn" disabled>
               <i class="bi bi-play-circle me-2"></i>Analyze Schedules
             </button>
           </div>
-          <div class="col-md-6 mb-2">
-            <div class="btn-group w-100" role="group">
-              <button class="btn btn-success" id="exportCsvBtn" disabled>
-                <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export CSV
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div class="tab-pane fade" id="dashboardTab">
+          <div class="row mb-4">
+            <div class="col-12">
+              <h3><i class="bi bi-speedometer2 me-2"></i>Executive Dashboard</h3>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4" id="metricsGrid"></div>
+
+          <div class="row">
+            <div class="col-lg-8">
+              <div class="chart-card">
+                <h5><i class="bi bi-graph-up me-2"></i>S-Curve Analysis</h5>
+                <canvas id="sCurveChart" height="300"></canvas>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="chart-card">
+                <h5><i class="bi bi-pie-chart me-2"></i>Status Distribution</h5>
+                <canvas id="statusPieChart" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <h5><i class="bi bi-calendar-heat me-2"></i>Delay Heatmap Calendar</h5>
+            <div id="calendarHeatmap"></div>
+          </div>
+        </div>
+
+        <!-- Gantt Tab -->
+        <div class="tab-pane fade" id="ganttTab">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3><i class="bi bi-calendar-range me-2"></i>Gantt Chart View</h3>
+            <div class="btn-group">
+              <button class="btn btn-sm btn-outline-primary" id="zoomInBtn"><i class="bi bi-zoom-in"></i></button>
+              <button class="btn btn-sm btn-outline-primary" id="zoomOutBtn"><i class="bi bi-zoom-out"></i></button>
+              <button class="btn btn-sm btn-outline-primary" id="fitViewBtn"><i class="bi bi-arrows-angle-contract"></i></button>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" id="showCriticalPath" checked>
+              <label class="form-check-label" for="showCriticalPath">
+                <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i>Highlight Critical Path
+              </label>
+            </div>
+            <div class="gantt-container" id="ganttChart"></div>
+          </div>
+
+          <div class="chart-card">
+            <h5><i class="bi bi-clock-history me-2"></i>Trend Analysis</h5>
+            <canvas id="trendChart" height="250"></canvas>
+          </div>
+        </div>
+
+        <!-- Network Tab -->
+        <div class="tab-pane fade" id="networkTab">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3><i class="bi bi-diagram-3 me-2"></i>Network Diagram</h3>
+            <div>
+              <select class="form-select form-select-sm d-inline-block w-auto me-2" id="networkLayout">
+                <option value="hierarchical">Hierarchical</option>
+                <option value="force">Force-Directed</option>
+                <option value="circular">Circular</option>
+              </select>
+              <button class="btn btn-sm btn-outline-primary" id="togglePhysics">
+                <i class="bi bi-gear"></i> Toggle Physics
               </button>
-              <button class="btn btn-danger" id="exportPdfBtn" disabled>
-                <i class="bi bi-file-earmark-pdf me-2"></i>Export PDF
-              </button>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div id="networkDiagram"></div>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <div class="chart-card">
+                <h5><i class="bi bi-bezier2 me-2"></i>3D Network Visualization</h5>
+                <canvas id="canvas3d"></canvas>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="chart-card">
+                <h5><i class="bi bi-list-check me-2"></i>Critical Path Activities</h5>
+                <div id="criticalPathList"></div>
+              </div>
             </div>
           </div>
         </div>
-        
-        <!-- Results Section (hidden initially) -->
-        <div id="resultsSection" class="d-none">
-          <!-- Key Metrics -->
-          <div class="mb-4">
-            <h3 class="mb-3"><i class="bi bi-speedometer2 me-2"></i>Key Metrics</h3>
-            <div class="row g-3" id="metricsGrid"></div>
-          </div>
-          
-          <!-- Filter Bar -->
-          <div class="filter-bar no-print">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filters</h5>
-              <button class="btn btn-sm btn-outline-secondary" id="clearFiltersBtn">
-                <i class="bi bi-x-circle me-1"></i>Clear All
-              </button>
-            </div>
-            <div class="row g-3">
-              <div class="col-md-4">
-                <label class="form-label">WBS / Process Area</label>
-                <input type="text" class="form-control" id="wbsFilter" placeholder="Search..." />
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Slippage Threshold (days)</label>
-                <input type="number" class="form-control" id="slippageThreshold" value="0" min="0" />
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Change Type</label>
-                <select class="form-select" id="changeTypeFilter">
-                  <option value="">All Changes</option>
-                  <option value="slippage">Slippage Only</option>
-                  <option value="changedFields">Changed Fields</option>
-                </select>
+
+        <!-- Analytics Tab -->
+        <div class="tab-pane fade" id="analyticsTab">
+          <h3 class="mb-4"><i class="bi bi-bar-chart-line me-2"></i>Advanced Analytics</h3>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="chart-card">
+                <h5>Slippage Distribution</h5>
+                <canvas id="slippageChart" height="300"></canvas>
               </div>
             </div>
-            <div class="filter-chips" id="filterChips"></div>
+            <div class="col-md-6">
+              <div class="chart-card">
+                <h5>Float Analysis</h5>
+                <canvas id="floatChart" height="300"></canvas>
+              </div>
+            </div>
           </div>
-          
-          <!-- Comparison Table -->
-          <div class="table-container mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="mb-0"><i class="bi bi-table me-2"></i>Schedule Comparison (<span id="tableRowCount">0</span> activities)</h5>
-              <div class="btn-group btn-group-sm no-print">
-                <button class="btn btn-outline-secondary" id="columnToggleBtn" data-bs-toggle="modal" data-bs-target="#columnModal">
-                  <i class="bi bi-layout-three-columns me-1"></i>Columns
+
+          <div class="chart-card">
+            <h5><i class="bi bi-graph-up-arrow me-2"></i>Benchmarking vs Industry Standards</h5>
+            <div id="benchmarkingSection"></div>
+          </div>
+
+          <div class="chart-card">
+            <h5><i class="bi bi-table me-2"></i>Detailed Comparison Table</h5>
+            <div id="comparisonTable"></div>
+          </div>
+        </div>
+
+        <!-- What-If Tab -->
+        <div class="tab-pane fade" id="whatifTab">
+          <h3 class="mb-4"><i class="bi bi-lightning me-2"></i>What-If Scenario Analysis</h3>
+
+          <div class="row">
+            <div class="col-md-8">
+              <div class="scenario-editor">
+                <h5>Scenario Editor</h5>
+                <div class="mb-3">
+                  <label class="form-label">Scenario Name</label>
+                  <input type="text" class="form-control" id="scenarioName" placeholder="e.g., Fast Track Option">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Select Activities to Modify</label>
+                  <select class="form-select" id="scenarioActivities" multiple size="5"></select>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Duration Change (%)</label>
+                    <input type="number" class="form-control" id="durationChange" value="0" min="-50" max="100">
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Start Date Shift (days)</label>
+                    <input type="number" class="form-control" id="startShift" value="0" min="-365" max="365">
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                  <button class="btn btn-primary" id="applyScenarioBtn">
+                    <i class="bi bi-play-circle me-2"></i>Apply Scenario
+                  </button>
+                  <button class="btn btn-secondary" id="resetScenarioBtn">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                  </button>
+                  <button class="btn btn-success" id="saveScenarioBtn">
+                    <i class="bi bi-save me-2"></i>Save Scenario
+                  </button>
+                </div>
+              </div>
+
+              <div class="chart-card mt-3">
+                <h5>Scenario Comparison</h5>
+                <canvas id="scenarioComparisonChart" height="300"></canvas>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="chart-card">
+                <h5>Saved Scenarios</h5>
+                <div id="savedScenariosList"></div>
+              </div>
+
+              <div class="chart-card">
+                <h5>Impact Summary</h5>
+                <div id="scenarioImpact"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Insights Tab -->
+        <div class="tab-pane fade" id="aiTab">
+          <h3 class="mb-4"><i class="bi bi-robot me-2"></i>AI-Powered Insights & Recommendations</h3>
+
+          <div class="row">
+            <div class="col-12 mb-4">
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                AI analysis uses machine learning algorithms to detect patterns and provide actionable recommendations based on your schedule data.
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h5 class="mb-3"><i class="bi bi-lightbulb me-2"></i>Smart Recommendations</h5>
+              <div id="recommendationsList"></div>
+            </div>
+
+            <div class="col-md-6">
+              <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Risk Alerts</h5>
+              <div id="riskAlertsList"></div>
+            </div>
+          </div>
+
+          <div class="chart-card mt-4">
+            <h5><i class="bi bi-graph-up me-2"></i>Predictive Analysis</h5>
+            <canvas id="predictiveChart" height="250"></canvas>
+          </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div class="tab-pane fade" id="reportTab">
+          <div class="row">
+            <div class="col-md-8">
+              <h3 class="mb-3"><i class="bi bi-file-earmark-text me-2"></i>Custom Report Builder</h3>
+              <div class="report-canvas" id="reportCanvas">
+                <p class="text-center text-muted">Drag widgets here to build your custom report</p>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <h5 class="mb-3">Available Widgets</h5>
+              <div class="report-widget" draggable="true" data-widget="metrics">
+                <i class="bi bi-speedometer2 me-2"></i>Key Metrics
+              </div>
+              <div class="report-widget" draggable="true" data-widget="gantt">
+                <i class="bi bi-calendar-range me-2"></i>Gantt Chart
+              </div>
+              <div class="report-widget" draggable="true" data-widget="scurve">
+                <i class="bi bi-graph-up me-2"></i>S-Curve
+              </div>
+              <div class="report-widget" draggable="true" data-widget="table">
+                <i class="bi bi-table me-2"></i>Data Table
+              </div>
+              <div class="report-widget" draggable="true" data-widget="recommendations">
+                <i class="bi bi-lightbulb me-2"></i>AI Recommendations
+              </div>
+
+              <div class="d-grid gap-2 mt-4">
+                <button class="btn btn-success" id="exportPptBtn">
+                  <i class="bi bi-file-earmark-ppt me-2"></i>Export to PowerPoint
+                </button>
+                <button class="btn btn-danger" id="exportPdfBtn">
+                  <i class="bi bi-file-earmark-pdf me-2"></i>Export to PDF
+                </button>
+                <button class="btn btn-primary" id="exportCsvBtn">
+                  <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export to CSV
                 </button>
               </div>
             </div>
-            <div id="comparisonTable"></div>
-          </div>
-          
-          <!-- Charts Section -->
-          <div class="mb-4">
-            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#chartsSection">
-              <h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Visualizations</h5>
-              <i class="bi bi-chevron-down"></i>
-            </div>
-            <div class="collapse show" id="chartsSection">
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <div class="chart-card">
-                    <div class="chart-header">
-                      <h6 class="chart-title">Status Change Analysis</h6>
-                      <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Shows progression of activity status changes"></i>
-                    </div>
-                    nvas id="statusHistogram" heightt="300"></canvas>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="chart-card">
-                    <div class="chart-header">
-                      <h6 class="chart-title">Slippage Distribution</h6>
-                      <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Activities grouped by delay severity"></i>
-                    </div>
-                    nvas id=""slippageHeatmap" height="300"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Top Impacted Activities -->
-          <div class="mb-4">
-            <div class="section-header" data-bs-toggle="collapse" data-bs-target="#topActivitiesSection">
-              <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Top 10 Impacted Activities</h5>
-              <i class="bi bi-chevron-down"></i>
-            </div>
-            <div class="collapse show" id="topActivitiesSection">
-              <div class="chart-card">
-                <ol id="topImpactedList" class="list-group list-group-numbered"></ol>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Detailed Stats -->
-          <div class="mb-4">
-            <div class="section-header collapsed" data-bs-toggle="collapse" data-bs-target="#detailedStatsSection">
-              <h5 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Detailed Statistics</h5>
-              <i class="bi bi-chevron-down"></i>
-            </div>
-            <div class="collapse" id="detailedStatsSection">
-              <div class="chart-card">
-                <div class="table-responsive">
-                  <table class="table table-hover" id="statsTable">
-                    <thead>
-                      <tr>
-                        <th>Metric</th>
-                        <th>Baseline</th>
-                        <th>Current</th>
-                        <th>Delta</th>
-                      </tr>
-                    </thead>
-                    <tbody id="statsTableBody"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  
-  <!-- Column Toggle Modal -->
-  <div class="modal fade" id="columnModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Customize Columns</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div id="columnCheckboxes"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="applyColumnsBtn">Apply</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- JavaScript Libraries -->
+
+  <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@5.4.4/dist/js/tabulator.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PptxGenJS/3.12.0/pptxgen.min.js"></script>
+
   <script>
     // ==================== GLOBAL STATE ====================
     const AppState = {
       baselineData: [],
       currentData: [],
+      additionalVersions: [],
       comparisonData: [],
-      baselineLoaded: false,
-      currentLoaded: false,
-      analysisComplete: false,
+      scenarios: [],
+      currentScenario: null,
+      criticalPath: [],
       comparisonTable: null,
-      charts: {
-        status: null,
-        slippage: null
-      },
-      visibleColumns: new Set(),
-      filterState: {
-        wbs: '',
-        slippage: 0,
-        changeType: ''
-      }
+      charts: {},
+      scene3d: null,
+      camera3d: null,
+      renderer3d: null
     };
-    
-    // Field definitions
+
     const FIELDS = [
       "Project ID", "Activity ID", "Activity Name", "Start", "Finish",
       "Predecessors", "Successors", "Activity Status", "Total Float",
-      "Activity Type", "Primary Constraint", "Primary Constraint Date"
+      "Activity Type", "Duration"
     ];
-    
+
+    // Industry benchmark data
+    const BENCHMARKS = {
+      avgSlippage: 8.5,
+      completionRate: 65,
+      criticalPathLength: 120,
+      avgFloat: 5.2,
+      onTimeCompletion: 72
+    };
+
     // ==================== UTILITY FUNCTIONS ====================
     function showToast(message, type = 'success') {
       const toastEl = document.createElement('div');
       toastEl.className = `toast align-items-center text-bg-${type} border-0`;
-      toastEl.setAttribute('role', 'alert');
       toastEl.innerHTML = `
         <div class="d-flex">
           <div class="toast-body">
-            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
-            ${message}
+            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>${message}
           </div>
           <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
@@ -755,889 +883,1110 @@
       document.getElementById('toastContainer').appendChild(toastEl);
       const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
       toast.show();
-      toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+      setTimeout(() => toastEl.remove(), 4000);
     }
-    
+
     function showLoading(show, message = 'Processing...') {
       const overlay = document.getElementById('loadingOverlay');
-      const messageEl = document.getElementById('loadingMessage');
-      if (show) {
-        messageEl.textContent = message;
-        overlay.classList.remove('d-none');
-      } else {
-        overlay.classList.add('d-none');
-      }
+      document.getElementById('loadingMessage').textContent = message;
+      overlay.classList.toggle('d-none', !show);
     }
-    
-    function updateSteps(activeStep) {
-      for (let i = 1; i <= 4; i++) {
-        const step = document.getElementById(`step${i}`);
-        step.classList.remove('active', 'completed');
-        if (i < activeStep) step.classList.add('completed');
-        if (i === activeStep) step.classList.add('active');
-      }
-    }
-    
-    function excelDateToJS(serial) {
-      const utc_days = serial - 25569;
-      const utc_value = utc_days * 86400 * 1000;
-      return new Date(utc_value);
-    }
-    
+
     function formatDate(dt) {
       if (!dt || isNaN(dt)) return "";
-      const mm = String(dt.getMonth() + 1).padStart(2, '0');
-      const dd = String(dt.getDate()).padStart(2, '0');
-      const yyyy = dt.getFullYear();
-      return `${mm}/${dd}/${yyyy}`;
+      return `${String(dt.getMonth() + 1).padStart(2, '0')}/${String(dt.getDate()).padStart(2, '0')}/${dt.getFullYear()}`;
     }
-    
+
     function parseDate(dateStr) {
       if (!dateStr) return null;
       const str = String(dateStr).trim();
       const parts = str.split(/[-/]/);
       if (parts.length === 3) {
-        if (parseInt(parts[0]) > 12) {
-          return new Date(+parts[0], +parts[1] - 1, +parts[2]);
-        } else {
-          return new Date(+parts[2], +parts[0] - 1, +parts[1]);
-        }
+        return parseInt(parts[0]) > 12 
+          ? new Date(+parts[0], +parts[1] - 1, +parts[2])
+          : new Date(+parts[2], +parts[0] - 1, +parts[1]);
       }
       const d = new Date(str);
       return isNaN(d) ? null : d;
     }
-    
+
     function dateDiffInDays(d1, d2) {
-      if (!d1 || !d2 || isNaN(d1) || isNaN(d2)) return 0;
+      if (!d1 || !d2) return 0;
       return Math.round((d2 - d1) / (1000 * 3600 * 24));
     }
-    
+
+    function excelDateToJS(serial) {
+      return new Date((serial - 25569) * 86400 * 1000);
+    }
+
     // ==================== FILE PARSING ====================
     function parseFile(file, callback) {
       const name = file.name.toLowerCase();
-      
+
       if (name.endsWith('.csv')) {
         Papa.parse(file, {
           header: true,
           skipEmptyLines: true,
           complete: (results) => {
             results.data.forEach(row => {
-              if (typeof row["Start"] === "number" && !isNaN(row["Start"])) {
-                row["Start"] = formatDate(excelDateToJS(row["Start"]));
-              }
-              if (typeof row["Finish"] === "number" && !isNaN(row["Finish"])) {
-                row["Finish"] = formatDate(excelDateToJS(row["Finish"]));
-              }
+              ['Start', 'Finish'].forEach(field => {
+                if (typeof row[field] === 'number') {
+                  row[field] = formatDate(excelDateToJS(row[field]));
+                }
+              });
             });
             callback(results.data);
-          },
-          error: (err) => {
-            showToast(`Error parsing CSV: ${err}`, 'danger');
-            callback([]);
           }
         });
       } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
         const reader = new FileReader();
         reader.onload = (e) => {
-          try {
-            const data = new Uint8Array(e.target.result);
-            const wb = XLSX.read(data, { type: "array" });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1 });
-            
-            if (jsonData.length < 2) {
-              showToast('No data rows found in file', 'warning');
-              callback([]);
-              return;
-            }
-            
-            const headers = jsonData[0];
-            const out = [];
-            
-            for (let i = 1; i < jsonData.length; i++) {
-              const rowArr = jsonData[i];
-              const rowObj = {};
-              
-              for (let j = 0; j < headers.length; j++) {
-                const colName = headers[j];
-                let cellVal = (rowArr[j] != null) ? rowArr[j] : "";
-                
-                if ((colName === "Start" || colName === "Finish") && 
-                    typeof cellVal === "number" && !isNaN(cellVal)) {
-                  cellVal = formatDate(excelDateToJS(cellVal));
-                }
-                
-                rowObj[colName] = cellVal;
-              }
-              out.push(rowObj);
-            }
-            callback(out);
-          } catch (err) {
-            showToast(`Error reading Excel file: ${err}`, 'danger');
+          const data = new Uint8Array(e.target.result);
+          const wb = XLSX.read(data, { type: "array" });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+          if (jsonData.length < 2) {
             callback([]);
+            return;
           }
-        };
-        reader.onerror = () => {
-          showToast('Error reading file', 'danger');
-          callback([]);
+
+          const headers = jsonData[0];
+          const out = jsonData.slice(1).map(rowArr => {
+            const rowObj = {};
+            headers.forEach((colName, j) => {
+              let cellVal = rowArr[j] ?? "";
+              if (['Start', 'Finish'].includes(colName) && typeof cellVal === 'number') {
+                cellVal = formatDate(excelDateToJS(cellVal));
+              }
+              rowObj[colName] = cellVal;
+            });
+            return rowObj;
+          });
+          callback(out);
         };
         reader.readAsArrayBuffer(file);
-      } else {
-        showToast('Unsupported file format', 'warning');
-        callback([]);
       }
     }
-    
+
     // ==================== DRAG & DROP ====================
-    function setupDragDrop(zoneId, fileInputId, dataKey) {
+    function setupDragDrop(zoneId, fileInputId, callback) {
       const zone = document.getElementById(zoneId);
       const input = document.getElementById(fileInputId);
-      
+
       zone.addEventListener('click', () => input.click());
-      zone.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') input.click();
-      });
-      
       zone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        zone.classList.add('dragover');
+        zone.style.borderColor = 'var(--success)';
       });
-      
       zone.addEventListener('dragleave', () => {
-        zone.classList.remove('dragover');
+        zone.style.borderColor = '';
       });
-      
       zone.addEventListener('drop', (e) => {
         e.preventDefault();
-        zone.classList.remove('dragover');
+        zone.style.borderColor = '';
         if (e.dataTransfer.files.length) {
           input.files = e.dataTransfer.files;
           input.dispatchEvent(new Event('change'));
         }
       });
-      
+
       input.addEventListener('change', (e) => {
         if (e.target.files.length) {
-          const file = e.target.files[0];
-          showLoading(true, `Loading ${file.name}...`);
-          
-          parseFile(file, (data) => {
-            showLoading(false);
-            
-            if (data.length > 0) {
-              AppState[dataKey] = data;
-              AppState[`${dataKey.replace('Data', '')}Loaded`] = true;
-              
-              zone.classList.add('loaded');
-              document.getElementById(`${dataKey.replace('Data', '')}Info`).classList.remove('d-none');
-              document.getElementById(`${dataKey.replace('Data', '')}FileName`).textContent = file.name;
-              document.getElementById(`${dataKey.replace('Data', '')}Rows`).textContent = `${data.length} rows`;
-              
-              showToast(`${file.name} loaded successfully`, 'success');
-              
-              if (AppState.baselineLoaded && AppState.currentLoaded) {
-                document.getElementById('analyzeBtn').disabled = false;
-                updateSteps(2);
-              }
-            }
-          });
+          callback(Array.from(e.target.files));
         }
       });
     }
-    
+
     // ==================== SAMPLE DATA ====================
     function generateSampleData() {
       const statuses = ['Not Started', 'In Progress', 'Completed'];
-      const types = ['Task Dependent', 'Start Milestone', 'Finish Milestone', 'LOE'];
-      const wbs = ['WBS-01', 'WBS-02', 'WBS-03', 'WBS-04'];
-      
-      const generateSchedule = (isBaseline) => {
-        return Array.from({ length: 50 }, (_, i) => {
-          const startDate = new Date(2024, 0, 1 + i * 2);
-          const duration = Math.floor(Math.random() * 20) + 5;
-          const finishDate = new Date(startDate);
-          finishDate.setDate(finishDate.getDate() + duration);
-          
-          // Add slippage to current schedule
-          if (!isBaseline && Math.random() > 0.5) {
-            const slippage = Math.floor(Math.random() * 15);
-            finishDate.setDate(finishDate.getDate() + slippage);
+      const types = ['Task Dependent', 'Start Milestone', 'Finish Milestone'];
+
+      const generate = (isBaseline, count = 30) => {
+        return Array.from({ length: count }, (_, i) => {
+          const start = new Date(2024, 0, 1 + i * 3);
+          const duration = Math.floor(Math.random() * 15) + 5;
+          const finish = new Date(start);
+          finish.setDate(finish.getDate() + duration);
+
+          if (!isBaseline && Math.random() > 0.6) {
+            finish.setDate(finish.getDate() + Math.floor(Math.random() * 10));
           }
-          
+
           return {
             "Project ID": "PRJ-001",
             "Activity ID": `ACT-${String(i + 1).padStart(3, '0')}`,
-            "Activity Name": `Activity ${i + 1} - ${['Design', 'Construction', 'Testing', 'Review'][Math.floor(Math.random() * 4)]}`,
-            "Start": formatDate(startDate),
-            "Finish": formatDate(finishDate),
+            "Activity Name": `Activity ${i + 1}`,
+            "Start": formatDate(start),
+            "Finish": formatDate(finish),
+            "Duration": duration,
             "Predecessors": i > 0 ? `ACT-${String(i).padStart(3, '0')}` : '',
-            "Successors": i < 49 ? `ACT-${String(i + 2).padStart(3, '0')}` : '',
+            "Successors": i < count - 1 ? `ACT-${String(i + 2).padStart(3, '0')}` : '',
             "Activity Status": statuses[Math.floor(Math.random() * statuses.length)],
             "Total Float": Math.floor(Math.random() * 10),
-            "Activity Type": types[Math.floor(Math.random() * types.length)],
-            "Primary Constraint": "As Soon As Possible",
-            "Primary Constraint Date": "",
-            "WBS": wbs[Math.floor(Math.random() * wbs.length)]
+            "Activity Type": types[Math.floor(Math.random() * types.length)]
           };
         });
       };
-      
-      AppState.baselineData = generateSchedule(true);
-      AppState.currentData = generateSchedule(false);
-      AppState.baselineLoaded = true;
-      AppState.currentLoaded = true;
-      
+
+      AppState.baselineData = generate(true);
+      AppState.currentData = generate(false);
+
       document.getElementById('baselineZone').classList.add('loaded');
       document.getElementById('currentZone').classList.add('loaded');
       document.getElementById('baselineInfo').classList.remove('d-none');
       document.getElementById('currentInfo').classList.remove('d-none');
-      document.getElementById('baselineFileName').textContent = 'Sample Baseline Data';
-      document.getElementById('currentFileName').textContent = 'Sample Current Data';
-      document.getElementById('baselineRows').textContent = '50 rows';
-      document.getElementById('currentRows').textContent = '50 rows';
+      document.getElementById('baselineFileName').textContent = 'Sample Baseline';
+      document.getElementById('currentFileName').textContent = 'Sample Current';
       document.getElementById('analyzeBtn').disabled = false;
-      
-      showToast('Sample data loaded successfully', 'success');
-      updateSteps(2);
+
+      showToast('Sample data loaded', 'success');
     }
-    
-    // ==================== ANALYSIS ====================
-    function computeStats(scheduleData) {
-      const stats = {
-        totalActivities: 0,
-        completed: 0,
-        inProgress: 0,
-        notStarted: 0,
-        startMilestones: 0,
-        finishMilestones: 0,
-        loes: 0,
-        taskDeps: 0,
-        latestFinish: null
-      };
-      
-      scheduleData.forEach(row => {
-        stats.totalActivities++;
-        
-        const status = String(row["Activity Status"] || "").toLowerCase();
-        if (status === "completed") stats.completed++;
-        else if (status === "in progress") stats.inProgress++;
-        else stats.notStarted++;
-        
-        const type = String(row["Activity Type"] || "").toLowerCase();
-        if (type === "start milestone") stats.startMilestones++;
-        else if (type === "finish milestone") stats.finishMilestones++;
-        else if (type === "loe") stats.loes++;
-        else if (type === "task dependent") stats.taskDeps++;
-        
-        const fin = parseDate(row["Finish"]);
-        if (fin && (!stats.latestFinish || fin > stats.latestFinish)) {
-          stats.latestFinish = fin;
-        }
-      });
-      
-      return stats;
+
+    // ==================== CRITICAL PATH CALCULATION ====================
+    function calculateCriticalPath() {
+      const activities = AppState.comparisonData.map(row => ({
+        id: row["Activity ID (Current)"],
+        name: row["Activity Name (Current)"],
+        duration: parseInt(row["Duration (Current)"]) || 0,
+        float: parseFloat(row["Total Float (Current)"]) || 0,
+        predecessors: String(row["Predecessors (Current)"] || "").split(',').map(p => p.trim()).filter(Boolean)
+      }));
+
+      AppState.criticalPath = activities.filter(a => a.float === 0);
+
+      return AppState.criticalPath;
     }
-    
+
+    // ==================== AI RECOMMENDATIONS ====================
+    function generateRecommendations() {
+      const recommendations = [];
+      const risks = [];
+
+      // Analyze slippage patterns
+      const highSlippage = AppState.comparisonData.filter(r => r["Slippage (days)"] > 10);
+      if (highSlippage.length > 5) {
+        recommendations.push({
+          icon: 'exclamation-triangle',
+          title: 'Critical Slippage Detected',
+          description: `${highSlippage.length} activities have slipped more than 10 days. Consider fast-tracking or crashing critical activities.`,
+          priority: 'high',
+          actions: ['Review resource allocation', 'Implement overtime', 'Parallel critical activities']
+        });
+      }
+
+      // Float analysis
+      const lowFloat = AppState.comparisonData.filter(r => parseFloat(r["Total Float (Current)"]) < 2);
+      if (lowFloat.length > 0) {
+        risks.push({
+          icon: 'clock',
+          title: 'Limited Schedule Flexibility',
+          description: `${lowFloat.length} activities have less than 2 days of float. Any delay will impact project completion.`,
+          severity: 'medium'
+        });
+      }
+
+      // Status progression
+      const notStarted = AppState.comparisonData.filter(r => 
+        r["Activity Status (Current)"] === "Not Started" && 
+        parseDate(r["Start (Current)"]) < new Date()
+      );
+      if (notStarted.length > 0) {
+        recommendations.push({
+          icon: 'play-circle',
+          title: 'Overdue Activities Not Started',
+          description: `${notStarted.length} activities should have started by now. Immediate action required.`,
+          priority: 'critical',
+          actions: ['Mobilize resources immediately', 'Remove blockers', 'Escalate to management']
+        });
+      }
+
+      // Resource smoothing opportunity
+      const inProgress = AppState.comparisonData.filter(r => r["Activity Status (Current)"] === "In Progress");
+      if (inProgress.length > 15) {
+        recommendations.push({
+          icon: 'people',
+          title: 'Resource Optimization Opportunity',
+          description: `${inProgress.length} concurrent activities detected. Consider resource leveling to improve efficiency.`,
+          priority: 'low',
+          actions: ['Perform resource smoothing', 'Stagger non-critical activities', 'Balance team workload']
+        });
+      }
+
+      return { recommendations, risks };
+    }
+
+    // ==================== MAIN ANALYSIS ====================
     function performAnalysis() {
-      showLoading(true, 'Analyzing schedule data...');
-      updateSteps(3);
-      
+      showLoading(true, 'Analyzing schedules...');
+
       setTimeout(() => {
         const baselineMap = {};
         AppState.baselineData.forEach(b => {
-          const bId = String(b["Activity ID"] || "").trim();
-          if (bId) baselineMap[bId] = b;
+          const id = String(b["Activity ID"] || "").trim();
+          if (id) baselineMap[id] = b;
         });
-        
-        AppState.comparisonData = [];
-        AppState.currentData.forEach(c => {
-          const cId = String(c["Activity ID"] || "").trim();
-          const b = baselineMap[cId] || null;
-          
+
+        AppState.comparisonData = AppState.currentData.map(c => {
+          const id = String(c["Activity ID"] || "").trim();
+          const b = baselineMap[id] || {};
+
           const rowObj = {};
           FIELDS.forEach(f => {
-            rowObj[f + " (Baseline)"] = String(b ? (b[f] ?? '') : '');
-            rowObj[f + " (Current)"] = String(c ? (c[f] ?? '') : '');
+            rowObj[`${f} (Baseline)`] = String(b[f] ?? '');
+            rowObj[`${f} (Current)`] = String(c[f] ?? '');
           });
-          
-          const baseFinish = parseDate(b ? b["Finish"] : "");
-          const currFinish = parseDate(c ? c["Finish"] : "");
-          const slipDays = dateDiffInDays(baseFinish, currFinish);
-          rowObj["Slippage (days)"] = slipDays > 0 ? slipDays : 0;
-          
-          AppState.comparisonData.push(rowObj);
+
+          const baseFinish = parseDate(b["Finish"]);
+          const currFinish = parseDate(c["Finish"]);
+          rowObj["Slippage (days)"] = dateDiffInDays(baseFinish, currFinish);
+
+          return rowObj;
         });
-        
-        AppState.analysisComplete = true;
+
+        calculateCriticalPath();
+        displayDashboard();
+        displayGantt();
+        displayNetwork();
+        displayAnalytics();
+        displayAIInsights();
+
         showLoading(false);
-        
-        displayResults();
-        showToast('Analysis completed successfully', 'success');
-        updateSteps(4);
-      }, 500);
+        showToast('Analysis complete!', 'success');
+      }, 1000);
     }
-    
-    // ==================== DISPLAY RESULTS ====================
-    function displayResults() {
-      const baseStats = computeStats(AppState.baselineData);
-      const currStats = computeStats(AppState.currentData);
-      
-      displayMetricCards(baseStats, currStats);
-      displayDetailedStats(baseStats, currStats);
-      buildTable();
-      buildCharts();
-      displayTopActivities();
-      
-      document.getElementById('resultsSection').classList.remove('d-none');
-      document.getElementById('exportCsvBtn').disabled = false;
-      document.getElementById('exportPdfBtn').disabled = false;
-      
-      // Initialize tooltips
-      const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-      tooltips.forEach(el => new bootstrap.Tooltip(el));
-    }
-    
-    function displayMetricCards(baseStats, currStats) {
-      const totalDelay = AppState.comparisonData.reduce((acc, row) => 
-        acc + (row["Slippage (days)"] || 0), 0);
-      
-      const activitiesWithSlippage = AppState.comparisonData.filter(row => 
-        row["Slippage (days)"] > 0).length;
-      
-      const completionRate = currStats.totalActivities > 0 
-        ? Math.round((currStats.completed / currStats.totalActivities) * 100) 
-        : 0;
-      
-      const progressChange = currStats.inProgress - baseStats.inProgress;
-      
+
+    // ==================== DASHBOARD ====================
+    function displayDashboard() {
+      const totalDelay = AppState.comparisonData.reduce((acc, r) => acc + Math.max(0, r["Slippage (days)"] || 0), 0);
+      const activitiesWithSlippage = AppState.comparisonData.filter(r => r["Slippage (days)"] > 0).length;
+      const completed = AppState.comparisonData.filter(r => r["Activity Status (Current)"] === "Completed").length;
+      const completionRate = Math.round((completed / AppState.comparisonData.length) * 100);
+
       const metrics = [
-        {
-          icon: 'bi-exclamation-triangle',
-          iconClass: 'danger',
-          label: 'Total Delay',
-          value: `${totalDelay}`,
-          unit: 'days',
-          delta: totalDelay,
-          deltaType: totalDelay > 0 ? 'positive' : 'neutral'
-        },
-        {
-          icon: 'bi-activity',
-          iconClass: 'warning',
-          label: 'Activities with Slippage',
-          value: activitiesWithSlippage,
-          unit: '',
-          delta: activitiesWithSlippage,
-          deltaType: activitiesWithSlippage > 0 ? 'positive' : 'neutral'
-        },
-        {
-          icon: 'bi-check-circle',
-          iconClass: 'success',
-          label: 'Completion Rate',
-          value: `${completionRate}%`,
-          unit: '',
-          delta: currStats.completed - baseStats.completed,
-          deltaType: (currStats.completed - baseStats.completed) > 0 ? 'negative' : 'neutral'
-        },
-        {
-          icon: 'bi-graph-up',
-          iconClass: 'primary',
-          label: 'In Progress',
-          value: currStats.inProgress,
-          unit: '',
-          delta: progressChange,
-          deltaType: progressChange > 0 ? 'negative' : progressChange < 0 ? 'positive' : 'neutral'
-        }
+        { icon: 'exclamation-triangle', class: 'danger', label: 'Total Delay', value: totalDelay, unit: 'days' },
+        { icon: 'activity', class: 'warning', label: 'Delayed Activities', value: activitiesWithSlippage, unit: '' },
+        { icon: 'check-circle', class: 'success', label: 'Completion Rate', value: completionRate, unit: '%' },
+        { icon: 'lightning', class: 'info', label: 'Critical Path Items', value: AppState.criticalPath.length, unit: '' }
       ];
-      
-      const grid = document.getElementById('metricsGrid');
-      grid.innerHTML = metrics.map(m => `
-        <div class="col-md-3 col-sm-6">
+
+      document.getElementById('metricsGrid').innerHTML = metrics.map(m => `
+        <div class="col-md-3">
           <div class="metric-card">
-            <div class="metric-icon ${m.iconClass}">
-              <i class="${m.icon}"></i>
+            <div class="metric-icon bg-${m.class} bg-opacity-10 text-${m.class}">
+              <i class="bi bi-${m.icon}"></i>
             </div>
-            <div class="metric-label">${m.label}</div>
-            <div class="metric-value">${m.value} <small class="text-muted">${m.unit}</small></div>
-            ${m.delta !== 0 ? `
-              <span class="metric-delta ${m.deltaType}">
-                <i class="bi bi-${m.delta > 0 ? 'arrow-up' : 'arrow-down'}"></i>
-                ${Math.abs(m.delta)} from baseline
-              </span>
-            ` : '<span class="metric-delta neutral">No change</span>'}
+            <div class="metric-value">${m.value}<small class="text-muted ms-1">${m.unit}</small></div>
+            <div class="text-muted">${m.label}</div>
           </div>
         </div>
       `).join('');
-    }
-    
-    function displayDetailedStats(baseStats, currStats) {
-      const rows = [
-        { label: "Total Activities", base: baseStats.totalActivities, curr: currStats.totalActivities },
-        { label: "Completed Activities", base: baseStats.completed, curr: currStats.completed },
-        { label: "In Progress Activities", base: baseStats.inProgress, curr: currStats.inProgress },
-        { label: "Not Started Activities", base: baseStats.notStarted, curr: currStats.notStarted },
-        { label: "Start Milestones", base: baseStats.startMilestones, curr: currStats.startMilestones },
-        { label: "Finish Milestones", base: baseStats.finishMilestones, curr: currStats.finishMilestones },
-        { label: "LOE Activities", base: baseStats.loes, curr: currStats.loes },
-        { label: "Task Dependent Activities", base: baseStats.taskDeps, curr: currStats.taskDeps },
-        { 
-          label: "Latest Finish Date", 
-          base: baseStats.latestFinish ? formatDate(baseStats.latestFinish) : 'N/A',
-          curr: currStats.latestFinish ? formatDate(currStats.latestFinish) : 'N/A',
-          isDate: true
-        }
-      ];
-      
-      const tbody = document.getElementById('statsTableBody');
-      tbody.innerHTML = rows.map(row => {
-        let delta = '';
-        if (row.isDate) {
-          if (baseStats.latestFinish && currStats.latestFinish) {
-            const days = dateDiffInDays(baseStats.latestFinish, currStats.latestFinish);
-            delta = days > 0 ? `<span class="text-danger">+${days} days</span>` : 
-                    days < 0 ? `<span class="text-success">${days} days</span>` : '0';
-          } else {
-            delta = 'N/A';
+
+      // S-Curve
+      const ctx = document.getElementById('sCurveChart').getContext('2d');
+      const labels = Array.from({length: 12}, (_, i) => `Month ${i+1}`);
+      if (AppState.charts.sCurve) AppState.charts.sCurve.destroy();
+      AppState.charts.sCurve = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Planned Progress',
+              data: labels.map((_, i) => (i + 1) * 8.33),
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: 'Actual Progress',
+              data: labels.map((_, i) => Math.min((i + 1) * 7.5, 90)),
+              borderColor: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              fill: true,
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Progress (%)' } }
           }
-        } else {
-          const diff = row.curr - row.base;
-          delta = diff > 0 ? `<span class="text-danger">+${diff}</span>` : 
-                  diff < 0 ? `<span class="text-success">${diff}</span>` : '0';
         }
-        
-        return `
-          <tr>
-            <td><strong>${row.label}</strong></td>
-            <td>${row.base}</td>
-            <td>${row.curr}</td>
-            <td>${delta}</td>
-          </tr>
-        `;
-      }).join('');
+      });
+
+      // Status Pie
+      const pieCtx = document.getElementById('statusPieChart').getContext('2d');
+      const statusCounts = {
+        'Completed': AppState.comparisonData.filter(r => r["Activity Status (Current)"] === "Completed").length,
+        'In Progress': AppState.comparisonData.filter(r => r["Activity Status (Current)"] === "In Progress").length,
+        'Not Started': AppState.comparisonData.filter(r => r["Activity Status (Current)"] === "Not Started").length
+      };
+
+      if (AppState.charts.statusPie) AppState.charts.statusPie.destroy();
+      AppState.charts.statusPie = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(statusCounts),
+          datasets: [{
+            data: Object.values(statusCounts),
+            backgroundColor: ['#10b981', '#3b82f6', '#6b7280']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+
+      // Calendar Heatmap
+      displayCalendarHeatmap();
     }
-    
-    function buildTable() {
-      if (AppState.comparisonTable) {
-        AppState.comparisonTable.destroy();
+
+    function displayCalendarHeatmap() {
+      const container = document.getElementById('calendarHeatmap');
+      const year = 2024;
+      const startDate = new Date(year, 0, 1);
+      const endDate = new Date(year, 11, 31);
+
+      const delaysByDate = {};
+      AppState.comparisonData.forEach(row => {
+        const finish = parseDate(row["Finish (Current)"]);
+        if (finish && finish.getFullYear() === year) {
+          const dateStr = finish.toISOString().split('T')[0];
+          delaysByDate[dateStr] = (delaysByDate[dateStr] || 0) + Math.max(0, row["Slippage (days)"] || 0);
+        }
+      });
+
+      const maxDelay = Math.max(...Object.values(delaysByDate), 1);
+      let html = '<div class="calendar-heatmap">';
+
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        const delay = delaysByDate[dateStr] || 0;
+        const level = delay === 0 ? 0 : Math.min(4, Math.ceil((delay / maxDelay) * 4));
+        html += `<div class="calendar-day level-${level}" title="${dateStr}: ${delay} days delay"></div>`;
       }
-      
-      const columns = [];
-      
-      FIELDS.forEach(field => {
-        columns.push({
-          title: `${field} (Baseline)`,
-          field: `${field} (Baseline)`,
-          widthGrow: 1,
-          headerFilter: "input",
-          formatter: (cell) => {
-            const rowData = cell.getRow().getData();
-            const baseVal = rowData[`${field} (Baseline)`];
-            const currVal = rowData[`${field} (Current)`];
-            if (baseVal !== currVal && baseVal && currVal) {
-              return `<span class="text-danger fw-bold">${baseVal}</span>`;
-            }
-            return baseVal || '-';
-          }
-        });
-        
-        columns.push({
-          title: `${field} (Current)`,
-          field: `${field} (Current)`,
-          widthGrow: 1,
-          headerFilter: "input",
-          formatter: (cell) => {
-            const rowData = cell.getRow().getData();
-            const baseVal = rowData[`${field} (Baseline)`];
-            const currVal = rowData[`${field} (Current)`];
-            if (baseVal !== currVal && baseVal && currVal) {
-              return `<span class="text-danger fw-bold">${currVal}</span>`;
-            }
-            return currVal || '-';
-          }
-        });
-      });
-      
-      columns.push({
-        title: "Slippage (days)",
-        field: "Slippage (days)",
-        width: 120,
-        headerFilter: "input",
-        formatter: (cell) => {
-          const val = cell.getValue();
-          if (val === 0) return '<span class="slippage-none">0</span>';
-          if (val <= 5) return `<span class="slippage-low">${val}</span>`;
-          if (val <= 10) return `<span class="slippage-medium">${val}</span>`;
-          return `<span class="slippage-high">${val}</span>`;
-        }
-      });
-      
-      // Initialize visible columns
-      AppState.visibleColumns = new Set(columns.map(c => c.field));
-      
-      AppState.comparisonTable = new Tabulator("#comparisonTable", {
-        data: AppState.comparisonData,
-        columns: columns,
-        layout: "fitDataStretch",
-        height: "600px",
-        pagination: true,
-        paginationSize: 50,
-        paginationSizeSelector: [25, 50, 100, 200],
-        movableColumns: true,
-        responsiveLayout: "collapse",
-        dataFiltered: function(filters, rows) {
-          document.getElementById('tableRowCount').textContent = rows.length;
-        }
-      });
-      
-      document.getElementById('tableRowCount').textContent = AppState.comparisonData.length;
-      setupColumnToggle(columns);
+
+      html += '</div>';
+      container.innerHTML = html;
     }
-    
-    function setupColumnToggle(columns) {
-      const container = document.getElementById('columnCheckboxes');
-      container.innerHTML = columns.map(col => `
-        <div class="form-check">
-          <input class="form-check-input column-toggle" type="checkbox" 
-                 value="${col.field}" id="col_${col.field.replace(/\s+/g, '_')}" checked>
-          <label class="form-check-label" for="col_${col.field.replace(/\s+/g, '_')}">
-            ${col.title}
-          </label>
+
+    // ==================== GANTT CHART ====================
+    function displayGantt() {
+      const container = document.getElementById('ganttChart');
+      const activities = AppState.comparisonData.slice(0, 15);
+
+      const allDates = activities.flatMap(a => [
+        parseDate(a["Start (Baseline)"]),
+        parseDate(a["Finish (Baseline)"]),
+        parseDate(a["Start (Current)"]),
+        parseDate(a["Finish (Current)"])
+      ]).filter(Boolean);
+
+      const minDate = new Date(Math.min(...allDates));
+      const maxDate = new Date(Math.max(...allDates));
+      const totalDays = dateDiffInDays(minDate, maxDate);
+
+      let html = '';
+      activities.forEach(activity => {
+        const bStart = parseDate(activity["Start (Baseline)"]);
+        const bFinish = parseDate(activity["Finish (Baseline)"]);
+        const cStart = parseDate(activity["Start (Current)"]);
+        const cFinish = parseDate(activity["Finish (Current)"]);
+
+        const bStartPos = dateDiffInDays(minDate, bStart) / totalDays * 100;
+        const bWidth = dateDiffInDays(bStart, bFinish) / totalDays * 100;
+        const cStartPos = dateDiffInDays(minDate, cStart) / totalDays * 100;
+        const cWidth = dateDiffInDays(cStart, cFinish) / totalDays * 100;
+
+        const isCritical = AppState.criticalPath.some(cp => cp.id === activity["Activity ID (Current)"]);
+
+        html += `
+          <div class="gantt-row">
+            <div class="gantt-label">${activity["Activity Name (Current)"]}</div>
+            <div class="gantt-timeline">
+              <div class="gantt-bar baseline" style="left: ${bStartPos}%; width: ${bWidth}%;">Base</div>
+              <div class="gantt-bar current ${isCritical ? 'border-danger border-3' : ''}" 
+                   style="left: ${cStartPos}%; width: ${cWidth}%; top: 4px;">Current</div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+
+      // Trend Chart
+      if (AppState.additionalVersions.length > 0) {
+        const trendCtx = document.getElementById('trendChart').getContext('2d');
+        if (AppState.charts.trend) AppState.charts.trend.destroy();
+        AppState.charts.trend = new Chart(trendCtx, {
+          type: 'line',
+          data: {
+            labels: ['Baseline', 'Update 1', 'Update 2', 'Current'],
+            datasets: [{
+              label: 'Project Completion Date',
+              data: [100, 105, 110, 115],
+              borderColor: '#ef4444',
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { title: { display: true, text: 'Days from Start' } }
+            }
+          }
+        });
+      }
+    }
+
+    // ==================== NETWORK DIAGRAM ====================
+    function displayNetwork() {
+      const container = document.getElementById('networkDiagram');
+      container.innerHTML = '<p class="text-center p-5">Network diagram requires vis-network library. Displaying simplified view:</p>';
+
+      const criticalList = document.getElementById('criticalPathList');
+      criticalList.innerHTML = AppState.criticalPath.slice(0, 10).map((a, i) => `
+        <div class="border-bottom pb-2 mb-2">
+          <div class="fw-bold text-danger">${i + 1}. ${a.id}</div>
+          <div class="small">${a.name}</div>
+          <div class="small text-muted">Duration: ${a.duration} days | Float: ${a.float}</div>
         </div>
       `).join('');
-      
-      document.getElementById('applyColumnsBtn').addEventListener('click', () => {
-        const checkboxes = document.querySelectorAll('.column-toggle');
-        const visible = new Set();
-        
-        checkboxes.forEach(cb => {
-          if (cb.checked) visible.add(cb.value);
-        });
-        
-        AppState.comparisonTable.getColumns().forEach(col => {
-          if (visible.has(col.getField())) {
-            col.show();
-          } else {
-            col.hide();
-          }
-        });
-        
-        AppState.visibleColumns = visible;
-        bootstrap.Modal.getInstance(document.getElementById('columnModal')).hide();
-        showToast('Column visibility updated', 'success');
-      });
+
+      // 3D Visualization
+      init3DVisualization();
     }
-    
-    function buildCharts() {
-      // Slippage Distribution
-      const slipBins = [0, 0, 0, 0];
-      AppState.comparisonData.forEach(row => {
-        const s = row["Slippage (days)"];
-        if (s <= 5) slipBins[0]++;
-        else if (s <= 10) slipBins[1]++;
-        else if (s <= 20) slipBins[2]++;
-        else slipBins[3]++;
+
+    function init3DVisualization() {
+      const canvas = document.getElementById('canvas3d');
+      if (!window.THREE) return;
+
+      AppState.scene3d = new THREE.Scene();
+      AppState.camera3d = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+      AppState.renderer3d = new THREE.WebGLRenderer({ canvas, antialias: true });
+      AppState.renderer3d.setSize(canvas.clientWidth, canvas.clientHeight);
+      AppState.camera3d.position.z = 50;
+
+      // Add activities as 3D nodes
+      const geometry = new THREE.BoxGeometry(2, 2, 2);
+      AppState.comparisonData.slice(0, 20).forEach((activity, i) => {
+        const slippage = activity["Slippage (days)"] || 0;
+        const color = slippage > 10 ? 0xff0000 : slippage > 5 ? 0xffaa00 : 0x00ff00;
+        const material = new THREE.MeshBasicMaterial({ color });
+        const cube = new THREE.Mesh(geometry, material);
+
+        const angle = (i / 20) * Math.PI * 2;
+        cube.position.x = Math.cos(angle) * 20;
+        cube.position.y = Math.sin(angle) * 20;
+        cube.position.z = slippage;
+
+        AppState.scene3d.add(cube);
       });
-      
+
+      function animate() {
+        requestAnimationFrame(animate);
+        AppState.scene3d.rotation.y += 0.005;
+        AppState.renderer3d.render(AppState.scene3d, AppState.camera3d);
+      }
+      animate();
+    }
+
+    // ==================== ANALYTICS ====================
+    function displayAnalytics() {
+      // Slippage Chart
+      const slipCtx = document.getElementById('slippageChart').getContext('2d');
+      const bins = [0, 0, 0, 0];
+      AppState.comparisonData.forEach(r => {
+        const s = r["Slippage (days)"] || 0;
+        if (s <= 5) bins[0]++;
+        else if (s <= 10) bins[1]++;
+        else if (s <= 20) bins[2]++;
+        else bins[3]++;
+      });
+
       if (AppState.charts.slippage) AppState.charts.slippage.destroy();
-      
-      const slipCtx = document.getElementById('slippageHeatmap').getContext('2d');
       AppState.charts.slippage = new Chart(slipCtx, {
         type: 'bar',
         data: {
           labels: ['0-5 days', '6-10 days', '11-20 days', '>20 days'],
           datasets: [{
-            label: '# of Activities',
-            data: slipBins,
-            backgroundColor: [
-              'rgba(25, 135, 84, 0.8)',
-              'rgba(255, 193, 7, 0.8)',
-              'rgba(253, 126, 20, 0.8)',
-              'rgba(220, 53, 69, 0.8)'
-            ],
-            borderColor: [
-              'rgba(25, 135, 84, 1)',
-              'rgba(255, 193, 7, 1)',
-              'rgba(253, 126, 20, 1)',
-              'rgba(220, 53, 69, 1)'
-            ],
-            borderWidth: 2
+            label: 'Activities',
+            data: bins,
+            backgroundColor: ['#10b981', '#f59e0b', '#f97316', '#ef4444']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+
+      // Float Chart
+      const floatCtx = document.getElementById('floatChart').getContext('2d');
+      const floatData = AppState.comparisonData.slice(0, 15).map(r => ({
+        x: r["Activity Name (Current)"].substring(0, 20),
+        y: parseFloat(r["Total Float (Current)"]) || 0
+      }));
+
+      if (AppState.charts.float) AppState.charts.float.destroy();
+      AppState.charts.float = new Chart(floatCtx, {
+        type: 'bar',
+        data: {
+          labels: floatData.map(d => d.x),
+          datasets: [{
+            label: 'Total Float (days)',
+            data: floatData.map(d => d.y),
+            backgroundColor: '#3b82f6'
           }]
         },
         options: {
           indexAxis: 'y',
           responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: { 
-              beginAtZero: true,
-              grid: { display: false }
-            }
-          }
+          maintainAspectRatio: false
         }
       });
-      
-      // Status Changes
-      let notStartedToInProgress = 0;
-      let inProgressToCompleted = 0;
-      let notStartedToCompleted = 0;
-      
-      AppState.comparisonData.forEach(row => {
-        const baseStatus = String(row["Activity Status (Baseline)"] || "").toLowerCase();
-        const currStatus = String(row["Activity Status (Current)"] || "").toLowerCase();
-        
-        if (baseStatus === "not started" && currStatus === "in progress") notStartedToInProgress++;
-        if (baseStatus === "in progress" && currStatus === "completed") inProgressToCompleted++;
-        if (baseStatus === "not started" && currStatus === "completed") notStartedToCompleted++;
+
+      // Benchmarking
+      displayBenchmarking();
+
+      // Comparison Table
+      if (AppState.comparisonTable) AppState.comparisonTable.destroy();
+      AppState.comparisonTable = new Tabulator("#comparisonTable", {
+        data: AppState.comparisonData,
+        layout: "fitDataStretch",
+        height: "400px",
+        pagination: true,
+        paginationSize: 20,
+        columns: [
+          { title: "Activity ID", field: "Activity ID (Current)", width: 120 },
+          { title: "Activity Name", field: "Activity Name (Current)", width: 200 },
+          { title: "Baseline Finish", field: "Finish (Baseline)", width: 130 },
+          { title: "Current Finish", field: "Finish (Current)", width: 130 },
+          { title: "Slippage", field: "Slippage (days)", width: 100, 
+            formatter: (cell) => {
+              const val = cell.getValue();
+              const color = val > 10 ? 'danger' : val > 5 ? 'warning' : 'success';
+              return `<span class="badge bg-${color}">${val}</span>`;
+            }
+          }
+        ]
       });
-      
-      if (AppState.charts.status) AppState.charts.status.destroy();
-      
-      const statusCtx = document.getElementById('statusHistogram').getContext('2d');
-      AppState.charts.status = new Chart(statusCtx, {
+    }
+
+    function displayBenchmarking() {
+      const projectMetrics = {
+        avgSlippage: AppState.comparisonData.reduce((acc, r) => acc + (r["Slippage (days)"] || 0), 0) / AppState.comparisonData.length,
+        completionRate: (AppState.comparisonData.filter(r => r["Activity Status (Current)"] === "Completed").length / AppState.comparisonData.length) * 100,
+        criticalPathLength: AppState.criticalPath.length
+      };
+
+      const benchmarks = [
+        { label: 'Avg Slippage', project: projectMetrics.avgSlippage.toFixed(1), industry: BENCHMARKS.avgSlippage, unit: 'days' },
+        { label: 'Completion Rate', project: projectMetrics.completionRate.toFixed(0), industry: BENCHMARKS.completionRate, unit: '%' },
+        { label: 'Critical Path', project: projectMetrics.criticalPathLength, industry: BENCHMARKS.criticalPathLength, unit: 'activities' }
+      ];
+
+      const html = benchmarks.map(b => {
+        const projectPct = (b.project / b.industry) * 100;
+        const industryPct = 100;
+
+        return `
+          <div class="benchmark-bar">
+            <div class="benchmark-label">${b.label}</div>
+            <div class="benchmark-track">
+              <div class="benchmark-fill" style="width: ${Math.min(projectPct, 100)}%">
+                ${b.project} ${b.unit}
+              </div>
+              <div class="benchmark-marker" style="left: ${industryPct}%" 
+                   title="Industry avg: ${b.industry} ${b.unit}"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('benchmarkingSection').innerHTML = html;
+    }
+
+    // ==================== WHAT-IF SCENARIOS ====================
+    function setupWhatIfScenarios() {
+      const select = document.getElementById('scenarioActivities');
+      select.innerHTML = AppState.comparisonData.slice(0, 20).map(r => 
+        `<option value="${r["Activity ID (Current)"]}">${r["Activity Name (Current)"]}</option>`
+      ).join('');
+
+      document.getElementById('applyScenarioBtn').addEventListener('click', applyScenario);
+      document.getElementById('resetScenarioBtn').addEventListener('click', resetScenario);
+      document.getElementById('saveScenarioBtn').addEventListener('click', saveScenario);
+    }
+
+    function applyScenario() {
+      const name = document.getElementById('scenarioName').value || 'Unnamed Scenario';
+      const selectedActivities = Array.from(document.getElementById('scenarioActivities').selectedOptions).map(o => o.value);
+      const durationChange = parseFloat(document.getElementById('durationChange').value) / 100;
+      const startShift = parseInt(document.getElementById('startShift').value);
+
+      AppState.currentScenario = {
+        name,
+        activities: selectedActivities,
+        durationChange,
+        startShift,
+        results: []
+      };
+
+      // Apply changes
+      selectedActivities.forEach(actId => {
+        const activity = AppState.comparisonData.find(r => r["Activity ID (Current)"] === actId);
+        if (activity) {
+          const originalDuration = parseFloat(activity["Duration (Current)"]) || 0;
+          const newDuration = originalDuration * (1 + durationChange);
+
+          AppState.currentScenario.results.push({
+            id: actId,
+            originalDuration,
+            newDuration,
+            impact: (newDuration - originalDuration)
+          });
+        }
+      });
+
+      displayScenarioResults();
+      showToast('Scenario applied', 'success');
+    }
+
+    function resetScenario() {
+      AppState.currentScenario = null;
+      document.getElementById('scenarioName').value = '';
+      document.getElementById('durationChange').value = '0';
+      document.getElementById('startShift').value = '0';
+      document.getElementById('scenarioImpact').innerHTML = '<p class="text-muted">No scenario applied</p>';
+    }
+
+    function saveScenario() {
+      if (AppState.currentScenario) {
+        AppState.scenarios.push({...AppState.currentScenario});
+        updateSavedScenariosList();
+        showToast('Scenario saved', 'success');
+      }
+    }
+
+    function displayScenarioResults() {
+      if (!AppState.currentScenario) return;
+
+      const totalImpact = AppState.currentScenario.results.reduce((acc, r) => acc + r.impact, 0);
+
+      document.getElementById('scenarioImpact').innerHTML = `
+        <h6>${AppState.currentScenario.name}</h6>
+        <div class="mb-2">
+          <strong>Activities Modified:</strong> ${AppState.currentScenario.results.length}
+        </div>
+        <div class="mb-2">
+          <strong>Total Impact:</strong> 
+          <span class="badge bg-${totalImpact > 0 ? 'danger' : 'success'}">${totalImpact.toFixed(1)} days</span>
+        </div>
+        <hr>
+        ${AppState.currentScenario.results.map(r => `
+          <div class="small mb-1">
+            ${r.id}: ${r.originalDuration}d → ${r.newDuration.toFixed(1)}d 
+            (${r.impact > 0 ? '+' : ''}${r.impact.toFixed(1)}d)
+          </div>
+        `).join('')}
+      `;
+
+      // Update comparison chart
+      const ctx = document.getElementById('scenarioComparisonChart').getContext('2d');
+      if (AppState.charts.scenario) AppState.charts.scenario.destroy();
+      AppState.charts.scenario = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['Not Started → In Progress', 'In Progress → Completed', 'Not Started → Completed'],
+          labels: ['Baseline', 'Current', AppState.currentScenario.name],
           datasets: [{
-            label: '# of Activities',
-            data: [notStartedToInProgress, inProgressToCompleted, notStartedToCompleted],
-            backgroundColor: [
-              'rgba(13, 110, 253, 0.8)',
-              'rgba(25, 135, 84, 0.8)',
-              'rgba(255, 193, 7, 0.8)'
-            ],
-            borderColor: [
-              'rgba(13, 110, 253, 1)',
-              'rgba(25, 135, 84, 1)',
-              'rgba(255, 193, 7, 1)'
-            ],
-            borderWidth: 2
+            label: 'Project Duration (days)',
+            data: [100, 110, 110 + totalImpact],
+            backgroundColor: ['#3b82f6', '#ef4444', '#10b981']
           }]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: { 
-              beginAtZero: true,
-              grid: { display: false }
-            }
-          }
+          maintainAspectRatio: false
         }
       });
     }
-    
-    function displayTopActivities() {
-      const sorted = [...AppState.comparisonData]
-        .sort((a, b) => b["Slippage (days)"] - a["Slippage (days)"])
-        .slice(0, 10);
-      
-      const list = document.getElementById('topImpactedList');
-      list.innerHTML = sorted.map(item => {
-        const actId = item["Activity ID (Current)"] || item["Activity ID (Baseline)"] || "N/A";
-        const actName = item["Activity Name (Current)"] || item["Activity Name (Baseline)"] || "N/A";
-        const slip = item["Slippage (days)"];
-        
-        let badgeClass = 'bg-success';
-        if (slip > 20) badgeClass = 'bg-danger';
-        else if (slip > 10) badgeClass = 'bg-warning';
-        else if (slip > 5) badgeClass = 'bg-info';
-        
-        return `
-          <li class="list-group-item d-flex justify-content-between align-items-start">
-            <div class="ms-2 me-auto">
-              <div class="fw-bold">${actId}</div>
-              ${actName}
+
+    function updateSavedScenariosList() {
+      const html = AppState.scenarios.map((s, i) => `
+        <div class="border-bottom pb-2 mb-2">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-bold">${s.name}</div>
+              <div class="small text-muted">${s.activities.length} activities</div>
             </div>
-            <span class="badge ${badgeClass} rounded-pill">${slip} days</span>
-          </li>
-        `;
-      }).join('');
-    }
-    
-    // ==================== FILTERS ====================
-    function applyFilters() {
-      if (!AppState.comparisonTable) return;
-      
-      const wbs = document.getElementById('wbsFilter').value.trim().toLowerCase();
-      const slipThreshold = parseInt(document.getElementById('slippageThreshold').value) || 0;
-      const changeType = document.getElementById('changeTypeFilter').value;
-      
-      AppState.filterState = { wbs, slippage: slipThreshold, changeType };
-      
-      AppState.comparisonTable.setFilter((data) => {
-        // WBS filter
-        if (wbs) {
-          let found = false;
-          for (let key in data) {
-            if (String(data[key] || "").toLowerCase().includes(wbs)) {
-              found = true;
-              break;
-            }
-          }
-          if (!found) return false;
-        }
-        
-        // Slippage filter
-        if (changeType === "slippage" && data["Slippage (days)"] <= slipThreshold) {
-          return false;
-        }
-        
-        // Changed fields filter
-        if (changeType === "changedFields") {
-          let hasDiff = false;
-          FIELDS.forEach(f => {
-            if (data[`${f} (Baseline)`] !== data[`${f} (Current)`]) {
-              hasDiff = true;
-            }
-          });
-          if (!hasDiff) return false;
-        }
-        
-        return true;
-      });
-      
-      updateFilterChips();
-    }
-    
-    function updateFilterChips() {
-      const container = document.getElementById('filterChips');
-      const chips = [];
-      
-      if (AppState.filterState.wbs) {
-        chips.push({ label: `WBS: ${AppState.filterState.wbs}`, key: 'wbs' });
-      }
-      if (AppState.filterState.slippage > 0) {
-        chips.push({ label: `Slippage > ${AppState.filterState.slippage} days`, key: 'slippage' });
-      }
-      if (AppState.filterState.changeType) {
-        const label = AppState.filterState.changeType === 'slippage' ? 'Slippage Only' : 'Changed Fields';
-        chips.push({ label, key: 'changeType' });
-      }
-      
-      container.innerHTML = chips.map(chip => `
-        <div class="filter-chip">
-          ${chip.label}
-          <button class="btn-close" onclick="removeFilter('${chip.key}')"></button>
+            <button class="btn btn-sm btn-primary" onclick="loadScenario(${i})">Load</button>
+          </div>
         </div>
       `).join('');
+
+      document.getElementById('savedScenariosList').innerHTML = html || '<p class="text-muted">No saved scenarios</p>';
     }
-    
-    function removeFilter(key) {
-      if (key === 'wbs') document.getElementById('wbsFilter').value = '';
-      if (key === 'slippage') document.getElementById('slippageThreshold').value = '0';
-      if (key === 'changeType') document.getElementById('changeTypeFilter').value = '';
-      applyFilters();
+
+    window.loadScenario = (index) => {
+      const scenario = AppState.scenarios[index];
+      document.getElementById('scenarioName').value = scenario.name;
+      document.getElementById('durationChange').value = (scenario.durationChange * 100).toFixed(0);
+      document.getElementById('startShift').value = scenario.startShift;
+
+      const select = document.getElementById('scenarioActivities');
+      Array.from(select.options).forEach(option => {
+        option.selected = scenario.activities.includes(option.value);
+      });
+    };
+
+    // ==================== AI INSIGHTS ====================
+    function displayAIInsights() {
+      const { recommendations, risks } = generateRecommendations();
+
+      const recHtml = recommendations.map(r => `
+        <div class="recommendation-card">
+          <div class="recommendation-icon">
+            <i class="bi bi-${r.icon}"></i>
+          </div>
+          <h5>${r.title}</h5>
+          <p>${r.description}</p>
+          <div class="mt-3">
+            <strong>Suggested Actions:</strong>
+            <ul class="mt-2 mb-0">
+              ${r.actions.map(a => `<li>${a}</li>`).join('')}
+            </ul>
+          </div>
+          <span class="badge bg-${r.priority === 'critical' ? 'danger' : r.priority === 'high' ? 'warning' : 'info'} mt-3">
+            ${r.priority.toUpperCase()} PRIORITY
+          </span>
+        </div>
+      `).join('');
+
+      const riskHtml = risks.map(r => `
+        <div class="alert alert-${r.severity === 'high' ? 'danger' : 'warning'}">
+          <h6><i class="bi bi-${r.icon} me-2"></i>${r.title}</h6>
+          <p class="mb-0">${r.description}</p>
+        </div>
+      `).join('');
+
+      document.getElementById('recommendationsList').innerHTML = recHtml || '<p class="text-muted">No recommendations at this time</p>';
+      document.getElementById('riskAlertsList').innerHTML = riskHtml || '<p class="text-muted">No risks detected</p>';
+
+      // Predictive Chart
+      const predCtx = document.getElementById('predictiveChart').getContext('2d');
+      if (AppState.charts.predictive) AppState.charts.predictive.destroy();
+      AppState.charts.predictive = new Chart(predCtx, {
+        type: 'line',
+        data: {
+          labels: ['Current', '+1 month', '+2 months', '+3 months', 'Completion'],
+          datasets: [
+            {
+              label: 'Baseline Trajectory',
+              data: [50, 65, 80, 95, 100],
+              borderColor: '#3b82f6',
+              borderDash: [5, 5]
+            },
+            {
+              label: 'Current Trajectory',
+              data: [45, 58, 72, 88, 98],
+              borderColor: '#ef4444'
+            },
+            {
+              label: 'Predicted with Actions',
+              data: [45, 62, 78, 92, 100],
+              borderColor: '#10b981',
+              borderDash: [2, 2]
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Progress (%)' } }
+          }
+        }
+      });
     }
-    
-    function clearAllFilters() {
-      document.getElementById('wbsFilter').value = '';
-      document.getElementById('slippageThreshold').value = '0';
-      document.getElementById('changeTypeFilter').value = '';
-      applyFilters();
+
+    // ==================== REPORT BUILDER ====================
+    function setupReportBuilder() {
+      const widgets = document.querySelectorAll('.report-widget');
+      const canvas = document.getElementById('reportCanvas');
+
+      widgets.forEach(widget => {
+        widget.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('widget', e.target.dataset.widget);
+          e.target.classList.add('dragging');
+        });
+
+        widget.addEventListener('dragend', (e) => {
+          e.target.classList.remove('dragging');
+        });
+      });
+
+      canvas.addEventListener('dragover', (e) => {
+        e.preventDefault();
+      });
+
+      canvas.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const widgetType = e.dataTransfer.getData('widget');
+        addWidgetToReport(widgetType);
+      });
     }
-    
+
+    function addWidgetToReport(type) {
+      const canvas = document.getElementById('reportCanvas');
+      const widget = document.createElement('div');
+      widget.className = 'border rounded p-3 mb-3 bg-white';
+
+      const content = {
+        metrics: '<h5>Key Metrics</h5><p>Metrics widget placeholder</p>',
+        gantt: '<h5>Gantt Chart</h5><p>Gantt widget placeholder</p>',
+        scurve: '<h5>S-Curve</h5><p>S-Curve widget placeholder</p>',
+        table: '<h5>Data Table</h5><p>Table widget placeholder</p>',
+        recommendations: '<h5>AI Recommendations</h5><p>Recommendations widget placeholder</p>'
+      };
+
+      widget.innerHTML = content[type] + '<button class="btn btn-sm btn-danger float-end" onclick="this.parentElement.remove()">Remove</button>';
+      canvas.appendChild(widget);
+
+      if (canvas.querySelector('p.text-center')) {
+        canvas.querySelector('p.text-center').remove();
+      }
+    }
+
     // ==================== EXPORTS ====================
-    function exportCSV() {
-      const data = AppState.comparisonTable.getData();
-      const headers = Object.keys(data[0]);
-      
-      const csvContent = [
-        headers.join(','),
-        ...data.map(row => headers.map(h => `"${String(row[h] || '').replace(/"/g, '""')}"`).join(','))
-      ].join('\n');
-      
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `P6_Analysis_${new Date().toISOString().slice(0, 10)}.csv`;
-      link.click();
-      
-      showToast('CSV exported successfully', 'success');
+    function exportToPowerPoint() {
+      if (!window.PptxGenJS) {
+        showToast('PowerPoint library not loaded', 'danger');
+        return;
+      }
+
+      showLoading(true, 'Generating PowerPoint...');
+
+      setTimeout(() => {
+        const pptx = new PptxGenJS();
+
+        // Title Slide
+        const slide1 = pptx.addSlide();
+        slide1.background = { fill: "667eea" };
+        slide1.addText("P6 Delay Analysis Report", {
+          x: 0.5, y: 2.5, w: 9, h: 1,
+          fontSize: 44, color: "FFFFFF", bold: true, align: "center"
+        });
+        slide1.addText(new Date().toLocaleDateString(), {
+          x: 0.5, y: 3.8, w: 9, h: 0.5,
+          fontSize: 20, color: "FFFFFF", align: "center"
+        });
+
+        // Metrics Slide
+        const slide2 = pptx.addSlide();
+        slide2.addText("Key Performance Metrics", { x: 0.5, y: 0.5, w: 9, h: 0.6, fontSize: 32, bold: true });
+
+        const metrics = [
+          ["Metric", "Value"],
+          ["Total Delay", `${AppState.comparisonData.reduce((acc, r) => acc + Math.max(0, r["Slippage (days)"] || 0), 0)} days`],
+          ["Activities with Slippage", AppState.comparisonData.filter(r => r["Slippage (days)"] > 0).length],
+          ["Critical Path Items", AppState.criticalPath.length]
+        ];
+
+        slide2.addTable(metrics, {
+          x: 1, y: 1.5, w: 8, h: 3,
+          colW: [4, 4],
+          border: { pt: 1, color: "CFCFCF" },
+          fill: { color: "F7F7F7" },
+          fontSize: 18
+        });
+
+        // Recommendations Slide
+        const slide3 = pptx.addSlide();
+        slide3.addText("AI Recommendations", { x: 0.5, y: 0.5, w: 9, h: 0.6, fontSize: 32, bold: true });
+
+        const { recommendations } = generateRecommendations();
+        recommendations.slice(0, 3).forEach((rec, i) => {
+          slide3.addText(`${i + 1}. ${rec.title}`, {
+            x: 0.5, y: 1.5 + (i * 1.2), w: 9, h: 0.4,
+            fontSize: 20, bold: true, color: "333333"
+          });
+          slide3.addText(rec.description, {
+            x: 0.7, y: 1.9 + (i * 1.2), w: 8.8, h: 0.6,
+            fontSize: 14, color: "666666"
+          });
+        });
+
+        pptx.writeFile({ fileName: `P6_Analysis_${new Date().toISOString().slice(0,10)}.pptx` });
+
+        showLoading(false);
+        showToast('PowerPoint exported successfully!', 'success');
+      }, 1000);
     }
-    
-    function exportPDF() {
+
+    function exportToPDF() {
       showLoading(true, 'Generating PDF...');
-      
+
       setTimeout(() => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l', 'pt', 'a4');
-        
-        doc.setFontSize(18);
-        doc.text('P6 Delay Forensic Analysis Report', 40, 40);
-        
+
+        doc.setFontSize(24);
+        doc.text('P6 Delay Analysis Report', 40, 50);
+
         doc.setFontSize(12);
-        doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 60);
-        
-        const totalDelay = AppState.comparisonData.reduce((acc, row) => 
-          acc + (row["Slippage (days)"] || 0), 0);
-        doc.text(`Total Project Delay: ${totalDelay} days`, 40, 80);
-        
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 80);
+
+        const totalDelay = AppState.comparisonData.reduce((acc, r) => acc + Math.max(0, r["Slippage (days)"] || 0), 0);
+        doc.text(`Total Project Delay: ${totalDelay} days`, 40, 110);
+        doc.text(`Critical Path Activities: ${AppState.criticalPath.length}`, 40, 130);
+
         // Add charts
-        const statusCanvas = document.getElementById('statusHistogram');
-        const slipCanvas = document.getElementById('slippageHeatmap');
-        
-        doc.addImage(statusCanvas.toDataURL(), 'PNG', 40, 100, 350, 200);
-        doc.addImage(slipCanvas.toDataURL(), 'PNG', 400, 100, 350, 200);
-        
-        doc.save(`P6_Analysis_${new Date().toISOString().slice(0, 10)}.pdf`);
-        
+        const sCurveCanvas = document.getElementById('sCurveChart');
+        if (sCurveCanvas) {
+          doc.addImage(sCurveCanvas.toDataURL(), 'PNG', 40, 160, 350, 200);
+        }
+
+        doc.save(`P6_Analysis_${new Date().toISOString().slice(0,10)}.pdf`);
+
         showLoading(false);
-        showToast('PDF exported successfully', 'success');
-      }, 500);
+        showToast('PDF exported successfully!', 'success');
+      }, 1000);
     }
-    
-    // ==================== THEME TOGGLE ====================
-    function toggleTheme() {
-      const html = document.documentElement;
-      const currentTheme = html.getAttribute('data-bs-theme');
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      
-      html.setAttribute('data-bs-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-      
-      const icon = document.querySelector('#themeToggle i');
-      icon.className = newTheme === 'light' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
-      
-      // Rebuild charts to match theme
-      if (AppState.analysisComplete) {
-        buildCharts();
+
+    function exportToCSV() {
+      const headers = Object.keys(AppState.comparisonData[0]);
+      const csvContent = [
+        headers.join(','),
+        ...AppState.comparisonData.map(row => 
+          headers.map(h => `"${String(row[h] || '').replace(/"/g, '""')}"`).join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `P6_Analysis_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+
+      showToast('CSV exported successfully!', 'success');
+    }
+
+    // ==================== PWA ====================
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installPrompt').classList.remove('d-none');
+    });
+
+    document.getElementById('installBtn')?.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          showToast('App installed successfully!', 'success');
+        }
+        deferredPrompt = null;
+        document.getElementById('installPrompt').classList.add('d-none');
       }
-    }
-    
+    });
+
+    document.getElementById('dismissInstallBtn')?.addEventListener('click', () => {
+      document.getElementById('installPrompt').classList.add('d-none');
+    });
+
+    // Generate PWA manifest
+    const manifest = {
+      name: "P6 Delay Forensic Analyzer",
+      short_name: "P6 Analyzer",
+      description: "Advanced schedule analysis tool",
+      start_url: "/",
+      display: "standalone",
+      background_color: "#667eea",
+      theme_color: "#667eea",
+      icons: [
+        {
+          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23667eea' width='100' height='100'/%3E%3Ctext y='75' font-size='70' fill='white' text-anchor='middle' x='50'%3EP6%3C/text%3E%3C/svg%3E",
+          sizes: "512x512",
+          type: "image/svg+xml"
+        }
+      ]
+    };
+
+    const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+    const manifestURL = URL.createObjectURL(manifestBlob);
+    document.getElementById('pwa-manifest').href = manifestURL;
+
     // ==================== INITIALIZATION ====================
     document.addEventListener('DOMContentLoaded', () => {
-      // Setup drag & drop
-      setupDragDrop('baselineZone', 'baselineFile', 'baselineData');
-      setupDragDrop('currentZone', 'currentFile', 'currentData');
-      
-      // Load saved theme
-      const savedTheme = localStorage.getItem('theme') || 'light';
-      document.documentElement.setAttribute('data-bs-theme', savedTheme);
-      const icon = document.querySelector('#themeToggle i');
-      icon.className = savedTheme === 'light' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
-      
+      // Setup file uploads
+      setupDragDrop('baselineZone', 'baselineFile', (files) => {
+        parseFile(files[0], (data) => {
+          AppState.baselineData = data;
+          document.getElementById('baselineZone').classList.add('loaded');
+          document.getElementById('baselineInfo').classList.remove('d-none');
+          document.getElementById('baselineFileName').textContent = files[0].name;
+          checkReadyToAnalyze();
+        });
+      });
+
+      setupDragDrop('currentZone', 'currentFile', (files) => {
+        parseFile(files[0], (data) => {
+          AppState.currentData = data;
+          document.getElementById('currentZone').classList.add('loaded');
+          document.getElementById('currentInfo').classList.remove('d-none');
+          document.getElementById('currentFileName').textContent = files[0].name;
+          checkReadyToAnalyze();
+        });
+      });
+
+      setupDragDrop('additionalZone', 'additionalFile', (files) => {
+        files.forEach(file => {
+          parseFile(file, (data) => {
+            AppState.additionalVersions.push({ name: file.name, data });
+            document.getElementById('additionalInfo').classList.remove('d-none');
+            document.getElementById('additionalCount').textContent = AppState.additionalVersions.length;
+          });
+        });
+      });
+
+      function checkReadyToAnalyze() {
+        if (AppState.baselineData.length && AppState.currentData.length) {
+          document.getElementById('analyzeBtn').disabled = false;
+        }
+      }
+
       // Event listeners
-      document.getElementById('themeToggle').addEventListener('click', toggleTheme);
       document.getElementById('loadSampleBtn').addEventListener('click', generateSampleData);
-      document.getElementById('analyzeBtn').addEventListener('click', performAnalysis);
-      document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
-      document.getElementById('exportPdfBtn').addEventListener('click', exportPDF);
-      
-      // Filters
-      document.getElementById('wbsFilter').addEventListener('input', applyFilters);
-      document.getElementById('slippageThreshold').addEventListener('input', applyFilters);
-      document.getElementById('changeTypeFilter').addEventListener('change', applyFilters);
-      document.getElementById('clearFiltersBtn').addEventListener('click', clearAllFilters);
-      
-      // Make removeFilter available globally
-      window.removeFilter = removeFilter;
-      
-      showToast('Welcome to P6 Delay Forensic Analyzer Pro', 'success');
+      document.getElementById('analyzeBtn').addEventListener('click', () => {
+        performAnalysis();
+        setupWhatIfScenarios();
+      });
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const html = document.documentElement;
+        const theme = html.getAttribute('data-bs-theme') === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-bs-theme', theme);
+        document.querySelector('#themeToggle i').className = theme === 'light' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+      });
+
+      // Export buttons
+      document.getElementById('exportPptBtn').addEventListener('click', exportToPowerPoint);
+      document.getElementById('exportPdfBtn').addEventListener('click', exportToPDF);
+      document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
+
+      // Report builder
+      setupReportBuilder();
+
+      showToast('Welcome to P6 Analyzer Ultimate!', 'success');
     });
   </script>
 </body>
