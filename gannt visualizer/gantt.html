@@ -759,7 +759,7 @@
       <!-- Column 5 => Person Slicers -->
       <div class="toolbar-column" style="align-items:center;">
         <div class="toolbar-group" style="align-items:center;">
-          <span style="font-weight:700;">Person Slicers</span>
+          <span style="font-weight:700;">Staff Filters</span>
           <div class="slicers-horizontal">
             <div class="slicer-group">
               <label>Discipline</label>
@@ -780,14 +780,14 @@
               <select id="slicerLocationSelect" class="form-select form-select-sm" multiple></select>
             </div>
           </div>
-          <button id="clearAllFiltersBtn" class="btn btn-sm" style="margin-top:10px;">Clear All Filters</button>
+          <button id="clearAllFiltersBtn" class="btn btn-sm" style="margin-top:10px;">Clear Staff Filters</button>
         </div>
       </div>
 
       <!-- Column 6 => Opportunity Slicers -->
       <div class="toolbar-column" style="align-items:center;">
         <div class="toolbar-group" style="align-items:center;">
-          <span style="font-weight:700;">Opportunity Slicers</span>
+          <span style="font-weight:700;">Opportunity Filters</span>
           <div class="slicers-horizontal">
             <div class="slicer-group">
               <label>Discipline</label>
@@ -823,7 +823,7 @@
         <div class="toolbar-group" style="flex-direction: row; gap: 1rem; align-items:flex-end;">
           <!-- Sort Lines By side by side with Sort Bars By -->
           <div style="display:flex; flex-direction:column;">
-            <span style="font-weight:700;">Sort Lines By</span>
+            <span style="font-weight:700;">Sort Line Items by:</span>
             <label style="font-size:0.8rem;">Field:</label>
             <select id="sortFieldSelect" class="form-select form-select-sm">
               <option value="">None</option>
@@ -842,7 +842,7 @@
             </select>
           </div>
           <div style="display:flex; flex-direction:column;">
-            <span style="font-weight:700;">Sort Bars By</span>
+            <span style="font-weight:700;">Sort Projects by:</span>
             <label style="font-size:0.8rem;">Field:</label>
             <select id="sortFieldSelect2" class="form-select form-select-sm">
               <option value="">None</option>
@@ -2810,8 +2810,8 @@
 
       function buildOptions(options) {
         return (
-          `<option value=""></option>` +
-          options.map((o) => `<option value="${o}">${o}</option>`).join("")
+          options.map((o) => `<option value="${o}">${o}</option>`).join("") +
+              `<option value=""></option>`
         );
       }
 
@@ -3445,8 +3445,8 @@
 
       function buildOptions(options) {
         return (
-          `<option value=""></option>` +
-          options.map((o) => `<option value="${o}">${o}</option>`).join("")
+          options.map((o) => `<option value="${o}">${o}</option>`).join("") +
+          `<option value=""></option>` 
         );
       }
 
@@ -3486,8 +3486,8 @@
 
       function buildOptions(options) {
         return (
-          `<option value=""></option>` +
-          options.map((o) => `<option value="${o}">${o}</option>`).join("")
+          options.map((o) => `<option value="${o}">${o}</option>`).join("") +
+          `<option value=""></option>`
         );
       }
 
