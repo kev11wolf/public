@@ -1,4 +1,6 @@
-<html lang="en"><head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="UTF-8">
 <title>Meal Planner Pro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -6,11 +8,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Meal Planner">
 <meta name="theme-color" content="#0d0d1a">
-<link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='0.9em' font-size='90'&gt;🍽️&lt;/text&gt;&lt;/svg&gt;">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='0.9em' font-size='90'&gt;🍽️&lt;/text&gt;&lt;/svg&gt;">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🍽️</text></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🍽️</text></svg>">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 :root{
@@ -804,6 +806,17 @@ opacity:1;
 }
 }
 
+@keyframes slideOutRight{
+from{
+transform:translateX(0);
+opacity:1;
+}
+to{
+transform:translateX(500px);
+opacity:0;
+}
+}
+
 .toast-notification.success{
 border-left:4px solid var(--success);
 }
@@ -927,7 +940,7 @@ grid-template-columns:repeat(7,1fr);
 }
 </style>
 </head>
-<body class="" style="">
+<body>
 
 <div class="app-container">
 <header class="app-header">
@@ -977,57 +990,7 @@ grid-template-columns:repeat(7,1fr);
 <i class="bi bi-search"></i>
 <input type="text" class="search-box" id="searchBoxMobile" placeholder="Search recipes...">
 </div>
-<div class="recipe-items" id="recipePaletteMobile"><div class="recipe-item" data-recipe="Beer Brats">
-<div class="recipe-item-content">
-<span class="recipe-icon">🌭</span>
-<span>Beer Brats</span>
-</div>
-<div class="recipe-item-actions">
-<span class="icon-btn" data-action="edit" title="Edit recipe">
-<i class="bi bi-pencil"></i>
-</span>
-</div>
-</div><div class="recipe-item" data-recipe="Smash Burgers">
-<div class="recipe-item-content">
-<span class="recipe-icon">🍔</span>
-<span>Smash Burgers</span>
-</div>
-<div class="recipe-item-actions">
-<span class="icon-btn" data-action="edit" title="Edit recipe">
-<i class="bi bi-pencil"></i>
-</span>
-</div>
-</div><div class="recipe-item" data-recipe="Smoked Brisket">
-<div class="recipe-item-content">
-<span class="recipe-icon">🥓</span>
-<span>Smoked Brisket</span>
-</div>
-<div class="recipe-item-actions">
-<span class="icon-btn" data-action="edit" title="Edit recipe">
-<i class="bi bi-pencil"></i>
-</span>
-</div>
-</div><div class="recipe-item" data-recipe="Smoked Pork Butt">
-<div class="recipe-item-content">
-<span class="recipe-icon">🥩</span>
-<span>Smoked Pork Butt</span>
-</div>
-<div class="recipe-item-actions">
-<span class="icon-btn" data-action="edit" title="Edit recipe">
-<i class="bi bi-pencil"></i>
-</span>
-</div>
-</div><div class="recipe-item" data-recipe="Tacos">
-<div class="recipe-item-content">
-<span class="recipe-icon">🌮</span>
-<span>Tacos</span>
-</div>
-<div class="recipe-item-actions">
-<span class="icon-btn" data-action="edit" title="Edit recipe">
-<i class="bi bi-pencil"></i>
-</span>
-</div>
-</div></div>
+<div class="recipe-items" id="recipePaletteMobile"></div>
 </div>
 </div>
 
@@ -1041,57 +1004,7 @@ Recipe Library
 <i class="bi bi-search"></i>
 <input type="text" class="search-box" id="searchBoxDesktop" placeholder="Search recipes...">
 </div>
-<div class="recipe-items" id="recipePaletteDesktop"><div class="recipe-item" data-recipe="Beer Brats">
-<div class="recipe-item-content">
-<span class="recipe-icon">🌭</span>
-<span>Beer Brats</span>
-</div>
-<div class="recipe-item-actions">
-<span class="icon-btn" data-action="edit" title="Edit recipe">
-<i class="bi bi-pencil"></i>
-</span>
-</div>
-</div><div class="recipe-item" data-recipe="Smash Burgers">
-<div class="recipe-item-content">
-<span class="recipe-icon">🍔</span>
-<span>Smash Burgers</span>
-</div>
-<div class="recipe-item-actions">
-<span class="icon-btn" data-action="edit" title="Edit recipe">
-<i class="bi bi-pencil"></i>
-</span>
-</div>
-</div><div class="recipe-item" data-recipe="Smoked Brisket">
-<div class="recipe-item-content">
-<span class="recipe-icon">🥓</span>
-<span>Smoked Brisket</span>
-</div>
-<div class="recipe-item-actions">
-<span class="icon-btn" data-action="edit" title="Edit recipe">
-<i class="bi bi-pencil"></i>
-</span>
-</div>
-</div><div class="recipe-item" data-recipe="Smoked Pork Butt">
-<div class="recipe-item-content">
-<span class="recipe-icon">🥩</span>
-<span>Smoked Pork Butt</span>
-</div>
-<div class="recipe-item-actions">
-<span class="icon-btn" data-action="edit" title="Edit recipe">
-<i class="bi bi-pencil"></i>
-</span>
-</div>
-</div><div class="recipe-item" data-recipe="Tacos">
-<div class="recipe-item-content">
-<span class="recipe-icon">🌮</span>
-<span>Tacos</span>
-</div>
-<div class="recipe-item-actions">
-<span class="icon-btn" data-action="edit" title="Edit recipe">
-<i class="bi bi-pencil"></i>
-</span>
-</div>
-</div></div>
+<div class="recipe-items" id="recipePaletteDesktop"></div>
 </aside>
 
 <section>
@@ -1105,7 +1018,7 @@ Recipe Library
 <div class="weekday-label">Friday</div>
 <div class="weekday-label">Saturday</div>
 </div>
-<div class="calendar" id="calendar"><div class="day-card outside-trip" data-iso="2025-12-14"><div class="day-date d-md-none">Sun</div><div class="day-number">14</div></div><div class="day-card outside-trip" data-iso="2025-12-15"><div class="day-date d-md-none">Mon</div><div class="day-number">15</div></div><div class="day-card outside-trip" data-iso="2025-12-16"><div class="day-date d-md-none">Tue</div><div class="day-number">16</div></div><div class="day-card outside-trip" data-iso="2025-12-17"><div class="day-date d-md-none">Wed</div><div class="day-number">17</div></div><div class="day-card" data-iso="2025-12-18"><div class="day-date d-md-none">Thu</div><div class="day-number">18</div></div><div class="day-card" data-iso="2025-12-19"><div class="day-date d-md-none">Fri</div><div class="day-number">19</div></div><div class="day-card drop-success" data-iso="2025-12-20"><div class="day-date d-md-none">Sat</div><div class="day-number">20</div><div class="assigned-recipe"><span>🌮 Tacos</span><span class="clear-btn">×</span></div></div><div class="day-card drop-success" data-iso="2025-12-21"><div class="day-date d-md-none">Sun</div><div class="day-number">21</div><div class="assigned-recipe"><span>🌭 Beer Brats</span><span class="clear-btn">×</span></div></div><div class="day-card drop-success" data-iso="2025-12-22"><div class="day-date d-md-none">Mon</div><div class="day-number">22</div><div class="assigned-recipe"><span>🥩 Smoked Pork Butt</span><span class="clear-btn">×</span></div></div><div class="day-card" data-iso="2025-12-23"><div class="day-date d-md-none">Tue</div><div class="day-number">23</div></div><div class="day-card" data-iso="2025-12-24"><div class="day-date d-md-none">Wed</div><div class="day-number">24</div></div><div class="day-card drop-success" data-iso="2025-12-25"><div class="day-date d-md-none">Thu</div><div class="day-number">25</div><div class="assigned-recipe"><span>🥓 Smoked Brisket</span><span class="clear-btn">×</span></div></div><div class="day-card" data-iso="2025-12-26"><div class="day-date d-md-none">Fri</div><div class="day-number">26</div></div><div class="day-card" data-iso="2025-12-27"><div class="day-date d-md-none">Sat</div><div class="day-number">27</div></div><div class="day-card" data-iso="2025-12-28"><div class="day-date d-md-none">Sun</div><div class="day-number">28</div></div><div class="day-card outside-trip" data-iso="2025-12-29"><div class="day-date d-md-none">Mon</div><div class="day-number">29</div></div><div class="day-card outside-trip" data-iso="2025-12-30"><div class="day-date d-md-none">Tue</div><div class="day-number">30</div></div><div class="day-card outside-trip" data-iso="2025-12-31"><div class="day-date d-md-none">Wed</div><div class="day-number">31</div></div><div class="day-card outside-trip" data-iso="2026-01-01"><div class="day-date d-md-none">Thu</div><div class="day-number">1</div></div><div class="day-card outside-trip" data-iso="2026-01-02"><div class="day-date d-md-none">Fri</div><div class="day-number">2</div></div><div class="day-card outside-trip" data-iso="2026-01-03"><div class="day-date d-md-none">Sat</div><div class="day-number">3</div></div></div>
+<div class="calendar" id="calendar"></div>
 </div>
 
 <div class="recipe-details" id="recipeDetails">
@@ -1131,50 +1044,45 @@ Recipe Library
 <button id="cancelAssignBtn">Cancel</button>
 </div>
 
-<div class="modal fade" id="addRecipeModal" tabindex="-1" aria-hidden="true" style="display: none;">
+<div class="modal fade" id="addRecipeModal" tabindex="-1" aria-hidden="true">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header">
-<h5 class="modal-title" id="recipeModalTitle"><i class="bi bi-pencil"></i> Edit Recipe</h5>
+<h5 class="modal-title" id="recipeModalTitle"><i class="bi bi-plus-circle"></i> Add Recipe</h5>
 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <form id="addRecipeForm">
-<input type="hidden" id="editingRecipeKey" value="Beer Brats">
+<input type="hidden" id="editingRecipeKey">
 <div class="mb-3">
 <label class="form-label">Recipe Name (unique)</label>
-<input type="text" class="form-control" id="newKey" placeholder="e.g., Mom's Lasagna" required="" disabled="">
+<input type="text" class="form-control" id="newKey" placeholder="e.g., Mom's Lasagna" required>
 </div>
 <div class="mb-3">
 <label class="form-label">Display Title</label>
-<input type="text" class="form-control" id="newTitle" placeholder="e.g., Classic Homemade Lasagna" required="">
+<input type="text" class="form-control" id="newTitle" placeholder="e.g., Classic Homemade Lasagna" required>
 </div>
 <div class="mb-3">
 <label class="form-label">Ingredients (one per line)</label>
-<textarea class="form-control" id="newIngredients" rows="5" placeholder="1 lb ground beef
-2 cups marinara sauce
-1 box lasagna noodles" required=""></textarea>
+<textarea class="form-control" id="newIngredients" rows="5" placeholder="1 lb ground beef&#10;2 cups marinara sauce&#10;1 box lasagna noodles" required></textarea>
 </div>
 <div class="mb-3">
 <label class="form-label">Cooking Steps (one per line)</label>
-<textarea class="form-control" id="newSteps" rows="5" placeholder="Preheat oven to 375°F
-Brown the ground beef
-Layer noodles and sauce" required=""></textarea>
+<textarea class="form-control" id="newSteps" rows="5" placeholder="Preheat oven to 375°F&#10;Brown the ground beef&#10;Layer noodles and sauce" required></textarea>
 </div>
 <div class="mb-3">
-<label class="form-label">Tips &amp; Notes (optional, one per line)</label>
-<textarea class="form-control" id="newTips" rows="3" placeholder="Can be made ahead and frozen
-Leftovers keep for 3 days"></textarea>
+<label class="form-label">Tips & Notes (optional, one per line)</label>
+<textarea class="form-control" id="newTips" rows="3" placeholder="Can be made ahead and frozen&#10;Leftovers keep for 3 days"></textarea>
 </div>
 </form>
 </div>
 <div class="modal-footer">
 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-<button type="button" class="btn btn-danger" id="deleteRecipeBtn" style="display: block; margin-right: auto;">
+<button type="button" class="btn btn-danger" id="deleteRecipeBtn" style="display:none;margin-right:auto;">
 <i class="bi bi-trash"></i> Delete
 </button>
 <button type="button" class="btn btn-primary" id="saveRecipeBtn">
-<i class="bi bi-check-circle"></i> <span id="saveBtnText">Save Changes</span>
+<i class="bi bi-check-circle"></i> <span id="saveBtnText">Save Recipe</span>
 </button>
 </div>
 </div>
@@ -1356,17 +1264,13 @@ let recipes = {
   }
 };
 
-let assignments = {
-  "2025-12-21": "Beer Brats",
-  "2025-12-25": "Smoked Brisket",
-  "2025-12-22": "Smoked Pork Butt",
-  "2025-12-20": "Tacos"
-};
+let assignments = {};
 
 const STORAGE_KEY = 'meal-planner-v3';
 const RECIPES_KEY = 'meal-planner-recipes-v3';
 let isMobile = false;
 let selectedRecipeForAssign = null;
+let activeToasts = new Set();
 
 const calendarEl = document.getElementById('calendar');
 const recipeDetails = document.getElementById('recipeDetails');
@@ -1379,16 +1283,28 @@ function detectMobile() {
 return window.innerWidth < 768;
 }
 
+// FIXED: Improved toast notification with proper cleanup
 function showToast(message, type = 'success') {
 const toast = document.createElement('div');
 toast.className = `toast-notification ${type}`;
 const icons = { success: '✓', error: '✕', info: 'ℹ' };
 toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span>${message}</span>`;
 document.body.appendChild(toast);
+activeToasts.add(toast);
+
+// Auto-dismiss after 3 seconds
+const dismissTimer = setTimeout(() => {
+toast.style.animation = 'slideOutRight .3s ease-out';
 setTimeout(() => {
-toast.style.animation = 'slideInRight .3s ease-out reverse';
-setTimeout(() => toast.remove(), 300);
+if (toast.parentNode) {
+toast.remove();
+activeToasts.delete(toast);
+}
+}, 300);
 }, 3000);
+
+// Store timer on element for potential early cleanup
+toast._dismissTimer = dismissTimer;
 }
 
 function loadData() {
@@ -1726,18 +1642,52 @@ bootstrap.Modal.getInstance(document.getElementById('addRecipeModal')).hide();
 showToast('Recipe deleted', 'info');
 });
 
+// FIXED: Completely rewritten save function to capture full current state
 document.getElementById('downloadHtmlBtn').addEventListener('click', () => {
-let html = document.documentElement.outerHTML;
-html = html.replace(/let recipes = \{[\s\S]*?\n\};/, `let recipes = ${JSON.stringify(recipes, null, 2)};`);
-html = html.replace(/let assignments = \{[^}]*\};/, `let assignments = ${JSON.stringify(assignments, null, 2)};`);
-const blob = new Blob([html], { type: 'text/html' });
+// Clear all active toasts before saving
+activeToasts.forEach(toast => {
+if (toast._dismissTimer) clearTimeout(toast._dismissTimer);
+toast.remove();
+});
+activeToasts.clear();
+
+// Clone the document
+const clone = document.cloneNode(true);
+const cloneHtml = clone.documentElement;
+
+// Update the script section with current data
+const scriptTags = cloneHtml.querySelectorAll('script');
+scriptTags.forEach(script => {
+if (script.textContent.includes('let recipes =')) {
+// Replace recipes and assignments with current values
+let scriptContent = script.textContent;
+scriptContent = scriptContent.replace(
+/let recipes = \{[\s\S]*?\n\};/,
+`let recipes = ${JSON.stringify(recipes, null, 2)};`
+);
+scriptContent = scriptContent.replace(
+/let assignments = \{[^}]*\};/,
+`let assignments = ${JSON.stringify(assignments, null, 2)};`
+);
+script.textContent = scriptContent;
+}
+});
+
+// Get the full HTML with updated data
+let html = '<!DOCTYPE html>\n' + cloneHtml.outerHTML;
+
+// Create and download the file
+const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
 const url = URL.createObjectURL(blob);
 const a = document.createElement('a');
 a.href = url;
 a.download = `meal-planner-${new Date().toISOString().split('T')[0]}.html`;
+document.body.appendChild(a);
 a.click();
+document.body.removeChild(a);
 URL.revokeObjectURL(url);
-showToast('HTML saved with all data!', 'success');
+
+showToast('Meal plan saved successfully!', 'success');
 });
 
 document.getElementById('clearAllBtn').addEventListener('click', () => {
@@ -1760,10 +1710,18 @@ buildCalendar();
 }
 });
 
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+activeToasts.forEach(toast => {
+if (toast._dismissTimer) clearTimeout(toast._dismissTimer);
+});
+});
+
 loadData();
 buildPalette();
 buildCalendar();
 console.log('🍽️ Meal Planner Pro v3 ready!');
 </script>
 
-<div class="toast-notification success"><span class="toast-icon">✓</span><span>Tacos added to 12/19</span></div></body></html>
+</body>
+</html>
