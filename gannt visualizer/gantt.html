@@ -35,8 +35,7 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      background-color: #1C173E !important;
-      opacity: 100%;
+      background-color: rgba(28, 23, 62,1) !important;
       color: #fff !important;
       padding: 0.25rem 0.5rem;
       width: 100%;
@@ -668,6 +667,7 @@
       position: absolute !important; /* let it expand out of the navbar container */
       z-index: 9999 !important;     /* keep it above the table content */
     }
+
   </style>
 </head>
 
@@ -752,9 +752,11 @@
             <span>Future</span>
           </div>
         </div>
+        <!-- Added Undo button here, removing it from the hamburger menu -->
+        <button id="undoBtn" class="btn btn-sm" style="margin-top:10px;">Undo</button>
       </div>
 
-      <!-- Column 5 => Person Slicers (Removed "Client") -->
+      <!-- Column 5 => Person Slicers -->
       <div class="toolbar-column" style="align-items:center;">
         <div class="toolbar-group" style="align-items:center;">
           <span style="font-weight:700;">Person Slicers</span>
@@ -762,17 +764,20 @@
             <div class="slicer-group">
               <label>Discipline</label>
               <button id="clearDisciplineSlicerBtn" class="btn btn-sm" >Clear</button>
-              <select id="slicerDisciplineSelect" class="form-select form-select-sm"></select>
+              <!-- Changed to multiple -->
+              <select id="slicerDisciplineSelect" class="form-select form-select-sm" multiple></select>
             </div>
             <div class="slicer-group">
               <label>Experience</label>
               <button id="clearExperienceSlicerBtn" class="btn btn-sm" >Clear</button>
-              <select id="slicerExperienceSelect" class="form-select form-select-sm"></select>
+              <!-- Changed to multiple -->
+              <select id="slicerExperienceSelect" class="form-select form-select-sm" multiple></select>
             </div>
             <div class="slicer-group">
               <label>Location</label>
               <button id="clearLocationSlicerBtn" class="btn btn-sm" >Clear</button>
-              <select id="slicerLocationSelect" class="form-select form-select-sm"></select>
+              <!-- Changed to multiple -->
+              <select id="slicerLocationSelect" class="form-select form-select-sm" multiple></select>
             </div>
           </div>
           <button id="clearAllFiltersBtn" class="btn btn-sm" style="margin-top:10px;">Clear All Filters</button>
@@ -787,22 +792,26 @@
             <div class="slicer-group">
               <label>Discipline</label>
               <button id="clearDisciplineSlicerOppBtn" class="btn btn-sm" >Clear</button>
-              <select id="slicerDisciplineSelectOpp" class="form-select form-select-sm"></select>
+              <!-- Changed to multiple -->
+              <select id="slicerDisciplineSelectOpp" class="form-select form-select-sm" multiple></select>
             </div>
             <div class="slicer-group">
               <label>Client</label>
               <button id="clearClientSlicerOppBtn" class="btn btn-sm">Clear</button>
-              <select id="slicerClientSelectOpp" class="form-select form-select-sm"></select>
+              <!-- Changed to multiple -->
+              <select id="slicerClientSelectOpp" class="form-select form-select-sm" multiple></select>
             </div>
             <div class="slicer-group">
               <label>Experience</label>
               <button id="clearExperienceSlicerOppBtn" class="btn btn-sm" >Clear</button>
-              <select id="slicerExperienceSelectOpp" class="form-select form-select-sm"></select>
+              <!-- Changed to multiple -->
+              <select id="slicerExperienceSelectOpp" class="form-select form-select-sm" multiple></select>
             </div>
             <div class="slicer-group">
               <label>Location</label>
               <button id="clearLocationSlicerOppBtn" class="btn btn-sm" >Clear</button>
-              <select id="slicerLocationSelectOpp" class="form-select form-select-sm"></select>
+              <!-- Changed to multiple -->
+              <select id="slicerLocationSelectOpp" class="form-select form-select-sm" multiple></select>
             </div>
           </div>
           <button id="clearAllOppFiltersBtn" class="btn btn-sm" style="margin-top:10px;">Clear Opp. Filters</button>
@@ -877,7 +886,7 @@
             <li><a class="dropdown-item" href="#" id="aboutToggleBtn">About</a></li>
             <li><a class="dropdown-item" href="#" id="csvEditToggleBtn" style="display:none;">Edit CSV</a></li>
             <li><a class="dropdown-item" href="#" id="overviewToggleBtn">Overview</a></li>
-            <li><a class="dropdown-item" href="#" id="undoBtn">Undo</a></li>
+            <!-- Removed the Undo button from here, now a dedicated button -->
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="#" id="importCsvBtn">Import CSV</a></li>
             <li><a class="dropdown-item" href="#" id="downloadCsvBtn">Export CSV</a></li>
@@ -1155,7 +1164,8 @@
       future: "#6f42c1",
     };
 
-    let lines = [
+    // Hard-coded sample lines for resetting
+    const defaultSampleLines = [
       {
         id: 1,
         name: "Line One",
@@ -1220,6 +1230,9 @@
       },
     ];
 
+    // Start with some default lines
+    let lines = JSON.parse(JSON.stringify(defaultSampleLines));
+
     let startYear = 2025;
     let startWeek = 1;
     let endYear = 2035;
@@ -1232,18 +1245,18 @@
     let rowHeight = 40;
 
     let filters = { line: {}, bar: {} };
-    // Person slicers => discipline, experience, location only
+
+    // Multi-select slicers will store arrays of chosen values
     let slicersPerson = {
-      discipline: null,
-      experience: null,
-      location: null
+      discipline: [],
+      experience: [],
+      location: []
     };
-    // Opportunity slicers => discipline, client, experience, location
     let slicersOpp = {
-      discipline: null,
-      client: null,
-      experience: null,
-      location: null
+      discipline: [],
+      client: [],
+      experience: [],
+      location: []
     };
 
     let searchTerm = "";
@@ -1263,9 +1276,10 @@
     let currentEditorBar = null;
     let currentEditorLine = null;
 
-    // Now line sorting can consider "lineType":
-    let barSortField = "";
-    let barSortDirection = "asc";
+    // Set line-level sort defaults to lineType, desc
+    let barSortField = "lineType";
+    let barSortDirection = "desc";
+    // bar-level sort is still empty
     let barSortField2 = "";
     let barSortDirection2 = "asc";
 
@@ -1323,19 +1337,25 @@
       renderTable();
     }
 
-    /* ------------------------------------------------------------------------------------------------
-       HELPER & UTILITY FUNCTIONS
-       ------------------------------------------------------------------------------------------------ */
+    /*
+     * Convert Year & Week to an absolute index
+     */
     function toAbsoluteWeek(year, week) {
       return year * 52 + (week - 1);
     }
 
+    /*
+     * Convert absolute index back to Year & Week
+     */
     function fromAbsoluteWeek(abs) {
       const y = Math.floor(abs / 52);
       const w = (abs % 52) + 1;
       return { year: y, week: w };
     }
 
+    /*
+     * Derive month from a given year and ISO week
+     */
     function getMonthFromYearWeek(year, week) {
       let january4 = new Date(year, 0, 4);
       let dayMs = 24 * 3600 * 1000;
@@ -1344,6 +1364,9 @@
       return date.getMonth();
     }
 
+    /*
+     * Return short month name from index
+     */
     function getMonthName(m) {
       const months = [
         "Jan",
@@ -1362,10 +1385,16 @@
       return months[m] || "";
     }
 
+    /*
+     * Get color for bar type
+     */
     function getColorFromType(t) {
       return typeColors[t] || "#fd7e14";
     }
 
+    /*
+     * Save chart to localStorage
+     */
     function saveToLocalStorage() {
       const chartData = {
         lines,
@@ -1383,6 +1412,9 @@
       localStorage.setItem("ganttChartData", JSON.stringify(chartData));
     }
 
+    /*
+     * Load chart from localStorage
+     */
     function loadFromLocalStorage() {
       const stored = localStorage.getItem("ganttChartData");
       if (!stored) return;
@@ -1416,6 +1448,9 @@
       }
     }
 
+    /*
+     * Update the legend swatches
+     */
     function updateLegendSwatches() {
       document.getElementById("legendSecuredSwatch").style.backgroundColor =
         typeColors.secured;
@@ -1427,6 +1462,9 @@
         typeColors.future;
     }
 
+    /*
+     * Apply theme (dark/light) to body
+     */
     function applyTheme() {
       if (currentTheme === "dark") {
         document.body.classList.add("dark-theme");
@@ -1438,29 +1476,44 @@
       saveToLocalStorage();
     }
 
+    /*
+     * Update rowHeight & cellWidth in CSS
+     */
     function updateCSSVariables() {
       document.documentElement.style.setProperty("--cell-width", cellWidth + "px");
       document.documentElement.style.setProperty("--row-height", rowHeight + "px");
     }
 
+    /*
+     * Return the current display range for the timescale
+     */
     function getDisplayRange() {
       let ds = toAbsoluteWeek(startYear, startWeek);
       let de = toAbsoluteWeek(endYear, endWeek);
       return { displayStart: ds, displayEnd: de };
     }
 
+    /*
+     * Unselect all bars
+     */
     function unselectAllBars() {
       lines.forEach((line) =>
         line.bars.forEach((bar) => (bar.selected = false))
       );
     }
 
+    /*
+     * Clear bar highlights
+     */
     function clearHighlights() {
       document
         .querySelectorAll(".bar.highlighted")
         .forEach((el) => el.classList.remove("highlighted"));
     }
 
+    /*
+     * Reposition bar text after re-render or scroll
+     */
     function updateBarTextPositions() {
       let scrollLeft = tableWrapper.scrollLeft;
       let viewportWidth = tableWrapper.clientWidth;
@@ -1838,45 +1891,65 @@
           }
         }
 
-        // slicers => If line.type== 'person', apply person slicers, else if 'opportunity', apply opp slicers
+        // Distinguish line types
         let isPerson = (line.type || "").toLowerCase() === "person";
         let isOpp = (line.type || "").toLowerCase() === "opportunity";
 
+        // Person slicers: check if any of the line's discipline/experience/location matches
         if (isPerson) {
-          if (slicersPerson.discipline) {
+          // check discipline slicer
+          if (slicersPerson.discipline.length > 0) {
             let discLower = (line.discipline || "").toLowerCase();
-            if (discLower !== slicersPerson.discipline.toLowerCase()) return false;
+            // Must match at least one of the chosen disciplines
+            if (!slicersPerson.discipline.map(d => d.toLowerCase()).includes(discLower)) {
+              return false;
+            }
           }
-          if (slicersPerson.experience) {
+          if (slicersPerson.experience.length > 0) {
             let exprLower = (line.experience || "").toLowerCase();
-            if (exprLower !== slicersPerson.experience.toLowerCase()) return false;
+            if (!slicersPerson.experience.map(e => e.toLowerCase()).includes(exprLower)) {
+              return false;
+            }
           }
-          if (slicersPerson.location) {
+          if (slicersPerson.location.length > 0) {
             let locLower = (line.officeLocation || "").toLowerCase();
-            if (locLower !== slicersPerson.location.toLowerCase()) return false;
+            if (!slicersPerson.location.map(l => l.toLowerCase()).includes(locLower)) {
+              return false;
+            }
           }
-        } else if (isOpp) {
-          // discipline
-          if (slicersOpp.discipline) {
+        }
+
+        // Opp slicers
+        if (isOpp) {
+          if (slicersOpp.discipline.length > 0) {
             let discLower = (line.discipline || "").toLowerCase();
-            if (discLower !== slicersOpp.discipline.toLowerCase()) return false;
+            if (!slicersOpp.discipline.map(d => d.toLowerCase()).includes(discLower)) {
+              return false;
+            }
           }
-          // client
-          if (slicersOpp.client) {
-            const lineMatchesClient =
-              (line.client || "").toLowerCase() === slicersOpp.client.toLowerCase();
-            const barHasClient = line.bars.some(b => (b.client || "").toLowerCase() === slicersOpp.client.toLowerCase());
-            if (!lineMatchesClient && !barHasClient) return false;
+          if (slicersOpp.client.length > 0) {
+            const lineClientLower = (line.client || "").toLowerCase();
+            // The line's client might match or one of the bars might match
+            let barMatchesClient = line.bars.some(b => {
+              return slicersOpp.client.map(c => c.toLowerCase()).includes((b.client || "").toLowerCase());
+            });
+            let lineMatchesClient = slicersOpp.client.map(c => c.toLowerCase()).includes(lineClientLower);
+
+            if (!barMatchesClient && !lineMatchesClient) {
+              return false;
+            }
           }
-          // experience
-          if (slicersOpp.experience) {
+          if (slicersOpp.experience.length > 0) {
             let exprLower = (line.experience || "").toLowerCase();
-            if (exprLower !== slicersOpp.experience.toLowerCase()) return false;
+            if (!slicersOpp.experience.map(e => e.toLowerCase()).includes(exprLower)) {
+              return false;
+            }
           }
-          // location
-          if (slicersOpp.location) {
+          if (slicersOpp.location.length > 0) {
             let locLower = (line.officeLocation || "").toLowerCase();
-            if (locLower !== slicersOpp.location.toLowerCase()) return false;
+            if (!slicersOpp.location.map(l => l.toLowerCase()).includes(locLower)) {
+              return false;
+            }
           }
         }
 
@@ -2096,12 +2169,17 @@
       updateBarTextPositions();
     }
 
+    /*
+     * Select a bar on click
+     */
     function handleBarClickSelect(bar, e) {
       unselectAllBars();
       bar.selected = true;
     }
 
-    /* DRAG / MOUSE EVENTS */
+    /*
+     * Mousedown on a line => reorder
+     */
     function onLineMouseDown(e, line, lineIndex) {
       pushUndoState();
       dragging = true;
@@ -2113,6 +2191,9 @@
       e.preventDefault();
     }
 
+    /*
+     * Mousedown on a bar => move or resize
+     */
     function onBarMouseDown(e, line, bar, lineIndex) {
       pushUndoState();
       dragging = true;
@@ -2138,6 +2219,9 @@
       e.preventDefault();
     }
 
+    /*
+     * Mousemove => handle dragging
+     */
     document.addEventListener("mousemove", (e) => {
       if (!dragging) return;
 
@@ -2211,6 +2295,9 @@
       }
     });
 
+    /*
+     * Mouseup => stop dragging
+     */
     document.addEventListener("mouseup", () => {
       if (!dragging) return;
       dragging = false;
@@ -2235,6 +2322,9 @@
       dragType = null;
     });
 
+    /*
+     * Click => unselect lines/bars if clicking blank space
+     */
     document.addEventListener("click", (evt) => {
       if (!dragging) {
         let nm = evt.target.closest(".name-cell");
@@ -2499,115 +2589,148 @@
       }
     });
 
-    /* PERSON SLICERS => discipline, experience, location only */
+    /* PERSON SLICERS => now multi-select, storing arrays */
     const slicerDisciplineSelect = document.getElementById("slicerDisciplineSelect");
     const slicerExperienceSelect = document.getElementById("slicerExperienceSelect");
     const slicerLocationSelect = document.getElementById("slicerLocationSelect");
 
+    // Clear single dimension
     document.getElementById("clearDisciplineSlicerBtn").addEventListener("click", () => {
-      slicersPerson.discipline = null;
-      slicerDisciplineSelect.value = "";
+      slicersPerson.discipline = [];
+      // Clear selections in the multi-select
+      for(const opt of slicerDisciplineSelect.options) {
+        opt.selected = false;
+      }
       renderTable();
     });
     document.getElementById("clearExperienceSlicerBtn").addEventListener("click", () => {
-      slicersPerson.experience = null;
-      slicerExperienceSelect.value = "";
+      slicersPerson.experience = [];
+      for(const opt of slicerExperienceSelect.options) {
+        opt.selected = false;
+      }
       renderTable();
     });
     document.getElementById("clearLocationSlicerBtn").addEventListener("click", () => {
-      slicersPerson.location = null;
-      slicerLocationSelect.value = "";
+      slicersPerson.location = [];
+      for(const opt of slicerLocationSelect.options) {
+        opt.selected = false;
+      }
       renderTable();
     });
 
+    // Clear all person filters
     document.getElementById("clearAllFiltersBtn").addEventListener("click", () => {
-      slicersPerson.discipline = null;
-      slicersPerson.experience = null;
-      slicersPerson.location = null;
+      slicersPerson.discipline = [];
+      slicersPerson.experience = [];
+      slicersPerson.location = [];
       filters.line = {};
       filters.bar = {};
 
-      slicerDisciplineSelect.value = "";
-      slicerExperienceSelect.value = "";
-      slicerLocationSelect.value = "";
+      for(const opt of slicerDisciplineSelect.options) {
+        opt.selected = false;
+      }
+      for(const opt of slicerExperienceSelect.options) {
+        opt.selected = false;
+      }
+      for(const opt of slicerLocationSelect.options) {
+        opt.selected = false;
+      }
 
       renderTable();
     });
 
+    // On change, read all selected items into an array
     slicerDisciplineSelect.addEventListener("change", () => {
-      let selVal = slicerDisciplineSelect.value;
-      slicersPerson.discipline = selVal ? selVal : null;
+      let selected = Array.from(slicerDisciplineSelect.selectedOptions).map(o => o.value).filter(v => v);
+      slicersPerson.discipline = selected;
       renderTable();
     });
     slicerExperienceSelect.addEventListener("change", () => {
-      let selVal = slicerExperienceSelect.value;
-      slicersPerson.experience = selVal ? selVal : null;
+      let selected = Array.from(slicerExperienceSelect.selectedOptions).map(o => o.value).filter(v => v);
+      slicersPerson.experience = selected;
       renderTable();
     });
     slicerLocationSelect.addEventListener("change", () => {
-      let selVal = slicerLocationSelect.value;
-      slicersPerson.location = selVal ? selVal : null;
+      let selected = Array.from(slicerLocationSelect.selectedOptions).map(o => o.value).filter(v => v);
+      slicersPerson.location = selected;
       renderTable();
     });
 
-    /* OPPORTUNITY SLICERS => discipline, client, experience, location */
+    /* OPPORTUNITY SLICERS => now multi-select */
     const slicerDisciplineSelectOpp = document.getElementById("slicerDisciplineSelectOpp");
     const slicerClientSelectOpp = document.getElementById("slicerClientSelectOpp");
     const slicerExperienceSelectOpp = document.getElementById("slicerExperienceSelectOpp");
     const slicerLocationSelectOpp = document.getElementById("slicerLocationSelectOpp");
 
     document.getElementById("clearDisciplineSlicerOppBtn").addEventListener("click", () => {
-      slicersOpp.discipline = null;
-      slicerDisciplineSelectOpp.value = "";
+      slicersOpp.discipline = [];
+      for(const opt of slicerDisciplineSelectOpp.options) {
+        opt.selected = false;
+      }
       renderTable();
     });
     document.getElementById("clearClientSlicerOppBtn").addEventListener("click", () => {
-      slicersOpp.client = null;
-      slicerClientSelectOpp.value = "";
+      slicersOpp.client = [];
+      for(const opt of slicerClientSelectOpp.options) {
+        opt.selected = false;
+      }
       renderTable();
     });
     document.getElementById("clearExperienceSlicerOppBtn").addEventListener("click", () => {
-      slicersOpp.experience = null;
-      slicerExperienceSelectOpp.value = "";
+      slicersOpp.experience = [];
+      for(const opt of slicerExperienceSelectOpp.options) {
+        opt.selected = false;
+      }
       renderTable();
     });
     document.getElementById("clearLocationSlicerOppBtn").addEventListener("click", () => {
-      slicersOpp.location = null;
-      slicerLocationSelectOpp.value = "";
+      slicersOpp.location = [];
+      for(const opt of slicerLocationSelectOpp.options) {
+        opt.selected = false;
+      }
       renderTable();
     });
-    document.getElementById("clearAllOppFiltersBtn").addEventListener("click", () => {
-      slicersOpp.discipline = null;
-      slicersOpp.client = null;
-      slicersOpp.experience = null;
-      slicersOpp.location = null;
 
-      slicerDisciplineSelectOpp.value = "";
-      slicerClientSelectOpp.value = "";
-      slicerExperienceSelectOpp.value = "";
-      slicerLocationSelectOpp.value = "";
+    document.getElementById("clearAllOppFiltersBtn").addEventListener("click", () => {
+      slicersOpp.discipline = [];
+      slicersOpp.client = [];
+      slicersOpp.experience = [];
+      slicersOpp.location = [];
+
+      for(const opt of slicerDisciplineSelectOpp.options) {
+        opt.selected = false;
+      }
+      for(const opt of slicerClientSelectOpp.options) {
+        opt.selected = false;
+      }
+      for(const opt of slicerExperienceSelectOpp.options) {
+        opt.selected = false;
+      }
+      for(const opt of slicerLocationSelectOpp.options) {
+        opt.selected = false;
+      }
 
       renderTable();
     });
 
     slicerDisciplineSelectOpp.addEventListener("change", () => {
-      let selVal = slicerDisciplineSelectOpp.value;
-      slicersOpp.discipline = selVal ? selVal : null;
+      let selected = Array.from(slicerDisciplineSelectOpp.selectedOptions).map(o => o.value).filter(v => v);
+      slicersOpp.discipline = selected;
       renderTable();
     });
     slicerClientSelectOpp.addEventListener("change", () => {
-      let selVal = slicerClientSelectOpp.value;
-      slicersOpp.client = selVal ? selVal : null;
+      let selected = Array.from(slicerClientSelectOpp.selectedOptions).map(o => o.value).filter(v => v);
+      slicersOpp.client = selected;
       renderTable();
     });
     slicerExperienceSelectOpp.addEventListener("change", () => {
-      let selVal = slicerExperienceSelectOpp.value;
-      slicersOpp.experience = selVal ? selVal : null;
+      let selected = Array.from(slicerExperienceSelectOpp.selectedOptions).map(o => o.value).filter(v => v);
+      slicersOpp.experience = selected;
       renderTable();
     });
     slicerLocationSelectOpp.addEventListener("change", () => {
-      let selVal = slicerLocationSelectOpp.value;
-      slicersOpp.location = selVal ? selVal : null;
+      let selected = Array.from(slicerLocationSelectOpp.selectedOptions).map(o => o.value).filter(v => v);
+      slicersOpp.location = selected;
       renderTable();
     });
 
@@ -2904,7 +3027,7 @@
     function buildCsv(linesArray) {
       let csvStr =
         "Line ID,Line Name,Line Client,Line Discipline,Line Experience,Line OfficeLocation,Line GeoLocation,Line Type," +
-        "Bar ID,Bar Label,Project Name,Client,Discipline,Experience,LOE,Location,Assigned to,Proposed,Type," +
+        "Bar ID,Bar Label,Project Name,Client,Discipline,Experience,LOE,Location,AssignedTo,Proposed,Type," +
         "Start Year,Start Week,End Year,End Week,Duration (weeks)\n";
 
       linesArray.forEach((line) => {
@@ -3097,6 +3220,9 @@
     startYearInput.addEventListener("change", timescaleChange);
     startWeekInput.addEventListener("change", timescaleChange);
 
+    /*
+     * Parse CSV into lines & bars
+     */
     function parseCsv(csvString) {
       let linesArr = csvString.split(/\r?\n/);
       if (!linesArr.length) return { lines: [], lineCounter: 0, barCounter: 0 };
@@ -3248,14 +3374,52 @@
       renderTable();
     });
 
-    /* CLEAR STORAGE button => reload */
-    const clearStorageBtn = document.getElementById("clearStorageBtn");
+    /*
+     * Clear storage => now resets lines to default sample data
+     */
     clearStorageBtn.addEventListener("click", () => {
+      // Remove the saved chart data from localStorage
       localStorage.removeItem("ganttChartData");
-      location.reload();
+      
+      // Reset lines to default sample
+      lines = JSON.parse(JSON.stringify(defaultSampleLines));
+      lineCounter = 2;
+      barCounter = 102;
+
+      // Reset everything else as needed
+      startYear = 2025;
+      startWeek = 1;
+      endYear = 2035;
+      endWeek = 52;
+      cellWidth = 150;
+      rowHeight = 40;
+      barSortField = "lineType";
+      barSortDirection = "desc";
+
+      // Clear filters
+      filters.line = {};
+      filters.bar = {};
+      slicersPerson.discipline = [];
+      slicersPerson.experience = [];
+      slicersPerson.location = [];
+      slicersOpp.discipline = [];
+      slicersOpp.client = [];
+      slicersOpp.experience = [];
+      slicersOpp.location = [];
+
+      // Repopulate slicers and re-render
+      populateSlicersPerson();
+      populateSlicersOpp();
+      updateCSSVariables();
+      applyTheme();
+      renderTable();
+      // Save new state
+      saveToLocalStorage();
     });
 
-    /* Re-populate Person slicers => discipline, experience, location only */
+    /*
+     * Re-populate Person slicers => discipline, experience, location only
+     */
     function populateSlicersPerson() {
       let disciplineSet = new Set();
       let experienceSet = new Set();
@@ -3291,7 +3455,9 @@
       slicerLocationSelect.innerHTML = buildOptions(locArr);
     }
 
-    /* Re-populate Opp slicers => discipline, client, experience, location */
+    /*
+     * Re-populate Opp slicers => discipline, client, experience, location
+     */
     function populateSlicersOpp() {
       let disciplineSet = new Set();
       let clientSet = new Set();
@@ -3331,7 +3497,9 @@
       slicerLocationSelectOpp.innerHTML = buildOptions(locArr);
     }
 
-    /* INIT => on window load */
+    /*
+     * Init => load from localStorage or keep defaults
+     */
     const tableWrapper = document.getElementById("tableWrapper");
     const ganttTable = document.getElementById("ganttTable");
     const tableBody = document.getElementById("tableBody");
@@ -3363,6 +3531,9 @@
       window.addEventListener("resize", () => updateBarTextPositions());
     }
 
+    /*
+     * Build year and week selects
+     */
     function populateDateSelects() {
       let years = [];
       for (let y = 2023; y <= 2040; y++) {
@@ -3393,6 +3564,13 @@
     }
 
     window.addEventListener("load", init);
+
+    /* 
+     * Undo button event
+     */
+    undoBtn.addEventListener("click", () => {
+      undoLastAction();
+    });
   </script>
 </body>
 </html>
