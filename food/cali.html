@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="UTF-8">
 <title>Meal Planner Pro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -8,11 +7,30 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Meal Planner">
 <meta name="theme-color" content="#0d0d1a">
-<link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🍽️</text></svg>">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🍽️</text></svg>">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='0.9em' font-size='90'&gt;🍽️&lt;/text&gt;&lt;/svg&gt;">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='0.9em' font-size='90'&gt;🍽️&lt;/text&gt;&lt;/svg&gt;">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+
+<!-- Google Analytics - Replace YOUR_GA_MEASUREMENT_ID with your actual Google Analytics ID -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=YOUR_GA_MEASUREMENT_ID"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'YOUR_GA_MEASUREMENT_ID');
+
+// Custom event tracking helper
+function trackEvent(category, action, label) {
+  if (typeof gtag !== 'undefined') {
+    gtag('event', action, {
+      'event_category': category,
+      'event_label': label
+    });
+  }
+}
+</script>
 
 <style>
 :root{
@@ -338,6 +356,27 @@ font-size:1.2rem;
 flex-shrink:0;
 }
 
+/* NEW: Recipe thumbnail styles */
+.recipe-thumbnail{
+width:40px;
+height:40px;
+border-radius:var(--radius-sm);
+object-fit:cover;
+flex-shrink:0;
+border:1px solid var(--card-border);
+}
+
+.recipe-thumbnail-large{
+width:100%;
+max-width:400px;
+height:auto;
+max-height:300px;
+object-fit:cover;
+border-radius:var(--radius-lg);
+margin-bottom:var(--spacing-lg);
+border:1px solid var(--card-border);
+}
+
 .icon-btn{
 width:32px;
 height:32px;
@@ -657,6 +696,111 @@ outline:none;
 color:var(--text-muted);
 }
 
+/* NEW: Image upload preview styles */
+.image-upload-area{
+border:2px dashed var(--card-border);
+border-radius:var(--radius-md);
+padding:var(--spacing-lg);
+text-align:center;
+cursor:pointer;
+transition:all .2s;
+background:var(--card-bg);
+}
+
+.image-upload-area:hover{
+border-color:var(--accent-primary);
+background:var(--card-bg-hover);
+}
+
+.image-upload-area.has-image{
+border-style:solid;
+padding:0;
+}
+
+.image-preview{
+width:100%;
+max-height:200px;
+object-fit:cover;
+border-radius:var(--radius-md);
+}
+
+.image-actions{
+display:flex;
+gap:var(--spacing-sm);
+justify-content:center;
+margin-top:var(--spacing-sm);
+}
+
+/* NEW: Drag-to-reorder list styles */
+.draggable-list{
+list-style:none;
+padding:0;
+margin:0;
+}
+
+.draggable-item{
+background:var(--card-bg);
+border:1px solid var(--card-border);
+border-radius:var(--radius-sm);
+padding:var(--spacing-sm) var(--spacing-md);
+margin-bottom:var(--spacing-xs);
+display:flex;
+align-items:center;
+gap:var(--spacing-sm);
+cursor:move;
+transition:all .2s;
+}
+
+.draggable-item:hover{
+background:var(--card-bg-hover);
+border-color:var(--accent-primary);
+}
+
+.draggable-item.dragging{
+opacity:.5;
+}
+
+.draggable-item.drag-over{
+border-top:3px solid var(--accent-primary);
+}
+
+.drag-handle{
+color:var(--text-muted);
+cursor:grab;
+font-size:1.1rem;
+}
+
+.drag-handle:active{
+cursor:grabbing;
+}
+
+.draggable-item-content{
+flex:1;
+color:var(--text-primary);
+}
+
+.draggable-item-remove{
+color:var(--danger);
+cursor:pointer;
+font-size:1.1rem;
+opacity:.7;
+transition:opacity .2s;
+}
+
+.draggable-item-remove:hover{
+opacity:1;
+}
+
+.add-item-input{
+display:flex;
+gap:var(--spacing-sm);
+margin-top:var(--spacing-sm);
+}
+
+.add-item-input input{
+flex:1;
+}
+
 .offcanvas{
 background:var(--bg-primary);
 border-right:1px solid var(--card-border);
@@ -940,7 +1084,7 @@ grid-template-columns:repeat(7,1fr);
 }
 </style>
 </head>
-<body>
+<body style="" class="">
 
 <div class="app-container">
 <header class="app-header">
@@ -990,7 +1134,57 @@ grid-template-columns:repeat(7,1fr);
 <i class="bi bi-search"></i>
 <input type="text" class="search-box" id="searchBoxMobile" placeholder="Search recipes...">
 </div>
-<div class="recipe-items" id="recipePaletteMobile"></div>
+<div class="recipe-items" id="recipePaletteMobile"><div class="recipe-item" data-recipe="Beer Brats">
+    <div class="recipe-item-content">
+      <span class="recipe-icon">🌭</span>
+      <span>Beer Brats</span>
+    </div>
+    <div class="recipe-item-actions">
+      <span class="icon-btn" data-action="edit" title="Edit recipe">
+        <i class="bi bi-pencil"></i>
+      </span>
+    </div>
+  </div><div class="recipe-item" data-recipe="Smash Burgers">
+    <div class="recipe-item-content">
+      <span class="recipe-icon">🍔</span>
+      <span>Smash Burgers</span>
+    </div>
+    <div class="recipe-item-actions">
+      <span class="icon-btn" data-action="edit" title="Edit recipe">
+        <i class="bi bi-pencil"></i>
+      </span>
+    </div>
+  </div><div class="recipe-item" data-recipe="Smoked Brisket">
+    <div class="recipe-item-content">
+      <span class="recipe-icon">🥓</span>
+      <span>Smoked Brisket</span>
+    </div>
+    <div class="recipe-item-actions">
+      <span class="icon-btn" data-action="edit" title="Edit recipe">
+        <i class="bi bi-pencil"></i>
+      </span>
+    </div>
+  </div><div class="recipe-item" data-recipe="Smoked Pork Butt">
+    <div class="recipe-item-content">
+      <span class="recipe-icon">🥩</span>
+      <span>Smoked Pork Butt</span>
+    </div>
+    <div class="recipe-item-actions">
+      <span class="icon-btn" data-action="edit" title="Edit recipe">
+        <i class="bi bi-pencil"></i>
+      </span>
+    </div>
+  </div><div class="recipe-item" data-recipe="Tacos">
+    <div class="recipe-item-content">
+      <span class="recipe-icon">🌮</span>
+      <span>Tacos</span>
+    </div>
+    <div class="recipe-item-actions">
+      <span class="icon-btn" data-action="edit" title="Edit recipe">
+        <i class="bi bi-pencil"></i>
+      </span>
+    </div>
+  </div></div>
 </div>
 </div>
 
@@ -1004,7 +1198,57 @@ Recipe Library
 <i class="bi bi-search"></i>
 <input type="text" class="search-box" id="searchBoxDesktop" placeholder="Search recipes...">
 </div>
-<div class="recipe-items" id="recipePaletteDesktop"></div>
+<div class="recipe-items" id="recipePaletteDesktop"><div class="recipe-item" data-recipe="Beer Brats">
+    <div class="recipe-item-content">
+      <span class="recipe-icon">🌭</span>
+      <span>Beer Brats</span>
+    </div>
+    <div class="recipe-item-actions">
+      <span class="icon-btn" data-action="edit" title="Edit recipe">
+        <i class="bi bi-pencil"></i>
+      </span>
+    </div>
+  </div><div class="recipe-item" data-recipe="Smash Burgers">
+    <div class="recipe-item-content">
+      <span class="recipe-icon">🍔</span>
+      <span>Smash Burgers</span>
+    </div>
+    <div class="recipe-item-actions">
+      <span class="icon-btn" data-action="edit" title="Edit recipe">
+        <i class="bi bi-pencil"></i>
+      </span>
+    </div>
+  </div><div class="recipe-item" data-recipe="Smoked Brisket">
+    <div class="recipe-item-content">
+      <span class="recipe-icon">🥓</span>
+      <span>Smoked Brisket</span>
+    </div>
+    <div class="recipe-item-actions">
+      <span class="icon-btn" data-action="edit" title="Edit recipe">
+        <i class="bi bi-pencil"></i>
+      </span>
+    </div>
+  </div><div class="recipe-item" data-recipe="Smoked Pork Butt">
+    <div class="recipe-item-content">
+      <span class="recipe-icon">🥩</span>
+      <span>Smoked Pork Butt</span>
+    </div>
+    <div class="recipe-item-actions">
+      <span class="icon-btn" data-action="edit" title="Edit recipe">
+        <i class="bi bi-pencil"></i>
+      </span>
+    </div>
+  </div><div class="recipe-item" data-recipe="Tacos">
+    <div class="recipe-item-content">
+      <span class="recipe-icon">🌮</span>
+      <span>Tacos</span>
+    </div>
+    <div class="recipe-item-actions">
+      <span class="icon-btn" data-action="edit" title="Edit recipe">
+        <i class="bi bi-pencil"></i>
+      </span>
+    </div>
+  </div></div>
 </aside>
 
 <section>
@@ -1018,7 +1262,7 @@ Recipe Library
 <div class="weekday-label">Friday</div>
 <div class="weekday-label">Saturday</div>
 </div>
-<div class="calendar" id="calendar"></div>
+<div class="calendar" id="calendar"><div class="day-card outside-trip" data-iso="2025-12-14"><div class="day-date d-md-none">Sun</div><div class="day-number">14</div></div><div class="day-card outside-trip" data-iso="2025-12-15"><div class="day-date d-md-none">Mon</div><div class="day-number">15</div></div><div class="day-card outside-trip" data-iso="2025-12-16"><div class="day-date d-md-none">Tue</div><div class="day-number">16</div></div><div class="day-card outside-trip" data-iso="2025-12-17"><div class="day-date d-md-none">Wed</div><div class="day-number">17</div></div><div class="day-card" data-iso="2025-12-18"><div class="day-date d-md-none">Thu</div><div class="day-number">18</div></div><div class="day-card" data-iso="2025-12-19"><div class="day-date d-md-none">Fri</div><div class="day-number">19</div></div><div class="day-card" data-iso="2025-12-20"><div class="day-date d-md-none">Sat</div><div class="day-number">20</div></div><div class="day-card drop-success" data-iso="2025-12-21"><div class="day-date d-md-none">Sun</div><div class="day-number">21</div><div class="assigned-recipe"><span>🌭 Beer Brats</span><span class="clear-btn">×</span></div></div><div class="day-card drop-success" data-iso="2025-12-22"><div class="day-date d-md-none">Mon</div><div class="day-number">22</div><div class="assigned-recipe"><span>🌭 Beer Brats</span><span class="clear-btn">×</span></div></div><div class="day-card drop-success" data-iso="2025-12-23"><div class="day-date d-md-none">Tue</div><div class="day-number">23</div><div class="assigned-recipe"><span>🌭 Beer Brats</span><span class="clear-btn">×</span></div></div><div class="day-card drop-success" data-iso="2025-12-24"><div class="day-date d-md-none">Wed</div><div class="day-number">24</div><div class="assigned-recipe"><span>🌭 Beer Brats</span><span class="clear-btn">×</span></div></div><div class="day-card drop-success" data-iso="2025-12-25"><div class="day-date d-md-none">Thu</div><div class="day-number">25</div><div class="assigned-recipe"><span>🌭 Beer Brats</span><span class="clear-btn">×</span></div></div><div class="day-card" data-iso="2025-12-26"><div class="day-date d-md-none">Fri</div><div class="day-number">26</div></div><div class="day-card" data-iso="2025-12-27"><div class="day-date d-md-none">Sat</div><div class="day-number">27</div></div><div class="day-card" data-iso="2025-12-28"><div class="day-date d-md-none">Sun</div><div class="day-number">28</div></div><div class="day-card outside-trip" data-iso="2025-12-29"><div class="day-date d-md-none">Mon</div><div class="day-number">29</div></div><div class="day-card outside-trip" data-iso="2025-12-30"><div class="day-date d-md-none">Tue</div><div class="day-number">30</div></div><div class="day-card outside-trip" data-iso="2025-12-31"><div class="day-date d-md-none">Wed</div><div class="day-number">31</div></div><div class="day-card outside-trip" data-iso="2026-01-01"><div class="day-date d-md-none">Thu</div><div class="day-number">1</div></div><div class="day-card outside-trip" data-iso="2026-01-02"><div class="day-date d-md-none">Fri</div><div class="day-number">2</div></div><div class="day-card outside-trip" data-iso="2026-01-03"><div class="day-date d-md-none">Sat</div><div class="day-number">3</div></div></div>
 </div>
 
 <div class="recipe-details" id="recipeDetails">
@@ -1044,6 +1288,7 @@ Recipe Library
 <button id="cancelAssignBtn">Cancel</button>
 </div>
 
+<!-- Recipe Modal with NEW image upload and drag-to-reorder -->
 <div class="modal fade" id="addRecipeModal" tabindex="-1" aria-hidden="true">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
@@ -1054,25 +1299,60 @@ Recipe Library
 <div class="modal-body">
 <form id="addRecipeForm">
 <input type="hidden" id="editingRecipeKey">
+<input type="hidden" id="recipeImageData">
 <div class="mb-3">
 <label class="form-label">Recipe Name (unique)</label>
-<input type="text" class="form-control" id="newKey" placeholder="e.g., Mom's Lasagna" required>
+<input type="text" class="form-control" id="newKey" placeholder="e.g., Mom's Lasagna" required="">
 </div>
 <div class="mb-3">
 <label class="form-label">Display Title</label>
-<input type="text" class="form-control" id="newTitle" placeholder="e.g., Classic Homemade Lasagna" required>
+<input type="text" class="form-control" id="newTitle" placeholder="e.g., Classic Homemade Lasagna" required="">
 </div>
 <div class="mb-3">
-<label class="form-label">Ingredients (one per line)</label>
-<textarea class="form-control" id="newIngredients" rows="5" placeholder="1 lb ground beef&#10;2 cups marinara sauce&#10;1 box lasagna noodles" required></textarea>
+<label class="form-label">Recipe Image (optional)</label>
+<div class="image-upload-area" id="imageUploadArea">
+<input type="file" id="imageUpload" accept="image/*" style="display:none;">
+<div id="imageUploadPrompt">
+<i class="bi bi-image" style="font-size:2rem;opacity:.5;"></i>
+<p style="margin:.5rem 0 0;color:var(--text-muted);">Click to upload image</p>
+<small style="color:var(--text-muted);">Max 500KB recommended</small>
+</div>
+<img id="imagePreview" class="image-preview" style="display:none;">
+</div>
+<div class="image-actions" id="imageActions" style="display:none;">
+<button type="button" class="btn btn-sm btn-secondary" id="changeImageBtn">Change Image</button>
+<button type="button" class="btn btn-sm btn-danger" id="removeImageBtn">Remove</button>
+</div>
 </div>
 <div class="mb-3">
-<label class="form-label">Cooking Steps (one per line)</label>
-<textarea class="form-control" id="newSteps" rows="5" placeholder="Preheat oven to 375°F&#10;Brown the ground beef&#10;Layer noodles and sauce" required></textarea>
+<label class="form-label">Ingredients <small class="text-muted">(drag to reorder)</small></label>
+<ul class="draggable-list" id="ingredientsList"></ul>
+<div class="add-item-input">
+<input type="text" class="form-control" id="newIngredient" placeholder="Add ingredient...">
+<button type="button" class="btn btn-primary" id="addIngredientBtn">
+<i class="bi bi-plus"></i>
+</button>
+</div>
 </div>
 <div class="mb-3">
-<label class="form-label">Tips & Notes (optional, one per line)</label>
-<textarea class="form-control" id="newTips" rows="3" placeholder="Can be made ahead and frozen&#10;Leftovers keep for 3 days"></textarea>
+<label class="form-label">Cooking Steps <small class="text-muted">(drag to reorder)</small></label>
+<ol class="draggable-list" id="stepsList"></ol>
+<div class="add-item-input">
+<input type="text" class="form-control" id="newStep" placeholder="Add step...">
+<button type="button" class="btn btn-primary" id="addStepBtn">
+<i class="bi bi-plus"></i>
+</button>
+</div>
+</div>
+<div class="mb-3">
+<label class="form-label">Tips &amp; Notes <small class="text-muted">(drag to reorder)</small></label>
+<ul class="draggable-list" id="tipsList"></ul>
+<div class="add-item-input">
+<input type="text" class="form-control" id="newTip" placeholder="Add tip...">
+<button type="button" class="btn btn-primary" id="addTipBtn">
+<i class="bi bi-plus"></i>
+</button>
+</div>
 </div>
 </form>
 </div>
@@ -1089,7 +1369,7 @@ Recipe Library
 </div>
 </div>
 
-<div class="modal fade" id="shoppingListModal" tabindex="-1">
+<div class="modal fade" id="shoppingListModal" tabindex="-1" style="display: none;" aria-hidden="true">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header">
@@ -1097,7 +1377,56 @@ Recipe Library
 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
-<div id="shoppingListContent" class="shopping-list"></div>
+<div id="shoppingListContent" class="shopping-list">
+      <div class="shopping-item" id="shop-0">
+        <input type="checkbox" id="check-0" onchange="document.getElementById('shop-0').classList.toggle('checked')">
+        <label for="check-0" class="shopping-item-text">
+          1 large onion, sliced
+        </label>
+      </div>
+    
+      <div class="shopping-item" id="shop-1">
+        <input type="checkbox" id="check-1" onchange="document.getElementById('shop-1').classList.toggle('checked')">
+        <label for="check-1" class="shopping-item-text">
+          1 Tbsp mustard seeds
+        </label>
+      </div>
+    
+      <div class="shopping-item" id="shop-2">
+        <input type="checkbox" id="check-2" onchange="document.getElementById('shop-2').classList.toggle('checked')">
+        <label for="check-2" class="shopping-item-text">
+          12 bratwurst links
+        </label>
+      </div>
+    
+      <div class="shopping-item" id="shop-3">
+        <input type="checkbox" id="check-3" onchange="document.getElementById('shop-3').classList.toggle('checked')">
+        <label for="check-3" class="shopping-item-text">
+          2 cups lager
+        </label>
+      </div>
+    
+      <div class="shopping-item" id="shop-4">
+        <input type="checkbox" id="check-4" onchange="document.getElementById('shop-4').classList.toggle('checked')">
+        <label for="check-4" class="shopping-item-text">
+          2 Tbsp butter
+        </label>
+      </div>
+    
+      <div class="shopping-item" id="shop-5">
+        <input type="checkbox" id="check-5" onchange="document.getElementById('shop-5').classList.toggle('checked')">
+        <label for="check-5" class="shopping-item-text">
+          Buns, sauerkraut, mustard
+        </label>
+      </div>
+    
+      <div class="shopping-item" id="shop-6">
+        <input type="checkbox" id="check-6" onchange="document.getElementById('shop-6').classList.toggle('checked')">
+        <label for="check-6" class="shopping-item-text">
+          Olive oil
+        </label>
+      </div>
+    </div>
 </div>
 <div class="modal-footer">
 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -1264,10 +1593,16 @@ let recipes = {
   }
 };
 
-let assignments = {};
+let assignments = {
+  "2025-12-21": "Beer Brats",
+  "2025-12-22": "Beer Brats",
+  "2025-12-23": "Beer Brats",
+  "2025-12-24": "Beer Brats",
+  "2025-12-25": "Beer Brats"
+};
 
-const STORAGE_KEY = 'meal-planner-v3';
-const RECIPES_KEY = 'meal-planner-recipes-v3';
+const STORAGE_KEY = 'meal-planner-v4';
+const RECIPES_KEY = 'meal-planner-recipes-v4';
 let isMobile = false;
 let selectedRecipeForAssign = null;
 let activeToasts = new Set();
@@ -1280,448 +1615,732 @@ const mobileAssignBanner = document.getElementById('mobileAssignBanner');
 const selectedRecipeName = document.getElementById('selectedRecipeName');
 
 function detectMobile() {
-return window.innerWidth < 768;
+  return window.innerWidth < 768;
 }
 
-// FIXED: Improved toast notification with proper cleanup
 function showToast(message, type = 'success') {
-const toast = document.createElement('div');
-toast.className = `toast-notification ${type}`;
-const icons = { success: '✓', error: '✕', info: 'ℹ' };
-toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span>${message}</span>`;
-document.body.appendChild(toast);
-activeToasts.add(toast);
+  const toast = document.createElement('div');
+  toast.className = `toast-notification ${type}`;
+  const icons = { success: '✓', error: '✕', info: 'ℹ' };
+  toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span>${message}</span>`;
+  document.body.appendChild(toast);
+  activeToasts.add(toast);
 
-// Auto-dismiss after 3 seconds
-const dismissTimer = setTimeout(() => {
-toast.style.animation = 'slideOutRight .3s ease-out';
-setTimeout(() => {
-if (toast.parentNode) {
-toast.remove();
-activeToasts.delete(toast);
-}
-}, 300);
-}, 3000);
+  const dismissTimer = setTimeout(() => {
+    toast.style.animation = 'slideOutRight .3s ease-out';
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.remove();
+        activeToasts.delete(toast);
+      }
+    }, 300);
+  }, 3000);
 
-// Store timer on element for potential early cleanup
-toast._dismissTimer = dismissTimer;
+  toast._dismissTimer = dismissTimer;
 }
 
 function loadData() {
-try {
-const savedAssignments = localStorage.getItem(STORAGE_KEY);
-if (savedAssignments) assignments = JSON.parse(savedAssignments);
-const savedRecipes = localStorage.getItem(RECIPES_KEY);
-if (savedRecipes) recipes = { ...recipes, ...JSON.parse(savedRecipes) };
-} catch (e) {
-console.error('Error loading data:', e);
-}
+  try {
+    const savedAssignments = localStorage.getItem(STORAGE_KEY);
+    if (savedAssignments) assignments = JSON.parse(savedAssignments);
+    const savedRecipes = localStorage.getItem(RECIPES_KEY);
+    if (savedRecipes) recipes = { ...recipes, ...JSON.parse(savedRecipes) };
+  } catch (e) {
+    console.error('Error loading data:', e);
+    trackEvent('Error', 'load_data_failed', e.message);
+  }
 }
 
 function saveAssignments() {
-localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
+  trackEvent('Data', 'save_assignments', Object.keys(assignments).length);
 }
 
 function saveRecipes() {
-localStorage.setItem(RECIPES_KEY, JSON.stringify(recipes));
+  localStorage.setItem(RECIPES_KEY, JSON.stringify(recipes));
+  trackEvent('Data', 'save_recipes', Object.keys(recipes).length);
 }
 
 function isInTrip(date) { return date >= tripStart && date <= tripEnd; }
 function isToday(date) {
-const today = new Date();
-return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+  const today = new Date();
+  return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
 }
 function formatDate(date) { return `${date.getMonth() + 1}/${date.getDate()}`; }
 function getWeekday(date) { return date.toLocaleDateString('en-US', { weekday: 'short' }); }
 
+// NEW: Image upload handler
+function setupImageUpload() {
+  const uploadArea = document.getElementById('imageUploadArea');
+  const fileInput = document.getElementById('imageUpload');
+  const preview = document.getElementById('imagePreview');
+  const prompt = document.getElementById('imageUploadPrompt');
+  const actions = document.getElementById('imageActions');
+  const imageDataInput = document.getElementById('recipeImageData');
+
+  uploadArea.addEventListener('click', () => {
+    if (!uploadArea.classList.contains('has-image')) {
+      fileInput.click();
+    }
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2000000) { // 2MB limit
+        showToast('Image too large! Please use image under 2MB', 'error');
+        trackEvent('Image', 'upload_failed', 'file_too_large');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target.result;
+        imageDataInput.value = base64;
+        preview.src = base64;
+        preview.style.display = 'block';
+        prompt.style.display = 'none';
+        uploadArea.classList.add('has-image');
+        actions.style.display = 'flex';
+        trackEvent('Image', 'upload_success', file.size);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  document.getElementById('changeImageBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    fileInput.click();
+  });
+
+  document.getElementById('removeImageBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    imageDataInput.value = '';
+    preview.src = '';
+    preview.style.display = 'none';
+    prompt.style.display = 'block';
+    uploadArea.classList.remove('has-image');
+    actions.style.display = 'none';
+    fileInput.value = '';
+    trackEvent('Image', 'remove', 'manual');
+  });
+}
+
+// NEW: Drag-to-reorder functionality
+function makeDraggable(listElement, onReorder) {
+  let draggedElement = null;
+
+  listElement.addEventListener('dragstart', (e) => {
+    if (e.target.classList.contains('draggable-item')) {
+      draggedElement = e.target;
+      e.target.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+  });
+
+  listElement.addEventListener('dragend', (e) => {
+    if (e.target.classList.contains('draggable-item')) {
+      e.target.classList.remove('dragging');
+      listElement.querySelectorAll('.draggable-item').forEach(item => {
+        item.classList.remove('drag-over');
+      });
+      if (onReorder) onReorder();
+    }
+  });
+
+  listElement.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(listElement, e.clientY);
+    if (afterElement == null) {
+      listElement.appendChild(draggedElement);
+    } else {
+      listElement.insertBefore(draggedElement, afterElement);
+    }
+  });
+}
+
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.draggable-item:not(.dragging)')];
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset: offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function createDraggableItem(text, onRemove) {
+  const li = document.createElement('li');
+  li.className = 'draggable-item';
+  li.draggable = true;
+  li.innerHTML = `
+    <i class="bi bi-grip-vertical drag-handle"></i>
+    <span class="draggable-item-content">${text}</span>
+    <i class="bi bi-x-circle draggable-item-remove"></i>
+  `;
+  li.querySelector('.draggable-item-remove').addEventListener('click', () => {
+    li.remove();
+    if (onRemove) onRemove();
+    trackEvent('Recipe', 'remove_item', 'draggable_list');
+  });
+  return li;
+}
+
+function populateDraggableList(listId, items) {
+  const list = document.getElementById(listId);
+  list.innerHTML = '';
+  items.forEach(item => {
+    list.appendChild(createDraggableItem(item));
+  });
+}
+
+function getDraggableListValues(listId) {
+  const list = document.getElementById(listId);
+  return Array.from(list.querySelectorAll('.draggable-item-content')).map(el => el.textContent);
+}
+
+function setupDraggableLists() {
+  makeDraggable(document.getElementById('ingredientsList'), () => {
+    trackEvent('Recipe', 'reorder_ingredients', 'drag');
+  });
+  makeDraggable(document.getElementById('stepsList'), () => {
+    trackEvent('Recipe', 'reorder_steps', 'drag');
+  });
+  makeDraggable(document.getElementById('tipsList'), () => {
+    trackEvent('Recipe', 'reorder_tips', 'drag');
+  });
+
+  document.getElementById('addIngredientBtn').addEventListener('click', () => {
+    const input = document.getElementById('newIngredient');
+    if (input.value.trim()) {
+      document.getElementById('ingredientsList').appendChild(createDraggableItem(input.value.trim()));
+      input.value = '';
+      trackEvent('Recipe', 'add_ingredient', 'button');
+    }
+  });
+
+  document.getElementById('newIngredient').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('addIngredientBtn').click();
+    }
+  });
+
+  document.getElementById('addStepBtn').addEventListener('click', () => {
+    const input = document.getElementById('newStep');
+    if (input.value.trim()) {
+      document.getElementById('stepsList').appendChild(createDraggableItem(input.value.trim()));
+      input.value = '';
+      trackEvent('Recipe', 'add_step', 'button');
+    }
+  });
+
+  document.getElementById('newStep').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('addStepBtn').click();
+    }
+  });
+
+  document.getElementById('addTipBtn').addEventListener('click', () => {
+    const input = document.getElementById('newTip');
+    if (input.value.trim()) {
+      document.getElementById('tipsList').appendChild(createDraggableItem(input.value.trim()));
+      input.value = '';
+      trackEvent('Recipe', 'add_tip', 'button');
+    }
+  });
+
+  document.getElementById('newTip').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('addTipBtn').click();
+    }
+  });
+}
+
 function createRecipeItem(name) {
-const recipe = recipes[name];
-const div = document.createElement('div');
-div.className = 'recipe-item';
-div.dataset.recipe = name;
-const icon = recipe.icon || recipeIcons[name] || recipeIcons.default;
-div.innerHTML = `
-<div class="recipe-item-content">
-<span class="recipe-icon">${icon}</span>
-<span>${name}</span>
-</div>
-<div class="recipe-item-actions">
-<span class="icon-btn" data-action="edit" title="Edit recipe">
-<i class="bi bi-pencil"></i>
-</span>
-</div>
-`;
+  const recipe = recipes[name];
+  const div = document.createElement('div');
+  div.className = 'recipe-item';
+  div.dataset.recipe = name;
+  const icon = recipe.icon || recipeIcons[name] || recipeIcons.default;
+  
+  // NEW: Show thumbnail if image exists
+  const imageHtml = recipe.image 
+    ? `<img src="${recipe.image}" class="recipe-thumbnail" alt="${name}">`
+    : `<span class="recipe-icon">${icon}</span>`;
+  
+  div.innerHTML = `
+    <div class="recipe-item-content">
+      ${imageHtml}
+      <span>${name}</span>
+    </div>
+    <div class="recipe-item-actions">
+      <span class="icon-btn" data-action="edit" title="Edit recipe">
+        <i class="bi bi-pencil"></i>
+      </span>
+    </div>
+  `;
 
-div.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
-e.stopPropagation();
-openEditRecipeModal(name);
-});
+  div.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    openEditRecipeModal(name);
+    trackEvent('Recipe', 'edit_clicked', name);
+  });
 
-if (!isMobile) {
-let ghost = null;
-let currentDropTarget = null;
-const startDrag = ev => {
-ev.preventDefault();
-const recipeName = div.dataset.recipe;
-ghost = div.cloneNode(true);
-ghost.classList.add('dragging');
-ghost.style.cssText = `position:fixed;left:${ev.clientX-50}px;top:${ev.clientY-20}px;pointer-events:none;opacity:.8;z-index:10000;width:200px;`;
-document.body.appendChild(ghost);
+  if (!isMobile) {
+    let ghost = null;
+    let currentDropTarget = null;
+    const startDrag = ev => {
+      ev.preventDefault();
+      const recipeName = div.dataset.recipe;
+      ghost = div.cloneNode(true);
+      ghost.classList.add('dragging');
+      ghost.style.cssText = `position:fixed;left:${ev.clientX-50}px;top:${ev.clientY-20}px;pointer-events:none;opacity:.8;z-index:10000;width:200px;`;
+      document.body.appendChild(ghost);
+      trackEvent('Recipe', 'drag_start', recipeName);
 
-const move = me => {
-ghost.style.left = me.clientX - 50 + 'px';
-ghost.style.top = me.clientY - 20 + 'px';
-const dropTarget = document.elementFromPoint(me.clientX, me.clientY);
-const dayCard = dropTarget?.closest('.day-card');
-if (currentDropTarget && currentDropTarget !== dayCard) currentDropTarget.classList.remove('drag-over');
-if (dayCard && !dayCard.classList.contains('outside-trip')) {
-dayCard.classList.add('drag-over');
-currentDropTarget = dayCard;
-} else currentDropTarget = null;
-};
+      const move = me => {
+        ghost.style.left = me.clientX - 50 + 'px';
+        ghost.style.top = me.clientY - 20 + 'px';
+        const dropTarget = document.elementFromPoint(me.clientX, me.clientY);
+        const dayCard = dropTarget?.closest('.day-card');
+        if (currentDropTarget && currentDropTarget !== dayCard) currentDropTarget.classList.remove('drag-over');
+        if (dayCard && !dayCard.classList.contains('outside-trip')) {
+          dayCard.classList.add('drag-over');
+          currentDropTarget = dayCard;
+        } else currentDropTarget = null;
+      };
 
-const end = me => {
-document.removeEventListener('pointermove', move);
-document.removeEventListener('pointerup', end);
-if (ghost) ghost.remove();
-if (currentDropTarget) {
-currentDropTarget.classList.remove('drag-over');
-const iso = currentDropTarget.dataset.iso;
-assignments[iso] = recipeName;
-saveAssignments();
-updateCardAssignment(currentDropTarget, recipeName);
-currentDropTarget.classList.add('drop-success');
-setTimeout(() => currentDropTarget.classList.remove('drop-success'), 600);
-showToast(`${recipeName} added to ${formatDate(new Date(iso))}`, 'success');
-}
-currentDropTarget = null;
-};
+      const end = me => {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', end);
+        if (ghost) ghost.remove();
+        if (currentDropTarget) {
+          currentDropTarget.classList.remove('drag-over');
+          const iso = currentDropTarget.dataset.iso;
+          assignments[iso] = recipeName;
+          saveAssignments();
+          updateCardAssignment(currentDropTarget, recipeName);
+          currentDropTarget.classList.add('drop-success');
+          setTimeout(() => currentDropTarget.classList.remove('drop-success'), 600);
+          showToast(`${recipeName} added to ${formatDate(new Date(iso))}`, 'success');
+          trackEvent('Assignment', 'drag_drop', recipeName);
+        }
+        currentDropTarget = null;
+      };
 
-document.addEventListener('pointermove', move);
-document.addEventListener('pointerup', end);
-};
-div.addEventListener('pointerdown', startDrag);
-} else {
-div.addEventListener('click', (e) => {
-if (e.target.closest('.icon-btn')) return;
-selectedRecipeForAssign = name;
-selectedRecipeName.textContent = name;
-mobileAssignBanner.classList.add('active');
-document.querySelectorAll('.recipe-item').forEach(item => item.classList.remove('selected-for-assign'));
-div.classList.add('selected-for-assign');
-document.querySelectorAll('.day-card:not(.outside-trip)').forEach(card => card.classList.add('can-assign'));
-});
-}
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', end);
+    };
+    div.addEventListener('pointerdown', startDrag);
+  } else {
+    div.addEventListener('click', (e) => {
+      if (e.target.closest('.icon-btn')) return;
+      selectedRecipeForAssign = name;
+      selectedRecipeName.textContent = name;
+      mobileAssignBanner.classList.add('active');
+      document.querySelectorAll('.recipe-item').forEach(item => item.classList.remove('selected-for-assign'));
+      div.classList.add('selected-for-assign');
+      document.querySelectorAll('.day-card:not(.outside-trip)').forEach(card => card.classList.add('can-assign'));
+      trackEvent('Recipe', 'select_mobile', name);
+    });
+  }
 
-return div;
+  return div;
 }
 
 function buildPalette() {
-isMobile = detectMobile();
-paletteDesktop.innerHTML = '';
-paletteMobile.innerHTML = '';
-Object.keys(recipes).sort().forEach(name => {
-paletteDesktop.appendChild(createRecipeItem(name));
-paletteMobile.appendChild(createRecipeItem(name));
-});
-attachSearch('searchBoxDesktop', paletteDesktop);
-attachSearch('searchBoxMobile', paletteMobile);
+  isMobile = detectMobile();
+  paletteDesktop.innerHTML = '';
+  paletteMobile.innerHTML = '';
+  Object.keys(recipes).sort().forEach(name => {
+    paletteDesktop.appendChild(createRecipeItem(name));
+    paletteMobile.appendChild(createRecipeItem(name));
+  });
+  attachSearch('searchBoxDesktop', paletteDesktop);
+  attachSearch('searchBoxMobile', paletteMobile);
+  trackEvent('UI', 'build_palette', Object.keys(recipes).length);
 }
 
 function attachSearch(boxId, container) {
-const box = document.getElementById(boxId);
-if (!box) return;
-box.addEventListener('input', () => {
-const term = box.value.trim().toLowerCase();
-container.querySelectorAll('.recipe-item').forEach(it => {
-it.style.display = it.dataset.recipe.toLowerCase().includes(term) ? '' : 'none';
-});
-});
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  box.addEventListener('input', () => {
+    const term = box.value.trim().toLowerCase();
+    container.querySelectorAll('.recipe-item').forEach(it => {
+      it.style.display = it.dataset.recipe.toLowerCase().includes(term) ? '' : 'none';
+    });
+    trackEvent('Search', 'recipe_search', term);
+  });
 }
 
 function buildCalendar() {
-calendarEl.innerHTML = '';
-for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
-const cur = new Date(d);
-const iso = cur.toISOString().split('T')[0];
-const card = document.createElement('div');
-card.className = 'day-card';
-card.dataset.iso = iso;
-if (!isInTrip(cur)) card.classList.add('outside-trip');
-if (isToday(cur)) card.classList.add('today');
+  calendarEl.innerHTML = '';
+  for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
+    const cur = new Date(d);
+    const iso = cur.toISOString().split('T')[0];
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    card.dataset.iso = iso;
+    if (!isInTrip(cur)) card.classList.add('outside-trip');
+    if (isToday(cur)) card.classList.add('today');
 
-const dateDiv = document.createElement('div');
-dateDiv.className = 'day-date d-md-none';
-dateDiv.textContent = getWeekday(cur);
-card.appendChild(dateDiv);
+    const dateDiv = document.createElement('div');
+    dateDiv.className = 'day-date d-md-none';
+    dateDiv.textContent = getWeekday(cur);
+    card.appendChild(dateDiv);
 
-const numberDiv = document.createElement('div');
-numberDiv.className = 'day-number';
-numberDiv.textContent = cur.getDate();
-card.appendChild(numberDiv);
+    const numberDiv = document.createElement('div');
+    numberDiv.className = 'day-number';
+    numberDiv.textContent = cur.getDate();
+    card.appendChild(numberDiv);
 
-if (assignments[iso]) updateCardAssignment(card, assignments[iso]);
+    if (assignments[iso]) updateCardAssignment(card, assignments[iso]);
 
-card.addEventListener('click', () => {
-if (isMobile && selectedRecipeForAssign && !card.classList.contains('outside-trip')) {
-assignments[iso] = selectedRecipeForAssign;
-saveAssignments();
-updateCardAssignment(card, selectedRecipeForAssign);
-card.classList.add('drop-success');
-setTimeout(() => card.classList.remove('drop-success'), 600);
-showToast(`${selectedRecipeForAssign} added!`, 'success');
-cancelMobileAssign();
-} else {
-const meal = assignments[iso];
-if (meal) displayRecipe(meal);
-}
-});
+    card.addEventListener('click', () => {
+      if (isMobile && selectedRecipeForAssign && !card.classList.contains('outside-trip')) {
+        assignments[iso] = selectedRecipeForAssign;
+        saveAssignments();
+        updateCardAssignment(card, selectedRecipeForAssign);
+        card.classList.add('drop-success');
+        setTimeout(() => card.classList.remove('drop-success'), 600);
+        showToast(`${selectedRecipeForAssign} added!`, 'success');
+        trackEvent('Assignment', 'mobile_tap', selectedRecipeForAssign);
+        cancelMobileAssign();
+      } else {
+        const meal = assignments[iso];
+        if (meal) {
+          displayRecipe(meal);
+          trackEvent('Recipe', 'view_from_calendar', meal);
+        }
+      }
+    });
 
-calendarEl.appendChild(card);
-}
+    calendarEl.appendChild(card);
+  }
+  trackEvent('UI', 'build_calendar', Object.keys(assignments).length);
 }
 
 function updateCardAssignment(card, recipeName) {
-const old = card.querySelector('.assigned-recipe');
-if (old) old.remove();
-const recipe = recipes[recipeName];
-const icon = recipe?.icon || recipeIcons[recipeName] || recipeIcons.default;
-const lbl = document.createElement('div');
-lbl.className = 'assigned-recipe';
-lbl.innerHTML = `<span>${icon} ${recipeName}</span><span class="clear-btn">×</span>`;
-lbl.querySelector('.clear-btn').addEventListener('click', ev => {
-ev.stopPropagation();
-delete assignments[card.dataset.iso];
-saveAssignments();
-lbl.remove();
-showToast('Recipe removed', 'info');
-});
-card.appendChild(lbl);
+  const old = card.querySelector('.assigned-recipe');
+  if (old) old.remove();
+  const recipe = recipes[recipeName];
+  const icon = recipe?.icon || recipeIcons[recipeName] || recipeIcons.default;
+  const lbl = document.createElement('div');
+  lbl.className = 'assigned-recipe';
+  lbl.innerHTML = `<span>${icon} ${recipeName}</span><span class="clear-btn">×</span>`;
+  lbl.querySelector('.clear-btn').addEventListener('click', ev => {
+    ev.stopPropagation();
+    delete assignments[card.dataset.iso];
+    saveAssignments();
+    lbl.remove();
+    showToast('Recipe removed', 'info');
+    trackEvent('Assignment', 'remove', recipeName);
+  });
+  card.appendChild(lbl);
 }
 
 function cancelMobileAssign() {
-selectedRecipeForAssign = null;
-mobileAssignBanner.classList.remove('active');
-document.querySelectorAll('.recipe-item').forEach(item => item.classList.remove('selected-for-assign'));
-document.querySelectorAll('.day-card').forEach(card => card.classList.remove('can-assign'));
+  selectedRecipeForAssign = null;
+  mobileAssignBanner.classList.remove('active');
+  document.querySelectorAll('.recipe-item').forEach(item => item.classList.remove('selected-for-assign'));
+  document.querySelectorAll('.day-card').forEach(card => card.classList.remove('can-assign'));
 }
 
 document.getElementById('cancelAssignBtn').addEventListener('click', cancelMobileAssign);
 
 function displayRecipe(mealName) {
-const recipe = recipes[mealName];
-if (!recipe) {
-recipeDetails.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>Recipe not found</p></div>`;
-return;
-}
-const icon = recipe.icon || recipeIcons[mealName] || recipeIcons.default;
-recipeDetails.innerHTML = `
-<h2>${icon} ${recipe.title}</h2>
-<h5><i class="bi bi-basket"></i> Ingredients</h5>
-<ul>${recipe.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
-<h5><i class="bi bi-list-ol"></i> Instructions</h5>
-<ol>${recipe.steps.map(s => `<li>${s}</li>`).join('')}</ol>
-${recipe.tips && recipe.tips.length ? `<h5><i class="bi bi-lightbulb"></i> Tips</h5><ul>${recipe.tips.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
-`;
-if (window.innerWidth < 768) recipeDetails.scrollIntoView({ behavior: 'smooth' });
+  const recipe = recipes[mealName];
+  if (!recipe) {
+    recipeDetails.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>Recipe not found</p></div>`;
+    return;
+  }
+  const icon = recipe.icon || recipeIcons[mealName] || recipeIcons.default;
+  
+  // NEW: Show large image if exists
+  const imageHtml = recipe.image 
+    ? `<img src="${recipe.image}" class="recipe-thumbnail-large" alt="${recipe.title}">`
+    : '';
+  
+  recipeDetails.innerHTML = `
+    ${imageHtml}
+    <h2>${icon} ${recipe.title}</h2>
+    <h5><i class="bi bi-basket"></i> Ingredients</h5>
+    <ul>${recipe.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+    <h5><i class="bi bi-list-ol"></i> Instructions</h5>
+    <ol>${recipe.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    ${recipe.tips && recipe.tips.length ? `<h5><i class="bi bi-lightbulb"></i> Tips</h5><ul>${recipe.tips.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
+  `;
+  if (window.innerWidth < 768) recipeDetails.scrollIntoView({ behavior: 'smooth' });
 }
 
 function generateShoppingList() {
-const counts = {};
-Object.values(assignments).forEach(recipeName => {
-const recipe = recipes[recipeName];
-if (recipe) recipe.ingredients.forEach(ing => {
-counts[ing] = (counts[ing] || 0) + 1;
-});
-});
-return Object.entries(counts).map(([ing, count]) => ({ ingredient: ing, count })).sort((a, b) => a.ingredient.localeCompare(b.ingredient));
+  const counts = {};
+  Object.values(assignments).forEach(recipeName => {
+    const recipe = recipes[recipeName];
+    if (recipe) recipe.ingredients.forEach(ing => {
+      counts[ing] = (counts[ing] || 0) + 1;
+    });
+  });
+  return Object.entries(counts).map(([ing, count]) => ({ ingredient: ing, count })).sort((a, b) => a.ingredient.localeCompare(b.ingredient));
 }
 
 document.getElementById('shoppingListBtn').addEventListener('click', () => {
-const items = generateShoppingList();
-const container = document.getElementById('shoppingListContent');
-if (items.length === 0) {
-container.innerHTML = '<div class="empty-state"><p>No meals assigned yet!</p></div>';
-} else {
-container.innerHTML = items.map((item, idx) => `
-<div class="shopping-item" id="shop-${idx}">
-<input type="checkbox" id="check-${idx}" onchange="document.getElementById('shop-${idx}').classList.toggle('checked')">
-<label for="check-${idx}" class="shopping-item-text">
-${item.count > 1 ? `<strong>${item.count}x</strong> ` : ''}${item.ingredient}
-</label>
-</div>
-`).join('');
-}
-new bootstrap.Modal(document.getElementById('shoppingListModal')).show();
+  const items = generateShoppingList();
+  const container = document.getElementById('shoppingListContent');
+  if (items.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>No meals assigned yet!</p></div>';
+  } else {
+    container.innerHTML = items.map((item, idx) => `
+      <div class="shopping-item" id="shop-${idx}">
+        <input type="checkbox" id="check-${idx}" onchange="document.getElementById('shop-${idx}').classList.toggle('checked')">
+        <label for="check-${idx}" class="shopping-item-text">
+          ${item.count > 1 ? `<strong>${item.count}x</strong> ` : ''}${item.ingredient}
+        </label>
+      </div>
+    `).join('');
+  }
+  new bootstrap.Modal(document.getElementById('shoppingListModal')).show();
+  trackEvent('Shopping', 'view_list', items.length);
 });
 
 document.getElementById('copyGroceryBtn').addEventListener('click', () => {
-const items = generateShoppingList();
-const text = items.map(i => `${i.count > 1 ? i.count + 'x ' : ''}${i.ingredient}`).join('\n');
-navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!', 'success')).catch(() => showToast('Copy failed', 'error'));
+  const items = generateShoppingList();
+  const text = items.map(i => `${i.count > 1 ? i.count + 'x ' : ''}${i.ingredient}`).join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copied to clipboard!', 'success');
+    trackEvent('Shopping', 'copy_list', items.length);
+  }).catch(() => {
+    showToast('Copy failed', 'error');
+    trackEvent('Error', 'copy_failed', 'shopping_list');
+  });
 });
 
 document.getElementById('exportGroceryTxtBtn').addEventListener('click', () => {
-const items = generateShoppingList();
-const text = '🛒 GROCERY LIST\n' + '='.repeat(40) + '\n\n' + items.map(i => `${i.count > 1 ? '(' + i.count + 'x) ' : '☐ '}${i.ingredient}`).join('\n');
-const blob = new Blob([text], { type: 'text/plain' });
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.href = url;
-a.download = `grocery-list-${new Date().toISOString().split('T')[0]}.txt`;
-a.click();
-URL.revokeObjectURL(url);
-showToast('Grocery list downloaded!', 'success');
+  const items = generateShoppingList();
+  const text = '🛒 GROCERY LIST\n' + '='.repeat(40) + '\n\n' + items.map(i => `${i.count > 1 ? '(' + i.count + 'x) ' : '☐ '}${i.ingredient}`).join('\n');
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `grocery-list-${new Date().toISOString().split('T')[0]}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Grocery list downloaded!', 'success');
+  trackEvent('Shopping', 'export_txt', items.length);
 });
 
 function openEditRecipeModal(recipeName) {
-const recipe = recipes[recipeName];
-if (!recipe) return;
-document.getElementById('recipeModalTitle').innerHTML = '<i class="bi bi-pencil"></i> Edit Recipe';
-document.getElementById('saveBtnText').textContent = 'Save Changes';
-document.getElementById('deleteRecipeBtn').style.display = 'block';
-document.getElementById('editingRecipeKey').value = recipeName;
-document.getElementById('newKey').value = recipeName;
-document.getElementById('newKey').disabled = true;
-document.getElementById('newTitle').value = recipe.title;
-document.getElementById('newIngredients').value = recipe.ingredients.join('\n');
-document.getElementById('newSteps').value = recipe.steps.join('\n');
-document.getElementById('newTips').value = (recipe.tips || []).join('\n');
-new bootstrap.Modal(document.getElementById('addRecipeModal')).show();
+  const recipe = recipes[recipeName];
+  if (!recipe) return;
+  
+  document.getElementById('recipeModalTitle').innerHTML = '<i class="bi bi-pencil"></i> Edit Recipe';
+  document.getElementById('saveBtnText').textContent = 'Save Changes';
+  document.getElementById('deleteRecipeBtn').style.display = 'block';
+  document.getElementById('editingRecipeKey').value = recipeName;
+  document.getElementById('newKey').value = recipeName;
+  document.getElementById('newKey').disabled = true;
+  document.getElementById('newTitle').value = recipe.title;
+  
+  // NEW: Load image if exists
+  const imageDataInput = document.getElementById('recipeImageData');
+  const preview = document.getElementById('imagePreview');
+  const prompt = document.getElementById('imageUploadPrompt');
+  const uploadArea = document.getElementById('imageUploadArea');
+  const actions = document.getElementById('imageActions');
+  
+  if (recipe.image) {
+    imageDataInput.value = recipe.image;
+    preview.src = recipe.image;
+    preview.style.display = 'block';
+    prompt.style.display = 'none';
+    uploadArea.classList.add('has-image');
+    actions.style.display = 'flex';
+  } else {
+    imageDataInput.value = '';
+    preview.src = '';
+    preview.style.display = 'none';
+    prompt.style.display = 'block';
+    uploadArea.classList.remove('has-image');
+    actions.style.display = 'none';
+  }
+  
+  // NEW: Populate draggable lists
+  populateDraggableList('ingredientsList', recipe.ingredients);
+  populateDraggableList('stepsList', recipe.steps);
+  populateDraggableList('tipsList', recipe.tips || []);
+  
+  new bootstrap.Modal(document.getElementById('addRecipeModal')).show();
 }
 
 document.querySelector('[data-bs-target="#addRecipeModal"]').addEventListener('click', () => {
-document.getElementById('recipeModalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> Add Recipe';
-document.getElementById('saveBtnText').textContent = 'Save Recipe';
-document.getElementById('deleteRecipeBtn').style.display = 'none';
-document.getElementById('editingRecipeKey').value = '';
-document.getElementById('newKey').disabled = false;
-document.getElementById('addRecipeForm').reset();
+  document.getElementById('recipeModalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> Add Recipe';
+  document.getElementById('saveBtnText').textContent = 'Save Recipe';
+  document.getElementById('deleteRecipeBtn').style.display = 'none';
+  document.getElementById('editingRecipeKey').value = '';
+  document.getElementById('newKey').disabled = false;
+  document.getElementById('addRecipeForm').reset();
+  document.getElementById('recipeImageData').value = '';
+  
+  // Clear image
+  const preview = document.getElementById('imagePreview');
+  const prompt = document.getElementById('imageUploadPrompt');
+  const uploadArea = document.getElementById('imageUploadArea');
+  const actions = document.getElementById('imageActions');
+  preview.src = '';
+  preview.style.display = 'none';
+  prompt.style.display = 'block';
+  uploadArea.classList.remove('has-image');
+  actions.style.display = 'none';
+  
+  // Clear lists
+  document.getElementById('ingredientsList').innerHTML = '';
+  document.getElementById('stepsList').innerHTML = '';
+  document.getElementById('tipsList').innerHTML = '';
+  
+  trackEvent('Recipe', 'add_new_clicked', 'toolbar');
 });
 
 document.getElementById('saveRecipeBtn').addEventListener('click', () => {
-const editingKey = document.getElementById('editingRecipeKey').value;
-const key = document.getElementById('newKey').value.trim();
-const title = document.getElementById('newTitle').value.trim();
-const ing = document.getElementById('newIngredients').value.trim().split('\n').filter(Boolean);
-const steps = document.getElementById('newSteps').value.trim().split('\n').filter(Boolean);
-const tips = document.getElementById('newTips').value.trim().split('\n').filter(Boolean);
+  const editingKey = document.getElementById('editingRecipeKey').value;
+  const key = document.getElementById('newKey').value.trim();
+  const title = document.getElementById('newTitle').value.trim();
+  const imageData = document.getElementById('recipeImageData').value;
+  
+  // NEW: Get values from draggable lists
+  const ing = getDraggableListValues('ingredientsList');
+  const steps = getDraggableListValues('stepsList');
+  const tips = getDraggableListValues('tipsList');
 
-if (!key || !title || !ing.length || !steps.length) {
-showToast('Fill all required fields!', 'error');
-return;
-}
-if (!editingKey && key in recipes && !confirm('Overwrite existing recipe?')) return;
+  if (!key || !title || !ing.length || !steps.length) {
+    showToast('Fill all required fields!', 'error');
+    trackEvent('Error', 'save_recipe_validation', 'missing_fields');
+    return;
+  }
+  if (!editingKey && key in recipes && !confirm('Overwrite existing recipe?')) return;
 
-recipes[key] = {
-title,
-icon: recipes[key]?.icon || recipeIcons.default,
-ingredients: ing,
-steps,
-tips
-};
+  recipes[key] = {
+    title,
+    icon: recipes[key]?.icon || recipeIcons.default,
+    image: imageData || undefined, // NEW: Save image
+    ingredients: ing,
+    steps,
+    tips
+  };
 
-saveRecipes();
-buildPalette();
-bootstrap.Modal.getInstance(document.getElementById('addRecipeModal')).hide();
-showToast(`Recipe ${editingKey ? 'updated' : 'added'}!`, 'success');
+  saveRecipes();
+  buildPalette();
+  buildCalendar(); // Rebuild calendar to show new images
+  bootstrap.Modal.getInstance(document.getElementById('addRecipeModal')).hide();
+  showToast(`Recipe ${editingKey ? 'updated' : 'added'}!`, 'success');
+  trackEvent('Recipe', editingKey ? 'update' : 'create', key);
 });
 
 document.getElementById('deleteRecipeBtn').addEventListener('click', () => {
-const key = document.getElementById('editingRecipeKey').value;
-if (!key || !confirm(`Delete "${key}"?`)) return;
-delete recipes[key];
-saveRecipes();
-Object.keys(assignments).forEach(date => {
-if (assignments[date] === key) delete assignments[date];
-});
-saveAssignments();
-buildPalette();
-buildCalendar();
-bootstrap.Modal.getInstance(document.getElementById('addRecipeModal')).hide();
-showToast('Recipe deleted', 'info');
+  const key = document.getElementById('editingRecipeKey').value;
+  if (!key || !confirm(`Delete "${key}"?`)) return;
+  delete recipes[key];
+  saveRecipes();
+  Object.keys(assignments).forEach(date => {
+    if (assignments[date] === key) delete assignments[date];
+  });
+  saveAssignments();
+  buildPalette();
+  buildCalendar();
+  bootstrap.Modal.getInstance(document.getElementById('addRecipeModal')).hide();
+  showToast('Recipe deleted', 'info');
+  trackEvent('Recipe', 'delete', key);
 });
 
-// FIXED: Completely rewritten save function to capture full current state
 document.getElementById('downloadHtmlBtn').addEventListener('click', () => {
-// Clear all active toasts before saving
-activeToasts.forEach(toast => {
-if (toast._dismissTimer) clearTimeout(toast._dismissTimer);
-toast.remove();
-});
-activeToasts.clear();
+  activeToasts.forEach(toast => {
+    if (toast._dismissTimer) clearTimeout(toast._dismissTimer);
+    toast.remove();
+  });
+  activeToasts.clear();
 
-// Clone the document
-const clone = document.cloneNode(true);
-const cloneHtml = clone.documentElement;
+  const clone = document.cloneNode(true);
+  const cloneHtml = clone.documentElement;
 
-// Update the script section with current data
-const scriptTags = cloneHtml.querySelectorAll('script');
-scriptTags.forEach(script => {
-if (script.textContent.includes('let recipes =')) {
-// Replace recipes and assignments with current values
-let scriptContent = script.textContent;
-scriptContent = scriptContent.replace(
-/let recipes = \{[\s\S]*?\n\};/,
-`let recipes = ${JSON.stringify(recipes, null, 2)};`
-);
-scriptContent = scriptContent.replace(
-/let assignments = \{[^}]*\};/,
-`let assignments = ${JSON.stringify(assignments, null, 2)};`
-);
-script.textContent = scriptContent;
-}
-});
+  const scriptTags = cloneHtml.querySelectorAll('script');
+  scriptTags.forEach(script => {
+    if (script.textContent.includes('let recipes =')) {
+      let scriptContent = script.textContent;
+      scriptContent = scriptContent.replace(
+        /let recipes = \{[\s\S]*?\n\};/,
+        `let recipes = ${JSON.stringify(recipes, null, 2)};`
+      );
+      scriptContent = scriptContent.replace(
+        /let assignments = \{[^}]*\};/,
+        `let assignments = ${JSON.stringify(assignments, null, 2)};`
+      );
+      script.textContent = scriptContent;
+    }
+  });
 
-// Get the full HTML with updated data
-let html = '<!DOCTYPE html>\n' + cloneHtml.outerHTML;
+  let html = '<!DOCTYPE html>\n' + cloneHtml.outerHTML;
 
-// Create and download the file
-const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.href = url;
-a.download = `meal-planner-${new Date().toISOString().split('T')[0]}.html`;
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
-URL.revokeObjectURL(url);
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `meal-planner-${new Date().toISOString().split('T')[0]}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 
-showToast('Meal plan saved successfully!', 'success');
+  showToast('Meal plan saved successfully!', 'success');
+  trackEvent('Data', 'download_html', 'save_button');
 });
 
 document.getElementById('clearAllBtn').addEventListener('click', () => {
-if (!confirm('Clear all assignments?')) return;
-assignments = {};
-saveAssignments();
-buildCalendar();
-recipeDetails.innerHTML = '<div class="empty-state"><i class="bi bi-cursor"></i><p>Assign meals to get started</p></div>';
-showToast('Calendar cleared', 'info');
+  if (!confirm('Clear all assignments?')) return;
+  const count = Object.keys(assignments).length;
+  assignments = {};
+  saveAssignments();
+  buildCalendar();
+  recipeDetails.innerHTML = '<div class="empty-state"><i class="bi bi-cursor"></i><p>Assign meals to get started</p></div>';
+  showToast('Calendar cleared', 'info');
+  trackEvent('Data', 'clear_all', count);
 });
 
-document.getElementById('printBtn').addEventListener('click', () => window.print());
+document.getElementById('printBtn').addEventListener('click', () => {
+  window.print();
+  trackEvent('UI', 'print', 'button');
+});
 
 window.addEventListener('resize', () => {
-const was = isMobile;
-isMobile = detectMobile();
-if (was !== isMobile) {
-buildPalette();
-buildCalendar();
-}
+  const was = isMobile;
+  isMobile = detectMobile();
+  if (was !== isMobile) {
+    buildPalette();
+    buildCalendar();
+    trackEvent('UI', 'resize', isMobile ? 'mobile' : 'desktop');
+  }
 });
 
-// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
-activeToasts.forEach(toast => {
-if (toast._dismissTimer) clearTimeout(toast._dismissTimer);
-});
+  activeToasts.forEach(toast => {
+    if (toast._dismissTimer) clearTimeout(toast._dismissTimer);
+  });
 });
 
+// Initialize everything
 loadData();
+setupImageUpload();
+setupDraggableLists();
 buildPalette();
 buildCalendar();
-console.log('🍽️ Meal Planner Pro v3 ready!');
+console.log('🍽️ Meal Planner Pro v4 ready!');
+trackEvent('App', 'loaded', 'v4');
 </script>
 
-</body>
-</html>
+
+
+</body></html>
