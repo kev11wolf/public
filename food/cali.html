@@ -1,747 +1,1557 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="UTF-8">
-<title>California Vacation Cooking Schedule 2025</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meal Planner Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Meal Planner">
+<meta name="theme-color" content="#0d0d1a">
+
+<!-- PWA Icons -->
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='0.9em' font-size='90'&gt;🍽️&lt;/text&gt;&lt;/svg&gt;">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='0.9em' font-size='90'&gt;🍽️&lt;/text&gt;&lt;/svg&gt;">
 
 <!-- Bootstrap 5 -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384‑VjEe0nX1QbM1pTgZ8c9Y2gkVYF5V6c5XQzWcXcH9Kc8FJp7G/9VgZs0f+M3a6c5n"
-      crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<!-- Google Font -->
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap"
-      rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
 
 <style>
-    :root{
-        --bg-gradient:linear-gradient(135deg,#0d0d1a,#1a1a33);
-        --card-bg:rgba(255,255,255,.08);
-        --card-bg-hover:rgba(255,255,255,.15);
-        --text-primary:#f0f0f0;
-        --text-muted:#b0b0c0;
-        --accent:#ffcc00;
-        --sidebar-bg:rgba(0,0,0,.4);
-        --drag-hint:rgba(255,255,255,.2);
-        --drop-success:rgba(0,200,0,.3);
-    }
-    body{
-        font-family:'Montserrat',sans-serif;
-        background:var(--bg-gradient);
-        color:var(--text-primary);
-        min-height:100vh;
-        margin:0;
-    }
-    h1{font-weight:600;margin-bottom:2rem;text-align:center;color:var(--accent);}
-    .wrapper{display:flex;gap:1rem;padding:1rem;}
-    .sidebar{
-        flex:0 0 220px;
-        background:var(--sidebar-bg);
-        border-radius:.5rem;
-        padding:.75rem;
-        max-height:calc(100vh - 4rem);
-        overflow-y:auto;
-    }
-    .sidebar h4{margin-top:0;color:var(--accent);text-align:center;}
-    .search-box{
-        width:100%;margin-bottom:.5rem;padding:.35rem .5rem;border:none;border-radius:.3rem;
-    }
-    .recipe-item{
-        background:var(--card-bg);
-        border-radius:.4rem;
-        padding:.5rem .75rem;
-        margin:.4rem 0;
-        cursor:grab;
-        user-select:none;
-        font-size:.9rem;
-        text-align:center;
-        color:var(--text-primary);
-        touch-action:none;               /* needed for pointer events */
-    }
-    .recipe-item:active{cursor:grabbing;}
-    .recipe-item.dragging{opacity:.5;}
+:root{
+/* Colors */
+--bg-primary:#0a0a14;
+--bg-secondary:#12121f;
+--bg-tertiary:#1a1a2e;
+--card-bg:rgba(255,255,255,.06);
+--card-bg-hover:rgba(255,255,255,.1);
+--card-border:rgba(255,255,255,.08);
+--text-primary:#f5f5f7;
+--text-secondary:#a1a1aa;
+--text-muted:#71717a;
+--accent-primary:#3b82f6;
+--accent-secondary:#8b5cf6;
+--accent-gradient:linear-gradient(135deg,#3b82f6,#8b5cf6);
+--success:#10b981;
+--warning:#f59e0b;
+--danger:#ef4444;
+--sidebar-bg:rgba(10,10,20,.95);
+--drop-zone-hover:rgba(59,130,246,.2);
+--drop-zone-active:rgba(59,130,246,.3);
 
-    .calendar{
-        flex:1;
-        display:grid;
-        grid-template-columns:repeat(7,1fr);
-        gap:.75rem;
-    }
-    .day-card{
-        background:var(--card-bg);
-        border-radius:.5rem;
-        padding:.75rem;
-        text-align:center;
-        cursor:pointer;
-        transition:background .2s,transform .2s;
-        min-height:100px;
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        color:var(--text-primary);
-        position:relative;
-    }
-    .day-card:hover{background:var(--card-bg-hover);transform:translateY(-2px);}
-    .day-card.outside-trip{opacity:.4;cursor:default;}
-    .day-card .date{font-size:.9rem;color:var(--text-muted);margin-top:.25rem;}
-    .day-card .assigned-recipe{
-        margin-top:.4rem;
-        font-size:.85rem;
-        font-style:italic;
-        color:var(--accent);
-        position:relative;
-        padding-right:1.2rem;
-    }
-    .day-card .clear-btn{
-        position:absolute;top:2px;right:4px;color:#fff;cursor:pointer;font-weight:bold;
-    }
-    .day-card.drag-over{outline:2px dashed var(--accent);background:var(--drag-hint);}
-    .day-card.drop-success::after{
-        content:"";
-        position:absolute;top:0;left:0;width:100%;height:100%;
-        background:var(--drop-success);
-        animation:flash .8s forwards;
-    }
-    @keyframes flash{0%{opacity:1}100%{opacity:0}}
+/* Spacing */
+--spacing-xs:.25rem;
+--spacing-sm:.5rem;
+--spacing-md:1rem;
+--spacing-lg:1.5rem;
+--spacing-xl:2rem;
 
-    .instructions-card{
-        background:var(--card-bg);
-        border-radius:.5rem;
-        padding:1.5rem;
-        margin-top:2rem;
-        color:var(--text-primary);
-    }
-    .instructions-card h2{color:var(--accent);margin-bottom:1rem;}
+/* Borders */
+--radius-sm:.375rem;
+--radius-md:.5rem;
+--radius-lg:.75rem;
+--radius-xl:1rem;
 
-    .weekday-header{font-weight:600;text-align:center;color:var(--accent);margin-bottom:.5rem;}
-    .weekday-header .col-1{padding:0;}
+/* Shadows */
+--shadow-sm:0 1px 2px 0 rgba(0,0,0,.3);
+--shadow-md:0 4px 6px -1px rgba(0,0,0,.4);
+--shadow-lg:0 10px 15px -3px rgba(0,0,0,.5);
+--shadow-xl:0 20px 25px -5px rgba(0,0,0,.6);
 
-    @media (max-width:768px){
-        .wrapper{flex-direction:column;}
-        .sidebar{flex:0 0 auto;width:100%;max-height:none;}
-        .calendar{grid-template-columns:repeat(2,1fr);}
-        .offcanvas-body{padding:0;}
-    }
-    @media (max-width:576px){
-        .calendar{grid-template-columns:repeat(1,1fr);}
-    }
+/* iOS safe areas */
+--safe-area-inset-top:env(safe-area-inset-top);
+--safe-area-inset-bottom:env(safe-area-inset-bottom);
+--safe-area-inset-left:env(safe-area-inset-left);
+--safe-area-inset-right:env(safe-area-inset-right);
+}
 
-    /* ---------- Print ---------- */
-    @media print{
-        body{background:white;color:black;}
-        .offcanvas,.btn,.search-box,.clear-btn,.weekday-header,.instructions-card{display:none!important;}
-        .day-card{border:1px solid #000;background:transparent;color:black;}
-        .day-card .assigned-recipe{color:black;}
-        .calendar{grid-template-columns:repeat(7,1fr);}
-        .print-recipes{page-break-before:always;}
-        .print-recipes h2{color:#000;}
-    }
+/* iOS-specific optimizations */
+*{
+-webkit-tap-highlight-color:transparent;
+-webkit-touch-callout:none;
+}
+
+body{
+font-family:'Inter',system-ui,-apple-system,sans-serif;
+background:linear-gradient(135deg,var(--bg-primary),var(--bg-secondary),var(--bg-tertiary));
+background-attachment:fixed;
+color:var(--text-primary);
+min-height:100vh;
+margin:0;
+padding:0;
+overscroll-behavior-y:none;
+-webkit-font-smoothing:antialiased;
+}
+
+/* App Container */
+.app-container{
+min-height:100vh;
+padding-top:calc(var(--safe-area-inset-top) + var(--spacing-md));
+padding-bottom:calc(var(--safe-area-inset-bottom) + var(--spacing-md));
+padding-left:max(var(--safe-area-inset-left),var(--spacing-md));
+padding-right:max(var(--safe-area-inset-right),var(--spacing-md));
+}
+
+/* Header */
+.app-header{
+text-align:center;
+margin-bottom:var(--spacing-xl);
+position:relative;
+}
+
+.app-title{
+font-size:clamp(1.75rem,5vw,2.5rem);
+font-weight:700;
+background:var(--accent-gradient);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+background-clip:text;
+margin:0 0 var(--spacing-sm);
+letter-spacing:-.02em;
+}
+
+.app-subtitle{
+font-size:.95rem;
+color:var(--text-secondary);
+font-weight:400;
+}
+
+/* Toolbar */
+.toolbar{
+display:flex;
+gap:var(--spacing-sm);
+margin-bottom:var(--spacing-lg);
+flex-wrap:wrap;
+position:sticky;
+top:calc(var(--safe-area-inset-top) + var(--spacing-sm));
+background:rgba(10,10,20,.85);
+backdrop-filter:blur(20px) saturate(180%);
+-webkit-backdrop-filter:blur(20px) saturate(180%);
+padding:var(--spacing-md);
+border-radius:var(--radius-lg);
+box-shadow:var(--shadow-lg);
+z-index:100;
+border:1px solid var(--card-border);
+}
+
+.btn-custom{
+flex:1;
+min-width:120px;
+padding:.65rem 1rem;
+border-radius:var(--radius-md);
+border:1px solid var(--card-border);
+background:var(--card-bg);
+color:var(--text-primary);
+font-size:.875rem;
+font-weight:500;
+transition:all .2s cubic-bezier(.4,0,.2,1);
+display:flex;
+align-items:center;
+justify-content:center;
+gap:var(--spacing-sm);
+cursor:pointer;
+white-space:nowrap;
+}
+
+.btn-custom:hover{
+background:var(--card-bg-hover);
+transform:translateY(-1px);
+box-shadow:var(--shadow-md);
+border-color:var(--accent-primary);
+}
+
+.btn-custom:active{
+transform:translateY(0);
+}
+
+.btn-custom i{
+font-size:1.1rem;
+}
+
+.btn-primary-custom{
+background:var(--accent-gradient);
+border:none;
+color:#fff;
+font-weight:600;
+}
+
+.btn-primary-custom:hover{
+filter:brightness(1.1);
+box-shadow:0 0 20px rgba(59,130,246,.4);
+}
+
+/* Layout */
+.main-wrapper{
+display:grid;
+grid-template-columns:280px 1fr;
+gap:var(--spacing-lg);
+max-width:1800px;
+margin:0 auto;
+}
+
+/* Sidebar */
+.sidebar{
+background:var(--sidebar-bg);
+backdrop-filter:blur(20px) saturate(180%);
+-webkit-backdrop-filter:blur(20px) saturate(180%);
+border-radius:var(--radius-xl);
+padding:var(--spacing-lg);
+border:1px solid var(--card-border);
+box-shadow:var(--shadow-lg);
+position:sticky;
+top:calc(var(--safe-area-inset-top) + 120px);
+height:fit-content;
+max-height:calc(100vh - 200px);
+overflow-y:auto;
+-webkit-overflow-scrolling:touch;
+}
+
+.sidebar::-webkit-scrollbar{
+width:6px;
+}
+
+.sidebar::-webkit-scrollbar-track{
+background:transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb{
+background:var(--card-border);
+border-radius:3px;
+}
+
+.sidebar-header{
+font-size:1.1rem;
+font-weight:600;
+color:var(--text-primary);
+margin:0 0 var(--spacing-md);
+display:flex;
+align-items:center;
+gap:var(--spacing-sm);
+}
+
+.search-box{
+width:100%;
+padding:.75rem 1rem;
+padding-left:2.75rem;
+background:var(--card-bg);
+border:1px solid var(--card-border);
+border-radius:var(--radius-md);
+color:var(--text-primary);
+font-size:.9rem;
+transition:all .2s;
+margin-bottom:var(--spacing-md);
+position:relative;
+}
+
+.search-wrapper{
+position:relative;
+margin-bottom:var(--spacing-md);
+}
+
+.search-wrapper i{
+position:absolute;
+left:1rem;
+top:50%;
+transform:translateY(-50%);
+color:var(--text-muted);
+pointer-events:none;
+}
+
+.search-box:focus{
+outline:none;
+border-color:var(--accent-primary);
+box-shadow:0 0 0 3px rgba(59,130,246,.1);
+background:var(--card-bg-hover);
+}
+
+/* Recipe Items */
+.recipe-items{
+display:flex;
+flex-direction:column;
+gap:var(--spacing-sm);
+}
+
+.recipe-item{
+background:var(--card-bg);
+border:1px solid var(--card-border);
+border-radius:var(--radius-md);
+padding:.875rem 1rem;
+cursor:grab;
+user-select:none;
+font-size:.9rem;
+color:var(--text-primary);
+font-weight:500;
+transition:all .2s cubic-bezier(.4,0,.2,1);
+touch-action:none;
+display:flex;
+align-items:center;
+gap:var(--spacing-sm);
+position:relative;
+overflow:hidden;
+}
+
+.recipe-item::before{
+content:'';
+position:absolute;
+left:0;
+top:0;
+height:100%;
+width:3px;
+background:var(--accent-gradient);
+transform:scaleY(0);
+transition:transform .2s;
+}
+
+.recipe-item:hover{
+background:var(--card-bg-hover);
+transform:translateX(4px);
+border-color:var(--accent-primary);
+box-shadow:var(--shadow-md);
+}
+
+.recipe-item:hover::before{
+transform:scaleY(1);
+}
+
+.recipe-item:active{
+cursor:grabbing;
+transform:scale(.98);
+}
+
+.recipe-item.dragging{
+opacity:.5;
+}
+
+.recipe-icon{
+font-size:1.2rem;
+flex-shrink:0;
+}
+
+/* Weekday Header */
+.weekday-header{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:var(--spacing-md);
+margin-bottom:var(--spacing-md);
+}
+
+.weekday-label{
+text-align:center;
+font-size:.85rem;
+font-weight:600;
+color:var(--text-secondary);
+text-transform:uppercase;
+letter-spacing:.05em;
+}
+
+/* Calendar */
+.calendar-wrapper{
+background:var(--card-bg);
+backdrop-filter:blur(20px) saturate(180%);
+-webkit-backdrop-filter:blur(20px) saturate(180%);
+border-radius:var(--radius-xl);
+padding:var(--spacing-lg);
+border:1px solid var(--card-border);
+box-shadow:var(--shadow-lg);
+}
+
+.calendar{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:var(--spacing-md);
+}
+
+.day-card{
+background:var(--bg-secondary);
+border:1px solid var(--card-border);
+border-radius:var(--radius-lg);
+padding:var(--spacing-md);
+min-height:120px;
+cursor:pointer;
+transition:all .2s cubic-bezier(.4,0,.2,1);
+position:relative;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+
+.day-card::before{
+content:'';
+position:absolute;
+top:0;
+left:0;
+right:0;
+height:2px;
+background:var(--accent-gradient);
+transform:scaleX(0);
+transition:transform .3s;
+}
+
+.day-card:hover{
+background:var(--card-bg-hover);
+transform:translateY(-2px);
+box-shadow:var(--shadow-md);
+border-color:var(--accent-primary);
+}
+
+.day-card:hover::before{
+transform:scaleX(1);
+}
+
+.day-card.outside-trip{
+opacity:.3;
+cursor:default;
+pointer-events:none;
+}
+
+.day-card.outside-trip:hover{
+transform:none;
+box-shadow:none;
+}
+
+.day-card.today{
+border-color:var(--accent-primary);
+box-shadow:0 0 0 1px var(--accent-primary),var(--shadow-md);
+}
+
+.day-date{
+font-size:.85rem;
+color:var(--text-muted);
+font-weight:500;
+margin-bottom:var(--spacing-sm);
+}
+
+.day-number{
+font-size:1.5rem;
+font-weight:700;
+color:var(--text-primary);
+line-height:1;
+margin-bottom:var(--spacing-sm);
+}
+
+.assigned-recipe{
+margin-top:auto;
+padding:.5rem .75rem;
+background:var(--accent-gradient);
+border-radius:var(--radius-sm);
+font-size:.8rem;
+font-weight:600;
+color:#fff;
+position:relative;
+padding-right:2rem;
+word-break:break-word;
+box-shadow:var(--shadow-sm);
+}
+
+.clear-btn{
+position:absolute;
+top:50%;
+right:.5rem;
+transform:translateY(-50%);
+width:1.5rem;
+height:1.5rem;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(255,255,255,.2);
+border-radius:50%;
+cursor:pointer;
+font-size:.9rem;
+font-weight:700;
+color:#fff;
+transition:all .2s;
+}
+
+.clear-btn:hover{
+background:rgba(255,255,255,.3);
+transform:translateY(-50%) scale(1.1);
+}
+
+.day-card.drag-over{
+background:var(--drop-zone-hover);
+border-color:var(--accent-primary);
+border-width:2px;
+border-style:dashed;
+transform:scale(1.02);
+box-shadow:0 0 20px rgba(59,130,246,.3);
+}
+
+.day-card.drop-success{
+animation:dropSuccess .6s ease-out;
+}
+
+@keyframes dropSuccess{
+0%{
+background:var(--success);
+transform:scale(1.05);
+}
+100%{
+background:var(--bg-secondary);
+transform:scale(1);
+}
+}
+
+/* Recipe Details Panel */
+.recipe-details{
+background:var(--card-bg);
+backdrop-filter:blur(20px) saturate(180%);
+-webkit-backdrop-filter:blur(20px) saturate(180%);
+border-radius:var(--radius-xl);
+padding:var(--spacing-xl);
+margin-top:var(--spacing-xl);
+border:1px solid var(--card-border);
+box-shadow:var(--shadow-lg);
+}
+
+.recipe-details h2{
+font-size:1.75rem;
+font-weight:700;
+background:var(--accent-gradient);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+background-clip:text;
+margin:0 0 var(--spacing-lg);
+}
+
+.recipe-details h5{
+font-size:1.1rem;
+font-weight:600;
+color:var(--text-primary);
+margin:var(--spacing-lg) 0 var(--spacing-md);
+display:flex;
+align-items:center;
+gap:var(--spacing-sm);
+}
+
+.recipe-details ul,
+.recipe-details ol{
+margin:0 0 var(--spacing-lg);
+padding-left:var(--spacing-lg);
+}
+
+.recipe-details li{
+margin-bottom:var(--spacing-sm);
+color:var(--text-secondary);
+line-height:1.6;
+}
+
+.recipe-details li::marker{
+color:var(--accent-primary);
+}
+
+.empty-state{
+text-align:center;
+padding:var(--spacing-xl);
+color:var(--text-muted);
+}
+
+.empty-state i{
+font-size:3rem;
+margin-bottom:var(--spacing-md);
+opacity:.5;
+}
+
+/* Modal Enhancements */
+.modal-content{
+background:var(--bg-secondary);
+border:1px solid var(--card-border);
+border-radius:var(--radius-xl);
+color:var(--text-primary);
+box-shadow:var(--shadow-xl);
+}
+
+.modal-header{
+border-bottom:1px solid var(--card-border);
+padding:var(--spacing-lg) var(--spacing-xl);
+}
+
+.modal-body{
+padding:var(--spacing-xl);
+}
+
+.modal-footer{
+border-top:1px solid var(--card-border);
+padding:var(--spacing-lg) var(--spacing-xl);
+}
+
+.modal-title{
+font-weight:600;
+font-size:1.25rem;
+}
+
+.form-label{
+font-weight:500;
+color:var(--text-primary);
+margin-bottom:var(--spacing-sm);
+font-size:.9rem;
+}
+
+.form-control{
+background:var(--card-bg);
+border:1px solid var(--card-border);
+border-radius:var(--radius-md);
+color:var(--text-primary);
+padding:.75rem 1rem;
+font-size:.9rem;
+transition:all .2s;
+}
+
+.form-control:focus{
+background:var(--card-bg-hover);
+border-color:var(--accent-primary);
+box-shadow:0 0 0 3px rgba(59,130,246,.1);
+color:var(--text-primary);
+outline:none;
+}
+
+.form-control::placeholder{
+color:var(--text-muted);
+}
+
+/* Offcanvas for Mobile */
+.offcanvas{
+background:var(--bg-primary);
+border-right:1px solid var(--card-border);
+}
+
+.offcanvas-header{
+border-bottom:1px solid var(--card-border);
+padding:var(--spacing-lg);
+}
+
+.offcanvas-body{
+padding:var(--spacing-lg);
+}
+
+.btn-close{
+filter:invert(1);
+opacity:.8;
+}
+
+/* Loading States */
+.loading-spinner{
+display:inline-block;
+width:1rem;
+height:1rem;
+border:2px solid var(--card-border);
+border-top-color:var(--accent-primary);
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+to{transform:rotate(360deg);}
+}
+
+/* Toast Notifications */
+.toast-container{
+position:fixed;
+bottom:calc(var(--safe-area-inset-bottom) + var(--spacing-lg));
+right:var(--spacing-lg);
+z-index:9999;
+}
+
+.custom-toast{
+background:var(--bg-secondary);
+border:1px solid var(--card-border);
+border-radius:var(--radius-lg);
+padding:var(--spacing-md) var(--spacing-lg);
+box-shadow:var(--shadow-xl);
+display:flex;
+align-items:center;
+gap:var(--spacing-md);
+min-width:300px;
+animation:slideIn .3s ease-out;
+}
+
+@keyframes slideIn{
+from{
+transform:translateX(400px);
+opacity:0;
+}
+to{
+transform:translateX(0);
+opacity:1;
+}
+}
+
+.toast-icon{
+font-size:1.5rem;
+}
+
+.toast-success{
+border-left:3px solid var(--success);
+}
+
+.toast-warning{
+border-left:3px solid var(--warning);
+}
+
+.toast-error{
+border-left:3px solid var(--danger);
+}
+
+/* Mobile Responsive */
+@media (max-width:768px){
+.main-wrapper{
+grid-template-columns:1fr;
+gap:var(--spacing-md);
+}
+
+.sidebar{
+display:none;
+}
+
+.toolbar{
+position:relative;
+top:0;
+}
+
+.btn-custom{
+min-width:auto;
+flex:1 1 calc(50% - var(--spacing-sm));
+font-size:.8rem;
+padding:.6rem .75rem;
+}
+
+.calendar{
+grid-template-columns:repeat(2,1fr);
+gap:var(--spacing-sm);
+}
+
+.day-card{
+min-height:100px;
+padding:var(--spacing-sm);
+}
+
+.day-number{
+font-size:1.25rem;
+}
+
+.weekday-header{
+display:none;
+}
+
+.day-date{
+display:block;
+}
+
+.recipe-details{
+padding:var(--spacing-lg);
+}
+
+.app-container{
+padding:var(--spacing-sm);
+}
+}
+
+@media (max-width:576px){
+.calendar{
+grid-template-columns:1fr;
+}
+
+.toolbar{
+gap:var(--spacing-xs);
+}
+}
+
+/* Print Styles */
+@media print{
+body{
+background:white;
+color:black;
+}
+
+.toolbar,
+.sidebar,
+.btn-custom,
+.clear-btn,
+.offcanvas{
+display:none!important;
+}
+
+.day-card{
+border:1px solid #000;
+background:white;
+color:black;
+}
+
+.calendar{
+grid-template-columns:repeat(7,1fr);
+}
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion:reduce){
+*,
+*::before,
+*::after{
+animation-duration:.01ms!important;
+animation-iteration-count:1!important;
+transition-duration:.01ms!important;
+}
+}
+
+/* Dark mode enhancements (already dark by default) */
+@media (prefers-color-scheme:light){
+/* Optional: Add light mode if desired */
+}
 </style>
 </head>
 <body>
 
-<div class="container py-4">
-    <h1>California Vacation Cooking Schedule 2025</h1>
+<div class="app-container">
+<!-- Header -->
+<header class="app-header">
+<h1 class="app-title">🍽️ Meal Planner Pro</h1>
+<p class="app-subtitle">Drag recipes to plan your perfect week</p>
+</header>
 
-    <!-- Toolbar -->
-    <div class="d-flex flex-wrap gap-2 mb-3">
-        <button class="btn btn-sm btn-outline-light" data-bs-toggle="offcanvas"
-                data-bs-target="#offcanvasRecipes" aria-controls="offcanvasRecipes">
-            <i class="bi bi-list"></i> Recipes
-        </button>
+<!-- Toolbar -->
+<div class="toolbar">
+<button class="btn-custom d-md-none" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRecipes">
+<i class="bi bi-grid-3x3-gap"></i>
+<span>Recipes</span>
+</button>
 
-        <button class="btn btn-sm btn-outline-light" id="exportBtn">
-            <i class="bi bi-download"></i> Export
-        </button>
+<button class="btn-custom btn-primary-custom" id="downloadHtmlBtn">
+<i class="bi bi-download"></i>
+<span class="d-none d-sm-inline">Save HTML</span>
+<span class="d-inline d-sm-none">Save</span>
+</button>
 
-        <button class="btn btn-sm btn-outline-light" id="importBtn">
-            <i class="bi bi-upload"></i> Import
-        </button>
+<button class="btn-custom" id="clearAllBtn">
+<i class="bi bi-trash3"></i>
+<span class="d-none d-sm-inline">Clear All</span>
+<span class="d-inline d-sm-none">Clear</span>
+</button>
 
-        <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal"
-                data-bs-target="#addRecipeModal">
-            <i class="bi bi-plus"></i> Add Recipe
-        </button>
+<button class="btn-custom" data-bs-toggle="modal" data-bs-target="#addRecipeModal">
+<i class="bi bi-plus-circle"></i>
+<span class="d-none d-sm-inline">Add Recipe</span>
+<span class="d-inline d-sm-none">Add</span>
+</button>
 
-        <input type="file" id="importFile" accept=".json" style="display:none;">
-    </div>
-
-    <!-- Offcanvas – recipe palette for phones -->
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasRecipes"
-         aria-labelledby="offcanvasRecipesLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="offcanvasRecipesLabel">Recipes</h5>
-            <button type="button" class="btn-close btn-close-white"
-                    data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <aside class="sidebar" id="recipePaletteMobile">
-                <input type="text" class="form-control search-box" id="searchBoxMobile"
-                       placeholder="Search recipes…">
-                <!-- items injected by JS -->
-            </aside>
-        </div>
-    </div>
-
-    <!-- Main layout (sidebar visible on larger screens) -->
-    <div class="wrapper">
-        <aside class="sidebar d-none d-md-block" id="recipePaletteDesktop">
-            <input type="text" class="form-control search-box" id="searchBoxDesktop"
-                   placeholder="Search recipes…">
-            <!-- items injected by JS -->
-        </aside>
-
-        <section class="flex-grow-1">
-            <!-- Weekday header -->
-            <div class="row weekday-header">
-                <div class="col-1 text-center">Sun</div>
-                <div class="col-1 text-center">Mon</div>
-                <div class="col-1 text-center">Tue</div>
-                <div class="col-1 text-center">Wed</div>
-                <div class="col-1 text-center">Thu</div>
-                <div class="col-1 text-center">Fri</div>
-                <div class="col-1 text-center">Sat</div>
-            </div>
-
-            <!-- Calendar -->
-            <div class="calendar" id="calendar"></div>
-
-            <!-- Instructions -->
-            <div class="instructions-card" id="instructions">
-                <p class="text-muted">Select a day to view the recipe and cooking instructions.</p>
-            </div>
-        </section>
-    </div>
-
-    <!-- Add Recipe Modal -->
-    <div class="modal fade" id="addRecipeModal" tabindex="-1"
-         aria-labelledby="addRecipeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content text-dark">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addRecipeModalLabel">Add Custom Recipe</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addRecipeForm">
-                        <div class="mb-3"><label class="form-label">Recipe Key (unique)</label>
-                            <input type="text" class="form-control" id="newKey" required></div>
-                        <div class="mb-3"><label class="form-label">Title</label>
-                            <input type="text" class="form-control" id="newTitle" required></div>
-                        <div class="mb-3"><label class="form-label">Ingredients (one per line)</label>
-                            <textarea class="form-control" id="newIngredients" rows="4" required></textarea></div>
-                        <div class="mb-3"><label class="form-label">Steps (one per line)</label>
-                            <textarea class="form-control" id="newSteps" rows="4" required></textarea></div>
-                        <div class="mb-3"><label class="form-label">Tips (optional, one per line)</label>
-                            <textarea class="form-control" id="newTips" rows="3"></textarea></div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary"
-                            data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveRecipeBtn">Save Recipe</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Hidden printable list -->
-    <div class="print-recipes d-none">
-        <h2>All Recipes</h2>
-        <div id="allRecipesPrint"></div>
-    </div>
+<button class="btn-custom" id="printBtn">
+<i class="bi bi-printer"></i>
+<span class="d-none d-sm-inline">Print</span>
+</button>
 </div>
 
-<!-- Bootstrap bundle (popper) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384‑ENjdO4Dr2bkBIFxQpeoYz1Hk8U5g4U7f0l2J8VIZjnM7E5VQZ0ZVnY4e+1m5K5pG"
-        crossorigin="anonymous"></script>
+<!-- Offcanvas for Mobile -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasRecipes">
+<div class="offcanvas-header">
+<h5 class="offcanvas-title"><i class="bi bi-grid-3x3-gap"></i> Recipe Library</h5>
+<button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+</div>
+<div class="offcanvas-body">
+<div class="search-wrapper">
+<i class="bi bi-search"></i>
+<input type="text" class="search-box" id="searchBoxMobile" placeholder="Search recipes...">
+</div>
+<div class="recipe-items" id="recipePaletteMobile"><div class="recipe-item" data-recipe="Beer Brats">
+<span class="recipe-icon">🌭</span>
+<span>Beer Brats</span>
+</div><div class="recipe-item" data-recipe="Smash Burgers">
+<span class="recipe-icon">🍔</span>
+<span>Smash Burgers</span>
+</div><div class="recipe-item" data-recipe="Smoked Brisket">
+<span class="recipe-icon">🥓</span>
+<span>Smoked Brisket</span>
+</div><div class="recipe-item" data-recipe="Smoked Pork Butt">
+<span class="recipe-icon">🥩</span>
+<span>Smoked Pork Butt</span>
+</div><div class="recipe-item" data-recipe="Tacos">
+<span class="recipe-icon">🌮</span>
+<span>Tacos</span>
+</div></div>
+</div>
+</div>
+
+<!-- Main Layout -->
+<div class="main-wrapper">
+<!-- Desktop Sidebar -->
+<aside class="sidebar d-none d-md-block">
+<div class="sidebar-header">
+<i class="bi bi-grid-3x3-gap"></i>
+Recipe Library
+</div>
+<div class="search-wrapper">
+<i class="bi bi-search"></i>
+<input type="text" class="search-box" id="searchBoxDesktop" placeholder="Search recipes...">
+</div>
+<div class="recipe-items" id="recipePaletteDesktop"><div class="recipe-item" data-recipe="Beer Brats">
+<span class="recipe-icon">🌭</span>
+<span>Beer Brats</span>
+</div><div class="recipe-item" data-recipe="Smash Burgers">
+<span class="recipe-icon">🍔</span>
+<span>Smash Burgers</span>
+</div><div class="recipe-item" data-recipe="Smoked Brisket">
+<span class="recipe-icon">🥓</span>
+<span>Smoked Brisket</span>
+</div><div class="recipe-item" data-recipe="Smoked Pork Butt">
+<span class="recipe-icon">🥩</span>
+<span>Smoked Pork Butt</span>
+</div><div class="recipe-item" data-recipe="Tacos">
+<span class="recipe-icon">🌮</span>
+<span>Tacos</span>
+</div></div>
+</aside>
+
+<!-- Calendar Section -->
+<section>
+<div class="calendar-wrapper">
+<div class="weekday-header d-none d-md-grid">
+<div class="weekday-label">Sunday</div>
+<div class="weekday-label">Monday</div>
+<div class="weekday-label">Tuesday</div>
+<div class="weekday-label">Wednesday</div>
+<div class="weekday-label">Thursday</div>
+<div class="weekday-label">Friday</div>
+<div class="weekday-label">Saturday</div>
+</div>
+<div class="calendar" id="calendar"><div class="day-card outside-trip" data-iso="2025-12-14"><div class="day-date d-md-none">Sun</div><div class="day-number">14</div></div><div class="day-card outside-trip" data-iso="2025-12-15"><div class="day-date d-md-none">Mon</div><div class="day-number">15</div></div><div class="day-card outside-trip" data-iso="2025-12-16"><div class="day-date d-md-none">Tue</div><div class="day-number">16</div></div><div class="day-card outside-trip" data-iso="2025-12-17"><div class="day-date d-md-none">Wed</div><div class="day-number">17</div></div><div class="day-card" data-iso="2025-12-18"><div class="day-date d-md-none">Thu</div><div class="day-number">18</div></div><div class="day-card" data-iso="2025-12-19"><div class="day-date d-md-none">Fri</div><div class="day-number">19</div></div><div class="day-card" data-iso="2025-12-20"><div class="day-date d-md-none">Sat</div><div class="day-number">20</div></div><div class="day-card drop-success" data-iso="2025-12-21"><div class="day-date d-md-none">Sun</div><div class="day-number">21</div><div class="assigned-recipe">
+<span>🌭 Beer Brats</span>
+<span class="clear-btn">×</span>
+</div></div><div class="day-card drop-success" data-iso="2025-12-22"><div class="day-date d-md-none">Mon</div><div class="day-number">22</div><div class="assigned-recipe">
+<span>🌭 Beer Brats</span>
+<span class="clear-btn">×</span>
+</div></div><div class="day-card" data-iso="2025-12-23"><div class="day-date d-md-none">Tue</div><div class="day-number">23</div></div><div class="day-card" data-iso="2025-12-24"><div class="day-date d-md-none">Wed</div><div class="day-number">24</div></div><div class="day-card" data-iso="2025-12-25"><div class="day-date d-md-none">Thu</div><div class="day-number">25</div></div><div class="day-card" data-iso="2025-12-26"><div class="day-date d-md-none">Fri</div><div class="day-number">26</div></div><div class="day-card" data-iso="2025-12-27"><div class="day-date d-md-none">Sat</div><div class="day-number">27</div></div><div class="day-card drop-success" data-iso="2025-12-28"><div class="day-date d-md-none">Sun</div><div class="day-number">28</div><div class="assigned-recipe">
+<span>🌭 Beer Brats</span>
+<span class="clear-btn">×</span>
+</div></div><div class="day-card outside-trip" data-iso="2025-12-29"><div class="day-date d-md-none">Mon</div><div class="day-number">29</div></div><div class="day-card outside-trip" data-iso="2025-12-30"><div class="day-date d-md-none">Tue</div><div class="day-number">30</div></div><div class="day-card outside-trip" data-iso="2025-12-31"><div class="day-date d-md-none">Wed</div><div class="day-number">31</div></div><div class="day-card outside-trip" data-iso="2026-01-01"><div class="day-date d-md-none">Thu</div><div class="day-number">1</div></div><div class="day-card outside-trip" data-iso="2026-01-02"><div class="day-date d-md-none">Fri</div><div class="day-number">2</div></div><div class="day-card outside-trip" data-iso="2026-01-03"><div class="day-date d-md-none">Sat</div><div class="day-number">3</div></div></div>
+</div>
+
+<!-- Recipe Details -->
+<div class="recipe-details" id="recipeDetails">
+<div class="empty-state">
+<i class="bi bi-cursor"></i>
+<p>Drag recipes onto calendar days to plan your meals</p>
+<p><small>Click any assigned day to view the full recipe</small></p>
+</div>
+</div>
+</section>
+</div>
+</div>
+
+<!-- Add Recipe Modal -->
+<div class="modal fade" id="addRecipeModal" tabindex="-1">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add Custom Recipe</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<form id="addRecipeForm">
+<div class="mb-3">
+<label class="form-label">Recipe Name (unique)</label>
+<input type="text" class="form-control" id="newKey" placeholder="e.g., Mom's Lasagna" required="">
+</div>
+<div class="mb-3">
+<label class="form-label">Display Title</label>
+<input type="text" class="form-control" id="newTitle" placeholder="e.g., Classic Homemade Lasagna" required="">
+</div>
+<div class="mb-3">
+<label class="form-label">Ingredients (one per line)</label>
+<textarea class="form-control" id="newIngredients" rows="5" placeholder="1 lb ground beef
+2 cups marinara sauce
+..." required=""></textarea>
+</div>
+<div class="mb-3">
+<label class="form-label">Cooking Steps (one per line)</label>
+<textarea class="form-control" id="newSteps" rows="5" placeholder="Preheat oven to 375°F
+Brown the ground beef..." required=""></textarea>
+</div>
+<div class="mb-3">
+<label class="form-label">Tips &amp; Notes (optional, one per line)</label>
+<textarea class="form-control" id="newTips" rows="3" placeholder="Can be made ahead and frozen
+Leftovers keep for 3 days..."></textarea>
+</div>
+</form>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+<button type="button" class="btn btn-primary" id="saveRecipeBtn">
+<i class="bi bi-check-circle"></i> Save Recipe
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"><div class="custom-toast toast-success">
+<span class="toast-icon">✓</span>
+<span>Beer Brats added to 12/27</span>
+</div></div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-/* ==============================================================
-   1️⃣  DATE CALCULATIONS
-   ============================================================== */
-const tripStart = new Date(2025, 11, 18);   // Dec 18 2025
-const tripEnd   = new Date(2025, 11, 28);   // Dec 28 2025
+/* ===================================
+   CONFIGURATION & DATA
+=================================== */
+const tripStart = new Date(2025, 11, 18);
+const tripEnd = new Date(2025, 11, 28);
 
-// start on the Sunday before the trip
 const startOfWeek = new Date(tripStart);
 startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
 
-// end on the Saturday after the trip
 const endOfWeek = new Date(tripEnd);
 endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
 
-/* ==============================================================
-   2️⃣  RECIPE DATA (initial set)
-   ============================================================== */
-let recipes = {
-    "Smoked Pork Butt": {
-        title: "Smoked Pork Butt (Pulled Pork)",
-        ingredients: [
-            "5‑lb pork shoulder (bone‑in or boneless)",
-            "2 Tbsp kosher salt",
-            "2 Tbsp brown sugar",
-            "1 Tbsp paprika",
-            "1 Tbsp black pepper",
-            "1 Tbsp garlic powder",
-            "1 Tbsp onion powder",
-            "½ Tbsp cayenne (optional)",
-            "Applewood or hickory wood chips"
-        ],
-        steps: [
-            "Trim excess fat, then apply a generous dry rub (all ingredients except wood).",
-            "Preheat smoker to **225 °F** and add applewood/hickory.",
-            "Place pork butt on the grill grate, fat side up.",
-            "Smoke until internal temperature reaches **165‑170 °F** (≈ 5‑6 h).",
-            "Wrap tightly in butcher paper or foil – this speeds the stall.",
-            "Return to smoker and continue until **195‑205 °F** (≈ 2‑3 h more).",
-            "Remove, let rest 30‑45 min, then shred with forks.",
-            "Serve with coleslaw, pickles, and buns."
-        ],
-        tips: [
-            "Maintain a steady **225 °F** throughout – use a good controller or digital smoker.",
-            "A digital probe (instant‑read) helps watch the stall (150‑170 °F).",
-            "Applewood gives a sweet flavor; hickory adds a stronger smoke."
-        ]
-    },
-
-    "Beer Brats": {
-        title: "Beer‑Braised Bratwurst",
-        ingredients: [
-            "12 bratwurst links",
-            "2 cups lager or ale",
-            "1 large onion, sliced",
-            "2 Tbsp butter",
-            "1 Tbsp mustard seeds",
-            "Olive oil",
-            "Buns, sauerkraut, mustard (optional)"
-        ],
-        steps: [
-            "In a large skillet, melt butter and sauté onions until translucent.",
-            "Add mustard seeds, then lay bratwurst in the pan.",
-            "Pour beer over the brats, bring to a simmer, cover, and cook 15‑20 min.",
-            "Remove brats, increase heat, and brown them on each side (2‑3 min).",
-            "Serve on buns with onions, sauerkraut, and mustard."
-        ],
-        tips: [
-            "Use a robust lager for a richer flavor.",
-            "Don’t over‑cook – the internal temperature should hit **160 °F**."
-        ]
-    },
-
-    "Smash Burgers": {
-        title: "Smash Burgers",
-        ingredients: [
-            "1 lb ground beef (80/20)",
-            "Salt & pepper",
-            "4 burger buns",
-            "Cheddar slices",
-            "Pickles, lettuce, tomato, onion",
-            "Butter (for buns)",
-            "Oil (high‑smoke‑point)"
-        ],
-        steps: [
-            "Form the meat into 4 loose balls (≈ 4 oz each).",
-            "Heat a cast‑iron skillet or griddle to **high** (≈ 450‑500 °F).",
-            "Place a ball, let sit 30 s, then smash with a spatula until thin.",
-            "Season with salt & pepper, cook 2‑3 min, flip, add cheese, cook another minute.",
-            "Toast buns in butter, assemble with toppings."
-        ],
-        tips: [
-            "A thin patty creates that coveted crust – don’t over‑handle the meat.",
-            "Use a heavy spatula for an even smash."
-        ]
-    },
-
-    "Smoked Brisket": {
-        title: "Smoked Beef Brisket",
-        ingredients: [
-            "10‑lb whole packer brisket (point + flat)",
-            "2 Tbsp kosher salt",
-            "2 Tbsp black pepper",
-            "1 Tbsp garlic powder",
-            "1 Tbsp onion powder",
-            "Hickory or oak wood chunks",
-            "Apple juice (optional for spritz)"
-        ],
-        steps: [
-            "Trim excess fat, leaving ~¼‑inch cap.",
-            "Mix salt, pepper, garlic & onion powder – apply liberally.",
-            "Pre‑heat smoker to **225 °F**, add hickory/oak.",
-            "Place brisket fat‑side up; smoke until internal temp hits **165‑170 °F** (≈ 6‑8 h).",
-            "Spritz with apple juice every hour (optional).",
-            "Wrap tightly in butcher paper or foil – this gets you through the stall.",
-            "Return to smoker and cook until **195‑203 °F** (≈ 2‑3 h more).",
-            "Rest wrapped for 1‑2 h, then slice against the grain."
-        ],
-        tips: [
-            "Consistent **225 °F** is key – fluctuations > 15 °F will lengthen cook time.",
-            "The stall (150‑170 °F) is normal; wrapping accelerates it.",
-            "Resting lets juices redistribute for juicy slices."
-        ]
-    },
-
-    "Tacos": {
-        title: "Grilled Chicken & Steak Tacos",
-        ingredients: [
-            "1 lb chicken breast, thinly sliced",
-            "1 lb flank steak, thinly sliced",
-            "2 Tbsp olive oil",
-            "1 Tbsp chili powder",
-            "1 tsp cumin",
-            "1 tsp smoked paprika",
-            "Salt & pepper",
-            "12 small corn tortillas",
-            "Toppings: cilantro, diced onion, lime wedges, salsa, avocado"
-        ],
-        steps: [
-            "Toss chicken and steak in oil + spices; let rest 15 min.",
-            "Grill over high heat (≈ 450 °F) – chicken 4‑5 min, steak 3‑4 min per side.",
-            "Let rest 5 min, then slice thinly.",
-            "Warm tortillas on the grill, then fill with meat and desired toppings."
-        ],
-        tips: [
-            "Oak or hickory woods give a nice char for the steak.",
-            "Slice against the grain for tender steak bites."
-        ]
-    }
+// Recipe icons mapping
+const recipeIcons = {
+'Smoked Pork Butt': '🥩',
+'Beer Brats': '🌭',
+'Smash Burgers': '🍔',
+'Smoked Brisket': '🥓',
+'Tacos': '🌮',
+'default': '🍽️'
 };
 
-/* ==============================================================
-   3️⃣  GLOBAL STATE
-   ============================================================== */
-const calendarEl   = document.getElementById('calendar');
-const instructions = document.getElementById('instructions');
+let recipes = {
+"Smoked Pork Butt": {
+title: "Smoked Pork Butt (Pulled Pork)",
+icon: "🥩",
+ingredients: [
+"5-lb pork shoulder (bone-in or boneless)",
+"2 Tbsp kosher salt",
+"2 Tbsp brown sugar",
+"1 Tbsp paprika",
+"1 Tbsp black pepper",
+"1 Tbsp garlic powder",
+"1 Tbsp onion powder",
+"½ Tbsp cayenne (optional)",
+"Applewood or hickory wood chips"
+],
+steps: [
+"Trim excess fat, then apply a generous dry rub (all ingredients except wood).",
+"Preheat smoker to 225°F and add applewood/hickory.",
+"Place pork butt on the grill grate, fat side up.",
+"Smoke until internal temperature reaches 165-170°F (≈ 5-6 h).",
+"Wrap tightly in butcher paper or foil.",
+"Return to smoker and continue until 195-205°F (≈ 2-3 h more).",
+"Remove, let rest 30-45 min, then shred with forks.",
+"Serve with coleslaw, pickles, and buns."
+],
+tips: [
+"Maintain a steady 225°F throughout.",
+"A digital probe helps watch the stall (150-170°F).",
+"Applewood gives a sweet flavor; hickory adds stronger smoke."
+]
+},
+
+"Beer Brats": {
+title: "Beer-Braised Bratwurst",
+icon: "🌭",
+ingredients: [
+"12 bratwurst links",
+"2 cups lager or ale",
+"1 large onion, sliced",
+"2 Tbsp butter",
+"1 Tbsp mustard seeds",
+"Olive oil",
+"Buns, sauerkraut, mustard (optional)"
+],
+steps: [
+"In a large skillet, melt butter and sauté onions until translucent.",
+"Add mustard seeds, then lay bratwurst in the pan.",
+"Pour beer over the brats, bring to a simmer, cover, and cook 15-20 min.",
+"Remove brats, increase heat, and brown them on each side (2-3 min).",
+"Serve on buns with onions, sauerkraut, and mustard."
+],
+tips: [
+"Use a robust lager for a richer flavor.",
+"Don't over-cook – the internal temperature should hit 160°F."
+]
+},
+
+"Smash Burgers": {
+title: "Smash Burgers",
+icon: "🍔",
+ingredients: [
+"1 lb ground beef (80/20)",
+"Salt & pepper",
+"4 burger buns",
+"Cheddar slices",
+"Pickles, lettuce, tomato, onion",
+"Butter (for buns)",
+"Oil (high-smoke-point)"
+],
+steps: [
+"Form the meat into 4 loose balls (≈ 4 oz each).",
+"Heat a cast-iron skillet or griddle to high (≈ 450-500°F).",
+"Place a ball, let sit 30 s, then smash with a spatula until thin.",
+"Season with salt & pepper, cook 2-3 min, flip, add cheese, cook another minute.",
+"Toast buns in butter, assemble with toppings."
+],
+tips: [
+"A thin patty creates that coveted crust – don't over-handle the meat.",
+"Use a heavy spatula for an even smash."
+]
+},
+
+"Smoked Brisket": {
+title: "Smoked Beef Brisket",
+icon: "🥓",
+ingredients: [
+"10-lb whole packer brisket (point + flat)",
+"2 Tbsp kosher salt",
+"2 Tbsp black pepper",
+"1 Tbsp garlic powder",
+"1 Tbsp onion powder",
+"Hickory or oak wood chunks",
+"Apple juice (optional for spritz)"
+],
+steps: [
+"Trim excess fat, leaving ~¼-inch cap.",
+"Mix salt, pepper, garlic & onion powder – apply liberally.",
+"Pre-heat smoker to 225°F, add hickory/oak.",
+"Place brisket fat-side up; smoke until internal temp hits 165-170°F (≈ 6-8 h).",
+"Spritz with apple juice every hour (optional).",
+"Wrap tightly in butcher paper or foil.",
+"Return to smoker and cook until 195-203°F (≈ 2-3 h more).",
+"Rest wrapped for 1-2 h, then slice against the grain."
+],
+tips: [
+"Consistent 225°F is key – fluctuations > 15°F will lengthen cook time.",
+"The stall (150-170°F) is normal; wrapping accelerates it.",
+"Resting lets juices redistribute for juicy slices."
+]
+},
+
+"Tacos": {
+title: "Grilled Chicken & Steak Tacos",
+icon: "🌮",
+ingredients: [
+"1 lb chicken breast, thinly sliced",
+"1 lb flank steak, thinly sliced",
+"2 Tbsp olive oil",
+"1 Tbsp chili powder",
+"1 tsp cumin",
+"1 tsp smoked paprika",
+"Salt & pepper",
+"12 small corn tortillas",
+"Toppings: cilantro, diced onion, lime wedges, salsa, avocado"
+],
+steps: [
+"Toss chicken and steak in oil + spices; let rest 15 min.",
+"Grill over high heat (≈ 450°F) – chicken 4-5 min, steak 3-4 min per side.",
+"Let rest 5 min, then slice thinly.",
+"Warm tortillas on the grill, then fill with meat and desired toppings."
+],
+tips: [
+"Oak or hickory woods give a nice char for the steak.",
+"Slice against the grain for tender steak bites."
+]
+}
+};
+
+/* ===================================
+   STATE MANAGEMENT
+=================================== */
+const calendarEl = document.getElementById('calendar');
+const recipeDetails = document.getElementById('recipeDetails');
 const paletteDesktop = document.getElementById('recipePaletteDesktop');
-const paletteMobile  = document.getElementById('recipePaletteMobile');
-let assignments = {};                     // {"2025-12-19":"Beer Brats"}
-const STORAGE_KEY = 'vacation-cook-assignments';
+const paletteMobile = document.getElementById('recipePaletteMobile');
 
-/* --------------------------------------------------------------
-   4️⃣  PERSISTENCE (localStorage)
-   -------------------------------------------------------------- */
-function loadAssignments(){
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw){
-        try{ assignments = JSON.parse(raw); }
-        catch(e){ console.error('bad assignment data',e); }
-    }
-}
-function saveAssignments(){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
-}
+// ⭐ ASSIGNMENTS INJECTED HERE ⭐
+let assignments = {
+  "2025-12-21": "Beer Brats",
+  "2025-12-22": "Beer Brats",
+  "2025-12-28": "Beer Brats"
+};
 
-/* --------------------------------------------------------------
-   5️⃣  RECIPE PALETTE (pointer‑based drag)
-   -------------------------------------------------------------- */
-function createPaletteItem(name){
-    const div = document.createElement('div');
-    div.className = 'recipe-item';
-    div.textContent = name;
-    div.dataset.recipe = name;
+const STORAGE_KEY = 'meal-planner-assignments-v2';
 
-    // ---- pointer‑based drag (works on mouse & touch) ----
-    let ghost = null;
-    const startDrag = ev => {
-        ev.preventDefault();                     // stop native text‑selection, etc.
-        const recipe = div.dataset.recipe;
-        ghost = div.cloneNode(true);
-        ghost.classList.add('dragging');
-        ghost.style.position = 'fixed';
-        ghost.style.left = ev.clientX + 'px';
-        ghost.style.top  = ev.clientY + 'px';
-        ghost.style.pointerEvents = 'none';
-        ghost.style.opacity = '0.8';
-        document.body.appendChild(ghost);
+/* ===================================
+   UTILITY FUNCTIONS
+=================================== */
+function showToast(message, type = 'success') {
+const container = document.getElementById('toastContainer');
+const toast = document.createElement('div');
+toast.className = `custom-toast toast-${type}`;
 
-        const move = me => {
-            ghost.style.left = me.clientX + 'px';
-            ghost.style.top  = me.clientY + 'px';
-        };
-        const end = me => {
-            document.removeEventListener('pointermove', move);
-            document.removeEventListener('pointerup', end);
-            ghost.remove();
-            ghost = null;
+const icons = {
+success: '✓',
+warning: '⚠',
+error: '✕',
+info: 'ℹ'
+};
 
-            const dropTarget = document.elementFromPoint(me.clientX, me.clientY);
-            const dayCard = dropTarget?.closest('.day-card');
-            if (dayCard && !dayCard.classList.contains('outside-trip')){
-                // assign
-                const iso = dayCard.dataset.iso;
-                assignments[iso] = recipe;
-                saveAssignments();
-                updateCardAssignment(dayCard, recipe);
-                // flash feedback
-                dayCard.classList.add('drop-success');
-                setTimeout(()=>dayCard.classList.remove('drop-success'),800);
-            }
-        };
-        document.addEventListener('pointermove', move);
-        document.addEventListener('pointerup', end);
-    };
-    div.addEventListener('pointerdown', startDrag);
-    return div;
+toast.innerHTML = `
+<span class="toast-icon">${icons[type] || icons.info}</span>
+<span>${message}</span>
+`;
+
+container.appendChild(toast);
+
+setTimeout(() => {
+toast.style.animation = 'slideIn .3s ease-out reverse';
+setTimeout(() => toast.remove(), 300);
+}, 3000);
 }
 
-function buildPalette(){
-    // Clear both containers and add fresh search boxes
-    paletteDesktop.innerHTML = '<input type="text" class="form-control search-box" id="searchBoxDesktop" placeholder="Search recipes…">';
-    paletteMobile.innerHTML  = '<input type="text" class="form-control search-box" id="searchBoxMobile" placeholder="Search recipes…">';
-
-    Object.keys(recipes).forEach(name=>{
-        const item = createPaletteItem(name);
-        // clone for each container
-        paletteDesktop.appendChild(item.cloneNode(true));
-        paletteMobile.appendChild(item.cloneNode(true));
-    });
+function loadAssignments() {
+const raw = localStorage.getItem(STORAGE_KEY);
+if (raw) {
+try {
+const loaded = JSON.parse(raw);
+assignments = { ...assignments, ...loaded };
+} catch (e) {
+console.error('Error loading assignments:', e);
+showToast('Error loading saved data', 'error');
+}
+}
 }
 
-/* --------------------------------------------------------------
-   6️⃣  SEARCH / FILTER
-   -------------------------------------------------------------- */
-function attachSearch(boxId, container){
-    const box = document.getElementById(boxId);
-    box.addEventListener('input',()=>{
-        const term = box.value.trim().toLowerCase();
-        const items = container.querySelectorAll('.recipe-item');
-        items.forEach(it=>{
-            const txt = it.dataset.recipe.toLowerCase();
-            it.style.display = txt.includes(term) ? '' : 'none';
-        });
-    });
+function saveAssignments() {
+localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
 }
 
-/* --------------------------------------------------------------
-   7️⃣  CALENDAR BUILD
-   -------------------------------------------------------------- */
-function isInTrip(date){ return date>=tripStart && date<=tripEnd; }
-function formatMD(date){ return `${date.getMonth()+1}/${date.getDate()}`; }
-function getDefaultMeal(date){
-    const iso = date.toISOString().split('T')[0];
-    if (iso==='2025-12-25') return 'Smoked Brisket';
-    const meals = ['Smoked Pork Butt','Beer Brats','Smash Burgers','Tacos'];
-    const offset = Math.floor((date-tripStart)/(1000*60*60*24));
-    if (offset<0 || offset> (tripEnd-tripStart)/(1000*60*60*24)) return null;
-    return meals[offset%meals.length];
+function isInTrip(date) {
+return date >= tripStart && date <= tripEnd;
 }
 
-/* Build calendar */
-for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate()+1)){
-    const cur = new Date(d);
-    const iso = cur.toISOString();
-
-    const card = document.createElement('div');
-    card.className = 'day-card' + (isInTrip(cur) ? '' : ' outside-trip');
-    card.dataset.iso = iso;
-
-    // Weekday name
-    const weekday = cur.toLocaleDateString('en-US',{weekday:'short'});
-    const head = document.createElement('div');
-    head.textContent = weekday;
-    head.style.fontWeight='600';
-    card.appendChild(head);
-
-    // Date number
-    const dateEl = document.createElement('div');
-    dateEl.className='date';
-    dateEl.textContent = formatMD(cur);
-    card.appendChild(dateEl);
-
-    // Default assignment (if any)
-    if (isInTrip(cur)){
-        const def = getDefaultMeal(cur);
-        if (def) assignments[iso] = def;
-    }
-
-    // Show assigned recipe (if any)
-    if (assignments[iso]){
-        const lbl = document.createElement('div');
-        lbl.className='assigned-recipe';
-        lbl.textContent = assignments[iso];
-
-        const clear = document.createElement('span');
-        clear.className='clear-btn';
-        clear.title='Remove assignment';
-        clear.textContent='×';
-        clear.addEventListener('click',ev=>{
-            ev.stopPropagation();
-            delete assignments[iso];
-            saveAssignments();
-            lbl.remove();
-        });
-        lbl.appendChild(clear);
-        card.appendChild(lbl);
-    }
-
-    // Click to view recipe
-    card.addEventListener('click',()=>{
-        const meal = assignments[card.dataset.iso];
-        if (meal) displayInstructions(meal);
-    });
-
-    calendarEl.appendChild(card);
+function isToday(date) {
+const today = new Date();
+return date.getDate() === today.getDate() &&
+date.getMonth() === today.getMonth() &&
+date.getFullYear() === today.getFullYear();
 }
 
-/* --------------------------------------------------------------
-   8️⃣  UPDATE CARD AFTER DROP / CLEAR
-   -------------------------------------------------------------- */
-function updateCardAssignment(card, recipeName){
-    // Remove old label if present
-    const old = card.querySelector('.assigned-recipe');
-    if (old) old.remove();
-
-    // New label
-    const lbl = document.createElement('div');
-    lbl.className='assigned-recipe';
-    lbl.textContent = recipeName;
-
-    const clear = document.createElement('span');
-    clear.className='clear-btn';
-    clear.title='Remove assignment';
-    clear.textContent='×';
-    clear.addEventListener('click',ev=>{
-        ev.stopPropagation();
-        delete assignments[card.dataset.iso];
-        saveAssignments();
-        lbl.remove();
-    });
-    lbl.appendChild(clear);
-    card.appendChild(lbl);
+function formatDate(date) {
+return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
-/* --------------------------------------------------------------
-   9️⃣  DISPLAY RECIPE IN INSTRUCTIONS PANEL
-   -------------------------------------------------------------- */
-function displayInstructions(mealName){
-    const recipe = recipes[mealName];
-    if (!recipe){
-        instructions.innerHTML = `<p class="text-muted">No recipe found for "${mealName}".</p>`;
-        return;
-    }
-    const html = `
-        <h2>${recipe.title}</h2>
-        <h5>Ingredients</h5>
-        <ul>${recipe.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
-        <h5>Steps</h5>
-        <ol>${recipe.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
-        ${recipe.tips && recipe.tips.length
-            ? `<h5>Tips & Techniques</h5><ul>${recipe.tips.map(t=>`<li>${t}</li>`).join('')}</ul>`
-            : ''
-        }
-    `;
-    instructions.innerHTML = html;
+function getWeekday(date) {
+return date.toLocaleDateString('en-US', { weekday: 'short' });
 }
 
-/* --------------------------------------------------------------
-   🔟  EXPORT / IMPORT
-   -------------------------------------------------------------- */
-document.getElementById('exportBtn').addEventListener('click',()=>{
-    const data = JSON.stringify(assignments, null, 2);
-    const blob = new Blob([data],{type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'vacation-cook-assignments.json';
-    a.click();
-    URL.revokeObjectURL(url);
-});
-document.getElementById('importBtn').addEventListener('click',()=>{
-    document.getElementById('importFile').click();
-});
-document.getElementById('importFile').addEventListener('change',ev=>{
-    const file = ev.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e=>{
-        try{
-            const imported = JSON.parse(e.target.result);
-            for (const [date, rec] of Object.entries(imported)){
-                if (rec in recipes) assignments[date] = rec;
-            }
-            saveAssignments();
-            // refresh UI
-            document.querySelectorAll('.day-card').forEach(card=>{
-                const iso = card.dataset.iso;
-                if (assignments[iso]) updateCardAssignment(card, assignments[iso]);
-                else{
-                    const old = card.querySelector('.assigned-recipe');
-                    if (old) old.remove();
-                }
-            });
-        }catch(err){
-            alert('Import failed: '+err);
-        }
-    };
-    reader.readAsText(file);
-    ev.target.value=''; // allow re‑select same file later
+/* ===================================
+   RECIPE PALETTE
+=================================== */
+function createRecipeItem(name) {
+const recipe = recipes[name];
+const div = document.createElement('div');
+div.className = 'recipe-item';
+div.dataset.recipe = name;
+
+const icon = recipe.icon || recipeIcons[name] || recipeIcons.default;
+div.innerHTML = `
+<span class="recipe-icon">${icon}</span>
+<span>${name}</span>
+`;
+
+let ghost = null;
+let currentDropTarget = null;
+
+const startDrag = ev => {
+ev.preventDefault();
+const recipeName = div.dataset.recipe;
+
+// Create ghost element
+ghost = div.cloneNode(true);
+ghost.classList.add('dragging');
+ghost.style.position = 'fixed';
+ghost.style.left = ev.clientX - 50 + 'px';
+ghost.style.top = ev.clientY - 20 + 'px';
+ghost.style.pointerEvents = 'none';
+ghost.style.opacity = '0.8';
+ghost.style.zIndex = '10000';
+ghost.style.width = '200px';
+document.body.appendChild(ghost);
+
+const move = me => {
+ghost.style.left = me.clientX - 50 + 'px';
+ghost.style.top = me.clientY - 20 + 'px';
+
+// Find drop target
+const dropTarget = document.elementFromPoint(me.clientX, me.clientY);
+const dayCard = dropTarget?.closest('.day-card');
+
+if (currentDropTarget && currentDropTarget !== dayCard) {
+currentDropTarget.classList.remove('drag-over');
+}
+
+if (dayCard && !dayCard.classList.contains('outside-trip')) {
+dayCard.classList.add('drag-over');
+currentDropTarget = dayCard;
+} else {
+currentDropTarget = null;
+}
+};
+
+const end = me => {
+document.removeEventListener('pointermove', move);
+document.removeEventListener('pointerup', end);
+
+if (ghost) ghost.remove();
+ghost = null;
+
+if (currentDropTarget) {
+currentDropTarget.classList.remove('drag-over');
+const iso = currentDropTarget.dataset.iso;
+assignments[iso] = recipeName;
+saveAssignments();
+updateCardAssignment(currentDropTarget, recipeName);
+currentDropTarget.classList.add('drop-success');
+setTimeout(() => currentDropTarget.classList.remove('drop-success'), 600);
+showToast(`${recipeName} added to ${formatDate(new Date(iso))}`, 'success');
+currentDropTarget = null;
+}
+};
+
+document.addEventListener('pointermove', move);
+document.addEventListener('pointerup', end);
+};
+
+div.addEventListener('pointerdown', startDrag);
+return div;
+}
+
+function buildPalette() {
+paletteDesktop.innerHTML = '';
+paletteMobile.innerHTML = '';
+
+Object.keys(recipes).sort().forEach(name => {
+const itemDesktop = createRecipeItem(name);
+const itemMobile = createRecipeItem(name);
+paletteDesktop.appendChild(itemDesktop);
+paletteMobile.appendChild(itemMobile);
 });
 
-/* --------------------------------------------------------------
-   1️⃣1️⃣  ADD CUSTOM RECIPE
-   -------------------------------------------------------------- */
-document.getElementById('saveRecipeBtn').addEventListener('click',()=>{
-    const key   = document.getElementById('newKey').value.trim();
-    const title = document.getElementById('newTitle').value.trim();
-    const ing   = document.getElementById('newIngredients').value.trim().split('\n').filter(Boolean);
-    const steps = document.getElementById('newSteps').value.trim().split('\n').filter(Boolean);
-    const tips  = document.getElementById('newTips').value.trim().split('\n').filter(Boolean);
-
-    if (!key || !title || !ing.length || !steps.length){
-        alert('Please fill in all required fields.');
-        return;
-    }
-    if (key in recipes && !confirm('Recipe key already exists – overwrite?')) return;
-
-    recipes[key] = {title, ingredients:ing, steps, tips};
-    buildPalette();                     // refresh palette with new item
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addRecipeModal'));
-    modal.hide();
-    document.getElementById('addRecipeForm').reset();
-});
-
-/* --------------------------------------------------------------
-   1️⃣2️⃣  PRINT‑FRIENDLY RECIPE LIST
-   -------------------------------------------------------------- */
-function buildPrintRecipes(){
-    const container = document.getElementById('allRecipesPrint');
-    container.innerHTML='';
-    Object.values(recipes).forEach(rec=>{
-        const div = document.createElement('div');
-        div.style.marginBottom='1.5rem';
-        div.innerHTML = `
-            <h3>${rec.title}</h3>
-            <strong>Ingredients:</strong>
-            <ul>${rec.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
-            <strong>Steps:</strong>
-            <ol>${rec.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
-            ${rec.tips && rec.tips.length
-                ? `<strong>Tips:</strong><ul>${rec.tips.map(t=>`<li>${t}</li>`).join('')}</ul>`
-                : ''
-            }
-        `;
-        container.appendChild(div);
-    });
+attachSearch('searchBoxDesktop', paletteDesktop);
+attachSearch('searchBoxMobile', paletteMobile);
 }
 
-/* --------------------------------------------------------------
-   1️⃣3️⃣  INITIALISE
-   -------------------------------------------------------------- */
+function attachSearch(boxId, container) {
+const box = document.getElementById(boxId);
+if (!box) return;
+
+box.addEventListener('input', () => {
+const term = box.value.trim().toLowerCase();
+const items = container.querySelectorAll('.recipe-item');
+items.forEach(it => {
+const txt = it.dataset.recipe.toLowerCase();
+it.style.display = txt.includes(term) ? '' : 'none';
+});
+});
+}
+
+/* ===================================
+   CALENDAR
+=================================== */
+function buildCalendar() {
+calendarEl.innerHTML = '';
+
+for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
+const cur = new Date(d);
+const iso = cur.toISOString().split('T')[0];
+
+const card = document.createElement('div');
+card.className = 'day-card';
+card.dataset.iso = iso;
+
+if (!isInTrip(cur)) {
+card.classList.add('outside-trip');
+}
+
+if (isToday(cur)) {
+card.classList.add('today');
+}
+
+// Date display
+const dateDiv = document.createElement('div');
+dateDiv.className = 'day-date d-md-none';
+dateDiv.textContent = getWeekday(cur);
+card.appendChild(dateDiv);
+
+const numberDiv = document.createElement('div');
+numberDiv.className = 'day-number';
+numberDiv.textContent = cur.getDate();
+card.appendChild(numberDiv);
+
+// Show assigned recipe
+if (assignments[iso]) {
+updateCardAssignment(card, assignments[iso]);
+}
+
+// Click to view recipe
+card.addEventListener('click', () => {
+const meal = assignments[card.dataset.iso];
+if (meal) displayRecipe(meal);
+});
+
+calendarEl.appendChild(card);
+}
+}
+
+function updateCardAssignment(card, recipeName) {
+const old = card.querySelector('.assigned-recipe');
+if (old) old.remove();
+
+const recipe = recipes[recipeName];
+const icon = recipe?.icon || recipeIcons[recipeName] || recipeIcons.default;
+
+const lbl = document.createElement('div');
+lbl.className = 'assigned-recipe';
+lbl.innerHTML = `
+<span>${icon} ${recipeName}</span>
+<span class="clear-btn">×</span>
+`;
+
+const clearBtn = lbl.querySelector('.clear-btn');
+clearBtn.addEventListener('click', ev => {
+ev.stopPropagation();
+delete assignments[card.dataset.iso];
+saveAssignments();
+lbl.remove();
+showToast(`${recipeName} removed`, 'info');
+});
+
+card.appendChild(lbl);
+}
+
+/* ===================================
+   RECIPE DISPLAY
+=================================== */
+function displayRecipe(mealName) {
+const recipe = recipes[mealName];
+if (!recipe) {
+recipeDetails.innerHTML = `
+<div class="empty-state">
+<i class="bi bi-exclamation-circle"></i>
+<p>Recipe not found: "${mealName}"</p>
+</div>
+`;
+return;
+}
+
+const icon = recipe.icon || recipeIcons[mealName] || recipeIcons.default;
+
+const html = `
+<h2>${icon} ${recipe.title}</h2>
+
+<h5><i class="bi bi-basket"></i> Ingredients</h5>
+<ul>${recipe.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+
+<h5><i class="bi bi-list-ol"></i> Instructions</h5>
+<ol>${recipe.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+
+${recipe.tips && recipe.tips.length
+? `<h5><i class="bi bi-lightbulb"></i> Tips & Techniques</h5>
+<ul>${recipe.tips.map(t => `<li>${t}</li>`).join('')}</ul>`
+: ''
+}
+`;
+
+recipeDetails.innerHTML = html;
+
+// Smooth scroll on mobile
+if (window.innerWidth < 768) {
+recipeDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+}
+
+/* ===================================
+   TOOLBAR ACTIONS
+=================================== */
+document.getElementById('downloadHtmlBtn').addEventListener('click', () => {
+let htmlContent = document.documentElement.outerHTML;
+const assignmentsJson = JSON.stringify(assignments, null, 2);
+const pattern = /let assignments = \{[^}]*\};/s;
+const replacement = `let assignments = ${assignmentsJson};`;
+htmlContent = htmlContent.replace(pattern, replacement);
+
+const blob = new Blob([htmlContent], { type: 'text/html' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = `meal-planner-${new Date().toISOString().split('T')[0]}.html`;
+a.click();
+URL.revokeObjectURL(url);
+
+showToast('HTML file downloaded successfully!', 'success');
+});
+
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+if (!confirm('Clear all recipe assignments? This cannot be undone.')) return;
+
+assignments = {};
+saveAssignments();
+buildCalendar();
+recipeDetails.innerHTML = `
+<div class="empty-state">
+<i class="bi bi-cursor"></i>
+<p>Drag recipes onto calendar days to plan your meals</p>
+<p><small>Click any assigned day to view the full recipe</small></p>
+</div>
+`;
+
+showToast('All assignments cleared', 'info');
+});
+
+document.getElementById('printBtn').addEventListener('click', () => {
+window.print();
+});
+
+/* ===================================
+   ADD CUSTOM RECIPE
+=================================== */
+document.getElementById('saveRecipeBtn').addEventListener('click', () => {
+const key = document.getElementById('newKey').value.trim();
+const title = document.getElementById('newTitle').value.trim();
+const ing = document.getElementById('newIngredients').value.trim().split('\n').filter(Boolean);
+const steps = document.getElementById('newSteps').value.trim().split('\n').filter(Boolean);
+const tips = document.getElementById('newTips').value.trim().split('\n').filter(Boolean);
+
+if (!key || !title || !ing.length || !steps.length) {
+showToast('Please fill in all required fields', 'warning');
+return;
+}
+
+if (key in recipes && !confirm('Recipe name already exists. Overwrite?')) return;
+
+recipes[key] = {
+title,
+icon: recipeIcons.default,
+ingredients: ing,
+steps,
+tips
+};
+
+buildPalette();
+
+const modal = bootstrap.Modal.getInstance(document.getElementById('addRecipeModal'));
+modal.hide();
+document.getElementById('addRecipeForm').reset();
+
+showToast(`Recipe "${key}" added successfully!`, 'success');
+});
+
+/* ===================================
+   INITIALIZATION
+=================================== */
 loadAssignments();
 buildPalette();
-attachSearch('searchBoxDesktop', paletteDesktop);
-attachSearch('searchBoxMobile',  paletteMobile);
-buildPrintRecipes();
+buildCalendar();
 
-/* After assignments are loaded, make sure UI reflects them */
-document.querySelectorAll('.day-card').forEach(card=>{
-    const iso = card.dataset.iso;
-    if (assignments[iso]) updateCardAssignment(card, assignments[iso]);
+// Service Worker Registration (PWA support)
+if ('serviceWorker' in navigator) {
+window.addEventListener('load', () => {
+// Uncomment to enable PWA features
+// navigator.serviceWorker.register('/sw.js');
 });
+}
+
+console.log('🍽️ Meal Planner Pro initialized');
 </script>
-</body>
-</html>
+
+</body></html>
