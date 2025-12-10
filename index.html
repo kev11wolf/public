@@ -1,236 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <!-- Sets character encoding to UTF-8 -->
-  <meta charset="UTF-8" />
-  <!-- Ensures the page scales correctly on mobile devices -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Page title as it appears in the browser tab -->
-  <title>My GitHub Repo Homepage</title>
-  <!-- Link to Bootstrap CSS for styling -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-  />
+    <!-- Sets character encoding to UTF-8 -->
+    <meta charset="UTF-8" />
+    <!-- Ensures the page scales correctly on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Page title as it appears in the browser tab -->
+    <title>My GitHub Repo Homepage</title>
+    <!-- Link to Bootstrap CSS for styling -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
 </head>
+
 <body class="bg-light">
-  <!-- Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-    <div class="container-fluid">
-      <!-- Brand name or title linking to homepage -->
-      <a class="navbar-brand" href="#">My GitHub Repo</a>
-      <!-- Toggler button for collapsible mobile menu -->
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <!-- Icon for the toggler button -->
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <!-- Collapsible navigation links -->
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <!-- Right-aligned navigation items -->
-        <ul class="navbar-nav ms-auto">
-          <!-- Link to the homepage -->
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="index.html"
-              >Home</a
-            >
-          </li>
-          <!-- Link to the "About" page -->
-          <li class="nav-item">
-            <a class="nav-link" href="about.html">About</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-  <!-- Main Container for page content -->
-  <div class="container my-5">
-    <!-- Row with cards displayed in columns for different screen breakpoints -->
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-      <!-- Card 1 -->
-      <div class="col">
-        <!-- Card container with responsive height -->
-        <div class="card h-100">
-          <!-- Body of the card -->
-          <div class="card-body">
-            <!-- Combine the previously top image and the card title in one line -->
-            <div class="d-flex align-items-center">
-              <!-- SVG placeholder as an inline image on the left -->
-              <img
-                src="data:image/svg+xml;charset=UTF-8,<svg width='100' height='100' xmlns='http://www.w3.org/2000/svg'><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='60'>📅</text></svg>"
-                alt="Placeholder"
-                style="width: 10%; height: auto;"  <!-- Scaled to 20% width, maintaining aspect ratio -->
-              <!-- Title for this card, now inline with the image -->
-              <h5 class="card-title ms-2">P6 Tools</h5>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <div class="container-fluid">
+            <!-- Brand name or title linking to homepage -->
+            <a class="navbar-brand" href="#">My GitHub Repo</a>
+            <!-- Toggler button for collapsible mobile menu -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <!-- Icon for the toggler button -->
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- Collapsible navigation links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Right-aligned navigation items -->
+                <ul class="navbar-nav ms-auto">
+                    <!-- Link to the homepage -->
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="index.html">Home</a>
+                    </li>
+                    <!-- Link to the "About" page -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="about.html">About</a>
+                    </li>
+                </ul>
             </div>
-            <!-- Short description or summary text -->
-            <p class="card-text">
-              These tools use exports from P6 to do various things.
-            </p>
-            <!-- Container for multiple button links, using Bootstrap classes for spacing -->
-            <div class="d-flex flex-wrap gap-2">
+        </div>
+    </nav>
+    <!-- Main Container for page content -->
+    <div class="container my-5">
+        <!-- Row with cards displayed in columns for different screen breakpoints -->
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            <!-- Card 1 -->
+            <div class="col">
+                <!-- Card container with responsive height -->
+                <div class="card h-100">
+                    <!-- Body of the card -->
+                    <div class="card-body">
+                        <!-- Combine the previously top image and the card title in one line -->
+                        <div class="d-flex align-items-center">
+                            <!-- SVG placeholder as an inline image on the left -->
+                            <img src="data:image/svg+xml;charset=UTF-8,<svg width='100' height='100' xmlns='http://www.w3.org/2000/svg'><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='60'>📅</text></svg>" alt="Placeholder" style="width: 10%; height: auto;" <!-- Scaled to 20% width, maintaining aspect ratio -->
+                            <!-- Title for this card, now inline with the image -->
+                            <h5 class="card-title ms-2">P6 Tools</h5>
+                        </div>
+                        <!-- Short description or summary text -->
+                        <p class="card-text">
+                            These tools use exports from P6 to do various things.
+                        </p>
+                        <!-- Container for multiple button links, using Bootstrap classes for spacing -->
+                        <div class="d-flex flex-wrap gap-2">
+                            <!-- Primary button link -->
+                            <a href="https://kev11wolf.github.io/public/p6tracer.html" class="btn btn-primary">P6 Tracer</a>
+                            <a href="https://kev11wolf.github.io/public/offlinep6.html" class="btn btn-primary">Offline P6</a>
+                            <!--
               <!-- Primary button link -->
-              <a href="https://kev11wolf.github.io/public/p6tracer.html"class="btn btn-primary">P6 Tracer</a>
-              <a href="https://kev11wolf.github.io/public/offlinep6.html"class="btn btn-primary">Offline P6</a>
-              <!--
-              <!-- Primary button link -->
-              <!--  <a href="#" class="btn btn-primary">View on GitHub</a>
+                            <!--  <a href="#" class="btn btn-primary">View on GitHub</a>
               <!-- Additional button link (secondary style) -->
-              <!--  <a href="#" class="btn btn-secondary">Additional Link 1</a>
+                            <!--  <a href="#" class="btn btn-secondary">Additional Link 1</a>
               <!-- Additional button link (success style) -->
-              <!--  <a href="#" class="btn btn-success">Additional Link 2</a> -->
+                            <!--  <a href="#" class="btn btn-success">Additional Link 2</a> -->
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <!-- Card 2 -->
-      <div class="col">
-        <!-- Card container with responsive height -->
-        <div class="card h-100">
-          <!-- Body of the card -->
-          <div class="card-body">
-            <!-- Combine the previously top image and the card title in one line -->
-            <div class="d-flex align-items-center">
-              <!-- SVG placeholder as an inline image on the left -->
-              <img
-                src="data:image/svg+xml;charset=UTF-8,<svg width='100' height='100' xmlns='http://www.w3.org/2000/svg'><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='60'>👁️</text></svg>"
-                alt="Placeholder"
-                style="width: 10%; height: auto;"  <!-- Scaled to 20% width, maintaining aspect ratio -->
-              <!-- Title for this card, now inline with the image -->
-              <h5 class="card-title ms-2">Visualizer Tools</h5>
-            </div>
-            <!-- Short description or summary text -->
-            <p class="card-text">
-              Standalone tools that visualize information input by the user.
-            </p>
-            <!-- Container for multiple button links, using Bootstrap classes for spacing -->
-            <div class="d-flex flex-wrap gap-2">
+            <!-- Card 2 -->
+            <div class="col">
+                <!-- Card container with responsive height -->
+                <div class="card h-100">
+                    <!-- Body of the card -->
+                    <div class="card-body">
+                        <!-- Combine the previously top image and the card title in one line -->
+                        <div class="d-flex align-items-center">
+                            <!-- SVG placeholder as an inline image on the left -->
+                            <img src="data:image/svg+xml;charset=UTF-8,<svg width='100' height='100' xmlns='http://www.w3.org/2000/svg'><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='60'>👁️</text></svg>" alt="Placeholder" style="width: 10%; height: auto;" <!-- Scaled to 20% width, maintaining aspect ratio -->
+                            <!-- Title for this card, now inline with the image -->
+                            <h5 class="card-title ms-2">Visualizer Tools</h5>
+                        </div>
+                        <!-- Short description or summary text -->
+                        <p class="card-text">
+                            Standalone tools that visualize information input by the user.
+                        </p>
+                        <!-- Container for multiple button links, using Bootstrap classes for spacing -->
+                        <div class="d-flex flex-wrap gap-2">
+                            <!-- Primary button link -->
+                            <a href="https://kev11wolf.github.io/public/gannt visualizer/gantt.html" class="btn btn-primary">
+                                Resource Gantt Visualizer
+                            </a>
+                            <a href="https://kev11wolf.github.io/public/orgchart/orgchart.html" class="btn btn-primary">
+                                Org Chart Generator
+                            </a>
+                            <!--
               <!-- Primary button link -->
-              <a
-                href="https://kev11wolf.github.io/public/gannt visualizer/gantt.html"
-                class="btn btn-primary"
-              >
-                Resource Gantt Visualizer
-              </a>
-              <a
-                href="https://kev11wolf.github.io/public/orgchart/orgchart.html"
-                class="btn btn-primary"
-              >
-                Org Chart Generator
-              </a>
-              <!--
-              <!-- Primary button link -->
-              <!-- <a href="#" class="btn btn-primary">View on GitHub</a>
+                            <!-- <a href="#" class="btn btn-primary">View on GitHub</a>
               <!-- Additional button link (secondary style) -->
-              <!--    <a href="#" class="btn btn-secondary">Additional Link 1</a>
+                            <!--    <a href="#" class="btn btn-secondary">Additional Link 1</a>
               <!-- Additional button link (danger style) -->
-              <!--      <a href="#" class="btn btn-danger">Additional Link 2</a> -->
+                            <!--      <a href="#" class="btn btn-danger">Additional Link 2</a> -->
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <!-- Card 3 with password protection -->
-      <div class="col position-relative">
-        <!-- 
+            <!-- Card 3 with password protection -->
+            <div class="col position-relative">
+                <!-- 
           The entire card is initially blurred and click-disabled via CSS 
           (filter: blur(...) and pointer-events: none).
           Once the correct password ("Kevin") is entered, 
           we remove these styles via JavaScript.
         -->
-        <div class="card h-100" id="protectedCard" style="filter: blur(5px); pointer-events: none;">
-          <!-- Body of the card -->
-          <div class="card-body">
-            <!-- Combine the previously top image and the card title in one line -->
-            <div class="d-flex align-items-center">
-              <!-- SVG placeholder as an inline image on the left -->
-              <img
-                src="data:image/svg+xml;charset=UTF-8,<svg width='100' height='100' xmlns='http://www.w3.org/2000/svg'><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='60'>🐺</text></svg>"
-                alt="Placeholder"
-                style="width: 10%; height: auto;"  <!-- Scaled to 20% width, maintaining aspect ratio -->
-              <!-- Title for this card, now inline with the image -->
-              <h5 class="card-title ms-2">Personal/Misc</h5>
-            </div>
-            <!-- Short description or summary text -->
-            <p class="card-text">
-              Random projects for Kevin's eyes only.
-            </p>
-            <!-- Container for multiple button links, using Bootstrap classes for spacing -->
-            <div class="d-flex flex-wrap gap-2">
+                <div class="card h-100" id="protectedCard" style="filter: blur(5px); pointer-events: none;">
+                    <!-- Body of the card -->
+                    <div class="card-body">
+                        <!-- Combine the previously top image and the card title in one line -->
+                        <div class="d-flex align-items-center">
+                            <!-- SVG placeholder as an inline image on the left -->
+                            <img src="data:image/svg+xml;charset=UTF-8,<svg width='100' height='100' xmlns='http://www.w3.org/2000/svg'><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='60'>🐺</text></svg>" alt="Placeholder" style="width: 10%; height: auto;" <!-- Scaled to 20% width, maintaining aspect ratio -->
+                            <!-- Title for this card, now inline with the image -->
+                            <h5 class="card-title ms-2">Personal/Misc</h5>
+                        </div>
+                        <!-- Short description or summary text -->
+                        <p class="card-text">
+                            Random projects for Kevin's eyes only.
+                        </p>
+                        <!-- Container for multiple button links, using Bootstrap classes for spacing -->
+                        <div class="d-flex flex-wrap gap-2">
+                            <!-- Primary button link -->
+                            <a href="https://kev11wolf.github.io/public/personal/harmonia.html" class="btn btn-primary">Harmonia Chord Progressions</a>
+                            <a href="https://kev11wolf.github.io/public/music/tabgen.html" class="btn btn-primary">Guitar Lick Tab Generator</a>
+                            <a href="https://kev11wolf.github.io/public/food/cali.html" class="btn btn-primary">Cali 2025 Cooking Schedule</a>
+                            <!--
               <!-- Primary button link -->
-              <a href="https://kev11wolf.github.io/public/personal/harmonia.html" class="btn btn-primary">Harmonia Chord Progressions</a>
-               <a href="https://kev11wolf.github.io/public/music/tabgen.html" class="btn btn-primary">Guitar Lick Tab Generator</a>
-                <a href="https://kev11wolf.github.io/public/cali.html" class="btn btn-primary">Cali 2025 Cooking Schedule</a>
-              <!--
-              <!-- Primary button link -->
-              <!-- <a href="#" class="btn btn-primary">View on GitHub</a>
+                            <!-- <a href="#" class="btn btn-primary">View on GitHub</a>
               <!-- Additional button link (secondary style) -->
-              <!--  <a href="#" class="btn btn-secondary">Additional Link 1</a>
+                            <!--  <a href="#" class="btn btn-secondary">Additional Link 1</a>
               <!-- Additional button link (warning style) -->
-              <!-- <a href="#" class="btn btn-warning">Additional Link 2</a> -->
-            </div>
-          </div>
-        </div>
-        <!-- 
+                            <!-- <a href="#" class="btn btn-warning">Additional Link 2</a> -->
+                        </div>
+                    </div>
+                </div>
+                <!-- 
           Small card inside the main card for the password prompt. 
           Uses Bootstrap classes for styling and positioning. 
         -->
-        <div class="card position-absolute top-50 start-50 translate-middle p-3" id="passwordPrompt" style="z-index: 2; max-width: 300px;">
-          <h5 class="card-title">Enter Password</h5>
-          <div class="mb-3">
-            <!-- 
+                <div class="card position-absolute top-50 start-50 translate-middle p-3" id="passwordPrompt" style="z-index: 2; max-width: 300px;">
+                    <h5 class="card-title">Enter Password</h5>
+                    <div class="mb-3">
+                        <!-- 
               Input for entering the password. 
               We'll check its value in the checkPassword() function.
             -->
-            <input
-              type="password"
-              class="form-control"
-              id="passwordInput"
-              placeholder="Enter password here"
-            />
-          </div>
-          <!-- 
+                        <input type="password" class="form-control" id="passwordInput" placeholder="Enter password here" />
+                    </div>
+                    <!-- 
             Button that triggers the checkPassword() function.
           -->
-          <button type="button" class="btn btn-primary" onclick="checkPassword()">
-            Unlock
-          </button>
+                    <button type="button" class="btn btn-primary" onclick="checkPassword()">
+                        Unlock
+                    </button>
+                </div>
+            </div>
+            <!-- Add more cards as needed and include more links within the d-flex container -->
         </div>
-      </div>
-      <!-- Add more cards as needed and include more links within the d-flex container -->
     </div>
-  </div>
-  <!-- Script for Bootstrap's JavaScript components (includes Popper) -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-  ></script>
-  <!-- 
+    <!-- Script for Bootstrap's JavaScript components (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 
     Custom script to handle password protection for card 3.
     Contains the checkPassword function which verifies user input.
   -->
-  <script>
-    // checkPassword function is called when the user clicks the "Unlock" button
-    function checkPassword() {
-      // Get the password entered into the input
-      var inputPassword = document.getElementById("passwordInput").value;
-      // Compare the entered password to the required one ("Kevin")
-      if (inputPassword === "Kevin") {
-        // If correct, remove the blur and pointer-events restrictions
-        document.getElementById("protectedCard").style.filter = "none";
-        document.getElementById("protectedCard").style.pointerEvents = "auto";
-        // Hide the password prompt card
-        document.getElementById("passwordPrompt").style.display = "none";
-      } else {
-        // If incorrect, alert the user
-        alert("Incorrect password! Please try again.");
-      }
-    }
-  </script>
+    <script>
+        // checkPassword function is called when the user clicks the "Unlock" button
+        function checkPassword() {
+            // Get the password entered into the input
+            var inputPassword = document.getElementById("passwordInput").value;
+            // Compare the entered password to the required one ("Kevin")
+            if (inputPassword === "Kevin") {
+                // If correct, remove the blur and pointer-events restrictions
+                document.getElementById("protectedCard").style.filter = "none";
+                document.getElementById("protectedCard").style.pointerEvents = "auto";
+                // Hide the password prompt card
+                document.getElementById("passwordPrompt").style.display = "none";
+            } else {
+                // If incorrect, alert the user
+                alert("Incorrect password! Please try again.");
+            }
+        }
+    </script>
 </body>
+
 </html>
