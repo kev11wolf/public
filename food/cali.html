@@ -1,4 +1,4 @@
-<html lang="en" data-whatintent="mouse" data-whatinput="mouse" data-whatelement="button" data-whatclasses="btn-custom,btn-primary-custom"><head>
+<html lang="en"><head>
 <meta charset="UTF-8">
 <title>Meal Planner Pro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -6,23 +6,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Meal Planner">
 <meta name="theme-color" content="#0d0d1a">
-
-<!-- PWA Icons -->
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='0.9em' font-size='90'&gt;🍽️&lt;/text&gt;&lt;/svg&gt;">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='0.9em' font-size='90'&gt;🍽️&lt;/text&gt;&lt;/svg&gt;">
-
-<!-- Bootstrap 5 -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<!-- Bootstrap Icons -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-
-<!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
 
 <style>
 :root{
-/* Colors */
 --bg-primary:#0a0a14;
 --bg-secondary:#12121f;
 --bg-tertiary:#1a1a2e;
@@ -39,36 +30,25 @@
 --warning:#f59e0b;
 --danger:#ef4444;
 --sidebar-bg:rgba(10,10,20,.95);
---drop-zone-hover:rgba(59,130,246,.2);
---drop-zone-active:rgba(59,130,246,.3);
-
-/* Spacing */
 --spacing-xs:.25rem;
 --spacing-sm:.5rem;
 --spacing-md:1rem;
 --spacing-lg:1.5rem;
 --spacing-xl:2rem;
-
-/* Borders */
 --radius-sm:.375rem;
 --radius-md:.5rem;
 --radius-lg:.75rem;
 --radius-xl:1rem;
-
-/* Shadows */
 --shadow-sm:0 1px 2px 0 rgba(0,0,0,.3);
 --shadow-md:0 4px 6px -1px rgba(0,0,0,.4);
 --shadow-lg:0 10px 15px -3px rgba(0,0,0,.5);
 --shadow-xl:0 20px 25px -5px rgba(0,0,0,.6);
-
-/* iOS safe areas */
 --safe-area-inset-top:env(safe-area-inset-top);
 --safe-area-inset-bottom:env(safe-area-inset-bottom);
 --safe-area-inset-left:env(safe-area-inset-left);
 --safe-area-inset-right:env(safe-area-inset-right);
 }
 
-/* iOS-specific optimizations */
 *{
 -webkit-tap-highlight-color:transparent;
 -webkit-touch-callout:none;
@@ -86,16 +66,14 @@ overscroll-behavior-y:none;
 -webkit-font-smoothing:antialiased;
 }
 
-/* App Container */
 .app-container{
 min-height:100vh;
 padding-top:calc(var(--safe-area-inset-top) + var(--spacing-md));
-padding-bottom:calc(var(--safe-area-inset-bottom) + var(--spacing-md));
+padding-bottom:calc(var(--safe-area-inset-bottom) + 80px);
 padding-left:max(var(--safe-area-inset-left),var(--spacing-md));
 padding-right:max(var(--safe-area-inset-right),var(--spacing-md));
 }
 
-/* Header */
 .app-header{
 text-align:center;
 margin-bottom:var(--spacing-xl);
@@ -119,7 +97,6 @@ color:var(--text-secondary);
 font-weight:400;
 }
 
-/* Toolbar */
 .toolbar{
 display:flex;
 gap:var(--spacing-sm);
@@ -139,8 +116,8 @@ border:1px solid var(--card-border);
 
 .btn-custom{
 flex:1;
-min-width:120px;
-padding:.65rem 1rem;
+min-width:110px;
+padding:.65rem .9rem;
 border-radius:var(--radius-md);
 border:1px solid var(--card-border);
 background:var(--card-bg);
@@ -151,7 +128,7 @@ transition:all .2s cubic-bezier(.4,0,.2,1);
 display:flex;
 align-items:center;
 justify-content:center;
-gap:var(--spacing-sm);
+gap:var(--spacing-xs);
 cursor:pointer;
 white-space:nowrap;
 }
@@ -183,7 +160,16 @@ filter:brightness(1.1);
 box-shadow:0 0 20px rgba(59,130,246,.4);
 }
 
-/* Layout */
+.btn-success-custom{
+background:var(--success);
+border:none;
+color:#fff;
+}
+
+.btn-success-custom:hover{
+filter:brightness(1.1);
+}
+
 .main-wrapper{
 display:grid;
 grid-template-columns:280px 1fr;
@@ -192,7 +178,6 @@ max-width:1800px;
 margin:0 auto;
 }
 
-/* Sidebar */
 .sidebar{
 background:var(--sidebar-bg);
 backdrop-filter:blur(20px) saturate(180%);
@@ -242,8 +227,6 @@ border-radius:var(--radius-md);
 color:var(--text-primary);
 font-size:.9rem;
 transition:all .2s;
-margin-bottom:var(--spacing-md);
-position:relative;
 }
 
 .search-wrapper{
@@ -258,6 +241,7 @@ top:50%;
 transform:translateY(-50%);
 color:var(--text-muted);
 pointer-events:none;
+z-index:1;
 }
 
 .search-box:focus{
@@ -267,7 +251,6 @@ box-shadow:0 0 0 3px rgba(59,130,246,.1);
 background:var(--card-bg-hover);
 }
 
-/* Recipe Items */
 .recipe-items{
 display:flex;
 flex-direction:column;
@@ -279,18 +262,32 @@ background:var(--card-bg);
 border:1px solid var(--card-border);
 border-radius:var(--radius-md);
 padding:.875rem 1rem;
-cursor:grab;
+cursor:pointer;
 user-select:none;
 font-size:.9rem;
 color:var(--text-primary);
 font-weight:500;
 transition:all .2s cubic-bezier(.4,0,.2,1);
-touch-action:none;
+touch-action:manipulation;
 display:flex;
 align-items:center;
+justify-content:space-between;
 gap:var(--spacing-sm);
 position:relative;
 overflow:hidden;
+}
+
+.recipe-item-content{
+display:flex;
+align-items:center;
+gap:var(--spacing-sm);
+flex:1;
+pointer-events:none;
+}
+
+.recipe-item-actions{
+display:flex;
+gap:var(--spacing-xs);
 }
 
 .recipe-item::before{
@@ -317,7 +314,6 @@ transform:scaleY(1);
 }
 
 .recipe-item:active{
-cursor:grabbing;
 transform:scale(.98);
 }
 
@@ -325,12 +321,46 @@ transform:scale(.98);
 opacity:.5;
 }
 
+.recipe-item.selected-for-assign{
+background:var(--accent-gradient);
+border-color:transparent;
+transform:scale(1.02);
+}
+
+.recipe-item.selected-for-assign .recipe-item-content{
+color:#fff;
+}
+
 .recipe-icon{
 font-size:1.2rem;
 flex-shrink:0;
 }
 
-/* Weekday Header */
+.icon-btn{
+width:32px;
+height:32px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(255,255,255,.1);
+border:1px solid var(--card-border);
+border-radius:var(--radius-sm);
+cursor:pointer;
+font-size:.9rem;
+transition:all .2s;
+z-index:2;
+}
+
+.icon-btn:hover{
+background:var(--accent-primary);
+border-color:var(--accent-primary);
+transform:scale(1.1);
+}
+
+.icon-btn:active{
+transform:scale(.95);
+}
+
 .weekday-header{
 display:grid;
 grid-template-columns:repeat(7,1fr);
@@ -347,7 +377,6 @@ text-transform:uppercase;
 letter-spacing:.05em;
 }
 
-/* Calendar */
 .calendar-wrapper{
 background:var(--card-bg);
 backdrop-filter:blur(20px) saturate(180%);
@@ -417,6 +446,20 @@ border-color:var(--accent-primary);
 box-shadow:0 0 0 1px var(--accent-primary),var(--shadow-md);
 }
 
+.day-card.can-assign{
+animation:pulse 1.5s infinite;
+border-color:var(--success);
+}
+
+@keyframes pulse{
+0%, 100%{
+box-shadow:0 0 0 0 rgba(16,185,129,.4);
+}
+50%{
+box-shadow:0 0 0 8px rgba(16,185,129,0);
+}
+}
+
 .day-date{
 font-size:.85rem;
 color:var(--text-muted);
@@ -471,12 +514,13 @@ transform:translateY(-50%) scale(1.1);
 }
 
 .day-card.drag-over{
-background:var(--drop-zone-hover);
-border-color:var(--accent-primary);
+background:var(--success);
+background:rgba(16,185,129,.2);
+border-color:var(--success);
 border-width:2px;
 border-style:dashed;
 transform:scale(1.02);
-box-shadow:0 0 20px rgba(59,130,246,.3);
+box-shadow:0 0 20px rgba(16,185,129,.3);
 }
 
 .day-card.drop-success{
@@ -494,7 +538,6 @@ transform:scale(1);
 }
 }
 
-/* Recipe Details Panel */
 .recipe-details{
 background:var(--card-bg);
 backdrop-filter:blur(20px) saturate(180%);
@@ -554,7 +597,6 @@ margin-bottom:var(--spacing-md);
 opacity:.5;
 }
 
-/* Modal Enhancements */
 .modal-content{
 background:var(--bg-secondary);
 border:1px solid var(--card-border);
@@ -570,6 +612,8 @@ padding:var(--spacing-lg) var(--spacing-xl);
 
 .modal-body{
 padding:var(--spacing-xl);
+max-height:70vh;
+overflow-y:auto;
 }
 
 .modal-footer{
@@ -611,10 +655,10 @@ outline:none;
 color:var(--text-muted);
 }
 
-/* Offcanvas for Mobile */
 .offcanvas{
 background:var(--bg-primary);
 border-right:1px solid var(--card-border);
+max-width:90vw;
 }
 
 .offcanvas-header{
@@ -631,30 +675,110 @@ filter:invert(1);
 opacity:.8;
 }
 
-/* Loading States */
-.loading-spinner{
-display:inline-block;
-width:1rem;
-height:1rem;
-border:2px solid var(--card-border);
-border-top-color:var(--accent-primary);
-border-radius:50%;
-animation:spin 1s linear infinite;
+.shopping-list{
+display:flex;
+flex-direction:column;
+gap:var(--spacing-sm);
 }
 
-@keyframes spin{
-to{transform:rotate(360deg);}
+.shopping-item{
+display:flex;
+align-items:center;
+gap:var(--spacing-md);
+padding:var(--spacing-md);
+background:var(--card-bg);
+border:1px solid var(--card-border);
+border-radius:var(--radius-md);
+transition:all .2s;
 }
 
-/* Toast Notifications */
-.toast-container{
+.shopping-item:hover{
+background:var(--card-bg-hover);
+}
+
+.shopping-item input[type="checkbox"]{
+width:20px;
+height:20px;
+cursor:pointer;
+accent-color:var(--success);
+}
+
+.shopping-item.checked{
+opacity:.5;
+text-decoration:line-through;
+}
+
+.shopping-item-text{
+flex:1;
+}
+
+.mobile-assign-banner{
 position:fixed;
-bottom:calc(var(--safe-area-inset-bottom) + var(--spacing-lg));
-right:var(--spacing-lg);
-z-index:9999;
+bottom:calc(var(--safe-area-inset-bottom) + var(--spacing-md));
+left:50%;
+transform:translateX(-50%);
+width:calc(100% - 2rem);
+max-width:500px;
+background:var(--accent-gradient);
+color:#fff;
+padding:var(--spacing-md) var(--spacing-lg);
+border-radius:var(--radius-xl);
+box-shadow:var(--shadow-xl);
+display:none;
+align-items:center;
+justify-content:space-between;
+gap:var(--spacing-md);
+z-index:1000;
+font-weight:600;
+animation:slideUpBanner .3s ease-out;
 }
 
-.custom-toast{
+@keyframes slideUpBanner{
+from{
+transform:translateX(-50%) translateY(150px);
+opacity:0;
+}
+to{
+transform:translateX(-50%) translateY(0);
+opacity:1;
+}
+}
+
+.mobile-assign-banner.active{
+display:flex;
+}
+
+.mobile-assign-banner-content{
+flex:1;
+display:flex;
+align-items:center;
+gap:var(--spacing-sm);
+}
+
+.mobile-assign-banner-icon{
+font-size:1.5rem;
+}
+
+.mobile-assign-banner button{
+background:rgba(255,255,255,.2);
+border:none;
+color:#fff;
+padding:.5rem 1rem;
+border-radius:var(--radius-md);
+font-weight:600;
+cursor:pointer;
+transition:all .2s;
+white-space:nowrap;
+}
+
+.mobile-assign-banner button:hover{
+background:rgba(255,255,255,.3);
+}
+
+.toast-notification{
+position:fixed;
+top:calc(var(--safe-area-inset-top) + var(--spacing-lg));
+right:var(--spacing-lg);
 background:var(--bg-secondary);
 border:1px solid var(--card-border);
 border-radius:var(--radius-lg);
@@ -664,12 +788,14 @@ display:flex;
 align-items:center;
 gap:var(--spacing-md);
 min-width:300px;
-animation:slideIn .3s ease-out;
+max-width:400px;
+z-index:10000;
+animation:slideInRight .3s ease-out;
 }
 
-@keyframes slideIn{
+@keyframes slideInRight{
 from{
-transform:translateX(400px);
+transform:translateX(500px);
 opacity:0;
 }
 to{
@@ -678,23 +804,22 @@ opacity:1;
 }
 }
 
+.toast-notification.success{
+border-left:4px solid var(--success);
+}
+
+.toast-notification.error{
+border-left:4px solid var(--danger);
+}
+
+.toast-notification.info{
+border-left:4px solid var(--accent-primary);
+}
+
 .toast-icon{
 font-size:1.5rem;
 }
 
-.toast-success{
-border-left:3px solid var(--success);
-}
-
-.toast-warning{
-border-left:3px solid var(--warning);
-}
-
-.toast-error{
-border-left:3px solid var(--danger);
-}
-
-/* Mobile Responsive */
 @media (max-width:768px){
 .main-wrapper{
 grid-template-columns:1fr;
@@ -708,13 +833,22 @@ display:none;
 .toolbar{
 position:relative;
 top:0;
+gap:var(--spacing-xs);
 }
 
 .btn-custom{
 min-width:auto;
-flex:1 1 calc(50% - var(--spacing-sm));
-font-size:.8rem;
-padding:.6rem .75rem;
+flex:1 1 calc(33.333% - var(--spacing-xs));
+font-size:.75rem;
+padding:.55rem .6rem;
+}
+
+.btn-custom span{
+display:none;
+}
+
+.btn-custom.show-text span{
+display:inline;
 }
 
 .calendar{
@@ -745,6 +879,14 @@ padding:var(--spacing-lg);
 
 .app-container{
 padding:var(--spacing-sm);
+padding-bottom:calc(var(--safe-area-inset-bottom) + 100px);
+}
+
+.toast-notification{
+left:var(--spacing-sm);
+right:var(--spacing-sm);
+min-width:auto;
+max-width:none;
 }
 }
 
@@ -753,12 +895,11 @@ padding:var(--spacing-sm);
 grid-template-columns:1fr;
 }
 
-.toolbar{
-gap:var(--spacing-xs);
+.btn-custom{
+flex:1 1 calc(50% - var(--spacing-xs));
 }
 }
 
-/* Print Styles */
 @media print{
 body{
 background:white;
@@ -769,7 +910,8 @@ color:black;
 .sidebar,
 .btn-custom,
 .clear-btn,
-.offcanvas{
+.offcanvas,
+.mobile-assign-banner{
 display:none!important;
 }
 
@@ -783,34 +925,16 @@ color:black;
 grid-template-columns:repeat(7,1fr);
 }
 }
-
-/* Accessibility */
-@media (prefers-reduced-motion:reduce){
-*,
-*::before,
-*::after{
-animation-duration:.01ms!important;
-animation-iteration-count:1!important;
-transition-duration:.01ms!important;
-}
-}
-
-/* Dark mode enhancements (already dark by default) */
-@media (prefers-color-scheme:light){
-/* Optional: Add light mode if desired */
-}
 </style>
 </head>
-<body>
+<body class="" style="">
 
 <div class="app-container">
-<!-- Header -->
 <header class="app-header">
 <h1 class="app-title">🍽️ Meal Planner Pro</h1>
-<p class="app-subtitle">Drag recipes to plan your perfect week</p>
+<p class="app-subtitle">Plan your perfect meals</p>
 </header>
 
-<!-- Toolbar -->
 <div class="toolbar">
 <button class="btn-custom d-md-none" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRecipes">
 <i class="bi bi-grid-3x3-gap"></i>
@@ -819,29 +943,30 @@ transition-duration:.01ms!important;
 
 <button class="btn-custom btn-primary-custom" id="downloadHtmlBtn">
 <i class="bi bi-download"></i>
-<span class="d-none d-sm-inline">Save HTML</span>
-<span class="d-inline d-sm-none">Save</span>
+<span>Save</span>
+</button>
+
+<button class="btn-custom btn-success-custom" id="shoppingListBtn">
+<i class="bi bi-cart"></i>
+<span>Shop</span>
 </button>
 
 <button class="btn-custom" id="clearAllBtn">
 <i class="bi bi-trash3"></i>
-<span class="d-none d-sm-inline">Clear All</span>
-<span class="d-inline d-sm-none">Clear</span>
+<span>Clear</span>
 </button>
 
 <button class="btn-custom" data-bs-toggle="modal" data-bs-target="#addRecipeModal">
 <i class="bi bi-plus-circle"></i>
-<span class="d-none d-sm-inline">Add Recipe</span>
-<span class="d-inline d-sm-none">Add</span>
+<span>Add</span>
 </button>
 
-<button class="btn-custom" id="printBtn">
+<button class="btn-custom d-none d-md-flex" id="printBtn">
 <i class="bi bi-printer"></i>
-<span class="d-none d-sm-inline">Print</span>
+<span>Print</span>
 </button>
 </div>
 
-<!-- Offcanvas for Mobile -->
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasRecipes">
 <div class="offcanvas-header">
 <h5 class="offcanvas-title"><i class="bi bi-grid-3x3-gap"></i> Recipe Library</h5>
@@ -853,27 +978,60 @@ transition-duration:.01ms!important;
 <input type="text" class="search-box" id="searchBoxMobile" placeholder="Search recipes...">
 </div>
 <div class="recipe-items" id="recipePaletteMobile"><div class="recipe-item" data-recipe="Beer Brats">
+<div class="recipe-item-content">
 <span class="recipe-icon">🌭</span>
 <span>Beer Brats</span>
+</div>
+<div class="recipe-item-actions">
+<span class="icon-btn" data-action="edit" title="Edit recipe">
+<i class="bi bi-pencil"></i>
+</span>
+</div>
 </div><div class="recipe-item" data-recipe="Smash Burgers">
+<div class="recipe-item-content">
 <span class="recipe-icon">🍔</span>
 <span>Smash Burgers</span>
+</div>
+<div class="recipe-item-actions">
+<span class="icon-btn" data-action="edit" title="Edit recipe">
+<i class="bi bi-pencil"></i>
+</span>
+</div>
 </div><div class="recipe-item" data-recipe="Smoked Brisket">
+<div class="recipe-item-content">
 <span class="recipe-icon">🥓</span>
 <span>Smoked Brisket</span>
+</div>
+<div class="recipe-item-actions">
+<span class="icon-btn" data-action="edit" title="Edit recipe">
+<i class="bi bi-pencil"></i>
+</span>
+</div>
 </div><div class="recipe-item" data-recipe="Smoked Pork Butt">
+<div class="recipe-item-content">
 <span class="recipe-icon">🥩</span>
 <span>Smoked Pork Butt</span>
+</div>
+<div class="recipe-item-actions">
+<span class="icon-btn" data-action="edit" title="Edit recipe">
+<i class="bi bi-pencil"></i>
+</span>
+</div>
 </div><div class="recipe-item" data-recipe="Tacos">
+<div class="recipe-item-content">
 <span class="recipe-icon">🌮</span>
 <span>Tacos</span>
+</div>
+<div class="recipe-item-actions">
+<span class="icon-btn" data-action="edit" title="Edit recipe">
+<i class="bi bi-pencil"></i>
+</span>
+</div>
 </div></div>
 </div>
 </div>
 
-<!-- Main Layout -->
 <div class="main-wrapper">
-<!-- Desktop Sidebar -->
 <aside class="sidebar d-none d-md-block">
 <div class="sidebar-header">
 <i class="bi bi-grid-3x3-gap"></i>
@@ -884,24 +1042,58 @@ Recipe Library
 <input type="text" class="search-box" id="searchBoxDesktop" placeholder="Search recipes...">
 </div>
 <div class="recipe-items" id="recipePaletteDesktop"><div class="recipe-item" data-recipe="Beer Brats">
+<div class="recipe-item-content">
 <span class="recipe-icon">🌭</span>
 <span>Beer Brats</span>
+</div>
+<div class="recipe-item-actions">
+<span class="icon-btn" data-action="edit" title="Edit recipe">
+<i class="bi bi-pencil"></i>
+</span>
+</div>
 </div><div class="recipe-item" data-recipe="Smash Burgers">
+<div class="recipe-item-content">
 <span class="recipe-icon">🍔</span>
 <span>Smash Burgers</span>
+</div>
+<div class="recipe-item-actions">
+<span class="icon-btn" data-action="edit" title="Edit recipe">
+<i class="bi bi-pencil"></i>
+</span>
+</div>
 </div><div class="recipe-item" data-recipe="Smoked Brisket">
+<div class="recipe-item-content">
 <span class="recipe-icon">🥓</span>
 <span>Smoked Brisket</span>
+</div>
+<div class="recipe-item-actions">
+<span class="icon-btn" data-action="edit" title="Edit recipe">
+<i class="bi bi-pencil"></i>
+</span>
+</div>
 </div><div class="recipe-item" data-recipe="Smoked Pork Butt">
+<div class="recipe-item-content">
 <span class="recipe-icon">🥩</span>
 <span>Smoked Pork Butt</span>
+</div>
+<div class="recipe-item-actions">
+<span class="icon-btn" data-action="edit" title="Edit recipe">
+<i class="bi bi-pencil"></i>
+</span>
+</div>
 </div><div class="recipe-item" data-recipe="Tacos">
+<div class="recipe-item-content">
 <span class="recipe-icon">🌮</span>
 <span>Tacos</span>
+</div>
+<div class="recipe-item-actions">
+<span class="icon-btn" data-action="edit" title="Edit recipe">
+<i class="bi bi-pencil"></i>
+</span>
+</div>
 </div></div>
 </aside>
 
-<!-- Calendar Section -->
 <section>
 <div class="calendar-wrapper">
 <div class="weekday-header d-none d-md-grid">
@@ -913,54 +1105,45 @@ Recipe Library
 <div class="weekday-label">Friday</div>
 <div class="weekday-label">Saturday</div>
 </div>
-<div class="calendar" id="calendar"><div class="day-card outside-trip" data-iso="2025-12-14"><div class="day-date d-md-none">Sun</div><div class="day-number">14</div></div><div class="day-card outside-trip" data-iso="2025-12-15"><div class="day-date d-md-none">Mon</div><div class="day-number">15</div></div><div class="day-card outside-trip" data-iso="2025-12-16"><div class="day-date d-md-none">Tue</div><div class="day-number">16</div></div><div class="day-card outside-trip" data-iso="2025-12-17"><div class="day-date d-md-none">Wed</div><div class="day-number">17</div></div><div class="day-card" data-iso="2025-12-18"><div class="day-date d-md-none">Thu</div><div class="day-number">18</div></div><div class="day-card drop-success" data-iso="2025-12-19"><div class="day-date d-md-none">Fri</div><div class="day-number">19</div><div class="assigned-recipe">
-<span>🌭 Beer Brats</span>
-<span class="clear-btn">×</span>
-</div></div><div class="day-card" data-iso="2025-12-20"><div class="day-date d-md-none">Sat</div><div class="day-number">20</div></div><div class="day-card drop-success" data-iso="2025-12-21"><div class="day-date d-md-none">Sun</div><div class="day-number">21</div><div class="assigned-recipe">
-<span>🥩 Smoked Pork Butt</span>
-<span class="clear-btn">×</span>
-</div></div><div class="day-card" data-iso="2025-12-22"><div class="day-date d-md-none">Mon</div><div class="day-number">22</div></div><div class="day-card drop-success" data-iso="2025-12-23"><div class="day-date d-md-none">Tue</div><div class="day-number">23</div><div class="assigned-recipe">
-<span>🌮 Tacos</span>
-<span class="clear-btn">×</span>
-</div></div><div class="day-card drop-success" data-iso="2025-12-24"><div class="day-date d-md-none">Wed</div><div class="day-number">24</div><div class="assigned-recipe">
-<span>🍔 Smash Burgers</span>
-<span class="clear-btn">×</span>
-</div></div><div class="day-card drop-success" data-iso="2025-12-25"><div class="day-date d-md-none">Thu</div><div class="day-number">25</div><div class="assigned-recipe">
-<span>🥓 Smoked Brisket</span>
-<span class="clear-btn">×</span>
-</div></div><div class="day-card drop-success" data-iso="2025-12-26"><div class="day-date d-md-none">Fri</div><div class="day-number">26</div></div><div class="day-card" data-iso="2025-12-27"><div class="day-date d-md-none">Sat</div><div class="day-number">27</div></div><div class="day-card" data-iso="2025-12-28"><div class="day-date d-md-none">Sun</div><div class="day-number">28</div></div><div class="day-card outside-trip" data-iso="2025-12-29"><div class="day-date d-md-none">Mon</div><div class="day-number">29</div></div><div class="day-card outside-trip" data-iso="2025-12-30"><div class="day-date d-md-none">Tue</div><div class="day-number">30</div></div><div class="day-card outside-trip" data-iso="2025-12-31"><div class="day-date d-md-none">Wed</div><div class="day-number">31</div></div><div class="day-card outside-trip" data-iso="2026-01-01"><div class="day-date d-md-none">Thu</div><div class="day-number">1</div></div><div class="day-card outside-trip" data-iso="2026-01-02"><div class="day-date d-md-none">Fri</div><div class="day-number">2</div></div><div class="day-card outside-trip" data-iso="2026-01-03"><div class="day-date d-md-none">Sat</div><div class="day-number">3</div></div></div>
+<div class="calendar" id="calendar"><div class="day-card outside-trip" data-iso="2025-12-14"><div class="day-date d-md-none">Sun</div><div class="day-number">14</div></div><div class="day-card outside-trip" data-iso="2025-12-15"><div class="day-date d-md-none">Mon</div><div class="day-number">15</div></div><div class="day-card outside-trip" data-iso="2025-12-16"><div class="day-date d-md-none">Tue</div><div class="day-number">16</div></div><div class="day-card outside-trip" data-iso="2025-12-17"><div class="day-date d-md-none">Wed</div><div class="day-number">17</div></div><div class="day-card" data-iso="2025-12-18"><div class="day-date d-md-none">Thu</div><div class="day-number">18</div></div><div class="day-card" data-iso="2025-12-19"><div class="day-date d-md-none">Fri</div><div class="day-number">19</div></div><div class="day-card drop-success" data-iso="2025-12-20"><div class="day-date d-md-none">Sat</div><div class="day-number">20</div><div class="assigned-recipe"><span>🌮 Tacos</span><span class="clear-btn">×</span></div></div><div class="day-card drop-success" data-iso="2025-12-21"><div class="day-date d-md-none">Sun</div><div class="day-number">21</div><div class="assigned-recipe"><span>🌭 Beer Brats</span><span class="clear-btn">×</span></div></div><div class="day-card drop-success" data-iso="2025-12-22"><div class="day-date d-md-none">Mon</div><div class="day-number">22</div><div class="assigned-recipe"><span>🥩 Smoked Pork Butt</span><span class="clear-btn">×</span></div></div><div class="day-card" data-iso="2025-12-23"><div class="day-date d-md-none">Tue</div><div class="day-number">23</div></div><div class="day-card" data-iso="2025-12-24"><div class="day-date d-md-none">Wed</div><div class="day-number">24</div></div><div class="day-card drop-success" data-iso="2025-12-25"><div class="day-date d-md-none">Thu</div><div class="day-number">25</div><div class="assigned-recipe"><span>🥓 Smoked Brisket</span><span class="clear-btn">×</span></div></div><div class="day-card" data-iso="2025-12-26"><div class="day-date d-md-none">Fri</div><div class="day-number">26</div></div><div class="day-card" data-iso="2025-12-27"><div class="day-date d-md-none">Sat</div><div class="day-number">27</div></div><div class="day-card" data-iso="2025-12-28"><div class="day-date d-md-none">Sun</div><div class="day-number">28</div></div><div class="day-card outside-trip" data-iso="2025-12-29"><div class="day-date d-md-none">Mon</div><div class="day-number">29</div></div><div class="day-card outside-trip" data-iso="2025-12-30"><div class="day-date d-md-none">Tue</div><div class="day-number">30</div></div><div class="day-card outside-trip" data-iso="2025-12-31"><div class="day-date d-md-none">Wed</div><div class="day-number">31</div></div><div class="day-card outside-trip" data-iso="2026-01-01"><div class="day-date d-md-none">Thu</div><div class="day-number">1</div></div><div class="day-card outside-trip" data-iso="2026-01-02"><div class="day-date d-md-none">Fri</div><div class="day-number">2</div></div><div class="day-card outside-trip" data-iso="2026-01-03"><div class="day-date d-md-none">Sat</div><div class="day-number">3</div></div></div>
 </div>
 
-<!-- Recipe Details -->
 <div class="recipe-details" id="recipeDetails">
-<h2>🥩 Smoked Pork Butt (Pulled Pork)</h2>
-
-<h5><i class="bi bi-basket"></i> Ingredients</h5>
-<ul><li>5-lb pork shoulder (bone-in or boneless)</li><li>2 Tbsp kosher salt</li><li>2 Tbsp brown sugar</li><li>1 Tbsp paprika</li><li>1 Tbsp black pepper</li><li>1 Tbsp garlic powder</li><li>1 Tbsp onion powder</li><li>½ Tbsp cayenne (optional)</li><li>Applewood or hickory wood chips</li></ul>
-
-<h5><i class="bi bi-list-ol"></i> Instructions</h5>
-<ol><li>Trim excess fat, then apply a generous dry rub (all ingredients except wood).</li><li>Preheat smoker to 225°F and add applewood/hickory.</li><li>Place pork butt on the grill grate, fat side up.</li><li>Smoke until internal temperature reaches 165-170°F (≈ 5-6 h).</li><li>Wrap tightly in butcher paper or foil.</li><li>Return to smoker and continue until 195-205°F (≈ 2-3 h more).</li><li>Remove, let rest 30-45 min, then shred with forks.</li><li>Serve with coleslaw, pickles, and buns.</li></ol>
-
-<h5><i class="bi bi-lightbulb"></i> Tips &amp; Techniques</h5>
-<ul><li>Maintain a steady 225°F throughout.</li><li>A digital probe helps watch the stall (150-170°F).</li><li>Applewood gives a sweet flavor; hickory adds stronger smoke.</li></ul>
+<div class="empty-state">
+<i class="bi bi-cursor"></i>
+<p><strong>📱 Mobile:</strong> Tap recipe → Tap day to assign</p>
+<p><strong>🖱️ Desktop:</strong> Drag recipe onto day</p>
+<p><small>Click any assigned day to view the full recipe</small></p>
+</div>
 </div>
 </section>
 </div>
 </div>
 
-<!-- Add Recipe Modal -->
-<div class="modal fade" id="addRecipeModal" tabindex="-1">
+<div class="mobile-assign-banner" id="mobileAssignBanner">
+<div class="mobile-assign-banner-content">
+<span class="mobile-assign-banner-icon">👉</span>
+<div>
+<div style="font-size:.85rem;opacity:.9;">Selected:</div>
+<div id="selectedRecipeName">Recipe</div>
+</div>
+</div>
+<button id="cancelAssignBtn">Cancel</button>
+</div>
+
+<div class="modal fade" id="addRecipeModal" tabindex="-1" aria-hidden="true" style="display: none;">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header">
-<h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add Custom Recipe</h5>
+<h5 class="modal-title" id="recipeModalTitle"><i class="bi bi-pencil"></i> Edit Recipe</h5>
 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <form id="addRecipeForm">
+<input type="hidden" id="editingRecipeKey" value="Beer Brats">
 <div class="mb-3">
 <label class="form-label">Recipe Name (unique)</label>
-<input type="text" class="form-control" id="newKey" placeholder="e.g., Mom's Lasagna" required="">
+<input type="text" class="form-control" id="newKey" placeholder="e.g., Mom's Lasagna" required="" disabled="">
 </div>
 <div class="mb-3">
 <label class="form-label">Display Title</label>
@@ -970,53 +1153,67 @@ Recipe Library
 <label class="form-label">Ingredients (one per line)</label>
 <textarea class="form-control" id="newIngredients" rows="5" placeholder="1 lb ground beef
 2 cups marinara sauce
-..." required=""></textarea>
+1 box lasagna noodles" required=""></textarea>
 </div>
 <div class="mb-3">
 <label class="form-label">Cooking Steps (one per line)</label>
 <textarea class="form-control" id="newSteps" rows="5" placeholder="Preheat oven to 375°F
-Brown the ground beef..." required=""></textarea>
+Brown the ground beef
+Layer noodles and sauce" required=""></textarea>
 </div>
 <div class="mb-3">
 <label class="form-label">Tips &amp; Notes (optional, one per line)</label>
 <textarea class="form-control" id="newTips" rows="3" placeholder="Can be made ahead and frozen
-Leftovers keep for 3 days..."></textarea>
+Leftovers keep for 3 days"></textarea>
 </div>
 </form>
 </div>
 <div class="modal-footer">
 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+<button type="button" class="btn btn-danger" id="deleteRecipeBtn" style="display: block; margin-right: auto;">
+<i class="bi bi-trash"></i> Delete
+</button>
 <button type="button" class="btn btn-primary" id="saveRecipeBtn">
-<i class="bi bi-check-circle"></i> Save Recipe
+<i class="bi bi-check-circle"></i> <span id="saveBtnText">Save Changes</span>
 </button>
 </div>
 </div>
 </div>
 </div>
 
-<!-- Toast Container -->
-<div class="toast-container" id="toastContainer"><div class="custom-toast toast-success">
-<span class="toast-icon">✓</span>
-<span>Beer Brats added to 12/27</span>
-</div></div>
+<div class="modal fade" id="shoppingListModal" tabindex="-1">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title"><i class="bi bi-cart"></i> Grocery List</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<div id="shoppingListContent" class="shopping-list"></div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+<button type="button" class="btn btn-success" id="exportGroceryTxtBtn">
+<i class="bi bi-file-earmark-text"></i> Export TXT
+</button>
+<button type="button" class="btn btn-primary" id="copyGroceryBtn">
+<i class="bi bi-clipboard"></i> Copy
+</button>
+</div>
+</div>
+</div>
+</div>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-/* ===================================
-   CONFIGURATION & DATA
-=================================== */
 const tripStart = new Date(2025, 11, 18);
 const tripEnd = new Date(2025, 11, 28);
-
 const startOfWeek = new Date(tripStart);
 startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-
 const endOfWeek = new Date(tripEnd);
 endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
 
-// Recipe icons mapping
 const recipeIcons = {
 'Smoked Pork Butt': '🥩',
 'Beer Brats': '🌭',
@@ -1027,200 +1224,181 @@ const recipeIcons = {
 };
 
 let recipes = {
-"Smoked Pork Butt": {
-title: "Smoked Pork Butt (Pulled Pork)",
-icon: "🥩",
-ingredients: [
-"5-lb pork shoulder (bone-in or boneless)",
-"2 Tbsp kosher salt",
-"2 Tbsp brown sugar",
-"1 Tbsp paprika",
-"1 Tbsp black pepper",
-"1 Tbsp garlic powder",
-"1 Tbsp onion powder",
-"½ Tbsp cayenne (optional)",
-"Applewood or hickory wood chips"
-],
-steps: [
-"Trim excess fat, then apply a generous dry rub (all ingredients except wood).",
-"Preheat smoker to 225°F and add applewood/hickory.",
-"Place pork butt on the grill grate, fat side up.",
-"Smoke until internal temperature reaches 165-170°F (≈ 5-6 h).",
-"Wrap tightly in butcher paper or foil.",
-"Return to smoker and continue until 195-205°F (≈ 2-3 h more).",
-"Remove, let rest 30-45 min, then shred with forks.",
-"Serve with coleslaw, pickles, and buns."
-],
-tips: [
-"Maintain a steady 225°F throughout.",
-"A digital probe helps watch the stall (150-170°F).",
-"Applewood gives a sweet flavor; hickory adds stronger smoke."
-]
-},
-
-"Beer Brats": {
-title: "Beer-Braised Bratwurst",
-icon: "🌭",
-ingredients: [
-"12 bratwurst links",
-"2 cups lager or ale",
-"1 large onion, sliced",
-"2 Tbsp butter",
-"1 Tbsp mustard seeds",
-"Olive oil",
-"Buns, sauerkraut, mustard (optional)"
-],
-steps: [
-"In a large skillet, melt butter and sauté onions until translucent.",
-"Add mustard seeds, then lay bratwurst in the pan.",
-"Pour beer over the brats, bring to a simmer, cover, and cook 15-20 min.",
-"Remove brats, increase heat, and brown them on each side (2-3 min).",
-"Serve on buns with onions, sauerkraut, and mustard."
-],
-tips: [
-"Use a robust lager for a richer flavor.",
-"Don't over-cook – the internal temperature should hit 160°F."
-]
-},
-
-"Smash Burgers": {
-title: "Smash Burgers",
-icon: "🍔",
-ingredients: [
-"1 lb ground beef (80/20)",
-"Salt & pepper",
-"4 burger buns",
-"Cheddar slices",
-"Pickles, lettuce, tomato, onion",
-"Butter (for buns)",
-"Oil (high-smoke-point)"
-],
-steps: [
-"Form the meat into 4 loose balls (≈ 4 oz each).",
-"Heat a cast-iron skillet or griddle to high (≈ 450-500°F).",
-"Place a ball, let sit 30 s, then smash with a spatula until thin.",
-"Season with salt & pepper, cook 2-3 min, flip, add cheese, cook another minute.",
-"Toast buns in butter, assemble with toppings."
-],
-tips: [
-"A thin patty creates that coveted crust – don't over-handle the meat.",
-"Use a heavy spatula for an even smash."
-]
-},
-
-"Smoked Brisket": {
-title: "Smoked Beef Brisket",
-icon: "🥓",
-ingredients: [
-"10-lb whole packer brisket (point + flat)",
-"2 Tbsp kosher salt",
-"2 Tbsp black pepper",
-"1 Tbsp garlic powder",
-"1 Tbsp onion powder",
-"Hickory or oak wood chunks",
-"Apple juice (optional for spritz)"
-],
-steps: [
-"Trim excess fat, leaving ~¼-inch cap.",
-"Mix salt, pepper, garlic & onion powder – apply liberally.",
-"Pre-heat smoker to 225°F, add hickory/oak.",
-"Place brisket fat-side up; smoke until internal temp hits 165-170°F (≈ 6-8 h).",
-"Spritz with apple juice every hour (optional).",
-"Wrap tightly in butcher paper or foil.",
-"Return to smoker and cook until 195-203°F (≈ 2-3 h more).",
-"Rest wrapped for 1-2 h, then slice against the grain."
-],
-tips: [
-"Consistent 225°F is key – fluctuations > 15°F will lengthen cook time.",
-"The stall (150-170°F) is normal; wrapping accelerates it.",
-"Resting lets juices redistribute for juicy slices."
-]
-},
-
-"Tacos": {
-title: "Grilled Chicken & Steak Tacos",
-icon: "🌮",
-ingredients: [
-"1 lb chicken breast, thinly sliced",
-"1 lb flank steak, thinly sliced",
-"2 Tbsp olive oil",
-"1 Tbsp chili powder",
-"1 tsp cumin",
-"1 tsp smoked paprika",
-"Salt & pepper",
-"12 small corn tortillas",
-"Toppings: cilantro, diced onion, lime wedges, salsa, avocado"
-],
-steps: [
-"Toss chicken and steak in oil + spices; let rest 15 min.",
-"Grill over high heat (≈ 450°F) – chicken 4-5 min, steak 3-4 min per side.",
-"Let rest 5 min, then slice thinly.",
-"Warm tortillas on the grill, then fill with meat and desired toppings."
-],
-tips: [
-"Oak or hickory woods give a nice char for the steak.",
-"Slice against the grain for tender steak bites."
-]
-}
+  "Smoked Pork Butt": {
+    "title": "Smoked Pork Butt (Pulled Pork)",
+    "icon": "🥩",
+    "ingredients": [
+      "5-lb pork shoulder",
+      "2 Tbsp kosher salt",
+      "2 Tbsp brown sugar",
+      "1 Tbsp paprika",
+      "1 Tbsp black pepper",
+      "1 Tbsp garlic powder",
+      "1 Tbsp onion powder",
+      "½ Tbsp cayenne (optional)",
+      "Applewood or hickory wood chips"
+    ],
+    "steps": [
+      "Trim excess fat, then apply dry rub.",
+      "Preheat smoker to 225°F and add wood.",
+      "Place pork butt fat side up.",
+      "Smoke until 165-170°F (5-6 h).",
+      "Wrap tightly in foil.",
+      "Continue until 195-205°F (2-3 h).",
+      "Rest 30-45 min, then shred.",
+      "Serve with coleslaw and buns."
+    ],
+    "tips": [
+      "Maintain steady 225°F.",
+      "Digital probe helps monitor temp.",
+      "Applewood = sweet, hickory = stronger."
+    ]
+  },
+  "Beer Brats": {
+    "title": "Beer-Braised Bratwurst",
+    "icon": "🌭",
+    "ingredients": [
+      "12 bratwurst links",
+      "2 cups lager",
+      "1 large onion, sliced",
+      "2 Tbsp butter",
+      "1 Tbsp mustard seeds",
+      "Olive oil",
+      "Buns, sauerkraut, mustard"
+    ],
+    "steps": [
+      "Melt butter, sauté onions.",
+      "Add mustard seeds and brats.",
+      "Pour beer, simmer covered 15-20 min.",
+      "Remove brats, brown each side.",
+      "Serve on buns with toppings."
+    ],
+    "tips": [
+      "Use robust lager.",
+      "Internal temp should hit 160°F."
+    ]
+  },
+  "Smash Burgers": {
+    "title": "Smash Burgers",
+    "icon": "🍔",
+    "ingredients": [
+      "1 lb ground beef (80/20)",
+      "Salt & pepper",
+      "4 burger buns",
+      "Cheddar slices",
+      "Pickles, lettuce, tomato, onion",
+      "Butter",
+      "High smoke-point oil"
+    ],
+    "steps": [
+      "Form 4 loose balls.",
+      "Heat griddle to 450-500°F.",
+      "Smash thin with spatula.",
+      "Season, cook 2-3 min, flip, add cheese.",
+      "Toast buns, assemble."
+    ],
+    "tips": [
+      "Thin patty = better crust.",
+      "Heavy spatula for even smash."
+    ]
+  },
+  "Smoked Brisket": {
+    "title": "Smoked Beef Brisket",
+    "icon": "🥓",
+    "ingredients": [
+      "10-lb brisket",
+      "2 Tbsp kosher salt",
+      "2 Tbsp black pepper",
+      "1 Tbsp garlic powder",
+      "1 Tbsp onion powder",
+      "Hickory or oak chunks",
+      "Apple juice (optional)"
+    ],
+    "steps": [
+      "Trim fat to ¼-inch.",
+      "Apply rub liberally.",
+      "Preheat smoker to 225°F.",
+      "Smoke until 165-170°F (6-8 h).",
+      "Wrap in foil.",
+      "Continue to 195-203°F (2-3 h).",
+      "Rest 1-2 h, slice."
+    ],
+    "tips": [
+      "Consistent 225°F is key.",
+      "Wrapping speeds stall.",
+      "Resting = juicy slices."
+    ]
+  },
+  "Tacos": {
+    "title": "Grilled Chicken & Steak Tacos",
+    "icon": "🌮",
+    "ingredients": [
+      "1 lb chicken breast",
+      "1 lb flank steak",
+      "2 Tbsp olive oil",
+      "1 Tbsp chili powder",
+      "1 tsp cumin",
+      "1 tsp smoked paprika",
+      "Salt & pepper",
+      "12 corn tortillas",
+      "Cilantro, onion, lime, salsa, avocado"
+    ],
+    "steps": [
+      "Toss meat in oil + spices, rest 15 min.",
+      "Grill at 450°F – chicken 4-5 min, steak 3-4 min per side.",
+      "Rest 5 min, slice.",
+      "Warm tortillas, fill with meat and toppings."
+    ],
+    "tips": [
+      "Oak/hickory for char.",
+      "Slice against grain."
+    ]
+  }
 };
 
-/* ===================================
-   STATE MANAGEMENT
-=================================== */
+let assignments = {
+  "2025-12-21": "Beer Brats",
+  "2025-12-25": "Smoked Brisket",
+  "2025-12-22": "Smoked Pork Butt",
+  "2025-12-20": "Tacos"
+};
+
+const STORAGE_KEY = 'meal-planner-v3';
+const RECIPES_KEY = 'meal-planner-recipes-v3';
+let isMobile = false;
+let selectedRecipeForAssign = null;
+
 const calendarEl = document.getElementById('calendar');
 const recipeDetails = document.getElementById('recipeDetails');
 const paletteDesktop = document.getElementById('recipePaletteDesktop');
 const paletteMobile = document.getElementById('recipePaletteMobile');
+const mobileAssignBanner = document.getElementById('mobileAssignBanner');
+const selectedRecipeName = document.getElementById('selectedRecipeName');
 
-// ⭐ ASSIGNMENTS INJECTED HERE ⭐
-let assignments = {
-  "2025-12-19": "Beer Brats",
-  "2025-12-25": "Smoked Brisket",
-  "2025-12-24": "Smash Burgers",
-  "2025-12-23": "Tacos",
-  "2025-12-21": "Smoked Pork Butt"
-};
+function detectMobile() {
+return window.innerWidth < 768;
+}
 
-const STORAGE_KEY = 'meal-planner-assignments-v2';
-
-/* ===================================
-   UTILITY FUNCTIONS
-=================================== */
 function showToast(message, type = 'success') {
-const container = document.getElementById('toastContainer');
 const toast = document.createElement('div');
-toast.className = `custom-toast toast-${type}`;
-
-const icons = {
-success: '✓',
-warning: '⚠',
-error: '✕',
-info: 'ℹ'
-};
-
-toast.innerHTML = `
-<span class="toast-icon">${icons[type] || icons.info}</span>
-<span>${message}</span>
-`;
-
-container.appendChild(toast);
-
+toast.className = `toast-notification ${type}`;
+const icons = { success: '✓', error: '✕', info: 'ℹ' };
+toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span>${message}</span>`;
+document.body.appendChild(toast);
 setTimeout(() => {
-toast.style.animation = 'slideIn .3s ease-out reverse';
+toast.style.animation = 'slideInRight .3s ease-out reverse';
 setTimeout(() => toast.remove(), 300);
 }, 3000);
 }
 
-function loadAssignments() {
-const raw = localStorage.getItem(STORAGE_KEY);
-if (raw) {
+function loadData() {
 try {
-const loaded = JSON.parse(raw);
-assignments = { ...assignments, ...loaded };
+const savedAssignments = localStorage.getItem(STORAGE_KEY);
+if (savedAssignments) assignments = JSON.parse(savedAssignments);
+const savedRecipes = localStorage.getItem(RECIPES_KEY);
+if (savedRecipes) recipes = { ...recipes, ...JSON.parse(savedRecipes) };
 } catch (e) {
-console.error('Error loading assignments:', e);
-showToast('Error loading saved data', 'error');
-}
+console.error('Error loading data:', e);
 }
 }
 
@@ -1228,86 +1406,68 @@ function saveAssignments() {
 localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
 }
 
-function isInTrip(date) {
-return date >= tripStart && date <= tripEnd;
+function saveRecipes() {
+localStorage.setItem(RECIPES_KEY, JSON.stringify(recipes));
 }
 
+function isInTrip(date) { return date >= tripStart && date <= tripEnd; }
 function isToday(date) {
 const today = new Date();
-return date.getDate() === today.getDate() &&
-date.getMonth() === today.getMonth() &&
-date.getFullYear() === today.getFullYear();
+return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
 }
+function formatDate(date) { return `${date.getMonth() + 1}/${date.getDate()}`; }
+function getWeekday(date) { return date.toLocaleDateString('en-US', { weekday: 'short' }); }
 
-function formatDate(date) {
-return `${date.getMonth() + 1}/${date.getDate()}`;
-}
-
-function getWeekday(date) {
-return date.toLocaleDateString('en-US', { weekday: 'short' });
-}
-
-/* ===================================
-   RECIPE PALETTE
-=================================== */
 function createRecipeItem(name) {
 const recipe = recipes[name];
 const div = document.createElement('div');
 div.className = 'recipe-item';
 div.dataset.recipe = name;
-
 const icon = recipe.icon || recipeIcons[name] || recipeIcons.default;
 div.innerHTML = `
+<div class="recipe-item-content">
 <span class="recipe-icon">${icon}</span>
 <span>${name}</span>
+</div>
+<div class="recipe-item-actions">
+<span class="icon-btn" data-action="edit" title="Edit recipe">
+<i class="bi bi-pencil"></i>
+</span>
+</div>
 `;
 
+div.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
+e.stopPropagation();
+openEditRecipeModal(name);
+});
+
+if (!isMobile) {
 let ghost = null;
 let currentDropTarget = null;
-
 const startDrag = ev => {
 ev.preventDefault();
 const recipeName = div.dataset.recipe;
-
-// Create ghost element
 ghost = div.cloneNode(true);
 ghost.classList.add('dragging');
-ghost.style.position = 'fixed';
-ghost.style.left = ev.clientX - 50 + 'px';
-ghost.style.top = ev.clientY - 20 + 'px';
-ghost.style.pointerEvents = 'none';
-ghost.style.opacity = '0.8';
-ghost.style.zIndex = '10000';
-ghost.style.width = '200px';
+ghost.style.cssText = `position:fixed;left:${ev.clientX-50}px;top:${ev.clientY-20}px;pointer-events:none;opacity:.8;z-index:10000;width:200px;`;
 document.body.appendChild(ghost);
 
 const move = me => {
 ghost.style.left = me.clientX - 50 + 'px';
 ghost.style.top = me.clientY - 20 + 'px';
-
-// Find drop target
 const dropTarget = document.elementFromPoint(me.clientX, me.clientY);
 const dayCard = dropTarget?.closest('.day-card');
-
-if (currentDropTarget && currentDropTarget !== dayCard) {
-currentDropTarget.classList.remove('drag-over');
-}
-
+if (currentDropTarget && currentDropTarget !== dayCard) currentDropTarget.classList.remove('drag-over');
 if (dayCard && !dayCard.classList.contains('outside-trip')) {
 dayCard.classList.add('drag-over');
 currentDropTarget = dayCard;
-} else {
-currentDropTarget = null;
-}
+} else currentDropTarget = null;
 };
 
 const end = me => {
 document.removeEventListener('pointermove', move);
 document.removeEventListener('pointerup', end);
-
 if (ghost) ghost.remove();
-ghost = null;
-
 if (currentDropTarget) {
 currentDropTarget.classList.remove('drag-over');
 const iso = currentDropTarget.dataset.iso;
@@ -1317,29 +1477,37 @@ updateCardAssignment(currentDropTarget, recipeName);
 currentDropTarget.classList.add('drop-success');
 setTimeout(() => currentDropTarget.classList.remove('drop-success'), 600);
 showToast(`${recipeName} added to ${formatDate(new Date(iso))}`, 'success');
-currentDropTarget = null;
 }
+currentDropTarget = null;
 };
 
 document.addEventListener('pointermove', move);
 document.addEventListener('pointerup', end);
 };
-
 div.addEventListener('pointerdown', startDrag);
+} else {
+div.addEventListener('click', (e) => {
+if (e.target.closest('.icon-btn')) return;
+selectedRecipeForAssign = name;
+selectedRecipeName.textContent = name;
+mobileAssignBanner.classList.add('active');
+document.querySelectorAll('.recipe-item').forEach(item => item.classList.remove('selected-for-assign'));
+div.classList.add('selected-for-assign');
+document.querySelectorAll('.day-card:not(.outside-trip)').forEach(card => card.classList.add('can-assign'));
+});
+}
+
 return div;
 }
 
 function buildPalette() {
+isMobile = detectMobile();
 paletteDesktop.innerHTML = '';
 paletteMobile.innerHTML = '';
-
 Object.keys(recipes).sort().forEach(name => {
-const itemDesktop = createRecipeItem(name);
-const itemMobile = createRecipeItem(name);
-paletteDesktop.appendChild(itemDesktop);
-paletteMobile.appendChild(itemMobile);
+paletteDesktop.appendChild(createRecipeItem(name));
+paletteMobile.appendChild(createRecipeItem(name));
 });
-
 attachSearch('searchBoxDesktop', paletteDesktop);
 attachSearch('searchBoxMobile', paletteMobile);
 }
@@ -1347,40 +1515,25 @@ attachSearch('searchBoxMobile', paletteMobile);
 function attachSearch(boxId, container) {
 const box = document.getElementById(boxId);
 if (!box) return;
-
 box.addEventListener('input', () => {
 const term = box.value.trim().toLowerCase();
-const items = container.querySelectorAll('.recipe-item');
-items.forEach(it => {
-const txt = it.dataset.recipe.toLowerCase();
-it.style.display = txt.includes(term) ? '' : 'none';
+container.querySelectorAll('.recipe-item').forEach(it => {
+it.style.display = it.dataset.recipe.toLowerCase().includes(term) ? '' : 'none';
 });
 });
 }
 
-/* ===================================
-   CALENDAR
-=================================== */
 function buildCalendar() {
 calendarEl.innerHTML = '';
-
 for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
 const cur = new Date(d);
 const iso = cur.toISOString().split('T')[0];
-
 const card = document.createElement('div');
 card.className = 'day-card';
 card.dataset.iso = iso;
+if (!isInTrip(cur)) card.classList.add('outside-trip');
+if (isToday(cur)) card.classList.add('today');
 
-if (!isInTrip(cur)) {
-card.classList.add('outside-trip');
-}
-
-if (isToday(cur)) {
-card.classList.add('today');
-}
-
-// Date display
 const dateDiv = document.createElement('div');
 dateDiv.className = 'day-date d-md-none';
 dateDiv.textContent = getWeekday(cur);
@@ -1391,15 +1544,21 @@ numberDiv.className = 'day-number';
 numberDiv.textContent = cur.getDate();
 card.appendChild(numberDiv);
 
-// Show assigned recipe
-if (assignments[iso]) {
-updateCardAssignment(card, assignments[iso]);
-}
+if (assignments[iso]) updateCardAssignment(card, assignments[iso]);
 
-// Click to view recipe
 card.addEventListener('click', () => {
-const meal = assignments[card.dataset.iso];
+if (isMobile && selectedRecipeForAssign && !card.classList.contains('outside-trip')) {
+assignments[iso] = selectedRecipeForAssign;
+saveAssignments();
+updateCardAssignment(card, selectedRecipeForAssign);
+card.classList.add('drop-success');
+setTimeout(() => card.classList.remove('drop-success'), 600);
+showToast(`${selectedRecipeForAssign} added!`, 'success');
+cancelMobileAssign();
+} else {
+const meal = assignments[iso];
 if (meal) displayRecipe(meal);
+}
 });
 
 calendarEl.appendChild(card);
@@ -1409,116 +1568,123 @@ calendarEl.appendChild(card);
 function updateCardAssignment(card, recipeName) {
 const old = card.querySelector('.assigned-recipe');
 if (old) old.remove();
-
 const recipe = recipes[recipeName];
 const icon = recipe?.icon || recipeIcons[recipeName] || recipeIcons.default;
-
 const lbl = document.createElement('div');
 lbl.className = 'assigned-recipe';
-lbl.innerHTML = `
-<span>${icon} ${recipeName}</span>
-<span class="clear-btn">×</span>
-`;
-
-const clearBtn = lbl.querySelector('.clear-btn');
-clearBtn.addEventListener('click', ev => {
+lbl.innerHTML = `<span>${icon} ${recipeName}</span><span class="clear-btn">×</span>`;
+lbl.querySelector('.clear-btn').addEventListener('click', ev => {
 ev.stopPropagation();
 delete assignments[card.dataset.iso];
 saveAssignments();
 lbl.remove();
-showToast(`${recipeName} removed`, 'info');
+showToast('Recipe removed', 'info');
 });
-
 card.appendChild(lbl);
 }
 
-/* ===================================
-   RECIPE DISPLAY
-=================================== */
+function cancelMobileAssign() {
+selectedRecipeForAssign = null;
+mobileAssignBanner.classList.remove('active');
+document.querySelectorAll('.recipe-item').forEach(item => item.classList.remove('selected-for-assign'));
+document.querySelectorAll('.day-card').forEach(card => card.classList.remove('can-assign'));
+}
+
+document.getElementById('cancelAssignBtn').addEventListener('click', cancelMobileAssign);
+
 function displayRecipe(mealName) {
 const recipe = recipes[mealName];
 if (!recipe) {
-recipeDetails.innerHTML = `
-<div class="empty-state">
-<i class="bi bi-exclamation-circle"></i>
-<p>Recipe not found: "${mealName}"</p>
-</div>
-`;
+recipeDetails.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>Recipe not found</p></div>`;
 return;
 }
-
 const icon = recipe.icon || recipeIcons[mealName] || recipeIcons.default;
-
-const html = `
+recipeDetails.innerHTML = `
 <h2>${icon} ${recipe.title}</h2>
-
 <h5><i class="bi bi-basket"></i> Ingredients</h5>
 <ul>${recipe.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
-
 <h5><i class="bi bi-list-ol"></i> Instructions</h5>
 <ol>${recipe.steps.map(s => `<li>${s}</li>`).join('')}</ol>
-
-${recipe.tips && recipe.tips.length
-? `<h5><i class="bi bi-lightbulb"></i> Tips & Techniques</h5>
-<ul>${recipe.tips.map(t => `<li>${t}</li>`).join('')}</ul>`
-: ''
-}
+${recipe.tips && recipe.tips.length ? `<h5><i class="bi bi-lightbulb"></i> Tips</h5><ul>${recipe.tips.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
 `;
-
-recipeDetails.innerHTML = html;
-
-// Smooth scroll on mobile
-if (window.innerWidth < 768) {
-recipeDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+if (window.innerWidth < 768) recipeDetails.scrollIntoView({ behavior: 'smooth' });
 }
 
-/* ===================================
-   TOOLBAR ACTIONS
-=================================== */
-document.getElementById('downloadHtmlBtn').addEventListener('click', () => {
-let htmlContent = document.documentElement.outerHTML;
-const assignmentsJson = JSON.stringify(assignments, null, 2);
-const pattern = /let assignments = \{[^}]*\};/s;
-const replacement = `let assignments = ${assignmentsJson};`;
-htmlContent = htmlContent.replace(pattern, replacement);
+function generateShoppingList() {
+const counts = {};
+Object.values(assignments).forEach(recipeName => {
+const recipe = recipes[recipeName];
+if (recipe) recipe.ingredients.forEach(ing => {
+counts[ing] = (counts[ing] || 0) + 1;
+});
+});
+return Object.entries(counts).map(([ing, count]) => ({ ingredient: ing, count })).sort((a, b) => a.ingredient.localeCompare(b.ingredient));
+}
 
-const blob = new Blob([htmlContent], { type: 'text/html' });
+document.getElementById('shoppingListBtn').addEventListener('click', () => {
+const items = generateShoppingList();
+const container = document.getElementById('shoppingListContent');
+if (items.length === 0) {
+container.innerHTML = '<div class="empty-state"><p>No meals assigned yet!</p></div>';
+} else {
+container.innerHTML = items.map((item, idx) => `
+<div class="shopping-item" id="shop-${idx}">
+<input type="checkbox" id="check-${idx}" onchange="document.getElementById('shop-${idx}').classList.toggle('checked')">
+<label for="check-${idx}" class="shopping-item-text">
+${item.count > 1 ? `<strong>${item.count}x</strong> ` : ''}${item.ingredient}
+</label>
+</div>
+`).join('');
+}
+new bootstrap.Modal(document.getElementById('shoppingListModal')).show();
+});
+
+document.getElementById('copyGroceryBtn').addEventListener('click', () => {
+const items = generateShoppingList();
+const text = items.map(i => `${i.count > 1 ? i.count + 'x ' : ''}${i.ingredient}`).join('\n');
+navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!', 'success')).catch(() => showToast('Copy failed', 'error'));
+});
+
+document.getElementById('exportGroceryTxtBtn').addEventListener('click', () => {
+const items = generateShoppingList();
+const text = '🛒 GROCERY LIST\n' + '='.repeat(40) + '\n\n' + items.map(i => `${i.count > 1 ? '(' + i.count + 'x) ' : '☐ '}${i.ingredient}`).join('\n');
+const blob = new Blob([text], { type: 'text/plain' });
 const url = URL.createObjectURL(blob);
 const a = document.createElement('a');
 a.href = url;
-a.download = `meal-planner-${new Date().toISOString().split('T')[0]}.html`;
+a.download = `grocery-list-${new Date().toISOString().split('T')[0]}.txt`;
 a.click();
 URL.revokeObjectURL(url);
-
-showToast('HTML file downloaded successfully!', 'success');
+showToast('Grocery list downloaded!', 'success');
 });
 
-document.getElementById('clearAllBtn').addEventListener('click', () => {
-if (!confirm('Clear all recipe assignments? This cannot be undone.')) return;
+function openEditRecipeModal(recipeName) {
+const recipe = recipes[recipeName];
+if (!recipe) return;
+document.getElementById('recipeModalTitle').innerHTML = '<i class="bi bi-pencil"></i> Edit Recipe';
+document.getElementById('saveBtnText').textContent = 'Save Changes';
+document.getElementById('deleteRecipeBtn').style.display = 'block';
+document.getElementById('editingRecipeKey').value = recipeName;
+document.getElementById('newKey').value = recipeName;
+document.getElementById('newKey').disabled = true;
+document.getElementById('newTitle').value = recipe.title;
+document.getElementById('newIngredients').value = recipe.ingredients.join('\n');
+document.getElementById('newSteps').value = recipe.steps.join('\n');
+document.getElementById('newTips').value = (recipe.tips || []).join('\n');
+new bootstrap.Modal(document.getElementById('addRecipeModal')).show();
+}
 
-assignments = {};
-saveAssignments();
-buildCalendar();
-recipeDetails.innerHTML = `
-<div class="empty-state">
-<i class="bi bi-cursor"></i>
-<p>Drag recipes onto calendar days to plan your meals</p>
-<p><small>Click any assigned day to view the full recipe</small></p>
-</div>
-`;
-
-showToast('All assignments cleared', 'info');
+document.querySelector('[data-bs-target="#addRecipeModal"]').addEventListener('click', () => {
+document.getElementById('recipeModalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> Add Recipe';
+document.getElementById('saveBtnText').textContent = 'Save Recipe';
+document.getElementById('deleteRecipeBtn').style.display = 'none';
+document.getElementById('editingRecipeKey').value = '';
+document.getElementById('newKey').disabled = false;
+document.getElementById('addRecipeForm').reset();
 });
 
-document.getElementById('printBtn').addEventListener('click', () => {
-window.print();
-});
-
-/* ===================================
-   ADD CUSTOM RECIPE
-=================================== */
 document.getElementById('saveRecipeBtn').addEventListener('click', () => {
+const editingKey = document.getElementById('editingRecipeKey').value;
 const key = document.getElementById('newKey').value.trim();
 const title = document.getElementById('newTitle').value.trim();
 const ing = document.getElementById('newIngredients').value.trim().split('\n').filter(Boolean);
@@ -1526,46 +1692,78 @@ const steps = document.getElementById('newSteps').value.trim().split('\n').filte
 const tips = document.getElementById('newTips').value.trim().split('\n').filter(Boolean);
 
 if (!key || !title || !ing.length || !steps.length) {
-showToast('Please fill in all required fields', 'warning');
+showToast('Fill all required fields!', 'error');
 return;
 }
-
-if (key in recipes && !confirm('Recipe name already exists. Overwrite?')) return;
+if (!editingKey && key in recipes && !confirm('Overwrite existing recipe?')) return;
 
 recipes[key] = {
 title,
-icon: recipeIcons.default,
+icon: recipes[key]?.icon || recipeIcons.default,
 ingredients: ing,
 steps,
 tips
 };
 
+saveRecipes();
 buildPalette();
-
-const modal = bootstrap.Modal.getInstance(document.getElementById('addRecipeModal'));
-modal.hide();
-document.getElementById('addRecipeForm').reset();
-
-showToast(`Recipe "${key}" added successfully!`, 'success');
+bootstrap.Modal.getInstance(document.getElementById('addRecipeModal')).hide();
+showToast(`Recipe ${editingKey ? 'updated' : 'added'}!`, 'success');
 });
 
-/* ===================================
-   INITIALIZATION
-=================================== */
-loadAssignments();
+document.getElementById('deleteRecipeBtn').addEventListener('click', () => {
+const key = document.getElementById('editingRecipeKey').value;
+if (!key || !confirm(`Delete "${key}"?`)) return;
+delete recipes[key];
+saveRecipes();
+Object.keys(assignments).forEach(date => {
+if (assignments[date] === key) delete assignments[date];
+});
+saveAssignments();
 buildPalette();
 buildCalendar();
-
-// Service Worker Registration (PWA support)
-if ('serviceWorker' in navigator) {
-window.addEventListener('load', () => {
-// Uncomment to enable PWA features
-// navigator.serviceWorker.register('/sw.js');
+bootstrap.Modal.getInstance(document.getElementById('addRecipeModal')).hide();
+showToast('Recipe deleted', 'info');
 });
-}
 
-console.log('🍽️ Meal Planner Pro initialized');
+document.getElementById('downloadHtmlBtn').addEventListener('click', () => {
+let html = document.documentElement.outerHTML;
+html = html.replace(/let recipes = \{[\s\S]*?\n\};/, `let recipes = ${JSON.stringify(recipes, null, 2)};`);
+html = html.replace(/let assignments = \{[^}]*\};/, `let assignments = ${JSON.stringify(assignments, null, 2)};`);
+const blob = new Blob([html], { type: 'text/html' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = `meal-planner-${new Date().toISOString().split('T')[0]}.html`;
+a.click();
+URL.revokeObjectURL(url);
+showToast('HTML saved with all data!', 'success');
+});
+
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+if (!confirm('Clear all assignments?')) return;
+assignments = {};
+saveAssignments();
+buildCalendar();
+recipeDetails.innerHTML = '<div class="empty-state"><i class="bi bi-cursor"></i><p>Assign meals to get started</p></div>';
+showToast('Calendar cleared', 'info');
+});
+
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+window.addEventListener('resize', () => {
+const was = isMobile;
+isMobile = detectMobile();
+if (was !== isMobile) {
+buildPalette();
+buildCalendar();
+}
+});
+
+loadData();
+buildPalette();
+buildCalendar();
+console.log('🍽️ Meal Planner Pro v3 ready!');
 </script>
 
-
-</body></html>
+<div class="toast-notification success"><span class="toast-icon">✓</span><span>Tacos added to 12/19</span></div></body></html>
