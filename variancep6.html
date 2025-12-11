@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Schedule Variance Report</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+            min-height: 100vh;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #4a5568;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 3px solid #2d3748;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        .upload-section {
+            padding: 30px;
+            background: #fafbfc;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .upload-box {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            background: white;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .upload-box:hover {
+            border-color: #4a5568;
+            background: #f7fafc;
+        }
+
+        .upload-box label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2d3748;
+            font-size: 1.1em;
+        }
+
+        .upload-box input[type="file"] {
+            display: block;
+            margin: 0 auto;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            width: 100%;
+            max-width: 500px;
+            font-size: 0.95em;
+        }
+
+        .file-list {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 6px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        .file-item .date-badge {
+            background: #4a5568;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .file-item .date-badge.undetected {
+            background: #ed8936;
+        }
+
+        .settings-panel {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .settings-panel h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .setting-item label {
+            display: block;
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .setting-item input[type="number"],
+        .setting-item input[type="text"],
+        .setting-item input[type="date"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .btn {
+            background: #4a5568;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            font-size: 1em;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            background: #2d3748;
+        }
+
+        .btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+
+        .btn-tertiary {
+            background: #4299e1;
+        }
+
+        .btn-tertiary:hover {
+            background: #3182ce;
+        }
+
+        .btn-danger {
+            background: #f56565;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+        }
+
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-small {
+            padding: 6px 16px;
+            font-size: 0.85em;
+        }
+
+        .report-section {
+            padding: 30px;
+            display: none;
+        }
+
+        .report-section.active {
+            display: block;
+        }
+
+        .report-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #edf2f7;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            font-size: 0.9em;
+        }
+
+        .report-meta .date {
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .report-meta .logo-area {
+            max-height: 40px;
+        }
+
+        .report-meta .logo-area img {
+            max-height: 40px;
+            max-width: 150px;
+        }
+
+        .comparison-info {
+            background: #e6fffa;
+            border-left: 4px solid #38b2ac;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+        }
+
+        .comparison-info h3 {
+            color: #234e52;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .comparison-info p {
+            color: #285e61;
+            font-size: 0.95em;
+            margin: 5px 0;
+        }
+
+        .narrative-box {
+            background: #edf2f7;
+            border-left: 4px solid #4a5568;
+            padding: 25px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .narrative-box h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .narrative-box p {
+            line-height: 1.8;
+            font-size: 1em;
+            color: #2d3748;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            border-color: #4a5568;
+        }
+
+        .metric-card .metric-value {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin: 12px 0;
+            color: #2d3748;
+        }
+
+        .metric-card .metric-label {
+            font-size: 1em;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .metric-card .metric-description {
+            font-size: 0.85em;
+            color: #718096;
+            margin-top: 8px;
+        }
+
+        .metric-card.positive .metric-value {
+            color: #48bb78;
+        }
+
+        .metric-card.negative .metric-value {
+            color: #f56565;
+        }
+
+        .metric-card.warning .metric-value {
+            color: #ed8936;
+        }
+
+        .metric-card.neutral .metric-value {
+            color: #4299e1;
+        }
+
+        .charts-section {
+            margin-top: 40px;
+            padding: 25px;
+            background: #fafbfc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .charts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .charts-header h2 {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.4em;
+        }
+
+        .range-toggle {
+            display: flex;
+            gap: 8px;
+            background: white;
+            padding: 4px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .range-toggle button {
+            padding: 6px 16px;
+            border: none;
+            background: transparent;
+            color: #4a5568;
+            font-size: 0.9em;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .range-toggle button:hover {
+            background: #f7fafc;
+        }
+
+        .range-toggle button.active {
+            background: #4a5568;
+            color: white;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .chart-container h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .chart-container canvas {
+            max-height: 300px;
+        }
+
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow: auto;
+        }
+
+        .detail-modal.active {
+            display: block;
+        }
+
+        .detail-content {
+            background: white;
+            max-width: 1200px;
+            margin: 50px auto;
+            border-radius: 8px;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.8em;
+            cursor: pointer;
+            color: #a0aec0;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #edf2f7;
+            color: #2d3748;
+        }
+
+        .detail-content h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .detail-table th,
+        .detail-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .detail-table th {
+            background: #edf2f7;
+            color: #2d3748;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .detail-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-not-started {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .status-in-progress {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .status-completed {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-delayed {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status-modified {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .status-accelerated {
+            background: #d1fae5;
+            color: #064e3b;
+        }
+
+        .type-start-milestone {
+            background: #e9d8fd;
+            color: #553c9a;
+        }
+
+        .type-finish-milestone {
+            background: #fbb6ce;
+            color: #97266d;
+        }
+
+        .type-loe {
+            background: #fef5e7;
+            color: #975a16;
+        }
+
+        .type-task {
+            background: #dbeafe;
+            color: #1e3a8a;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .alert-high {
+            border-left: 4px solid #f56565;
+        }
+
+        .alert-medium {
+            border-left: 4px solid #ed8936;
+        }
+
+        .alert-low {
+            border-left: 4px solid #48bb78;
+        }
+
+        .activity-display {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .activity-id {
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .activity-name {
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.95);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #4a5568;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .date-entry-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 3000;
+            overflow: auto;
+        }
+
+        .date-entry-modal.active {
+            display: block;
+        }
+
+        .date-entry-content {
+            background: white;
+            max-width: 800px;
+            margin: 50px auto;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .date-entry-content h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+        }
+
+        .date-entry-content .warning {
+            background: #fef5e7;
+            border-left: 4px solid #ed8936;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .date-entry-content .warning p {
+            color: #7c2d12;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .date-entry-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .date-entry-item {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .date-entry-item .filename {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        .date-entry-item .detected-date {
+            color: #4a5568;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+
+        .date-entry-item label {
+            display: block;
+            color: #4a5568;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .date-entry-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .upload-section,
+            .btn,
+            .detail-modal,
+            .date-entry-modal,
+            .settings-panel,
+            .range-toggle {
+                display: none !important;
+            }
+
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+            }
+
+            .header {
+                background: #4a5568 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .metric-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .narrative-box, .comparison-info {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts-section {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p style="color: #4a5568; font-size: 1.1em; font-weight: 600;">Processing schedules...</p>
+        </div>
+    </div>
+
+    <div class="date-entry-modal" id="dateEntryModal">
+        <div class="date-entry-content">
+            <h2>⚠️ Manual Date Entry Required</h2>
+            <div class="warning">
+                <p><strong>Some file dates could not be detected automatically.</strong> Please review and enter the correct data dates for the files below. The data date should be the date when the schedule was exported or the "as-of" date for the schedule data.</p>
+            </div>
+            <div class="date-entry-list" id="dateEntryList"></div>
+            <div class="date-entry-buttons">
+                <button class="btn btn-danger" onclick="cancelDateEntry()">Cancel</button>
+                <button class="btn btn-secondary" onclick="confirmDateEntry()">Confirm Dates</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>📊 Project Schedule Variance Analysis</h1>
+            <p>Historical Trend Analysis & Weekly Performance Report</p>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-box">
+                <label>📁 Upload All Schedule Files (Select Multiple)</label>
+                <p style="color: #718096; font-size: 0.9em; margin-bottom: 15px;">
+                    Select all Excel schedule exports from your project folder. Files should contain dates in filename (e.g., Schedule_11-Dec-25.xlsx or Project_2024-12-11.xlsx)
+                </p>
+                <input type="file" id="scheduleFiles" accept=".xlsx,.xls" multiple>
+                <div class="file-list" id="fileList" style="display: none;"></div>
+            </div>
+
+            <div class="settings-panel">
+                <h3>⚙️ Configuration Settings</h3>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>Major Change Threshold (days)</label>
+                        <input type="number" id="majorChangeThreshold" value="5" min="1" max="30">
+                    </div>
+                    <div class="setting-item">
+                        <label>Duration Change Threshold (days)</label>
+                        <input type="number" id="durationThreshold" value="3" min="1" max="30">
+                    </div>
+                    <div class="setting-item">
+                        <label>Client/Project Name</label>
+                        <input type="text" id="clientName" placeholder="Enter project name">
+                    </div>
+                    <div class="setting-item">
+                        <label>Client Logo (optional)</label>
+                        <input type="file" id="logoFile" accept="image/*">
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" id="generateBtn" disabled>Generate Comprehensive Report</button>
+            </div>
+        </div>
+
+        <div class="report-section" id="reportSection">
+            <div class="report-meta">
+                <div class="date">Report Generated: <span id="reportDate"></span></div>
+                <div class="project-name"><strong id="displayProjectName"></strong></div>
+                <div class="logo-area" id="logoArea"></div>
+            </div>
+
+            <div class="comparison-info" id="comparisonInfo"></div>
+
+            <div class="narrative-box" id="narrativeBox">
+                <h2>📝 Executive Summary</h2>
+                <p id="narrativeText"></p>
+            </div>
+
+            <div class="metrics-grid" id="metricsGrid"></div>
+
+            <div class="charts-section" id="chartsSection">
+                <div class="charts-header">
+                    <h2>📈 Historical Trend Analysis</h2>
+                    <div class="range-toggle" id="rangeToggle">
+                        <button class="active" onclick="setChartRange('all')">All Data</button>
+                        <button onclick="setChartRange(12)">Last 12</button>
+                        <button onclick="setChartRange(8)">Last 8</button>
+                        <button onclick="setChartRange(4)">Last 4</button>
+                    </div>
+                </div>
+                <div class="charts-grid" id="chartsGrid"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="window.print()">🖨️ Print Report</button>
+                <button class="btn btn-tertiary" onclick="exportToPDF()">📄 Export to PDF</button>
+                <button class="btn btn-danger" onclick="clearData()">🗑️ Clear & Start Over</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-modal" id="detailModal">
+        <div class="detail-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let allScheduleData = [];
+        let pendingScheduleData = [];
+        let analysisResults = null;
+        let clientLogo = null;
+        let dateColumns = { start: [], finish: [] };
+        let chartInstances = [];
+        let currentChartRange = 'all';
+        let dataDateReference = new Date();
+
+        const START_DATE_PATTERNS = [
+            'start', 'start date', 'begin', 'begin date', 'actual start',
+            'baseline start', 'planned start', 'early start', 'commenced'
+        ];
+
+        const FINISH_DATE_PATTERNS = [
+            'finish', 'finish date', 'end', 'end date', 'complete', 'completion',
+            'actual finish', 'baseline finish', 'planned finish', 'due date',
+            'late finish', 'target date'
+        ];
+
+        const MONTH_NAMES = {
+            'jan': 0, 'january': 0,
+            'feb': 1, 'february': 1,
+            'mar': 2, 'march': 2,
+            'apr': 3, 'april': 3,
+            'may': 4,
+            'jun': 5, 'june': 5,
+            'jul': 6, 'july': 6,
+            'aug': 7, 'august': 7,
+            'sep': 8, 'sept': 8, 'september': 8,
+            'oct': 9, 'october': 9,
+            'nov': 10, 'november': 10,
+            'dec': 11, 'december': 11
+        };
+
+        const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        document.getElementById('scheduleFiles').addEventListener('change', handleMultipleFileUpload);
+        document.getElementById('generateBtn').addEventListener('click', generateComprehensiveReport);
+        document.getElementById('logoFile').addEventListener('change', handleLogoUpload);
+
+        function handleLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                clientLogo = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handleMultipleFileUpload(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            const fileList = document.getElementById('fileList');
+            fileList.style.display = 'block';
+            fileList.innerHTML = '<p style="color: #4a5568; font-weight: 600; margin-bottom: 10px;">Processing files...</p>';
+
+            allScheduleData = [];
+            pendingScheduleData = [];
+
+            for (const file of files) {
+                try {
+                    const scheduleData = await processScheduleFile(file);
+                    pendingScheduleData.push(scheduleData);
+                } catch (error) {
+                    console.error(`Error processing ${file.name}:`, error);
+                    alert(`Error processing file: ${file.name}. Please ensure it's a valid Excel file.`);
+                }
+            }
+
+            const undetectedDates = pendingScheduleData.filter(s => !s.dateDetected);
+            
+            if (undetectedDates.length > 0) {
+                showManualDateEntry(pendingScheduleData);
+            } else {
+                finalizeScheduleData();
+            }
+        }
+
+        function showManualDateEntry(schedules) {
+            const modal = document.getElementById('dateEntryModal');
+            const list = document.getElementById('dateEntryList');
+            list.innerHTML = '';
+
+            schedules.forEach((schedule, index) => {
+                const item = document.createElement('div');
+                item.className = 'date-entry-item';
+                
+                const detectedInfo = schedule.dateDetected 
+                    ? `<div class="detected-date" style="color: #48bb78;">✓ Auto-detected: ${formatDate(schedule.dataDate)}</div>`
+                    : `<div class="detected-date" style="color: #ed8936;">⚠️ Could not detect date from filename</div>`;
+
+                item.innerHTML = `
+                    <div class="filename">${schedule.fileName}</div>
+                    ${detectedInfo}
+                    <label>Data Date (Schedule "As-Of" Date):</label>
+                    <input type="date" 
+                           id="manualDate_${index}" 
+                           value="${schedule.dataDate ? schedule.dataDate.toISOString().split('T')[0] : ''}"
+                           ${schedule.dateDetected ? 'disabled' : ''}>
+                `;
+                list.appendChild(item);
+            });
+
+            modal.classList.add('active');
+        }
+
+        function cancelDateEntry() {
+            document.getElementById('dateEntryModal').classList.remove('active');
+            document.getElementById('scheduleFiles').value = '';
+            document.getElementById('fileList').style.display = 'none';
+            pendingScheduleData = [];
+        }
+
+        function confirmDateEntry() {
+            let allDatesValid = true;
+
+            pendingScheduleData.forEach((schedule, index) => {
+                if (!schedule.dateDetected) {
+                    const dateInput = document.getElementById(`manualDate_${index}`);
+                    const dateValue = dateInput.value;
+                    
+                    if (!dateValue) {
+                        allDatesValid = false;
+                        dateInput.style.borderColor = '#f56565';
+                    } else {
+                        schedule.dataDate = new Date(dateValue);
+                        schedule.dateDetected = true;
+                        dateInput.style.borderColor = '#cbd5e0';
+                    }
+                }
+            });
+
+            if (!allDatesValid) {
+                alert('Please enter dates for all files or cancel the operation.');
+                return;
+            }
+
+            document.getElementById('dateEntryModal').classList.remove('active');
+            finalizeScheduleData();
+        }
+
+        function finalizeScheduleData() {
+            allScheduleData = pendingScheduleData;
+            allScheduleData.sort((a, b) => a.dataDate - b.dataDate);
+            displayFileList();
+            document.getElementById('generateBtn').disabled = allScheduleData.length < 2;
+
+            if (allScheduleData.length < 2) {
+                alert('Please upload at least 2 schedule files to generate a variance report.');
+            }
+        }
+
+        function processScheduleFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    try {
+                        const data = new Uint8Array(event.target.result);
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { raw: false, dateNF: 'yyyy-mm-dd' });
+
+                        const processedData = processDateColumns(jsonData);
+                        const dateResult = extractDateFromFilename(file.name);
+
+                        resolve({
+                            fileName: file.name,
+                            dataDate: dateResult.date,
+                            dateDetected: dateResult.detected,
+                            activities: processedData,
+                            activityCount: processedData.length
+                        });
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+
+                reader.onerror = () => reject(new Error('File reading failed'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function extractDateFromFilename(filename) {
+            const cleanName = filename.toLowerCase();
+
+            let match = cleanName.match(/(\d{1,2})[_\-]([a-z]{3,9})[_\-](\d{2,4})/i);
+            if (match) {
+                const day = parseInt(match[1]);
+                const monthStr = match[2].toLowerCase();
+                let year = parseInt(match[3]);
+                
+                if (year < 100) {
+                    year = year < 50 ? 2000 + year : 1900 + year;
+                }
+
+                const month = MONTH_NAMES[monthStr];
+                if (month !== undefined) {
+                    const date = new Date(year, month, day);
+                    if (!isNaN(date.getTime()) && date.getDate() === day) {
+                        return { date: date, detected: true };
+                    }
+                }
+            }
+
+            match = cleanName.match(/([a-z]{3,9})[_\-](\d{1,2})[_\-](\d{2,4})/i);
+            if (match) {
+                const monthStr = match[1].toLowerCase();
+                const day = parseInt(match[2]);
+                let year = parseInt(match[3]);
+                
+                if (year < 100) {
+                    year = year < 50 ? 2000 + year : 1900 + year;
+                }
+
+                const month = MONTH_NAMES[monthStr];
+                if (month !== undefined) {
+                    const date = new Date(year, month, day);
+                    if (!isNaN(date.getTime()) && date.getDate() === day) {
+                        return { date: date, detected: true };
+                    }
+                }
+            }
+
+            match = cleanName.match(/(\d{4})[_\-](\d{1,2})[_\-](\d{1,2})/);
+            if (match) {
+                const date = new Date(match[1], match[2] - 1, match[3]);
+                if (!isNaN(date.getTime())) {
+                    return { date: date, detected: true };
+                }
+            }
+
+            match = cleanName.match(/(\d{1,2})[_\-](\d{1,2})[_\-](\d{4})/);
+            if (match) {
+                const date1 = new Date(match[3], match[1] - 1, match[2]);
+                if (!isNaN(date1.getTime()) && parseInt(match[1]) <= 12) {
+                    return { date: date1, detected: true };
+                }
+                const date2 = new Date(match[3], match[2] - 1, match[1]);
+                if (!isNaN(date2.getTime()) && parseInt(match[2]) <= 12) {
+                    return { date: date2, detected: true };
+                }
+            }
+
+            match = cleanName.match(/(\d{8})/);
+            if (match) {
+                const year = match[1].substring(0, 4);
+                const month = match[1].substring(4, 6);
+                const day = match[1].substring(6, 8);
+                const date = new Date(year, month - 1, day);
+                if (!isNaN(date.getTime())) {
+                    return { date: date, detected: true };
+                }
+            }
+
+            match = cleanName.match(/(\d{1,2})([a-z]{3,9})(\d{2,4})/i);
+            if (match) {
+                const day = parseInt(match[1]);
+                const monthStr = match[2].toLowerCase();
+                let year = parseInt(match[3]);
+                
+                if (year < 100) {
+                    year = year < 50 ? 2000 + year : 1900 + year;
+                }
+
+                const month = MONTH_NAMES[monthStr];
+                if (month !== undefined) {
+                    const date = new Date(year, month, day);
+                    if (!isNaN(date.getTime()) && date.getDate() === day) {
+                        return { date: date, detected: true };
+                    }
+                }
+            }
+
+            match = cleanName.match(/([a-z]{3,9})\s+(\d{1,2})[,\s]+(\d{4})/i);
+            if (match) {
+                const monthStr = match[1].toLowerCase();
+                const day = parseInt(match[2]);
+                const year = parseInt(match[3]);
+
+                const month = MONTH_NAMES[monthStr];
+                if (month !== undefined) {
+                    const date = new Date(year, month, day);
+                    if (!isNaN(date.getTime()) && date.getDate() === day) {
+                        return { date: date, detected: true };
+                    }
+                }
+            }
+
+            match = cleanName.match(/(\d{6,8})/);
+            if (match && match[1].length === 6) {
+                const month = parseInt(match[1].substring(0, 2));
+                const day = parseInt(match[1].substring(2, 4));
+                let year = parseInt(match[1].substring(4, 6));
+                year = year < 50 ? 2000 + year : 1900 + year;
+                
+                if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                    const date = new Date(year, month - 1, day);
+                    if (!isNaN(date.getTime()) && date.getDate() === day) {
+                        return { date: date, detected: true };
+                    }
+                }
+            } else if (match && match[1].length === 8) {
+                const month = parseInt(match[1].substring(0, 2));
+                const day = parseInt(match[1].substring(2, 4));
+                const year = parseInt(match[1].substring(4, 8));
+                
+                if (month >= 1 && month <= 12 && day >= 1 && day <= 31 && year >= 1900 && year <= 2100) {
+                    const date = new Date(year, month - 1, day);
+                    if (!isNaN(date.getTime()) && date.getDate() === day) {
+                        return { date: date, detected: true };
+                    }
+                }
+            }
+
+            console.warn(`Could not extract date from filename: ${filename}`);
+            return { date: new Date(), detected: false };
+        }
+
+        function displayFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = `<p style="color: #2d3748; font-weight: 600; margin-bottom: 10px;">Loaded ${allScheduleData.length} schedule files:</p>`;
+
+            allScheduleData.forEach((schedule, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span>${schedule.fileName} (${schedule.activityCount} activities)</span>
+                    <span class="date-badge">${formatDate(schedule.dataDate)}</span>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function processDateColumns(data) {
+            if (!data || data.length === 0) return data;
+
+            const firstRow = data[0];
+            const columns = Object.keys(firstRow);
+
+            columns.forEach(col => {
+                const colLower = col.toLowerCase();
+                
+                if (START_DATE_PATTERNS.some(pattern => colLower.includes(pattern))) {
+                    if (!dateColumns.start.includes(col)) {
+                        dateColumns.start.push(col);
+                    }
+                }
+                
+                if (FINISH_DATE_PATTERNS.some(pattern => colLower.includes(pattern))) {
+                    if (!dateColumns.finish.includes(col)) {
+                        dateColumns.finish.push(col);
+                    }
+                }
+            });
+
+            return data.map(row => {
+                const processedRow = { ...row };
+                
+                Object.keys(row).forEach(key => {
+                    const value = row[key];
+                    if (value && (dateColumns.start.includes(key) || dateColumns.finish.includes(key))) {
+                        const parsedDate = parseFlexibleDate(value);
+                        if (parsedDate) {
+                            processedRow[key] = formatDateStandard(parsedDate);
+                        }
+                    }
+                });
+
+                return processedRow;
+            });
+        }
+
+        function parseFlexibleDate(dateValue) {
+            if (!dateValue) return null;
+
+            if (dateValue instanceof Date && !isNaN(dateValue)) {
+                return dateValue;
+            }
+
+            const dateString = String(dateValue).trim();
+            
+            if (!isNaN(dateString) && dateString.length <= 5) {
+                const excelEpoch = new Date(1899, 11, 30);
+                const days = parseInt(dateString);
+                const date = new Date(excelEpoch.getTime() + days * 86400000);
+                if (!isNaN(date.getTime())) return date;
+            }
+
+            let date = new Date(dateString);
+            if (!isNaN(date.getTime())) return date;
+
+            let match = dateString.match(/(\d{1,2})[_\-\s]([a-z]{3,9})[_\-\s](\d{2,4})/i);
+            if (match) {
+                const day = parseInt(match[1]);
+                const monthStr = match[2].toLowerCase();
+                let year = parseInt(match[3]);
+                
+                if (year < 100) {
+                    year = year < 50 ? 2000 + year : 1900 + year;
+                }
+
+                const month = MONTH_NAMES[monthStr];
+                if (month !== undefined) {
+                    date = new Date(year, month, day);
+                    if (!isNaN(date.getTime()) && date.getDate() === day) {
+                        return date;
+                    }
+                }
+            }
+
+            const formats = [
+                /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/,
+                /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/,
+                /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/
+            ];
+
+            for (let format of formats) {
+                match = dateString.match(format);
+                if (match) {
+                    let year, month, day;
+                    
+                    if (match[0].startsWith('19') || match[0].startsWith('20')) {
+                        [, year, month, day] = match;
+                    } else if (match[3] && match[3].length === 4) {
+                        const date1 = new Date(match[3], match[1] - 1, match[2]);
+                        const date2 = new Date(match[3], match[2] - 1, match[1]);
+                        
+                        if (!isNaN(date1.getTime()) && parseInt(match[1]) <= 12) return date1;
+                        if (!isNaN(date2.getTime()) && parseInt(match[2]) <= 12) return date2;
+                    } else {
+                        year = '20' + match[3];
+                        month = match[1];
+                        day = match[2];
+                    }
+
+                    date = new Date(year, month - 1, day);
+                    if (!isNaN(date.getTime())) return date;
+                }
+            }
+
+            return null;
+        }
+
+        function formatDateStandard(date) {
+            if (!date || isNaN(date.getTime())) return '';
+            
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = MONTH_ABBR[date.getMonth()];
+            const year = date.getFullYear();
+            
+            return `${day}-${month}-${year}`;
+        }
+
+        function formatDate(date) {
+            if (!date) return 'N/A';
+            
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = MONTH_ABBR[date.getMonth()];
+            const year = date.getFullYear();
+            
+            return `${day}-${month}-${year}`;
+        }
+
+        // Updated Activity Type Detection Logic
+        function getActivityType(activity) {
+            // Check if type is explicitly defined in data
+            const explicitType = activity['Activity Type'] || activity['Type'] || activity['Task Type'];
+            if (explicitType) {
+                const typeLower = String(explicitType).toLowerCase();
+                if (typeLower.includes('start') && typeLower.includes('milestone')) {
+                    return 'Start Milestone';
+                }
+                if (typeLower.includes('finish') && typeLower.includes('milestone')) {
+                    return 'Finish Milestone';
+                }
+                if (typeLower.includes('milestone') || typeLower.includes('ms')) {
+                    // Need to determine if start or finish
+                    return determineMilestoneType(activity);
+                }
+                if (typeLower.includes('loe') || typeLower.includes('level of effort')) {
+                    return 'LOE';
+                }
+                if (typeLower.includes('task') || typeLower.includes('activity')) {
+                    return 'Task Dependent';
+                }
+            }
+
+            // Auto-detect based on presence of dates
+            const startDateRaw = getStartDate(activity);
+            const finishDateRaw = getFinishDate(activity);
+            
+            // Check if dates are actually present (not empty/null/whitespace)
+            const hasStartDate = startDateRaw && String(startDateRaw).trim() !== '' && parseDate(startDateRaw) !== null;
+            const hasFinishDate = finishDateRaw && String(finishDateRaw).trim() !== '' && parseDate(finishDateRaw) !== null;
+
+            // Start Milestone: Has start date but NO finish date
+            if (hasStartDate && !hasFinishDate) {
+                return 'Start Milestone';
+            }
+
+            // Finish Milestone: Has finish date but NO start date
+            if (!hasStartDate && hasFinishDate) {
+                return 'Finish Milestone';
+            }
+
+            // Task Dependent: Has BOTH start and finish dates
+            if (hasStartDate && hasFinishDate) {
+                // Check for LOE keywords in name/description
+                const activityName = getActivityName(activity).toLowerCase();
+                const activityId = String(getActivityId(activity)).toLowerCase();
+                if (activityName.includes('loe') || activityName.includes('level of effort') || 
+                    activityId.includes('loe') || activityName.includes('management') ||
+                    activityName.includes('oversight') || activityName.includes('support')) {
+                    return 'LOE';
+                }
+                
+                return 'Task Dependent';
+            }
+
+            // No dates at all
+            if (!hasStartDate && !hasFinishDate) {
+                return 'Not Defined';
+            }
+
+            // Default
+            return 'Task Dependent';
+        }
+
+        function determineMilestoneType(activity) {
+            const activityName = getActivityName(activity).toLowerCase();
+            const activityId = String(getActivityId(activity)).toLowerCase();
+            
+            // Check for start milestone indicators
+            if (activityName.includes('start') || activityName.includes('begin') || 
+                activityName.includes('kick') || activityName.includes('initiat') ||
+                activityId.includes('start') || activityId.includes('ms-s')) {
+                return 'Start Milestone';
+            }
+            
+            // Check for finish milestone indicators
+            if (activityName.includes('finish') || activityName.includes('complet') || 
+                activityName.includes('deliver') || activityName.includes('end') ||
+                activityId.includes('finish') || activityId.includes('ms-f')) {
+                return 'Finish Milestone';
+            }
+
+            // Check dates to determine type
+            const startDateRaw = getStartDate(activity);
+            const finishDateRaw = getFinishDate(activity);
+            
+            const hasStartDate = startDateRaw && String(startDateRaw).trim() !== '' && parseDate(startDateRaw) !== null;
+            const hasFinishDate = finishDateRaw && String(finishDateRaw).trim() !== '' && parseDate(finishDateRaw) !== null;
+
+            if (hasStartDate && !hasFinishDate) {
+                return 'Start Milestone';
+            }
+            if (!hasStartDate && hasFinishDate) {
+                return 'Finish Milestone';
+            }
+            
+            // Default to finish milestone if can't determine
+            return 'Finish Milestone';
+        }
+
+        // Activity Status Detection
+        function getActivityStatus(activity, referenceDate = dataDateReference) {
+            // Check for explicit status in data
+            const explicitStatus = activity['Status'] || activity['Activity Status'] || activity['Task Status'];
+            if (explicitStatus) {
+                const statusLower = String(explicitStatus).toLowerCase();
+                if (statusLower.includes('not start') || statusLower === 'ns') return 'Not Started';
+                if (statusLower.includes('in progress') || statusLower.includes('in-progress') || statusLower === 'ip') return 'In Progress';
+                if (statusLower.includes('complet') || statusLower === 'c') return 'Completed';
+            }
+
+            // Check for % Complete
+            const percentComplete = activity['% Complete'] || activity['Percent Complete'] || activity['Progress'] || activity['% Done'];
+            if (percentComplete !== undefined && percentComplete !== null) {
+                const pct = parseFloat(percentComplete);
+                if (pct >= 100) return 'Completed';
+                if (pct > 0) return 'In Progress';
+                if (pct === 0) return 'Not Started';
+            }
+
+            // Auto-detect based on dates
+            const startDate = parseDate(getStartDate(activity));
+            const finishDate = parseDate(getFinishDate(activity));
+            
+            if (!startDate && !finishDate) {
+                return 'Not Started';
+            }
+
+            const refDate = referenceDate instanceof Date ? referenceDate : new Date(referenceDate);
+
+            // If finish date is in the past, completed
+            if (finishDate && finishDate < refDate) {
+                return 'Completed';
+            }
+
+            // If start date is in the future, not started
+            if (startDate && startDate > refDate) {
+                return 'Not Started';
+            }
+
+            // If start is in past and finish is in future (or no finish), in progress
+            if (startDate && startDate <= refDate) {
+                if (!finishDate || finishDate >= refDate) {
+                    return 'In Progress';
+                }
+            }
+
+            // For milestones without start (finish milestones)
+            if (!startDate && finishDate) {
+                if (finishDate < refDate) return 'Completed';
+                return 'Not Started';
+            }
+
+            // Default
+            return 'Not Started';
+        }
+
+        async function generateComprehensiveReport() {
+            if (allScheduleData.length < 2) {
+                alert('Please upload at least 2 schedule files.');
+                return;
+            }
+
+            document.getElementById('loadingOverlay').classList.add('active');
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const majorThreshold = parseInt(document.getElementById('majorChangeThreshold').value) || 5;
+            const durationThreshold = parseInt(document.getElementById('durationThreshold').value) || 3;
+
+            const currentSchedule = allScheduleData[allScheduleData.length - 1];
+            const previousSchedule = allScheduleData[allScheduleData.length - 2];
+
+            dataDateReference = currentSchedule.dataDate;
+
+            analysisResults = analyzeSchedules(
+                previousSchedule.activities,
+                currentSchedule.activities,
+                majorThreshold,
+                durationThreshold
+            );
+
+            analysisResults.currentDataDate = currentSchedule.dataDate;
+            analysisResults.previousDataDate = previousSchedule.dataDate;
+            analysisResults.totalSchedules = allScheduleData.length;
+
+            displayReport(analysisResults);
+            generateTrendCharts();
+
+            const reportDate = new Date();
+            document.getElementById('reportDate').textContent = formatDate(reportDate) + ' ' + 
+                reportDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+            const projectName = document.getElementById('clientName').value || 'Project Schedule Analysis';
+            document.getElementById('displayProjectName').textContent = projectName;
+
+            if (clientLogo) {
+                document.getElementById('logoArea').innerHTML = `<img src="${clientLogo}" alt="Client Logo">`;
+            }
+
+            const comparisonInfo = document.getElementById('comparisonInfo');
+            comparisonInfo.innerHTML = `
+                <h3>📅 Analysis Period</h3>
+                <p><strong>Baseline Date:</strong> ${formatDate(previousSchedule.dataDate)} (${previousSchedule.activityCount} activities)</p>
+                <p><strong>Current Date:</strong> ${formatDate(currentSchedule.dataDate)} (${currentSchedule.activityCount} activities)</p>
+                <p><strong>Historical Data:</strong> ${allScheduleData.length} schedule snapshots analyzed</p>
+            `;
+
+            document.getElementById('reportSection').classList.add('active');
+            document.getElementById('reportSection').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        function analyzeSchedules(lastWeek, currentWeek, majorThreshold, durationThreshold) {
+            const lastWeekMap = new Map();
+            const currentWeekMap = new Map();
+
+            lastWeek.forEach(activity => {
+                const id = getActivityId(activity);
+                if (id) lastWeekMap.set(id, activity);
+            });
+
+            currentWeek.forEach(activity => {
+                const id = getActivityId(activity);
+                if (id) currentWeekMap.set(id, activity);
+            });
+
+            const results = {
+                deltaActivities: currentWeekMap.size - lastWeekMap.size,
+                activitiesStarted: [],
+                activitiesClosed: [],
+                activitiesDelayed: [],
+                activitiesAccelerated: [],
+                majorChanges: [],
+                totalSlip: 0,
+                slipCount: 0,
+                lastWeekFinish: null,
+                currentWeekFinish: null,
+                thresholds: { major: majorThreshold, duration: durationThreshold }
+            };
+
+            currentWeekMap.forEach((activity, id) => {
+                if (!lastWeekMap.has(id)) {
+                    results.activitiesStarted.push(activity);
+                }
+            });
+
+            lastWeekMap.forEach((activity, id) => {
+                if (!currentWeekMap.has(id)) {
+                    results.activitiesClosed.push(activity);
+                }
+            });
+
+            currentWeekMap.forEach((currentActivity, id) => {
+                if (lastWeekMap.has(id)) {
+                    const lastActivity = lastWeekMap.get(id);
+                    
+                    const lastFinish = parseDate(getFinishDate(lastActivity));
+                    const currentFinish = parseDate(getFinishDate(currentActivity));
+
+                    if (lastFinish && currentFinish) {
+                        const daysDiff = Math.ceil((currentFinish - lastFinish) / (1000 * 60 * 60 * 24));
+                        
+                        if (daysDiff > 0) {
+                            results.totalSlip += daysDiff;
+                            results.slipCount++;
+                            results.activitiesDelayed.push({
+                                ...currentActivity,
+                                slipDays: daysDiff,
+                                oldFinish: getFinishDate(lastActivity),
+                                newFinish: getFinishDate(currentActivity),
+                                severity: daysDiff >= majorThreshold * 2 ? 'high' : daysDiff >= majorThreshold ? 'medium' : 'low'
+                            });
+                        } else if (daysDiff < 0) {
+                            results.activitiesAccelerated.push({
+                                ...currentActivity,
+                                improvementDays: Math.abs(daysDiff),
+                                oldFinish: getFinishDate(lastActivity),
+                                newFinish: getFinishDate(currentActivity)
+                            });
+                        }
+
+                        if (Math.abs(daysDiff) >= majorThreshold) {
+                            results.majorChanges.push({
+                                ...currentActivity,
+                                changeType: daysDiff > 0 ? 'Delayed' : 'Accelerated',
+                                daysDiff: daysDiff,
+                                oldFinish: getFinishDate(lastActivity),
+                                newFinish: getFinishDate(currentActivity),
+                                severity: Math.abs(daysDiff) >= majorThreshold * 2 ? 'high' : 'medium'
+                            });
+                        }
+                    }
+
+                    const lastDuration = getDuration(lastActivity);
+                    const currentDuration = getDuration(currentActivity);
+                    if (lastDuration && currentDuration && Math.abs(lastDuration - currentDuration) >= durationThreshold) {
+                        if (!results.majorChanges.find(c => getActivityId(c) === id)) {
+                            results.majorChanges.push({
+                                ...currentActivity,
+                                changeType: 'Duration Change',
+                                oldDuration: lastDuration,
+                                newDuration: currentDuration,
+                                severity: Math.abs(lastDuration - currentDuration) >= durationThreshold * 2 ? 'high' : 'medium'
+                            });
+                        }
+                    }
+                }
+            });
+
+            results.lastWeekFinish = getLatestFinishDate(lastWeek);
+            results.currentWeekFinish = getLatestFinishDate(currentWeek);
+            results.avgSlip = results.slipCount > 0 ? (results.totalSlip / results.slipCount).toFixed(1) : 0;
+
+            return results;
+        }
+
+        function getActivityId(activity) {
+            return activity['Activity ID'] || activity['ID'] || activity['Task ID'] || 
+                   activity['Activity'] || activity['Task'] || activity['Name'] || 
+                   activity['Task Name'] || activity['Activity Name'];
+        }
+
+        function getActivityName(activity) {
+            return activity['Activity Name'] || activity['Task Name'] || activity['Name'] || 
+                   activity['Description'] || activity['Task'] || activity['Activity'] || '';
+        }
+
+        function getActivityDisplay(activity) {
+            const id = getActivityId(activity);
+            const name = getActivityName(activity);
+            return { id, name };
+        }
+
+        function getFinishDate(activity) {
+            for (let col of dateColumns.finish) {
+                if (activity[col]) return activity[col];
+            }
+            return activity['Finish'] || activity['End Date'] || activity['Finish Date'] || 
+                   activity['Completion Date'] || activity['End'] || '';
+        }
+
+        function getStartDate(activity) {
+            for (let col of dateColumns.start) {
+                if (activity[col]) return activity[col];
+            }
+            return activity['Start'] || activity['Start Date'] || activity['Begin Date'] || '';
+        }
+
+        function getDuration(activity) {
+            const dur = activity['Duration'] || activity['Days'] || activity['Duration (days)'] || 
+                       activity['Original Duration'] || activity['Remaining Duration'];
+            return dur ? parseFloat(String(dur).replace(/[^\d.-]/g, '')) : null;
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr || String(dateStr).trim() === '') return null;
+            const date = parseFlexibleDate(dateStr);
+            return date && !isNaN(date.getTime()) ? date : null;
+        }
+
+        function getLatestFinishDate(schedule) {
+            let latest = null;
+            schedule.forEach(activity => {
+                const finish = parseDate(getFinishDate(activity));
+                if (finish && (!latest || finish > latest)) {
+                    latest = finish;
+                }
+            });
+            return latest;
+        }
+
+        function generateNarrative(results) {
+            let narrative = `This analysis examines ${results.totalSchedules} schedule snapshots spanning from ${formatDate(allScheduleData[0].dataDate)} to ${formatDate(allScheduleData[allScheduleData.length - 1].dataDate)}. `;
+            
+            narrative += `The most recent period compares ${allScheduleData[allScheduleData.length - 2].activityCount} activities from ${formatDate(results.previousDataDate)} against ${allScheduleData[allScheduleData.length - 1].activityCount} activities as of ${formatDate(results.currentDataDate)}. `;
+
+            if (results.deltaActivities > 0) {
+                narrative += `The project scope has expanded with ${results.deltaActivities} net new activities added. `;
+            } else if (results.deltaActivities < 0) {
+                narrative += `The project scope has reduced by ${Math.abs(results.deltaActivities)} activities. `;
+            } else {
+                narrative += `The project scope remains stable with no net change in activity count. `;
+            }
+
+            if (results.activitiesStarted.length > 0) {
+                narrative += `${results.activitiesStarted.length} new activities were initiated. `;
+            }
+
+            if (results.activitiesClosed.length > 0) {
+                narrative += `${results.activitiesClosed.length} activities were successfully completed or removed. `;
+            }
+
+            if (results.activitiesDelayed.length > 0) {
+                const highSeverity = results.activitiesDelayed.filter(a => a.severity === 'high').length;
+                narrative += `Schedule performance shows ${results.activitiesDelayed.length} activities experiencing delays${highSeverity > 0 ? ` (${highSeverity} high severity)` : ''}, with an average slip of ${results.avgSlip} days. `;
+            } else {
+                narrative += `Schedule performance is strong with no significant delays identified. `;
+            }
+
+            if (results.activitiesAccelerated.length > 0) {
+                narrative += `Positively, ${results.activitiesAccelerated.length} activities are ahead of their baseline schedule. `;
+            }
+
+            if (results.lastWeekFinish && results.currentWeekFinish) {
+                const daysDiff = Math.ceil((results.currentWeekFinish - results.lastWeekFinish) / (1000 * 60 * 60 * 24));
+                if (daysDiff > 0) {
+                    narrative += `The project completion date has slipped by ${daysDiff} days from ${formatDate(results.lastWeekFinish)} to ${formatDate(results.currentWeekFinish)}. `;
+                } else if (daysDiff < 0) {
+                    narrative += `The project completion date has improved by ${Math.abs(daysDiff)} days from ${formatDate(results.lastWeekFinish)} to ${formatDate(results.currentWeekFinish)}. `;
+                } else {
+                    narrative += `The project completion date remains on target at ${formatDate(results.currentWeekFinish)}. `;
+                }
+            }
+
+            if (results.majorChanges.length > 0) {
+                const highSeverity = results.majorChanges.filter(c => c.severity === 'high').length;
+                narrative += `Management attention is required for ${results.majorChanges.length} activities with major schedule changes${highSeverity > 0 ? ` including ${highSeverity} high-priority items` : ''}.`;
+            }
+
+            return narrative;
+        }
+
+        function displayReport(results) {
+            document.getElementById('narrativeText').textContent = generateNarrative(results);
+
+            let finishDelta = 0;
+            if (results.lastWeekFinish && results.currentWeekFinish) {
+                finishDelta = Math.ceil((results.currentWeekFinish - results.lastWeekFinish) / (1000 * 60 * 60 * 24));
+            }
+
+            const metrics = [
+                {
+                    label: 'Net Activity Change',
+                    value: results.deltaActivities > 0 ? `+${results.deltaActivities}` : results.deltaActivities,
+                    description: 'Change in scope',
+                    type: results.deltaActivities === 0 ? 'neutral' : results.deltaActivities > 0 ? 'warning' : 'positive',
+                    onClick: () => showDeltaActivitiesDetail(results)
+                },
+                {
+                    label: 'Project Finish Variance',
+                    value: finishDelta > 0 ? `+${finishDelta}d` : finishDelta === 0 ? 'On Track' : `${finishDelta}d`,
+                    description: 'Completion date shift',
+                    type: finishDelta === 0 ? 'positive' : finishDelta < 0 ? 'positive' : finishDelta <= 5 ? 'warning' : 'negative',
+                    onClick: () => showFinishDateDetail(results)
+                },
+                {
+                    label: 'Average Slip',
+                    value: `${results.avgSlip}d`,
+                    description: 'Mean delay per activity',
+                    type: results.avgSlip == 0 ? 'positive' : results.avgSlip <= 2 ? 'warning' : 'negative',
+                    onClick: () => showDelayedActivities(results)
+                },
+                {
+                    label: 'Activities Started',
+                    value: results.activitiesStarted.length,
+                    description: 'New work initiated',
+                    type: results.activitiesStarted.length > 0 ? 'positive' : 'neutral',
+                    onClick: () => showStartedActivities(results)
+                },
+                {
+                    label: 'Activities Completed',
+                    value: results.activitiesClosed.length,
+                    description: 'Finished this period',
+                    type: results.activitiesClosed.length > 0 ? 'positive' : 'neutral',
+                    onClick: () => showClosedActivities(results)
+                },
+                {
+                    label: 'Major Changes',
+                    value: results.majorChanges.length,
+                    description: `≥${results.thresholds.major} day shifts`,
+                    type: results.majorChanges.length === 0 ? 'positive' : results.majorChanges.length <= 3 ? 'warning' : 'negative',
+                    onClick: () => showMajorChanges(results)
+                }
+            ];
+
+            const grid = document.getElementById('metricsGrid');
+            grid.innerHTML = '';
+
+            metrics.forEach(metric => {
+                const card = document.createElement('div');
+                card.className = `metric-card ${metric.type}`;
+                card.innerHTML = `
+                    <div class="metric-label">${metric.label}</div>
+                    <div class="metric-value">${metric.value}</div>
+                    <div class="metric-description">${metric.description}</div>
+                `;
+                card.addEventListener('click', metric.onClick);
+                grid.appendChild(card);
+            });
+        }
+
+        function setChartRange(range) {
+            currentChartRange = range;
+            
+            const buttons = document.querySelectorAll('.range-toggle button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            generateTrendCharts();
+        }
+
+        function generateTrendCharts() {
+            chartInstances.forEach(chart => chart.destroy());
+            chartInstances = [];
+
+            const chartsGrid = document.getElementById('chartsGrid');
+            chartsGrid.innerHTML = '';
+
+            let filteredData = allScheduleData;
+            if (currentChartRange !== 'all' && typeof currentChartRange === 'number') {
+                filteredData = allScheduleData.slice(-currentChartRange);
+            }
+
+            const dates = filteredData.map(s => formatDate(s.dataDate));
+            const activityCounts = filteredData.map(s => s.activityCount);
+            
+            const completionDates = filteredData.map(s => {
+                const latestFinish = getLatestFinishDate(s.activities);
+                return latestFinish ? latestFinish.getTime() : null;
+            });
+
+            const avgSlipData = [];
+            for (let i = 1; i < filteredData.length; i++) {
+                const prev = filteredData[i - 1].activities;
+                const curr = filteredData[i].activities;
+                const analysis = analyzeSchedules(prev, curr, 5, 3);
+                avgSlipData.push(parseFloat(analysis.avgSlip));
+            }
+
+            createChart('Activity Count Over Time', dates, activityCounts, 'bar', '#4a5568');
+
+            if (avgSlipData.length > 0) {
+                createChart('Average Slip Trend (Days)', dates.slice(1), avgSlipData, 'line', '#f56565');
+            }
+
+            if (completionDates.every(d => d !== null)) {
+                const baselineCompletion = completionDates[0];
+                const varianceDays = completionDates.map(d => 
+                    Math.ceil((d - baselineCompletion) / (1000 * 60 * 60 * 24))
+                );
+                createChart('Project Completion Variance (Days)', dates, varianceDays, 'line', '#4299e1');
+            }
+
+            const velocityData = [];
+            for (let i = 1; i < filteredData.length; i++) {
+                const prevMap = new Map();
+                const currMap = new Map();
+                
+                filteredData[i - 1].activities.forEach(a => {
+                    const id = getActivityId(a);
+                    if (id) prevMap.set(id, a);
+                });
+                
+                filteredData[i].activities.forEach(a => {
+                    const id = getActivityId(a);
+                    if (id) currMap.set(id, a);
+                });
+
+                let completed = 0;
+                prevMap.forEach((activity, id) => {
+                    if (!currMap.has(id)) completed++;
+                });
+
+                velocityData.push(completed);
+            }
+
+            if (velocityData.length > 0) {
+                createChart('Activity Completion Velocity', dates.slice(1), velocityData, 'bar', '#48bb78');
+            }
+        }
+
+        function createChart(title, labels, data, type, color) {
+            const chartsGrid = document.getElementById('chartsGrid');
+            
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+            
+            const canvas = document.createElement('canvas');
+            container.innerHTML = `<h3>${title}</h3>`;
+            container.appendChild(canvas);
+            chartsGrid.appendChild(container);
+
+            const ctx = canvas.getContext('2d');
+            const chart = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: data,
+                        backgroundColor: type === 'bar' ? color : color + '20',
+                        borderColor: color,
+                        borderWidth: 2,
+                        fill: type === 'line',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#e2e8f0'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            chartInstances.push(chart);
+        }
+
+        function showDeltaActivitiesDetail(results) {
+            const content = `
+                <h3>New Activities: ${results.activitiesStarted.length}</h3>
+                ${createActivityTable(results.activitiesStarted)}
+                <h3 style="margin-top: 30px;">Closed Activities: ${results.activitiesClosed.length}</h3>
+                ${createActivityTable(results.activitiesClosed)}
+            `;
+            showModal('Activity Count Delta', content);
+        }
+
+        function showFinishDateDetail(results) {
+            const daysDiff = Math.ceil((results.currentWeekFinish - results.lastWeekFinish) / (1000 * 60 * 60 * 24));
+            const content = `
+                <p style="margin: 10px 0;"><strong>Baseline Latest Finish:</strong> ${formatDate(results.lastWeekFinish)} (as of ${formatDate(results.previousDataDate)})</p>
+                <p style="margin: 10px 0;"><strong>Current Latest Finish:</strong> ${formatDate(results.currentWeekFinish)} (as of ${formatDate(results.currentDataDate)})</p>
+                <p style="margin: 10px 0;"><strong>Variance:</strong> ${daysDiff > 0 ? '+' : ''}${daysDiff} days</p>
+                <p style="margin: 20px 0; padding: 15px; background: #f7fafc; border-radius: 6px; border-left: 3px solid ${daysDiff <= 0 ? '#48bb78' : daysDiff <= 5 ? '#ed8936' : '#f56565'};">
+                    <strong>Status:</strong> ${daysDiff === 0 ? 'Project is on schedule' : daysDiff < 0 ? 'Project is ahead of schedule' : daysDiff <= 5 ? 'Minor schedule slippage detected' : 'Significant schedule delay - corrective action recommended'}
+                </p>
+            `;
+            showModal('Project Completion Analysis', content);
+        }
+
+        function showDelayedActivities(results) {
+            const content = createDelayTable(results.activitiesDelayed);
+            showModal(`Delayed Activities (${results.activitiesDelayed.length})`, content);
+        }
+
+        function showStartedActivities(results) {
+            const content = createActivityTable(results.activitiesStarted);
+            showModal(`Activities Started (${results.activitiesStarted.length})`, content);
+        }
+
+        function showClosedActivities(results) {
+            const content = createActivityTable(results.activitiesClosed);
+            showModal(`Activities Completed (${results.activitiesClosed.length})`, content);
+        }
+
+        function showMajorChanges(results) {
+            const content = createMajorChangesTable(results.majorChanges);
+            showModal(`Major Schedule Changes (${results.majorChanges.length})`, content);
+        }
+
+        function createActivityTable(activities) {
+            if (activities.length === 0) return '<p style="color: #718096; padding: 20px; text-align: center;">No activities to display.</p>';
+
+            let html = '<div style="overflow-x: auto;"><table class="detail-table"><thead><tr>';
+            html += '<th>Activity ID</th><th>Activity Name</th><th>Type</th><th>Status</th><th>Start Date</th><th>Finish Date</th>';
+            html += '</tr></thead><tbody>';
+
+            activities.forEach(activity => {
+                const display = getActivityDisplay(activity);
+                const type = getActivityType(activity);
+                const status = getActivityStatus(activity);
+                
+                let typeClass = 'type-task';
+                if (type === 'Start Milestone') typeClass = 'type-start-milestone';
+                else if (type === 'Finish Milestone') typeClass = 'type-finish-milestone';
+                else if (type === 'LOE') typeClass = 'type-loe';
+
+                let statusClass = 'status-not-started';
+                if (status === 'In Progress') statusClass = 'status-in-progress';
+                else if (status === 'Completed') statusClass = 'status-completed';
+
+                const startDateValue = getStartDate(activity);
+                const finishDateValue = getFinishDate(activity);
+                const displayStart = (startDateValue && String(startDateValue).trim() !== '') ? startDateValue : '-';
+                const displayFinish = (finishDateValue && String(finishDateValue).trim() !== '') ? finishDateValue : '-';
+
+                html += `<tr>
+                    <td><strong>${display.id || 'N/A'}</strong></td>
+                    <td>${display.name || 'N/A'}</td>
+                    <td><span class="status-badge ${typeClass}">${type}</span></td>
+                    <td><span class="status-badge ${statusClass}">${status}</span></td>
+                    <td>${displayStart}</td>
+                    <td>${displayFinish}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            return html;
+        }
+
+        function createDelayTable(activities) {
+            if (activities.length === 0) return '<p style="color: #718096; padding: 20px; text-align: center;">No delayed activities.</p>';
+
+            activities.sort((a, b) => {
+                const severityOrder = { high: 0, medium: 1, low: 2 };
+                return severityOrder[a.severity] - severityOrder[b.severity] || b.slipDays - a.slipDays;
+            });
+
+            let html = '<div style="overflow-x: auto;"><table class="detail-table"><thead><tr>';
+            html += '<th>Activity ID</th><th>Activity Name</th><th>Type</th><th>Status</th><th>Severity</th><th>Baseline Finish</th><th>Current Finish</th><th>Slip (Days)</th>';
+            html += '</tr></thead><tbody>';
+
+            activities.forEach(activity => {
+                const display = getActivityDisplay(activity);
+                const type = getActivityType(activity);
+                const status = getActivityStatus(activity);
+                
+                let typeClass = 'type-task';
+                if (type === 'Start Milestone') typeClass = 'type-start-milestone';
+                else if (type === 'Finish Milestone') typeClass = 'type-finish-milestone';
+                else if (type === 'LOE') typeClass = 'type-loe';
+
+                let statusClass = 'status-not-started';
+                if (status === 'In Progress') statusClass = 'status-in-progress';
+                else if (status === 'Completed') statusClass = 'status-completed';
+
+                const severityClass = activity.severity === 'high' ? 'alert-high' : activity.severity === 'medium' ? 'alert-medium' : 'alert-low';
+                html += `<tr class="${severityClass}">
+                    <td><strong>${display.id || 'N/A'}</strong></td>
+                    <td>${display.name || 'N/A'}</td>
+                    <td><span class="status-badge ${typeClass}">${type}</span></td>
+                    <td><span class="status-badge ${statusClass}">${status}</span></td>
+                    <td><span class="status-badge status-delayed">${activity.severity.toUpperCase()}</span></td>
+                    <td>${activity.oldFinish}</td>
+                    <td>${activity.newFinish}</td>
+                    <td><strong>+${activity.slipDays}</strong></td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            return html;
+        }
+
+        function createMajorChangesTable(changes) {
+            if (changes.length === 0) return '<p style="color: #718096; padding: 20px; text-align: center;">No major changes detected - excellent schedule stability.</p>';
+
+            changes.sort((a, b) => {
+                const severityOrder = { high: 0, medium: 1, low: 2 };
+                return severityOrder[a.severity] - severityOrder[b.severity];
+            });
+
+            let html = '<div style="overflow-x: auto;"><table class="detail-table"><thead><tr>';
+            html += '<th>Activity ID</th><th>Activity Name</th><th>Type</th><th>Status</th><th>Change Type</th><th>Severity</th><th>Details</th>';
+            html += '</tr></thead><tbody>';
+
+            changes.forEach(change => {
+                const display = getActivityDisplay(change);
+                const type = getActivityType(change);
+                const status = getActivityStatus(change);
+                
+                let typeClass = 'type-task';
+                if (type === 'Start Milestone') typeClass = 'type-start-milestone';
+                else if (type === 'Finish Milestone') typeClass = 'type-finish-milestone';
+                else if (type === 'LOE') typeClass = 'type-loe';
+
+                let statusClass = 'status-not-started';
+                if (status === 'In Progress') statusClass = 'status-in-progress';
+                else if (status === 'Completed') statusClass = 'status-completed';
+
+                let details = '';
+                let badgeClass = 'status-modified';
+                
+                if (change.daysDiff !== undefined) {
+                    if (change.changeType === 'Accelerated') {
+                        details = `Improved by ${Math.abs(change.daysDiff)} days (${change.oldFinish} → ${change.newFinish})`;
+                        badgeClass = 'status-accelerated';
+                    } else {
+                        details = `Delayed by ${Math.abs(change.daysDiff)} days (${change.oldFinish} → ${change.newFinish})`;
+                        badgeClass = 'status-delayed';
+                    }
+                } else if (change.oldDuration !== undefined) {
+                    details = `Duration: ${change.oldDuration}d → ${change.newDuration}d (${change.newDuration > change.oldDuration ? '+' : ''}${change.newDuration - change.oldDuration}d)`;
+                }
+                
+                const severityClass = change.severity === 'high' ? 'alert-high' : 'alert-medium';
+                html += `<tr class="${severityClass}">
+                    <td><strong>${display.id || 'N/A'}</strong></td>
+                    <td>${display.name || 'N/A'}</td>
+                    <td><span class="status-badge ${typeClass}">${type}</span></td>
+                    <td><span class="status-badge ${statusClass}">${status}</span></td>
+                    <td><span class="status-badge ${badgeClass}">${change.changeType}</span></td>
+                    <td><span class="status-badge">${change.severity.toUpperCase()}</span></td>
+                    <td>${details}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            return html;
+        }
+
+        function showModal(title, content) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalContent').innerHTML = content;
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        async function exportToPDF() {
+            if (typeof jsPDF === 'undefined' || typeof html2canvas === 'undefined') {
+                alert('PDF export libraries not loaded. Please check your internet connection.');
+                return;
+            }
+
+            const reportSection = document.getElementById('reportSection');
+            const originalButtons = reportSection.querySelector('.action-buttons');
+            originalButtons.style.display = 'none';
+
+            try {
+                const canvas = await html2canvas(reportSection, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                });
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= 297;
+
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= 297;
+                }
+
+                const projectName = document.getElementById('clientName').value || 'Schedule_Report';
+                const reportDate = new Date().toISOString().split('T')[0].replace(/-/g, '');
+                const fileName = `${projectName.replace(/\s+/g, '_')}_${reportDate}.pdf`;
+                
+                pdf.save(fileName);
+            } catch (error) {
+                console.error('PDF export error:', error);
+                alert('Error generating PDF. Please try using Print to PDF instead.');
+            } finally {
+                originalButtons.style.display = 'flex';
+            }
+        }
+
+        function clearData() {
+            if (confirm('Are you sure you want to clear all data and start over?')) {
+                allScheduleData = [];
+                pendingScheduleData = [];
+                analysisResults = null;
+                document.getElementById('scheduleFiles').value = '';
+                document.getElementById('fileList').style.display = 'none';
+                document.getElementById('reportSection').classList.remove('active');
+                document.getElementById('generateBtn').disabled = true;
+                
+                chartInstances.forEach(chart => chart.destroy());
+                chartInstances = [];
+            }
+        }
+    </script>
+</body>
+</html>
