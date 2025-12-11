@@ -1,0 +1,3703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q667P6PD31"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q667P6PD31');
+</script>
+  <!-- Character set: Ensures correct text encoding -->
+  <meta charset="UTF-8" />
+  <!-- Page Title -->
+  <title>Gantt Planner</title>
+  <!-- Bootstrap 5 CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
+  >
+  <style>
+    /*
+     * We rely on native sizing to prevent clipping at bottom.
+     * The last row is a 'filler row' that remains always at bottom.
+     */
+    html,
+    body {
+      height: 100%; /* Fill the screen height */
+      margin: 0; /* No default margin */
+      padding: 0; /* No default padding */
+      overflow: hidden; /* Hide scrollbars to keep the board clean */
+      font-family: 'Montserrat', sans-serif; /* Use Montserrat or fallback */
+    }
+
+    /*
+     * The navbar is sticky at the top. Height is 250px as requested.
+     */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background-color: rgba(28, 23, 62,1) !important;
+      color: #fff !important;
+      padding: 0.25rem 0.5rem;
+      width: 100%;
+      height: 250px;
+      overflow-y: visible !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      border-bottom: 4px solid #EA1F27;
+      display: flex;
+      align-items: center;
+    }
+
+    /*
+     * Container inside navbar => flex arrangement for columns
+     */
+    .navbar .container-fluid {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+      flex-wrap: nowrap;
+    }
+
+    /*
+     * Placeholder image => max-height 100px, so it remains centered. No margin forcing.
+     */
+    #placeholderImage {
+      max-height: 100px;
+      width: auto;
+      object-fit: contain;
+      margin: 0;
+    }
+
+    /* Each toolbar column => displayed horizontally, with a red border on the right except last col. */
+    .toolbar-column {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding-right: 0.5rem;
+      align-items: flex-start;
+      border-right: 1px solid #EA1F27;
+    }
+    .toolbar-column:last-child {
+      border-right: none;
+      padding-right: 0;
+    }
+
+    /*
+     * Each group in the toolbar => typically repeated label+input sets.
+     */
+    .toolbar-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      color: #fff;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .toolbar-group label {
+      margin-bottom: 0;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /*
+     * Because user wants timescale column to be exactly 100px wide
+     */
+    #timescaleColumn {
+      width: 100px; /* Force this first column to 100px width */
+      min-width: 100px;
+      max-width: 100px;
+      flex-shrink: 0;
+      flex-grow: 0;
+      overflow: visible;
+    }
+
+    /* Form controls => dark background, red border, white text. */
+    .navbar input.form-control,
+    .navbar select.form-select {
+      background-color: #1C173E;
+      color: #fff;
+      border: 1px solid #EA1F27;
+      font-weight: 500;
+    }
+    .navbar input.form-control:focus,
+    .navbar select.form-select:focus {
+      outline: 1px solid #fff;
+      box-shadow: 0 0 5px 0 #fff;
+    }
+
+    /* Navbar buttons => transparent bg, white border+text, red hover */
+    .navbar .btn {
+      border: 1px solid #fff;
+      color: #fff;
+      font-weight: 600;
+      padding: 2px 8px;
+      background: transparent;
+    }
+    .navbar .btn:hover {
+      background-color: #EA1F27;
+      color: #fff;
+      border-color: #EA1F27;
+    }
+
+    /* Gantt container => the main area below the navbar. */
+    .gantt-container {
+      position: relative;
+      height: calc(100% - 100px);
+      margin-bottom: 0;
+    }
+
+    /* Table wrapper => scrollable area for the Gantt table. */
+    .table-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: auto;
+      box-sizing: border-box;
+      padding-bottom: 100px;
+    }
+
+    /* The main Gantt table => full width, collapsed borders, fixed layout. */
+    #ganttTable {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      position: relative;
+    }
+    #ganttTable,
+    #ganttTable thead th,
+    #ganttTable tbody td {
+      border: 1px solid #000;
+    }
+
+    /*
+     * Sticky table header => stays visible when scrolling vertically
+     */
+    #ganttTable thead {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: #f8f9fa;
+    }
+    #ganttTable thead th {
+      background-color: #f8f9fa;
+      text-align: center;
+      font-size: 0.9rem;
+      padding: 4px 8px;
+      box-sizing: border-box;
+      overflow: hidden;
+      text-overflow: ellipses;
+    }
+
+    /* Make the first two header columns sticky */
+    #nameHeader {
+      width: 300px;
+      text-align: center;
+      font-weight: bold;
+      background-color: #f8f9fa;
+      position: sticky;
+      left: 0;
+      z-index: 55;
+    }
+    #disciplineHeader {
+      width: 150px;
+      text-align: center;
+      font-weight: bold;
+      background-color: #f8f9fa;
+      position: sticky;
+      left: 300px;
+      z-index: 54;
+    }
+
+    /* Timescale headers => black border, subtle background. */
+    .timescale-header {
+      background-color: #e9ecef;
+      min-width: 50px;
+      border: 2px solid #000;
+    }
+
+    /*
+     * Gantt table body => each row.
+     */
+    #ganttTable tbody {
+      position: relative;
+    }
+    .gantt-row {
+      height: var(--row-height);
+      transition: outline 0.2s;
+    }
+    .gantt-row.selected {
+      background-color: #fff3cd;
+    }
+    .gantt-row.drag-highlight {
+      outline: 3px solid #EA1F27 !important;
+      position: relative;
+      z-index: 9999;
+    }
+
+    /* Filler row => optional. */
+    .filler-row {
+      height: 40px;
+    }
+
+    /* Left "Name" cell => sticky to the left. */
+    .name-cell {
+      position: sticky;
+      left: 0;
+      background-color: #f0f0f0;
+      box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+      z-index: 9;
+      width: 300px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: var(--row-height);
+      box-sizing: border-box;
+      cursor: move;
+    }
+    .name-cell span {
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipses;
+      display: inline-block;
+      max-width: 90%;
+    }
+
+    /* The second sticky Discipline cell => pinned next to the name cell */
+    .discipline-cell {
+      position: sticky;
+      left: 300px;
+      background-color: #f0f0f0;
+      box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+      z-index: 9;
+      width: 150px;
+      justify-content: center;
+      align-items: center;
+      height: var(--row-height);
+      box-sizing: border-box;
+      text-align:center;
+      cursor: move;
+      border: 1px #000;
+    }
+
+    /* The bar cell => contains the Gantt bars over the weeks. */
+    .bar-cell {
+      position: relative;
+      padding: 0;
+    }
+    .bar-row-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    /*
+     * Gantt bar => absolutely placed in bar-row-container.
+     */
+    .bar {
+      position: absolute;
+      height: calc(var(--row-height) - 20px);
+      left: 0;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+      user-select: none;
+      opacity: 0.7;
+      overflow: hidden;
+      z-index: 0;
+      box-sizing: border-box;
+      border: 2px solid #000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    .bar.selected {
+      outline: none;
+    }
+    .bar.highlighted {
+      outline: 3px solid #0d6efd;
+      opacity: 0.9;
+    }
+    .bar.drag-highlight {
+      border: 3px solid #EA1F27 !important;
+      position: relative;
+      z-index: 9999;
+    }
+
+    /* Text inside bar => absolutely centered vertically. */
+    .bar-text {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      white-space: nowrap;
+      pointer-events: none;
+      font-weight: 500;
+      padding: 0 4px;
+    }
+
+    /* Bar resize handles => appear on edges if admin. */
+    .bar-handle {
+      position: absolute;
+      top: 0;
+      width: 6px;
+      height: 100%;
+      cursor: col-resize;
+      background-color: rgba(255, 255, 255, 0.4);
+      z-index: 2;
+    }
+    .bar-handle.left {
+      left: 0;
+      border-radius: 4px 0 0 4px;
+    }
+    .bar-handle.right {
+      right: 0;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Overlap hatch => diagonal stripes if bars overlap. */
+    .overlap-hatch {
+      position: absolute;
+      height: calc(var(--row-height) - 16px);
+      background: repeating-linear-gradient(
+        45deg,
+        #EA1F27,
+        #EA1F27 2px,
+        transparent 2px,
+        transparent 4px
+      );
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /*
+     * barEditor, lineEditor => pop-up forms for editing bar/line data
+     */
+    #barEditor,
+    #lineEditor {
+      position: absolute;
+      display: none;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 8px;
+      border-radius: 6px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      max-height: 80vh;
+      overflow: auto;
+      max-width: 90vw;
+    }
+    #barEditor {
+      min-width: 200px;
+    }
+    #lineEditor {
+      min-width: 280px;
+    }
+    .attribute-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .attribute-row label {
+      flex: 0 0 auto;
+      margin-right: 6px;
+      font-weight: 500;
+    }
+    .attribute-row input,
+    .attribute-row select {
+      flex: 1 1 auto;
+    }
+    #barEditorActions,
+    #lineEditorActions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    /*
+     * Filter modal => advanced line/bar filtering
+     */
+    #filterModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      min-width: 400px;
+      max-height: 90vh;
+      overflow: auto;
+      font-size: 0.85rem;
+    }
+    #filterModal h3 {
+      margin-top: 0;
+      font-size: 1rem;
+    }
+    .filter-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .filter-card {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 6px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .filter-card h5 {
+      margin-top: 0;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    #filterActions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    /*
+     * Settings modal => theme color pickers, hidden by default
+     */
+    #settingsModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 6px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      min-width: 300px;
+      max-height: 80vh;
+      max-width: 90vw;
+      overflow: auto;
+    }
+    #settingsModal h3 {
+      margin-top: 0;
+    }
+    #settingsModal label {
+      display: block;
+      margin-top: 8px;
+    }
+    #settingsActions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .color-picker {
+      width: 60px;
+      height: 30px;
+      padding: 0;
+      border: none;
+      cursor: pointer;
+    }
+
+    /*
+     * CSV Edit modal => large text area for CSV, hidden by default
+     */
+    #csvEditModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 60%;
+      height: 60%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      z-index: 99999;
+      overflow: auto;
+    }
+    #csvTextarea {
+      width: 100%;
+      height: 70%;
+      font-family: 'Montserrat';
+      font-size: 0.9rem;
+    }
+    #csvEditModalActions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /*
+     * Dark theme => override backgrounds, text, etc.
+     */
+    body.dark-theme {
+      background-color: #212529;
+      color: #fff;
+    }
+    body.dark-theme .navbar {
+      background-color: #1C173E !important;
+      color: #fff !important;
+      border-bottom: 4px solid #EA1F27;
+    }
+    body.dark-theme #ganttTable thead th,
+    body.dark-theme .timescale-header {
+      background-color: #495057;
+      color: #fff;
+    }
+    body.dark-theme .name-cell {
+      background-color: #444;
+      color: #fff;
+      box-shadow: 1px 1px 3px rgba(255, 255, 255, 0.2);
+    }
+    body.dark-theme .bar-text {
+      color: #fff;
+    }
+    body.dark-theme
+    #barEditor,
+    body.dark-theme
+    #lineEditor,
+    body.dark-theme
+    #filterModal,
+    body.dark-theme
+    #settingsModal,
+    body.dark-theme
+    #csvEditModal {
+      background: #343a40;
+      color: #fff;
+      border: 1px solid #495057;
+    }
+    body.dark-theme input,
+    body.dark-theme select,
+    body.dark-theme textarea {
+      background: #495057;
+      color: #fff;
+      border: 1px solid #6c757d;
+    }
+    body.dark-theme .bar {
+      border: 2px solid #fff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    /*
+     * Slicers => horizontally inside .slicers-horizontal if needed
+     */
+    .slicers-horizontal {
+      display: flex;
+      padding: 10px;
+      flex-direction: row;
+      gap: 1rem;
+      align-items: flex-end;
+      overflow-y: auto;
+      font-size: 4px;
+      box-sizing: border-box;
+    }
+    .slicer-group label {
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
+      color: #fff;
+      font-weight: 600;
+    }
+    .slicer-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      align-items: flex-start;
+      font-size: 15px;
+    }
+    .slicer-group button {
+      width: 60px;
+      align-self: flex-start;
+      font-size: 10px;
+    }
+
+    @media print {
+      .navbar,
+      #barEditor,
+      #lineEditor,
+      #filterModal,
+      #settingsModal,
+      #csvEditModal {
+        display: none !important;
+      }
+    }
+
+    /*
+     * Legend => stacked vertical for each bar color.
+     */
+    .legend-container-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .legend-item {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 4px;
+    }
+    .legend-swatch {
+      width: 16px;
+      height: 16px;
+    }
+
+    /*
+     * Make the hamburger dropdown able to spill over the table.
+     * data-bs-auto-close="outside" ensures it can auto-close upon mouse leaving.
+     */
+    .dropdown-menu {
+      position: absolute !important; /* let it expand out of the navbar container */
+      z-index: 9999 !important;     /* keep it above the table content */
+    }
+
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <!-- Logo (left) -->
+      <img
+        id="placeholderImage"
+        src="https://raw.githubusercontent.com/kev11wolf/public/refs/heads/main/cushlogo.jpg"
+        alt="Placeholder Logo"
+      />
+
+      <!-- Column 1 => Timescale (width:100px) -->
+      <div class="toolbar-column" id="timescaleColumn" style="width: 100px;">
+        <div class="toolbar-group">
+          <span style="font-weight:700;">Timescale</span>
+          <div class="timescale-row">
+            <div class="timescale-col">
+              <label for="startYearInput" class="form-label">Start Year:</label>
+              <input id="startYearInput" type="number" class="form-control form-control-sm" value="2025" />
+              <label for="startWeekInput" class="form-label">Start Week:</label>
+              <input id="startWeekInput" type="number" class="form-control form-control-sm" value="1" />
+              <!-- Added: Quick timescale buttons under the week input -->
+              <div class="d-flex flex-column gap-1 mt-1"><!-- Container for vertical stacked buttons -->
+                <button id="todayBtn" class="btn btn-sm"><!-- "Today" button -->
+                  Today<!-- Label -->
+                </button>
+                <button id="thisYearBtn" class="btn btn-sm"><!-- "This year" button -->
+                  This year<!-- Label -->
+                </button>
+              </div>
+              <!-- End added buttons -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 2 => Zoom Sliders (tooltips for readouts) -->
+      <div class="toolbar-column">
+        <div class="toolbar-group">
+          <span style="font-weight:700;">Zoom</span>
+          <label for="zoomSlider" class="form-label m-0">Row Height:</label>
+          <!-- Added: Row height slider with left/right arrow buttons -->
+          <div class="d-flex align-items-center gap-1"><!-- Horizontal container for arrows + slider -->
+            <button id="rowHeightDecBtn" class="btn btn-sm" title="Decrease row height">◀</button><!-- Decrease row height -->
+            <input
+              type="range"
+              class="form-range"
+              id="zoomSlider"
+              min="30"
+              max="350"
+              step="10"
+              value="40"
+            /><!-- Existing slider (unchanged attributes) -->
+            <button id="rowHeightIncBtn" class="btn btn-sm" title="Increase row height">▶</button><!-- Increase row height -->
+          </div>
+          <!-- End: Row height with arrows -->
+
+          <label for="heightZoomSlider" class="form-label m-0">Column Width:</label>
+          <!-- Added: Column width slider with left/right arrow buttons -->
+          <div class="d-flex align-items-center gap-1"><!-- Horizontal container for arrows + slider -->
+            <button id="colWidthDecBtn" class="btn btn-sm" title="Decrease column width">◀</button><!-- Decrease column width -->
+            <!-- UPDATED: Set max to 150 and initial value to 100 as requested -->
+            <input
+              type="range"
+              class="form-range"
+              id="heightZoomSlider"
+              min="5"
+              max="150" 
+              step="10"
+              value="100" 
+            /><!-- Existing slider (attributes updated per request) -->
+            <button id="colWidthIncBtn" class="btn btn-sm" title="Increase column width">▶</button><!-- Increase column width -->
+          </div>
+          <!-- End: Column width with arrows -->
+        </div>
+      </div>
+
+      <!-- Column 3 => Search user input, plus filter modal open -->
+      <div class="toolbar-column">
+        <div class="toolbar-group">
+          <span style="font-weight:700;">Search</span>
+          <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Filter lines/bars..." />
+          <button id="filterBtn" class="btn btn-sm mt-1"> Filter </button>
+        </div>
+      </div>
+
+      <!-- Column 4 => Legend -->
+      <div class="toolbar-column">
+        <div class="toolbar-group legend-container-vertical" id="legendContainer">
+          <div class="legend-item">
+            <div class="legend-swatch" id="legendSecuredSwatch"></div>
+            <span>Secured</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" id="legendProposedSwatch"></div>
+            <span>Proposed</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" id="legendOpportunitySwatch"></div>
+            <span>Opportunity</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" id="legendFutureSwatch"></div>
+            <span>Future</span>
+          </div>
+        </div>
+        <!-- Added Undo button here, removing it from the hamburger menu -->
+        <button id="undoBtn" class="btn btn-sm" style="margin-top:10px;">Undo</button>
+      </div>
+
+      <!-- Column 5 => Person Slicers -->
+      <div class="toolbar-column" style="align-items:center;">
+        <div class="toolbar-group" style="align-items:center;">
+          <span style="font-weight:700;">Staff Filters</span>
+          <div class="slicers-horizontal">
+            <div class="slicer-group">
+              <label>Discipline</label>
+              <button id="clearDisciplineSlicerBtn" class="btn btn-sm" >Clear</button>
+              <!-- Changed to multiple -->
+              <select id="slicerDisciplineSelect" class="form-select form-select-sm" multiple></select>
+            </div>
+            <div class="slicer-group">
+              <label>Experience</label>
+              <button id="clearExperienceSlicerBtn" class="btn btn-sm" >Clear</button>
+              <!-- Changed to multiple -->
+              <select id="slicerExperienceSelect" class="form-select form-select-sm" multiple></select>
+            </div>
+            <div class="slicer-group">
+              <label>Location</label>
+              <button id="clearLocationSlicerBtn" class="btn btn-sm" >Clear</button>
+              <!-- Changed to multiple -->
+              <select id="slicerLocationSelect" class="form-select form-select-sm" multiple></select>
+            </div>
+          </div>
+          <button id="clearAllFiltersBtn" class="btn btn-sm" style="margin-top:10px;">Clear Staff Filters</button>
+        </div>
+      </div>
+
+      <!-- Column 6 => Opportunity Slicers -->
+      <div class="toolbar-column" style="align-items:center;">
+        <div class="toolbar-group" style="align-items:center;">
+          <span style="font-weight:700;">Opportunity Filters</span>
+          <div class="slicers-horizontal">
+            <div class="slicer-group">
+              <label>Discipline</label>
+              <button id="clearDisciplineSlicerOppBtn" class="btn btn-sm" >Clear</button>
+              <!-- Changed to multiple -->
+              <select id="slicerDisciplineSelectOpp" class="form-select form-select-sm" multiple></select>
+            </div>
+            <div class="slicer-group">
+              <label>Client</label>
+              <button id="clearClientSlicerOppBtn" class="btn btn-sm">Clear</button>
+              <!-- Changed to multiple -->
+              <select id="slicerClientSelectOpp" class="form-select form-select-sm" multiple></select>
+            </div>
+            <div class="slicer-group">
+              <label>Experience</label>
+              <button id="clearExperienceSlicerOppBtn" class="btn btn-sm" >Clear</button>
+              <!-- Changed to multiple -->
+              <select id="slicerExperienceSelectOpp" class="form-select form-select-sm" multiple></select>
+            </div>
+            <div class="slicer-group">
+              <label>Location</label>
+              <button id="clearLocationSlicerOppBtn" class="btn btn-sm" >Clear</button>
+              <!-- Changed to multiple -->
+              <select id="slicerLocationSelectOpp" class="form-select form-select-sm" multiple></select>
+            </div>
+          </div>
+          <button id="clearAllOppFiltersBtn" class="btn btn-sm" style="margin-top:10px;">Clear Opp. Filters</button>
+        </div>
+      </div>
+
+      <!-- Column 7 => Sort lines & bars horizontally, line type reinserted in the line-level sort, Clear All Sort below -->
+      <div class="toolbar-column">
+        <div class="toolbar-group" style="flex-direction: row; gap: 1rem; align-items:flex-end;">
+          <!-- Sort Lines By side by side with Sort Bars By -->
+          <div style="display:flex; flex-direction:column;">
+            <span style="font-weight:700;">Sort Line Items by:</span>
+            <label style="font-size:0.8rem;">Field:</label>
+            <select id="sortFieldSelect" class="form-select form-select-sm">
+              <option value="">None</option>
+              <option value="name">Name</option>
+              <option value="client">Client</option>
+              <option value="discipline">Discipline</option>
+              <option value="experience">Experience</option>
+              <option value="officeLocation">Office Location</option>
+              <option value="geoLocation">Geo Location</option>
+              <option value="lineType">Line Type</option><!-- reinserted lineType -->
+            </select>
+            <label style="font-size:0.8rem;">Direction:</label>
+            <select id="sortDirectionSelect" class="form-select form-select-sm">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </div>
+          <div style="display:flex; flex-direction:column;">
+            <span style="font-weight:700;">Sort Projects by:</span>
+            <label style="font-size:0.8rem;">Field:</label>
+            <select id="sortFieldSelect2" class="form-select form-select-sm">
+              <option value="">None</option>
+              <option value="label">Label</option>
+              <option value="projectName">Project Name</option>
+              <option value="client">Client</option>
+              <option value="discipline">Discipline</option>
+              <option value="experience">Experience</option>
+              <option value="location">Location</option>
+              <option value="assignedTo">Assigned To</option>
+              <option value="startAbsWeek">Start (Absolute)</option>
+              <option value="finishAbsWeek">Finish (Absolute)</option>
+              <option value="length">Duration</option>
+              <option value="LOE">LOE</option>
+              <option value="proposed">Proposed</option>
+              <option value="type">Bar Type</option>
+            </select>
+            <label style="font-size:0.8rem;">Direction:</label>
+            <select id="sortDirectionSelect2" class="form-select form-select-sm">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Clear All Sort is stacked below both sorts -->
+        <div class="toolbar-group" style="margin-top:8px;">
+          <button id="clearAllSortBtn" class="btn btn-sm">Clear All Sort</button>
+        </div>
+      </div>
+
+      <!-- Hamburger Column => with data-bs-auto-close="outside", position absolute so it can hang over the table -->
+      <div class="toolbar-column" id="hamburgerColumn" style="margin-left:auto;">
+        <div class="dropdown" data-bs-auto-close="outside">
+          <button class="btn btn-sm dropdown-toggle" type="button" id="hamburgerDropdownMenu" data-bs-toggle="dropdown" aria-expanded="false">
+            ☰
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="hamburgerDropdownMenu">
+            <li><a class="dropdown-item" href="#" id="adminToggleBtn">Admin</a></li>
+            <li><a class="dropdown-item" href="#" id="themeToggleBtn">Theme</a></li>
+            <li><a class="dropdown-item" href="#" id="aboutToggleBtn">About</a></li>
+            <li><a class="dropdown-item" href="#" id="csvEditToggleBtn" style="display:none;">Edit CSV</a></li>
+            <li><a class="dropdown-item" href="#" id="overviewToggleBtn">Overview</a></li>
+            <!-- Removed the Undo button from here, now a dedicated button -->
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" id="importCsvBtn">Import CSV</a></li>
+            <li><a class="dropdown-item" href="#" id="downloadCsvBtn">Export CSV</a></li>
+            <li><a class="dropdown-item" href="#" id="printBtn">Print/PDF</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" id="clearStorageBtn">Clear Storage</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main table area -->
+  <div class="gantt-container">
+    <div class="table-wrapper" id="tableWrapper">
+      <table id="ganttTable">
+        <thead>
+          <!-- Timescale built dynamically -->
+        </thead>
+        <tbody id="tableBody">
+          <!-- Rows generated dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bar editor -->
+  <div id="barEditor">
+    <!-- "Assigned to" remains at top, user-editable -->
+    <div class="attribute-row">
+      <label for="barAssignedToInput">Assigned to:</label>
+      <input type="text" id="barAssignedToInput" placeholder="Assigned to..." />
+    </div>
+
+    <!-- Bar Label -->
+    <div class="attribute-row">
+      <label for="barLabelInput">Bar Label:</label>
+      <input type="text" id="barLabelInput" placeholder="Bar Label..." />
+    </div>
+    <div class="attribute-row">
+      <label for="barProjectNameInput">Project Name:</label>
+      <input type="text" id="barProjectNameInput" placeholder="Project Name..." />
+    </div>
+    <div class="attribute-row">
+      <label for="barClientInput">Client:</label>
+      <input type="text" id="barClientInput" placeholder="Client..." />
+    </div>
+    <div class="attribute-row">
+      <label for="barDisciplineInput">Discipline:</label>
+      <input type="text" id="barDisciplineInput" placeholder="Discipline..." />
+    </div>
+    <div class="attribute-row">
+      <label for="barExperienceInput">Experience:</label>
+      <input type="text" id="barExperienceInput" placeholder="Experience..." />
+    </div>
+    <div class="attribute-row">
+      <label for="barLOEInput">LOE:</label>
+      <input type="text" id="barLOEInput" placeholder="LOE..." />
+    </div>
+    <div class="attribute-row">
+      <label for="barLocationInput">Location:</label>
+      <input type="text" id="barLocationInput" placeholder="Location..." />
+    </div>
+
+    <!-- Type select => below other fields -->
+    <div class="attribute-row">
+      <label for="barTypeSelect">Type (affects color):</label>
+      <select id="barTypeSelect">
+        <option value="secured">Secured</option>
+        <option value="proposed">Proposed</option>
+        <option value="opportunity">Opportunity</option>
+        <option value="future">Future</option>
+      </select>
+    </div>
+
+    <!-- Proposed -> uneditable in user mode, only admin can edit -->
+    <div class="attribute-row">
+      <label for="barProposedSelect">Proposed:</label>
+      <select id="barProposedSelect">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+
+    <!-- Start/End => same as before -->
+    <div class="attribute-row">
+      <label for="startYearSelect">Start (Y/W):</label>
+      <select id="startYearSelect"></select>
+      <select id="startWeekSelect"></select>
+    </div>
+    <div class="attribute-row">
+      <label for="endYearSelect">End (Y/W):</label>
+      <select id="endYearSelect"></select>
+      <select id="endWeekSelect"></select>
+    </div>
+    <div id="barEditorActions">
+      <button id="barDeleteBtn" class="btn btn-sm">Delete Bar</button>
+      <button id="barEditorOkBtn" class="btn btn-sm">OK</button>
+      <button id="barEditorCancelBtn" class="btn btn-sm">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Line editor -->
+  <div id="lineEditor">
+    <div class="attribute-row">
+      <label for="lineNameInput">Name:</label>
+      <input type="text" id="lineNameInput" placeholder="Name..." />
+    </div>
+    <div class="attribute-row">
+      <label for="lineClientInput">Client:</label>
+      <input type="text" id="lineClientInput" placeholder="Client..." />
+    </div>
+    <div class="attribute-row">
+      <label for="lineDisciplineInput">Discipline:</label>
+      <input type="text" id="lineDisciplineInput" placeholder="Discipline..." />
+    </div>
+    <div class="attribute-row">
+      <label for="lineExperienceInput">Experience:</label>
+      <input type="text" id="lineExperienceInput" placeholder="Experience..." />
+    </div>
+    <div class="attribute-row">
+      <label for="lineOfficeLocationInput">Office Location:</label>
+      <input type="text" id="lineOfficeLocationInput" placeholder="Office Location..." />
+    </div>
+    <div class="attribute-row">
+      <label for="lineGeoLocationInput">Geo Location:</label>
+      <input type="text" id="lineGeoLocationInput" placeholder="Geo Location..." />
+    </div>
+    <div class="attribute-row">
+      <label for="lineTypeInput">Type:</label>
+      <input type="text" id="lineTypeInput" placeholder="Type..." />
+    </div>
+    <div id="lineEditorActions">
+      <button id="lineDeleteBtn" class="btn btn-sm">Delete Line Item</button>
+      <button id="lineEditorOkBtn" class="btn btn-sm">OK</button>
+      <button id="lineEditorCancelBtn" class="btn btn-sm">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Filter modal (Line type removed from line filters) -->
+  <div id="filterModal">
+    <h3>Filter Lines/Bars</h3>
+    <div class="filter-container">
+      <!-- Left filter card => line item fields (no lineType) -->
+      <div class="filter-card">
+        <h5>Line Item Filters</h5>
+        <label for="filterLineName">Name:</label>
+        <select id="filterLineName" class="form-select form-select-sm"></select>
+
+        <label for="filterLineClient">Client:</label>
+        <select id="filterLineClient" class="form-select form-select-sm"></select>
+
+        <label for="filterLineDiscipline">Discipline:</label>
+        <select id="filterLineDiscipline" class="form-select form-select-sm"></select>
+
+        <label for="filterLineExperience">Experience:</label>
+        <select id="filterLineExperience" class="form-select form-select-sm"></select>
+
+        <label for="filterLineOfficeLocation">Office Location:</label>
+        <select id="filterLineOfficeLocation" class="form-select form-select-sm"></select>
+
+        <label for="filterLineGeoLocation">Geo Location:</label>
+        <select id="filterLineGeoLocation" class="form-select form-select-sm"></select>
+      </div>
+
+      <!-- Right filter card => bar attributes (Type still present) -->
+      <div class="filter-card">
+        <h5>Bar Filters</h5>
+        <label for="filterBarProjectName">Project Name:</label>
+        <select id="filterBarProjectName" class="form-select form-select-sm"></select>
+
+        <label for="filterBarClient">Client:</label>
+        <select id="filterBarClient" class="form-select form-select-sm"></select>
+
+        <label for="filterBarDiscipline">Discipline:</label>
+        <select id="filterBarDiscipline" class="form-select form-select-sm"></select>
+
+        <label for="filterBarExperience">Experience:</label>
+        <select id="filterBarExperience" class="form-select form-select-sm"></select>
+
+        <label for="filterBarLOE">LOE:</label>
+        <select id="filterBarLOE" class="form-select form-select-sm"></select>
+
+        <label for="filterBarLocation">Location:</label>
+        <select id="filterBarLocation" class="form-select form-select-sm"></select>
+
+        <label for="filterBarAssignedTo">Assigned to:</label>
+        <select id="filterBarAssignedTo" class="form-select form-select-sm"></select>
+
+        <label for="filterBarType">Type:</label>
+        <select id="filterBarType" class="form-select form-select-sm"></select>
+
+        <label for="filterBarProposed">Proposed:</label>
+        <select id="filterBarProposed" class="form-select form-select-sm"></select>
+      </div>
+    </div>
+    <div id="filterActions">
+      <button id="filterApplyBtn" class="btn btn-sm">Apply</button>
+      <button id="filterClearBtn" class="btn btn-sm">Clear</button>
+      <button id="filterCancelBtn" class="btn btn-sm">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div id="settingsModal">
+    <h3>Theme Settings</h3>
+    <label>Theme:</label>
+    <select id="themeSelect">
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
+
+    <label for="securedColor">Secured Color:</label>
+    <input type="color" id="securedColor" class="color-picker" value="#28a745" />
+
+    <label for="proposedColor">Proposed Color:</label>
+    <input type="color" id="proposedColor" class="color-picker" value="#fd7e14" />
+
+    <label for="opportunityColor">Opportunity Color:</label>
+    <input type="color" id="opportunityColor" class="color-picker" value="#dc3545" />
+
+    <label for="futureColor">Future Color:</label>
+    <input type="color" id="futureColor" class="color-picker" value="#6f42c1" />
+
+    <div id="settingsActions">
+      <button id="settingsOkBtn" class="btn btn-sm">Apply</button>
+      <button id="settingsCancelBtn" class="btn btn-sm">Cancel</button>
+    </div>
+  </div>
+
+  <!-- CSV Edit modal -->
+  <div id="csvEditModal">
+    <h3>Edit CSV In-Browser</h3>
+    <textarea id="csvTextarea"></textarea>
+    <div id="csvEditModalActions">
+      <button id="csvEditApplyBtn" class="btn btn-sm">Apply Changes</button>
+      <button id="csvEditCancelBtn" class="btn btn-sm">Close</button>
+    </div>
+  </div>
+
+  <!-- Hidden file input for CSV import only -->
+  <input type="file" id="importFileInput" accept=".csv" style="display: none;" />
+
+  <!-- Admin Password Modal (unchanged) -->
+  <div class="modal fade" id="adminPasswordModal" tabindex="-1" aria-labelledby="adminPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background-color:#1C173E; border:1px solid #EA1F27;">
+        <div class="modal-header">
+          <h5 class="modal-title" id="adminPasswordModalLabel" style="color:#fff;">Enter Admin Password</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="password" id="adminPasswordInput" class="form-control" placeholder="Password"/>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-sm btn-primary" id="adminPasswordConfirmBtn">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    /* ------------------------------------------------------------------------------------------------
+       GLOBALS & DEFAULT STATE
+       ------------------------------------------------------------------------------------------------ */
+    let adminMode = false;
+    let typeColors = {
+      secured: "#28a745",
+      proposed: "#fd7e14",
+      opportunity: "#dc3545",
+      future: "#6f42c1",
+    };
+
+    // Hard-coded sample lines for resetting
+    const defaultSampleLines = [
+      {
+        id: 1,
+        name: "Line One",
+        client: "",
+        discipline: "",
+        experience: "",
+        officeLocation: "",
+        geoLocation: "",
+        type: "person",
+        bars: [
+          {
+            id: 101,
+            label: "Bar Sample A",
+            projectName: "Proj A",
+            client: "",
+            discipline: "",
+            experience: "",
+            LOE: "",
+            location: "",
+            assignedTo: "",
+            proposed: "no",
+            type: "person",
+            startAbsWeek: toAbsoluteWeek(2025, 2),
+            length: 4,
+            selected: false,
+            dragging: false,
+          },
+        ],
+        selected: false,
+        dragging: false,
+      },
+      {
+        id: 2,
+        name: "Line Two",
+        client: "",
+        discipline: "",
+        experience: "",
+        officeLocation: "",
+        geoLocation: "",
+        type: "opportunity",
+        bars: [
+          {
+            id: 102,
+            label: "Bar Sample B",
+            projectName: "Proj B",
+            client: "",
+            discipline: "",
+            experience: "",
+            LOE: "",
+            location: "",
+            assignedTo: "",
+            proposed: "yes",
+            type: "opportunity",
+            startAbsWeek: toAbsoluteWeek(2025, 10),
+            length: 7,
+            selected: false,
+            dragging: false,
+          },
+        ],
+        selected: false,
+        dragging: false,
+      },
+    ];
+
+    // Start with some default lines
+    let lines = JSON.parse(JSON.stringify(defaultSampleLines));
+
+    let startYear = 2025;
+    let startWeek = 1;
+    let endYear = 2035;
+    let endWeek = 52;
+    let lineCounter = 2;
+    let barCounter = 102;
+
+    // Zoom variables
+    let cellWidth = 100; // UPDATED: default column width changed from 150 to 100
+    let rowHeight = 40;
+
+    let filters = { line: {}, bar: {} };
+
+    // Multi-select slicers will store arrays of chosen values
+    let slicersPerson = {
+      discipline: [],
+      experience: [],
+      location: []
+    };
+    let slicersOpp = {
+      discipline: [],
+      client: [],
+      experience: [],
+      location: []
+    };
+
+    let searchTerm = "";
+    let currentTheme = "light";
+
+    let dragging = false;
+    let dragType = null;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let initialStartAbs = 0;
+    let initialLength = 0;
+    let currentBar = null;
+    let currentLine = null;
+    let draggingLine = null;
+    let tableBodyRect = null;
+    let mainFilteredLines = [];
+    let currentEditorBar = null;
+    let currentEditorLine = null;
+
+    // Set line-level sort defaults to lineType, desc
+    let barSortField = "lineType";
+    let barSortDirection = "desc";
+    // bar-level sort is still empty
+    let barSortField2 = "";
+    let barSortDirection2 = "asc";
+
+    // Overview mode
+    let isOverviewMode = false;
+
+    // Simple Undo stack
+    let undoStack = [];
+
+    /*
+     * pushUndoState: store a deep copy of current chart data for an Undo
+     */
+    function pushUndoState() {
+      const chartData = JSON.parse(JSON.stringify({
+        lines,
+        startYear,
+        startWeek,
+        endYear,
+        endWeek,
+        lineCounter,
+        barCounter,
+        cellWidth,
+        rowHeight,
+        typeColors,
+        currentTheme
+      }));
+      undoStack.push(chartData);
+      if (undoStack.length > 50) {
+        undoStack.shift();
+      }
+    }
+
+    /*
+     * Undo method
+     */
+    function undoLastAction() {
+      if (undoStack.length === 0) {
+        alert("No more states to undo.");
+        return;
+      }
+      const lastState = undoStack.pop();
+      lines = lastState.lines;
+      startYear = lastState.startYear;
+      startWeek = lastState.startWeek;
+      endYear = lastState.endYear;
+      endWeek = lastState.endWeek;
+      lineCounter = lastState.lineCounter;
+      barCounter = lastState.barCounter;
+      cellWidth = lastState.cellWidth;
+      rowHeight = lastState.rowHeight;
+      typeColors = lastState.typeColors;
+      currentTheme = lastState.currentTheme;
+      updateCSSVariables();
+      applyTheme();
+      renderTable();
+    }
+
+    /*
+     * Convert Year & Week to an absolute index
+     */
+    function toAbsoluteWeek(year, week) {
+      return year * 52 + (week - 1);
+    }
+
+    /*
+     * Convert absolute index back to Year & Week
+     */
+    function fromAbsoluteWeek(abs) {
+      const y = Math.floor(abs / 52);
+      const w = (abs % 52) + 1;
+      return { year: y, week: w };
+    }
+
+    /*
+     * Derive month from a given year and ISO week
+     */
+    function getMonthFromYearWeek(year, week) {
+      let january4 = new Date(year, 0, 4);
+      let dayMs = 24 * 3600 * 1000;
+      let offsetDays = (week - 1) * 7 - ((january4.getDay() + 6) % 7);
+      let date = new Date(january4.getTime() + offsetDays * dayMs);
+      return date.getMonth();
+    }
+
+    /*
+     * Return short month name from index
+     */
+    function getMonthName(m) {
+      const months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      return months[m] || "";
+    }
+
+    /*
+     * Get color for bar type
+     */
+    function getColorFromType(t) {
+      return typeColors[t] || "#fd7e14";
+    }
+
+    /*
+     * Save chart to localStorage
+     */
+    function saveToLocalStorage() {
+      const chartData = {
+        lines,
+        startYear,
+        startWeek,
+        endYear,
+        endWeek,
+        lineCounter,
+        barCounter,
+        cellWidth,
+        rowHeight,
+        typeColors,
+        currentTheme,
+      };
+      localStorage.setItem("ganttChartData", JSON.stringify(chartData));
+    }
+
+    /*
+     * Load chart from localStorage
+     */
+    function loadFromLocalStorage() {
+      const stored = localStorage.getItem("ganttChartData");
+      if (!stored) return;
+      try {
+        let parsed = JSON.parse(stored);
+        lines = parsed.lines || [];
+        lines.forEach((line) => {
+          line.selected = false;
+          line.dragging = false;
+          line.bars.forEach((bar) => {
+            bar.selected = false;
+            if (bar.type === undefined) bar.type = "proposed";
+            if (bar.label === undefined) bar.label = "";
+            if (bar.assignedTo === undefined) bar.assignedTo = "";
+            if (bar.dragging === undefined) bar.dragging = false;
+          });
+        });
+
+        startYear = parsed.startYear || 2025;
+        startWeek = parsed.startWeek || 1;
+        endYear = (startYear + 10) || 2035;
+        endWeek = 52;
+        lineCounter = parsed.lineCounter || lineCounter;
+        barCounter = parsed.barCounter || barCounter;
+        cellWidth = parsed.cellWidth || 100; // UPDATED: fallback default now 100
+        rowHeight = parsed.rowHeight || 40;
+        typeColors = parsed.typeColors || typeColors;
+        currentTheme = parsed.currentTheme || "light";
+      } catch (err) {
+        console.warn("Invalid localStorage data");
+      }
+    }
+
+    /*
+     * Update the legend swatches
+     */
+    function updateLegendSwatches() {
+      document.getElementById("legendSecuredSwatch").style.backgroundColor =
+        typeColors.secured;
+      document.getElementById("legendProposedSwatch").style.backgroundColor =
+        typeColors.proposed;
+      document.getElementById("legendOpportunitySwatch").style.backgroundColor =
+        typeColors.opportunity;
+      document.getElementById("legendFutureSwatch").style.backgroundColor =
+        typeColors.future;
+    }
+
+    /*
+     * Apply theme (dark/light) to body
+     */
+    function applyTheme() {
+      if (currentTheme === "dark") {
+        document.body.classList.add("dark-theme");
+      } else {
+        document.body.classList.remove("dark-theme");
+      }
+      updateLegendSwatches();
+      renderTable();
+      saveToLocalStorage();
+    }
+
+    /*
+     * Update rowHeight & cellWidth in CSS
+     */
+    function updateCSSVariables() {
+      document.documentElement.style.setProperty("--cell-width", cellWidth + "px");
+      document.documentElement.style.setProperty("--row-height", rowHeight + "px");
+    }
+
+    /*
+     * Return the current display range for the timescale
+     */
+    function getDisplayRange() {
+      let ds = toAbsoluteWeek(startYear, startWeek);
+      let de = toAbsoluteWeek(endYear, endWeek);
+      return { displayStart: ds, displayEnd: de };
+    }
+
+    /*
+     * Unselect all bars
+     */
+    function unselectAllBars() {
+      lines.forEach((line) =>
+        line.bars.forEach((bar) => (bar.selected = false))
+      );
+    }
+
+    /*
+     * Clear bar highlights
+     */
+    function clearHighlights() {
+      document
+        .querySelectorAll(".bar.highlighted")
+        .forEach((el) => el.classList.remove("highlighted"));
+    }
+
+    /*
+     * Reposition bar text after re-render or scroll
+     */
+    function updateBarTextPositions() {
+      let scrollLeft = tableWrapper.scrollLeft;
+      let viewportWidth = tableWrapper.clientWidth;
+
+      document.querySelectorAll(".bar-text").forEach((textEl) => {
+        let barEl = textEl.parentElement;
+        let barLeft = parseFloat(barEl.style.left);
+        let barWidth = parseFloat(barEl.style.width);
+
+        let dynamicFontSize = Math.min(barWidth * 0.15, rowHeight * 0.4);
+        if (dynamicFontSize < 8) dynamicFontSize = 8;
+        textEl.style.fontSize = dynamicFontSize + "px";
+
+        let barRight = barLeft + barWidth;
+        let visibleLeft = Math.max(barLeft, scrollLeft);
+        let visibleRight = Math.min(barRight, scrollLeft + viewportWidth);
+        let visibleWidth = visibleRight - visibleLeft;
+
+        if (visibleWidth <= 0) {
+          textEl.style.opacity = "0";
+          return;
+        }
+
+        textEl.style.opacity = "1";
+        let textWidth = textEl.offsetWidth;
+        let textLeft =
+          visibleLeft - barLeft + (visibleWidth - textWidth) / 2;
+        if (textLeft < 5) textLeft = 5;
+        if (textLeft + textWidth > barWidth - 5) {
+          textLeft = barWidth - textWidth - 5;
+        }
+        textEl.style.left = textLeft + "px";
+      });
+    }
+
+    /* ------------------------------------------------------------------------------------------------
+       RENDER HEADER => draws the timescale
+       ------------------------------------------------------------------------------------------------ */
+    function renderHeader() {
+      const thead = ganttTable.querySelector("thead");
+      thead.innerHTML = "";
+
+      let yearRow = document.createElement("tr");
+      let monthRow = document.createElement("tr");
+      let weekRow = document.createElement("tr");
+      weekRow.id = "headerRow";
+
+      // First TH => "Personnel & Opps" remains rowSpan=3
+      const tasksTh = document.createElement("th");
+      tasksTh.id = "nameHeader";
+      tasksTh.rowSpan = 3;
+      tasksTh.textContent = "Personnel & Opps";
+      tasksTh.classList.add("timescale-header");
+      yearRow.appendChild(tasksTh);
+
+      // Second TH => "Discipline" column
+      const disciplineTh = document.createElement("th");
+      disciplineTh.id = "disciplineHeader";
+      disciplineTh.rowSpan = 3; 
+      disciplineTh.textContent = "Discipline";
+      disciplineTh.classList.add("timescale-header");
+      yearRow.appendChild(disciplineTh);
+
+      thead.appendChild(yearRow);
+      thead.appendChild(monthRow);
+      thead.appendChild(weekRow);
+
+      let { displayStart, displayEnd } = getDisplayRange();
+      let totalWeeks = displayEnd - displayStart + 1;
+      if (totalWeeks < 1) return;
+
+      let weekData = [];
+      for (let i = 0; i < totalWeeks; i++) {
+        let abs = displayStart + i;
+        let { year, week } = fromAbsoluteWeek(abs);
+        let mIdx = getMonthFromYearWeek(year, week);
+        weekData.push({ abs, year, week, monthIndex: mIdx });
+      }
+
+      let yearGroups = [];
+      let currentYearGroup = null;
+      for (let wd of weekData) {
+        if (!currentYearGroup || currentYearGroup.year !== wd.year) {
+          currentYearGroup = { year: wd.year, weeks: [] };
+          yearGroups.push(currentYearGroup);
+        }
+        currentYearGroup.weeks.push(wd);
+      }
+
+      for (let yg of yearGroups) {
+        let monthGroups = [];
+        let currentMonthGroup = null;
+        for (let wd of yg.weeks) {
+          if (
+            !currentMonthGroup ||
+            currentMonthGroup.monthIndex !== wd.monthIndex
+          ) {
+            currentMonthGroup = { monthIndex: wd.monthIndex, weeks: [] };
+            monthGroups.push(currentMonthGroup);
+          }
+          currentMonthGroup.weeks.push(wd);
+        }
+        yg.monthGroups = monthGroups;
+      }
+
+      // year row
+      for (let yg of yearGroups) {
+        let th = document.createElement("th");
+        th.textContent = yg.year;
+        th.colSpan = yg.weeks.length;
+        th.className = "timescale-header";
+        let totalWidthForYear = yg.weeks.length * cellWidth;
+        th.style.width = totalWidthForYear + "px";
+        let dynamicFontSizeYear = Math.max(
+          20,
+          Math.min(16, totalWidthForYear * 0.02)
+        );
+        th.style.fontSize = dynamicFontSizeYear + "px";
+        yearRow.appendChild(th);
+      }
+
+      // month row
+      for (let yg of yearGroups) {
+        for (let mg of yg.monthGroups) {
+          let th = document.createElement("th");
+          th.textContent = getMonthName(mg.monthIndex);
+          th.colSpan = mg.weeks.length;
+          th.className = "timescale-header";
+          let totalWidthForMonth = mg.weeks.length * cellWidth;
+          th.style.width = totalWidthForMonth + "px";
+          let dynamicFontSizeMonth = Math.max(
+            15,
+            Math.min(16, totalWidthForMonth * 0.02)
+          );
+          th.style.fontSize = dynamicFontSizeMonth + "px";
+          monthRow.appendChild(th);
+        }
+      }
+
+      // week row
+      for (let wd of weekData) {
+        let th = document.createElement("th");
+        th.className = "timescale-header";
+        th.style.width = cellWidth + "px";
+        let dynamicFontSizeWeek = Math.max(8, Math.min(16, cellWidth * 0.2));
+        th.style.fontSize = dynamicFontSizeWeek + "px";
+        th.textContent = "W" + wd.week;
+        weekRow.appendChild(th);
+      }
+    }
+
+    /* ------------------------------------------------------------------------------------------------
+       SORTING => line-level and bar-level
+       ------------------------------------------------------------------------------------------------ */
+    function doLineCompare(lineA, lineB, field, direction) {
+      if (!field) return 0;
+      let valA, valB;
+
+      // If sorting by "lineType", we map line.type here:
+      if (field === "lineType") {
+        valA = (lineA.type || "").toLowerCase();
+        valB = (lineB.type || "").toLowerCase();
+      } else {
+        valA = (lineA[field] || "").toLowerCase();
+        valB = (lineB[field] || "").toLowerCase();
+      }
+
+      let numA = parseFloat(valA);
+      let numB = parseFloat(valB);
+      let bothNumeric = !isNaN(numA) && !isNaN(numB);
+
+      if (bothNumeric) {
+        if (numA < numB) return direction === "asc" ? -1 : 1;
+        if (numA > numB) return direction === "asc" ? 1 : -1;
+        return 0;
+      } else {
+        if (valA < valB) return direction === "asc" ? -1 : 1;
+        if (valA > valB) return direction === "asc" ? 1 : -1;
+        return 0;
+      }
+    }
+
+    function doBarCompare(barA, barB, field, direction) {
+      if (!field) return 0;
+      let valA, valB;
+
+      if (field === "finishAbsWeek") {
+        valA = barA.startAbsWeek + barA.length - 1;
+        valB = barB.startAbsWeek + barB.length - 1;
+      } else if (field === "startAbsWeek" || field === "length") {
+        valA = parseInt(barA[field]) || 0;
+        valB = parseInt(barB[field]) || 0;
+      } else {
+        let rawA = (barA[field] || "").toString();
+        let rawB = (barB[field] || "").toString();
+        valA = rawA.toLowerCase();
+        valB = rawB.toLowerCase();
+      }
+
+      let numA = parseFloat(valA);
+      let numB = parseFloat(valB);
+      let bothNumeric = !isNaN(numA) && !isNaN(numB);
+
+      if (bothNumeric) {
+        if (numA < numB) return direction === "asc" ? -1 : 1;
+        if (numA > numB) return direction === "asc" ? 1 : -1;
+        return 0;
+      } else {
+        if (valA < valB) return direction === "asc" ? -1 : 1;
+        if (valA > valB) return direction === "asc" ? 1 : -1;
+        return 0;
+      }
+    }
+
+    /* ------------------------------------------------------------------------------------------------
+       OVERVIEW => merges lines by name, sorted+filtered only at line-level
+       ------------------------------------------------------------------------------------------------ */
+    function buildOverviewData() {
+      let filteredLinesOptimized = lines.filter((line) => {
+        if (Object.keys(filters.line).length > 0) {
+          for (let f in filters.line) {
+            let filterValue = filters.line[f].toLowerCase();
+            if (!line[f] || !line[f].toLowerCase().includes(filterValue)) {
+              return false;
+            }
+          }
+        }
+        let lowerSearchLocal = searchTerm.toLowerCase();
+        if (lowerSearchLocal) {
+          let lineMatch =
+            (line.name || "").toLowerCase().includes(lowerSearchLocal) ||
+            (line.client || "").toLowerCase().includes(lowerSearchLocal) ||
+            (line.discipline || "").toLowerCase().includes(lowerSearchLocal) ||
+            (line.experience || "").toLowerCase().includes(lowerSearchLocal) ||
+            (line.officeLocation || "").toLowerCase().includes(lowerSearchLocal) ||
+            (line.geoLocation || "").toLowerCase().includes(lowerSearchLocal) ||
+            (line.type || "").toLowerCase().includes(lowerSearchLocal);
+          if (!lineMatch) return false;
+        }
+        return true;
+      });
+
+      if (barSortField) {
+        filteredLinesOptimized.sort((a, b) =>
+          doLineCompare(a, b, barSortField, barSortDirection)
+        );
+      }
+
+      let grouped = {};
+      filteredLinesOptimized.forEach((ln) => {
+        let key = ln.name || "Unnamed";
+        if (!grouped[key]) {
+          grouped[key] = { lineName: key, earliest: Infinity, latest: -Infinity };
+        }
+        ln.bars.forEach((b) => {
+          let start = b.startAbsWeek;
+          let end = b.startAbsWeek + b.length - 1;
+          if (start < grouped[key].earliest) grouped[key].earliest = start;
+          if (end > grouped[key].latest) grouped[key].latest = end;
+        });
+      });
+      return Object.values(grouped);
+    }
+
+    function renderOverview() {
+      renderHeader();
+      tableBody.innerHTML = "";
+      clearHighlights();
+
+      let { displayStart, displayEnd } = getDisplayRange();
+      let totalWeeks = displayEnd - displayStart + 1;
+      if (totalWeeks < 1) return;
+
+      let overviewData = buildOverviewData();
+      overviewData.forEach((group) => {
+        let tr = document.createElement("tr");
+
+        let nameTd = document.createElement("td");
+        nameTd.className = "name-cell";
+        nameTd.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          let foundLine = lines.find((ln) => ln.name === group.lineName);
+          if (foundLine) {
+            showLineEditor(foundLine, e.clientX, e.clientY);
+          }
+        });
+
+        nameTd.style.whiteSpace = "nowrap";
+        nameTd.style.overflow = "hidden";
+        nameTd.style.textOverflow = "ellipsis";
+        nameTd.style.maxWidth = "300px";
+        nameTd.style.display = "inline-block";
+        nameTd.style.textAlign = "center";
+
+        nameTd.textContent = group.lineName;
+        tr.appendChild(nameTd);
+
+        let disciplineTd = document.createElement("td");
+        disciplineTd.className = "discipline-cell";
+        let foundLineForDiscipline = lines.find((ln) => ln.name === group.lineName);
+        disciplineTd.textContent = foundLineForDiscipline
+          ? foundLineForDiscipline.discipline || ""
+          : "";
+        tr.appendChild(disciplineTd);
+
+        let barTd = document.createElement("td");
+        barTd.colSpan = totalWeeks;
+        barTd.className = "bar-cell";
+
+        let barContainer = document.createElement("div");
+        barContainer.className = "bar-row-container";
+
+        let barStart = group.earliest;
+        let barEnd = group.latest;
+
+        if (barStart <= barEnd && barStart < Infinity && barEnd >= 0) {
+          let overlapStart = Math.max(displayStart, barStart);
+          let overlapEnd = Math.min(displayEnd, barEnd);
+          let overlapLen = overlapEnd - overlapStart + 1;
+
+          if (overlapLen > 0) {
+            let barDiv = document.createElement("div");
+            barDiv.classList.add("bar");
+            let firstLineMatch = lines.find((l) => l.name === group.lineName);
+            if (firstLineMatch && firstLineMatch.bars.length > 0) {
+              barDiv.style.backgroundColor = getColorFromType(
+                firstLineMatch.bars[0].type
+              );
+            } else {
+              barDiv.style.backgroundColor = "#444";
+            }
+            barDiv.style.cursor = "default";
+
+            let leftPx = (overlapStart - displayStart) * cellWidth;
+            let widthPx = overlapLen * cellWidth;
+            barDiv.style.left = leftPx + "px";
+            barDiv.style.width = widthPx + "px";
+            barContainer.appendChild(barDiv);
+          }
+        }
+
+        barTd.appendChild(barContainer);
+        tr.appendChild(barTd);
+        tableBody.appendChild(tr);
+      });
+    }
+
+    /* ------------------------------------------------------------------------------------------------
+       RENDER TABLE => normal detailed view
+       ------------------------------------------------------------------------------------------------ */
+    function renderTable() {
+      if (isOverviewMode) {
+        renderOverview();
+        return;
+      }
+
+      renderHeader();
+      tableBody.innerHTML = "";
+      clearHighlights();
+
+      let { displayStart, displayEnd } = getDisplayRange();
+      let totalWeeks = displayEnd - displayStart + 1;
+      if (totalWeeks < 1) return;
+
+      let lowerSearch = searchTerm.toLowerCase();
+
+      let filteredLines = lines.filter((line) => {
+        // line filters
+        if (Object.keys(filters.line).length > 0) {
+          for (let f in filters.line) {
+            let filterValue = filters.line[f].toLowerCase();
+            if (!line[f] || !line[f].toLowerCase().includes(filterValue)) {
+              return false;
+            }
+          }
+        }
+
+        // Distinguish line types
+        let isPerson = (line.type || "").toLowerCase() === "person";
+        let isOpp = (line.type || "").toLowerCase() === "opportunity";
+
+        // Person slicers: check if any of the line's discipline/experience/location matches
+        if (isPerson) {
+          // check discipline slicer
+          if (slicersPerson.discipline.length > 0) {
+            let discLower = (line.discipline || "").toLowerCase();
+            // Must match at least one of the chosen disciplines
+            if (!slicersPerson.discipline.map(d => d.toLowerCase()).includes(discLower)) {
+              return false;
+            }
+          }
+          if (slicersPerson.experience.length > 0) {
+            let exprLower = (line.experience || "").toLowerCase();
+            if (!slicersPerson.experience.map(e => e.toLowerCase()).includes(exprLower)) {
+              return false;
+            }
+          }
+          if (slicersPerson.location.length > 0) {
+            let locLower = (line.officeLocation || "").toLowerCase();
+            if (!slicersPerson.location.map(l => l.toLowerCase()).includes(locLower)) {
+              return false;
+            }
+          }
+        }
+
+        // Opp slicers
+        if (isOpp) {
+          if (slicersOpp.discipline.length > 0) {
+            let discLower = (line.discipline || "").toLowerCase();
+            if (!slicersOpp.discipline.map(d => d.toLowerCase()).includes(discLower)) {
+              return false;
+            }
+          }
+          if (slicersOpp.client.length > 0) {
+            const lineClientLower = (line.client || "").toLowerCase();
+            // The line's client might match or one of the bars might match
+            let barMatchesClient = line.bars.some(b => {
+              return slicersOpp.client.map(c => c.toLowerCase()).includes((b.client || "").toLowerCase());
+            });
+            let lineMatchesClient = slicersOpp.client.map(c => c.toLowerCase()).includes(lineClientLower);
+
+            if (!barMatchesClient && !lineMatchesClient) {
+              return false;
+            }
+          }
+          if (slicersOpp.experience.length > 0) {
+            let exprLower = (line.experience || "").toLowerCase();
+            if (!slicersOpp.experience.map(e => e.toLowerCase()).includes(exprLower)) {
+              return false;
+            }
+          }
+          if (slicersOpp.location.length > 0) {
+            let locLower = (line.officeLocation || "").toLowerCase();
+            if (!slicersOpp.location.map(l => l.toLowerCase()).includes(locLower)) {
+              return false;
+            }
+          }
+        }
+
+        // bar-level filters
+        let passBars = line.bars.filter((b) => {
+          if (Object.keys(filters.bar).length > 0) {
+            for (let fb in filters.bar) {
+              let val = filters.bar[fb].toLowerCase();
+              if (!b[fb] || !b[fb].toLowerCase().includes(val)) {
+                return false;
+              }
+            }
+          }
+          return true;
+        });
+        if (Object.keys(filters.bar).length > 0 && passBars.length === 0) return false;
+
+        // search
+        if (lowerSearch) {
+          let lineMatch =
+            (line.name || "").toLowerCase().includes(lowerSearch) ||
+            (line.client || "").toLowerCase().includes(lowerSearch) ||
+            (line.discipline || "").toLowerCase().includes(lowerSearch) ||
+            (line.experience || "").toLowerCase().includes(lowerSearch) ||
+            (line.officeLocation || "").toLowerCase().includes(lowerSearch) ||
+            (line.geoLocation || "").toLowerCase().includes(lowerSearch) ||
+            (line.type || "").toLowerCase().includes(lowerSearch);
+
+          let barMatch = line.bars.some((bar) => {
+            let bFields = [
+              (bar.label || "").toLowerCase(),
+              (bar.projectName || "").toLowerCase(),
+              (bar.client || "").toLowerCase(),
+              (bar.discipline || "").toLowerCase(),
+              (bar.experience || "").toLowerCase(),
+              (bar.LOE || "").toLowerCase(),
+              (bar.location || "").toLowerCase(),
+              (bar.type || "").toLowerCase(),
+              (bar.proposed || "").toLowerCase(),
+              (bar.assignedTo || "").toLowerCase(),
+            ];
+            return bFields.some((f) => f.includes(lowerSearch));
+          });
+
+          if (!lineMatch && !barMatch) return false;
+        }
+        return true;
+      });
+
+      mainFilteredLines = filteredLines;
+
+      // line-level sort
+      if (barSortField) {
+        mainFilteredLines.sort((a, b) =>
+          doLineCompare(a, b, barSortField, barSortDirection)
+        );
+      }
+
+      // render lines
+      mainFilteredLines.forEach((line, lineIndex) => {
+        // bar-level sort
+        if (barSortField2) {
+          line.bars.sort((barA, barB) =>
+            doBarCompare(barA, barB, barSortField2, barSortDirection2)
+          );
+        }
+
+        const tr = document.createElement("tr");
+        tr.className = "gantt-row";
+        if (line.selected) tr.classList.add("selected");
+        if (line.dragging) tr.classList.add("drag-highlight");
+
+        // name cell
+        const nameTd = document.createElement("td");
+        nameTd.className = "name-cell";
+        nameTd.addEventListener("mousedown", (e) =>
+          onLineMouseDown(e, line, lineIndex)
+        );
+        nameTd.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          showLineEditor(line, e.clientX, e.clientY);
+        });
+
+        const labelSpan = document.createElement("span");
+        labelSpan.textContent = line.name;
+        nameTd.appendChild(labelSpan);
+        tr.appendChild(nameTd);
+
+        // discipline cell
+        const disciplineTd = document.createElement("td");
+        disciplineTd.className = "discipline-cell";
+        disciplineTd.addEventListener("mousedown", (e) =>
+          onLineMouseDown(e, line, lineIndex)
+        );
+        disciplineTd.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          showLineEditor(line, e.clientX, e.clientY);
+        });
+        const disciplineSpan = document.createElement("span");
+        disciplineSpan.textContent = line.discipline || "";
+        disciplineTd.appendChild(disciplineSpan);
+        tr.appendChild(disciplineTd);
+
+        const barTd = document.createElement("td");
+        barTd.colSpan = (displayEnd - displayStart + 1);
+        barTd.className = "bar-cell";
+
+        const barContainer = document.createElement("div");
+        barContainer.className = "bar-row-container";
+
+        let finalBarsToRender = line.bars.filter((b) => {
+          if (Object.keys(filters.bar).length > 0) {
+            for (let fb in filters.bar) {
+              let val = filters.bar[fb].toLowerCase();
+              if (!b[fb] || !b[fb].toLowerCase().includes(val)) {
+                return false;
+              }
+            }
+          }
+          return true;
+        });
+
+        finalBarsToRender.forEach((bar) => {
+          let barStart = bar.startAbsWeek;
+          let barEnd = barStart + bar.length;
+          let overlapStart = Math.max(displayStart, barStart);
+          let overlapEnd = Math.min(displayEnd + 1, barEnd);
+          let overlapLen = overlapEnd - overlapStart;
+          if (overlapLen <= 0) return;
+
+          let barLeftPx = (overlapStart - displayStart) * cellWidth;
+          let barWidthPx = overlapLen * cellWidth;
+
+          const barDiv = document.createElement("div");
+          barDiv.classList.add("bar");
+          barDiv.style.left = barLeftPx + "px";
+          barDiv.style.width = barWidthPx + "px";
+          barDiv.style.backgroundColor = getColorFromType(bar.type);
+
+          if (bar.dragging) {
+            barDiv.classList.add("drag-highlight");
+          }
+
+          let barSearchMatch =
+            (bar.projectName || "").toLowerCase().includes(lowerSearch) ||
+            (bar.assignedTo || "").toLowerCase().includes(lowerSearch);
+
+          if (lowerSearch && barSearchMatch) {
+            barDiv.classList.add("highlighted");
+          }
+
+          const textSpan = document.createElement("span");
+          textSpan.className = "bar-text";
+          textSpan.textContent = bar.label || bar.projectName;
+          barDiv.appendChild(textSpan);
+
+          if (adminMode) {
+            const leftHandle = document.createElement("div");
+            leftHandle.classList.add("bar-handle", "left");
+            const rightHandle = document.createElement("div");
+            rightHandle.classList.add("bar-handle", "right");
+            barDiv.appendChild(leftHandle);
+            barDiv.appendChild(rightHandle);
+          }
+
+          barDiv.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            showBarEditor(bar, line, e.clientX, e.clientY);
+          });
+          barDiv.addEventListener("click", (e) => {
+            e.stopPropagation();
+            handleBarClickSelect(bar, e);
+            renderTable();
+            saveToLocalStorage();
+          });
+          barDiv.addEventListener("mousedown", (e) =>
+            onBarMouseDown(e, line, bar, lineIndex)
+          );
+
+          barContainer.appendChild(barDiv);
+        });
+
+        // overlap hatch check
+        let sortedBars = [...finalBarsToRender].sort(
+          (a, b) => a.startAbsWeek - b.startAbsWeek
+        );
+        for (let i = 0; i < sortedBars.length; i++) {
+          for (let j = i + 1; j < sortedBars.length; j++) {
+            let b1 = sortedBars[i];
+            let b2 = sortedBars[j];
+            let s1 = b1.startAbsWeek;
+            let e1 = b1.startAbsWeek + b1.length;
+            let s2 = b2.startAbsWeek;
+            let e2 = b2.startAbsWeek + b2.length;
+
+            let overlapS = Math.max(s1, s2);
+            let overlapE = Math.min(e1, e2);
+            if (overlapE > overlapS) {
+              let leftPx = (Math.max(displayStart, overlapS) - displayStart) * cellWidth;
+              let wPx = (Math.min(displayEnd + 1, overlapE) - Math.max(displayStart, overlapS)) * cellWidth;
+              if (wPx > 0) {
+                let hatch = document.createElement("div");
+                hatch.className = "overlap-hatch";
+                hatch.style.left = leftPx + "px";
+                hatch.style.width = wPx + "px";
+                barContainer.appendChild(hatch);
+              }
+            }
+          }
+        }
+
+        barTd.appendChild(barContainer);
+        tr.appendChild(barTd);
+        tableBody.appendChild(tr);
+      });
+
+      updateBarTextPositions();
+    }
+
+    /*
+     * Select a bar on click
+     */
+    function handleBarClickSelect(bar, e) {
+      unselectAllBars();
+      bar.selected = true;
+    }
+
+    /*
+     * Mousedown on a line => reorder
+     */
+    function onLineMouseDown(e, line, lineIndex) {
+      pushUndoState();
+      dragging = true;
+      dragType = "line-reorder";
+      draggingLine = line;
+      line.dragging = true;
+      tableBodyRect = tableBody.getBoundingClientRect();
+      renderTable();
+      e.preventDefault();
+    }
+
+    /*
+     * Mousedown on a bar => move or resize
+     */
+    function onBarMouseDown(e, line, bar, lineIndex) {
+      pushUndoState();
+      dragging = true;
+      currentBar = bar;
+      currentLine = line;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      initialStartAbs = bar.startAbsWeek;
+      initialLength = bar.length;
+      tableBodyRect = tableBody.getBoundingClientRect();
+      bar.dragging = true;
+
+      if (adminMode) {
+        if (e.target.classList.contains("bar-handle")) {
+          if (e.target.classList.contains("left")) dragType = "resize-left";
+          else dragType = "resize-right";
+        } else {
+          dragType = "bar-move-admin";
+        }
+      } else {
+        dragType = "bar-move-user";
+      }
+      e.preventDefault();
+    }
+
+    /*
+     * Mousemove => handle dragging
+     */
+    document.addEventListener("mousemove", (e) => {
+      if (!dragging) return;
+
+      if (dragType === "line-reorder" && draggingLine) {
+        let posY = e.clientY - tableBodyRect.top;
+        let newIndex = Math.floor(posY / rowHeight);
+        if (newIndex < 0) newIndex = 0;
+        if (newIndex >= mainFilteredLines.length) newIndex = mainFilteredLines.length - 1;
+        let oldIndex = mainFilteredLines.indexOf(draggingLine);
+        if (oldIndex < 0) return;
+        if (newIndex !== oldIndex) {
+          lines.splice(lines.indexOf(draggingLine), 1);
+          let targetLine = mainFilteredLines[newIndex];
+          let targetGlobalIdx = lines.indexOf(targetLine);
+          if (targetGlobalIdx < 0) targetGlobalIdx = lines.length;
+          lines.splice(targetGlobalIdx, 0, draggingLine);
+          renderTable();
+        }
+      } else if (dragType === "bar-move-admin" && currentBar) {
+        let dx = e.clientX - dragStartX;
+        let dWeeks = Math.floor(dx / cellWidth);
+        currentBar.startAbsWeek = Math.max(0, initialStartAbs + dWeeks);
+
+        let posY = e.clientY - tableBodyRect.top;
+        let idxCur = mainFilteredLines.indexOf(currentLine);
+        let newIdx = Math.floor(posY / rowHeight);
+        if (newIdx < 0) newIdx = 0;
+        if (newIdx >= mainFilteredLines.length) newIdx = mainFilteredLines.length - 1;
+        if (newIdx !== idxCur) {
+          currentLine.bars = currentLine.bars.filter((b) => b.id !== currentBar.id);
+          mainFilteredLines[newIdx].bars.push(currentBar);
+          currentLine = mainFilteredLines[newIdx];
+        }
+        renderTable();
+      } else if (dragType === "resize-left" && currentBar) {
+        let dx = e.clientX - dragStartX;
+        let dWeeks = Math.floor(dx / cellWidth);
+        let newStart = initialStartAbs + dWeeks;
+        let newLen = initialStartAbs + initialLength - newStart;
+        if (newLen < 1) {
+          newLen = 1;
+          newStart = initialStartAbs + initialLength - 1;
+        }
+        currentBar.startAbsWeek = Math.max(0, newStart);
+        currentBar.length = newLen;
+        renderTable();
+      } else if (dragType === "resize-right" && currentBar) {
+        let dx = e.clientX - dragStartX;
+        let dWeeks = Math.floor(dx / cellWidth);
+        let newLen = initialLength + dWeeks;
+        if (newLen < 1) newLen = 1;
+        currentBar.length = newLen;
+        renderTable();
+      } else if (dragType === "bar-move-user" && currentBar) {
+        let posY = e.clientY - tableBodyRect.top;
+        let newIndex = Math.floor(posY / rowHeight);
+        if (newIndex < 0) newIndex = 0;
+        if (newIndex >= mainFilteredLines.length) newIndex = mainFilteredLines.length - 1;
+
+        let oldLineIdx = mainFilteredLines.indexOf(currentLine);
+        if (oldLineIdx < 0) oldLineIdx = 0;
+
+        if (newIndex !== oldLineIdx) {
+          mainFilteredLines[oldLineIdx].bars = mainFilteredLines[oldLineIdx].bars.filter(
+            (b) => b.id !== currentBar.id
+          );
+          mainFilteredLines[newIndex].bars.push(currentBar);
+          currentLine = mainFilteredLines[newIndex];
+          renderTable();
+        }
+      }
+    });
+
+    /*
+     * Mouseup => stop dragging
+     */
+    document.addEventListener("mouseup", () => {
+      if (!dragging) return;
+      dragging = false;
+
+      if (dragType === "line-reorder") {
+        draggingLine.dragging = false;
+        draggingLine = null;
+        saveToLocalStorage();
+        renderTable();
+      } else if (
+        ["bar-move-admin", "resize-left", "resize-right", "bar-move-user"].includes(
+          dragType
+        )
+      ) {
+        if (currentBar) {
+          currentBar.dragging = false;
+        }
+        currentBar = null;
+        currentLine = null;
+        saveToLocalStorage();
+      }
+      dragType = null;
+    });
+
+    /*
+     * Click => unselect lines/bars if clicking blank space
+     */
+    document.addEventListener("click", (evt) => {
+      if (!dragging) {
+        let nm = evt.target.closest(".name-cell");
+        let br = evt.target.closest(".bar");
+        if (!nm && !br) {
+          lines.forEach((l) => (l.selected = false));
+          unselectAllBars();
+          renderTable();
+          saveToLocalStorage();
+        }
+      }
+    });
+
+    /* ------------------------------------------------------------------------------------------------
+       BAR & LINE EDITOR => popups
+       ------------------------------------------------------------------------------------------------ */
+    function showBarEditor(bar, line, x, y) {
+      currentEditorBar = bar;
+      currentEditorLine = line;
+
+      // "Assigned to" = always user-editable
+      barAssignedToInput.value = bar.assignedTo || "";
+
+      barLabelInput.value = bar.label || "";
+      barProjectNameInput.value = bar.projectName || "";
+      barClientInput.value = bar.client || "";
+      barDisciplineInput.value = bar.discipline || "";
+      barExperienceInput.value = bar.experience || "";
+      barLOEInput.value = bar.LOE || "";
+      barLocationInput.value = bar.location || "";
+      barTypeSelect.value = bar.type || "proposed";
+
+      // Proposed => only admin can toggle
+      barProposedSelect.value = bar.proposed || "no";
+      barProposedSelect.disabled = !adminMode;
+
+      let { year: sy, week: sw } = fromAbsoluteWeek(bar.startAbsWeek);
+      let { year: ey, week: ew } = fromAbsoluteWeek(bar.startAbsWeek + bar.length - 1);
+      startYearSelect.value = sy;
+      startWeekSelect.value = sw;
+      endYearSelect.value = ey;
+      endWeekSelect.value = ew;
+
+      let ro = !adminMode;
+      [
+        barLabelInput,
+        barProjectNameInput,
+        barClientInput,
+        barDisciplineInput,
+        barExperienceInput,
+        barLOEInput,
+        barLocationInput,
+        barTypeSelect,
+        startYearSelect,
+        startWeekSelect,
+        endYearSelect,
+        endWeekSelect,
+        barDeleteBtn,
+      ].forEach((el) => (el.disabled = ro));
+
+      // AssignedTo is always enabled
+      barAssignedToInput.disabled = false;
+
+      barEditor.style.display = "block";
+      barEditor.style.left = x + window.scrollX + 10 + "px";
+      barEditor.style.top = y + window.scrollY + 10 + "px";
+
+      setTimeout(() => {
+        let rect = barEditor.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+          barEditor.style.left =
+            Math.max(0, window.innerWidth - rect.width - 10) + "px";
+        }
+        if (rect.bottom > window.innerHeight) {
+          barEditor.style.top =
+            Math.max(0, window.innerHeight - rect.height - 10) + "px";
+        }
+      }, 0);
+
+      const autosave = () => {
+        // assignedTo is always saved
+        currentEditorBar.assignedTo = barAssignedToInput.value;
+
+        // Proposed only saved if admin
+        if (adminMode) {
+          currentEditorBar.proposed = barProposedSelect.value;
+          currentEditorBar.label = barLabelInput.value;
+          currentEditorBar.projectName = barProjectNameInput.value;
+          currentEditorBar.client = barClientInput.value;
+          currentEditorBar.discipline = barDisciplineInput.value;
+          currentEditorBar.experience = barExperienceInput.value;
+          currentEditorBar.LOE = barLOEInput.value;
+          currentEditorBar.location = barLocationInput.value;
+          currentEditorBar.type = barTypeSelect.value;
+
+          let sY = parseInt(startYearSelect.value);
+          let sW = parseInt(startWeekSelect.value);
+          let eY = parseInt(endYearSelect.value);
+          let eW = parseInt(endWeekSelect.value);
+
+          currentEditorBar.startAbsWeek = toAbsoluteWeek(sY, sW);
+          currentEditorBar.length =
+            toAbsoluteWeek(eY, eW) - currentEditorBar.startAbsWeek + 1;
+          if (currentEditorBar.length < 1) currentEditorBar.length = 1;
+        }
+        renderTable();
+        saveToLocalStorage();
+      };
+
+      barAssignedToInput.oninput = autosave;
+      barProposedSelect.onchange = autosave;
+      barLabelInput.oninput = autosave;
+      barProjectNameInput.oninput = autosave;
+      barClientInput.oninput = autosave;
+      barDisciplineInput.oninput = autosave;
+      barExperienceInput.oninput = autosave;
+      barLOEInput.oninput = autosave;
+      barLocationInput.oninput = autosave;
+      barTypeSelect.onchange = autosave;
+      startYearSelect.onchange = autosave;
+      startWeekSelect.onchange = autosave;
+      endYearSelect.onchange = autosave;
+      endWeekSelect.onchange = autosave;
+    }
+
+    barEditorOkBtn.addEventListener("click", () => {
+      barEditor.style.display = "none";
+      currentEditorBar = null;
+      currentEditorLine = null;
+    });
+
+    barEditorCancelBtn.addEventListener("click", () => {
+      barEditor.style.display = "none";
+      currentEditorBar = null;
+      currentEditorLine = null;
+    });
+
+    barDeleteBtn.addEventListener("click", () => {
+      if (!adminMode) return;
+      if (!currentEditorBar || !currentEditorLine) return;
+      pushUndoState();
+      currentEditorLine.bars = currentEditorLine.bars.filter(
+        (b) => b.id !== currentEditorBar.id
+      );
+      barEditor.style.display = "none";
+      currentEditorBar = null;
+      currentEditorLine = null;
+      renderTable();
+      saveToLocalStorage();
+    });
+
+    document.addEventListener("mousedown", (e) => {
+      if (barEditor.style.display === "block") {
+        let rect = barEditor.getBoundingClientRect();
+        let inside =
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom;
+        if (!inside) {
+          barEditor.style.display = "none";
+          currentEditorBar = null;
+          currentEditorLine = null;
+        }
+      }
+    });
+
+    function showLineEditor(line, x, y) {
+      currentEditorLine = line;
+      lineNameInput.value = line.name || "";
+      lineClientInput.value = line.client || "";
+      lineDisciplineInput.value = line.discipline || "";
+      lineExperienceInput.value = line.experience || "";
+      lineOfficeLocationInput.value = line.officeLocation || "";
+      lineGeoLocationInput.value = line.geoLocation || "";
+      lineTypeInput.value = line.type || "";
+
+      let ro = !adminMode;
+      [
+        lineNameInput,
+        lineClientInput,
+        lineDisciplineInput,
+        lineExperienceInput,
+        lineOfficeLocationInput,
+        lineGeoLocationInput,
+        lineTypeInput,
+        lineDeleteBtn,
+      ].forEach((el) => (el.disabled = ro));
+
+      lineEditor.style.display = "block";
+      lineEditor.style.left = x + window.scrollX + 10 + "px";
+      lineEditor.style.top = y + window.scrollY + 10 + "px";
+
+      setTimeout(() => {
+        let rect = lineEditor.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+          lineEditor.style.left =
+            Math.max(0, window.innerWidth - rect.width - 10) + "px";
+        }
+        if (rect.bottom > window.innerHeight) {
+          lineEditor.style.top =
+            Math.max(0, window.innerHeight - rect.height - 10) + "px";
+        }
+      }, 0);
+
+      const autosaveLine = () => {
+        if (!adminMode) return;
+        currentEditorLine.name = lineNameInput.value;
+        currentEditorLine.client = lineClientInput.value;
+        currentEditorLine.discipline = lineDisciplineInput.value;
+        currentEditorLine.experience = lineExperienceInput.value;
+        currentEditorLine.officeLocation = lineOfficeLocationInput.value;
+        currentEditorLine.geoLocation = lineGeoLocationInput.value;
+        currentEditorLine.type = lineTypeInput.value;
+
+        renderTable();
+        saveToLocalStorage();
+      };
+
+      lineNameInput.oninput = autosaveLine;
+      lineClientInput.oninput = autosaveLine;
+      lineDisciplineInput.oninput = autosaveLine;
+      lineExperienceInput.oninput = autosaveLine;
+      lineOfficeLocationInput.oninput = autosaveLine;
+      lineGeoLocationInput.oninput = autosaveLine;
+      lineTypeInput.oninput = autosaveLine;
+    }
+
+    lineEditorOkBtn.addEventListener("click", () => {
+      lineEditor.style.display = "none";
+      currentEditorLine = null;
+    });
+
+    lineEditorCancelBtn.addEventListener("click", () => {
+      lineEditor.style.display = "none";
+      currentEditorLine = null;
+    });
+
+    lineDeleteBtn.addEventListener("click", () => {
+      if (!adminMode) return;
+      if (!currentEditorLine) return;
+      pushUndoState();
+      lines = lines.filter((l) => l.id !== currentEditorLine.id);
+      lineEditor.style.display = "none";
+      currentEditorLine = null;
+      renderTable();
+      saveToLocalStorage();
+    });
+
+    document.addEventListener("mousedown", (e) => {
+      if (lineEditor.style.display === "block") {
+        let rect = lineEditor.getBoundingClientRect();
+        let inside =
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom;
+        if (!inside) {
+          lineEditor.style.display = "none";
+          currentEditorLine = null;
+        }
+      }
+    });
+
+    /* PERSON SLICERS => now multi-select, storing arrays */
+    const slicerDisciplineSelect = document.getElementById("slicerDisciplineSelect");
+    const slicerExperienceSelect = document.getElementById("slicerExperienceSelect");
+    const slicerLocationSelect = document.getElementById("slicerLocationSelect");
+
+    // Clear single dimension
+    document.getElementById("clearDisciplineSlicerBtn").addEventListener("click", () => {
+      slicersPerson.discipline = [];
+      // Clear selections in the multi-select
+      for(const opt of slicerDisciplineSelect.options) {
+        opt.selected = false;
+      }
+      renderTable();
+    });
+    document.getElementById("clearExperienceSlicerBtn").addEventListener("click", () => {
+      slicersPerson.experience = [];
+      for(const opt of slicerExperienceSelect.options) {
+        opt.selected = false;
+      }
+      renderTable();
+    });
+    document.getElementById("clearLocationSlicerBtn").addEventListener("click", () => {
+      slicersPerson.location = [];
+      for(const opt of slicerLocationSelect.options) {
+        opt.selected = false;
+      }
+      renderTable();
+    });
+
+    // Clear all person filters
+    document.getElementById("clearAllFiltersBtn").addEventListener("click", () => {
+      slicersPerson.discipline = [];
+      slicersPerson.experience = [];
+      slicersPerson.location = [];
+      filters.line = {};
+      filters.bar = {};
+
+      for(const opt of slicerDisciplineSelect.options) {
+        opt.selected = false;
+      }
+      for(const opt of slicerExperienceSelect.options) {
+        opt.selected = false;
+      }
+      for(const opt of slicerLocationSelect.options) {
+        opt.selected = false;
+      }
+
+      renderTable();
+    });
+
+    // On change, read all selected items into an array
+    slicerDisciplineSelect.addEventListener("change", () => {
+      let selected = Array.from(slicerDisciplineSelect.selectedOptions).map(o => o.value).filter(v => v);
+      slicersPerson.discipline = selected;
+      renderTable();
+    });
+    slicerExperienceSelect.addEventListener("change", () => {
+      let selected = Array.from(slicerExperienceSelect.selectedOptions).map(o => o.value).filter(v => v);
+      slicersPerson.experience = selected;
+      renderTable();
+    });
+    slicerLocationSelect.addEventListener("change", () => {
+      let selected = Array.from(slicerLocationSelect.selectedOptions).map(o => o.value).filter(v => v);
+      slicersPerson.location = selected;
+      renderTable();
+    });
+
+    /* OPPORTUNITY SLICERS => now multi-select */
+    const slicerDisciplineSelectOpp = document.getElementById("slicerDisciplineSelectOpp");
+    const slicerClientSelectOpp = document.getElementById("slicerClientSelectOpp");
+    const slicerExperienceSelectOpp = document.getElementById("slicerExperienceSelectOpp");
+    const slicerLocationSelectOpp = document.getElementById("slicerLocationSelectOpp");
+
+    document.getElementById("clearDisciplineSlicerOppBtn").addEventListener("click", () => {
+      slicersOpp.discipline = [];
+      for(const opt of slicerDisciplineSelectOpp.options) {
+        opt.selected = false;
+      }
+      renderTable();
+    });
+    document.getElementById("clearClientSlicerOppBtn").addEventListener("click", () => {
+      slicersOpp.client = [];
+      for(const opt of slicerClientSelectOpp.options) {
+        opt.selected = false;
+      }
+      renderTable();
+    });
+    document.getElementById("clearExperienceSlicerOppBtn").addEventListener("click", () => {
+      slicersOpp.experience = [];
+      for(const opt of slicerExperienceSelectOpp.options) {
+        opt.selected = false;
+      }
+      renderTable();
+    });
+    document.getElementById("clearLocationSlicerOppBtn").addEventListener("click", () => {
+      slicersOpp.location = [];
+      for(const opt of slicerLocationSelectOpp.options) {
+        opt.selected = false;
+      }
+      renderTable();
+    });
+
+    document.getElementById("clearAllOppFiltersBtn").addEventListener("click", () => {
+      slicersOpp.discipline = [];
+      slicersOpp.client = [];
+      slicersOpp.experience = [];
+      slicersOpp.location = [];
+
+      for(const opt of slicerDisciplineSelectOpp.options) {
+        opt.selected = false;
+      }
+      for(const opt of slicerClientSelectOpp.options) {
+        opt.selected = false;
+      }
+      for(const opt of slicerExperienceSelectOpp.options) {
+        opt.selected = false;
+      }
+      for(const opt of slicerLocationSelectOpp.options) {
+        opt.selected = false;
+      }
+
+      renderTable();
+    });
+
+    slicerDisciplineSelectOpp.addEventListener("change", () => {
+      let selected = Array.from(slicerDisciplineSelectOpp.selectedOptions).map(o => o.value).filter(v => v);
+      slicersOpp.discipline = selected;
+      renderTable();
+    });
+    slicerClientSelectOpp.addEventListener("change", () => {
+      let selected = Array.from(slicerClientSelectOpp.selectedOptions).map(o => o.value).filter(v => v);
+      slicersOpp.client = selected;
+      renderTable();
+    });
+    slicerExperienceSelectOpp.addEventListener("change", () => {
+      let selected = Array.from(slicerExperienceSelectOpp.selectedOptions).map(o => o.value).filter(v => v);
+      slicersOpp.experience = selected;
+      renderTable();
+    });
+    slicerLocationSelectOpp.addEventListener("change", () => {
+      let selected = Array.from(slicerLocationSelectOpp.selectedOptions).map(o => o.value).filter(v => v);
+      slicersOpp.location = selected;
+      renderTable();
+    });
+
+    /* FILTER MODAL => advanced line & bar filters remain otherwise intact */
+    const filterLineName = document.getElementById("filterLineName");
+    const filterLineClient = document.getElementById("filterLineClient");
+    const filterLineDiscipline = document.getElementById("filterLineDiscipline");
+    const filterLineExperience = document.getElementById("filterLineExperience");
+    const filterLineOfficeLocation = document.getElementById("filterLineOfficeLocation");
+    const filterLineGeoLocation = document.getElementById("filterLineGeoLocation");
+
+    const filterBarProjectName = document.getElementById("filterBarProjectName");
+    const filterBarClient = document.getElementById("filterBarClient");
+    const filterBarDiscipline = document.getElementById("filterBarDiscipline");
+    const filterBarExperience = document.getElementById("filterBarExperience");
+    const filterBarLOE = document.getElementById("filterBarLOE");
+    const filterBarLocation = document.getElementById("filterBarLocation");
+    const filterBarAssignedTo = document.getElementById("filterBarAssignedTo");
+    const filterBarType = document.getElementById("filterBarType");
+    const filterBarProposed = document.getElementById("filterBarProposed");
+
+    function populateFilterDropdowns() {
+      let setLineName = new Set();
+      let setLineClient = new Set();
+      let setLineDiscipline = new Set();
+      let setLineExperience = new Set();
+      let setLineOffice = new Set();
+      let setLineGeo = new Set();
+
+      let setBarProject = new Set();
+      let setBarClient = new Set();
+      let setBarDiscipline = new Set();
+      let setBarExperience = new Set();
+      let setBarLOE = new Set();
+      let setBarLocation = new Set();
+      let setBarAssigned = new Set();
+      let setBarType = new Set();
+      let setBarProposed = new Set();
+
+      lines.forEach((l) => {
+        if (l.name) setLineName.add(l.name);
+        if (l.client) setLineClient.add(l.client);
+        if (l.discipline) setLineDiscipline.add(l.discipline);
+        if (l.experience) setLineExperience.add(l.experience);
+        if (l.officeLocation) setLineOffice.add(l.officeLocation);
+        if (l.geoLocation) setLineGeo.add(l.geoLocation);
+
+        l.bars.forEach((b) => {
+          if (b.projectName) setBarProject.add(b.projectName);
+          if (b.client) setBarClient.add(b.client);
+          if (b.discipline) setBarDiscipline.add(b.discipline);
+          if (b.experience) setBarExperience.add(b.experience);
+          if (b.LOE) setBarLOE.add(b.LOE);
+          if (b.location) setBarLocation.add(b.location);
+          if (b.assignedTo) setBarAssigned.add(b.assignedTo);
+          if (b.type) setBarType.add(b.type);
+          if (b.proposed) setBarProposed.add(b.proposed);
+        });
+      });
+
+      let arrLineName = [...setLineName].sort();
+      let arrLineClient = [...setLineClient].sort();
+      let arrLineDiscipline = [...setLineDiscipline].sort();
+      let arrLineExperience = [...setLineExperience].sort();
+      let arrLineOffice = [...setLineOffice].sort();
+      let arrLineGeo = [...setLineGeo].sort();
+
+      let arrBarProject = [...setBarProject].sort();
+      let arrBarClient = [...setBarClient].sort();
+      let arrBarDiscipline = [...setBarDiscipline].sort();
+      let arrBarExperience = [...setBarExperience].sort();
+      let arrBarLOE = [...setBarLOE].sort();
+      let arrBarLocation = [...setBarLocation].sort();
+      let arrBarAssigned = [...setBarAssigned].sort();
+      let arrBarType = [...setBarType].sort();
+      let arrBarProposed = [...setBarProposed].sort();
+
+      function buildOptions(options) {
+        return (
+          options.map((o) => `<option value="${o}">${o}</option>`).join("") +
+              `<option value=""></option>`
+        );
+      }
+
+      filterLineName.innerHTML = buildOptions(arrLineName);
+      filterLineClient.innerHTML = buildOptions(arrLineClient);
+      filterLineDiscipline.innerHTML = buildOptions(arrLineDiscipline);
+      filterLineExperience.innerHTML = buildOptions(arrLineExperience);
+      filterLineOfficeLocation.innerHTML = buildOptions(arrLineOffice);
+      filterLineGeoLocation.innerHTML = buildOptions(arrLineGeo);
+
+      filterBarProjectName.innerHTML = buildOptions(arrBarProject);
+      filterBarClient.innerHTML = buildOptions(arrBarClient);
+      filterBarDiscipline.innerHTML = buildOptions(arrBarDiscipline);
+      filterBarExperience.innerHTML = buildOptions(arrBarExperience);
+      filterBarLOE.innerHTML = buildOptions(arrBarLOE);
+      filterBarLocation.innerHTML = buildOptions(arrBarLocation);
+      filterBarAssignedTo.innerHTML = buildOptions(arrBarAssigned);
+      filterBarType.innerHTML = buildOptions(arrBarType);
+      filterBarProposed.innerHTML = buildOptions(arrBarProposed);
+    }
+
+    function autoRefreshFilters() {
+      filters.line.name = filterLineName.value || null;
+      filters.line.client = filterLineClient.value || null;
+      filters.line.discipline = filterLineDiscipline.value || null;
+      filters.line.experience = filterLineExperience.value || null;
+      filters.line.officeLocation = filterLineOfficeLocation.value || null;
+      filters.line.geoLocation = filterLineGeoLocation.value || null;
+
+      filters.bar.projectName = filterBarProjectName.value || null;
+      filters.bar.client = filterBarClient.value || null;
+      filters.bar.discipline = filterBarDiscipline.value || null;
+      filters.bar.experience = filterBarExperience.value || null;
+      filters.bar.LOE = filterBarLOE.value || null;
+      filters.bar.location = filterBarLocation.value || null;
+      filters.bar.assignedTo = filterBarAssignedTo.value || null;
+      filters.bar.type = filterBarType.value || null;
+      filters.bar.proposed = filterBarProposed.value || null;
+
+      for (let k in filters.line) if (!filters.line[k]) delete filters.line[k];
+      for (let k in filters.bar) if (!filters.bar[k]) delete filters.bar[k];
+
+      renderTable();
+    }
+
+    [
+      filterLineName,
+      filterLineClient,
+      filterLineDiscipline,
+      filterLineExperience,
+      filterLineOfficeLocation,
+      filterLineGeoLocation,
+
+      filterBarProjectName,
+      filterBarClient,
+      filterBarDiscipline,
+      filterBarExperience,
+      filterBarLOE,
+      filterBarLocation,
+      filterBarAssignedTo,
+      filterBarType,
+      filterBarProposed,
+    ].forEach((el) => {
+      el.addEventListener("change", autoRefreshFilters);
+    });
+
+    const filterBtn = document.getElementById("filterBtn");
+    filterBtn.addEventListener("click", () => {
+      populateFilterDropdowns();
+      filterLineName.value = filters.line.name || "";
+      filterLineClient.value = filters.line.client || "";
+      filterLineDiscipline.value = filters.line.discipline || "";
+      filterLineExperience.value = filters.line.experience || "";
+      filterLineOfficeLocation.value = filters.line.officeLocation || "";
+      filterLineGeoLocation.value = filters.line.geoLocation || "";
+
+      filterBarProjectName.value = filters.bar.projectName || "";
+      filterBarClient.value = filters.bar.client || "";
+      filterBarDiscipline.value = filters.bar.discipline || "";
+      filterBarExperience.value = filters.bar.experience || "";
+      filterBarLOE.value = filters.bar.LOE || "";
+      filterBarLocation.value = filters.bar.location || "";
+      filterBarAssignedTo.value = filters.bar.assignedTo || "";
+      filterBarType.value = filters.bar.type || "";
+      filterBarProposed.value = filters.bar.proposed || "";
+
+      filterModal.style.display = "block";
+    });
+
+    const filterApplyBtn = document.getElementById("filterApplyBtn");
+    filterApplyBtn.addEventListener("click", () => {
+      filterModal.style.display = "none";
+    });
+
+    const filterClearBtn = document.getElementById("filterClearBtn");
+    filterClearBtn.addEventListener("click", () => {
+      filters.line = {};
+      filters.bar = {};
+      filterModal.style.display = "none";
+      renderTable();
+    });
+
+    const filterCancelBtn = document.getElementById("filterCancelBtn");
+    filterCancelBtn.addEventListener("click", () => {
+      filterModal.style.display = "none";
+    });
+
+    document.addEventListener("mousedown", (e) => {
+      if (filterModal.style.display === "block") {
+        let rect = filterModal.getBoundingClientRect();
+        let inside =
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom;
+        if (!inside) filterModal.style.display = "none";
+      }
+    });
+
+    /* SETTINGS => theme, color pickers */
+    const settingsModal = document.getElementById("settingsModal");
+    const settingsOkBtn = document.getElementById("settingsOkBtn");
+    const settingsCancelBtn = document.getElementById("settingsCancelBtn");
+    const themeSelect = document.getElementById("themeSelect");
+    const securedColor = document.getElementById("securedColor");
+    const proposedColor = document.getElementById("proposedColor");
+    const opportunityColor = document.getElementById("opportunityColor");
+    const futureColor = document.getElementById("futureColor");
+
+    document.getElementById("themeToggleBtn").addEventListener("click", () => {
+      themeSelect.value = currentTheme;
+      securedColor.value = typeColors.secured;
+      proposedColor.value = typeColors.proposed;
+      opportunityColor.value = typeColors.opportunity;
+      futureColor.value = typeColors.future;
+      settingsModal.style.display = "block";
+    });
+
+    settingsOkBtn.addEventListener("click", () => {
+      currentTheme = themeSelect.value;
+      typeColors.secured = securedColor.value;
+      typeColors.proposed = proposedColor.value;
+      typeColors.opportunity = opportunityColor.value;
+      typeColors.future = futureColor.value;
+      settingsModal.style.display = "none";
+      applyTheme();
+    });
+
+    settingsCancelBtn.addEventListener("click", () => {
+      settingsModal.style.display = "none";
+    });
+
+    document.addEventListener("mousedown", (e) => {
+      if (settingsModal.style.display === "block") {
+        let rect = settingsModal.getBoundingClientRect();
+        let inside =
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom;
+        if (!inside) settingsModal.style.display = "none";
+      }
+    });
+
+    /* ABOUT => unchanged */
+    document.getElementById("aboutToggleBtn").addEventListener("click", () => {
+      alert(`
+ Sleek Professional Gantt Planner
+ Custom modifications in place. Enjoy planning!
+      `);
+    });
+
+    /* SEARCH => text input */
+    const searchInput = document.getElementById("searchInput");
+    searchInput.addEventListener("input", () => {
+      searchTerm = searchInput.value.trim();
+      renderTable();
+    });
+
+    /* ADMIN MODE => toggles advanced features via a bootstrap modal for password. */
+    const adminToggleBtn = document.getElementById("adminToggleBtn");
+    const csvEditToggleBtn = document.getElementById("csvEditToggleBtn");
+    const adminPasswordModal = new bootstrap.Modal(document.getElementById("adminPasswordModal"));
+    const adminPasswordInput = document.getElementById("adminPasswordInput");
+    const adminPasswordConfirmBtn = document.getElementById("adminPasswordConfirmBtn");
+
+    adminToggleBtn.addEventListener("click", () => {
+      if (!adminMode) {
+        adminPasswordInput.value = "";
+        adminPasswordModal.show();
+      } else {
+        adminMode = false;
+        alert("Admin mode disabled.");
+        csvEditToggleBtn.style.display = "none";
+        renderTable();
+      }
+    });
+
+    adminPasswordConfirmBtn.addEventListener("click", () => {
+      const entered = adminPasswordInput.value;
+      if (entered === "Password") {
+        adminMode = true;
+        alert("Admin mode enabled.");
+        csvEditToggleBtn.style.display = "inline-block";
+        adminPasswordModal.hide();
+        renderTable();
+      } else {
+        alert("Incorrect password. Remaining in user mode.");
+      }
+    });
+
+    /* CSV BUILD => for export or editing */
+    function buildCsv(linesArray) {
+      let csvStr =
+        "Line ID,Line Name,Line Client,Line Discipline,Line Experience,Line OfficeLocation,Line GeoLocation,Line Type," +
+        "Bar ID,Bar Label,Project Name,Client,Discipline,Experience,LOE,Location,AssignedTo,Proposed,Type," +
+        "Start Year,Start Week,End Year,End Week,Duration (weeks)\n";
+
+      linesArray.forEach((line) => {
+        if (!line.bars.length) {
+          csvStr += `${line.id || ""},"${line.name || ""}","${line.client || ""}","${line.discipline || ""}","${line.experience || ""}","${line.officeLocation || ""}","${line.geoLocation || ""}","${line.type || ""}",,,,,,,,,,,,\n`;
+        } else {
+          line.bars.forEach((bar) => {
+            let { year: sy, week: sw } = fromAbsoluteWeek(bar.startAbsWeek);
+            let { year: ey, week: ew } = fromAbsoluteWeek(bar.startAbsWeek + bar.length - 1);
+            csvStr += `${line.id || ""},"${line.name || ""}","${line.client || ""}","${line.discipline || ""}","${line.experience || ""}","${line.officeLocation || ""}","${line.geoLocation || ""}","${line.type || ""}",`;
+            csvStr += `${bar.id || ""},"${bar.label || ""}","${bar.projectName || ""}","${bar.client || ""}","${bar.discipline || ""}","${bar.experience || ""}","${bar.LOE || ""}","${bar.location || ""}","${bar.assignedTo || ""}","${bar.proposed || ""}","${bar.type || ""}",`;
+            csvStr += `${sy},${sw},${ey},${ew},${bar.length}\n`;
+          });
+        }
+      });
+      return csvStr;
+    }
+
+    /* CSV EDIT => admin only */
+    const csvEditModal = document.getElementById("csvEditModal");
+    const csvTextarea = document.getElementById("csvTextarea");
+    const csvEditApplyBtn = document.getElementById("csvEditApplyBtn");
+    const csvEditCancelBtn = document.getElementById("csvEditCancelBtn");
+
+    csvEditToggleBtn.addEventListener("click", () => {
+      if (!adminMode) return;
+      let csvStr = buildCsv(lines);
+      csvTextarea.value = csvStr;
+      csvEditModal.style.display = "block";
+    });
+
+    csvEditApplyBtn.addEventListener("click", () => {
+      if (!adminMode) return;
+      let csvData = csvTextarea.value;
+      try {
+        pushUndoState();
+        let parsed = parseCsv(csvData);
+        lines = parsed.lines;
+        lineCounter = parsed.lineCounter;
+        barCounter = parsed.barCounter;
+        populateSlicersPerson();
+        populateSlicersOpp();
+        renderTable();
+        saveToLocalStorage();
+        alert("CSV updated successfully.");
+        csvEditModal.style.display = "none";
+      } catch (err) {
+        alert("Error parsing CSV: " + err.message);
+      }
+    });
+
+    csvEditCancelBtn.addEventListener("click", () => {
+      csvEditModal.style.display = "none";
+    });
+
+    document.addEventListener("mousedown", (e) => {
+      if (csvEditModal.style.display === "block") {
+        let rect = csvEditModal.getBoundingClientRect();
+        let inside =
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom;
+        if (!inside) csvEditModal.style.display = "none";
+      }
+    });
+
+    /* IMPORT CSV => triggers file input. */
+    const importFileInput = document.getElementById("importFileInput");
+    importCsvBtn.addEventListener("click", () => {
+      importFileInput.value = "";
+      importFileInput.click();
+    });
+
+    importFileInput.addEventListener("change", (e) => {
+      let file = e.target.files[0];
+      if (!file) return;
+      let reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          pushUndoState();
+          if (file.name.endsWith(".csv")) {
+            let parsed = parseCsv(ev.target.result);
+            lines = parsed.lines;
+            lineCounter = parsed.lineCounter;
+            barCounter = parsed.barCounter;
+            populateSlicersPerson();
+            populateSlicersOpp();
+          } else {
+            throw new Error("Unsupported file type (CSV only).");
+          }
+          startYearInput.value = startYear;
+          startWeekInput.value = startWeek;
+          endYear = startYear + 10;
+          endWeek = 52;
+          zoomSlider.value = rowHeight;
+          heightZoomSlider.value = cellWidth;
+          themeSelect.value = currentTheme;
+          securedColor.value = typeColors.secured;
+          proposedColor.value = typeColors.proposed;
+          opportunityColor.value = typeColors.opportunity;
+          futureColor.value = typeColors.future;
+
+          updateCSSVariables();
+          applyTheme();
+          renderTable();
+          saveToLocalStorage();
+
+          alert("CSV Import successful!");
+        } catch (err) {
+          console.error(err);
+          alert("Import failed: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    /* EXPORT CSV => filename generation */
+    const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+    downloadCsvBtn.addEventListener("click", () => {
+      let csv = buildCsv(lines);
+      let now = new Date();
+      let dd = String(now.getDate()).padStart(2, "0");
+      let mm = String(now.getMonth() + 1).padStart(2, "0");
+      let yyyy = now.getFullYear();
+      let hh = String(now.getHours()).padStart(2, "0");
+      let min = String(now.getMinutes()).padStart(2, "0");
+
+      let filename = `Gantt-${dd}-${mm}-${yyyy}-${hh}:${min}.csv`;
+      let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      let url = URL.createObjectURL(blob);
+      let a = document.createElement("a");
+      a.download = filename;
+      a.href = url;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    /* PRINT => PDF */
+    const printBtn = document.getElementById("printBtn");
+    printBtn.addEventListener("click", () => {
+      window.print();
+    });
+
+    /* ZOOM => show tooltips with the slider values instead of inline text */
+    const zoomSlider = document.getElementById("zoomSlider");
+    const heightZoomSlider = document.getElementById("heightZoomSlider");
+
+    zoomSlider.addEventListener("input", (e) => {
+      rowHeight = parseInt(e.target.value);
+      zoomSlider.title = rowHeight;
+      updateCSSVariables();
+      renderTable();
+      saveToLocalStorage();
+    });
+    heightZoomSlider.addEventListener("input", (e) => {
+      cellWidth = parseInt(e.target.value);
+      heightZoomSlider.title = cellWidth;
+      updateCSSVariables();
+      renderTable();
+      saveToLocalStorage();
+    });
+
+    /* ------------------------------------------
+       Arrow button controls for zoom (updated behavior)
+       ------------------------------------------ */
+    const rowHeightDecBtn = document.getElementById("rowHeightDecBtn"); // Reference to row height decrease button
+    const rowHeightIncBtn = document.getElementById("rowHeightIncBtn"); // Reference to row height increase button
+    const colWidthDecBtn = document.getElementById("colWidthDecBtn");   // Reference to column width decrease button
+    const colWidthIncBtn = document.getElementById("colWidthIncBtn");   // Reference to column width increase button
+
+    function clamp(val, min, max) { // Utility to clamp values between min and max
+      return Math.max(min, Math.min(max, val)); // Return clamped value
+    }
+
+    function adjustRowHeight(delta) { // Adjust row height by delta
+      const min = parseInt(zoomSlider.min || "30"); // Read slider min
+      const max = parseInt(zoomSlider.max || "350"); // Read slider max
+      let newVal = clamp((parseInt(zoomSlider.value) || rowHeight) + delta, min, max); // Compute and clamp new value
+      zoomSlider.value = newVal; // Update slider UI
+      rowHeight = newVal; // Update state
+      zoomSlider.title = rowHeight; // Update slider tooltip
+      updateCSSVariables(); // Apply CSS variables
+      renderTable(); // Re-render
+      saveToLocalStorage(); // Persist
+    }
+
+    function adjustColWidth(delta) { // Adjust column width by delta
+      const min = parseInt(heightZoomSlider.min || "5"); // Read slider min
+      const max = parseInt(heightZoomSlider.max || "150"); // UPDATED: default fallback max now 150
+      let newVal = clamp((parseInt(heightZoomSlider.value) || cellWidth) + delta, min, max); // Compute and clamp new value
+      heightZoomSlider.value = newVal; // Update slider UI
+      cellWidth = newVal; // Update state
+      heightZoomSlider.title = cellWidth; // Update slider tooltip
+      updateCSSVariables(); // Apply CSS variables
+      renderTable(); // Re-render
+      saveToLocalStorage(); // Persist
+    }
+
+    // UPDATED: Default click adjusts by the slider's step value; Shift has no effect (removed).
+    rowHeightDecBtn.addEventListener("click", () => { // Decrease row height by step
+      const step = parseInt(zoomSlider.step || "1"); // Read slider step
+      adjustRowHeight(-step); // Apply step decrement
+    });
+
+    rowHeightIncBtn.addEventListener("click", () => { // Increase row height by step
+      const step = parseInt(zoomSlider.step || "1"); // Read slider step
+      adjustRowHeight(step); // Apply step increment
+    });
+
+    colWidthDecBtn.addEventListener("click", () => { // Decrease column width by step
+      const step = parseInt(heightZoomSlider.step || "1"); // Read slider step
+      adjustColWidth(-step); // Apply step decrement
+    });
+
+    colWidthIncBtn.addEventListener("click", () => { // Increase column width by step
+      const step = parseInt(heightZoomSlider.step || "1"); // Read slider step
+      adjustColWidth(step); // Apply step increment
+    });
+    /* ------------------------------------------
+       End updated arrow controls
+       ------------------------------------------ */
+
+    /* TIMESCALE => recalc endYear to startYear+10 */
+    const startYearInput = document.getElementById("startYearInput");
+    const startWeekInput = document.getElementById("startWeekInput");
+
+    function checkTimescale() {
+      let ds = toAbsoluteWeek(startYear, startWeek);
+      let de = toAbsoluteWeek(endYear, endWeek);
+      if (ds > de) {
+        alert("Error: The Start date is later than the End date.");
+        return false;
+      }
+      return true;
+    }
+
+    function timescaleChange() {
+      startYear = parseInt(startYearInput.value) || 2025;
+      startWeek = parseInt(startWeekInput.value) || 1;
+      endYear = startYear + 10;
+      endWeek = 52;
+
+      if (checkTimescale()) {
+        renderTable();
+        saveToLocalStorage();
+      }
+    }
+
+    startYearInput.addEventListener("change", timescaleChange);
+    startWeekInput.addEventListener("change", timescaleChange);
+
+    /* ------------------------------------------
+       Added: "Today" and "This year" timescale buttons
+       ------------------------------------------ */
+    const todayBtn = document.getElementById("todayBtn"); // Reference to Today button
+    const thisYearBtn = document.getElementById("thisYearBtn"); // Reference to This year button
+
+    function getISOYearAndWeek(date) { // Compute ISO year and week number for a given date
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())); // Use UTC to avoid TZ issues
+      const dayNum = (d.getUTCDay() + 6) % 7; // Day of week with Monday=0
+      d.setUTCDate(d.getUTCDate() - dayNum + 3); // Shift to Thursday of current week
+      const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4)); // First Thursday of ISO year
+      const diff = (d - firstThursday) / 86400000; // Days between
+      const week = 1 + Math.round(diff / 7); // Week number
+      const year = d.getUTCFullYear(); // ISO week year
+      return { year, week }; // Return computed year/week
+    }
+
+    todayBtn.addEventListener("click", () => { // When Today is clicked
+      const { year, week } = getISOYearAndWeek(new Date()); // Get today's ISO year/week
+      startYearInput.value = year; // Set Start Year input
+      startWeekInput.value = week; // Set Start Week input
+      timescaleChange(); // Apply timescale change (also sets endYear)
+    });
+
+    thisYearBtn.addEventListener("click", () => { // When This year is clicked
+      const { year } = getISOYearAndWeek(new Date()); // Get current ISO year
+      startYearInput.value = year; // Set Start Year input
+      startWeekInput.value = 1; // Set Start Week to week 1
+      timescaleChange(); // Apply timescale change (also sets endYear)
+    });
+    /* ------------------------------------------
+       End added timescale buttons
+       ------------------------------------------ */
+
+    /*
+     * Parse CSV into lines & bars
+     */
+    function parseCsv(csvString) {
+      let linesArr = csvString.split(/\r?\n/);
+      if (!linesArr.length) return { lines: [], lineCounter: 0, barCounter: 0 };
+      let header = linesArr[0].split(",");
+      linesArr.shift();
+
+      let data = [];
+      linesArr.forEach((row) => {
+        if (!row.trim()) return;
+        let cols = splitCsvRow(row);
+        let entry = {};
+        for (let i = 0; i < header.length; i++) {
+          entry[header[i].trim()] = (cols[i] || "").trim();
+        }
+        data.push(entry);
+      });
+
+      let rebuilt = {};
+      let lineCount = 0;
+      let barCount = 0;
+
+      data.forEach((r) => {
+        let lineId = r["Line ID"] || "";
+        if (!rebuilt[lineId]) {
+          rebuilt[lineId] = {
+            id: parseInt(lineId) || 1000 + Object.keys(rebuilt).length,
+            name: stripQuotes(r["Line Name"] || ""),
+            client: stripQuotes(r["Line Client"] || ""),
+            discipline: stripQuotes(r["Line Discipline"] || ""),
+            experience: stripQuotes(r["Line Experience"] || ""),
+            officeLocation: stripQuotes(r["Line OfficeLocation"] || ""),
+            geoLocation: stripQuotes(r["Line GeoLocation"] || ""),
+            type: stripQuotes(r["Line Type"] || ""),
+            bars: [],
+            selected: false,
+            dragging: false,
+          };
+          lineCount++;
+        }
+
+        let barId = r["Bar ID"] || "";
+        if (barId.trim()) {
+          let sy = parseInt(r["Start Year"] || "2025");
+          let sw = parseInt(r["Start Week"] || "1");
+          let ey = parseInt(r["End Year"] || "2025");
+          let ew = parseInt(r["End Week"] || "1");
+
+          let startAbs = toAbsoluteWeek(sy, sw);
+          let endAbs = toAbsoluteWeek(ey, ew);
+          let length = endAbs - startAbs + 1;
+          if (length < 1) length = 1;
+
+          rebuilt[lineId].bars.push({
+            id: parseInt(barId) || 9999 + barCount,
+            label: stripQuotes(r["Bar Label"] || ""),
+            projectName: stripQuotes(r["Project Name"] || ""),
+            client: stripQuotes(r["Client"] || ""),
+            discipline: stripQuotes(r["Discipline"] || ""),
+            experience: stripQuotes(r["Experience"] || ""),
+            LOE: stripQuotes(r["LOE"] || ""),
+            location: stripQuotes(r["Location"] || ""),
+            assignedTo: stripQuotes(r["AssignedTo"] || ""),
+            proposed: stripQuotes(r["Proposed"] || "no").toLowerCase(),
+            type: stripQuotes(r["Type"] || "proposed").toLowerCase(),
+            startAbsWeek: startAbs,
+            length,
+            selected: false,
+            dragging: false,
+          });
+          barCount++;
+        }
+      });
+
+      let finalLines = Object.values(rebuilt);
+      return { lines: finalLines, lineCounter: lineCount, barCounter: barCount };
+    }
+
+    function splitCsvRow(row) {
+      let result = [];
+      let cur = "";
+      let inQuotes = false;
+      for (let i = 0; i < row.length; i++) {
+        let c = row[i];
+        if (c === '"') {
+          inQuotes = !inQuotes;
+          cur += c;
+        } else if (c === "," && !inQuotes) {
+          result.push(cur);
+          cur = "";
+        } else {
+          cur += c;
+        }
+      }
+      result.push(cur);
+      return result;
+    }
+
+    function stripQuotes(str) {
+      return str.replace(/^"(.*)"$/, "$1");
+    }
+
+    /* SORT UI => clearing all sorts */
+    const sortFieldSelect = document.getElementById("sortFieldSelect");
+    const sortDirectionSelect = document.getElementById("sortDirectionSelect");
+    const sortFieldSelect2 = document.getElementById("sortFieldSelect2");
+    const sortDirectionSelect2 = document.getElementById("sortDirectionSelect2");
+
+    sortFieldSelect.addEventListener("change", () => {
+      barSortField = sortFieldSelect.value;
+      renderTable();
+    });
+    sortDirectionSelect.addEventListener("change", () => {
+      barSortDirection = sortDirectionSelect.value;
+      renderTable();
+    });
+    sortFieldSelect2.addEventListener("change", () => {
+      barSortField2 = sortFieldSelect2.value;
+      renderTable();
+    });
+    sortDirectionSelect2.addEventListener("change", () => {
+      barSortDirection2 = sortDirectionSelect2.value;
+      renderTable();
+    });
+
+    const clearAllSortBtn = document.getElementById("clearAllSortBtn");
+    clearAllSortBtn.addEventListener("click", () => {
+      barSortField = "";
+      barSortDirection = "asc";
+      barSortField2 = "";
+      barSortDirection2 = "asc";
+      sortFieldSelect.value = "";
+      sortDirectionSelect.value = "asc";
+      sortFieldSelect2.value = "";
+      sortDirectionSelect2.value = "asc";
+      renderTable();
+    });
+
+    /* Overview toggle */
+    const overviewToggleBtn = document.getElementById("overviewToggleBtn");
+    overviewToggleBtn.addEventListener("click", () => {
+      isOverviewMode = !isOverviewMode;
+      if (isOverviewMode) {
+        overviewToggleBtn.classList.add("btn-secondary");
+        overviewToggleBtn.classList.remove("btn-sm");
+      } else {
+        overviewToggleBtn.classList.remove("btn-secondary");
+        overviewToggleBtn.classList.add("btn-sm");
+      }
+      renderTable();
+    });
+
+    /*
+     * Clear storage => now resets lines to default sample data
+     */
+    clearStorageBtn.addEventListener("click", () => {
+      // Remove the saved chart data from localStorage
+      localStorage.removeItem("ganttChartData");
+      
+      // Reset lines to default sample
+      lines = JSON.parse(JSON.stringify(defaultSampleLines));
+      lineCounter = 2;
+      barCounter = 102;
+
+      // Reset everything else as needed
+      startYear = 2025;
+      startWeek = 1;
+      endYear = 2035;
+      endWeek = 52;
+      cellWidth = 100; // UPDATED: reset column width default to 100
+      rowHeight = 40;
+      barSortField = "lineType";
+      barSortDirection = "desc";
+
+      // Clear filters
+      filters.line = {};
+      filters.bar = {};
+      slicersPerson.discipline = [];
+      slicersPerson.experience = [];
+      slicersPerson.location = [];
+      slicersOpp.discipline = [];
+      slicersOpp.client = [];
+      slicersOpp.experience = [];
+      slicersOpp.location = [];
+
+      // Repopulate slicers and re-render
+      populateSlicersPerson();
+      populateSlicersOpp();
+      updateCSSVariables();
+      applyTheme();
+      renderTable();
+      // Save new state
+      saveToLocalStorage();
+    });
+
+    /*
+     * Re-populate Person slicers => discipline, experience, location only
+     */
+    function populateSlicersPerson() {
+      let disciplineSet = new Set();
+      let experienceSet = new Set();
+      let locationSet = new Set();
+
+      lines.forEach((line) => {
+        if ((line.type || "").toLowerCase() === "person") {
+          if (line.discipline) disciplineSet.add(line.discipline);
+          if (line.experience) experienceSet.add(line.experience);
+          if (line.officeLocation) locationSet.add(line.officeLocation);
+
+          line.bars.forEach((b) => {
+            if ((b.type || "").toLowerCase() === "person") {
+              // no client used for person => do nothing
+            }
+          });
+        }
+      });
+
+      let discArr = [...disciplineSet].sort();
+      let expArr = [...experienceSet].sort();
+      let locArr = [...locationSet].sort();
+
+      function buildOptions(options) {
+        return (
+          options.map((o) => `<option value="${o}">${o}</option>`).join("") +
+          `<option value=""></option>` 
+        );
+      }
+
+      slicerDisciplineSelect.innerHTML = buildOptions(discArr);
+      slicerExperienceSelect.innerHTML = buildOptions(expArr);
+      slicerLocationSelect.innerHTML = buildOptions(locArr);
+    }
+
+    /*
+     * Re-populate Opp slicers => discipline, client, experience, location
+     */
+    function populateSlicersOpp() {
+      let disciplineSet = new Set();
+      let clientSet = new Set();
+      let experienceSet = new Set();
+      let locationSet = new Set();
+
+      lines.forEach((line) => {
+        if ((line.type || "").toLowerCase() === "opportunity") {
+          if (line.discipline) disciplineSet.add(line.discipline);
+          if (line.client) clientSet.add(line.client);
+          if (line.experience) experienceSet.add(line.experience);
+          if (line.officeLocation) locationSet.add(line.officeLocation);
+
+          line.bars.forEach((b) => {
+            if ((b.type || "").toLowerCase() === "opportunity") {
+              if (b.client) clientSet.add(b.client);
+            }
+          });
+        }
+      });
+
+      let discArr = [...disciplineSet].sort();
+      let clientArr = [...clientSet].sort();
+      let expArr = [...experienceSet].sort();
+      let locArr = [...locationSet].sort();
+
+      function buildOptions(options) {
+        return (
+          options.map((o) => `<option value="${o}">${o}</option>`).join("") +
+          `<option value=""></option>`
+        );
+      }
+
+      slicerDisciplineSelectOpp.innerHTML = buildOptions(discArr);
+      slicerClientSelectOpp.innerHTML = buildOptions(clientArr);
+      slicerExperienceSelectOpp.innerHTML = buildOptions(expArr);
+      slicerLocationSelectOpp.innerHTML = buildOptions(locArr);
+    }
+
+    /*
+     * Init => load from localStorage or keep defaults
+     */
+    const tableWrapper = document.getElementById("tableWrapper");
+    const ganttTable = document.getElementById("ganttTable");
+    const tableBody = document.getElementById("tableBody");
+
+    function init() {
+      loadFromLocalStorage();
+      populateDateSelects();
+      updateCSSVariables();
+      updateLegendSwatches();
+
+      startYearInput.value = startYear;
+      startWeekInput.value = startWeek;
+      endYear = startYear + 10;
+      endWeek = 52;
+      zoomSlider.value = rowHeight;
+      heightZoomSlider.value = cellWidth;
+      themeSelect.value = currentTheme;
+      securedColor.value = typeColors.secured;
+      proposedColor.value = typeColors.proposed;
+      opportunityColor.value = typeColors.opportunity;
+      futureColor.value = typeColors.future;
+
+      populateSlicersPerson();
+      populateSlicersOpp();
+      applyTheme();
+      renderTable();
+
+      tableWrapper.addEventListener("scroll", () => updateBarTextPositions());
+      window.addEventListener("resize", () => updateBarTextPositions());
+    }
+
+    /*
+     * Build year and week selects
+     */
+    function populateDateSelects() {
+      let years = [];
+      for (let y = 2023; y <= 2040; y++) {
+        years.push(y);
+      }
+      let weeks = [];
+      for (let w = 1; w <= 52; w++) {
+        weeks.push(w);
+      }
+      [startYearSelect, endYearSelect].forEach((sel) => {
+        sel.innerHTML = "";
+        years.forEach((Y) => {
+          let opt = document.createElement("option");
+          opt.value = Y;
+          opt.textContent = Y;
+          sel.appendChild(opt);
+        });
+      });
+      [startWeekSelect, endWeekSelect].forEach((sel) => {
+        sel.innerHTML = "";
+        weeks.forEach((W) => {
+          let opt = document.createElement("option");
+          opt.value = W;
+          opt.textContent = W;
+          sel.appendChild(opt);
+        });
+      });
+    }
+
+    window.addEventListener("load", init);
+
+    /* 
+     * Undo button event
+     */
+    undoBtn.addEventListener("click", () => {
+      undoLastAction();
+    });
+  </script>
+</body>
+</html>
