@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta tags for proper rendering and responsiveness -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P6 Schedule Comparison Tool</title>
+    
+    <!-- SheetJS library for Excel file parsing -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        /* Root CSS variables for consistent theming throughout the application */
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        /* Reset and base styles for consistent rendering across browsers */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body styling with modern font stack and background */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        /* Main container with max width for readability */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header section styling */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Main heading with improved typography */
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        /* Subtitle text styling */
+        .header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        /* Card component for content sections */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Card title styling */
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Icon styling for card headers */
+        .card h2::before {
+            content: '📊';
+            font-size: 1.5rem;
+        }
+
+        /* Upload section specific heading icon */
+        .upload-section h2::before {
+            content: '📁';
+        }
+
+        /* Results section specific heading icon */
+        .results-section h2::before {
+            content: '🔍';
+        }
+
+        /* Grid layout for file upload cards */
+        .upload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Individual file upload box styling */
+        .file-upload-box {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: var(--bg-color);
+        }
+
+        /* Hover effect for upload box */
+        .file-upload-box:hover {
+            border-color: var(--primary-color);
+            background: white;
+        }
+
+        /* Active/dragover state for upload box */
+        .file-upload-box.dragover {
+            border-color: var(--primary-color);
+            background: #eff6ff;
+        }
+
+        /* Label styling for file upload boxes */
+        .file-upload-box label {
+            display: block;
+            cursor: pointer;
+        }
+
+        /* File upload title styling */
+        .file-upload-box h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        /* Helper text in upload box */
+        .file-upload-box p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        /* Hide default file input element */
+        .file-input {
+            display: none;
+        }
+
+        /* Custom button styling for file selection */
+        .file-button {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+            cursor: pointer;
+        }
+
+        /* Hover effect for file button */
+        .file-button:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Success state for file uploaded */
+        .file-uploaded {
+            border-color: var(--success-color);
+            background: #f0fdf4;
+        }
+
+        /* File name display after upload */
+        .file-name {
+            margin-top: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            word-break: break-all;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Compare button styling */
+        .compare-button {
+            width: 100%;
+            padding: 15px;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Hover effect for compare button */
+        .compare-button:hover:not(:disabled) {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Disabled state for compare button */
+        .compare-button:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Statistics bar layout */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* Individual stat card styling */
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Stat value (number) styling */
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        /* Stat label styling */
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* Controls section for filters and search */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        /* Individual control group styling */
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* Label styling for form controls */
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        /* Input and select field styling */
+        .control-group input,
+        .control-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+        }
+
+        /* Focus state for inputs */
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Export button styling */
+        .export-button {
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            white-space: nowrap;
+        }
+
+        /* Hover effect for export button */
+        .export-button:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Table container with horizontal scroll */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Results table styling */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        /* Table header and cell styling */
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Table header specific styling */
+        .results-table th {
+            background: var(--bg-color);
+            font-weight: 600;
+            color: var(--text-primary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Hover effect for sortable headers */
+        .results-table th:hover {
+            background: #e2e8f0;
+        }
+
+        /* Sort indicator in table headers */
+        .results-table th::after {
+            content: ' ⇅';
+            opacity: 0.3;
+            font-size: 0.8rem;
+        }
+
+        /* Active sort indicator */
+        .results-table th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        /* Active descending sort indicator */
+        .results-table th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        /* Zebra striping for table rows */
+        .results-table tbody tr:nth-child(even) {
+            background: var(--bg-color);
+        }
+
+        /* Hover effect for table rows */
+        .results-table tbody tr:hover {
+            background: #f1f5f9;
+        }
+
+        /* Highlight styling for changed cells */
+        .changed {
+            background: #fef3c7 !important;
+            font-weight: 600;
+            position: relative;
+        }
+
+        /* Change indicator badge */
+        .change-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        /* Badge for added items */
+        .badge-added {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Badge for removed items */
+        .badge-removed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Badge for modified items */
+        .badge-modified {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Loading spinner overlay */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        /* Show loading state */
+        .loading.active {
+            display: flex;
+        }
+
+        /* Spinner animation */
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Keyframes for spinner rotation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Alert message styling */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        /* Error alert styling */
+        .alert.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* Success alert styling */
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        /* Show alert */
+        .alert.show {
+            display: block;
+        }
+
+        /* Empty state message */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        /* Empty state icon */
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* Column mapping section */
+        .column-mapping {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Mapping item layout */
+        .mapping-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: white;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        /* Mapping item icon */
+        .mapping-item::before {
+            content: '↔️';
+        }
+
+        /* Responsive design for mobile devices */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .control-group {
+                width: 100%;
+            }
+            
+            .stats-bar {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main container for entire application -->
+    <div class="container">
+        <!-- Header section with title and description -->
+        <div class="header">
+            <h1>P6 Schedule Comparison Tool</h1>
+            <p>Compare two P6 schedule exports and identify changes between datasets</p>
+        </div>
+
+        <!-- Alert container for user notifications -->
+        <div id="alertBox" class="alert"></div>
+
+        <!-- File upload section -->
+        <div class="card upload-section">
+            <h2>Upload Schedule Files</h2>
+            
+            <!-- Grid layout for two file uploads -->
+            <div class="upload-grid">
+                <!-- Baseline/original file upload -->
+                <div class="file-upload-box" id="fileBox1">
+                    <label for="file1">
+                        <h3>Baseline Schedule</h3>
+                        <p>Select or drag your baseline Excel file</p>
+                        <span class="file-button">Choose File</span>
+                        <input type="file" id="file1" class="file-input" accept=".xlsx,.xls">
+                        <div id="fileName1" class="file-name" style="display: none;"></div>
+                    </label>
+                </div>
+
+                <!-- Comparison/updated file upload -->
+                <div class="file-upload-box" id="fileBox2">
+                    <label for="file2">
+                        <h3>Comparison Schedule</h3>
+                        <p>Select or drag your comparison Excel file</p>
+                        <span class="file-button">Choose File</span>
+                        <input type="file" id="file2" class="file-input" accept=".xlsx,.xls">
+                        <div id="fileName2" class="file-name" style="display: none;"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Compare button to trigger analysis -->
+            <button id="compareBtn" class="compare-button" disabled>
+                Compare Schedules
+            </button>
+        </div>
+
+        <!-- Column mapping information display -->
+        <div id="mappingSection" class="card" style="display: none;">
+            <h2>Column Mapping</h2>
+            <div id="columnMapping" class="column-mapping"></div>
+        </div>
+
+        <!-- Results section (hidden until comparison is complete) -->
+        <div id="resultsSection" class="card results-section" style="display: none;">
+            <h2>Comparison Results</h2>
+
+            <!-- Statistics dashboard -->
+            <div class="stats-bar" id="statsBar"></div>
+
+            <!-- Filter and export controls -->
+            <div class="controls">
+                <!-- Search filter -->
+                <div class="control-group">
+                    <label for="searchInput">Search</label>
+                    <input type="text" id="searchInput" placeholder="Search in results...">
+                </div>
+
+                <!-- Change type filter -->
+                <div class="control-group">
+                    <label for="filterSelect">Filter by Change Type</label>
+                    <select id="filterSelect">
+                        <option value="all">All Changes</option>
+                        <option value="modified">Modified Only</option>
+                        <option value="added">Added Only</option>
+                        <option value="removed">Removed Only</option>
+                    </select>
+                </div>
+
+                <!-- Export to Excel button -->
+                <div class="control-group">
+                    <label>&nbsp;</label>
+                    <button id="exportBtn" class="export-button">📥 Export Results</button>
+                </div>
+            </div>
+
+            <!-- Results table container -->
+            <div class="table-container">
+                <table class="results-table" id="resultsTable">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Empty state when no results match filters -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">🔍</div>
+                <h3>No results found</h3>
+                <p>Try adjusting your filters or search terms</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading spinner overlay -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Global application state object to store all data and configuration
+        const AppState = {
+            file1Data: null,        // Stores parsed data from baseline file
+            file2Data: null,        // Stores parsed data from comparison file
+            file1Name: '',          // Stores baseline filename
+            file2Name: '',          // Stores comparison filename
+            comparisonResults: [],  // Stores final comparison results
+            filteredResults: [],    // Stores filtered results based on user input
+            commonColumns: [],      // Stores columns that exist in both datasets
+            sortColumn: null,       // Current column being sorted
+            sortDirection: 'asc',   // Current sort direction (asc/desc)
+            keyColumns: ['Activity ID', 'Calendar', 'Schedule Name'], // Composite key columns for matching
+        };
+
+        // DOM element references for efficient access
+        const elements = {
+            file1Input: document.getElementById('file1'),
+            file2Input: document.getElementById('file2'),
+            fileBox1: document.getElementById('fileBox1'),
+            fileBox2: document.getElementById('fileBox2'),
+            fileName1: document.getElementById('fileName1'),
+            fileName2: document.getElementById('fileName2'),
+            compareBtn: document.getElementById('compareBtn'),
+            resultsSection: document.getElementById('resultsSection'),
+            mappingSection: document.getElementById('mappingSection'),
+            columnMapping: document.getElementById('columnMapping'),
+            tableHead: document.getElementById('tableHead'),
+            tableBody: document.getElementById('tableBody'),
+            statsBar: document.getElementById('statsBar'),
+            searchInput: document.getElementById('searchInput'),
+            filterSelect: document.getElementById('filterSelect'),
+            exportBtn: document.getElementById('exportBtn'),
+            loading: document.getElementById('loading'),
+            alertBox: document.getElementById('alertBox'),
+            emptyState: document.getElementById('emptyState'),
+        };
+
+        // Initialize all event listeners when DOM is loaded
+        function initializeEventListeners() {
+            // File input change event for baseline file
+            elements.file1Input.addEventListener('change', (e) => handleFileSelect(e, 1));
+            
+            // File input change event for comparison file
+            elements.file2Input.addEventListener('change', (e) => handleFileSelect(e, 2));
+            
+            // Compare button click event
+            elements.compareBtn.addEventListener('click', performComparison);
+            
+            // Search input with debounce for performance
+            elements.searchInput.addEventListener('input', debounce(filterResults, 300));
+            
+            // Filter dropdown change event
+            elements.filterSelect.addEventListener('change', filterResults);
+            
+            // Export button click event
+            elements.exportBtn.addEventListener('click', exportResults);
+
+            // Drag and drop events for file box 1
+            setupDragAndDrop(elements.fileBox1, elements.file1Input, 1);
+            
+            // Drag and drop events for file box 2
+            setupDragAndDrop(elements.fileBox2, elements.file2Input, 2);
+        }
+
+        // Setup drag and drop functionality for file upload boxes
+        function setupDragAndDrop(box, input, fileNum) {
+            // Prevent default drag behaviors on drag over
+            box.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                box.classList.add('dragover');
+            });
+
+            // Remove dragover styling when drag leaves
+            box.addEventListener('dragleave', () => {
+                box.classList.remove('dragover');
+            });
+
+            // Handle file drop event
+            box.addEventListener('drop', (e) => {
+                e.preventDefault();
+                box.classList.remove('dragover');
+                
+                // Get dropped files
+                const files = e.dataTransfer.files;
+                
+                // Validate that exactly one file was dropped
+                if (files.length > 0) {
+                    input.files = files;
+                    handleFileSelect({ target: input }, fileNum);
+                }
+            });
+        }
+
+        // Handle file selection from input or drag-drop
+        function handleFileSelect(event, fileNum) {
+            // Get the selected file
+            const file = event.target.files[0];
+            
+            // Validate file was selected
+            if (!file) return;
+
+            // Validate file extension is Excel format
+            if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                showAlert('Please select a valid Excel file (.xlsx or .xls)', 'error');
+                return;
+            }
+
+            // Update UI to show file is uploaded
+            const fileBox = fileNum === 1 ? elements.fileBox1 : elements.fileBox2;
+            const fileName = fileNum === 1 ? elements.fileName1 : elements.fileName2;
+            
+            // Add uploaded class for styling
+            fileBox.classList.add('file-uploaded');
+            
+            // Display filename
+            fileName.textContent = `📄 ${file.name}`;
+            fileName.style.display = 'block';
+
+            // Store filename in app state
+            if (fileNum === 1) {
+                AppState.file1Name = file.name;
+            } else {
+                AppState.file2Name = file.name;
+            }
+
+            // Read and parse the Excel file
+            parseExcelFile(file, fileNum);
+        }
+
+        // Parse Excel file using SheetJS library
+        function parseExcelFile(file, fileNum) {
+            // Show loading indicator
+            showLoading(true);
+
+            // Create FileReader to read file contents
+            const reader = new FileReader();
+
+            // Define onload callback for when file is read
+            reader.onload = (e) => {
+                try {
+                    // Get file data as array buffer
+                    const data = new Uint8Array(e.target.result);
+                    
+                    // Parse Excel file using SheetJS
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Get first worksheet name
+                    const firstSheetName = workbook.SheetNames[0];
+                    
+                    // Get worksheet data
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Convert worksheet to JSON with header row
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    // Process and structure the data
+                    const structuredData = structureData(jsonData);
+                    
+                    // Store data in app state
+                    if (fileNum === 1) {
+                        AppState.file1Data = structuredData;
+                    } else {
+                        AppState.file2Data = structuredData;
+                    }
+
+                    // Enable compare button if both files are loaded
+                    checkCompareButtonState();
+                    
+                    // Show success message
+                    showAlert(`File ${fileNum} loaded successfully! (${structuredData.data.length} rows)`, 'success');
+                    
+                } catch (error) {
+                    // Handle parsing errors
+                    showAlert(`Error parsing file ${fileNum}: ${error.message}`, 'error');
+                    console.error('Parse error:', error);
+                } finally {
+                    // Hide loading indicator
+                    showLoading(false);
+                }
+            };
+
+            // Read file as array buffer
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Structure raw Excel data into usable format with headers and rows
+        function structureData(rawData) {
+            // Validate data exists and has content
+            if (!rawData || rawData.length < 2) {
+                throw new Error('File must contain headers and at least one data row');
+            }
+
+            // Extract header row (first row)
+            const headers = rawData[0];
+            
+            // Extract data rows (all rows after header)
+            const dataRows = rawData.slice(1);
+
+            // Convert rows to objects with header keys
+            const data = dataRows.map(row => {
+                const obj = {};
+                headers.forEach((header, index) => {
+                    // Store each cell value with corresponding header as key
+                    obj[header] = row[index] !== undefined ? row[index] : '';
+                });
+                return obj;
+            }).filter(row => {
+                // Filter out completely empty rows
+                return Object.values(row).some(val => val !== '');
+            });
+
+            // Return structured data with headers and data array
+            return { headers, data };
+        }
+
+        // Check if both files are loaded and enable compare button
+        function checkCompareButtonState() {
+            // Enable button only if both files have been parsed
+            if (AppState.file1Data && AppState.file2Data) {
+                elements.compareBtn.disabled = false;
+            }
+        }
+
+        // Main comparison function - orchestrates the entire comparison process
+        function performComparison() {
+            // Show loading indicator
+            showLoading(true);
+
+            // Use setTimeout to allow UI to update before heavy computation
+            setTimeout(() => {
+                try {
+                    // Step 1: Identify common columns between both datasets
+                    identifyCommonColumns();
+                    
+                    // Step 2: Display column mapping to user
+                    displayColumnMapping();
+                    
+                    // Step 3: Build composite keys for matching rows
+                    const file1Keys = buildCompositeKeys(AppState.file1Data.data);
+                    const file2Keys = buildCompositeKeys(AppState.file2Data.data);
+                    
+                    // Step 4: Create maps for efficient lookups
+                    const file1Map = createKeyMap(AppState.file1Data.data, file1Keys);
+                    const file2Map = createKeyMap(AppState.file2Data.data, file2Keys);
+                    
+                    // Step 5: Compare datasets and identify changes
+                    const results = compareDatasets(file1Map, file2Map);
+                    
+                    // Store results in app state
+                    AppState.comparisonResults = results;
+                    AppState.filteredResults = results;
+                    
+                    // Step 6: Display results to user
+                    displayResults();
+                    
+                    // Step 7: Show statistics
+                    displayStatistics();
+                    
+                    // Show results section
+                    elements.resultsSection.style.display = 'block';
+                    elements.mappingSection.style.display = 'block';
+                    
+                    // Scroll to results
+                    elements.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    
+                } catch (error) {
+                    // Handle comparison errors
+                    showAlert(`Comparison error: ${error.message}`, 'error');
+                    console.error('Comparison error:', error);
+                } finally {
+                    // Hide loading indicator
+                    showLoading(false);
+                }
+            }, 100);
+        }
+
+        // Identify columns that exist in both datasets
+        function identifyCommonColumns() {
+            // Get headers from both files
+            const headers1 = AppState.file1Data.headers;
+            const headers2 = AppState.file2Data.headers;
+            
+            // Find intersection of headers (columns present in both)
+            AppState.commonColumns = headers1.filter(h => headers2.includes(h));
+            
+            // Validate that key columns exist in common columns
+            const missingKeys = AppState.keyColumns.filter(key => !AppState.commonColumns.includes(key));
+            
+            // If key columns are missing, throw error
+            if (missingKeys.length > 0) {
+                throw new Error(`Required key columns not found in both files: ${missingKeys.join(', ')}`);
+            }
+        }
+
+        // Display column mapping information to user
+        function displayColumnMapping() {
+            // Clear existing mapping display
+            elements.columnMapping.innerHTML = '';
+            
+            // Create header for mapping section
+            const header = document.createElement('div');
+            header.innerHTML = `<strong>Matched ${AppState.commonColumns.length} columns between datasets:</strong>`;
+            header.style.marginBottom = '10px';
+            elements.columnMapping.appendChild(header);
+            
+            // Create mapping item for each common column
+            AppState.commonColumns.forEach(col => {
+                const item = document.createElement('div');
+                item.className = 'mapping-item';
+                
+                // Highlight key columns
+                if (AppState.keyColumns.includes(col)) {
+                    item.innerHTML = `<strong>${col}</strong> <span class="change-badge badge-added">KEY</span>`;
+                } else {
+                    item.textContent = col;
+                }
+                
+                elements.columnMapping.appendChild(item);
+            });
+        }
+
+        // Build composite keys for matching rows between datasets
+        function buildCompositeKeys(data) {
+            // Map each row to its composite key
+            return data.map(row => {
+                // Concatenate key column values with separator
+                return AppState.keyColumns
+                    .map(col => String(row[col] || '').trim())
+                    .join('|||');
+            });
+        }
+
+        // Create a map for efficient row lookups by composite key
+        function createKeyMap(data, keys) {
+            const map = new Map();
+            
+            // Associate each key with its row data
+            keys.forEach((key, index) => {
+                // Handle duplicate keys by storing array of rows
+                if (map.has(key)) {
+                    // If key already exists, store as array
+                    const existing = map.get(key);
+                    if (Array.isArray(existing)) {
+                        existing.push(data[index]);
+                    } else {
+                        map.set(key, [existing, data[index]]);
+                    }
+                } else {
+                    map.set(key, data[index]);
+                }
+            });
+            
+            return map;
+        }
+
+        // Compare two datasets and identify all changes
+        function compareDatasets(file1Map, file2Map) {
+            const results = [];
+            
+            // Track which keys have been processed
+            const processedKeys = new Set();
+            
+            // Process all keys from file1 (baseline)
+            file1Map.forEach((value1, key) => {
+                processedKeys.add(key);
+                
+                // Handle array case (duplicate keys)
+                const rows1 = Array.isArray(value1) ? value1 : [value1];
+                
+                // Check if key exists in file2
+                if (file2Map.has(key)) {
+                    // Key exists in both - compare for modifications
+                    const value2 = file2Map.get(key);
+                    const rows2 = Array.isArray(value2) ? value2 : [value2];
+                    
+                    // Compare each row from file1 with corresponding rows in file2
+                    rows1.forEach((row1, idx) => {
+                        const row2 = rows2[idx] || rows2[0];
+                        const changes = compareRows(row1, row2, key);
+                        
+                        // Only add if there are actual changes
+                        if (changes.status !== 'unchanged') {
+                            results.push(changes);
+                        }
+                    });
+                } else {
+                    // Key only exists in file1 - row was removed
+                    rows1.forEach(row1 => {
+                        results.push({
+                            key: key,
+                            status: 'removed',
+                            ...row1,
+                            _changeType: 'removed'
+                        });
+                    });
+                }
+            });
+            
+            // Process keys that only exist in file2 (added rows)
+            file2Map.forEach((value2, key) => {
+                // Skip if already processed
+                if (processedKeys.has(key)) return;
+                
+                // Handle array case
+                const rows2 = Array.isArray(value2) ? value2 : [value2];
+                
+                // Mark all as added
+                rows2.forEach(row2 => {
+                    results.push({
+                        key: key,
+                        status: 'added',
+                        ...row2,
+                        _changeType: 'added'
+                    });
+                });
+            });
+            
+            return results;
+        }
+
+        // Compare two individual rows and identify specific field changes
+        function compareRows(row1, row2, key) {
+            // Initialize result object
+            const result = {
+                key: key,
+                status: 'unchanged',
+                _changedFields: [],
+                _changeType: 'unchanged'
+            };
+            
+            // Track if any changes found
+            let hasChanges = false;
+            
+            // Compare each common column
+            AppState.commonColumns.forEach(col => {
+                // Get values from both rows
+                const val1 = row1[col];
+                const val2 = row2[col];
+                
+                // Normalize values for comparison (handle nulls, empty strings, etc)
+                const normalizedVal1 = normalizeValue(val1);
+                const normalizedVal2 = normalizeValue(val2);
+                
+                // Check if values are different
+                if (normalizedVal1 !== normalizedVal2) {
+                    hasChanges = true;
+                    result._changedFields.push(col);
+                    
+                    // Store both old and new values
+                    result[col] = val2; // Current value
+                    result[`${col}_OLD`] = val1; // Previous value
+                } else {
+                    // Store unchanged value
+                    result[col] = val2;
+                }
+            });
+            
+            // Update status if changes found
+            if (hasChanges) {
+                result.status = 'modified';
+                result._changeType = 'modified';
+            }
+            
+            return result;
+        }
+
+        // Normalize values for consistent comparison
+        function normalizeValue(value) {
+            // Handle null, undefined, and empty strings
+            if (value === null || value === undefined || value === '') {
+                return '';
+            }
+            
+            // Convert to string and trim whitespace
+            return String(value).trim();
+        }
+
+        // Display comparison results in table format
+        function displayResults() {
+            // Clear existing table content
+            elements.tableHead.innerHTML = '';
+            elements.tableBody.innerHTML = '';
+            
+            // Build table header
+            const headerRow = document.createElement('tr');
+            
+            // Add change type column
+            const changeTypeHeader = document.createElement('th');
+            changeTypeHeader.textContent = 'Change Type';
+            changeTypeHeader.dataset.column = '_changeType';
+            changeTypeHeader.addEventListener('click', () => sortTable('_changeType'));
+            headerRow.appendChild(changeTypeHeader);
+            
+            // Add column for each common column
+            AppState.commonColumns.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = col;
+                th.dataset.column = col;
+                
+                // Add click handler for sorting
+                th.addEventListener('click', () => sortTable(col));
+                
+                // Highlight key columns
+                if (AppState.keyColumns.includes(col)) {
+                    th.style.background = '#dbeafe';
+                }
+                
+                headerRow.appendChild(th);
+            });
+            
+            elements.tableHead.appendChild(headerRow);
+            
+            // Render table body with filtered results
+            renderTableBody();
+        }
+
+        // Render table body rows from filtered results
+        function renderTableBody() {
+            // Clear existing rows
+            elements.tableBody.innerHTML = '';
+            
+            // Check if results exist
+            if (AppState.filteredResults.length === 0) {
+                elements.emptyState.style.display = 'block';
+                return;
+            }
+            
+            elements.emptyState.style.display = 'none';
+            
+            // Create row for each result
+            AppState.filteredResults.forEach(result => {
+                const row = document.createElement('tr');
+                
+                // Add change type cell
+                const changeTypeCell = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.className = `change-badge badge-${result._changeType}`;
+                badge.textContent = result._changeType.toUpperCase();
+                changeTypeCell.appendChild(badge);
+                row.appendChild(changeTypeCell);
+                
+                // Add cell for each common column
+                AppState.commonColumns.forEach(col => {
+                    const td = document.createElement('td');
+                    
+                    // Check if this field changed
+                    if (result._changedFields && result._changedFields.includes(col)) {
+                        // Field changed - show both old and new values
+                        td.classList.add('changed');
+                        
+                        const oldVal = result[`${col}_OLD`];
+                        const newVal = result[col];
+                        
+                        // Format display with old and new values
+                        td.innerHTML = `
+                            <div><strong>New:</strong> ${escapeHtml(newVal)}</div>
+                            <div style="color: #dc2626; font-size: 0.85em;"><strong>Old:</strong> ${escapeHtml(oldVal)}</div>
+                        `;
+                    } else {
+                        // Field unchanged or N/A
+                        const value = result[col];
+                        td.textContent = value !== undefined ? value : 'N/A';
+                        
+                        // Gray out N/A values for removed rows
+                        if (result._changeType === 'removed' && !value) {
+                            td.style.color = '#94a3b8';
+                        }
+                    }
+                    
+                    row.appendChild(td);
+                });
+                
+                elements.tableBody.appendChild(row);
+            });
+        }
+
+        // Display statistics about comparison results
+        function displayStatistics() {
+            // Calculate statistics
+            const total = AppState.comparisonResults.length;
+            const added = AppState.comparisonResults.filter(r => r._changeType === 'added').length;
+            const removed = AppState.comparisonResults.filter(r => r._changeType === 'removed').length;
+            const modified = AppState.comparisonResults.filter(r => r._changeType === 'modified').length;
+            
+            // Build statistics HTML
+            elements.statsBar.innerHTML = `
+                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="stat-value">${total}</div>
+                    <div class="stat-label">Total Changes</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="stat-value">${modified}</div>
+                    <div class="stat-label">Modified</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="stat-value">${added}</div>
+                    <div class="stat-label">Added</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="stat-value">${removed}</div>
+                    <div class="stat-label">Removed</div>
+                </div>
+            `;
+        }
+
+        // Filter results based on search and filter inputs
+        function filterResults() {
+            // Get filter values
+            const searchTerm = elements.searchInput.value.toLowerCase();
+            const filterType = elements.filterSelect.value;
+            
+            // Start with all results
+            let filtered = AppState.comparisonResults;
+            
+            // Apply change type filter
+            if (filterType !== 'all') {
+                filtered = filtered.filter(r => r._changeType === filterType);
+            }
+            
+            // Apply search filter
+            if (searchTerm) {
+                filtered = filtered.filter(result => {
+                    // Search across all column values
+                    return AppState.commonColumns.some(col => {
+                        const value = String(result[col] || '').toLowerCase();
+                        return value.includes(searchTerm);
+                    });
+                });
+            }
+            
+            // Update filtered results
+            AppState.filteredResults = filtered;
+            
+            // Re-render table
+            renderTableBody();
+        }
+
+        // Sort table by specified column
+        function sortTable(column) {
+            // Toggle sort direction if same column clicked
+            if (AppState.sortColumn === column) {
+                AppState.sortDirection = AppState.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                AppState.sortColumn = column;
+                AppState.sortDirection = 'asc';
+            }
+            
+            // Sort filtered results
+            AppState.filteredResults.sort((a, b) => {
+                const aVal = normalizeValue(a[column]);
+                const bVal = normalizeValue(b[column]);
+                
+                // Compare values
+                if (aVal < bVal) return AppState.sortDirection === 'asc' ? -1 : 1;
+                if (aVal > bVal) return AppState.sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Update header sort indicators
+            document.querySelectorAll('.results-table th').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+                if (th.dataset.column === column) {
+                    th.classList.add(`sorted-${AppState.sortDirection}`);
+                }
+            });
+            
+            // Re-render table
+            renderTableBody();
+        }
+
+        // Export comparison results to Excel file
+        function exportResults() {
+            // Show loading indicator
+            showLoading(true);
+            
+            setTimeout(() => {
+                try {
+                    // Prepare data for export
+                    const exportData = AppState.filteredResults.map(result => {
+                        const row = {
+                            'Change Type': result._changeType.toUpperCase()
+                        };
+                        
+                        // Add all common columns
+                        AppState.commonColumns.forEach(col => {
+                            row[col] = result[col];
+                            
+                            // Add old value if field changed
+                            if (result._changedFields && result._changedFields.includes(col)) {
+                                row[`${col} (OLD)`] = result[`${col}_OLD`];
+                            }
+                        });
+                        
+                        return row;
+                    });
+                    
+                    // Create worksheet from data
+                    const ws = XLSX.utils.json_to_sheet(exportData);
+                    
+                    // Create workbook
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Comparison Results');
+                    
+                    // Generate filename with timestamp
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                    const filename = `P6_Comparison_${timestamp}.xlsx`;
+                    
+                    // Trigger download
+                    XLSX.writeFile(wb, filename);
+                    
+                    showAlert('Results exported successfully!', 'success');
+                    
+                } catch (error) {
+                    showAlert(`Export error: ${error.message}`, 'error');
+                    console.error('Export error:', error);
+                } finally {
+                    showLoading(false);
+                }
+            }, 100);
+        }
+
+        // Show loading overlay
+        function showLoading(show) {
+            if (show) {
+                elements.loading.classList.add('active');
+            } else {
+                elements.loading.classList.remove('active');
+            }
+        }
+
+        // Show alert message to user
+        function showAlert(message, type = 'success') {
+            // Set alert content and type
+            elements.alertBox.textContent = message;
+            elements.alertBox.className = `alert ${type} show`;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                elements.alertBox.classList.remove('show');
+            }, 5000);
+        }
+
+        // Debounce function to limit rapid function calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Escape HTML to prevent XSS attacks
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize application when DOM is ready
+        document.addEventListener('DOMContentLoaded', initializeEventListeners);
+    </script>
+</body>
+</html>
