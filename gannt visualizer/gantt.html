@@ -418,6 +418,7 @@
       border-collapse: collapse;
       table-layout: fixed;
       position: relative;
+        margin-bottom: 39px;  /* ADD THIS LINE */
     }
     #ganttTable,
     #ganttTable thead th,
@@ -495,46 +496,113 @@
       height: 40px;
     }
 
-    /* Left "Name" cell => sticky to the left. */
-    .name-cell {
-      position: sticky;
-      left: 0;
-      background-color: #f0f0f0;
-      box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
-      z-index: 9;
-      width: 300px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: var(--row-height);
-      box-sizing: border-box;
-      cursor: move;
-    }
-    .name-cell span {
-      font-size: 0.85rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipses;
-      display: inline-block;
-      max-width: 90%;
-    }
+/* ========================================
+   UPDATED NAME AND DISCIPLINE CELLS
+   - No gaps between cells
+   - Dynamic height from var(--row-height)
+   - Consistent structure
+   ======================================== */
 
-    /* The second sticky Discipline cell => pinned next to the name cell */
-    .discipline-cell {
-      position: sticky;
-      left: 300px;
-      background-color: #f0f0f0;
-      box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
-      z-index: 9;
-      width: 150px;
-      justify-content: center;
-      align-items: center;
-      height: var(--row-height);
-      box-sizing: border-box;
-      text-align:center;
-      cursor: move;
-      border: 1px #000;
-    }
+/* Name cell - line item labels */
+.name-cell {
+  position: sticky;
+  left: 0;
+  background-color: #f0f0f0;
+  box-shadow: 2px 0 3px rgba(0, 0, 0, 0.1); /* Shadow only on right */
+  z-index: 9;
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: var(--row-height); /* Already dynamic! */
+  box-sizing: border-box;
+  cursor: move;
+  padding: 4px 8px;
+  margin: 0;
+  border: none;
+  border-right: 1px solid #000;
+}
+
+.name-cell span {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  width: 100%; /* Changed from 90% */
+  text-align: center;
+}
+
+/* Discipline cell - now consistent with name cell */
+.discipline-cell {
+  position: sticky;
+  left: 300px;
+  background-color: #f0f0f0;
+  box-shadow: 2px 0 3px rgba(0, 0, 0, 0.1);
+  z-index: 9;
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  justify-content: center;
+  align-items: center;
+  height: var(--row-height); /* Already dynamic! */
+  box-sizing: border-box;
+  cursor: move;
+  padding: 4px 8px;
+  margin: 0;
+  border: none;
+  border-right: 1px solid #000;
+}
+
+.discipline-cell span {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+}
+
+/* Remove double borders from table cells */
+#ganttTable tbody td {
+  border-left: none;
+  border-right: 1px solid #000;
+  padding: 0;
+  margin: 0;
+}
+
+#ganttTable tbody tr {
+  border-bottom: 1px solid #000;
+  margin: 0;
+  padding: 0;
+}
+
+/* Dark theme updates */
+body.dark-theme .name-cell {
+  background-color: #444;
+  color: #fff;
+  box-shadow: 2px 0 3px rgba(255, 255, 255, 0.1);
+  border-right-color: #666;
+}
+
+body.dark-theme .discipline-cell {
+  background-color: #444;
+  color: #fff;
+  box-shadow: 2px 0 3px rgba(255, 255, 255, 0.1);
+  border-right-color: #666;
+}
+
+body.dark-theme #ganttTable tbody td {
+  border-right-color: #666;
+}
+
+body.dark-theme #ganttTable tbody tr {
+  border-bottom-color: #666;
+}
+
 
     /* The bar cell => contains the Gantt bars over the weeks. */
     .bar-cell {
@@ -890,6 +958,93 @@
         display: none !important;
       }
     }
+/* ========================================================================
+   ADDITIONAL DARK THEME FIXES
+   ======================================================================== */
+
+/* Discipline cell dark theme */
+body.dark-theme .discipline-cell {
+  background-color: #444;
+  color: #fff;
+  box-shadow: 1px 1px 3px rgba(255, 255, 255, 0.2);
+}
+
+/* Filter modal cards */
+body.dark-theme .filter-card {
+  background: #495057;
+  color: #fff;
+}
+
+body.dark-theme .filter-card h5 {
+  color: #fff;
+}
+
+/* Selected row in dark theme */
+body.dark-theme .gantt-row.selected {
+  background-color: #665d03; /* Dark gold */
+}
+
+/* Bar cells background */
+body.dark-theme .bar-cell {
+  background-color: #2d3238;
+}
+
+/* Table borders in dark theme */
+body.dark-theme #ganttTable,
+body.dark-theme #ganttTable thead th,
+body.dark-theme #ganttTable tbody td {
+  border-color: #666;
+}
+
+/* Modal headers */
+body.dark-theme #filterModal h3,
+body.dark-theme #settingsModal h3,
+body.dark-theme #csvEditModal h3 {
+  color: #fff;
+}
+
+/* Attribute row labels */
+body.dark-theme .attribute-row label {
+  color: #fff;
+}
+
+/* Table wrapper background */
+body.dark-theme .table-wrapper {
+  background-color: #212529;
+}
+
+/* Legend text */
+body.dark-theme .legend-item span {
+  color: #fff;
+}
+
+/* Dropdown menu (hamburger) */
+body.dark-theme .dropdown-menu {
+  background-color: #343a40;
+  border-color: #495057;
+}
+
+body.dark-theme .dropdown-item {
+  color: #fff;
+}
+
+body.dark-theme .dropdown-item:hover {
+  background-color: #495057;
+}
+
+body.dark-theme .dropdown-divider {
+  border-top-color: #495057;
+}
+
+/* Table body background */
+body.dark-theme #ganttTable tbody {
+  background-color: #2d3238;
+}
+
+/* Timescale header borders */
+body.dark-theme .timescale-header {
+  border-color: #666;
+}
 
     /*
      * Legend => stacked vertical for each bar color.
@@ -999,7 +1154,7 @@
       font-weight: 700;
       font-size: 1rem;
       margin-bottom: 8px;
-      color: #EA1F27; /* Red title */
+      color: #fff; /* Red title */
       border-bottom: 1px solid #EA1F27;
       padding-bottom: 4px;
     }
