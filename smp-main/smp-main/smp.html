@@ -16,42 +16,77 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
   <title>Sommerville Masters Pool Leaderboard</title>
   <style>
+    /* ==========================================
+       CSS VARIABLES & BASE STYLES
+       ========================================== */
+    :root {
+      --masters-green: #003525;
+      --masters-light-bg: #f7f5ef;
+      --masters-hover: #e5ffe5;
+      --masters-text: #003300;
+      --white: #fff;
+      --border-color: #ddd;
+      --shadow-light: rgba(0,0,0,0.1);
+      --shadow-medium: rgba(0,0,0,0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      /* Updated to a Masters-like open source serif font */
       font-family: 'Libre Baskerville', 'Times New Roman', serif;
       margin: 0;
       padding: 0;
-      background-color: #f7f5ef;
+      background-color: var(--masters-light-bg);
+      font-size: 16px;
+      line-height: 1.6;
     }
 
-    /* Updated header to prevent logo clash on mobile/smaller screens */
+    /* ==========================================
+       HEADER STYLES
+       ========================================== */
     header {
-      background-color: #003525;
+      background-color: var(--masters-green);
       background-size: cover;
       background-position: center;
-      color: #fff;
-      padding: 20px;
+      color: var(--white);
+      padding: 15px 20px;
       text-align: center;
     }
 
     header h1 {
       z-index: 1;
-      font-size: 1.6em;
-      margin-left: 0px;
-      font-family: 'Libre Baskerville', 'Times New Roman', serif; /* Ensure headings also use Libre Baskerville */
+      font-size: clamp(1.2em, 4vw, 1.8em);
+      margin: 10px 0;
+      font-family: 'Libre Baskerville', 'Times New Roman', serif;
     }
 
     .logo {
       display: block;
       margin: 0 auto;
-      max-width: 20%;
-      width: auto;
+      max-width: 150px;
+      width: 100%;
       height: auto;
-      max-height: 50px;
+      max-height: 60px;
       object-fit: contain;
+    }
+
+    /* ==========================================
+       MAIN CONTENT STYLES
+       ========================================== */
+    main {
+      padding: 15px;
+      max-width: 800px;
+      text-align: center;
+      margin: 0 auto;
+      padding-bottom: 120px;
+    }
+
+    section {
+      margin-bottom: 20px;
     }
 
     .timer,
@@ -59,24 +94,23 @@
     #weather-widget,
     #golf-leaderboard,
     #pool-leaderboard,
-    .youtube,
     .slideshow,
     #historical-winners,
     #sommerville-registration {
-      background-color: #fff;
-      padding: 10px;
+      background-color: var(--white);
+      padding: 15px;
       text-align: center;
-      max-width: 800px;
+      max-width: 100%;
       margin: 20px auto;
-      border-radius: 5px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      box-shadow: 0 2px 6px var(--shadow-light);
     }
 
     .update-image,
     .summary-image {
       display: block;
       margin: 16px auto 0 auto;
-      max-height: 200px;
+      max-height: 250px;
       width: auto;
       max-width: 100%;
       height: auto;
@@ -84,25 +118,17 @@
       border-radius: 5px;
     }
 
-    main {
-      padding: 20px;
-      max-width: 800px;
-      text-align: center;
-      margin: 0 auto;
-    }
-
-    section {
-      margin-bottom: 20px;
-    }
-
     h2 {
-      color: #003525;
+      color: var(--masters-green);
       text-align: center;
-      font-size: 1.2em;
+      font-size: clamp(1em, 3vw, 1.3em);
       margin: 10px 0;
-      font-family: 'Libre Baskerville', 'Times New Roman', serif; /* Ensure section headings also use Libre Baskerville */
+      font-family: 'Libre Baskerville', 'Times New Roman', serif;
     }
 
+    /* ==========================================
+       LIST STYLES
+       ========================================== */
     ul {
       list-style-type: none;
       padding: 0;
@@ -110,28 +136,38 @@
     }
 
     li {
-      background-color: #fff;
-      margin: 3px 0;
-      padding: 8px;
-      border-radius: 3px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      background-color: var(--white);
+      margin: 5px 0;
+      padding: 12px;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px var(--shadow-light);
       cursor: pointer;
       position: relative;
-      transition: background-color 0.3s ease;
-      font-size: 0.9em;
+      transition: all 0.3s ease;
+      font-size: clamp(0.85em, 2.5vw, 0.95em);
+      min-height: 44px;
+      display: flex;
+      align-items: center;
     }
 
     li:hover {
-      background-color: #e5ffe5;
+      background-color: var(--masters-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px var(--shadow-light);
+    }
+
+    li:active {
+      transform: scale(0.98);
     }
 
     .expand {
       display: none;
-      margin-top: 5px;
-      padding: 5px;
-      background-color: #e5ffe5;
-      border-radius: 3px;
-      font-size: 0.85em;
+      margin-top: 8px;
+      padding: 10px;
+      background-color: var(--masters-hover);
+      border-radius: 5px;
+      font-size: clamp(0.8em, 2.3vw, 0.9em);
+      text-align: left;
     }
 
     .golf-icon {
@@ -141,121 +177,716 @@
       background-size: contain;
       display: inline-block;
       vertical-align: middle;
-      margin-right: 5px;
+      margin-right: 8px;
+      flex-shrink: 0;
     }
 
+    /* ==========================================
+       FOOTER STYLES
+       ========================================== */
     footer {
-      background-color: #003525;
-      color: #fff;
-      padding: 10px;
+      background-color: var(--masters-green);
+      color: var(--white);
+      padding: 20px 15px;
       text-align: center;
+      font-size: clamp(0.85em, 2.5vw, 0.95em);
     }
 
-    .feedback-button {
-      background-color: #fff;
-      color: #004c00;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 3px;
-      cursor: pointer;
-      margin-top: 10px;
+    footer p {
+      margin: 10px 0;
     }
 
-    .slideshow img {
-      max-width: 300px;
-      max-height: 200px;
-      border-radius: 3px;
-      display: block;
-      margin: 0 auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 10px auto;
-    }
-
-    th,
-    td {
-      padding: 8px;
-      background-color: #fff;
-      border: 1px solid #ddd;
-      text-align: center;
-      border-radius: 3px;
-      font-size: 0.9em;
-    }
-
-    th {
-      background-color: #003525;
-      color: #fff;
-    }
-
-    tr:nth-child(even) {
-      background-color: #003525;
-    }
-
-    .collapse-btn {
-      margin: 5px 0;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-      background: #e5ffe5;
-      color: #003300;
-      border: 1px solid #003300;
-      padding: 5px 10px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-size: 0.9em;
-    }
-
-    /* Added to lock slideshow width & height */
+    /* ==========================================
+       SLIDESHOW STYLES
+       ========================================== */
     .slideshow {
-      width: calc(100% - 50px);
-      max-width: calc(100% - 50px);
-      height: 200px;
+      width: 100%;
+      max-width: 100%;
+      height: 250px;
       overflow: hidden;
-      margin: 0 auto;
+      margin: 20px auto;
       position: relative;
+      border-radius: 8px;
     }
+
     .slideshow img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
+      border-radius: 8px;
+      transition: opacity 0.8s ease-in-out;
+    }
+
+    /* ==========================================
+       TABLE STYLES
+       ========================================== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px auto;
+      font-size: clamp(0.8em, 2.3vw, 0.9em);
+    }
+
+    th,
+    td {
+      padding: 10px 8px;
+      background-color: var(--white);
+      border: 1px solid var(--border-color);
+      text-align: center;
+      border-radius: 3px;
+    }
+
+    th {
+      background-color: var(--masters-green);
+      color: var(--white);
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    /* ==========================================
+       BUTTON STYLES
+       ========================================== */
+    .collapse-btn {
+      margin: 10px auto;
+      display: block;
+      background: var(--masters-hover);
+      color: var(--masters-text);
+      border: 2px solid var(--masters-text);
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: clamp(0.85em, 2.5vw, 0.95em);
+      font-family: 'Libre Baskerville', 'Times New Roman', serif;
+      min-height: 44px;
+      min-width: 120px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .collapse-btn:hover {
+      background: var(--masters-text);
+      color: var(--white);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 53, 37, 0.3);
+    }
+
+    .collapse-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* ==========================================
+       AUDIO CONTROLS
+       ========================================== */
+    #audio-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(255,255,255,0.95);
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px var(--shadow-medium);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      z-index: 999;
+      max-width: calc(100vw - 40px);
+    }
+
+    #audio-controls button {
+      padding: 10px 14px;
+      border: none;
+      background: var(--masters-green);
+      color: var(--white);
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      min-height: 44px;
+      min-width: 44px;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #audio-controls button:hover {
+      background: #004d32;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px var(--shadow-medium);
+    }
+
+    #audio-controls button:active {
+      transform: scale(0.95);
+    }
+
+    #audio-status {
+      font-weight: 400;
+      color: var(--masters-green);
+      font-size: clamp(0.75em, 2vw, 0.85em);
+      text-align: center;
+    }
+
+    /* ==========================================
+       CHATANGO CONTAINER
+       ========================================== */
+    #chatango-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 998;
+    }
+
+    /* ==========================================
+       WEATHER WIDGET
+       ========================================== */
+    #weather-forecast > div {
+      display: inline-block;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      margin: 6px;
+      min-width: 100px;
+      box-shadow: 0 2px 4px var(--shadow-light);
+      transition: all 0.3s ease;
+    }
+
+    #weather-forecast > div:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px var(--shadow-light);
+    }
+
+    /* ==========================================
+       REGISTRATION LINK
+       ========================================== */
+    #sommerville-registration a {
+      display: inline-block;
+      text-decoration: none;
+      background-color: var(--masters-green);
+      color: var(--white);
+      padding: 12px 24px;
+      border-radius: 5px;
+      font-family: 'Libre Baskerville', 'Times New Roman', serif;
+      font-size: clamp(0.9em, 2.5vw, 1em);
+      min-height: 44px;
+      transition: all 0.3s ease;
+    }
+
+    #sommerville-registration a:hover {
+      background-color: #004d32;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px var(--shadow-medium);
+    }
+
+    #sommerville-registration a:active {
+      transform: translateY(0);
+    }
+
+    /* ==========================================
+       TOAST NOTIFICATION SYSTEM
+       ========================================== */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+      max-width: 400px;
+    }
+
+    .toast {
+      background: white;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 60px;
+      pointer-events: all;
+      animation: slideInRight 0.3s ease-out;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .toast:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .toast:active {
+      transform: scale(0.98);
+    }
+
+    .toast.success {
+      border-left: 4px solid #10B981;
+    }
+
+    .toast.info {
+      border-left: 4px solid #3B82F6;
+    }
+
+    .toast.warning {
+      border-left: 4px solid #F59E0B;
+    }
+
+    .toast.error {
+      border-left: 4px solid #EF4444;
+    }
+
+    .toast-icon {
+      font-size: 24px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .toast-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .toast-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #1F2937;
+      margin: 0;
+    }
+
+    .toast-message {
+      font-size: 13px;
+      color: #6B7280;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #9CA3AF;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: color 0.2s ease;
+    }
+
+    .toast-close:hover {
+      color: #374151;
+    }
+
+    .toast-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #10B981, #059669);
+      animation: progressBar 3s linear forwards;
+    }
+
+    .toast.info .toast-progress {
+      background: linear-gradient(90deg, #3B82F6, #2563EB);
+    }
+
+    .toast.warning .toast-progress {
+      background: linear-gradient(90deg, #F59E0B, #D97706);
+    }
+
+    .toast.error .toast-progress {
+      background: linear-gradient(90deg, #EF4444, #DC2626);
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideInUp {
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes progressBar {
+      from {
+        width: 100%;
+      }
+      to {
+        width: 0%;
+      }
+    }
+
+    .toast.removing {
+      animation: slideOutRight 0.3s ease-in forwards;
+    }
+
+    @keyframes slideOutRight {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+    }
+
+    @keyframes slideOutDown {
+      from {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+    }
+
+    /* ==========================================
+       RIPPLE EFFECT
+       ========================================== */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(0);
+      animation: rippleEffect 0.6s ease-out;
+      pointer-events: none;
+    }
+
+    @keyframes rippleEffect {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* ==========================================
+       PULSE ANIMATION
+       ========================================== */
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+      }
+    }
+
+    .pulse-once {
+      animation: pulse 0.6s ease-out;
+    }
+
+    /* ==========================================
+       SKELETON LOADER
+       ========================================== */
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        #f0f0f0 0%,
+        #e0e0e0 20%,
+        #f0f0f0 40%,
+        #f0f0f0 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+      border-radius: 4px;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    /* ==========================================
+       LOADING SPINNER
+       ========================================== */
+    .spinner {
+      border: 3px solid rgba(0, 53, 37, 0.1);
+      border-top-color: var(--masters-green);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ==========================================
+       RESPONSIVE MEDIA QUERIES
+       ========================================== */
+    @media screen and (max-width: 480px) {
+      body {
+        font-size: 14px;
+      }
+
+      header {
+        padding: 10px 15px;
+      }
+
+      header h1 {
+        font-size: 1.2em;
+        margin: 8px 0;
+      }
+
+      .logo {
+        max-width: 120px;
+        max-height: 45px;
+      }
+
+      main {
+        padding: 10px;
+        padding-bottom: 100px;
+      }
+
+      .timer,
+      .updates,
+      #weather-widget,
+      #golf-leaderboard,
+      #pool-leaderboard,
+      .slideshow,
+      #historical-winners,
+      #sommerville-registration {
+        padding: 12px;
+        margin: 15px auto;
+        border-radius: 6px;
+      }
+
+      .slideshow {
+        height: 180px;
+      }
+
+      .update-image {
+        max-height: 180px;
+      }
+
+      #audio-controls {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        max-width: calc(100vw - 20px);
+        padding: 10px;
+      }
+
+      #audio-controls > div:first-child {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      #audio-controls button {
+        padding: 8px 12px;
+        font-size: 14px;
+        min-height: 40px;
+        min-width: 40px;
+      }
+
+      #chatango-container {
+        display: none;
+      }
+
+      #weather-forecast > div {
+        display: block;
+        margin: 8px auto;
+        max-width: 280px;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      th, td {
+        padding: 8px 6px;
+        font-size: 0.8em;
+      }
+
+      .toast-container {
+        top: auto;
+        bottom: 80px;
+        left: 10px;
+        right: 10px;
+        max-width: none;
+      }
+
+      .toast {
+        animation: slideInUp 0.3s ease-out;
+      }
+
+      .toast.removing {
+        animation: slideOutDown 0.3s ease-in forwards;
+      }
+    }
+
+    @media screen and (min-width: 481px) and (max-width: 768px) {
+      main {
+        padding: 15px;
+        padding-bottom: 110px;
+      }
+
+      .slideshow {
+        height: 220px;
+      }
+
+      #audio-controls {
+        bottom: 15px;
+        left: 15px;
+      }
+
+      #chatango-container {
+        bottom: 15px;
+        right: 15px;
+      }
+
+      #weather-forecast > div {
+        min-width: 110px;
+      }
+    }
+
+    @media screen and (min-width: 769px) and (max-width: 1024px) {
+      main {
+        max-width: 700px;
+        padding: 20px;
+      }
+
+      .slideshow {
+        height: 280px;
+      }
+
+      #audio-controls {
+        bottom: 20px;
+        left: 20px;
+      }
+    }
+
+    @media screen and (min-width: 1025px) {
+      main {
+        max-width: 800px;
+      }
+
+      .slideshow {
+        height: 300px;
+      }
+
+      #weather-forecast > div {
+        min-width: 115px;
+      }
+    }
+
+    @media screen and (max-height: 600px) and (orientation: landscape) {
+      #audio-controls {
+        bottom: 10px;
+        left: 10px;
+        padding: 8px;
+        gap: 6px;
+      }
+
+      #audio-controls button {
+        padding: 6px 10px;
+        font-size: 14px;
+      }
+
+      #chatango-container {
+        display: none;
+      }
+
+      main {
+        padding-bottom: 80px;
+      }
+    }
+
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+      .golf-icon {
+        background-size: cover;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --masters-light-bg: #1a1a1a;
+        --white: #2d2d2d;
+        --border-color: #444;
+      }
+
+      body {
+        color: #e0e0e0;
+      }
+
+      li {
+        color: #e0e0e0;
+      }
+
+      #audio-controls {
+        background: rgba(45, 45, 45, 0.95);
+      }
+    }
+
+    *:focus-visible {
+      outline: 3px solid #FFD700;
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
 </head>
 
-<!-- Sticky Audio Player Controls with a status line added -->
-<div id="audio-controls" style="
-    position: fixed;
-    bottom: 100px;
-    left: 20px;
-    background: rgba(255,255,255,0.9);
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    z-index: 999;
-">
-  <div>
-    <!-- Updated button text to indicate "Augusta Theme Song" -->
-    <button id="play-pause" style="padding: 6px 12px;">⏯️ </button>
-    <button id="volume-down" style="padding: 6px 12px;">🔉-</button>
-    <button id="volume-up" style="padding: 6px 12px;">🔊+</button>
-  </div>
-  <div id="audio-status" style="font-weight: light; color: green;"></div>
-</div>
-
 <body>
 
+<!-- Audio Player Controls -->
+<div id="audio-controls">
+  <div>
+    <button id="play-pause" aria-label="Play or pause Masters theme song">⏯️</button>
+    <button id="volume-down" aria-label="Decrease volume">🔉</button>
+    <button id="volume-up" aria-label="Increase volume">🔊</button>
+  </div>
+  <div id="audio-status" role="status" aria-live="polite"></div>
+</div>
+
 <header>
-  <!-- Insert your logo URL and logo link below -->
-  <a href="https://kev11wolf.github.io/smp/">
-    <img src="https://esagcs.org/wp-content/uploads/2023/03/The-Masters.jpg" alt="Logo" class="logo">
+  <a href="https://kev11wolf.github.io/smp/" aria-label="Sommerville Masters Pool Home">
+    <img src="https://esagcs.org/wp-content/uploads/2023/03/The-Masters.jpg" alt="The Masters Tournament Logo" class="logo">
   </a>
   <h1>Sommerville Masters Pool</h1>
 </header>
@@ -264,66 +895,62 @@
 
   <section class="timer" id="countdown-timer">
     <h2>Time left 'til 2026 Masters</h2>
-    <p id="time-left"></p>
+    <p id="time-left" aria-live="polite"></p>
   </section>
 
   <section class="updates">
     <h2>News + Updates</h2>
     <p>Thanks for playing! See you all in 2026.</p>
-    <img src="https://i.postimg.cc/wjy1wZ2X/2025-masters.png" alt="Update Placeholder" class="update-image">
+    <img src="https://i.postimg.cc/wjy1wZ2X/2025-masters.png" alt="2025 Masters Pool Winner Celebration" class="update-image">
   </section>
 
-  <!-- Updated weather widget section to pull and display current + 7-day forecast via Open-Meteo, with emojis -->
   <section id="weather-widget">
     <h2>Augusta, GA Weather</h2>
-    <div id="weather-current" style="margin-bottom: 15px;">
+    <div id="weather-current" style="margin-bottom: 15px;" aria-live="polite">
       Loading current weather…
     </div>
-    <div id="weather-forecast">
+    <div id="weather-forecast" aria-live="polite">
       Loading 7-day forecast…
     </div>
   </section>
 
   <section id="sommerville-registration">
-    <h2 style="color: #003300; font-size: 1.2em; margin: 10px 0; font-family: Libre Baskerville, Times New Roman, serif;">
-      Sommerville Masters Pool Registration
-    </h2>
-    <p style="color: #003300; margin-bottom: 10px; font-family: Helvetica, Arial, sans-serif;">
-      Click the button below to submit your selections!
-    </p>
-    <a href="https://docs.google.com/forms/d/e/1FAIpQLSeFdQqMiI8_6rMCRZCMvR5AMDjgjY1Uyq_V2_GUGkQk1tJ6ag/viewform?usp=header"
-       style="display: inline-block; text-decoration: none; background-color: #003525; color: #fff; padding: 10px 15px; border-radius: 3px; font-family: Helvetica, Arial, sans-serif; font-size: 14px;">
+    <h2>Sommerville Masters Pool Registration</h2>
+    <p>Click the button below to submit your selections!</p>
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSeFdQqMiI8_6rMCRZCMvR5AMDjgjY1Uyq_V2_GUGkQk1tJ6ag/viewform?usp=header" 
+       target="_blank" 
+       rel="noopener noreferrer">
       Pick your players!
     </a>
   </section>
 
   <section class="slideshow">
-    <img id="slideshow-image" src="" alt="Slideshow Image">
+    <img id="slideshow-image" src="" alt="Augusta National Golf Course">
   </section>
 
   <section id="pool-leaderboard">
     <h2>Pool Participants Leaderboard</h2>
-    <button id="toggle-pool-button" class="collapse-btn">Collapse</button>
-    <ul id="pool-list">
+    <button id="toggle-pool-button" class="collapse-btn" aria-expanded="true">Collapse</button>
+    <ul id="pool-list" role="list">
       <!-- Pool participant scores will be inserted here -->
     </ul>
   </section>
 
   <section id="golf-leaderboard">
     <h2>Golf Players Leaderboard</h2>
-    <button id="toggle-button" class="collapse-btn">Show More</button>
-    <ul id="golf-list">
+    <button id="toggle-button" class="collapse-btn" aria-expanded="false">Show More</button>
+    <ul id="golf-list" role="list">
       <!-- Golf player scores will be inserted here -->
     </ul>
   </section>
 
   <section id="historical-winners">
     <h2>Sommerville Masters Pool Past Champions</h2>
-    <table>
+    <table role="table">
       <thead>
       <tr>
-        <th>Name</th>
-        <th>Year</th>
+        <th scope="col">Year</th>
+        <th scope="col">Champion</th>
       </tr>
       </thead>
       <tbody>
@@ -351,7 +978,7 @@
     </table>
   </section>
 
-  <div id="chatango-container" style="position: fixed; bottom: 20px; right: 20px;">
+  <div id="chatango-container">
     <script id="cid0020000416183938966" data-cfasync="false" async src="//st.chatango.com/js/gz/emb.js"
             style="width: 250px;height: 350px;">
       {"handle":"sommerville-masters","arch":"js","styles":{"b":100,"c":"000000","d":"000000","l":"FFFFFF","m":"FFFFFF","p":"10","r":100,"fwtickm":1}}
@@ -361,43 +988,213 @@
 </main>
 
 <footer>
-  <p>Website created by K-Dawg.
-  <p></p>
-  <button class="feedback-button" onclick="sendFeedback()">Submit Website Feedback</button>
-  <p></p>
-  <title>Masters wordmark</title>
-  <defs>
-    <linearGradient id="badgeFill" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#FAD84E"/>
-      <stop offset="100%" stop-color="#F6C915"/>
-    </linearGradient>
-    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="rgba(0,0,0,.25)"/>
-    </filter>
-    <style>
-      .word {
-        font-family: "Libre Baskerville", Baskerville, "Times New Roman", serif;
-        font-style: italic;
-        font-weight: 700;
-        letter-spacing: -0.5px;
-      }
-    </style>
-  </defs>
-  <rect x="1.5" y="1.5" width="61" height="61" rx="6" ry="6" fill="url(#badgeFill)" stroke="#106d3b" stroke-width="2"
-        filter="url(#softShadow)"/>
-  <text x="30" y="39" class="word" fill="#106d3b" font-size="18" text-anchor="middle" textLength="44"
-        lengthAdjust="spacingAndGlyphs">MASTERS</text>
-  <g transform="translate(52,18)">
-    <path d="M0 0 L0 18" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round"/>
-    <path d="M0 0 L9 3 L0 6 Z" fill="#D62828" stroke="#9c1f1f" stroke-width="0.7" stroke-linejoin="round"/>
-    <ellipse cx="-1.5" cy="18.5" rx="2.8" ry="1.1" fill="#0b0b0b" opacity="0.2"/>
-  </g>
+  <p>Website created by K-Dawg</p>
+  <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-label="Masters Tournament Badge">
+    <title>Masters wordmark</title>
+    <defs>
+      <linearGradient id="badgeFill" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#FAD84E"/>
+        <stop offset="100%" stop-color="#F6C915"/>
+      </linearGradient>
+      <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="rgba(0,0,0,.25)"/>
+      </filter>
+      <style>
+        .word {
+          font-family: "Libre Baskerville", Baskerville, "Times New Roman", serif;
+          font-style: italic;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+        }
+      </style>
+    </defs>
+    <rect x="1.5" y="1.5" width="61" height="61" rx="6" ry="6" fill="url(#badgeFill)" stroke="#106d3b" stroke-width="2"
+          filter="url(#softShadow)"/>
+    <text x="30" y="39" class="word" fill="#106d3b" font-size="18" text-anchor="middle" textLength="44"
+          lengthAdjust="spacingAndGlyphs">MASTERS</text>
+    <g transform="translate(52,18)">
+      <path d="M0 0 L0 18" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M0 0 L9 3 L0 6 Z" fill="#D62828" stroke="#9c1f1f" stroke-width="0.7" stroke-linejoin="round"/>
+      <ellipse cx="-1.5" cy="18.5" rx="2.8" ry="1.1" fill="#0b0b0b" opacity="0.2"/>
+    </g>
   </svg>
-  </p>
 </footer>
 
 <script>
-  // Use the correct RAW link from GitHub:
+  /* ==========================================
+     TOAST NOTIFICATION SYSTEM
+     ========================================== */
+  class ToastManager {
+    constructor() {
+      this.container = null;
+      this.toasts = [];
+      this.init();
+    }
+
+    init() {
+      if (!document.querySelector('.toast-container')) {
+        this.container = document.createElement('div');
+        this.container.className = 'toast-container';
+        this.container.setAttribute('aria-live', 'polite');
+        this.container.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(this.container);
+      } else {
+        this.container = document.querySelector('.toast-container');
+      }
+    }
+
+    show(options) {
+      const {
+        type = 'info',
+        title = '',
+        message = '',
+        duration = 3000,
+        icon = this.getDefaultIcon(type),
+        vibrate = true
+      } = options;
+
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.setAttribute('role', 'alert');
+
+      toast.innerHTML = `
+        <span class="toast-icon" aria-hidden="true">${icon}</span>
+        <div class="toast-content">
+          ${title ? `<p class="toast-title">${title}</p>` : ''}
+          ${message ? `<p class="toast-message">${message}</p>` : ''}
+        </div>
+        <button class="toast-close" aria-label="Close notification">&times;</button>
+        <div class="toast-progress"></div>
+      `;
+
+      this.container.appendChild(toast);
+      this.toasts.push(toast);
+
+      if (vibrate && 'vibrate' in navigator) {
+        const pattern = type === 'error' ? [100] : [50, 30, 50];
+        navigator.vibrate(pattern);
+      }
+
+      const closeBtn = toast.querySelector('.toast-close');
+      closeBtn.addEventListener('click', () => this.dismiss(toast));
+
+      toast.addEventListener('click', (e) => {
+        if (e.target !== closeBtn) {
+          this.dismiss(toast);
+        }
+      });
+
+      if (duration > 0) {
+        setTimeout(() => this.dismiss(toast), duration);
+      }
+
+      this.addSwipeGesture(toast);
+
+      return toast;
+    }
+
+    dismiss(toast) {
+      if (!toast || !toast.parentElement) return;
+
+      toast.classList.add('removing');
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.parentElement.removeChild(toast);
+          this.toasts = this.toasts.filter(t => t !== toast);
+        }
+      }, 300);
+    }
+
+    addSwipeGesture(toast) {
+      let startX = 0;
+      let currentX = 0;
+      let isSwiping = false;
+
+      toast.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isSwiping = true;
+      }, { passive: true });
+
+      toast.addEventListener('touchmove', (e) => {
+        if (!isSwiping) return;
+        currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+
+        if (Math.abs(diff) > 10) {
+          toast.style.transform = `translateX(${diff}px)`;
+          toast.style.opacity = 1 - Math.abs(diff) / 200;
+        }
+      }, { passive: true });
+
+      toast.addEventListener('touchend', () => {
+        const diff = currentX - startX;
+
+        if (Math.abs(diff) > 100) {
+          this.dismiss(toast);
+        } else {
+          toast.style.transform = '';
+          toast.style.opacity = '';
+        }
+
+        isSwiping = false;
+      });
+    }
+
+    getDefaultIcon(type) {
+      const icons = {
+        success: '✓',
+        error: '✕',
+        warning: '⚠',
+        info: 'ℹ'
+      };
+      return icons[type] || icons.info;
+    }
+
+    success(title, message, duration) {
+      return this.show({ type: 'success', title, message, duration, icon: '✓' });
+    }
+
+    error(title, message, duration) {
+      return this.show({ type: 'error', title, message, duration, icon: '✕' });
+    }
+
+    warning(title, message, duration) {
+      return this.show({ type: 'warning', title, message, duration, icon: '⚠' });
+    }
+
+    info(title, message, duration) {
+      return this.show({ type: 'info', title, message, duration, icon: 'ℹ' });
+    }
+  }
+
+  const toast = new ToastManager();
+
+  /* ==========================================
+     BUTTON RIPPLE EFFECT
+     ========================================== */
+  function addRippleEffect(element) {
+    element.addEventListener('click', function(e) {
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = x + 'px';
+      ripple.style.top = y + 'px';
+
+      this.appendChild(ripple);
+
+      setTimeout(() => ripple.remove(), 600);
+    });
+  }
+
+  /* ==========================================
+     AUDIO PLAYER WITH TOAST NOTIFICATIONS
+     ========================================== */
   const audio = new Audio("https://github.com/kev11wolf/public/raw/refs/heads/main/smp-main/smp-main/Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Masters%20Theme%20Song%20On%20Repeat(1).mp3");
   audio.loop = true;
   audio.volume = 0.5;
@@ -408,55 +1205,79 @@
   const audioStatus = document.getElementById('audio-status');
   let isPlaying = false;
 
-  // Toggle play/pause
   playPauseBtn.onclick = () => {
     if (!isPlaying) {
       audio.play().catch(() => {
-        alert('Click the play button to start the music.');
+        audioStatus.textContent = 'Click play to start music 🎵';
+        toast.warning('Autoplay Blocked', 'Click play to start the music', 3000);
       });
     } else {
       audio.pause();
     }
   };
 
-  // Update button text and status line on play
   audio.onplay = () => {
     isPlaying = true;
-    playPauseBtn.textContent = '⏸️ Pause';
-    audioStatus.textContent = 'Masters Theme Song Playing ▶️';
+    playPauseBtn.textContent = '⏸️';
+    playPauseBtn.setAttribute('aria-label', 'Pause Masters theme song');
+    audioStatus.textContent = 'Masters Theme Playing ▶️';
+    toast.success('Now Playing', 'Masters Theme Song ♪', 2500);
   };
 
-  // Update button text and status line on pause
   audio.onpause = () => {
     isPlaying = false;
-    playPauseBtn.textContent = '⏯️ Play';
-    audioStatus.textContent = 'Masters Theme Song paused ⏸️';
+    playPauseBtn.textContent = '⏯️';
+    playPauseBtn.setAttribute('aria-label', 'Play Masters theme song');
+    audioStatus.textContent = 'Masters Theme Paused ⏸️';
+    toast.info('Paused', 'Click play to resume', 2000);
   };
 
-  // Volume controls
   volumeUpBtn.onclick = () => {
     if (audio.volume < 1) {
       audio.volume = Math.min(1, audio.volume + 0.1);
+      const volumePercent = Math.round(audio.volume * 100);
+      toast.show({
+        type: 'info',
+        title: 'Volume',
+        message: `${volumePercent}%`,
+        duration: 1500,
+        icon: '🔊',
+        vibrate: true
+      });
+    } else {
+      toast.warning('Max Volume', 'Volume is at 100%', 1500);
     }
   };
 
   volumeDownBtn.onclick = () => {
     if (audio.volume > 0) {
       audio.volume = Math.max(0, audio.volume - 0.1);
+      const volumePercent = Math.round(audio.volume * 100);
+      toast.show({
+        type: 'info',
+        title: 'Volume',
+        message: `${volumePercent}%`,
+        duration: 1500,
+        icon: '🔉',
+        vibrate: true
+      });
+    } else {
+      toast.info('Muted', 'Volume is at 0%', 1500);
     }
   };
 
-  // Optional: auto-play on load
   window.onload = () => {
     audio.play().catch(() => {
       console.log('Auto-play blocked. Use the play button.');
+      audioStatus.textContent = 'Click play to start 🎵';
     });
   };
-</script>
 
-<!-- Scripts -->
-<!-- 1. Countdown timer and feedback script -->
-<script>
+  /* ==========================================
+     COUNTDOWN TIMER WITH MILESTONES
+     ========================================== */
+  let lastMilestone = localStorage.getItem('lastMilestone') || '';
+
   function updateCountdown() {
     const futureDate = new Date("09 April 2026").getTime();
     const now = new Date().getTime();
@@ -469,21 +1290,70 @@
 
     document.getElementById("time-left").textContent =
       `${days} Days ${hours} Hours ${minutes} Minutes ${seconds} Seconds`;
-  }
-  setInterval(updateCountdown, 1000);
 
-  function sendFeedback() {
-    const feedback = prompt("Please enter your feedback:");
-    if (feedback) {
-      window.location.href =
-        `mailto:kev11wolf@gmail.com?subject=Website Feedback&body=${encodeURIComponent(feedback)}`;
+    // Milestone celebrations
+    if (days === 100 && hours === 0 && minutes === 0 && lastMilestone !== '100d') {
+      toast.show({
+        type: 'success',
+        title: '100 Days! 🎯',
+        message: 'Getting close to Masters time!',
+        duration: 5000,
+        icon: '🏌️'
+      });
+      localStorage.setItem('lastMilestone', '100d');
+      lastMilestone = '100d';
+    }
+
+    if (days === 30 && hours === 0 && minutes === 0 && lastMilestone !== '30d') {
+      toast.show({
+        type: 'success',
+        title: 'One Month! 🎉',
+        message: 'Just 30 days until Augusta!',
+        duration: 5000,
+        icon: '⛳'
+      });
+      localStorage.setItem('lastMilestone', '30d');
+      lastMilestone = '30d';
+    }
+
+    if (days === 7 && hours === 0 && minutes === 0 && lastMilestone !== '7d') {
+      toast.show({
+        type: 'warning',
+        title: 'One Week! 🔥',
+        message: 'Masters week is here!',
+        duration: 5000,
+        icon: '🏆'
+      });
+      localStorage.setItem('lastMilestone', '7d');
+      lastMilestone = '7d';
+    }
+
+    if (days === 1 && hours === 0 && minutes === 0 && lastMilestone !== '1d') {
+      toast.show({
+        type: 'success',
+        title: 'Tomorrow! 🎊',
+        message: 'The Masters starts tomorrow!',
+        duration: 6000,
+        icon: '⛳'
+      });
+      localStorage.setItem('lastMilestone', '1d');
+      lastMilestone = '1d';
     }
   }
-</script>
 
-<!-- 2. Slideshow, leaderboard, etc. -->
-<script>
+  setInterval(updateCountdown, 1000);
+  updateCountdown();
+
+  /* ==========================================
+     SLIDESHOW, LEADERBOARD, AND WEATHER
+     ========================================== */
   document.addEventListener('DOMContentLoaded', function() {
+    // Apply ripple effect to all buttons
+    document.querySelectorAll('button, .collapse-btn').forEach(btn => {
+      addRippleEffect(btn);
+    });
+
+    // Slideshow with fade transitions
     const images = [
       'https://i.insider.com/5ac3ca737a74af24008b45c7?width=1000&format=jpeg',
       'https://media.stewarttravel.co.uk/media/repository/Golf/golfcourses/USA/Georgia/AugustaNational/Augusta-National.jpg',
@@ -496,7 +1366,6 @@
       'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1145859172.jpg',
       'https://o90934w8.cdn.imgeng.in/wp-content/uploads/2015/04/amen-corner.jpg',
       'https://media.cnn.com/api/v1/images/stellar/prod/170223113519-tiger-augusta-azaleas.jpg',
-      'https://o90934w8.cdn.imgeng.in/wp-content/uploads/2015/04/amen-corner.jpg',
       'https://www.liveabout.com/thmb/KqYZccVwvG6HOodBXslj-yYRDk4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/augusta-national-azalea-rory-58272e685f9b58d5b15309db-5c251adf46e0fb0001e72d82.jpg',
       'https://e0.365dm.com/18/04/768x432/skysports-tiger-woods-masters_4271003.jpg?20180401182508'
     ];
@@ -506,11 +1375,17 @@
     slideshowImage.src = images[currentImageIndex];
 
     function cycleSlideshow() {
-      currentImageIndex = (currentImageIndex + 1) % images.length;
-      slideshowImage.src = images[currentImageIndex];
+      slideshowImage.style.opacity = '0';
+
+      setTimeout(() => {
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        slideshowImage.src = images[currentImageIndex];
+        slideshowImage.style.opacity = '1';
+      }, 800);
     }
     setInterval(cycleSlideshow, 3000);
 
+    // Golf and Pool Leaderboard Data
     const golfLeaderboardData = [
       {name: 'Rory McIlroy', score:-11, roundScores:[0,-6,-6,1]},
       {name: 'Justin Rose', score:-11, roundScores:[-7,-1,3,-6]},
@@ -755,18 +1630,6 @@
         ]
       },
       {
-        name: 'Nate C.',
-        points: -4,
-        selectedPlayers:[
-          {name: 'Viktor Hovland', score:-2},
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Will Zalatoris', score:28},
-          {name: 'Min Woo Lee', score:6},
-          {name: 'Matt Fitzpatrick', score:3},
-          {name: 'Cameron Young', score:27}
-        ]
-      },
-      {
         name: 'Zack K.',
         points: -9,
         selectedPlayers:[
@@ -791,18 +1654,6 @@
         ]
       },
       {
-        name: 'Brady',
-        points: -1,
-        selectedPlayers:[
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Brooks Koepka', score:25},
-          {name: 'Wyndham Clark', score:5},
-          {name: 'Min Woo Lee', score:6},
-          {name: 'Dustin Johnson', score:23},
-          {name: 'Max Homa', score:-4}
-        ]
-      },
-      {
         name: 'Dima K.',
         points: -5,
         selectedPlayers:[
@@ -811,6 +1662,18 @@
           {name: 'Cameron Smith', score:25},
           {name: 'Will Zalatoris', score:28},
           {name: 'Justin Rose', score:-11},
+          {name: 'Cameron Young', score:27}
+        ]
+      },
+      {
+        name: 'Nate C.',
+        points: -4,
+        selectedPlayers:[
+          {name: 'Viktor Hovland', score:-2},
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Will Zalatoris', score:28},
+          {name: 'Min Woo Lee', score:6},
+          {name: 'Matt Fitzpatrick', score:3},
           {name: 'Cameron Young', score:27}
         ]
       },
@@ -824,6 +1687,18 @@
           {name: 'Will Zalatoris', score:28},
           {name: 'Billy Horschel', score:25},
           {name: 'Joe Highsmith', score:24}
+        ]
+      },
+      {
+        name: 'Brady',
+        points: -1,
+        selectedPlayers:[
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Brooks Koepka', score:25},
+          {name: 'Wyndham Clark', score:5},
+          {name: 'Min Woo Lee', score:6},
+          {name: 'Dustin Johnson', score:23},
+          {name: 'Max Homa', score:-4}
         ]
       },
       {
@@ -852,9 +1727,7 @@
       }
     ];
 
-    // Sort golf leaderboard
     golfLeaderboardData.sort((a, b) => a.score - b.score);
-    // Sort pool leaderboard
     poolLeaderboardData.sort((a, b) => a.points - b.points);
 
     function updateLeaderboard(listId, data, scoreType, limit, btnId) {
@@ -865,13 +1738,13 @@
       let btn = btnId ? document.getElementById(btnId) : null;
 
       if (showAll) {
-        data.forEach(item => createListItem(list, item, scoreType));
+        data.forEach((item, index) => createListItem(list, item, scoreType, index));
         if (btn) btn.style.display = 'none';
         return;
       }
 
       const topPlayers = data.slice(0, 10);
-      topPlayers.forEach(item => createListItem(list, item, scoreType));
+      topPlayers.forEach((item, index) => createListItem(list, item, scoreType, index));
 
       if (btn) btn.textContent = "Show More";
       if (!btn) return;
@@ -884,31 +1757,43 @@
         list.innerHTML = '';
 
         if (expanded) {
-          data.forEach(item => createListItem(list, item, scoreType));
+          data.forEach((item, index) => createListItem(list, item, scoreType, index));
           btn.textContent = "Show Less";
+          btn.setAttribute('aria-expanded', 'true');
+          toast.info('Leaderboard', `Showing all ${data.length} players`, 1500);
         } else {
-          topPlayers.forEach(item => createListItem(list, item, scoreType));
+          topPlayers.forEach((item, index) => createListItem(list, item, scoreType, index));
           btn.textContent = "Show More";
+          btn.setAttribute('aria-expanded', 'false');
+          toast.info('Leaderboard', `Showing top ${topPlayers.length}`, 1500);
         }
       };
     }
 
-    function createListItem(list, item, scoreType) {
+    function createListItem(list, item, scoreType, index) {
       const li = document.createElement('li');
       const expandDiv = document.createElement('div');
       expandDiv.classList.add('expand');
 
-      li.innerHTML = `<span class="golf-icon"></span> ${item.name}: ${item[scoreType]}`;
+      // Add trophy for first place
+      if (index === 0) {
+        li.innerHTML = `<span style="font-size:20px;">🏆</span> ${item.name}: ${item[scoreType]}`;
+        li.classList.add('pulse-once');
+      } else if (index === 1) {
+        li.innerHTML = `<span style="font-size:18px;">🥈</span> ${item.name}: ${item[scoreType]}`;
+      } else if (index === 2) {
+        li.innerHTML = `<span style="font-size:18px;">🥉</span> ${item.name}: ${item[scoreType]}`;
+      } else {
+        li.innerHTML = `<span class="golf-icon"></span> ${item.name}: ${item[scoreType]}`;
+      }
 
-      // If this is a golf player with roundScores
       if (item.roundScores) {
         const roundScores = item.roundScores
-          .map((score, index) => `<div>Round ${index + 1}: ${score}</div>`)
+          .map((score, idx) => `<div>Round ${idx + 1}: ${score}</div>`)
           .join('');
         expandDiv.innerHTML = `<strong>Round Scores:</strong>${roundScores}`;
       }
 
-      // If this is a pool participant with selected players
       if (item.selectedPlayers) {
         item.selectedPlayers.forEach(player => {
           const playerInfo = document.createElement('div');
@@ -927,10 +1812,7 @@
       });
     }
 
-    // Golf leaderboard
     updateLeaderboard('golf-list', golfLeaderboardData, 'score', 10, 'toggle-button');
-
-    // Pool leaderboard
     updateLeaderboard('pool-list', poolLeaderboardData, 'points', null, 'toggle-pool-button');
 
     const poolBtn = document.getElementById('toggle-pool-button');
@@ -941,22 +1823,37 @@
 
       if (poolExpanded) {
         poolList.innerHTML = '';
-        poolLeaderboardData.forEach(item => createListItem(poolList, item, 'points'));
+        poolLeaderboardData.forEach((item, index) => createListItem(poolList, item, 'points', index));
         poolBtn.textContent = "Collapse";
+        poolBtn.setAttribute('aria-expanded', 'true');
       } else {
         poolList.innerHTML = '';
         poolBtn.textContent = "Expand";
+        poolBtn.setAttribute('aria-expanded', 'false');
+        toast.info('Collapsed', 'Pool leaderboard hidden', 1500);
       }
     };
-  });
-</script>
 
-<!-- 4. Weather Widget Script (Open-Meteo) with Emojis -->
-<script>
+    // First-time user tutorial
+    if (!localStorage.getItem('tutorialComplete')) {
+      setTimeout(() => {
+        toast.info('Welcome! 👋', 'Tap any player to see detailed scores', 4000);
+
+        setTimeout(() => {
+          toast.info('Tip 💡', 'Click the audio button to play the Masters theme', 4000);
+          localStorage.setItem('tutorialComplete', 'true');
+        }, 5000);
+      }, 2000);
+    }
+  });
+
+  /* ==========================================
+     WEATHER WIDGET WITH TOAST NOTIFICATIONS
+     ========================================== */
   (async function(){
     const weatherCurrent = document.getElementById("weather-current");
     const weatherForecast = document.getElementById("weather-forecast");
-    const lat = 33.5025, lon = -82.02; // Augusta National location
+    const lat = 33.5025, lon = -82.02;
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_mean,weathercode&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
 
     const weatherCodeMap = {
@@ -1050,11 +1947,11 @@
           const emoji = weatherEmojiMap[weathercode[i]] || "❓";
 
           forecastHTML += `
-            <div style="display:inline-block;border:1px solid #ccc;border-radius:6px;padding:8px;margin:4px;min-width:110px;">
+            <div>
               <div><strong>${dayName}</strong></div>
-              <div style="font-size:1.2em;margin:4px 0;">${emoji}</div>
+              <div style="font-size:1.3em;margin:6px 0;">${emoji}</div>
               <div style="font-size:0.9em;color:#333;">${codeTx}</div>
-              <div style="font-size:0.9em;color:#333;margin-top:6px;">High: ${temperature_2m_max[i]}°F</div>
+              <div style="font-size:0.9em;color:#333;margin-top:8px;">High: ${temperature_2m_max[i]}°F</div>
               <div style="font-size:0.9em;color:#333;">Low: ${temperature_2m_min[i]}°F</div>
               <div style="font-size:0.9em;color:#333;">Precip: ${precipitation_probability_mean[i]}%</div>
             </div>
@@ -1064,10 +1961,17 @@
       } else {
         weatherForecast.textContent = "No forecast data.";
       }
+
+      // Success toast
+      toast.success('Weather Updated', 'Augusta forecast loaded', 2000);
+
     } catch (err) {
       weatherCurrent.textContent = "Could not load weather data.";
       weatherForecast.textContent = "";
       console.error(err);
+
+      // Error toast
+      toast.error('Connection Error', 'Could not load weather data', 4000);
     }
   })();
 </script>
