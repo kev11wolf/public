@@ -30,6 +30,24 @@
       --border-color: #ddd;
       --shadow-light: rgba(0,0,0,0.1);
       --shadow-medium: rgba(0,0,0,0.2);
+      --card-bg: #ffffff;
+      --text-primary: #1a1a1a;
+      --text-secondary: #666;
+    }
+
+    /* Dark theme colors with high contrast */
+    [data-theme="dark"] {
+      --masters-green: #00ff88;
+      --masters-light-bg: #0a0a0a;
+      --masters-hover: #1a4d2e;
+      --masters-text: #00ff88;
+      --white: #1a1a1a;
+      --border-color: #333;
+      --shadow-light: rgba(255,255,255,0.05);
+      --shadow-medium: rgba(255,255,255,0.1);
+      --card-bg: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #b0b0b0;
     }
 
     * {
@@ -41,8 +59,46 @@
       margin: 0;
       padding: 0;
       background-color: var(--masters-light-bg);
+      color: var(--text-primary);
       font-size: 16px;
       line-height: 1.6;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* ==========================================
+       THEME TOGGLE BUTTON
+       ========================================== */
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: var(--card-bg);
+      border: 2px solid var(--masters-green);
+      border-radius: 50px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 1.2em;
+      box-shadow: 0 4px 12px var(--shadow-medium);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px var(--shadow-medium);
+    }
+
+    .theme-toggle:active {
+      transform: scale(0.95);
+    }
+
+    .theme-label {
+      font-size: 0.75em;
+      color: var(--text-primary);
+      font-weight: 600;
     }
 
     /* ==========================================
@@ -55,6 +111,7 @@
       color: var(--white);
       padding: 15px 20px;
       text-align: center;
+      transition: background-color 0.3s ease;
     }
 
     header h1 {
@@ -62,6 +119,11 @@
       font-size: clamp(1.2em, 4vw, 1.8em);
       margin: 10px 0;
       font-family: 'Libre Baskerville', 'Times New Roman', serif;
+      color: var(--text-primary);
+    }
+
+    [data-theme="dark"] header h1 {
+      color: #0a0a0a;
     }
 
     .logo {
@@ -89,6 +151,61 @@
       margin-bottom: 20px;
     }
 
+    /* Card styles with collapsible functionality */
+    .card {
+      background-color: var(--card-bg);
+      padding: 15px;
+      text-align: center;
+      max-width: 100%;
+      margin: 20px auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px var(--shadow-light);
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 12px var(--shadow-medium);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+    }
+
+    .card-preview {
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    .card-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .card.expanded .card-content {
+      max-height: 2000px;
+      margin-top: 15px;
+    }
+
+    .card-toggle {
+      font-size: 1.5em;
+      transition: transform 0.3s ease;
+      color: var(--masters-green);
+    }
+
+    .card.expanded .card-toggle {
+      transform: rotate(180deg);
+    }
+
     .timer,
     .updates,
     #weather-widget,
@@ -97,13 +214,15 @@
     .slideshow,
     #historical-winners,
     #sommerville-registration {
-      background-color: var(--white);
+      background-color: var(--card-bg);
       padding: 15px;
       text-align: center;
       max-width: 100%;
       margin: 20px auto;
       border-radius: 8px;
       box-shadow: 0 2px 6px var(--shadow-light);
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
     }
 
     .update-image,
@@ -136,11 +255,13 @@
     }
 
     li {
-      background-color: var(--white);
+      background-color: var(--card-bg);
+      color: var(--text-primary);
       margin: 5px 0;
       padding: 12px;
       border-radius: 5px;
       box-shadow: 0 1px 3px var(--shadow-light);
+      border: 1px solid var(--border-color);
       cursor: pointer;
       position: relative;
       transition: all 0.3s ease;
@@ -168,6 +289,7 @@
       border-radius: 5px;
       font-size: clamp(0.8em, 2.3vw, 0.9em);
       text-align: left;
+      color: var(--text-primary);
     }
 
     .golf-icon {
@@ -186,10 +308,15 @@
        ========================================== */
     footer {
       background-color: var(--masters-green);
-      color: var(--white);
+      color: var(--text-primary);
       padding: 20px 15px;
       text-align: center;
       font-size: clamp(0.85em, 2.5vw, 0.95em);
+      transition: background-color 0.3s ease;
+    }
+
+    [data-theme="dark"] footer {
+      color: #0a0a0a;
     }
 
     footer p {
@@ -231,20 +358,25 @@
     th,
     td {
       padding: 10px 8px;
-      background-color: var(--white);
+      background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       text-align: center;
       border-radius: 3px;
+      color: var(--text-primary);
     }
 
     th {
       background-color: var(--masters-green);
-      color: var(--white);
+      color: var(--text-primary);
       font-weight: 700;
     }
 
+    [data-theme="dark"] th {
+      color: #0a0a0a;
+    }
+
     tr:nth-child(even) {
-      background-color: #f9f9f9;
+      background-color: var(--card-bg);
     }
 
     /* ==========================================
@@ -270,7 +402,7 @@
 
     .collapse-btn:hover {
       background: var(--masters-text);
-      color: var(--white);
+      color: var(--card-bg);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 53, 37, 0.3);
     }
@@ -286,9 +418,10 @@
       position: fixed;
       bottom: 20px;
       left: 20px;
-      background: rgba(255,255,255,0.95);
+      background: var(--card-bg);
       padding: 12px;
       border-radius: 10px;
+      border: 1px solid var(--border-color);
       box-shadow: 0 4px 12px var(--shadow-medium);
       display: flex;
       flex-direction: column;
@@ -296,13 +429,14 @@
       gap: 8px;
       z-index: 999;
       max-width: calc(100vw - 40px);
+      transition: all 0.3s ease;
     }
 
     #audio-controls button {
       padding: 10px 14px;
       border: none;
       background: var(--masters-green);
-      color: var(--white);
+      color: var(--card-bg);
       border-radius: 5px;
       cursor: pointer;
       font-size: 16px;
@@ -313,8 +447,12 @@
       overflow: hidden;
     }
 
+    [data-theme="dark"] #audio-controls button {
+      color: #0a0a0a;
+    }
+
     #audio-controls button:hover {
-      background: #004d32;
+      opacity: 0.85;
       transform: translateY(-2px);
       box-shadow: 0 4px 8px var(--shadow-medium);
     }
@@ -325,7 +463,7 @@
 
     #audio-status {
       font-weight: 400;
-      color: var(--masters-green);
+      color: var(--text-primary);
       font-size: clamp(0.75em, 2vw, 0.85em);
       text-align: center;
     }
@@ -352,6 +490,7 @@
       min-width: 100px;
       box-shadow: 0 2px 4px var(--shadow-light);
       transition: all 0.3s ease;
+      background-color: var(--card-bg);
     }
 
     #weather-forecast > div:hover {
@@ -366,7 +505,7 @@
       display: inline-block;
       text-decoration: none;
       background-color: var(--masters-green);
-      color: var(--white);
+      color: var(--card-bg);
       padding: 12px 24px;
       border-radius: 5px;
       font-family: 'Libre Baskerville', 'Times New Roman', serif;
@@ -375,8 +514,12 @@
       transition: all 0.3s ease;
     }
 
+    [data-theme="dark"] #sommerville-registration a {
+      color: #0a0a0a;
+    }
+
     #sommerville-registration a:hover {
-      background-color: #004d32;
+      opacity: 0.85;
       transform: translateY(-2px);
       box-shadow: 0 4px 8px var(--shadow-medium);
     }
@@ -390,7 +533,7 @@
        ========================================== */
     .toast-container {
       position: fixed;
-      top: 20px;
+      top: 80px;
       right: 20px;
       z-index: 10000;
       display: flex;
@@ -401,9 +544,10 @@
     }
 
     .toast {
-      background: white;
+      background: var(--card-bg);
       padding: 16px 20px;
       border-radius: 8px;
+      border: 1px solid var(--border-color);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
       display: flex;
       align-items: center;
@@ -458,13 +602,13 @@
     .toast-title {
       font-weight: 600;
       font-size: 14px;
-      color: #1F2937;
+      color: var(--text-primary);
       margin: 0;
     }
 
     .toast-message {
       font-size: 13px;
-      color: #6B7280;
+      color: var(--text-secondary);
       margin: 0;
       line-height: 1.4;
     }
@@ -473,7 +617,7 @@
       background: none;
       border: none;
       font-size: 20px;
-      color: #9CA3AF;
+      color: var(--text-secondary);
       cursor: pointer;
       padding: 4px;
       line-height: 1;
@@ -482,7 +626,7 @@
     }
 
     .toast-close:hover {
-      color: #374151;
+      color: var(--text-primary);
     }
 
     .toast-progress {
@@ -738,8 +882,7 @@
       }
 
       .toast-container {
-        top: auto;
-        bottom: 80px;
+        top: 70px;
         left: 10px;
         right: 10px;
         max-width: none;
@@ -751,6 +894,17 @@
 
       .toast.removing {
         animation: slideOutDown 0.3s ease-in forwards;
+      }
+
+      .theme-toggle {
+        top: 10px;
+        right: 10px;
+        padding: 6px 12px;
+        font-size: 1em;
+      }
+
+      .theme-label {
+        display: none;
       }
     }
 
@@ -837,26 +991,6 @@
       }
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --masters-light-bg: #1a1a1a;
-        --white: #2d2d2d;
-        --border-color: #444;
-      }
-
-      body {
-        color: #e0e0e0;
-      }
-
-      li {
-        color: #e0e0e0;
-      }
-
-      #audio-controls {
-        background: rgba(45, 45, 45, 0.95);
-      }
-    }
-
     *:focus-visible {
       outline: 3px solid #FFD700;
       outline-offset: 2px;
@@ -873,6 +1007,12 @@
 </head>
 
 <body>
+
+<!-- Theme Toggle Button -->
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+  <span id="theme-icon">☀️</span>
+  <span class="theme-label" id="theme-label">Light</span>
+</button>
 
 <!-- Audio Player Controls -->
 <div id="audio-controls">
@@ -893,89 +1033,138 @@
 
 <main>
 
-  <section class="timer" id="countdown-timer">
-    <h2>Time left 'til 2026 Masters</h2>
-    <p id="time-left" aria-live="polite"></p>
-  </section>
-
-  <section class="updates">
-    <h2>News + Updates</h2>
-    <p>Thanks for playing! See you all in 2026.</p>
-    <img src="https://i.postimg.cc/wjy1wZ2X/2025-masters.png" alt="2025 Masters Pool Winner Celebration" class="update-image">
-  </section>
-
-  <section id="weather-widget">
-    <h2>Augusta, GA Weather</h2>
-    <div id="weather-current" style="margin-bottom: 15px;" aria-live="polite">
-      Loading current weather…
+  <section class="timer card" id="countdown-timer">
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <h2 style="margin: 0;">⏰ Countdown</h2>
+      <span class="card-toggle">▼</span>
     </div>
-    <div id="weather-forecast" aria-live="polite">
-      Loading 7-day forecast…
+    <div class="card-preview">Time until 2026 Masters Tournament</div>
+    <div class="card-content">
+      <p id="time-left" aria-live="polite"></p>
     </div>
   </section>
 
-  <section id="sommerville-registration">
-    <h2>Sommerville Masters Pool Registration</h2>
-    <p>Click the button below to submit your selections!</p>
-    <a href="https://docs.google.com/forms/d/e/1FAIpQLSeFdQqMiI8_6rMCRZCMvR5AMDjgjY1Uyq_V2_GUGkQk1tJ6ag/viewform?usp=header" 
-       target="_blank" 
-       rel="noopener noreferrer">
-      Pick your players!
-    </a>
+  <section class="updates card">
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <h2 style="margin: 0;">📢 News + Updates</h2>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-preview">Latest announcements and highlights</div>
+    <div class="card-content">
+      <p>Thanks for playing! See you all in 2026.</p>
+      <img src="https://i.postimg.cc/wjy1wZ2X/2025-masters.png" alt="2025 Masters Pool Winner Celebration" class="update-image">
+    </div>
   </section>
 
-  <section class="slideshow">
-    <img id="slideshow-image" src="" alt="Augusta National Golf Course">
+  <section id="weather-widget" class="card">
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <h2 style="margin: 0;">🌤️ Augusta Weather</h2>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-preview" id="weather-preview">Loading weather...</div>
+    <div class="card-content">
+      <div id="weather-current" style="margin-bottom: 15px;" aria-live="polite">
+        Loading current weather…
+      </div>
+      <div id="weather-forecast" aria-live="polite">
+        Loading 7-day forecast…
+      </div>
+    </div>
   </section>
 
-  <section id="pool-leaderboard">
-    <h2>Pool Participants Leaderboard</h2>
-    <button id="toggle-pool-button" class="collapse-btn" aria-expanded="true">Collapse</button>
-    <ul id="pool-list" role="list">
-      <!-- Pool participant scores will be inserted here -->
-    </ul>
+  <section id="sommerville-registration" class="card">
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <h2 style="margin: 0;">✍️ Registration</h2>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-preview">Submit your player selections</div>
+    <div class="card-content">
+      <p>Click the button below to submit your selections!</p>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeFdQqMiI8_6rMCRZCMvR5AMDjgjY1Uyq_V2_GUGkQk1tJ6ag/viewform?usp=header" 
+         target="_blank" 
+         rel="noopener noreferrer">
+        Pick your players!
+      </a>
+    </div>
   </section>
 
-  <section id="golf-leaderboard">
-    <h2>Golf Players Leaderboard</h2>
-    <button id="toggle-button" class="collapse-btn" aria-expanded="false">Show More</button>
-    <ul id="golf-list" role="list">
-      <!-- Golf player scores will be inserted here -->
-    </ul>
+  <section class="slideshow card">
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <h2 style="margin: 0;">🖼️ Augusta Gallery</h2>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-preview">Beautiful photos of Augusta National</div>
+    <div class="card-content">
+      <img id="slideshow-image" src="" alt="Augusta National Golf Course" style="margin-top: 15px;">
+    </div>
   </section>
 
-  <section id="historical-winners">
-    <h2>Sommerville Masters Pool Past Champions</h2>
-    <table role="table">
-      <thead>
-      <tr>
-        <th scope="col">Year</th>
-        <th scope="col">Champion</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr>
-        <td>2025</td>
-        <td>Jason</td>
-      </tr>
-      <tr>
-        <td>2024</td>
-        <td>Blake</td>
-      </tr>
-      <tr>
-        <td>2023</td>
-        <td>Brandon E.</td>
-      </tr>
-      <tr>
-        <td>2022</td>
-        <td>Dima</td>
-      </tr>
-      <tr>
-        <td>2021</td>
-        <td>Zach K.</td>
-      </tr>
-      </tbody>
-    </table>
+  <section id="pool-leaderboard" class="card expanded">
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <h2 style="margin: 0;">🏆 Pool Leaderboard</h2>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-preview">Current pool participant standings</div>
+    <div class="card-content">
+      <button id="toggle-pool-button" class="collapse-btn" aria-expanded="true">Collapse</button>
+      <ul id="pool-list" role="list">
+        <!-- Pool participant scores will be inserted here -->
+      </ul>
+    </div>
+  </section>
+
+  <section id="golf-leaderboard" class="card">
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <h2 style="margin: 0;">⛳ Golf Leaderboard</h2>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-preview">Top 10 golf players (tap to expand all)</div>
+    <div class="card-content">
+      <button id="toggle-button" class="collapse-btn" aria-expanded="false">Show More</button>
+      <ul id="golf-list" role="list">
+        <!-- Golf player scores will be inserted here -->
+      </ul>
+    </div>
+  </section>
+
+  <section id="historical-winners" class="card">
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <h2 style="margin: 0;">🎖️ Past Champions</h2>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-preview">Sommerville Masters Pool hall of fame</div>
+    <div class="card-content">
+      <table role="table">
+        <thead>
+        <tr>
+          <th scope="col">Year</th>
+          <th scope="col">Champion</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>2025</td>
+          <td>Jason</td>
+        </tr>
+        <tr>
+          <td>2024</td>
+          <td>Blake</td>
+        </tr>
+        <tr>
+          <td>2023</td>
+          <td>Brandon E.</td>
+        </tr>
+        <tr>
+          <td>2022</td>
+          <td>Dima</td>
+        </tr>
+        <tr>
+          <td>2021</td>
+          <td>Zach K.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
   <div id="chatango-container">
@@ -1021,6 +1210,78 @@
 </footer>
 
 <script>
+  /* ==========================================
+     THEME TOGGLE FUNCTIONALITY
+     ========================================== */
+  function initTheme() {
+    // Force light mode as default, ignoring system preferences
+    const savedTheme = localStorage.getItem('theme');
+    const theme = savedTheme || 'light';
+
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeButton(theme);
+  }
+
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeButton(newTheme);
+
+    toast.success(
+      newTheme === 'dark' ? 'Dark Mode' : 'Light Mode',
+      `Switched to ${newTheme} theme`,
+      2000
+    );
+  }
+
+  function updateThemeButton(theme) {
+    const themeIcon = document.getElementById('theme-icon');
+    const themeLabel = document.getElementById('theme-label');
+
+    if (theme === 'dark') {
+      themeIcon.textContent = '🌙';
+      themeLabel.textContent = 'Dark';
+    } else {
+      themeIcon.textContent = '☀️';
+      themeLabel.textContent = 'Light';
+    }
+  }
+
+  // Initialize theme on load
+  initTheme();
+
+  // Add event listener
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+  /* ==========================================
+     CARD TOGGLE FUNCTIONALITY
+     ========================================== */
+  function toggleCard(card) {
+    const wasExpanded = card.classList.contains('expanded');
+    card.classList.toggle('expanded');
+
+    // Save card state
+    const cardId = card.id || card.className.split(' ')[0];
+    if (cardId) {
+      localStorage.setItem(`card-${cardId}`, card.classList.contains('expanded'));
+    }
+  }
+
+  // Restore card states on load
+  function restoreCardStates() {
+    document.querySelectorAll('.card').forEach(card => {
+      const cardId = card.id || card.className.split(' ')[0];
+      const savedState = localStorage.getItem(`card-${cardId}`);
+
+      if (savedState === 'true') {
+        card.classList.add('expanded');
+      }
+    });
+  }
+
   /* ==========================================
      TOAST NOTIFICATION SYSTEM
      ========================================== */
@@ -1352,6 +1613,9 @@
     document.querySelectorAll('button, .collapse-btn').forEach(btn => {
       addRippleEffect(btn);
     });
+
+    // Restore card states
+    restoreCardStates();
 
     // Slideshow with fade transitions
     const images = [
@@ -1840,7 +2104,7 @@
         toast.info('Welcome! 👋', 'Tap any player to see detailed scores', 4000);
 
         setTimeout(() => {
-          toast.info('Tip 💡', 'Click the audio button to play the Masters theme', 4000);
+          toast.info('Tip 💡', 'Click cards to expand/collapse content', 4000);
           localStorage.setItem('tutorialComplete', 'true');
         }, 5000);
       }, 2000);
@@ -1853,6 +2117,7 @@
   (async function(){
     const weatherCurrent = document.getElementById("weather-current");
     const weatherForecast = document.getElementById("weather-forecast");
+    const weatherPreview = document.getElementById("weather-preview");
     const lat = 33.5025, lon = -82.02;
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_mean,weathercode&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
 
@@ -1932,8 +2197,10 @@
         weatherCurrent.innerHTML = `
           <strong>Currently:</strong> ${emoji} ${cw.temperature}°F | ${codeText} | Wind ${cw.windspeed} mph
         `;
+        weatherPreview.textContent = `${emoji} ${cw.temperature}°F - ${codeText}`;
       } else {
         weatherCurrent.textContent = "No current weather data.";
+        weatherPreview.textContent = "No weather data";
       }
 
       if (data.daily && data.daily.time) {
@@ -1950,10 +2217,10 @@
             <div>
               <div><strong>${dayName}</strong></div>
               <div style="font-size:1.3em;margin:6px 0;">${emoji}</div>
-              <div style="font-size:0.9em;color:#333;">${codeTx}</div>
-              <div style="font-size:0.9em;color:#333;margin-top:8px;">High: ${temperature_2m_max[i]}°F</div>
-              <div style="font-size:0.9em;color:#333;">Low: ${temperature_2m_min[i]}°F</div>
-              <div style="font-size:0.9em;color:#333;">Precip: ${precipitation_probability_mean[i]}%</div>
+              <div style="font-size:0.9em;color:var(--text-secondary);">${codeTx}</div>
+              <div style="font-size:0.9em;color:var(--text-secondary);margin-top:8px;">High: ${temperature_2m_max[i]}°F</div>
+              <div style="font-size:0.9em;color:var(--text-secondary);">Low: ${temperature_2m_min[i]}°F</div>
+              <div style="font-size:0.9em;color:var(--text-secondary);">Precip: ${precipitation_probability_mean[i]}%</div>
             </div>
           `;
         }
@@ -1968,6 +2235,7 @@
     } catch (err) {
       weatherCurrent.textContent = "Could not load weather data.";
       weatherForecast.textContent = "";
+      weatherPreview.textContent = "Weather unavailable";
       console.error(err);
 
       // Error toast
