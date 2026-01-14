@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MYNRNZXHML"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-MYNRNZXHML');
+</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <!-- Added Google Fonts for a Masters-like look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <title>Sommerville Masters Pool Leaderboard</title>
+  <style>
+    body {
+      /* Updated to a Masters-like open source serif font */
+      font-family: 'Libre Baskerville', 'Times New Roman', serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f7f5ef;
+    }
+
+    /* Updated header to prevent logo clash on mobile/smaller screens */
+    header {
+      background-color: #003525;
+      background-size: cover;
+      background-position: center;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      z-index: 1;
+      font-size: 1.6em;
+      margin-left: 0px;
+      font-family: 'Libre Baskerville', 'Times New Roman', serif; /* Ensure headings also use Libre Baskerville */
+    }
+
+    .logo {
+      display: block;
+      margin: 0 auto;
+      max-width: 20%;
+      width: auto;
+      height: auto;
+      max-height: 50px;
+      object-fit: contain;
+    }
+
+    .timer,
+    .updates,
+    #weather-widget,
+    #golf-leaderboard,
+    #pool-leaderboard,
+    .youtube,
+    .slideshow,
+    #historical-winners,
+    #sommerville-registration {
+      background-color: #fff;
+      padding: 10px;
+      text-align: center;
+      max-width: 800px;
+      margin: 20px auto;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .update-image,
+    .summary-image {
+      display: block;
+      margin: 16px auto 0 auto;
+      max-height: 200px;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+      border-radius: 5px;
+    }
+
+    main {
+      padding: 20px;
+      max-width: 800px;
+      text-align: center;
+      margin: 0 auto;
+    }
+
+    section {
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: #003525;
+      text-align: center;
+      font-size: 1.2em;
+      margin: 10px 0;
+      font-family: 'Libre Baskerville', 'Times New Roman', serif; /* Ensure section headings also use Libre Baskerville */
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      background-color: #fff;
+      margin: 3px 0;
+      padding: 8px;
+      border-radius: 3px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      cursor: pointer;
+      position: relative;
+      transition: background-color 0.3s ease;
+      font-size: 0.9em;
+    }
+
+    li:hover {
+      background-color: #e5ffe5;
+    }
+
+    .expand {
+      display: none;
+      margin-top: 5px;
+      padding: 5px;
+      background-color: #e5ffe5;
+      border-radius: 3px;
+      font-size: 0.85em;
+    }
+
+    .golf-icon {
+      width: 15px;
+      height: 15px;
+      background-image: url('https://i.etsystatic.com/16454555/r/il/f205d2/4762277869/il_570xN.4762277869_89g1.jpg');
+      background-size: contain;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+
+    footer {
+      background-color: #003525;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .feedback-button {
+      background-color: #fff;
+      color: #004c00;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 3px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .slideshow img {
+      max-width: 300px;
+      max-height: 200px;
+      border-radius: 3px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px auto;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      text-align: center;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    th {
+      background-color: #003525;
+      color: #fff;
+    }
+
+    tr:nth-child(even) {
+      background-color: #003525;
+    }
+
+    .collapse-btn {
+      margin: 5px 0;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      background: #e5ffe5;
+      color: #003300;
+      border: 1px solid #003300;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+
+    /* Added to lock slideshow width & height */
+    .slideshow {
+      width: calc(100% - 50px);
+      max-width: calc(100% - 50px);
+      height: 200px;
+      overflow: hidden;
+      margin: 0 auto;
+      position: relative;
+    }
+    .slideshow img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  </style>
+</head>
+
+<!-- Sticky Audio Player Controls with a status line added -->
+<div id="audio-controls" style="
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    background: rgba(255,255,255,0.9);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 999;
+">
+  <div>
+    <!-- Updated button text to indicate "Augusta Theme Song" -->
+    <button id="play-pause" style="padding: 6px 12px;">⏯️ </button>
+    <button id="volume-down" style="padding: 6px 12px;">🔉-</button>
+    <button id="volume-up" style="padding: 6px 12px;">🔊+</button>
+  </div>
+  <div id="audio-status" style="font-weight: light; color: green;"></div>
+</div>
+
+<body>
+
+<header>
+  <!-- Insert your logo URL and logo link below -->
+  <a href="https://kev11wolf.github.io/smp/">
+    <img src="https://esagcs.org/wp-content/uploads/2023/03/The-Masters.jpg" alt="Logo" class="logo">
+  </a>
+  <h1>Sommerville Masters Pool</h1>
+</header>
+
+<main>
+
+  <section class="timer" id="countdown-timer">
+    <h2>Time left 'til 2026 Masters</h2>
+    <p id="time-left"></p>
+  </section>
+
+  <section class="updates">
+    <h2>News + Updates</h2>
+    <p>Thanks for playing! See you all in 2026.</p>
+    <img src="https://i.postimg.cc/wjy1wZ2X/2025-masters.png" alt="Update Placeholder" class="update-image">
+  </section>
+
+  <!-- Updated weather widget section to pull and display current + 7-day forecast via Open-Meteo, with emojis -->
+  <section id="weather-widget">
+    <h2>Augusta, GA Weather</h2>
+    <div id="weather-current" style="margin-bottom: 15px;">
+      Loading current weather…
+    </div>
+    <div id="weather-forecast">
+      Loading 7-day forecast…
+    </div>
+  </section>
+
+  <section id="sommerville-registration">
+    <h2 style="color: #003300; font-size: 1.2em; margin: 10px 0; font-family: Libre Baskerville, Times New Roman, serif;">
+      Sommerville Masters Pool Registration
+    </h2>
+    <p style="color: #003300; margin-bottom: 10px; font-family: Helvetica, Arial, sans-serif;">
+      Click the button below to submit your selections!
+    </p>
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSeFdQqMiI8_6rMCRZCMvR5AMDjgjY1Uyq_V2_GUGkQk1tJ6ag/viewform?usp=header"
+       style="display: inline-block; text-decoration: none; background-color: #003525; color: #fff; padding: 10px 15px; border-radius: 3px; font-family: Helvetica, Arial, sans-serif; font-size: 14px;">
+      Pick your players!
+    </a>
+  </section>
+
+  <section class="slideshow">
+    <img id="slideshow-image" src="" alt="Slideshow Image">
+  </section>
+
+  <section id="pool-leaderboard">
+    <h2>Pool Participants Leaderboard</h2>
+    <button id="toggle-pool-button" class="collapse-btn">Collapse</button>
+    <ul id="pool-list">
+      <!-- Pool participant scores will be inserted here -->
+    </ul>
+  </section>
+
+  <section id="golf-leaderboard">
+    <h2>Golf Players Leaderboard</h2>
+    <button id="toggle-button" class="collapse-btn">Show More</button>
+    <ul id="golf-list">
+      <!-- Golf player scores will be inserted here -->
+    </ul>
+  </section>
+
+  <section id="historical-winners">
+    <h2>Sommerville Masters Pool Past Champions</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Year</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>2025</td>
+        <td>Jason</td>
+      </tr>
+      <tr>
+        <td>2024</td>
+        <td>Blake</td>
+      </tr>
+      <tr>
+        <td>2023</td>
+        <td>Brandon E.</td>
+      </tr>
+      <tr>
+        <td>2022</td>
+        <td>Dima</td>
+      </tr>
+      <tr>
+        <td>2021</td>
+        <td>Zach K.</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div id="chatango-container" style="position: fixed; bottom: 20px; right: 20px;">
+    <script id="cid0020000416183938966" data-cfasync="false" async src="//st.chatango.com/js/gz/emb.js"
+            style="width: 250px;height: 350px;">
+      {"handle":"sommerville-masters","arch":"js","styles":{"b":100,"c":"000000","d":"000000","l":"FFFFFF","m":"FFFFFF","p":"10","r":100,"fwtickm":1}}
+    </script>
+  </div>
+
+</main>
+
+<footer>
+  <p>Website created by K-Dawg.
+  <p></p>
+  <button class="feedback-button" onclick="sendFeedback()">Submit Website Feedback</button>
+  <p></p>
+  <title>Masters wordmark</title>
+  <defs>
+    <linearGradient id="badgeFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FAD84E"/>
+      <stop offset="100%" stop-color="#F6C915"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="rgba(0,0,0,.25)"/>
+    </filter>
+    <style>
+      .word {
+        font-family: "Libre Baskerville", Baskerville, "Times New Roman", serif;
+        font-style: italic;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+    </style>
+  </defs>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="6" ry="6" fill="url(#badgeFill)" stroke="#106d3b" stroke-width="2"
+        filter="url(#softShadow)"/>
+  <text x="30" y="39" class="word" fill="#106d3b" font-size="18" text-anchor="middle" textLength="44"
+        lengthAdjust="spacingAndGlyphs">MASTERS</text>
+  <g transform="translate(52,18)">
+    <path d="M0 0 L0 18" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M0 0 L9 3 L0 6 Z" fill="#D62828" stroke="#9c1f1f" stroke-width="0.7" stroke-linejoin="round"/>
+    <ellipse cx="-1.5" cy="18.5" rx="2.8" ry="1.1" fill="#0b0b0b" opacity="0.2"/>
+  </g>
+  </svg>
+  </p>
+</footer>
+
+<script>
+  // Use the correct RAW link from GitHub:
+  const audio = new Audio("https://github.com/kev11wolf/public/raw/refs/heads/main/smp-main/smp-main/Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Masters%20Theme%20Song%20On%20Repeat(1).mp3");
+  audio.loop = true;
+  audio.volume = 0.5;
+
+  const playPauseBtn = document.getElementById('play-pause');
+  const volumeUpBtn = document.getElementById('volume-up');
+  const volumeDownBtn = document.getElementById('volume-down');
+  const audioStatus = document.getElementById('audio-status');
+  let isPlaying = false;
+
+  // Toggle play/pause
+  playPauseBtn.onclick = () => {
+    if (!isPlaying) {
+      audio.play().catch(() => {
+        alert('Click the play button to start the music.');
+      });
+    } else {
+      audio.pause();
+    }
+  };
+
+  // Update button text and status line on play
+  audio.onplay = () => {
+    isPlaying = true;
+    playPauseBtn.textContent = '⏸️ Pause';
+    audioStatus.textContent = 'Masters Theme Song Playing ▶️';
+  };
+
+  // Update button text and status line on pause
+  audio.onpause = () => {
+    isPlaying = false;
+    playPauseBtn.textContent = '⏯️ Play';
+    audioStatus.textContent = 'Masters Theme Song paused ⏸️';
+  };
+
+  // Volume controls
+  volumeUpBtn.onclick = () => {
+    if (audio.volume < 1) {
+      audio.volume = Math.min(1, audio.volume + 0.1);
+    }
+  };
+
+  volumeDownBtn.onclick = () => {
+    if (audio.volume > 0) {
+      audio.volume = Math.max(0, audio.volume - 0.1);
+    }
+  };
+
+  // Optional: auto-play on load
+  window.onload = () => {
+    audio.play().catch(() => {
+      console.log('Auto-play blocked. Use the play button.');
+    });
+  };
+</script>
+
+<!-- Scripts -->
+<!-- 1. Countdown timer and feedback script -->
+<script>
+  function updateCountdown() {
+    const futureDate = new Date("09 April 2026").getTime();
+    const now = new Date().getTime();
+    const timeLeft = futureDate - now;
+
+    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+    document.getElementById("time-left").textContent =
+      `${days} Days ${hours} Hours ${minutes} Minutes ${seconds} Seconds`;
+  }
+  setInterval(updateCountdown, 1000);
+
+  function sendFeedback() {
+    const feedback = prompt("Please enter your feedback:");
+    if (feedback) {
+      window.location.href =
+        `mailto:kev11wolf@gmail.com?subject=Website Feedback&body=${encodeURIComponent(feedback)}`;
+    }
+  }
+</script>
+
+<!-- 2. Slideshow, leaderboard, etc. -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const images = [
+      'https://i.insider.com/5ac3ca737a74af24008b45c7?width=1000&format=jpeg',
+      'https://media.stewarttravel.co.uk/media/repository/Golf/golfcourses/USA/Georgia/AugustaNational/Augusta-National.jpg',
+      'https://static01.nyt.com/images/2025/05/12/multimedia/12nat-masters-photos-rory-win-sunday-chtq/12nat-masters-photos-rory-win-sunday-chtq-articleLarge.jpg',
+      'https://images2.minutemediacdn.com/image/upload/c_crop,w_8025,h_4514,x_0,y_167/c_fill,w_720,ar_16:9,f_auto,q_auto,g_auto/images/ImagnImages/mmsport/si/01jabn4qvj71gpkb0kzy.jpg',
+      'https://golfweek.usatoday.com/gcdn/authoring/authoring-images/2025/04/10/SGLF/83022855007-usatsi-25892403.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1685967.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-83123181.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1074391880-1.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1145859172.jpg',
+      'https://o90934w8.cdn.imgeng.in/wp-content/uploads/2015/04/amen-corner.jpg',
+      'https://media.cnn.com/api/v1/images/stellar/prod/170223113519-tiger-augusta-azaleas.jpg',
+      'https://o90934w8.cdn.imgeng.in/wp-content/uploads/2015/04/amen-corner.jpg',
+      'https://www.liveabout.com/thmb/KqYZccVwvG6HOodBXslj-yYRDk4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/augusta-national-azalea-rory-58272e685f9b58d5b15309db-5c251adf46e0fb0001e72d82.jpg',
+      'https://e0.365dm.com/18/04/768x432/skysports-tiger-woods-masters_4271003.jpg?20180401182508'
+    ];
+
+    let currentImageIndex = 0;
+    const slideshowImage = document.getElementById('slideshow-image');
+    slideshowImage.src = images[currentImageIndex];
+
+    function cycleSlideshow() {
+      currentImageIndex = (currentImageIndex + 1) % images.length;
+      slideshowImage.src = images[currentImageIndex];
+    }
+    setInterval(cycleSlideshow, 3000);
+
+    const golfLeaderboardData = [
+      {name: 'Rory McIlroy', score:-11, roundScores:[0,-6,-6,1]},
+      {name: 'Justin Rose', score:-11, roundScores:[-7,-1,3,-6]},
+      {name: 'Patrick Reed', score:-9, roundScores:[-1,-2,-3,-3]},
+      {name: 'Scottie Scheffler', score:-8, roundScores:[-4,-1,0,-3]},
+      {name: 'Sungjae Im', score:-7, roundScores:[-1,-2,-1,-3]},
+      {name: 'Bryson DeChambeau', score:-7, roundScores:[-3,-4,-3,3]},
+      {name: 'Ludvig Åberg', score:-6, roundScores:[-4,1,-3,0]},
+      {name: 'Zach Johnson', score:-5, roundScores:[0,2,-6,-1]},
+      {name: 'Xander Schauffele', score:-5, roundScores:[1,-3,-2,-1]},
+      {name: 'Jason Day', score:-5, roundScores:[-2,-2,-1,0]},
+      {name: 'Corey Conners', score:-5, roundScores:[-4,-2,-2,3]},
+      {name: 'Harris English', score:-4, roundScores:[-2,1,1,-4]},
+      {name: 'Max Homa', score:-4, roundScores:[2,-2,-3,-1]},
+      {name: 'Bubba Watson', score:-3, roundScores:[-1,0,2,-4]},
+      {name: 'Jon Rahm', score:-3, roundScores:[3,-1,-2,-3]},
+      {name: 'Jordan Spieth', score:-3, roundScores:[1,1,-3,-2]},
+      {name: 'Tom Hoge', score:-3, roundScores:[0,0,-2,-1]},
+      {name: 'Tyrrell Hatton', score:-3, roundScores:[-3,-2,3,-1]},
+      {name: 'Matt McCarty', score:-3, roundScores:[-1,-4,3,-1]},
+      {name: 'Collin Morikawa', score:-3, roundScores:[0,-3,0,0]},
+      {name: 'Hideki Matsuyama', score:-2, roundScores:[1,-4,7,-6]},
+      {name: 'Daniel Berger', score:-2, roundScores:[-1,1,1,-3]},
+      {name: 'Davis Riley', score:-2, roundScores:[1,-3,3,-3]},
+      {name: 'Tommy Fleetwood', score:-2, roundScores:[1,-3,3,-3]},
+      {name: 'Byeong Hun An', score:-2, roundScores:[2,-1,-2,-1]},
+      {name: 'Viktor Hovland', score:-2, roundScores:[-1,-3,1,1]},
+      {name: 'Aaron Rai', score:-1, roundScores:[-2,2,1,-2]},
+      {name: 'Michael Kim', score:-1, roundScores:[-1,-1,2,-1]},
+      {name: 'Denny McCarthy', score:0, roundScores:[-1,3,-1,-1]},
+      {name: 'Sahith Theegala', score:0, roundScores:[0,0,1,-1]},
+      {name: 'Joaquín Niemann', score:0, roundScores:[0,2,-2,0]},
+      {name: 'Brian Campbell', score:1, roundScores:[0,1,4,-4]},
+      {name: 'Maverick McNealy', score:1, roundScores:[0,1,-1,1]},
+      {name: 'Max Greyserman', score:1, roundScores:[-1,3,-3,2]},
+      {name: 'Rasmus Højgaard', score:1, roundScores:[1,-5,3,2]},
+      {name: 'Justin Thomas', score:2, roundScores:[1,-1,4,-2]},
+      {name: 'Patrick Cantlay', score:2, roundScores:[2,0,1,-1]},
+      {name: 'Brian Harman', score:2, roundScores:[-1,-1,5,-1]},
+      {name: 'Charl Schwartzel', score:2, roundScores:[2,0,0,0]},
+      {name: 'Nick Taylor', score:3, roundScores:[1,-1,2,1]},
+      {name: 'Matt Fitzpatrick', score:3, roundScores:[-1,1,2,1]},
+      {name: 'Akshay Bhatia', score:4, roundScores:[-2,4,3,-1]},
+      {name: 'Danny Willett', score:4, roundScores:[3,-1,1,1]},
+      {name: 'J.T. Poston', score:4, roundScores:[2,0,1,1]},
+      {name: 'Shane Lowry', score:4, roundScores:[-1,-4,0,9]},
+      {name: 'Wyndham Clark', score:5, roundScores:[4,-4,3,2]},
+      {name: 'Sam Burns', score:5, roundScores:[1,-2,3,3]},
+      {name: 'Davis Thompson', score:5, roundScores:[-1,1,-2,7]},
+      {name: 'Min Woo Lee', score:6, roundScores:[-1,0,5,2]},
+      {name: 'J.J. Spaun', score:7, roundScores:[2,0,2,3]},
+      {name: 'Nico Echavarria', score:8, roundScores:[1,-2,-3,12]},
+      {name: 'Stephan Jaeger', score:9, roundScores:[0,2,1,6]},
+      {name: 'Tom Kim', score:9, roundScores:[1,1,0,7]},
+      {name: 'Russell Henley', score:23, roundScores:[7,-4,10,10]},
+      {name: 'Chris Kirk', score:23, roundScores:[3,0,10,10]},
+      {name: 'Dustin Johnson', score:23, roundScores:[2,1,10,10]},
+      {name: 'Bernhard Langer', score:23, roundScores:[2,1,10,10]},
+      {name: 'Keegan Bradley', score:23, roundScores:[2,1,10,10]},
+      {name: 'Justin Hastings (a)', score:24, roundScores:[4,0,10,10]},
+      {name: 'Joe Highsmith', score:24, roundScores:[4,0,10,10]},
+      {name: 'Rafael Campos', score:24, roundScores:[3,1,10,10]},
+      {name: 'Mike Weir', score:24, roundScores:[3,1,10,10]},
+      {name: 'Tony Finau', score:24, roundScores:[3,1,10,10]},
+      {name: 'Adam Schenk', score:24, roundScores:[1,3,10,10]},
+      {name: 'Sergio Garcia', score:24, roundScores:[0,4,10,10]},
+      {name: 'Fred Couples', score:24, roundScores:[-1,5,10,10]},
+      {name: 'Sepp Straka', score:25, roundScores:[6,-1,10,10]},
+      {name: 'Adam Scott', score:25, roundScores:[5,0,10,10]},
+      {name: 'Billy Horschel', score:25, roundScores:[5,0,10,10]},
+      {name: 'Phil Mickelson', score:25, roundScores:[3,2,10,10]},
+      {name: 'Brooks Koepka', score:25, roundScores:[2,3,10,10]},
+      {name: 'Cameron Smith', score:25, roundScores:[-1,6,10,10]},
+      {name: 'Austin Eckroat', score:26, roundScores:[4,2,10,10]},
+      {name: 'Nicolai Højgaard', score:26, roundScores:[4,2,10,10]},
+      {name: 'Kevin Yu', score:26, roundScores:[4,2,10,10]},
+      {name: 'Jhonattan Vegas', score:26, roundScores:[3,3,10,10]},
+      {name: 'Robert MacIntyre', score:26, roundScores:[3,3,10,10]},
+      {name: 'Hiroshi Tai (a)', score:26, roundScores:[1,5,10,10]},
+      {name: 'José María Olazábal', score:27, roundScores:[5,2,10,10]},
+      {name: 'Christiaan Bezuidenhout', score:27, roundScores:[4,3,10,10]},
+      {name: 'Cameron Young', score:27, roundScores:[0,7,10,10]},
+      {name: 'Patton Kizzire', score:28, roundScores:[7,1,10,10]},
+      {name: 'Lucas Glover', score:28, roundScores:[6,2,10,10]},
+      {name: 'Taylor Pendrith', score:28, roundScores:[5,3,10,10]},
+      {name: 'Will Zalatoris', score:28, roundScores:[2,6,10,10]},
+      {name: 'Thomas Detry', score:29, roundScores:[7,2,10,10]},
+      {name: 'Evan Beck (a)', score:29, roundScores:[5,4,10,10]},
+      {name: 'Cam Davis', score:29, roundScores:[2,7,10,10]},
+      {name: 'Matthieu Pavon', score:30, roundScores:[6,4,10,10]},
+      {name: 'Laurie Canter', score:30, roundScores:[5,5,10,10]},
+      {name: 'Jose Luis Ballester Barrio', score:30, roundScores:[4,6,10,10]},
+      {name: 'Thriston Lawrence', score:31, roundScores:[7,4,10,10]},
+      {name: 'Noah Kent (a)', score:31, roundScores:[7,4,10,10]},
+      {name: 'Ángel Cabrera', score:31, roundScores:[3,8,10,10]},
+      {name: 'Nick Dunlap', score:37, roundScores:[18,-1,10,10]},
+    ];
+
+    const poolLeaderboardData = [
+      {
+        name: 'K-Dawg',
+        points: -13,
+        selectedPlayers:[
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Bryson DeChambeau', score:-7},
+          {name: 'Sahith Theegala', score:0},
+          {name: 'Patrick Cantlay', score:2},
+          {name: 'Phil Mickelson', score:25},
+          {name: 'Cameron Young', score:27}
+        ]
+      },
+      {
+        name: 'Jason K.',
+        points: -26,
+        selectedPlayers:[
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Corey Conners', score:-5},
+          {name: 'Min Woo Lee', score:6},
+          {name: 'Daniel Berger', score:-2},
+          {name: 'Cam Davis', score:29}
+        ]
+      },
+      {
+        name: 'Paul W.',
+        points: -24,
+        selectedPlayers:[
+          {name: 'Jon Rahm', score:-3},
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Shane Lowry', score:4},
+          {name: 'Patrick Reed', score:-9},
+          {name: 'Aaron Rai', score:-1},
+          {name: 'Nick Taylor', score:3}
+        ]
+      },
+      {
+        name: 'Rick S.',
+        points: -20,
+        selectedPlayers:[
+          {name: 'Collin Morikawa', score:-3},
+          {name: 'Viktor Hovland', score:-2},
+          {name: 'Patrick Cantlay', score:2},
+          {name: 'Shane Lowry', score:4},
+          {name: 'Justin Rose', score:-11},
+          {name: 'Max Homa', score:-4}
+        ]
+      },
+      {
+        name: 'Addison G.',
+        points: -19,
+        selectedPlayers:[
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Collin Morikawa', score:-3},
+          {name: 'Will Zalatoris', score:28},
+          {name: 'Russell Henley', score:23},
+          {name: 'Michael Kim', score:-1},
+          {name: 'Max Homa', score:-4}
+        ]
+      },
+      {
+        name: 'Nat S.',
+        points: -19,
+        selectedPlayers:[
+          {name: 'Collin Morikawa', score:-3},
+          {name: 'Bryson DeChambeau', score:-7},
+          {name: 'Tony Finau', score:24},
+          {name: 'Corey Conners', score:-5},
+          {name: 'Billy Horschel', score:25},
+          {name: 'Max Homa', score:-4}
+        ]
+      },
+      {
+        name: 'Max',
+        points: -18,
+        selectedPlayers:[
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Collin Morikawa', score:-3},
+          {name: 'Sergio Garcia', score:24},
+          {name: 'Jason Day', score:-5},
+          {name: 'Phil Mickelson', score:25},
+          {name: 'Max Greyserman', score:1}
+        ]
+      },
+      {
+        name: 'Stephen',
+        points: -17,
+        selectedPlayers:[
+          {name: 'Bryson DeChambeau', score:-7},
+          {name: 'Ludvig Åberg', score:-6},
+          {name: 'Tony Finau', score:24},
+          {name: 'Tom Kim', score:9},
+          {name: 'Sungjae Im', score:-7},
+          {name: 'Nick Taylor', score:3}
+        ]
+      },
+      {
+        name: 'Thomas K.',
+        points: -15,
+        selectedPlayers:[
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Collin Morikawa', score:-3},
+          {name: 'Russell Henley', score:23},
+          {name: 'Shane Lowry', score:4},
+          {name: 'Aaron Rai', score:-1},
+          {name: 'Tom Hoge', score:-3}
+        ]
+      },
+      {
+        name: 'Justin E.',
+        points: -14,
+        selectedPlayers:[
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Ludvig Åberg', score:-6},
+          {name: 'Will Zalatoris', score:28},
+          {name: 'Patrick Cantlay', score:2},
+          {name: 'Maverick McNealy', score:1},
+          {name: 'Matthieu Pavon', score:30}
+        ]
+      },
+      {
+        name: 'Blake S.',
+        points: -12,
+        selectedPlayers:[
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Min Woo Lee', score:6},
+          {name: 'Cameron Smith', score:25},
+          {name: 'Maverick McNealy', score:1},
+          {name: 'Nicolai Højgaard', score:26}
+        ]
+      },
+      {
+        name: 'Jailbirdie El Pato',
+        points: -10,
+        selectedPlayers:[
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Tony Finau', score:24},
+          {name: 'Min Woo Lee', score:6},
+          {name: 'Matt Fitzpatrick', score:3},
+          {name: 'Ángel Cabrera', score:31}
+        ]
+      },
+      {
+        name: 'Nate C.',
+        points: -4,
+        selectedPlayers:[
+          {name: 'Viktor Hovland', score:-2},
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Will Zalatoris', score:28},
+          {name: 'Min Woo Lee', score:6},
+          {name: 'Matt Fitzpatrick', score:3},
+          {name: 'Cameron Young', score:27}
+        ]
+      },
+      {
+        name: 'Zack K.',
+        points: -9,
+        selectedPlayers:[
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Xander Schauffele', score:-5},
+          {name: 'Russell Henley', score:23},
+          {name: 'Wyndham Clark', score:5},
+          {name: 'Maverick McNealy', score:1},
+          {name: 'Nick Taylor', score:3}
+        ]
+      },
+      {
+        name: 'Evan S.',
+        points: -8,
+        selectedPlayers:[
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Xander Schauffele', score:-5},
+          {name: 'Patrick Cantlay', score:2},
+          {name: 'Cameron Smith', score:25},
+          {name: 'Matt Fitzpatrick', score:3},
+          {name: 'Cameron Young', score:27}
+        ]
+      },
+      {
+        name: 'Brady',
+        points: -1,
+        selectedPlayers:[
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Brooks Koepka', score:25},
+          {name: 'Wyndham Clark', score:5},
+          {name: 'Min Woo Lee', score:6},
+          {name: 'Dustin Johnson', score:23},
+          {name: 'Max Homa', score:-4}
+        ]
+      },
+      {
+        name: 'Dima K.',
+        points: -5,
+        selectedPlayers:[
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Cameron Smith', score:25},
+          {name: 'Will Zalatoris', score:28},
+          {name: 'Justin Rose', score:-11},
+          {name: 'Cameron Young', score:27}
+        ]
+      },
+      {
+        name: 'Cole T.',
+        points: -4,
+        selectedPlayers:[
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Patrick Reed', score:-9},
+          {name: 'Will Zalatoris', score:28},
+          {name: 'Billy Horschel', score:25},
+          {name: 'Joe Highsmith', score:24}
+        ]
+      },
+      {
+        name: 'Jordan',
+        points: 16,
+        selectedPlayers:[
+          {name: 'Collin Morikawa', score:-3},
+          {name: 'Rory McIlroy', score:-11},
+          {name: 'Sepp Straka', score:25},
+          {name: 'Russell Henley', score:23},
+          {name: 'J.J. Spaun', score:7},
+          {name: 'Cameron Young', score:27}
+        ]
+      },
+      {
+        name: 'Brandon E.',
+        points: 34,
+        selectedPlayers:[
+          {name: 'Scottie Scheffler', score:-8},
+          {name: 'Ludvig Åberg', score:-6},
+          {name: 'Russell Henley', score:23},
+          {name: 'Sepp Straka', score:25},
+          {name: 'Billy Horschel', score:25},
+          {name: 'Christiaan Bezuidenhout', score:27}
+        ]
+      }
+    ];
+
+    // Sort golf leaderboard
+    golfLeaderboardData.sort((a, b) => a.score - b.score);
+    // Sort pool leaderboard
+    poolLeaderboardData.sort((a, b) => a.points - b.points);
+
+    function updateLeaderboard(listId, data, scoreType, limit, btnId) {
+      const list = document.getElementById(listId);
+      list.innerHTML = '';
+
+      let showAll = !limit;
+      let btn = btnId ? document.getElementById(btnId) : null;
+
+      if (showAll) {
+        data.forEach(item => createListItem(list, item, scoreType));
+        if (btn) btn.style.display = 'none';
+        return;
+      }
+
+      const topPlayers = data.slice(0, 10);
+      topPlayers.forEach(item => createListItem(list, item, scoreType));
+
+      if (btn) btn.textContent = "Show More";
+      if (!btn) return;
+
+      btn.style.display = "block";
+      let expanded = false;
+
+      btn.onclick = function() {
+        expanded = !expanded;
+        list.innerHTML = '';
+
+        if (expanded) {
+          data.forEach(item => createListItem(list, item, scoreType));
+          btn.textContent = "Show Less";
+        } else {
+          topPlayers.forEach(item => createListItem(list, item, scoreType));
+          btn.textContent = "Show More";
+        }
+      };
+    }
+
+    function createListItem(list, item, scoreType) {
+      const li = document.createElement('li');
+      const expandDiv = document.createElement('div');
+      expandDiv.classList.add('expand');
+
+      li.innerHTML = `<span class="golf-icon"></span> ${item.name}: ${item[scoreType]}`;
+
+      // If this is a golf player with roundScores
+      if (item.roundScores) {
+        const roundScores = item.roundScores
+          .map((score, index) => `<div>Round ${index + 1}: ${score}</div>`)
+          .join('');
+        expandDiv.innerHTML = `<strong>Round Scores:</strong>${roundScores}`;
+      }
+
+      // If this is a pool participant with selected players
+      if (item.selectedPlayers) {
+        item.selectedPlayers.forEach(player => {
+          const playerInfo = document.createElement('div');
+          playerInfo.textContent = `${player.name}: ${player.score}`;
+          expandDiv.appendChild(playerInfo);
+        });
+      }
+
+      li.appendChild(expandDiv);
+      list.appendChild(li);
+
+      li.addEventListener('click', function() {
+        const expanded = expandDiv.style.display === 'block';
+        document.querySelectorAll('.expand').forEach(div => div.style.display = 'none');
+        expandDiv.style.display = expanded ? 'none' : 'block';
+      });
+    }
+
+    // Golf leaderboard
+    updateLeaderboard('golf-list', golfLeaderboardData, 'score', 10, 'toggle-button');
+
+    // Pool leaderboard
+    updateLeaderboard('pool-list', poolLeaderboardData, 'points', null, 'toggle-pool-button');
+
+    const poolBtn = document.getElementById('toggle-pool-button');
+    let poolExpanded = true;
+    poolBtn.onclick = function() {
+      poolExpanded = !poolExpanded;
+      const poolList = document.getElementById('pool-list');
+
+      if (poolExpanded) {
+        poolList.innerHTML = '';
+        poolLeaderboardData.forEach(item => createListItem(poolList, item, 'points'));
+        poolBtn.textContent = "Collapse";
+      } else {
+        poolList.innerHTML = '';
+        poolBtn.textContent = "Expand";
+      }
+    };
+  });
+</script>
+
+<!-- 4. Weather Widget Script (Open-Meteo) with Emojis -->
+<script>
+  (async function(){
+    const weatherCurrent = document.getElementById("weather-current");
+    const weatherForecast = document.getElementById("weather-forecast");
+    const lat = 33.5025, lon = -82.02; // Augusta National location
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_mean,weathercode&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
+
+    const weatherCodeMap = {
+      0: "Clear sky",
+      1: "Mainly clear",
+      2: "Partly cloudy",
+      3: "Overcast",
+      45: "Foggy",
+      48: "Depositing rime fog",
+      51: "Light drizzle",
+      53: "Moderate drizzle",
+      55: "Dense drizzle",
+      56: "Freezing drizzle",
+      57: "Freezing drizzle",
+      61: "Slight rain",
+      63: "Moderate rain",
+      65: "Heavy rain",
+      66: "Freezing rain",
+      67: "Freezing rain",
+      71: "Slight snowfall",
+      73: "Moderate snowfall",
+      75: "Heavy snowfall",
+      77: "Snow grains",
+      80: "Light rain showers",
+      81: "Moderate rain showers",
+      82: "Violent rain showers",
+      85: "Slight snow showers",
+      86: "Heavy snow showers",
+      95: "Thunderstorm",
+      96: "Thunders. w/ slight hail",
+      99: "Thunders. w/ heavy hail"
+    };
+
+    const weatherEmojiMap = {
+      0: "☀️",
+      1: "🌤️",
+      2: "⛅",
+      3: "☁️",
+      45: "🌫️",
+      48: "🌫️",
+      51: "🌧️",
+      53: "🌧️",
+      55: "🌧️",
+      56: "🌧️",
+      57: "🌧️",
+      61: "🌧️",
+      63: "🌧️",
+      65: "🌧️",
+      66: "🌧️",
+      67: "🌧️",
+      71: "❄️",
+      73: "❄️",
+      75: "❄️",
+      77: "❄️",
+      80: "🌧️",
+      81: "🌧️",
+      82: "🌧️",
+      85: "❄️",
+      86: "❄️",
+      95: "⛈️",
+      96: "⛈️",
+      99: "⛈️"
+    };
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Open-Meteo fetch failed: ${response.status}`);
+      }
+      const data = await response.json();
+
+      if (data.current_weather) {
+        const cw = data.current_weather;
+        const codeText = weatherCodeMap[cw.weathercode] || "Unknown";
+        const emoji = weatherEmojiMap[cw.weathercode] || "❓";
+        weatherCurrent.innerHTML = `
+          <strong>Currently:</strong> ${emoji} ${cw.temperature}°F | ${codeText} | Wind ${cw.windspeed} mph
+        `;
+      } else {
+        weatherCurrent.textContent = "No current weather data.";
+      }
+
+      if (data.daily && data.daily.time) {
+        const { time, temperature_2m_max, temperature_2m_min, precipitation_probability_mean, weathercode } = data.daily;
+        let forecastHTML = "";
+
+        for (let i = 0; i < time.length; i++) {
+          const dateObj = new Date(time[i]);
+          const dayName = dateObj.toLocaleDateString(undefined, { weekday: "short" });
+          const codeTx = weatherCodeMap[weathercode[i]] || "Unknown";
+          const emoji = weatherEmojiMap[weathercode[i]] || "❓";
+
+          forecastHTML += `
+            <div style="display:inline-block;border:1px solid #ccc;border-radius:6px;padding:8px;margin:4px;min-width:110px;">
+              <div><strong>${dayName}</strong></div>
+              <div style="font-size:1.2em;margin:4px 0;">${emoji}</div>
+              <div style="font-size:0.9em;color:#333;">${codeTx}</div>
+              <div style="font-size:0.9em;color:#333;margin-top:6px;">High: ${temperature_2m_max[i]}°F</div>
+              <div style="font-size:0.9em;color:#333;">Low: ${temperature_2m_min[i]}°F</div>
+              <div style="font-size:0.9em;color:#333;">Precip: ${precipitation_probability_mean[i]}%</div>
+            </div>
+          `;
+        }
+        weatherForecast.innerHTML = forecastHTML;
+      } else {
+        weatherForecast.textContent = "No forecast data.";
+      }
+    } catch (err) {
+      weatherCurrent.textContent = "Could not load weather data.";
+      weatherForecast.textContent = "";
+      console.error(err);
+    }
+  })();
+</script>
+
+</body>
+</html>
