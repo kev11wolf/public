@@ -105,13 +105,33 @@
        HEADER STYLES
        ========================================== */
     header {
-      background-color: var(--masters-green);
+      background:
+        linear-gradient(160deg, rgba(0,36,22,0.83) 0%, rgba(0,75,45,0.70) 50%, rgba(0,45,28,0.83) 100%),
+        url('https://media.istockphoto.com/id/157400500/photo/azalea.jpg?s=612x612&w=0&k=20&c=gcs21rGcFKCM44eWDelQRGSc-696HU4i_GZ1oHt7cyI=');
       background-size: cover;
       background-position: center;
       color: var(--white);
-      padding: 15px 20px;
+      padding: 20px 20px 0 20px;
       text-align: center;
-      transition: background-color 0.3s ease;
+      transition: background 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::after {
+      content: '';
+      display: block;
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, #c9a84c 30%, #FFD700 50%, #c9a84c 70%, transparent 100%);
+      margin-top: 15px;
+    }
+
+    [data-theme="dark"] header {
+      background:
+        linear-gradient(160deg, rgba(0,20,10,0.90) 0%, rgba(0,40,22,0.82) 50%, rgba(0,20,10,0.90) 100%),
+        url('https://media.istockphoto.com/id/157400500/photo/azalea.jpg?s=612x612&w=0&k=20&c=gcs21rGcFKCM44eWDelQRGSc-696HU4i_GZ1oHt7cyI=');
+      background-size: cover;
+      background-position: center;
     }
 
     header h1 {
@@ -119,7 +139,9 @@
       font-size: clamp(1.2em, 4vw, 1.8em);
       margin: 10px 0;
       font-family: 'Libre Baskerville', 'Times New Roman', serif;
-      color: var(--text-primary);
+      color: #f8f5e4;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.45);
+      letter-spacing: 0.5px;
     }
 
     [data-theme="dark"] header h1 {
@@ -162,7 +184,6 @@
       box-shadow: 0 2px 6px var(--shadow-light);
       border: 1px solid var(--border-color);
       transition: all 0.3s ease;
-      cursor: pointer;
       overflow: hidden;
     }
 
@@ -173,37 +194,20 @@
 
     .card-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 10px 0;
+      padding: 6px 0 12px 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 10px;
     }
 
-    .card-preview {
-      font-size: 0.9em;
-      color: var(--text-secondary);
-      margin-top: 8px;
-      line-height: 1.4;
+    .card-header h2 {
+      margin: 0;
+      border-left: 4px solid var(--masters-green);
+      padding-left: 10px;
     }
 
     .card-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.4s ease;
-    }
-
-    .card.expanded .card-content {
-      max-height: 2000px;
       margin-top: 15px;
-    }
-
-    .card-toggle {
-      font-size: 1.5em;
-      transition: transform 0.3s ease;
-      color: var(--masters-green);
-    }
-
-    .card.expanded .card-toggle {
-      transform: rotate(180deg);
     }
 
     .timer,
@@ -285,7 +289,6 @@
       display: none;
       margin-top: 8px;
       padding: 10px;
-      background-color: var(--masters-hover);
       border-radius: 5px;
       font-size: clamp(0.8em, 2.3vw, 0.9em);
       text-align: left;
@@ -329,21 +332,44 @@
     .slideshow {
       width: 100%;
       max-width: 100%;
-      height: 250px;
-      overflow: hidden;
       margin: 20px auto;
       position: relative;
       border-radius: 8px;
     }
 
-    .slideshow img {
+    .slideshow-frame {
+      width: 100%;
+      position: relative;
+      aspect-ratio: 16 / 9;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #0d1f18;
+    }
+
+    .slide-img {
+      position: absolute;
+      top: 0; left: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
-      border-radius: 8px;
-      transition: opacity 0.8s ease-in-out;
+      border-radius: 6px;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
     }
+
+    .slide-img.active {
+      opacity: 1;
+    }
+
+    /* ==========================================
+       SCORE TIER ROW COLORS
+       ========================================== */
+    li.tier-gold  { border-left: 4px solid #FFD700; }
+    li.tier-green { border-left: 4px solid #10B981; }
+    li.tier-even  { border-left: 4px solid #9CA3AF; }
+    li.tier-over  { border-left: 4px solid #F59E0B; }
+    li.tier-high  { border-left: 4px solid #EF4444; }
 
     /* ==========================================
        TABLE STYLES
@@ -367,7 +393,7 @@
 
     th {
       background-color: var(--masters-green);
-      color: var(--text-primary);
+      color: #ffffff;
       font-weight: 700;
     }
 
@@ -533,32 +559,33 @@
        ========================================== */
     .toast-container {
       position: fixed;
-      top: 80px;
-      right: 20px;
+      top: 70px;
+      right: 16px;
       z-index: 10000;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 5px;
       pointer-events: none;
-      max-width: 400px;
+      max-width: 240px;
     }
 
     .toast {
       background: var(--card-bg);
-      padding: 16px 20px;
-      border-radius: 8px;
+      padding: 7px 10px;
+      border-radius: 6px;
       border: 1px solid var(--border-color);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
       display: flex;
       align-items: center;
-      gap: 12px;
-      min-height: 60px;
+      gap: 7px;
+      min-height: 34px;
       pointer-events: all;
-      animation: slideInRight 0.3s ease-out;
+      animation: slideInRight 0.25s ease-out;
       position: relative;
       overflow: hidden;
       cursor: pointer;
       transition: transform 0.2s ease;
+      opacity: 0.93;
     }
 
     .toast:hover {
@@ -571,23 +598,23 @@
     }
 
     .toast.success {
-      border-left: 4px solid #10B981;
+      border-left: 3px solid #10B981;
     }
 
     .toast.info {
-      border-left: 4px solid #3B82F6;
+      border-left: 3px solid #3B82F6;
     }
 
     .toast.warning {
-      border-left: 4px solid #F59E0B;
+      border-left: 3px solid #F59E0B;
     }
 
     .toast.error {
-      border-left: 4px solid #EF4444;
+      border-left: 3px solid #EF4444;
     }
 
     .toast-icon {
-      font-size: 24px;
+      font-size: 14px;
       line-height: 1;
       flex-shrink: 0;
     }
@@ -601,13 +628,13 @@
 
     .toast-title {
       font-weight: 600;
-      font-size: 14px;
+      font-size: 11px;
       color: var(--text-primary);
       margin: 0;
     }
 
     .toast-message {
-      font-size: 13px;
+      font-size: 10px;
       color: var(--text-secondary);
       margin: 0;
       line-height: 1.4;
@@ -616,7 +643,7 @@
     .toast-close {
       background: none;
       border: none;
-      font-size: 20px;
+      font-size: 13px;
       color: var(--text-secondary);
       cursor: pointer;
       padding: 4px;
@@ -633,7 +660,7 @@
       position: absolute;
       bottom: 0;
       left: 0;
-      height: 3px;
+      height: 2px;
       background: linear-gradient(90deg, #10B981, #059669);
       animation: progressBar 3s linear forwards;
     }
@@ -829,10 +856,6 @@
         border-radius: 6px;
       }
 
-      .slideshow {
-        height: 180px;
-      }
-
       .update-image {
         max-height: 180px;
       }
@@ -882,15 +905,35 @@
       }
 
       .toast-container {
-        top: 70px;
-        left: 10px;
-        right: 10px;
-        max-width: none;
-      }
+      position: fixed;
+      top: 70px;
+      right: 16px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      pointer-events: none;
+      max-width: 240px;
+    }
 
       .toast {
-        animation: slideInUp 0.3s ease-out;
-      }
+      background: var(--card-bg);
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      pointer-events: all;
+      animation: slideInRight 0.25s ease-out;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      opacity: 0.93;
+    }
 
       .toast.removing {
         animation: slideOutDown 0.3s ease-in forwards;
@@ -914,10 +957,6 @@
         padding-bottom: 110px;
       }
 
-      .slideshow {
-        height: 220px;
-      }
-
       #audio-controls {
         bottom: 15px;
         left: 15px;
@@ -939,10 +978,6 @@
         padding: 20px;
       }
 
-      .slideshow {
-        height: 280px;
-      }
-
       #audio-controls {
         bottom: 20px;
         left: 20px;
@@ -952,10 +987,6 @@
     @media screen and (min-width: 1025px) {
       main {
         max-width: 800px;
-      }
-
-      .slideshow {
-        height: 300px;
       }
 
       #weather-forecast > div {
@@ -1034,22 +1065,18 @@
 <main>
 
   <section class="timer card" id="countdown-timer">
-    <div class="card-header" onclick="toggleCard(this.parentElement)">
+    <div class="card-header">
       <h2 style="margin: 0;">⏰ Countdown</h2>
-      <span class="card-toggle">▼</span>
     </div>
-    <div class="card-preview">Time until 2026 Masters Tournament</div>
     <div class="card-content">
       <p id="time-left" aria-live="polite"></p>
     </div>
   </section>
 
   <section class="updates card">
-    <div class="card-header" onclick="toggleCard(this.parentElement)">
+    <div class="card-header">
       <h2 style="margin: 0;">📢 News + Updates</h2>
-      <span class="card-toggle">▼</span>
     </div>
-    <div class="card-preview">Latest announcements and highlights</div>
     <div class="card-content">
       <p>Thanks for playing! See you all in 2026.</p>
       <img src="https://i.postimg.cc/wjy1wZ2X/2025-masters.png" alt="2025 Masters Pool Winner Celebration" class="update-image">
@@ -1057,11 +1084,9 @@
   </section>
 
   <section id="weather-widget" class="card">
-    <div class="card-header" onclick="toggleCard(this.parentElement)">
+    <div class="card-header">
       <h2 style="margin: 0;">🌤️ Augusta Weather</h2>
-      <span class="card-toggle">▼</span>
     </div>
-    <div class="card-preview" id="weather-preview">Loading weather...</div>
     <div class="card-content">
       <div id="weather-current" style="margin-bottom: 15px;" aria-live="polite">
         Loading current weather…
@@ -1073,11 +1098,9 @@
   </section>
 
   <section id="sommerville-registration" class="card">
-    <div class="card-header" onclick="toggleCard(this.parentElement)">
+    <div class="card-header">
       <h2 style="margin: 0;">✍️ Registration</h2>
-      <span class="card-toggle">▼</span>
     </div>
-    <div class="card-preview">Submit your player selections</div>
     <div class="card-content">
       <p>Click the button below to submit your selections!</p>
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeFdQqMiI8_6rMCRZCMvR5AMDjgjY1Uyq_V2_GUGkQk1tJ6ag/viewform?usp=header" 
@@ -1089,50 +1112,21 @@
   </section>
 
   <section class="slideshow card">
-    <div class="card-header" onclick="toggleCard(this.parentElement)">
+    <div class="card-header">
       <h2 style="margin: 0;">🖼️ Augusta Gallery</h2>
-      <span class="card-toggle">▼</span>
     </div>
-    <div class="card-preview">Beautiful photos of Augusta National</div>
     <div class="card-content">
-      <img id="slideshow-image" src="" alt="Augusta National Golf Course" style="margin-top: 15px;">
-    </div>
-  </section>
-
-  <section id="pool-leaderboard" class="card expanded">
-    <div class="card-header" onclick="toggleCard(this.parentElement)">
-      <h2 style="margin: 0;">🏆 Pool Leaderboard</h2>
-      <span class="card-toggle">▼</span>
-    </div>
-    <div class="card-preview">Current pool participant standings</div>
-    <div class="card-content">
-      <button id="toggle-pool-button" class="collapse-btn" aria-expanded="true">Collapse</button>
-      <ul id="pool-list" role="list">
-        <!-- Pool participant scores will be inserted here -->
-      </ul>
-    </div>
-  </section>
-
-  <section id="golf-leaderboard" class="card">
-    <div class="card-header" onclick="toggleCard(this.parentElement)">
-      <h2 style="margin: 0;">⛳ Golf Leaderboard</h2>
-      <span class="card-toggle">▼</span>
-    </div>
-    <div class="card-preview">Top 10 golf players (tap to expand all)</div>
-    <div class="card-content">
-      <button id="toggle-button" class="collapse-btn" aria-expanded="false">Show More</button>
-      <ul id="golf-list" role="list">
-        <!-- Golf player scores will be inserted here -->
-      </ul>
+      <div class="slideshow-frame">
+        <img id="slide-img-a" class="slide-img" src="" alt="Augusta National Golf Course">
+        <img id="slide-img-b" class="slide-img" src="" alt="Augusta National Golf Course">
+      </div>
     </div>
   </section>
 
   <section id="historical-winners" class="card">
-    <div class="card-header" onclick="toggleCard(this.parentElement)">
+    <div class="card-header">
       <h2 style="margin: 0;">🎖️ Past Champions</h2>
-      <span class="card-toggle">▼</span>
     </div>
-    <div class="card-preview">Sommerville Masters Pool hall of fame</div>
     <div class="card-content">
       <table role="table">
         <thead>
@@ -1166,6 +1160,30 @@
       </table>
     </div>
   </section>
+  <section id="pool-leaderboard" class="card">
+    <div class="card-header">
+      <h2 style="margin: 0;">🏆 Pool Leaderboard</h2>
+    </div>
+    <div class="card-content">
+      <button id="toggle-pool-button" class="collapse-btn" aria-expanded="true">Collapse</button>
+      <ul id="pool-list" role="list">
+        <!-- Pool participant scores will be inserted here -->
+      </ul>
+    </div>
+  </section>
+
+  <section id="golf-leaderboard" class="card">
+    <div class="card-header">
+      <h2 style="margin: 0;">⛳ Golf Leaderboard</h2>
+    </div>
+    <div class="card-content">
+      <button id="toggle-button" class="collapse-btn" aria-expanded="false">Show More</button>
+      <ul id="golf-list" role="list">
+        <!-- Golf player scores will be inserted here -->
+      </ul>
+    </div>
+  </section>
+
 
   <div id="chatango-container">
     <script id="cid0020000416183938966" data-cfasync="false" async src="//st.chatango.com/js/gz/emb.js"
@@ -1255,32 +1273,6 @@
 
   // Add event listener
   document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-
-  /* ==========================================
-     CARD TOGGLE FUNCTIONALITY
-     ========================================== */
-  function toggleCard(card) {
-    const wasExpanded = card.classList.contains('expanded');
-    card.classList.toggle('expanded');
-
-    // Save card state
-    const cardId = card.id || card.className.split(' ')[0];
-    if (cardId) {
-      localStorage.setItem(`card-${cardId}`, card.classList.contains('expanded'));
-    }
-  }
-
-  // Restore card states on load
-  function restoreCardStates() {
-    document.querySelectorAll('.card').forEach(card => {
-      const cardId = card.id || card.className.split(' ')[0];
-      const savedState = localStorage.getItem(`card-${cardId}`);
-
-      if (savedState === 'true') {
-        card.classList.add('expanded');
-      }
-    });
-  }
 
   /* ==========================================
      TOAST NOTIFICATION SYSTEM
@@ -1614,40 +1606,61 @@
       addRippleEffect(btn);
     });
 
-    // Restore card states
-    restoreCardStates();
 
-    // Slideshow with fade transitions
-    const images = [
+    // Slideshow — dual-image crossfade with preloading
+    const slideshowImages = [
       'https://i.insider.com/5ac3ca737a74af24008b45c7?width=1000&format=jpeg',
       'https://media.stewarttravel.co.uk/media/repository/Golf/golfcourses/USA/Georgia/AugustaNational/Augusta-National.jpg',
       'https://static01.nyt.com/images/2025/05/12/multimedia/12nat-masters-photos-rory-win-sunday-chtq/12nat-masters-photos-rory-win-sunday-chtq-articleLarge.jpg',
       'https://images2.minutemediacdn.com/image/upload/c_crop,w_8025,h_4514,x_0,y_167/c_fill,w_720,ar_16:9,f_auto,q_auto,g_auto/images/ImagnImages/mmsport/si/01jabn4qvj71gpkb0kzy.jpg',
-      'https://golfweek.usatoday.com/gcdn/authoring/authoring-images/2025/04/10/SGLF/83022855007-usatsi-25892403.jpg',
+      'https://golfweek.usatoday.com/gcdn/authoring/authoring-images/2025/04/10/SGLF/8.3022855007e+10-usatsi-25892403.jpg',
       'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1685967.jpg',
       'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-83123181.jpg',
-      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1074391880-1.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1.07439188e+09-1.jpg',
       'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1145859172.jpg',
       'https://o90934w8.cdn.imgeng.in/wp-content/uploads/2015/04/amen-corner.jpg',
-      'https://media.cnn.com/api/v1/images/stellar/prod/170223113519-tiger-augusta-azaleas.jpg',
+      'https://media.cnn.com/api/v1/images/stellar/prod/1.70223113519e+11-tiger-augusta-azaleas.jpg',
       'https://www.liveabout.com/thmb/KqYZccVwvG6HOodBXslj-yYRDk4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/augusta-national-azalea-rory-58272e685f9b58d5b15309db-5c251adf46e0fb0001e72d82.jpg',
-      'https://e0.365dm.com/18/04/768x432/skysports-tiger-woods-masters_4271003.jpg?20180401182508'
+      'https://e0.365dm.com/18/04/768x432/skysports-tiger-woods-masters_4271003.jpg?2.0180401182508e+13'
     ];
 
-    let currentImageIndex = 0;
-    const slideshowImage = document.getElementById('slideshow-image');
-    slideshowImage.src = images[currentImageIndex];
+    let ssIndex  = 0;
+    let ssActive = 'a';
+    const ssImgA = document.getElementById('slide-img-a');
+    const ssImgB = document.getElementById('slide-img-b');
 
-    function cycleSlideshow() {
-      slideshowImage.style.opacity = '0';
+    function ssGetActive() { return ssActive === 'a' ? ssImgA : ssImgB; }
+    function ssGetNext()   { return ssActive === 'a' ? ssImgB : ssImgA; }
 
-      setTimeout(() => {
-        currentImageIndex = (currentImageIndex + 1) % images.length;
-        slideshowImage.src = images[currentImageIndex];
-        slideshowImage.style.opacity = '1';
-      }, 800);
+    function ssPreload(urls) {
+      urls.forEach(url => { const i = new Image(); i.src = url; });
     }
-    setInterval(cycleSlideshow, 3000);
+
+    function ssAdvance() {
+      const nextIndex = (ssIndex + 1) % slideshowImages.length;
+      const nextEl    = ssGetNext();
+      const curEl     = ssGetActive();
+      nextEl.src = slideshowImages[nextIndex];
+      nextEl.onload = function() {
+        nextEl.classList.add('active');
+        curEl.classList.remove('active');
+        ssActive = ssActive === 'a' ? 'b' : 'a';
+        ssIndex  = nextIndex;
+      };
+      nextEl.onerror = function() {
+        ssIndex = nextIndex;
+        setTimeout(ssAdvance, 200);
+      };
+    }
+
+    // Load first image, then preload rest and start cycling
+    ssImgA.src = slideshowImages[0];
+    ssImgA.onload = function() {
+      ssImgA.classList.add('active');
+      ssPreload(slideshowImages.slice(1));
+      setInterval(ssAdvance, 4500);
+    };
+    ssImgA.onerror = function() { ssIndex = 1; ssAdvance(); };
 
     // Golf and Pool Leaderboard Data
     const golfLeaderboardData = [
@@ -2034,8 +2047,24 @@
       };
     }
 
+    function getScoreTier(score, scoreType) {
+      if (scoreType === 'score') {
+        if (score <= -8) return 'tier-gold';
+        if (score < 0)   return 'tier-green';
+        if (score === 0) return 'tier-even';
+        if (score <= 10) return 'tier-over';
+        return 'tier-high';
+      } else {
+        if (score <= -20) return 'tier-gold';
+        if (score < 0)    return 'tier-green';
+        if (score === 0)  return 'tier-even';
+        return 'tier-over';
+      }
+    }
+
     function createListItem(list, item, scoreType, index) {
       const li = document.createElement('li');
+      li.classList.add(getScoreTier(item[scoreType], scoreType));
       const expandDiv = document.createElement('div');
       expandDiv.classList.add('expand');
 
@@ -2104,7 +2133,7 @@
         toast.info('Welcome! 👋', 'Tap any player to see detailed scores', 4000);
 
         setTimeout(() => {
-          toast.info('Tip 💡', 'Click cards to expand/collapse content', 4000);
+          toast.info('Tip 💡', 'Use the Show More button to see all players', 4000);
           localStorage.setItem('tutorialComplete', 'true');
         }, 5000);
       }, 2000);
@@ -2197,10 +2226,10 @@
         weatherCurrent.innerHTML = `
           <strong>Currently:</strong> ${emoji} ${cw.temperature}°F | ${codeText} | Wind ${cw.windspeed} mph
         `;
-        weatherPreview.textContent = `${emoji} ${cw.temperature}°F - ${codeText}`;
+        if (weatherPreview) weatherPreview.textContent = `${emoji} ${cw.temperature}°F - ${codeText}`;
       } else {
         weatherCurrent.textContent = "No current weather data.";
-        weatherPreview.textContent = "No weather data";
+        if (weatherPreview) weatherPreview.textContent = "No weather data";
       }
 
       if (data.daily && data.daily.time) {
@@ -2235,7 +2264,7 @@
     } catch (err) {
       weatherCurrent.textContent = "Could not load weather data.";
       weatherForecast.textContent = "";
-      weatherPreview.textContent = "Weather unavailable";
+      if (weatherPreview) weatherPreview.textContent = "Weather unavailable";
       console.error(err);
 
       // Error toast
