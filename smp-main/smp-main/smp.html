@@ -310,15 +310,33 @@
        FOOTER STYLES
        ========================================== */
     footer {
-      background-color: var(--masters-green);
-      color: var(--text-primary);
-      padding: 20px 15px;
+      background:
+        linear-gradient(160deg, rgba(0,36,22,0.83) 0%, rgba(0,75,45,0.70) 50%, rgba(0,45,28,0.83) 100%),
+        url('https://media.istockphoto.com/id/157400500/photo/azalea.jpg?s=612x612&w=0&k=20&c=gcs21rGcFKCM44eWDelQRGSc-696HU4i_GZ1oHt7cyI=');
+      background-size: cover;
+      background-position: center;
+      color: #f8f5e4;
+      padding: 0 15px 20px 15px;
       text-align: center;
       font-size: clamp(0.85em, 2.5vw, 0.95em);
-      transition: background-color 0.3s ease;
+      transition: background 0.3s ease;
+      position: relative;
+    }
+
+    footer::before {
+      content: '';
+      display: block;
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, #c9a84c 30%, #FFD700 50%, #c9a84c 70%, transparent 100%);
+      margin-bottom: 15px;
     }
 
     [data-theme="dark"] footer {
+      background:
+        linear-gradient(160deg, rgba(0,20,10,0.90) 0%, rgba(0,40,22,0.82) 50%, rgba(0,20,10,0.90) 100%),
+        url('https://media.istockphoto.com/id/157400500/photo/azalea.jpg?s=612x612&w=0&k=20&c=gcs21rGcFKCM44eWDelQRGSc-696HU4i_GZ1oHt7cyI=');
+      background-size: cover;
+      background-position: center;
       color: #0a0a0a;
     }
 
@@ -343,7 +361,7 @@
       aspect-ratio: 16 / 9;
       border-radius: 6px;
       overflow: hidden;
-      background: #0d1f18;
+      background: transparent;
     }
 
     .slide-img {
@@ -379,6 +397,14 @@
       border-collapse: collapse;
       margin: 10px auto;
       font-size: clamp(0.8em, 2.3vw, 0.9em);
+    }
+
+    /* Past Champions table – always centered on all viewports */
+    #historical-winners table {
+      width: auto;
+      min-width: 220px;
+      margin: 10px auto;
+      display: table;
     }
 
     th,
@@ -897,6 +923,16 @@
         overflow-x: auto;
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
+      }
+
+      /* Keep Past Champions table centered on mobile */
+      #historical-winners table {
+        display: table;
+        overflow-x: visible;
+        white-space: normal;
+        width: auto;
+        min-width: 220px;
+        margin: 10px auto;
       }
 
       th, td {
