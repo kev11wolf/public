@@ -886,26 +886,39 @@
         max-height: 180px;
       }
 
+      /* Audio controls: compact top-left pill on phones */
       #audio-controls {
-        bottom: 10px;
+        bottom: auto;
+        top: 10px;
         left: 10px;
-        right: 10px;
-        max-width: calc(100vw - 20px);
-        padding: 10px;
+        right: auto;
+        max-width: calc(60vw - 15px);
+        padding: 6px 10px;
+        flex-direction: row;
+        gap: 4px;
+        align-items: center;
+        border-radius: 50px;
       }
 
       #audio-controls > div:first-child {
         display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-        justify-content: center;
+        gap: 4px;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-items: center;
       }
 
       #audio-controls button {
-        padding: 8px 12px;
-        font-size: 14px;
-        min-height: 40px;
-        min-width: 40px;
+        padding: 6px 8px;
+        font-size: 13px;
+        min-height: 34px;
+        min-width: 34px;
+        border-radius: 50px;
+      }
+
+      /* Status text hidden on phones; toasts still give feedback */
+      #audio-status {
+        display: none;
       }
 
       #chatango-container {
@@ -993,9 +1006,22 @@
         padding-bottom: 110px;
       }
 
+      /* Audio controls: top-left on tablet to clear Chatango */
       #audio-controls {
-        bottom: 15px;
+        bottom: auto;
+        top: 15px;
         left: 15px;
+        flex-direction: row;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 50px;
+      }
+
+      #audio-controls > div:first-child {
+        display: flex;
+        flex-direction: row;
+        gap: 6px;
+        align-items: center;
       }
 
       #chatango-container {
@@ -1032,10 +1058,13 @@
 
     @media screen and (max-height: 600px) and (orientation: landscape) {
       #audio-controls {
-        bottom: 10px;
+        bottom: auto;
+        top: 10px;
         left: 10px;
-        padding: 8px;
-        gap: 6px;
+        padding: 6px 10px;
+        gap: 4px;
+        flex-direction: row;
+        border-radius: 50px;
       }
 
       #audio-controls button {
