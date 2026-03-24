@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Les Chansons de Bébé — Baby's Nursery Rhymes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple:#7c6fcf;--purple-l:#ede9ff;--purple-t:#4a3f9a;
+      --amber:#f9a825;--amber-l:#fff8e1;--amber-t:#b46a00;
+      --green:#43a047;--green-l:#e8f5e9;--green-t:#2a6b2e;
+      --indigo:#3949ab;--indigo-l:#e8eaf6;--indigo-t:#1a2575;
+      --teal:#00897b;--teal-l:#e0f2f1;--teal-t:#005048;
+      --blue:#1e88e5;--blue-l:#e3f2fd;--blue-t:#0a4a8a;
+      --rose:#d81b60;--rose-l:#fce4ec;--rose-t:#880040;
+      --orange:#f4511e;--orange-l:#fbe9e7;--orange-t:#8a2400;
+      --lime:#7cb342;--lime-l:#f1f8e9;--lime-t:#3a6000;
+      --sky:#039be5;--sky-l:#e1f5fe;--sky-t:#014b7a;
+    }
+    body { font-family:'Nunito',sans-serif; background:#f7f3ff; min-height:100vh; color:#2d2040; }
+
+    header {
+      background: linear-gradient(135deg,#7c6fcf 0%,#d63fa0 55%,#f9a825 100%);
+      padding:2.5rem 1.5rem 2.2rem; text-align:center; position:relative; overflow:hidden;
+    }
+    header::before {
+      content:"🦆  🐑  🐄  ⭐  🕷️  🚌  🐏  🚣";
+      position:absolute;top:6px;left:0;right:0;font-size:1.2rem;
+      opacity:0.15;letter-spacing:1rem;white-space:nowrap;overflow:hidden;
+    }
+    .header-icons { font-size:2rem; margin-bottom:0.6rem; letter-spacing:0.5rem; }
+    header h1 { font-family:'Pacifico',cursive; font-size:clamp(1.8rem,5vw,3rem); color:#fff; text-shadow:2px 3px 0 rgba(0,0,0,.15); }
+    header p.sub { margin-top:.5rem; color:rgba(255,255,255,.88); font-weight:700; font-size:1rem; }
+
+    .filter-bar {
+      background:#fff; border-bottom:1px solid #ece8f8;
+      padding:.85rem 1.5rem; display:flex; flex-wrap:wrap; gap:.45rem;
+      align-items:center; justify-content:center;
+      position:sticky; top:0; z-index:100;
+      box-shadow:0 2px 12px rgba(100,80,180,.07);
+    }
+    .filter-btn {
+      border:2px solid #e0d8f8; background:#fff; color:#7a6aaa;
+      font-family:'Nunito',sans-serif; font-weight:800; font-size:.8rem;
+      padding:.35rem .85rem; border-radius:100px; cursor:pointer;
+      transition:all .16s; white-space:nowrap;
+    }
+    .filter-btn:hover { border-color:#a090d0; color:#4a3a9a; background:#f0ecff; }
+    .filter-btn.active { background:#7c6fcf; border-color:#7c6fcf; color:#fff; }
+    .cbadge { display:inline-flex; background:#ede9ff; color:#7c6fcf; font-size:.7rem; font-weight:900; border-radius:100px; padding:0 .42rem; margin-left:.2rem; line-height:1.6; }
+
+    main { max-width:1200px; margin:0 auto; padding:1.8rem 1rem 4rem; }
+    .section-info { text-align:center; margin-bottom:1.6rem; }
+    .section-info span { font-size:.86rem; font-weight:700; color:#9a8aba; }
+
+    .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(275px,1fr)); gap:1.4rem; }
+
+    .card {
+      background:#fff; border-radius:20px; padding:1.4rem 1.5rem 1.5rem;
+      box-shadow:0 4px 20px rgba(80,60,140,.08); cursor:pointer;
+      transition:transform .2s,box-shadow .2s; position:relative; overflow:hidden;
+      display:flex; flex-direction:column;
+    }
+    .card:hover { transform:translateY(-5px); box-shadow:0 12px 32px rgba(80,60,140,.15); }
+    .card-bar { height:5px; position:absolute; top:0; left:0; right:0; border-radius:20px 20px 0 0; }
+
+    .card-icon { width:50px; height:50px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:1.65rem; margin-bottom:.85rem; }
+    .card-title { font-family:'Pacifico',cursive; font-size:1.1rem; line-height:1.3; margin-bottom:.2rem; }
+    .card-tune { font-size:.72rem; font-weight:700; color:#aaa0c0; margin-bottom:.75rem; text-transform:uppercase; letter-spacing:.06em; }
+    .card-tags { display:flex; flex-wrap:wrap; gap:.28rem; margin-bottom:.85rem; }
+    .tag { font-size:.68rem; font-weight:800; padding:.16rem .5rem; border-radius:100px; text-transform:uppercase; letter-spacing:.04em; }
+    .card-preview { font-size:.88rem; line-height:1.75; color:#6a5a8a; flex-grow:1; font-style:italic; }
+    .card-cta { margin-top:.9rem; font-size:.8rem; font-weight:800; }
+
+    /* Color themes */
+    .c-purple .card-bar{background:var(--purple)} .c-purple .card-icon{background:var(--purple-l)} .c-purple .card-title{color:var(--purple-t)} .c-purple .card-cta{color:var(--purple)}
+    .c-amber  .card-bar{background:var(--amber)}  .c-amber  .card-icon{background:var(--amber-l)}  .c-amber  .card-title{color:var(--amber-t)}  .c-amber  .card-cta{color:var(--amber)}
+    .c-green  .card-bar{background:var(--green)}  .c-green  .card-icon{background:var(--green-l)}  .c-green  .card-title{color:var(--green-t)}  .c-green  .card-cta{color:var(--green)}
+    .c-indigo .card-bar{background:var(--indigo)} .c-indigo .card-icon{background:var(--indigo-l)} .c-indigo .card-title{color:var(--indigo-t)} .c-indigo .card-cta{color:var(--indigo)}
+    .c-teal   .card-bar{background:var(--teal)}   .c-teal   .card-icon{background:var(--teal-l)}   .c-teal   .card-title{color:var(--teal-t)}   .c-teal   .card-cta{color:var(--teal)}
+    .c-blue   .card-bar{background:var(--blue)}   .c-blue   .card-icon{background:var(--blue-l)}   .c-blue   .card-title{color:var(--blue-t)}   .c-blue   .card-cta{color:var(--blue)}
+    .c-rose   .card-bar{background:var(--rose)}   .c-rose   .card-icon{background:var(--rose-l)}   .c-rose   .card-title{color:var(--rose-t)}   .c-rose   .card-cta{color:var(--rose)}
+    .c-orange .card-bar{background:var(--orange)} .c-orange .card-icon{background:var(--orange-l)} .c-orange .card-title{color:var(--orange-t)} .c-orange .card-cta{color:var(--orange)}
+    .c-lime   .card-bar{background:var(--lime)}   .c-lime   .card-icon{background:var(--lime-l)}   .c-lime   .card-title{color:var(--lime-t)}   .c-lime   .card-cta{color:var(--lime)}
+    .c-sky    .card-bar{background:var(--sky)}    .c-sky    .card-icon{background:var(--sky-l)}    .c-sky    .card-title{color:var(--sky-t)}    .c-sky    .card-cta{color:var(--sky)}
+
+    .card.hidden { display:none; }
+
+    /* Modal */
+    .overlay { display:none; position:fixed; inset:0; background:rgba(30,15,60,.55); z-index:1000; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
+    .overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:24px; max-width:680px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 24px 80px rgba(30,15,60,.25); animation:mIn .22s ease; }
+    @keyframes mIn { from{opacity:0;transform:scale(.94) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+
+    .modal-head { padding:1.8rem 2rem 1.1rem; border-bottom:1px solid #f0ecff; position:sticky; top:0; background:#fff; border-radius:24px 24px 0 0; z-index:2; }
+    .modal-head-row { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+    .m-emoji { font-size:2.4rem; display:block; margin-bottom:.35rem; }
+    .m-title { font-family:'Pacifico',cursive; font-size:1.45rem; line-height:1.25; }
+    .m-tune { font-size:.75rem; font-weight:700; color:#aaa0c0; text-transform:uppercase; letter-spacing:.07em; margin-top:.18rem; }
+    .m-close { background:#f0ecff; border:none; border-radius:50%; width:36px; height:36px; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#7c6fcf; font-weight:900; transition:background .15s; }
+    .m-close:hover { background:#e0d8f8; }
+
+    .modal-body { padding:1.5rem 2rem 2.2rem; }
+    .lblock { margin-bottom:1.4rem; }
+    .lblock h3, .tblock h3 { font-size:.7rem; font-weight:900; text-transform:uppercase; letter-spacing:.1em; color:#b0a0c8; margin-bottom:.85rem; }
+    .stanza { margin-bottom:1rem; }
+    .stanza p { font-size:1.03rem; line-height:1.85; color:#2d2040; }
+    .stanza p em { font-style:normal; font-weight:800; }
+    .tblock { background:#f8f5ff; border-radius:14px; padding:1.1rem 1.3rem; }
+    .tblock p { font-size:.9rem; line-height:1.8; color:#6a5a8a; }
+
+    /* Tag colors */
+    .tag-gaston{background:#ede9ff;color:#5c4fcf} .tag-bedtime{background:#e8eaf6;color:#3949ab}
+    .tag-morning{background:#fff8e1;color:#b46a00} .tag-animals{background:#e8f5e9;color:#2e7d32}
+    .tag-movement{background:#fce4ec;color:#ad1457} .tag-classic{background:#e1f5fe;color:#0277bd}
+    .tag-calming{background:#e0f2f1;color:#00695c}
+
+    footer { text-align:center; padding:2rem 1rem; font-size:.8rem; color:#b0a0c8; font-weight:700; }
+    .no-results { grid-column:1/-1; text-align:center; padding:3rem; color:#b0a0c8; font-weight:700; font-size:1.05rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-icons">🎵 🦆 🐑 🐄 ⭐ 🕷️</div>
+  <h1>Les Chansons de Bébé</h1>
+  <p class="sub">Baby's French &amp; English Nursery Rhymes &nbsp;·&nbsp; 10 Songs</p>
+</header>
+
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filter('all',this)">All <span class="cbadge">10</span></button>
+  <button class="filter-btn" onclick="filter('gaston',this)">🦆 Gaston</button>
+  <button class="filter-btn" onclick="filter('bedtime',this)">🌙 Bedtime</button>
+  <button class="filter-btn" onclick="filter('morning',this)">☀️ Morning</button>
+  <button class="filter-btn" onclick="filter('animals',this)">🐾 Animals</button>
+  <button class="filter-btn" onclick="filter('movement',this)">💃 Movement</button>
+  <button class="filter-btn" onclick="filter('calming',this)">🌊 Calming</button>
+  <button class="filter-btn" onclick="filter('classic',this)">🎵 Classic Tune</button>
+</div>
+
+<main>
+  <div class="section-info"><span id="info">Showing all 10 songs — tap any card to sing along</span></div>
+  <div class="cards-grid" id="grid"></div>
+</main>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)close()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-head-row">
+        <div>
+          <span class="m-emoji" id="mEmoji"></span>
+          <div class="m-title" id="mTitle"></div>
+          <div class="m-tune" id="mTune"></div>
+        </div>
+        <button class="m-close" onclick="close()">✕</button>
+      </div>
+      <div class="card-tags" style="margin-top:.75rem" id="mTags"></div>
+    </div>
+    <div class="modal-body">
+      <div class="lblock"><h3>🇫🇷 Lyrics</h3><div id="mLyrics"></div></div>
+      <div class="tblock"><h3>🇬🇧 English Translation</h3><div id="mTrans"></div></div>
+    </div>
+  </div>
+</div>
+
+<footer>Made with 💛 for baby · Les Chansons de Bébé</footer>
+
+<script>
+const TL = {gaston:"🦆 Gaston",bedtime:"🌙 Bedtime",morning:"☀️ Morning",animals:"🐾 Animals",movement:"💃 Movement",classic:"🎵 Classic",calming:"🌊 Calming"};
+
+const data = [
+  {id:1,emoji:"🌙",title:"Bonne Nuit, Bébé",tune:"Original lullaby",color:"purple",tags:["gaston","bedtime"],
+   preview:'Gaston dit, "Bonjour, bébé,"\nComment ça va today?',
+   lyrics:[
+     ['Gaston dit, <em>"Bonjour, bébé,"</em>','Comment ça va today?'],
+     ['Tu le regardes, il dit, <em>"Coucou,"</em>','Je t\'aime beaucoup, yes I do.'],
+     ['Puis Gaston dit, <em>"Il fait nuit noire,"</em>','Hello, my baby, au revoir.'],
+     ['Dors bien, mon cœur, ferme les yeux,','Petit Gaston te dit, <em>"Bonne nuit, bonsoir."</em>']
+   ],
+   trans:'Gaston says, "Hello, baby — how are you today?" You look at him, he says, "Hi there — I love you very much, yes I do." Then Gaston says, "The night is dark — hello my baby, goodbye." Sleep well, my darling, close your eyes — little Gaston says, "Good night, good evening."'},
+
+  {id:2,emoji:"☀️",title:"Bonjour, Bébé!",tune:"Original morning song",color:"amber",tags:["gaston","morning"],
+   preview:'Gaston dit, "Bonjour, bébé,"\nComment ça va this new day?',
+   lyrics:[
+     ['Gaston dit, <em>"Bonjour, bébé,"</em>','Comment ça va this new day?'],
+     ['Tu ouvres les yeux, il dit, <em>"Coucou,"</em>','Le soleil brille just for you!'],
+     ['Puis Gaston dit, <em>"Il fait si beau,"</em>','Hello, my baby, let\'s say bonjour!'],
+     ['Lève-toi, mon cœur, ouvre les yeux,','Petit Gaston te dit, <em>"Bonjour, je t\'aime!"</em>']
+   ],
+   trans:'Gaston says, "Hello, baby — how are you this new day?" You open your eyes, he says, "Hi there — the sun is shining just for you!" Then Gaston says, "It\'s so beautiful out — hello my baby, let\'s say hello!" Rise up, my darling, open your eyes — little Gaston says, "Good morning, I love you!"'},
+
+  {id:3,emoji:"🐄",title:"La Ferme de Papa",tune:"Old MacDonald Had a Farm",color:"green",tags:["animals","classic"],
+   preview:"La ferme de papa, é-i-é-i-ô!\nEt sur la ferme il y a une vache…",
+   lyrics:[
+     ['La ferme de papa, <em>é-i-é-i-ô!</em>','Et sur la ferme il y a une vache, <em>é-i-é-i-ô!</em>','With a meuh meuh here, and a meuh meuh there,','Here a meuh, there a meuh, everywhere a meuh meuh!','La ferme de papa, <em>é-i-é-i-ô!</em>'],
+     ['La ferme de papa, <em>é-i-é-i-ô!</em>','Et sur la ferme il y a un canard, <em>é-i-é-i-ô!</em>','With a coin coin here, and a coin coin there,','Here a coin, there a coin, everywhere a coin coin!','La ferme de papa, <em>é-i-é-i-ô!</em>'],
+     ['La ferme de papa, <em>é-i-é-i-ô!</em>','Et sur la ferme il y a un chien, <em>é-i-é-i-ô!</em>','With a woof woof here, and a woof woof there,','Here a woof, there a woof, everywhere a woof woof!','La ferme de papa, <em>é-i-é-i-ô!</em>']
+   ],
+   trans:"Papa's farm, E-I-E-I-O! And on the farm there is a cow — with a moo moo here and a moo moo there, everywhere a moo moo! And on the farm there is a duck — with a quack quack here and a quack quack there! And on the farm there is a dog — with a woof woof here and a woof woof there!"},
+
+  {id:4,emoji:"⭐",title:"Brille, Petite Étoile",tune:"Twinkle Twinkle Little Star",color:"indigo",tags:["bedtime","classic"],
+   preview:"Brille, brille, petite étoile,\nHow I wonder what you are!",
+   lyrics:[
+     ['<em>Brille, brille, petite étoile,</em>','How I wonder what you are!','Up above le ciel so high,','Like a diamond dans le sky.','<em>Brille, brille, petite étoile,</em>','Dors, mon bébé, sous ton voile.']
+   ],
+   trans:"Shine, shine, little star — how I wonder what you are! Up above the sky so high, like a diamond in the sky. Shine, shine, little star — sleep, my baby, under your veil."},
+
+  {id:5,emoji:"🕷️",title:"La Petite Araignée",tune:"Itsy Bitsy Spider",color:"teal",tags:["animals","classic"],
+   preview:"La petite araignée\nClimbed up the waterspout.",
+   lyrics:[
+     ['<em>La petite araignée</em>','Climbed up the waterspout.','Down came <em>la pluie</em>','And washed the spider out!','Out came <em>le soleil</em>','And dried up all the rain,','And <em>la petite araignée</em>','Climbed up the spout again!']
+   ],
+   trans:"The little spider climbed up the waterspout. Down came the rain and washed the spider out! Out came the sun and dried up all the rain, and the little spider climbed up the spout again!"},
+
+  {id:6,emoji:"🚣",title:"Rame, Rame, Bébé",tune:"Row Row Row Your Boat",color:"blue",tags:["calming","classic"],
+   preview:"Rame, rame, rame le bateau,\nGently down le ruisseau!",
+   lyrics:[
+     ['<em>Rame, rame, rame le bateau,</em>','Gently down le ruisseau!','Merrily, merrily, tout est beau,','La vie est un beau cadeau!'],
+     ['<em>Doucement, doucement,</em> mon bébé,','Gliding through the day.','Merrily, merrily, on y va,','Tout va bien, hooray!']
+   ],
+   trans:"Row, row, row the boat — gently down the stream! Merrily, merrily, everything is beautiful — life is a beautiful gift! Gently, gently, my baby, gliding through the day. Merrily, merrily, let's go — everything is fine, hooray!"},
+
+  {id:7,emoji:"💃",title:"Tête, Épaules!",tune:"Head Shoulders Knees and Toes",color:"rose",tags:["movement","classic"],
+   preview:"Tête, épaules, knees and toes,\nKnees and toes!",
+   lyrics:[
+     ['<em>Tête, épaules,</em> knees and toes, knees and toes!','<em>Tête, épaules,</em> knees and toes, knees and toes!','Et les yeux et les oreilles,','Et la bouche et le nez!','<em>Tête, épaules,</em> knees and toes, knees and toes!']
+   ],
+   trans:"Head, shoulders, knees and toes, knees and toes! Head, shoulders, knees and toes, knees and toes! And the eyes and the ears, and the mouth and the nose! Head, shoulders, knees and toes, knees and toes!"},
+
+  {id:8,emoji:"🚌",title:"Les Animaux du Bus",tune:"The Wheels on the Bus",color:"orange",tags:["animals","classic","movement"],
+   preview:"Les canards du bus font coin coin coin,\nAll through la ville!",
+   lyrics:[
+     ['Les canards du bus font <em>coin coin coin,</em>','Coin coin coin, coin coin coin!','Les canards du bus font coin coin coin,','All through <em>la ville!</em>'],
+     ['Les chats du bus font <em>miaou miaou miaou,</em>','Miaou miaou miaou, miaou miaou miaou!','Les chats du bus font miaou miaou miaou,','All through <em>la ville!</em>'],
+     ['Le bébé du bus dit <em>"Je t\'aime, je t\'aime,"</em>','Je t\'aime, je t\'aime, je t\'aime!','Le bébé du bus dit "Je t\'aime, je t\'aime,"','All through <em>la ville!</em>']
+   ],
+   trans:"The ducks on the bus go quack quack quack — all through the town! The cats on the bus go meow meow meow — all through the town! The baby on the bus says \"I love you, I love you\" — all through the town!"},
+
+  {id:9,emoji:"🐑",title:"Bêê, Petit Mouton",tune:"Baa Baa Black Sheep",color:"lime",tags:["animals","classic"],
+   preview:"Bêê, bêê, petit mouton,\nAs-tu de la laine?",
+   lyrics:[
+     ['<em>Bêê, bêê, petit mouton,</em>','As-tu de la laine?','Oui monsieur, oui monsieur,','Trois sacs pleins!','Un pour maman, one for papa,','Et un pour le petit bébé','Who lives down the lane!']
+   ],
+   trans:"Baa, baa, little sheep — do you have any wool? Yes sir, yes sir, three bags full! One for mama, one for papa, and one for the little baby who lives down the lane!"},
+
+  {id:10,emoji:"🐏",title:"Marie et Son Agneau",tune:"Mary Had a Little Lamb",color:"sky",tags:["animals","classic"],
+   preview:"Marie avait un petit agneau,\nSa laine blanche comme la neige!",
+   lyrics:[
+     ['<em>Marie avait un petit agneau,</em>','Petit agneau, petit agneau!','Marie avait un petit agneau,','Sa laine blanche comme la neige!'],
+     ['Et partout où Marie allait,','Marie allait, Marie allait,','Et partout où Marie allait,','L\'agneau was sure to go!'],
+     ['Il followed her to school one day,','School one day, school one day!','Il followed her to school one day,','Which made <em>les enfants</em> laugh and play!']
+   ],
+   trans:"Mary had a little lamb — its fleece was white as snow! And everywhere that Mary went, the lamb was sure to go! It followed her to school one day, which made the children laugh and play!"}
+];
+
+function renderAll() {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  data.forEach(r => {
+    const tags = r.tags.map(t=>`<span class="tag tag-${t}">${TL[t]||t}</span>`).join('');
+    const prev = r.preview.split('\n').join('<br/>');
+    const d = document.createElement('div');
+    d.className = `card c-${r.color}`;
+    d.dataset.tags = r.tags.join(',');
+    d.innerHTML = `<div class="card-bar"></div>
+      <div class="card-icon">${r.emoji}</div>
+      <div class="card-title">${r.title}</div>
+      <div class="card-tune">♪ ${r.tune}</div>
+      <div class="card-tags">${tags}</div>
+      <div class="card-preview">${prev}</div>
+      <div class="card-cta">Tap to sing along →</div>`;
+    d.onclick = () => open(r);
+    g.appendChild(d);
+  });
+}
+
+function filter(f, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  let v = 0;
+  document.querySelectorAll('.card').forEach(c => {
+    const show = f==='all' || c.dataset.tags.split(',').includes(f);
+    c.classList.toggle('hidden',!show);
+    if(show) v++;
+  });
+  document.getElementById('info').textContent = f==='all'
+    ? `Showing all ${v} songs — tap any card to sing along`
+    : `Showing ${v} song${v!==1?'s':''} — tap any card to sing along`;
+}
+
+function open(r) {
+  document.getElementById('mEmoji').textContent = r.emoji;
+  document.getElementById('mTitle').textContent = r.title;
+  document.getElementById('mTune').textContent = '♪ ' + r.tune;
+  document.getElementById('mTags').innerHTML = r.tags.map(t=>`<span class="tag tag-${t}">${TL[t]||t}</span>`).join('');
+  document.getElementById('mLyrics').innerHTML = r.lyrics.map(s=>`<div class="stanza"><p>${s.join('<br/>')}</p></div>`).join('');
+  document.getElementById('mTrans').innerHTML = `<p>${r.trans}</p>`;
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function close() {
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') close(); });
+renderAll();
+</script>
+</body>
+</html>
