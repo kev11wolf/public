@@ -1964,350 +1964,98 @@
     };
     ssImgA.onerror = function() { ssIndex = 1; ssAdvance(); };
 
-    // Golf and Pool Leaderboard Data
-    const golfLeaderboardData = [
-      {name: 'Rory McIlroy', score:-11, roundScores:[0,-6,-6,1]},
-      {name: 'Justin Rose', score:-11, roundScores:[-7,-1,3,-6]},
-      {name: 'Patrick Reed', score:-9, roundScores:[-1,-2,-3,-3]},
-      {name: 'Scottie Scheffler', score:-8, roundScores:[-4,-1,0,-3]},
-      {name: 'Sungjae Im', score:-7, roundScores:[-1,-2,-1,-3]},
-      {name: 'Bryson DeChambeau', score:-7, roundScores:[-3,-4,-3,3]},
-      {name: 'Ludvig Åberg', score:-6, roundScores:[-4,1,-3,0]},
-      {name: 'Zach Johnson', score:-5, roundScores:[0,2,-6,-1]},
-      {name: 'Xander Schauffele', score:-5, roundScores:[1,-3,-2,-1]},
-      {name: 'Jason Day', score:-5, roundScores:[-2,-2,-1,0]},
-      {name: 'Corey Conners', score:-5, roundScores:[-4,-2,-2,3]},
-      {name: 'Harris English', score:-4, roundScores:[-2,1,1,-4]},
-      {name: 'Max Homa', score:-4, roundScores:[2,-2,-3,-1]},
-      {name: 'Bubba Watson', score:-3, roundScores:[-1,0,2,-4]},
-      {name: 'Jon Rahm', score:-3, roundScores:[3,-1,-2,-3]},
-      {name: 'Jordan Spieth', score:-3, roundScores:[1,1,-3,-2]},
-      {name: 'Tom Hoge', score:-3, roundScores:[0,0,-2,-1]},
-      {name: 'Tyrrell Hatton', score:-3, roundScores:[-3,-2,3,-1]},
-      {name: 'Matt McCarty', score:-3, roundScores:[-1,-4,3,-1]},
-      {name: 'Collin Morikawa', score:-3, roundScores:[0,-3,0,0]},
-      {name: 'Hideki Matsuyama', score:-2, roundScores:[1,-4,7,-6]},
-      {name: 'Daniel Berger', score:-2, roundScores:[-1,1,1,-3]},
-      {name: 'Davis Riley', score:-2, roundScores:[1,-3,3,-3]},
-      {name: 'Tommy Fleetwood', score:-2, roundScores:[1,-3,3,-3]},
-      {name: 'Byeong Hun An', score:-2, roundScores:[2,-1,-2,-1]},
-      {name: 'Viktor Hovland', score:-2, roundScores:[-1,-3,1,1]},
-      {name: 'Aaron Rai', score:-1, roundScores:[-2,2,1,-2]},
-      {name: 'Michael Kim', score:-1, roundScores:[-1,-1,2,-1]},
-      {name: 'Denny McCarthy', score:0, roundScores:[-1,3,-1,-1]},
-      {name: 'Sahith Theegala', score:0, roundScores:[0,0,1,-1]},
-      {name: 'Joaquín Niemann', score:0, roundScores:[0,2,-2,0]},
-      {name: 'Brian Campbell', score:1, roundScores:[0,1,4,-4]},
-      {name: 'Maverick McNealy', score:1, roundScores:[0,1,-1,1]},
-      {name: 'Max Greyserman', score:1, roundScores:[-1,3,-3,2]},
-      {name: 'Rasmus Højgaard', score:1, roundScores:[1,-5,3,2]},
-      {name: 'Justin Thomas', score:2, roundScores:[1,-1,4,-2]},
-      {name: 'Patrick Cantlay', score:2, roundScores:[2,0,1,-1]},
-      {name: 'Brian Harman', score:2, roundScores:[-1,-1,5,-1]},
-      {name: 'Charl Schwartzel', score:2, roundScores:[2,0,0,0]},
-      {name: 'Nick Taylor', score:3, roundScores:[1,-1,2,1]},
-      {name: 'Matt Fitzpatrick', score:3, roundScores:[-1,1,2,1]},
-      {name: 'Akshay Bhatia', score:4, roundScores:[-2,4,3,-1]},
-      {name: 'Danny Willett', score:4, roundScores:[3,-1,1,1]},
-      {name: 'J.T. Poston', score:4, roundScores:[2,0,1,1]},
-      {name: 'Shane Lowry', score:4, roundScores:[-1,-4,0,9]},
-      {name: 'Wyndham Clark', score:5, roundScores:[4,-4,3,2]},
-      {name: 'Sam Burns', score:5, roundScores:[1,-2,3,3]},
-      {name: 'Davis Thompson', score:5, roundScores:[-1,1,-2,7]},
-      {name: 'Min Woo Lee', score:6, roundScores:[-1,0,5,2]},
-      {name: 'J.J. Spaun', score:7, roundScores:[2,0,2,3]},
-      {name: 'Nico Echavarria', score:8, roundScores:[1,-2,-3,12]},
-      {name: 'Stephan Jaeger', score:9, roundScores:[0,2,1,6]},
-      {name: 'Tom Kim', score:9, roundScores:[1,1,0,7]},
-      {name: 'Russell Henley', score:23, roundScores:[7,-4,10,10]},
-      {name: 'Chris Kirk', score:23, roundScores:[3,0,10,10]},
-      {name: 'Dustin Johnson', score:23, roundScores:[2,1,10,10]},
-      {name: 'Bernhard Langer', score:23, roundScores:[2,1,10,10]},
-      {name: 'Keegan Bradley', score:23, roundScores:[2,1,10,10]},
-      {name: 'Justin Hastings (a)', score:24, roundScores:[4,0,10,10]},
-      {name: 'Joe Highsmith', score:24, roundScores:[4,0,10,10]},
-      {name: 'Rafael Campos', score:24, roundScores:[3,1,10,10]},
-      {name: 'Mike Weir', score:24, roundScores:[3,1,10,10]},
-      {name: 'Tony Finau', score:24, roundScores:[3,1,10,10]},
-      {name: 'Adam Schenk', score:24, roundScores:[1,3,10,10]},
-      {name: 'Sergio Garcia', score:24, roundScores:[0,4,10,10]},
-      {name: 'Fred Couples', score:24, roundScores:[-1,5,10,10]},
-      {name: 'Sepp Straka', score:25, roundScores:[6,-1,10,10]},
-      {name: 'Adam Scott', score:25, roundScores:[5,0,10,10]},
-      {name: 'Billy Horschel', score:25, roundScores:[5,0,10,10]},
-      {name: 'Phil Mickelson', score:25, roundScores:[3,2,10,10]},
-      {name: 'Brooks Koepka', score:25, roundScores:[2,3,10,10]},
-      {name: 'Cameron Smith', score:25, roundScores:[-1,6,10,10]},
-      {name: 'Austin Eckroat', score:26, roundScores:[4,2,10,10]},
-      {name: 'Nicolai Højgaard', score:26, roundScores:[4,2,10,10]},
-      {name: 'Kevin Yu', score:26, roundScores:[4,2,10,10]},
-      {name: 'Jhonattan Vegas', score:26, roundScores:[3,3,10,10]},
-      {name: 'Robert MacIntyre', score:26, roundScores:[3,3,10,10]},
-      {name: 'Hiroshi Tai (a)', score:26, roundScores:[1,5,10,10]},
-      {name: 'José María Olazábal', score:27, roundScores:[5,2,10,10]},
-      {name: 'Christiaan Bezuidenhout', score:27, roundScores:[4,3,10,10]},
-      {name: 'Cameron Young', score:27, roundScores:[0,7,10,10]},
-      {name: 'Patton Kizzire', score:28, roundScores:[7,1,10,10]},
-      {name: 'Lucas Glover', score:28, roundScores:[6,2,10,10]},
-      {name: 'Taylor Pendrith', score:28, roundScores:[5,3,10,10]},
-      {name: 'Will Zalatoris', score:28, roundScores:[2,6,10,10]},
-      {name: 'Thomas Detry', score:29, roundScores:[7,2,10,10]},
-      {name: 'Evan Beck (a)', score:29, roundScores:[5,4,10,10]},
-      {name: 'Cam Davis', score:29, roundScores:[2,7,10,10]},
-      {name: 'Matthieu Pavon', score:30, roundScores:[6,4,10,10]},
-      {name: 'Laurie Canter', score:30, roundScores:[5,5,10,10]},
-      {name: 'Jose Luis Ballester Barrio', score:30, roundScores:[4,6,10,10]},
-      {name: 'Thriston Lawrence', score:31, roundScores:[7,4,10,10]},
-      {name: 'Noah Kent (a)', score:31, roundScores:[7,4,10,10]},
-      {name: 'Ángel Cabrera', score:31, roundScores:[3,8,10,10]},
-      {name: 'Nick Dunlap', score:37, roundScores:[18,-1,10,10]},
-    ];
+    // ==========================================
+    // GOOGLE SHEETS LIVE LEADERBOARD
+    // ==========================================
+    // ⬇️  STEP 1: Paste your Google Sheet ID here
+    const SHEET_ID = '1GUWEW15MKtoeBsnCM83EdWes3TC4JIEau1LR66NH7nM';
+    const GOLF_SHEET_NAME = 'Golf';
+    const POOL_SHEET_NAME = 'Pool';
 
-    const poolLeaderboardData = [
-      {
-        name: 'K-Dawg',
-        points: -13,
-        selectedPlayers:[
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Bryson DeChambeau', score:-7},
-          {name: 'Sahith Theegala', score:0},
-          {name: 'Patrick Cantlay', score:2},
-          {name: 'Phil Mickelson', score:25},
-          {name: 'Cameron Young', score:27}
-        ]
-      },
-      {
-        name: 'Jason K.',
-        points: -26,
-        selectedPlayers:[
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Corey Conners', score:-5},
-          {name: 'Min Woo Lee', score:6},
-          {name: 'Daniel Berger', score:-2},
-          {name: 'Cam Davis', score:29}
-        ]
-      },
-      {
-        name: 'Paul W.',
-        points: -24,
-        selectedPlayers:[
-          {name: 'Jon Rahm', score:-3},
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Shane Lowry', score:4},
-          {name: 'Patrick Reed', score:-9},
-          {name: 'Aaron Rai', score:-1},
-          {name: 'Nick Taylor', score:3}
-        ]
-      },
-      {
-        name: 'Rick S.',
-        points: -20,
-        selectedPlayers:[
-          {name: 'Collin Morikawa', score:-3},
-          {name: 'Viktor Hovland', score:-2},
-          {name: 'Patrick Cantlay', score:2},
-          {name: 'Shane Lowry', score:4},
-          {name: 'Justin Rose', score:-11},
-          {name: 'Max Homa', score:-4}
-        ]
-      },
-      {
-        name: 'Addison G.',
-        points: -19,
-        selectedPlayers:[
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Collin Morikawa', score:-3},
-          {name: 'Will Zalatoris', score:28},
-          {name: 'Russell Henley', score:23},
-          {name: 'Michael Kim', score:-1},
-          {name: 'Max Homa', score:-4}
-        ]
-      },
-      {
-        name: 'Nat S.',
-        points: -19,
-        selectedPlayers:[
-          {name: 'Collin Morikawa', score:-3},
-          {name: 'Bryson DeChambeau', score:-7},
-          {name: 'Tony Finau', score:24},
-          {name: 'Corey Conners', score:-5},
-          {name: 'Billy Horschel', score:25},
-          {name: 'Max Homa', score:-4}
-        ]
-      },
-      {
-        name: 'Max',
-        points: -18,
-        selectedPlayers:[
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Collin Morikawa', score:-3},
-          {name: 'Sergio Garcia', score:24},
-          {name: 'Jason Day', score:-5},
-          {name: 'Phil Mickelson', score:25},
-          {name: 'Max Greyserman', score:1}
-        ]
-      },
-      {
-        name: 'Stephen',
-        points: -17,
-        selectedPlayers:[
-          {name: 'Bryson DeChambeau', score:-7},
-          {name: 'Ludvig Åberg', score:-6},
-          {name: 'Tony Finau', score:24},
-          {name: 'Tom Kim', score:9},
-          {name: 'Sungjae Im', score:-7},
-          {name: 'Nick Taylor', score:3}
-        ]
-      },
-      {
-        name: 'Thomas K.',
-        points: -15,
-        selectedPlayers:[
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Collin Morikawa', score:-3},
-          {name: 'Russell Henley', score:23},
-          {name: 'Shane Lowry', score:4},
-          {name: 'Aaron Rai', score:-1},
-          {name: 'Tom Hoge', score:-3}
-        ]
-      },
-      {
-        name: 'Justin E.',
-        points: -14,
-        selectedPlayers:[
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Ludvig Åberg', score:-6},
-          {name: 'Will Zalatoris', score:28},
-          {name: 'Patrick Cantlay', score:2},
-          {name: 'Maverick McNealy', score:1},
-          {name: 'Matthieu Pavon', score:30}
-        ]
-      },
-      {
-        name: 'Blake S.',
-        points: -12,
-        selectedPlayers:[
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Min Woo Lee', score:6},
-          {name: 'Cameron Smith', score:25},
-          {name: 'Maverick McNealy', score:1},
-          {name: 'Nicolai Højgaard', score:26}
-        ]
-      },
-      {
-        name: 'Jailbirdie El Pato',
-        points: -10,
-        selectedPlayers:[
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Tony Finau', score:24},
-          {name: 'Min Woo Lee', score:6},
-          {name: 'Matt Fitzpatrick', score:3},
-          {name: 'Ángel Cabrera', score:31}
-        ]
-      },
-      {
-        name: 'Zack K.',
-        points: -9,
-        selectedPlayers:[
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Xander Schauffele', score:-5},
-          {name: 'Russell Henley', score:23},
-          {name: 'Wyndham Clark', score:5},
-          {name: 'Maverick McNealy', score:1},
-          {name: 'Nick Taylor', score:3}
-        ]
-      },
-      {
-        name: 'Evan S.',
-        points: -8,
-        selectedPlayers:[
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Xander Schauffele', score:-5},
-          {name: 'Patrick Cantlay', score:2},
-          {name: 'Cameron Smith', score:25},
-          {name: 'Matt Fitzpatrick', score:3},
-          {name: 'Cameron Young', score:27}
-        ]
-      },
-      {
-        name: 'Dima K.',
-        points: -5,
-        selectedPlayers:[
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Cameron Smith', score:25},
-          {name: 'Will Zalatoris', score:28},
-          {name: 'Justin Rose', score:-11},
-          {name: 'Cameron Young', score:27}
-        ]
-      },
-      {
-        name: 'Nate C.',
-        points: -4,
-        selectedPlayers:[
-          {name: 'Viktor Hovland', score:-2},
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Will Zalatoris', score:28},
-          {name: 'Min Woo Lee', score:6},
-          {name: 'Matt Fitzpatrick', score:3},
-          {name: 'Cameron Young', score:27}
-        ]
-      },
-      {
-        name: 'Cole T.',
-        points: -4,
-        selectedPlayers:[
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Patrick Reed', score:-9},
-          {name: 'Will Zalatoris', score:28},
-          {name: 'Billy Horschel', score:25},
-          {name: 'Joe Highsmith', score:24}
-        ]
-      },
-      {
-        name: 'Brady',
-        points: -1,
-        selectedPlayers:[
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Brooks Koepka', score:25},
-          {name: 'Wyndham Clark', score:5},
-          {name: 'Min Woo Lee', score:6},
-          {name: 'Dustin Johnson', score:23},
-          {name: 'Max Homa', score:-4}
-        ]
-      },
-      {
-        name: 'Jordan',
-        points: 16,
-        selectedPlayers:[
-          {name: 'Collin Morikawa', score:-3},
-          {name: 'Rory McIlroy', score:-11},
-          {name: 'Sepp Straka', score:25},
-          {name: 'Russell Henley', score:23},
-          {name: 'J.J. Spaun', score:7},
-          {name: 'Cameron Young', score:27}
-        ]
-      },
-      {
-        name: 'Brandon E.',
-        points: 34,
-        selectedPlayers:[
-          {name: 'Scottie Scheffler', score:-8},
-          {name: 'Ludvig Åberg', score:-6},
-          {name: 'Russell Henley', score:23},
-          {name: 'Sepp Straka', score:25},
-          {name: 'Billy Horschel', score:25},
-          {name: 'Christiaan Bezuidenhout', score:27}
-        ]
+    function parseCSV(text) {
+      const rows = [];
+      const lines = text.split('\n');
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const row = [];
+        let field = '', inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          if (line[i] === '"') { inQ = !inQ; }
+          else if (line[i] === ',' && !inQ) { row.push(field.trim()); field = ''; }
+          else { field += line[i]; }
+        }
+        row.push(field.trim());
+        rows.push(row);
       }
-    ];
+      return rows;
+    }
 
-    golfLeaderboardData.sort((a, b) => a.score - b.score);
-    poolLeaderboardData.sort((a, b) => a.points - b.points);
+    function csvUrl(sheetName) {
+      return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&t=${Date.now()}`;
+    }
+
+    function showLBError(listId, msg) {
+      const el = document.getElementById(listId);
+      if (el) el.innerHTML = `<li style="color:#c0392b;justify-content:center;padding:16px;">⚠️ ${msg}</li>`;
+    }
+
+    async function loadLeaderboards() {
+      try {
+        const [golfResp, poolResp] = await Promise.all([
+          fetch(csvUrl(GOLF_SHEET_NAME)),
+          fetch(csvUrl(POOL_SHEET_NAME))
+        ]);
+        if (!golfResp.ok || !poolResp.ok) throw new Error('fetch failed');
+
+        const golfRows = parseCSV(await golfResp.text());
+        const poolRows = parseCSV(await poolResp.text());
+
+        // --- Golf sheet (headers: Name, Score, R1, R2, R3, R4) ---
+        const gh = golfRows[0].map(h => h.toLowerCase().trim());
+        const gNameC  = gh.indexOf('name'),  gScoreC = gh.indexOf('score');
+        const gR1C    = gh.indexOf('r1'),     gR2C    = gh.indexOf('r2');
+        const gR3C    = gh.indexOf('r3'),     gR4C    = gh.indexOf('r4');
+
+        const golfLeaderboardData = [];
+        const scoreLookup = {};
+
+        for (let i = 1; i < golfRows.length; i++) {
+          const r = golfRows[i];
+          if (!r[gNameC] || r[gNameC] === '') continue;
+          const name  = r[gNameC];
+          const score = parseFloat(r[gScoreC]) || 0;
+          const roundScores = [gR1C, gR2C, gR3C, gR4C]
+            .filter(c => c !== -1 && r[c] !== undefined && r[c] !== '')
+            .map(c => parseFloat(r[c]) || 0);
+          const entry = { name, score };
+          if (roundScores.length) entry.roundScores = roundScores;
+          golfLeaderboardData.push(entry);
+          scoreLookup[name.toLowerCase().trim()] = score;
+        }
+        golfLeaderboardData.sort((a, b) => a.score - b.score);
+
+        // --- Pool sheet (headers: Name, Pick1, Pick2, Pick3, Pick4, Pick5, Pick6) ---
+        const ph = poolRows[0].map(h => h.toLowerCase().trim());
+        const pNameC = ph.indexOf('name');
+
+        const poolLeaderboardData = [];
+        for (let i = 1; i < poolRows.length; i++) {
+          const r = poolRows[i];
+          if (!r[pNameC] || r[pNameC] === '') continue;
+          const name = r[pNameC];
+          const selectedPlayers = [];
+          for (let p = 1; p <= 6; p++) {
+            const pickC = ph.indexOf(`pick${p}`);
+            if (pickC !== -1 && r[pickC] && r[pickC] !== '') {
+              const playerName  = r[pickC];
+              const playerScore = scoreLookup[playerName.toLowerCase().trim()];
+              selectedPlayers.push({ name: playerName, score: playerScore !== undefined ? playerScore : 0 });
+            }
+          }
+          const points = selectedPlayers.reduce((s, p) => s + p.score, 0);
+          poolLeaderboardData.push({ name, points, selectedPlayers });
+        }
+        poolLeaderboardData.sort((a, b) => a.points - b.points);
 
     function updateLeaderboard(listId, data, scoreType, limit, btnId) {
       const list = document.getElementById(listId);
@@ -2415,19 +2163,28 @@
     poolBtn.onclick = function() {
       poolExpanded = !poolExpanded;
       const poolList = document.getElementById('pool-list');
-
       if (poolExpanded) {
         poolList.innerHTML = '';
         poolLeaderboardData.forEach((item, index) => createListItem(poolList, item, 'points', index));
-        poolBtn.textContent = "Collapse";
+        poolBtn.textContent = 'Collapse';
         poolBtn.setAttribute('aria-expanded', 'true');
       } else {
         poolList.innerHTML = '';
-        poolBtn.textContent = "Expand";
+        poolBtn.textContent = 'Expand';
         poolBtn.setAttribute('aria-expanded', 'false');
         toast.info('Collapsed', 'Pool leaderboard hidden', 1500);
       }
     };
+
+      } catch (err) {
+        console.error('Leaderboard error:', err);
+        showLBError('golf-list', 'Could not load golf scores — check back soon.');
+        showLBError('pool-list', 'Could not load pool standings — check back soon.');
+        toast.error('Data Error', 'Could not load leaderboard data', 4000);
+      }
+    }
+
+    loadLeaderboards();
 
     // First-time user tutorial
     if (!localStorage.getItem('tutorialComplete')) {
