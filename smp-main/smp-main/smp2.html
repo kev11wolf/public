@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q667P6PD31"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-Q667P6PD31');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<title>Sommerville Masters Pool Leaderboard</title>
+
+<style>
+  :root {
+    --masters-green: #003525;
+    --masters-light-bg: #f7f5ef;
+    --masters-hover: #e5ffe5;
+    --masters-text: #003300;
+    --white: #fff;
+    --border-color: #ddd;
+    --shadow-light: rgba(0,0,0,0.1);
+    --shadow-medium: rgba(0,0,0,0.2);
+    --card-bg: #ffffff;
+    --text-primary: #1a1a1a;
+    --text-secondary: #666;
+  }
+
+  [data-theme="dark"] {
+    --masters-green: #00ff88;
+    --masters-light-bg: #0a0a0a;
+    --masters-hover: #1a4d2e;
+    --masters-text: #00ff88;
+    --white: #1a1a1a;
+    --border-color: #333;
+    --shadow-light: rgba(255,255,255,0.05);
+    --shadow-medium: rgba(255,255,255,0.1);
+    --card-bg: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Libre Baskerville', 'Times New Roman', serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--masters-light-bg);
+    color: var(--text-primary);
+    font-size: 16px;
+    line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--card-bg);
+    border: 2px solid var(--masters-green);
+    border-radius: 50px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 1.2em;
+    box-shadow: 0 4px 12px var(--shadow-medium);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .theme-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--shadow-medium);
+  }
+
+  .theme-toggle:active { transform: scale(0.95); }
+
+  .theme-label {
+    font-size: 0.75em;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  header {
+    background:
+      linear-gradient(160deg, rgba(0,36,22,0.83) 0%, rgba(0,75,45,0.70) 50%, rgba(0,45,28,0.83) 100%),
+      url('https://media.istockphoto.com/id/157400500/photo/azalea.jpg?s=612x612&w=0&k=20&c=gcs21rGcFKCM44eWDelQRGSc-696HU4i_GZ1oHt7cyI=');
+    background-size: cover;
+    background-position: center;
+    color: var(--white);
+    padding: 20px 20px 0 20px;
+    text-align: center;
+    transition: background 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::after {
+    content: '';
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg, transparent 0%, #c9a84c 30%, #FFD700 50%, #c9a84c 70%, transparent 100%);
+    margin-top: 15px;
+  }
+
+  [data-theme="dark"] header {
+    background:
+      linear-gradient(160deg, rgba(0,20,10,0.90) 0%, rgba(0,40,22,0.82) 50%, rgba(0,20,10,0.90) 100%),
+      url('https://media.istockphoto.com/id/157400500/photo/azalea.jpg?s=612x612&w=0&k=20&c=gcs21rGcFKCM44eWDelQRGSc-696HU4i_GZ1oHt7cyI=');
+    background-size: cover;
+    background-position: center;
+  }
+
+  header h1 {
+    z-index: 1;
+    font-size: clamp(1.2em, 4vw, 1.8em);
+    margin: 10px 0;
+    font-family: 'Libre Baskerville', 'Times New Roman', serif;
+    color: #f8f5e4;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.45);
+    letter-spacing: 0.5px;
+  }
+
+  [data-theme="dark"] header h1 { color: #0a0a0a; }
+
+  .logo {
+    display: block;
+    margin: 0 auto;
+    max-width: 150px;
+    width: 100%;
+    height: auto;
+    max-height: 60px;
+    object-fit: contain;
+  }
+
+  main {
+    padding: 15px;
+    max-width: 800px;
+    text-align: center;
+    margin: 0 auto;
+    padding-bottom: 120px;
+  }
+
+  section { margin-bottom: 20px; }
+
+  .card,
+  .timer,
+  .updates,
+  #weather-widget,
+  #golf-leaderboard,
+  #pool-leaderboard,
+  .slideshow,
+  #historical-winners,
+  #sommerville-registration,
+  #grand-prize-card,
+  #hole-in-one-card {
+    background-color: var(--card-bg);
+    padding: 15px;
+    text-align: center;
+    max-width: 100%;
+    margin: 20px auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px var(--shadow-light);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  .card:hover,
+  #weather-widget:hover,
+  #golf-leaderboard:hover,
+  #pool-leaderboard:hover,
+  .slideshow:hover,
+  #historical-winners:hover,
+  #sommerville-registration:hover,
+  #grand-prize-card:hover,
+  #hole-in-one-card:hover {
+    box-shadow: 0 4px 12px var(--shadow-medium);
+    transform: translateY(-2px);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    padding: 6px 0 12px 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
+  }
+
+  .card-header h2 {
+    margin: 0;
+    border-left: 4px solid var(--masters-green);
+    padding-left: 10px;
+  }
+
+  .card-content { margin-top: 15px; }
+
+  .update-image,
+  .summary-image,
+  .feature-card-image {
+    display: block;
+    margin: 16px auto 0 auto;
+    width: 100%;
+    max-width: 540px;
+    height: auto;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px var(--shadow-light);
+  }
+
+  h2 {
+    color: var(--masters-green);
+    text-align: center;
+    font-size: clamp(1em, 3vw, 1.3em);
+    margin: 10px 0;
+    font-family: 'Libre Baskerville', 'Times New Roman', serif;
+  }
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    margin: 5px 0;
+    padding: 12px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px var(--shadow-light);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    font-size: clamp(0.85em, 2.5vw, 0.95em);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  li:hover {
+    background-color: var(--masters-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px var(--shadow-light);
+  }
+
+  li:active { transform: scale(0.98); }
+
+  .expand {
+    display: none;
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: clamp(0.8em, 2.3vw, 0.9em);
+    text-align: left;
+    color: var(--text-primary);
+  }
+
+  .golf-icon {
+    width: 15px;
+    height: 15px;
+    background-image: url('https://i.etsystatic.com/16454555/r/il/f205d2/4762277869/il_570xN.4762277869_89g1.jpg');
+    background-size: contain;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  footer {
+    background:
+      linear-gradient(160deg, rgba(0,36,22,0.83) 0%, rgba(0,75,45,0.70) 50%, rgba(0,45,28,0.83) 100%),
+      url('https://media.istockphoto.com/id/157400500/photo/azalea.jpg?s=612x612&w=0&k=20&c=gcs21rGcFKCM44eWDelQRGSc-696HU4i_GZ1oHt7cyI=');
+    background-size: cover;
+    background-position: center;
+    color: #f8f5e4;
+    padding: 0 15px 20px 15px;
+    text-align: center;
+    font-size: clamp(0.85em, 2.5vw, 0.95em);
+    transition: background 0.3s ease;
+    position: relative;
+  }
+
+  footer::before {
+    content: '';
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg, transparent 0%, #c9a84c 30%, #FFD700 50%, #c9a84c 70%, transparent 100%);
+    margin-bottom: 15px;
+  }
+
+  [data-theme="dark"] footer {
+    background:
+      linear-gradient(160deg, rgba(0,20,10,0.90) 0%, rgba(0,40,22,0.82) 50%, rgba(0,20,10,0.90) 100%),
+      url('https://media.istockphoto.com/id/157400500/photo/azalea.jpg?s=612x612&w=0&k=20&c=gcs21rGcFKCM44eWDelQRGSc-696HU4i_GZ1oHt7cyI=');
+    background-size: cover;
+    background-position: center;
+    color: #0a0a0a;
+  }
+
+  footer p { margin: 10px 0; }
+
+  .slideshow {
+    width: 100%;
+    max-width: 100%;
+    margin: 20px auto;
+    position: relative;
+    border-radius: 8px;
+  }
+
+  .slideshow-frame {
+    width: 100%;
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 6px;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  .slide-img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 6px;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+  }
+
+  .slide-img.active { opacity: 1; }
+
+  li.tier-gold  { border-left: 4px solid #FFD700; }
+  li.tier-green { border-left: 4px solid #10B981; }
+  li.tier-even  { border-left: 4px solid #9CA3AF; }
+  li.tier-over  { border-left: 4px solid #F59E0B; }
+  li.tier-high  { border-left: 4px solid #EF4444; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px auto;
+    font-size: clamp(0.8em, 2.3vw, 0.9em);
+  }
+
+  #historical-winners table {
+    width: auto;
+    min-width: 220px;
+    margin: 10px auto;
+    display: table;
+  }
+
+  th, td {
+    padding: 10px 8px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    text-align: center;
+    border-radius: 3px;
+    color: var(--text-primary);
+  }
+
+  th {
+    background-color: var(--masters-green);
+    color: #ffffff;
+    font-weight: 700;
+  }
+
+  [data-theme="dark"] th { color: #0a0a0a; }
+
+  tr:nth-child(even) { background-color: var(--card-bg); }
+
+  .collapse-btn {
+    margin: 10px auto;
+    display: block;
+    background: var(--masters-hover);
+    color: var(--masters-text);
+    border: 2px solid var(--masters-text);
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: clamp(0.85em, 2.5vw, 0.95em);
+    font-family: 'Libre Baskerville', 'Times New Roman', serif;
+    min-height: 44px;
+    min-width: 120px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .collapse-btn:hover {
+    background: var(--masters-text);
+    color: var(--card-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 53, 37, 0.3);
+  }
+
+  .collapse-btn:active { transform: scale(0.95); }
+
+  #audio-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: var(--card-bg);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px var(--shadow-medium);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 999;
+    max-width: calc(100vw - 40px);
+    transition: all 0.3s ease;
+  }
+
+  #audio-controls button {
+    padding: 10px 14px;
+    border: none;
+    background: var(--masters-green);
+    color: var(--card-bg);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    min-height: 44px;
+    min-width: 44px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  [data-theme="dark"] #audio-controls button { color: #0a0a0a; }
+
+  #audio-controls button:hover {
+    opacity: 0.85;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--shadow-medium);
+  }
+
+  #audio-controls button:active { transform: scale(0.95); }
+
+  #audio-status {
+    font-weight: 400;
+    color: var(--text-primary);
+    font-size: clamp(0.75em, 2vw, 0.85em);
+    text-align: center;
+  }
+
+  #chatango-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 998;
+  }
+
+  #weather-forecast > div {
+    display: inline-block;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    margin: 6px;
+    min-width: 100px;
+    box-shadow: 0 2px 4px var(--shadow-light);
+    transition: all 0.3s ease;
+    background-color: var(--card-bg);
+  }
+
+  #weather-forecast > div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--shadow-light);
+  }
+
+  #sommerville-registration a {
+    display: inline-block;
+    text-decoration: none;
+    background-color: var(--masters-green);
+    color: var(--card-bg);
+    padding: 12px 24px;
+    border-radius: 5px;
+    font-family: 'Libre Baskerville', 'Times New Roman', serif;
+    font-size: clamp(0.9em, 2.5vw, 1em);
+    min-height: 44px;
+    transition: all 0.3s ease;
+  }
+
+  [data-theme="dark"] #sommerville-registration a { color: #0a0a0a; }
+
+  #sommerville-registration a:hover {
+    opacity: 0.85;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--shadow-medium);
+  }
+
+  #sommerville-registration a:active { transform: translateY(0); }
+
+  .toast-container {
+    position: fixed;
+    top: 70px;
+    right: 16px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    pointer-events: none;
+    max-width: 240px;
+  }
+
+  .toast {
+    background: var(--card-bg);
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    pointer-events: all;
+    animation: slideInRight 0.25s ease-out;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    opacity: 0.93;
+  }
+
+  .toast:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .toast:active { transform: scale(0.98); }
+  .toast.success { border-left: 3px solid #10B981; }
+  .toast.info { border-left: 3px solid #3B82F6; }
+  .toast.warning { border-left: 3px solid #F59E0B; }
+  .toast.error { border-left: 3px solid #EF4444; }
+
+  .toast-icon {
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .toast-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .toast-title {
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .toast-message {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .toast-close {
+    background: none;
+    border: none;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+  }
+
+  .toast-close:hover { color: var(--text-primary); }
+
+  .toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #10B981, #059669);
+    animation: progressBar 3s linear forwards;
+  }
+
+  .toast.info .toast-progress { background: linear-gradient(90deg, #3B82F6, #2563EB); }
+  .toast.warning .toast-progress { background: linear-gradient(90deg, #F59E0B, #D97706); }
+  .toast.error .toast-progress { background: linear-gradient(90deg, #EF4444, #DC2626); }
+
+  @keyframes slideInRight {
+    from { transform: translateX(400px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  @keyframes slideInUp {
+    from { transform: translateY(100px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes progressBar {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
+
+  .toast.removing { animation: slideOutRight 0.3s ease-in forwards; }
+
+  @keyframes slideOutRight {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(400px); opacity: 0; }
+  }
+
+  @keyframes slideOutDown {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(100px); opacity: 0; }
+  }
+
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: rippleEffect 0.6s ease-out;
+    pointer-events: none;
+  }
+
+  @keyframes rippleEffect {
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    50% {
+      transform: scale(1.05);
+      box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+  }
+
+  .pulse-once { animation: pulse 0.6s ease-out; }
+
+  .skeleton {
+    background: linear-gradient(90deg,#f0f0f0 0%,#e0e0e0 20%,#f0f0f0 40%,#f0f0f0 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .spinner {
+    border: 3px solid rgba(0, 53, 37, 0.1);
+    border-top-color: var(--masters-green);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .news-item {
+    background: var(--masters-light-bg);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 10px 0;
+    text-align: left;
+    border: 1px solid var(--border-color);
+    transition: background 0.3s ease;
+  }
+
+  [data-theme="dark"] .news-item { background: #1c1c1c; }
+
+  .news-item--charcoal {
+    background: #131313;
+    border-color: #2a2a2a;
+  }
+
+  [data-theme="dark"] .news-item--charcoal { background: #0e0e0e; }
+
+  .news-item--green {
+    background: #003525;
+    border-color: #c9a84c55;
+  }
+
+  [data-theme="dark"] .news-item--green { background: #002a1c; }
+
+  .news-tag {
+    font-size: 0.68em;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #c9a84c;
+    margin-bottom: 8px;
+  }
+
+  .news-item--charcoal .news-body-text,
+  .news-item--green .news-body-text,
+  .news-item--green .schedule-row,
+  .news-item--charcoal .player-pill-odds,
+  .news-item--charcoal .player-pill {
+    color: #e0d8c8;
+  }
+
+  .news-body-text {
+    font-size: 0.88em;
+    line-height: 1.65;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .news-gold-divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, #c9a84c 30%, #FFD700 50%, #c9a84c 70%, transparent 100%);
+    margin: 14px 0;
+    border-radius: 2px;
+    border: none;
+  }
+
+  .news-thin-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 8px 0;
+    border: none;
+  }
+
+  .player-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-top: 10px;
+  }
+
+  @media (max-width: 400px) {
+    .player-grid { grid-template-columns: 1fr; }
+  }
+
+  .player-pill {
+    background: rgba(0, 53, 37, 0.07);
+    border: 1px solid rgba(0, 53, 37, 0.15);
+    border-radius: 5px;
+    padding: 7px 10px;
+    font-size: 0.82em;
+    line-height: 1.3;
+  }
+
+  [data-theme="dark"] .player-pill {
+    background: rgba(0, 255, 136, 0.05);
+    border-color: rgba(0, 255, 136, 0.12);
+  }
+
+  .player-pill-odds {
+    font-size: 0.78em;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .menu-row {
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+    font-size: 0.85em;
+    line-height: 1.5;
+    color: #e8e0cc;
+  }
+
+  .menu-row:last-child { border-bottom: none; }
+
+  .menu-label {
+    color: #FFD700;
+    font-weight: 700;
+  }
+
+  .schedule-row {
+    font-size: 0.88em;
+    line-height: 1.8;
+    color: var(--text-primary);
+  }
+
+  .news-intro-text {
+    font-size: 0.9em;
+    line-height: 1.65;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+  }
+
+  .prize-highlight {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(0, 53, 37, 0.07);
+    border: 1px solid rgba(0, 53, 37, 0.14);
+    font-size: 0.92em;
+  }
+
+  [data-theme="dark"] .prize-highlight {
+    background: rgba(0, 255, 136, 0.05);
+    border-color: rgba(0, 255, 136, 0.12);
+  }
+
+  .grand-prize-total {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: var(--masters-green);
+  }
+
+  .fact-caption {
+    margin-top: 10px;
+    font-size: 0.82em;
+    color: var(--text-secondary);
+  }
+
+  @media screen and (max-width: 480px) {
+    body { font-size: 14px; }
+    header { padding: 10px 15px; }
+    header h1 { font-size: 1.2em; margin: 8px 0; }
+    .logo { max-width: 120px; max-height: 45px; }
+    main { padding: 10px; padding-bottom: 100px; }
+
+    .card,
+    .timer,
+    .updates,
+    #weather-widget,
+    #golf-leaderboard,
+    #pool-leaderboard,
+    .slideshow,
+    #historical-winners,
+    #sommerville-registration,
+    #grand-prize-card,
+    #hole-in-one-card {
+      padding: 12px;
+      margin: 15px auto;
+      border-radius: 6px;
+    }
+
+    .update-image,
+    .feature-card-image { max-height: 260px; }
+
+    #audio-controls {
+      bottom: auto;
+      top: 10px;
+      left: 10px;
+      right: auto;
+      max-width: calc(60vw - 15px);
+      padding: 6px 10px;
+      flex-direction: row;
+      gap: 4px;
+      align-items: center;
+      border-radius: 50px;
+    }
+
+    #audio-controls > div:first-child {
+      display: flex;
+      gap: 4px;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    #audio-controls button {
+      padding: 6px 8px;
+      font-size: 13px;
+      min-height: 34px;
+      min-width: 34px;
+      border-radius: 50px;
+    }
+
+    #audio-status { display: none; }
+    #chatango-container { display: none; }
+
+    #weather-forecast > div {
+      display: block;
+      margin: 8px auto;
+      max-width: 280px;
+    }
+
+    table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #historical-winners table {
+      display: table;
+      overflow-x: visible;
+      white-space: normal;
+      width: auto;
+      min-width: 220px;
+      margin: 10px auto;
+    }
+
+    th, td {
+      padding: 8px 6px;
+      font-size: 0.8em;
+    }
+
+    .toast.removing { animation: slideOutDown 0.3s ease-in forwards; }
+
+    .theme-toggle {
+      top: 10px;
+      right: 10px;
+      padding: 6px 12px;
+      font-size: 1em;
+    }
+
+    .theme-label { display: none; }
+  }
+
+  @media screen and (min-width: 481px) and (max-width: 768px) {
+    main { padding: 15px; padding-bottom: 110px; }
+
+    #audio-controls {
+      bottom: auto;
+      top: 15px;
+      left: 15px;
+      flex-direction: row;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 50px;
+    }
+
+    #audio-controls > div:first-child {
+      display: flex;
+      flex-direction: row;
+      gap: 6px;
+      align-items: center;
+    }
+
+    #chatango-container {
+      bottom: 15px;
+      right: 15px;
+    }
+
+    #weather-forecast > div { min-width: 110px; }
+  }
+
+  @media screen and (min-width: 769px) and (max-width: 1024px) {
+    main { max-width: 700px; padding: 20px; }
+    #audio-controls { bottom: 20px; left: 20px; }
+  }
+
+  @media screen and (min-width: 1025px) {
+    main { max-width: 800px; }
+    #weather-forecast > div { min-width: 115px; }
+  }
+
+  @media screen and (max-height: 600px) and (orientation: landscape) {
+    #audio-controls {
+      bottom: auto;
+      top: 10px;
+      left: 10px;
+      padding: 6px 10px;
+      gap: 4px;
+      flex-direction: row;
+      border-radius: 50px;
+    }
+
+    #audio-controls button {
+      padding: 6px 10px;
+      font-size: 14px;
+    }
+
+    #chatango-container { display: none; }
+    main { padding-bottom: 80px; }
+  }
+
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .golf-icon { background-size: cover; }
+  }
+
+  *:focus-visible {
+    outline: 3px solid #FFD700;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+  <span id="theme-icon">☀️</span>
+  <span class="theme-label" id="theme-label">Light</span>
+</button>
+
+<div id="audio-controls">
+  <div>
+    <button id="play-pause" aria-label="Play or pause Masters theme song">⏯️</button>
+    <button id="volume-down" aria-label="Decrease volume">🔉</button>
+    <button id="volume-up" aria-label="Increase volume">🔊</button>
+  </div>
+  <div id="audio-status" role="status" aria-live="polite"></div>
+</div>
+
+<header>
+  <a href="https://kev11wolf.github.io/smp/" aria-label="Sommerville Masters Pool Home">
+    <img src="https://esagcs.org/wp-content/uploads/2023/03/The-Masters.jpg" alt="The Masters Tournament Logo" class="logo">
+  </a>
+  <h1>Sommerville Masters Pool</h1>
+</header>
+
+<main>
+
+  <!--
+  <section class="timer card" id="countdown-timer">
+    <div class="card-header">
+      <h2 style="margin: 0;">⏰ Countdown</h2>
+    </div>
+    <div class="card-content">
+      <p id="time-left" aria-live="polite"></p>
+    </div>
+  </section>
+  -->
+
+  <section class="updates card">
+    <div class="card-header">
+      <h2 style="margin: 0;">📢 News + Updates</h2>
+    </div>
+    <div class="card-content">
+
+      <p class="news-intro-text">
+        ⛳ &nbsp;The tournament is just around the corner, and the Sommerville Masters Pool is getting ready for another <strong>tradition</strong> unlike any other. Here’s what to watch as Augusta week arrives.
+      </p>
+
+      <hr class="news-gold-divider">
+
+      <div class="news-item news-item--charcoal">
+        <div class="news-tag">📈 &nbsp;Top Players on the Odds Board</div>
+        <p class="news-body-text" style="margin-bottom:10px;">
+          Augusta always delivers a loaded field, and the early board is packed with proven major winners, elite ball-strikers, and a few dangerous chasers. If you're filling out the pool sheet, these are the names setting the pace heading into Thursday:
+        </p>
+        <div class="player-grid">
+          <div class="player-pill">
+            🏆 <strong>Scottie Scheffler</strong>
+            <span class="player-pill-odds">+495 · Two-time Masters champion</span>
+          </div>
+          <div class="player-pill">
+            🐂 <strong>Jon Rahm</strong>
+            <span class="player-pill-odds">+910 · Former green jacket winner</span>
+          </div>
+          <div class="player-pill">
+            💥 <strong>Bryson DeChambeau</strong>
+            <span class="player-pill-odds">+1050 · Power always changes the math</span>
+          </div>
+          <div class="player-pill">
+            🍀 <strong>Rory McIlroy</strong>
+            <span class="player-pill-odds">+1175 · Plenty of Augusta buzz again</span>
+          </div>
+          <div class="player-pill">
+            🔭 <strong>Ludvig Åberg</strong>
+            <span class="player-pill-odds">+1650 · One of the sharpest young threats</span>
+          </div>
+          <div class="player-pill">
+            📏 <strong>Xander Schauffele</strong>
+            <span class="player-pill-odds">+1800 · Big-event pedigree</span>
+          </div>
+          <div class="player-pill">
+            🔥 <strong>Cameron Young</strong>
+            <span class="player-pill-odds">+2300 · Live long-shot value</span>
+          </div>
+          <div class="player-pill">
+            🎯 <strong>Collin Morikawa</strong>
+            <span class="player-pill-odds">+3100 · Elite iron play travels anywhere</span>
+          </div>
+        </div>
+      </div>
+
+      <hr class="news-thin-divider">
+
+      <div class="news-item">
+        <div class="news-tag">🎯 &nbsp;Par 3 Contest</div>
+        <p class="news-body-text">
+          The always-fun Par 3 Contest tees off Wednesday before the tournament and gives Augusta week its most relaxed, family-heavy moment. It’s equal parts skill, smiles, and superstition too — because nobody has ever won the Par 3 Contest and the Masters in the same year.
+        </p>
+      </div>
+
+      <hr class="news-thin-divider">
+
+      <div class="news-item news-item--green">
+        <div class="news-tag">🍽️ &nbsp;Champions Dinner — Tuesday, April 7</div>
+        <p class="news-body-text" style="color:#e0d8c8;margin-bottom:10px;">
+          As defending champion, <strong style="color:#fff;">Rory McIlroy</strong> hosts the annual Champions Dinner for all past Masters winners Tuesday night at Augusta National. His menu blends Northern Irish comfort food with Georgia flavors and a few luxurious touches:
+        </p>
+        <div>
+          <div class="menu-row"><span class="menu-label">Appetizers</span> &nbsp;Bacon-Wrapped Dates &nbsp;·&nbsp; Peach &amp; Ricotta Flatbread &nbsp;·&nbsp; Rock Shrimp Tempura &nbsp;·&nbsp; Grilled Elk Sliders</div>
+          <div class="menu-row"><span class="menu-label">First Course</span> &nbsp;Yellowfin Tuna Carpaccio</div>
+          <div class="menu-row"><span class="menu-label">Main</span> &nbsp;Wagyu Filet Mignon &nbsp;<em>or</em>&nbsp; Seared Salmon</div>
+          <div class="menu-row"><span class="menu-label">Sides</span> &nbsp;Traditional Irish Champ &nbsp;·&nbsp; Brussels Sprouts &nbsp;·&nbsp; Glazed Carrots &nbsp;·&nbsp; Vidalia Onion Rings</div>
+          <div class="menu-row"><span class="menu-label">Dessert</span> &nbsp;Sticky Toffee Pudding, Vanilla Ice Cream &amp; Warm Toffee Sauce</div>
+        </div>
+      </div>
+
+      <hr class="news-thin-divider">
+
+      <div class="news-item">
+        <div class="news-tag">📅 &nbsp;Masters Week at a Glance</div>
+        <div class="schedule-row">
+          <div>🎯 &nbsp;<strong>Wed Apr 8</strong> &nbsp;—&nbsp; Par Three Contest · Begins at noon</div>
+          <div>⛳ &nbsp;<strong>Thu Apr 9</strong> &nbsp;—&nbsp; Round 1</div>
+          <div>⛳ &nbsp;<strong>Fri Apr 10</strong> &nbsp;—&nbsp; Round 2 &nbsp;·&nbsp; Cut Day</div>
+          <div>⛳ &nbsp;<strong>Sat Apr 11</strong> &nbsp;—&nbsp; Round 3 &nbsp;·&nbsp; Moving Day</div>
+          <div>🏆 &nbsp;<strong>Sun Apr 12</strong> &nbsp;—&nbsp; Final Round &nbsp;·&nbsp; Green Jacket Ceremony</div>
+        </div>
+      </div>
+
+      <hr class="news-thin-divider">
+
+      <div class="news-item">
+        <div class="news-tag">📬 &nbsp;Pool Registration</div>
+        <p class="news-body-text">
+          Picks are live now, entry is <strong>$20/person</strong>, and it’s almost time to lock in your six-man roster. Get your card submitted before the first tee shot and make sure your name is on the participant list.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="slideshow card">
+    <div class="card-header">
+      <h2 style="margin: 0;">🖼️ Augusta Gallery</h2>
+    </div>
+    <div class="card-content">
+      <div class="slideshow-frame">
+        <img id="slide-img-a" class="slide-img" src="" alt="Augusta National Golf Course">
+        <img id="slide-img-b" class="slide-img" src="" alt="Augusta National Golf Course">
+      </div>
+    </div>
+  </section>
+
+  <section id="weather-widget" class="card">
+    <div class="card-header">
+      <h2 style="margin: 0;">🌤️ Augusta Weather</h2>
+    </div>
+    <div class="card-content">
+      <div id="weather-current" style="margin-bottom: 15px;" aria-live="polite">
+        Loading current weather…
+      </div>
+      <div id="weather-forecast" aria-live="polite">
+        Loading 7-day forecast…
+      </div>
+    </div>
+  </section>
+
+  <section id="hole-in-one-card" class="card">
+    <div class="card-header">
+      <h2 style="margin: 0;">📸 Augusta Ace History</h2>
+    </div>
+    <div class="card-content">
+      <p class="news-body-text">
+        The first hole in one in Masters history was made by Ross Somerville during the second round of the inaugural 1934 tournament, back when the event was still called the Augusta National Invitation Tournament. He made the ace at the 16th hole, giving the Somerville name a permanent place in Augusta lore right from the beginning.
+      </p>
+      <img
+        src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiSNwTCLz9jt9kja8tliPoOvUc09jnDfGahfqtoIASVXPe1vW9GLWhCPXInvNTY9jcTvbKnjqV6WjJOvu6y3XzSoVDgrC2l6nbqYNEU6bAFO6a9QCFXfL6mb4ZHd5FOvdwnMJAVXmDXWk5S/w1200-h630-p-k-no-nu/ross-somerville-magazine.jpg"
+        alt="Ross Somerville historic golf photo"
+        class="feature-card-image"
+      >
+      <p class="fact-caption">
+        Somerville was a Canadian amateur, and his shot came in the very first Masters ever played — a perfect early reminder that Augusta has been producing memorable moments since day one.
+      </p>
+    </div>
+  </section>
+
+  <section id="grand-prize-card" class="card">
+    <div class="card-header">
+      <h2 style="margin: 0;">🏆 Grand Prize</h2>
+    </div>
+    <div class="card-content">
+      <p class="news-body-text">
+        The winner of this year’s pool gets two prizes worth playing for: <strong>first</strong>, an invitation for one round of golf with the pool organizers, the Sommervilles; and second, the winner-takes-all cash prize based on the live participant count.
+      </p>
+      <div class="prize-highlight">
+        <div id="grand-prize-formula">Calculating from participant list…</div>
+        <div class="grand-prize-total" id="grand-prize-total">Winner takes all: Loading…</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sommerville-registration" class="card">
+    <div class="card-header">
+      <h2 style="margin: 0;">✍️ Registration</h2>
+    </div>
+    <div class="card-content">
+      <p>Click the button below to submit your selections!</p>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeFdQqMiI8_6rMCRZCMvR5AMDjgjY1Uyq_V2_GUGkQk1tJ6ag/viewform?usp=dialog"
+         target="_blank"
+         rel="noopener noreferrer">
+        Pick your players!
+      </a>
+    </div>
+  </section>
+
+  <section id="historical-winners" class="card">
+    <div class="card-header">
+      <h2 style="margin: 0;">🎖️ Past Champions</h2>
+    </div>
+    <div class="card-content">
+      <table role="table">
+        <thead>
+          <tr>
+            <th scope="col">Year</th>
+            <th scope="col">Champion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>2025</td><td>Jason</td></tr>
+          <tr><td>2024</td><td>Blake</td></tr>
+          <tr><td>2023</td><td>Brandon E.</td></tr>
+          <tr><td>2022</td><td>Dima</td></tr>
+          <tr><td>2021</td><td>Zach K.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="pool-leaderboard" class="card">
+    <div class="card-header">
+      <h2 style="margin: 0;">🏆 Pool Leaderboard</h2>
+    </div>
+    <div class="card-content">
+      <button id="toggle-pool-button" class="collapse-btn" aria-expanded="true">Collapse</button>
+      <ul id="pool-list" role="list">
+        <!-- Pool participant scores will be inserted here -->
+      </ul>
+    </div>
+  </section>
+
+  <section id="golf-leaderboard" class="card">
+    <div class="card-header">
+      <h2 style="margin: 0;">⛳ Golf Leaderboard</h2>
+    </div>
+    <div class="card-content">
+      <button id="toggle-button" class="collapse-btn" aria-expanded="false">Show More</button>
+      <ul id="golf-list" role="list">
+        <!-- Golf player scores will be inserted here -->
+      </ul>
+    </div>
+  </section>
+
+  <div id="chatango-container">
+    <script id="cid0020000416183938966" data-cfasync="false" async src="//st.chatango.com/js/gz/emb.js"
+            style="width: 250px;height: 350px;">
+      {"handle":"sommerville-masters","arch":"js","styles":{"b":100,"c":"000000","d":"000000","l":"FFFFFF","m":"FFFFFF","p":"10","r":100,"fwtickm":1}}
+    </script>
+  </div>
+
+</main>
+
+<footer>
+  <p>Website created by K-Dawg</p>
+  <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-label="Masters Tournament Badge">
+    <title>Masters wordmark</title>
+    <defs>
+      <linearGradient id="badgeFill" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#FAD84E"/>
+        <stop offset="100%" stop-color="#F6C915"/>
+      </linearGradient>
+      <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="rgba(0,0,0,.25)"/>
+      </filter>
+      <style>
+        .word {
+          font-family: "Libre Baskerville", Baskerville, "Times New Roman", serif;
+          font-style: italic;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+        }
+      </style>
+    </defs>
+    <rect x="1.5" y="1.5" width="61" height="61" rx="6" ry="6" fill="url(#badgeFill)" stroke="#106d3b" stroke-width="2"
+          filter="url(#softShadow)"/>
+    <text x="30" y="39" class="word" fill="#106d3b" font-size="18" text-anchor="middle" textLength="44"
+          lengthAdjust="spacingAndGlyphs">MASTERS</text>
+    <g transform="translate(52,18)">
+      <path d="M0 0 L0 18" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M0 0 L9 3 L0 6 Z" fill="#D62828" stroke="#9c1f1f" stroke-width="0.7" stroke-linejoin="round"/>
+      <ellipse cx="-1.5" cy="18.5" rx="2.8" ry="1.1" fill="#0b0b0b" opacity="0.2"/>
+    </g>
+  </svg>
+</footer>
+
+<script>
+  function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const theme = savedTheme || 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeButton(theme);
+  }
+
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeButton(newTheme);
+    toast.success(
+      newTheme === 'dark' ? 'Dark Mode' : 'Light Mode',
+      `Switched to ${newTheme} theme`,
+      2000
+    );
+  }
+
+  function updateThemeButton(theme) {
+    const themeIcon = document.getElementById('theme-icon');
+    const themeLabel = document.getElementById('theme-label');
+    if (theme === 'dark') {
+      themeIcon.textContent = '🌙';
+      themeLabel.textContent = 'Dark';
+    } else {
+      themeIcon.textContent = '☀️';
+      themeLabel.textContent = 'Light';
+    }
+  }
+
+  initTheme();
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+  class ToastManager {
+    constructor() {
+      this.container = null;
+      this.toasts = [];
+      this.init();
+    }
+
+    init() {
+      if (!document.querySelector('.toast-container')) {
+        this.container = document.createElement('div');
+        this.container.className = 'toast-container';
+        this.container.setAttribute('aria-live', 'polite');
+        this.container.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(this.container);
+      } else {
+        this.container = document.querySelector('.toast-container');
+      }
+    }
+
+    show(options) {
+      const {
+        type = 'info',
+        title = '',
+        message = '',
+        duration = 3000,
+        icon = this.getDefaultIcon(type),
+        vibrate = true
+      } = options;
+
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.setAttribute('role', 'alert');
+
+      toast.innerHTML = `
+        <span class="toast-icon" aria-hidden="true">${icon}</span>
+        <div class="toast-content">
+          ${title ? `<p class="toast-title">${title}</p>` : ''}
+          ${message ? `<p class="toast-message">${message}</p>` : ''}
+        </div>
+        <button class="toast-close" aria-label="Close notification">&times;</button>
+        <div class="toast-progress"></div>
+      `;
+
+      this.container.appendChild(toast);
+      this.toasts.push(toast);
+
+      if (vibrate && 'vibrate' in navigator) {
+        const pattern = type === 'error' ? [100] : [50, 30, 50];
+        navigator.vibrate(pattern);
+      }
+
+      const closeBtn = toast.querySelector('.toast-close');
+      closeBtn.addEventListener('click', () => this.dismiss(toast));
+
+      toast.addEventListener('click', (e) => {
+        if (e.target !== closeBtn) this.dismiss(toast);
+      });
+
+      if (duration > 0) setTimeout(() => this.dismiss(toast), duration);
+      this.addSwipeGesture(toast);
+      return toast;
+    }
+
+    dismiss(toast) {
+      if (!toast || !toast.parentElement) return;
+      toast.classList.add('removing');
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.parentElement.removeChild(toast);
+          this.toasts = this.toasts.filter(t => t !== toast);
+        }
+      }, 300);
+    }
+
+    addSwipeGesture(toast) {
+      let startX = 0;
+      let currentX = 0;
+      let isSwiping = false;
+
+      toast.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isSwiping = true;
+      }, { passive: true });
+
+      toast.addEventListener('touchmove', (e) => {
+        if (!isSwiping) return;
+        currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+        if (Math.abs(diff) > 10) {
+          toast.style.transform = `translateX(${diff}px)`;
+          toast.style.opacity = 1 - Math.abs(diff) / 200;
+        }
+      }, { passive: true });
+
+      toast.addEventListener('touchend', () => {
+        const diff = currentX - startX;
+        if (Math.abs(diff) > 100) {
+          this.dismiss(toast);
+        } else {
+          toast.style.transform = '';
+          toast.style.opacity = '';
+        }
+        isSwiping = false;
+      });
+    }
+
+    getDefaultIcon(type) {
+      const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+      return icons[type] || icons.info;
+    }
+
+    success(title, message, duration) { return this.show({ type: 'success', title, message, duration, icon: '✓' }); }
+    error(title, message, duration) { return this.show({ type: 'error', title, message, duration, icon: '✕' }); }
+    warning(title, message, duration) { return this.show({ type: 'warning', title, message, duration, icon: '⚠' }); }
+    info(title, message, duration) { return this.show({ type: 'info', title, message, duration, icon: 'ℹ' }); }
+  }
+
+  const toast = new ToastManager();
+
+  function addRippleEffect(element) {
+    element.addEventListener('click', function(e) {
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = x + 'px';
+      ripple.style.top = y + 'px';
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+  }
+
+  const audio = new Audio("https://github.com/kev11wolf/public/raw/refs/heads/main/smp-main/smp-main/Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Masters%20Theme%20Song%20On%20Repeat(1).mp3");
+  audio.loop = true;
+  audio.volume = 0.5;
+
+  const playPauseBtn = document.getElementById('play-pause');
+  const volumeUpBtn = document.getElementById('volume-up');
+  const volumeDownBtn = document.getElementById('volume-down');
+  const audioStatus = document.getElementById('audio-status');
+  let isPlaying = false;
+
+  playPauseBtn.onclick = () => {
+    if (!isPlaying) {
+      audio.play().catch(() => {
+        audioStatus.textContent = 'Click play to start music 🎵';
+        toast.warning('Autoplay Blocked', 'Click play to start the music', 3000);
+      });
+    } else {
+      audio.pause();
+    }
+  };
+
+  audio.onplay = () => {
+    isPlaying = true;
+    playPauseBtn.textContent = '⏸️';
+    playPauseBtn.setAttribute('aria-label', 'Pause Masters theme song');
+    audioStatus.textContent = 'Masters Theme Playing ▶️';
+    toast.success('Now Playing', 'Masters Theme Song ♪', 2500);
+  };
+
+  audio.onpause = () => {
+    isPlaying = false;
+    playPauseBtn.textContent = '⏯️';
+    playPauseBtn.setAttribute('aria-label', 'Play Masters theme song');
+    audioStatus.textContent = 'Masters Theme Paused ⏸️';
+    toast.info('Paused', 'Click play to resume', 2000);
+  };
+
+  volumeUpBtn.onclick = () => {
+    if (audio.volume < 1) {
+      audio.volume = Math.min(1, audio.volume + 0.1);
+      const volumePercent = Math.round(audio.volume * 100);
+      toast.show({
+        type: 'info',
+        title: 'Volume',
+        message: `${volumePercent}%`,
+        duration: 1500,
+        icon: '🔊',
+        vibrate: true
+      });
+    } else {
+      toast.warning('Max Volume', 'Volume is at 100%', 1500);
+    }
+  };
+
+  volumeDownBtn.onclick = () => {
+    if (audio.volume > 0) {
+      audio.volume = Math.max(0, audio.volume - 0.1);
+      const volumePercent = Math.round(audio.volume * 100);
+      toast.show({
+        type: 'info',
+        title: 'Volume',
+        message: `${volumePercent}%`,
+        duration: 1500,
+        icon: '🔉',
+        vibrate: true
+      });
+    } else {
+      toast.info('Muted', 'Volume is at 0%', 1500);
+    }
+  };
+
+  window.onload = () => {
+    audio.play().catch(() => {
+      console.log('Auto-play blocked. Use the play button.');
+      audioStatus.textContent = 'Click play to start 🎵';
+    });
+  };
+
+  // Countdown timer intentionally disabled per requested layout update.
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('button, .collapse-btn').forEach(btn => {
+      addRippleEffect(btn);
+    });
+
+    const slideshowImages = [
+      'https://i.insider.com/5ac3ca737a74af24008b45c7?width=1000&format=jpeg',
+      'https://media.stewarttravel.co.uk/media/repository/Golf/golfcourses/USA/Georgia/AugustaNational/Augusta-National.jpg',
+      'https://static01.nyt.com/images/2025/05/12/multimedia/12nat-masters-photos-rory-win-sunday-chtq/12nat-masters-photos-rory-win-sunday-chtq-articleLarge.jpg',
+      'https://images2.minutemediacdn.com/image/upload/c_crop,w_8025,h_4514,x_0,y_167/c_fill,w_720,ar_16:9,f_auto,q_auto,g_auto/images/ImagnImages/mmsport/si/01jabn4qvj71gpkb0kzy.jpg',
+      'https://golfweek.usatoday.com/gcdn/authoring/authoring-images/2025/04/10/SGLF/8.3022855007e+10-usatsi-25892403.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1685967.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-83123181.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1.07439188e+09-1.jpg',
+      'https://worldwide.golf/wp-content/uploads/2020/04/GettyImages-1145859172.jpg',
+      'https://o90934w8.cdn.imgeng.in/wp-content/uploads/2015/04/amen-corner.jpg',
+      'https://media.cnn.com/api/v1/images/stellar/prod/1.70223113519e+11-tiger-augusta-azaleas.jpg',
+      'https://www.liveabout.com/thmb/KqYZccVwvG6HOodBXslj-yYRDk4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/augusta-national-azalea-rory-58272e685f9b58d5b15309db-5c251adf46e0fb0001e72d82.jpg',
+      'https://e0.365dm.com/18/04/768x432/skysports-tiger-woods-masters_4271003.jpg?2.0180401182508e+13'
+    ];
+
+    let ssIndex = 0;
+    let ssActive = 'a';
+    const ssImgA = document.getElementById('slide-img-a');
+    const ssImgB = document.getElementById('slide-img-b');
+
+    function ssGetActive() { return ssActive === 'a' ? ssImgA : ssImgB; }
+    function ssGetNext() { return ssActive === 'a' ? ssImgB : ssImgA; }
+
+    function ssPreload(urls) {
+      urls.forEach(url => {
+        const i = new Image();
+        i.src = url;
+      });
+    }
+
+    function ssAdvance() {
+      const nextIndex = (ssIndex + 1) % slideshowImages.length;
+      const nextEl = ssGetNext();
+      const curEl = ssGetActive();
+      nextEl.src = slideshowImages[nextIndex];
+      nextEl.onload = function() {
+        nextEl.classList.add('active');
+        curEl.classList.remove('active');
+        ssActive = ssActive === 'a' ? 'b' : 'a';
+        ssIndex = nextIndex;
+      };
+      nextEl.onerror = function() {
+        ssIndex = nextIndex;
+        setTimeout(ssAdvance, 200);
+      };
+    }
+
+    ssImgA.src = slideshowImages[0];
+    ssImgA.onload = function() {
+      ssImgA.classList.add('active');
+      ssPreload(slideshowImages.slice(1));
+      setInterval(ssAdvance, 4500);
+    };
+    ssImgA.onerror = function() { ssIndex = 1; ssAdvance(); };
+
+    const SHEET_ID = '1GUWEW15MKtoeBsnCM83EdWes3TC4JIEau1LR66NH7nM';
+    const GOLF_SHEET_NAME = 'Golf';
+    const POOL_SHEET_NAME = 'Pool';
+
+    function parseCSV(text) {
+      const rows = [];
+      const lines = text.split('\n');
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const row = [];
+        let field = '', inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          if (line[i] === '"') inQ = !inQ;
+          else if (line[i] === ',' && !inQ) { row.push(field.trim()); field = ''; }
+          else field += line[i];
+        }
+        row.push(field.trim());
+        rows.push(row);
+      }
+      return rows;
+    }
+
+    function csvUrl(sheetName) {
+      return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&t=${Date.now()}`;
+    }
+
+    function showLBError(listId, msg) {
+      const el = document.getElementById(listId);
+      if (el) el.innerHTML = `<li style="color:#c0392b;justify-content:center;padding:16px;">⚠️ ${msg}</li>`;
+    }
+
+    function updatePrizeCard(participantCount) {
+      const formula = document.getElementById('grand-prize-formula');
+      const total = document.getElementById('grand-prize-total');
+
+      if (typeof participantCount === 'number' && !Number.isNaN(participantCount)) {
+        const grandPrize = participantCount * 20;
+        formula.textContent = `${participantCount} participants × $20 entry fee`;
+        total.textContent = `Winner takes all: $${grandPrize}`;
+      } else {
+        formula.textContent = `Participant list updating…`;
+        total.textContent = `Winner takes all: $20 × total participants`;
+      }
+    }
+
+    async function loadLeaderboards() {
+      try {
+        const [golfResp, poolResp] = await Promise.all([
+          fetch(csvUrl(GOLF_SHEET_NAME)),
+          fetch(csvUrl(POOL_SHEET_NAME))
+        ]);
+
+        if (!golfResp.ok || !poolResp.ok) throw new Error('fetch failed');
+
+        const golfRows = parseCSV(await golfResp.text());
+        const poolRows = parseCSV(await poolResp.text());
+
+        const gh = golfRows[0].map(h => h.toLowerCase().trim());
+        const gNameC = gh.indexOf('name');
+        const gScoreC = gh.indexOf('score');
+        const gR1C = gh.indexOf('r1');
+        const gR2C = gh.indexOf('r2');
+        const gR3C = gh.indexOf('r3');
+        const gR4C = gh.indexOf('r4');
+
+        const golfLeaderboardData = [];
+        const scoreLookup = {};
+
+        for (let i = 1; i < golfRows.length; i++) {
+          const r = golfRows[i];
+          if (!r[gNameC] || r[gNameC] === '') continue;
+          const name = r[gNameC];
+          const score = parseFloat(r[gScoreC]) || 0;
+          const roundScores = [gR1C, gR2C, gR3C, gR4C]
+            .filter(c => c !== -1 && r[c] !== undefined && r[c] !== '')
+            .map(c => parseFloat(r[c]) || 0);
+
+          const entry = { name, score };
+          if (roundScores.length) entry.roundScores = roundScores;
+          golfLeaderboardData.push(entry);
+          scoreLookup[name.toLowerCase().trim()] = score;
+        }
+
+        golfLeaderboardData.sort((a, b) => a.score - b.score);
+
+        const ph = poolRows[0].map(h => h.toLowerCase().trim());
+        const pNameC = ph.indexOf('name');
+
+        const poolLeaderboardData = [];
+
+        for (let i = 1; i < poolRows.length; i++) {
+          const r = poolRows[i];
+          if (!r[pNameC] || r[pNameC] === '') continue;
+
+          const name = r[pNameC];
+          const selectedPlayers = [];
+
+          for (let p = 1; p <= 6; p++) {
+            const pickC = ph.indexOf(`pick${p}`);
+            if (pickC !== -1 && r[pickC] && r[pickC] !== '') {
+              const playerName = r[pickC];
+              const playerScore = scoreLookup[playerName.toLowerCase().trim()];
+              selectedPlayers.push({
+                name: playerName,
+                score: playerScore !== undefined ? playerScore : 0
+              });
+            }
+          }
+
+          const points = selectedPlayers.reduce((s, p) => s + p.score, 0);
+          poolLeaderboardData.push({ name, points, selectedPlayers });
+        }
+
+        poolLeaderboardData.sort((a, b) => a.points - b.points);
+        updatePrizeCard(poolLeaderboardData.length);
+
+        function updateLeaderboard(listId, data, scoreType, limit, btnId) {
+          const list = document.getElementById(listId);
+          list.innerHTML = '';
+
+          let showAll = !limit;
+          let btn = btnId ? document.getElementById(btnId) : null;
+
+          if (showAll) {
+            data.forEach((item, index) => createListItem(list, item, scoreType, index));
+            if (btn) btn.style.display = 'none';
+            return;
+          }
+
+          const topPlayers = data.slice(0, 10);
+          topPlayers.forEach((item, index) => createListItem(list, item, scoreType, index));
+
+          if (btn) btn.textContent = "Show More";
+          if (!btn) return;
+
+          btn.style.display = "block";
+          let expanded = false;
+
+          btn.onclick = function() {
+            expanded = !expanded;
+            list.innerHTML = '';
+
+            if (expanded) {
+              data.forEach((item, index) => createListItem(list, item, scoreType, index));
+              btn.textContent = "Show Less";
+              btn.setAttribute('aria-expanded', 'true');
+              toast.info('Leaderboard', `Showing all ${data.length} players`, 1500);
+            } else {
+              topPlayers.forEach((item, index) => createListItem(list, item, scoreType, index));
+              btn.textContent = "Show More";
+              btn.setAttribute('aria-expanded', 'false');
+              toast.info('Leaderboard', `Showing top ${topPlayers.length}`, 1500);
+            }
+          };
+        }
+
+        function getScoreTier(score, scoreType) {
+          if (scoreType === 'score') {
+            if (score <= -8) return 'tier-gold';
+            if (score < 0) return 'tier-green';
+            if (score === 0) return 'tier-even';
+            if (score <= 10) return 'tier-over';
+            return 'tier-high';
+          } else {
+            if (score <= -20) return 'tier-gold';
+            if (score < 0) return 'tier-green';
+            if (score === 0) return 'tier-even';
+            return 'tier-over';
+          }
+        }
+
+        function createListItem(list, item, scoreType, index) {
+          const li = document.createElement('li');
+          li.classList.add(getScoreTier(item[scoreType], scoreType));
+
+          const expandDiv = document.createElement('div');
+          expandDiv.classList.add('expand');
+
+          if (index === 0) {
+            li.innerHTML = `<span style="font-size:20px;">🏆</span> ${item.name}: ${item[scoreType]}`;
+            li.classList.add('pulse-once');
+          } else if (index === 1) {
+            li.innerHTML = `<span style="font-size:18px;">🥈</span> ${item.name}: ${item[scoreType]}`;
+          } else if (index === 2) {
+            li.innerHTML = `<span style="font-size:18px;">🥉</span> ${item.name}: ${item[scoreType]}`;
+          } else {
+            li.innerHTML = `<span class="golf-icon"></span> ${item.name}: ${item[scoreType]}`;
+          }
+
+          if (item.roundScores) {
+            const roundScores = item.roundScores
+              .map((score, idx) => `<div>Round ${idx + 1}: ${score}</div>`)
+              .join('');
+            expandDiv.innerHTML = `<strong>Round Scores:</strong>${roundScores}`;
+          }
+
+          if (item.selectedPlayers) {
+            item.selectedPlayers.forEach(player => {
+              const playerInfo = document.createElement('div');
+              playerInfo.textContent = `${player.name}: ${player.score}`;
+              expandDiv.appendChild(playerInfo);
+            });
+          }
+
+          li.appendChild(expandDiv);
+          list.appendChild(li);
+
+          li.addEventListener('click', function() {
+            const expanded = expandDiv.style.display === 'block';
+            document.querySelectorAll('.expand').forEach(div => div.style.display = 'none');
+            expandDiv.style.display = expanded ? 'none' : 'block';
+          });
+        }
+
+        updateLeaderboard('golf-list', golfLeaderboardData, 'score', 10, 'toggle-button');
+        updateLeaderboard('pool-list', poolLeaderboardData, 'points', null, 'toggle-pool-button');
+
+        const poolBtn = document.getElementById('toggle-pool-button');
+        let poolExpanded = true;
+
+        poolBtn.onclick = function() {
+          poolExpanded = !poolExpanded;
+          const poolList = document.getElementById('pool-list');
+
+          if (poolExpanded) {
+            poolList.innerHTML = '';
+            poolLeaderboardData.forEach((item, index) => createListItem(poolList, item, 'points', index));
+            poolBtn.textContent = 'Collapse';
+            poolBtn.setAttribute('aria-expanded', 'true');
+          } else {
+            poolList.innerHTML = '';
+            poolBtn.textContent = 'Expand';
+            poolBtn.setAttribute('aria-expanded', 'false');
+            toast.info('Collapsed', 'Pool leaderboard hidden', 1500);
+          }
+        };
+
+      } catch (err) {
+        console.error('Leaderboard error:', err);
+        showLBError('golf-list', 'Could not load golf scores — check back soon.');
+        showLBError('pool-list', 'Could not load pool standings — check back soon.');
+        updatePrizeCard();
+        toast.error('Data Error', 'Could not load leaderboard data', 4000);
+      }
+    }
+
+    loadLeaderboards();
+
+    if (!localStorage.getItem('tutorialComplete')) {
+      setTimeout(() => {
+        toast.info('Welcome! 👋', 'Tap any player to see detailed scores', 4000);
+        setTimeout(() => {
+          toast.info('Tip 💡', 'Use the Show More button to see all players', 4000);
+          localStorage.setItem('tutorialComplete', 'true');
+        }, 5000);
+      }, 2000);
+    }
+  });
+
+  (async function(){
+    const weatherCurrent = document.getElementById("weather-current");
+    const weatherForecast = document.getElementById("weather-forecast");
+    const weatherPreview = document.getElementById("weather-preview");
+    const lat = 33.5025, lon = -82.02;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_mean,weathercode&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
+
+    const weatherCodeMap = {
+      0: "Clear sky",
+      1: "Mainly clear",
+      2: "Partly cloudy",
+      3: "Overcast",
+      45: "Foggy",
+      48: "Depositing rime fog",
+      51: "Light drizzle",
+      53: "Moderate drizzle",
+      55: "Dense drizzle",
+      56: "Freezing drizzle",
+      57: "Freezing drizzle",
+      61: "Slight rain",
+      63: "Moderate rain",
+      65: "Heavy rain",
+      66: "Freezing rain",
+      67: "Freezing rain",
+      71: "Slight snowfall",
+      73: "Moderate snowfall",
+      75: "Heavy snowfall",
+      77: "Snow grains",
+      80: "Light rain showers",
+      81: "Moderate rain showers",
+      82: "Violent rain showers",
+      85: "Slight snow showers",
+      86: "Heavy snow showers",
+      95: "Thunderstorm",
+      96: "Thunders. w/ slight hail",
+      99: "Thunders. w/ heavy hail"
+    };
+
+    const weatherEmojiMap = {
+      0: "☀️",
+      1: "🌤️",
+      2: "⛅",
+      3: "☁️",
+      45: "🌫️",
+      48: "🌫️",
+      51: "🌧️",
+      53: "🌧️",
+      55: "🌧️",
+      56: "🌧️",
+      57: "🌧️",
+      61: "🌧️",
+      63: "🌧️",
+      65: "🌧️",
+      66: "🌧️",
+      67: "🌧️",
+      71: "❄️",
+      73: "❄️",
+      75: "❄️",
+      77: "❄️",
+      80: "🌧️",
+      81: "🌧️",
+      82: "🌧️",
+      85: "❄️",
+      86: "❄️",
+      95: "⛈️",
+      96: "⛈️",
+      99: "⛈️"
+    };
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Open-Meteo fetch failed: ${response.status}`);
+      const data = await response.json();
+
+      if (data.current_weather) {
+        const cw = data.current_weather;
+        const codeText = weatherCodeMap[cw.weathercode] || "Unknown";
+        const emoji = weatherEmojiMap[cw.weathercode] || "❓";
+        weatherCurrent.innerHTML = `<strong>Currently:</strong> ${emoji} ${cw.temperature}°F | ${codeText} | Wind ${cw.windspeed} mph`;
+        if (weatherPreview) weatherPreview.textContent = `${emoji} ${cw.temperature}°F - ${codeText}`;
+      } else {
+        weatherCurrent.textContent = "No current weather data.";
+        if (weatherPreview) weatherPreview.textContent = "No weather data";
+      }
+
+      if (data.daily && data.daily.time) {
+        const { time, temperature_2m_max, temperature_2m_min, precipitation_probability_mean, weathercode } = data.daily;
+        let forecastHTML = "";
+
+        for (let i = 0; i < time.length; i++) {
+          const dateObj = new Date(time[i]);
+          const dayName = dateObj.toLocaleDateString(undefined, { weekday: "short" });
+          const codeTx = weatherCodeMap[weathercode[i]] || "Unknown";
+          const emoji = weatherEmojiMap[weathercode[i]] || "❓";
+
+          forecastHTML += `
+            <div>
+              <div><strong>${dayName}</strong></div>
+              <div style="font-size:1.3em;margin:6px 0;">${emoji}</div>
+              <div style="font-size:0.9em;color:var(--text-secondary);">${codeTx}</div>
+              <div style="font-size:0.9em;color:var(--text-secondary);margin-top:8px;">High: ${temperature_2m_max[i]}°F</div>
+              <div style="font-size:0.9em;color:var(--text-secondary);">Low: ${temperature_2m_min[i]}°F</div>
+              <div style="font-size:0.9em;color:var(--text-secondary);">Precip: ${precipitation_probability_mean[i]}%</div>
+            </div>
+          `;
+        }
+
+        weatherForecast.innerHTML = forecastHTML;
+      } else {
+        weatherForecast.textContent = "No forecast data.";
+      }
+
+      toast.success('Weather Updated', 'Augusta forecast loaded', 2000);
+    } catch (err) {
+      weatherCurrent.textContent = "Could not load weather data.";
+      weatherForecast.textContent = "";
+      if (weatherPreview) weatherPreview.textContent = "Weather unavailable";
+      console.error(err);
+      toast.error('Connection Error', 'Could not load weather data', 4000);
+    }
+  })();
+</script>
+
+</body>
+</html>
