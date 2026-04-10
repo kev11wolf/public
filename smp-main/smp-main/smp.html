@@ -34,6 +34,20 @@
       --azalea-photo: url('https://github.com/kev11wolf/public/blob/main/azalea_background.jpg?raw=true');
     }
 
+    [data-theme="dark"] {
+      --masters-green: #00ff88;
+      --masters-light-bg: #0a0a0a;
+      --masters-hover: #1a4d2e;
+      --masters-text: #00ff88;
+      --white: #1a1a1a;
+      --border-color: #333;
+      --shadow-light: rgba(255,255,255,0.05);
+      --shadow-medium: rgba(255,255,255,0.1);
+      --card-bg: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #b0b0b0;
+    }
+
     * {
       box-sizing: border-box;
     }
@@ -67,6 +81,14 @@
       overflow: hidden;
     }
 
+    [data-theme="dark"] header {
+      background:
+        linear-gradient(160deg, rgba(0,20,10,0.90) 0%, rgba(0,40,22,0.82) 50%, rgba(0,20,10,0.90) 100%),
+        var(--azalea-photo);
+      background-size: cover;
+      background-position: center;
+    }
+
     header::after {
       content: '';
       display: block;
@@ -82,6 +104,10 @@
       color: #f8f5e4;
       text-shadow: 0 1px 4px rgba(0,0,0,0.45);
       letter-spacing: 0.5px;
+    }
+
+    [data-theme="dark"] header h1 {
+      color: #0a0a0a;
     }
 
     .logo {
@@ -133,12 +159,6 @@
       text-align: left;
     }
 
-    .last-updated {
-      margin: 8px 0 0;
-      font-size: 0.92rem;
-      color: var(--text-secondary);
-    }
-
     .card-header h2 {
       margin: 0;
       border-left: 4px solid var(--masters-green);
@@ -169,6 +189,39 @@
       box-shadow: 0 2px 6px var(--shadow-light);
       border: 1px solid var(--border-color);
       transition: all 0.3s ease;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: var(--card-bg);
+      border: 2px solid var(--masters-green);
+      border-radius: 50px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 1.2em;
+      box-shadow: 0 4px 12px var(--shadow-medium);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px var(--shadow-medium);
+    }
+
+    .theme-toggle:active {
+      transform: scale(0.95);
+    }
+
+    .theme-label {
+      font-size: 0.75em;
+      color: var(--text-primary);
+      font-weight: 600;
     }
 
     .quick-nav {
@@ -214,6 +267,10 @@
       z-index: 850;
       padding: 12px 0 14px 0;
       background: linear-gradient(180deg, var(--masters-light-bg) 0%, var(--masters-light-bg) 78%, rgba(247,245,239,0) 100%);
+    }
+
+    [data-theme="dark"] .sticky-jump-bar {
+      background: linear-gradient(180deg, var(--masters-light-bg) 0%, var(--masters-light-bg) 78%, rgba(10,10,10,0) 100%);
     }
 
     .leaderboard-grid {
@@ -352,6 +409,10 @@
       background: rgba(0, 53, 37, 0.05);
     }
 
+    [data-theme="dark"] .expand {
+      background: rgba(0, 255, 136, 0.05);
+    }
+
     .golf-icon {
       width: 15px;
       height: 15px;
@@ -399,6 +460,10 @@
       font-weight: 700;
     }
 
+    [data-theme="dark"] th {
+      color: #0a0a0a;
+    }
+
     tr:nth-child(even) {
       background-color: var(--card-bg);
     }
@@ -442,14 +507,26 @@
       transition: background 0.3s ease;
     }
 
+    [data-theme="dark"] .news-item {
+      background: #1c1c1c;
+    }
+
     .news-item--charcoal {
       background: #131313;
       border-color: #2a2a2a;
     }
 
+    [data-theme="dark"] .news-item--charcoal {
+      background: #0e0e0e;
+    }
+
     .news-item--green {
       background: #003525;
       border-color: #c9a84c55;
+    }
+
+    [data-theme="dark"] .news-item--green {
+      background: #002a1c;
     }
 
     .news-tag {
@@ -548,6 +625,11 @@
       text-align: center;
     }
 
+    [data-theme="dark"] .prize-highlight {
+      background: rgba(0, 255, 136, 0.05);
+      border-color: rgba(0, 255, 136, 0.12);
+    }
+
     #grand-prize-formula,
     #grand-prize-total {
       text-align: center;
@@ -582,6 +664,11 @@
       padding: 7px 10px;
       font-size: 0.82em;
       line-height: 1.3;
+    }
+
+    [data-theme="dark"] .player-pill {
+      background: rgba(0, 255, 136, 0.05);
+      border-color: rgba(0, 255, 136, 0.12);
     }
 
     .player-pill-odds {
@@ -681,6 +768,10 @@
       overflow: hidden;
     }
 
+    [data-theme="dark"] #audio-controls button {
+      color: #0a0a0a;
+    }
+
     #audio-controls button:hover {
       opacity: 0.85;
       transform: translateY(-2px);
@@ -734,6 +825,10 @@
       font-size: clamp(0.9em, 2.5vw, 1em);
       min-height: 44px;
       transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] #sommerville-registration a {
+      color: #0a0a0a;
     }
 
     #sommerville-registration a:hover {
@@ -890,6 +985,15 @@
       margin-bottom: 15px;
     }
 
+    [data-theme="dark"] footer {
+      background:
+        linear-gradient(160deg, rgba(0,20,10,0.90) 0%, rgba(0,40,22,0.82) 50%, rgba(0,20,10,0.90) 100%),
+        var(--azalea-photo);
+      background-size: cover;
+      background-position: center;
+      color: #0a0a0a;
+    }
+
     footer p {
       margin: 10px 0;
     }
@@ -1032,6 +1136,14 @@
       }
       th, td { padding: 8px 6px; font-size: 0.8em; }
       .toast.removing { animation: slideOutDown 0.3s ease-in forwards; }
+      .theme-toggle {
+        top: 10px;
+        right: 10px;
+        padding: 6px 12px;
+        font-size: 1em;
+      }
+      .theme-label { display: none; }
+    }
 
     @media screen and (min-width: 481px) and (max-width: 768px) {
       main { padding: 15px; padding-bottom: 110px; }
@@ -1103,9 +1215,16 @@
 </head>
 
 <body>
-<div id="audio-controls">
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+    <span id="theme-icon">☀️</span>
+    <span class="theme-label" id="theme-label">Light</span>
+  </button>
+
+  <div id="audio-controls">
     <div>
       <button id="play-pause" aria-label="Play or pause Masters theme song">⏯️</button>
+      <button id="volume-down" aria-label="Decrease volume">🔉</button>
+      <button id="volume-up" aria-label="Increase volume">🔊</button>
     </div>
     <div id="audio-status" role="status" aria-live="polite"></div>
   </div>
@@ -1140,7 +1259,6 @@
       <section id="pool-leaderboard" class="card">
         <div class="card-header">
           <h2>🏆 Pool Leaderboard</h2>
-          <p id="pool-leaderboard-last-updated" class="last-updated">Last updated: waiting for first refresh</p>
         </div>
         <div class="card-content">
           <button id="toggle-pool-button" class="collapse-btn" aria-expanded="true" style="display:none;">Collapse</button>
@@ -1420,11 +1538,14 @@
       const currentTheme = document.documentElement.getAttribute('data-theme');
       const newTheme = currentTheme === 'light' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
       updateThemeButton(newTheme);
       toast.success(newTheme === 'dark' ? 'Dark Mode' : 'Light Mode', `Switched to ${newTheme} theme`, 2000);
     }
 
     function updateThemeButton(theme) {
+      const themeIcon = document.getElementById('theme-icon');
+      const themeLabel = document.getElementById('theme-label');
       if (theme === 'dark') {
         themeIcon.textContent = '🌙';
         themeLabel.textContent = 'Dark';
@@ -1597,6 +1718,8 @@
     audio.volume = 0.5;
 
     const playPauseBtn = document.getElementById('play-pause');
+    const volumeUpBtn = document.getElementById('volume-up');
+    const volumeDownBtn = document.getElementById('volume-down');
     const audioStatus = document.getElementById('audio-status');
     let isPlaying = false;
 
@@ -1625,6 +1748,26 @@
       playPauseBtn.setAttribute('aria-label', 'Play Masters theme song');
       audioStatus.textContent = 'Masters Theme Paused ⏸️';
       toast.info('Paused', 'Click play to resume', 2000);
+    };
+
+    volumeUpBtn.onclick = () => {
+      if (audio.volume < 1) {
+        audio.volume = Math.min(1, audio.volume + 0.1);
+        const volumePercent = Math.round(audio.volume * 100);
+        toast.show({ type: 'info', title: 'Volume', message: `${volumePercent}%`, duration: 1500, icon: '🔊', vibrate: true });
+      } else {
+        toast.warning('Max Volume', 'Volume is at 100%', 1500);
+      }
+    };
+
+    volumeDownBtn.onclick = () => {
+      if (audio.volume > 0) {
+        audio.volume = Math.max(0, audio.volume - 0.1);
+        const volumePercent = Math.round(audio.volume * 100);
+        toast.show({ type: 'info', title: 'Volume', message: `${volumePercent}%`, duration: 1500, icon: '🔉', vibrate: true });
+      } else {
+        toast.info('Muted', 'Volume is at 0', 1500);
+      }
     };
 
     window.onload = () => {
@@ -1701,78 +1844,8 @@
 
     window.addEventListener('hashchange', revealHashTarget);
 
-    
-    function updatePoolLeaderboardTimestamp(date = new Date()) {
-      const el = document.getElementById('pool-leaderboard-last-updated');
-      if (!el) return;
-      const formatted = date.toLocaleString([], {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit'
-      });
-      el.textContent = `Last updated: ${formatted}`;
-    }
-
-    function initPoolLeaderboardTimestampObserver() {
-      const poolList = document.getElementById('pool-list');
-      updatePoolLeaderboardTimestamp();
-      if (!poolList) return;
-      let debounceTimer;
-      const observer = new MutationObserver(() => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => updatePoolLeaderboardTimestamp(), 60);
-      });
-      observer.observe(poolList, { childList: true, subtree: true });
-    }
-
-    function findExpandablePanel(button, panelClass) {
-      const controlsId = button.getAttribute('aria-controls');
-      if (controlsId) {
-        const controlled = document.getElementById(controlsId);
-        if (controlled) return controlled;
-      }
-
-      let sibling = button.nextElementSibling;
-      while (sibling) {
-        if (sibling.classList && sibling.classList.contains(panelClass)) return sibling;
-        sibling = sibling.nextElementSibling;
-      }
-
-      const container = button.closest('li, .pool-item, .player-item, .pool-row, .player-row, .participant-card, .leaderboard-item, .entry, .score-entry, .pool-entry, .player-entry, .accordion-item, .pool-card, .player-card, div');
-      if (!container) return null;
-      return container.querySelector(`.${panelClass}`);
-    }
-
-    document.addEventListener('click', function(event) {
-      const button = event.target.closest('.pool-button, .player-button');
-      if (!button) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      if (typeof event.stopImmediatePropagation === 'function') {
-        event.stopImmediatePropagation();
-      }
-
-      const isPoolButton = button.classList.contains('pool-button');
-      const panelClass = isPoolButton ? 'pool-content' : 'player-content';
-      const panel = findExpandablePanel(button, panelClass);
-      const nextExpanded = button.getAttribute('aria-expanded') !== 'true';
-
-      button.setAttribute('aria-expanded', String(nextExpanded));
-      button.classList.toggle('active', nextExpanded);
-
-      if (panel) {
-        panel.hidden = !nextExpanded;
-        panel.classList.toggle('open', nextExpanded);
-        panel.style.display = nextExpanded ? 'block' : 'none';
-      }
-    }, true);
-
-document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
       document.querySelectorAll('button, .collapse-btn, .quick-nav a, summary').forEach(btn => addRippleEffect(btn));
-      initPoolLeaderboardTimestampObserver();
 
       const slideshowImages = [
         'https://i.insider.com/5ac3ca737a74af24008b45c7?width=1000&format=jpeg',
