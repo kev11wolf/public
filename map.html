@@ -31,7 +31,7 @@
         .safe-top { padding-top: env(safe-area-inset-top); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         
-        /* Force-remove text directions itinerary panels completely */
+        /* Force-remove text directions itinerary layout panels completely */
         .leaflet-routing-container, .leaflet-routing-error, .leaflet-right {
             display: none !important;
         }
@@ -41,24 +41,29 @@
 
         .custom-popup .leaflet-popup-content-wrapper {
             border-radius: 16px;
-            padding: 4px;
+            padding: 6px;
         }
     </style>
 </head>
 <body class="flex flex-col justify-end">
 
     <div class="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col">
-        <div class="px-4 py-3 flex justify-between items-center">
-            <div>
-                <h1 class="text-xs font-bold uppercase tracking-wider text-gray-400">Raleigh → Asheville</h1>
-                <p id="status" class="text-sm font-semibold text-gray-800">Plotting highway path...</p>
+        <div class="px-4 py-3 flex justify-between items-center gap-2">
+            <div class="flex-1 min-w-0">
+                <h1 class="text-xs font-bold uppercase tracking-wider text-gray-400 truncate">Raleigh → Asheville</h1>
+                <p id="status" class="text-sm font-semibold text-gray-800 truncate">Plotting highway path...</p>
             </div>
-            <div class="flex gap-2">
-                <button id="clear-cache-btn" class="bg-gray-100 active:bg-gray-200 text-gray-600 text-xs font-medium px-3 py-2 rounded-xl hidden min-h-[44px]">
-                    🔄 Reset Cache
+            <div class="flex items-center gap-1.5 shrink-0">
+                <select id="buffer-select" class="bg-gray-100 active:bg-gray-200 text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                    <option value="4000">⏱️ 5 Min Max</option>
+                    <option value="12000" selected>⏱️ 15 Min Max</option>
+                    <option value="24000">⏱️ 30 Min Max</option>
+                </select>
+                <button id="clear-cache-btn" class="bg-gray-100 active:bg-gray-200 text-gray-600 text-xs font-medium px-2.5 py-2 rounded-xl hidden min-h-[44px]">
+                    🔄 Reset
                 </button>
-                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm transition-all flex items-center min-h-[44px]">
-                    📍 Track Me
+                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm transition-all min-h-[44px]">
+                    📍 Track
                 </button>
             </div>
         </div>
@@ -87,13 +92,11 @@
     <script>
         const START_COORDS = [35.601832, -78.623624]; // 620 Trunecek Cir
         const END_COORDS = [35.5951, -82.5515];     // Asheville
-        const CACHE_KEY = 'nc_corridor_pois_v6';
+        const CACHE_KEY = 'nc_corridor_pois_v7';
         const CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
-        // North Carolina map constraint system
         const NC_BOUNDS = L.latLngBounds([33.7, -84.4], [36.7, -75.3]);
 
-        // Static Local DB Fallback (Updated with Jersey Mike's)
         const FALLBACK_POI_DATABASE = [
             { lat: 36.0612, lon: -80.2981, tags: { name: "Sheetz #412", brand: "Sheetz", opening_hours: "24/7", description: "Convenience store chain offering gas & snacks." } },
             { lat: 36.0784, lon: -79.8012, tags: { name: "Chick-fil-A Greensboro", brand: "Chick-fil-A", opening_hours: "06:00-22:00 (Closed Sun)", description: "Classic chicken sandwiches and waffle fries." } },
@@ -105,24 +108,24 @@
             { lat: 35.6042, lon: -82.4215, tags: { name: "Robert Lake Park Playground", leisure: "playground", description: "Community recreation zone with slides and picnic areas." } }
         ];
 
-        // POI Map Pin Visual Configurations
         const poiConfigs = {
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
             sheetz: { label: '⛽', bg: 'bg-red-600 border-red-200 text-white', name: 'Sheetz', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
             chipotle: { label: '🌯', bg: 'bg-amber-950 border-amber-600 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a084768e?auto=format&fit=crop&w=300&q=80' },
             jerseymikes: { label: '🥪', bg: 'bg-blue-900 border-amber-400 text-amber-400 font-bold', name: "Jersey Mike's", img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
             mcdonalds: { label: '🍟', bg: 'bg-yellow-500 border-red-600 text-red-700 font-black', name: "McDonald's", img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
-            wendys: { label: '👧', bg: 'bg-sky-500 border-sky-200 text-white', name: "Wendy's", img: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=300&q=80' },
+            wendys: { label: '🍔', bg: 'bg-sky-500 border-sky-200 text-white', name: "Wendy's", img: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=300&q=80' },
             chickfila: { label: '🐔', bg: 'bg-red-700 border-white text-white', name: 'Chick-fil-A', img: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?auto=format&fit=crop&w=300&q=80' },
-            food: { label: '🍔', bg: 'bg-zinc-500 border-zinc-300 text-white', name: 'Food Stop', img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80' }
+            food: { label: '🍴', bg: 'bg-zinc-500 border-zinc-300 text-white', name: 'Food Stop', img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80' }
         };
 
         let allPoiMarkers = [];
+        let rawPoiDataMemory = []; // Permanent database layer in-memory cache
         let routeLineCoordinates = [];
         let userMarker = null;
         let activeFilter = 'all';
+        let activeBufferMeters = 12000; // Default matching radius (15-minute straight line equivalent)
 
-        // Base Map Setup
         const map = L.map('map', { 
             zoomControl: false, 
             tap: true,
@@ -143,7 +146,6 @@
             popupAnchor: [0, -10]
         });
 
-        // Initialize Routing Object
         const routingControl = L.Routing.control({
             waypoints: [L.latLng(START_COORDS[0], START_COORDS[1]), L.latLng(END_COORDS[0], END_COORDS[1])],
             show: false,
@@ -163,7 +165,8 @@
             if (cachedData && cacheTimestamp && (now - cacheTimestamp < CACHE_EXPIRY_MS)) {
                 document.getElementById('status').innerText = "Stops active (Offline Cache)";
                 document.getElementById('clear-cache-btn').classList.remove('hidden');
-                processAndRenderPOIs(JSON.parse(cachedData));
+                rawPoiDataMemory = JSON.parse(cachedData);
+                processAndRenderPOIs(rawPoiDataMemory);
             } else {
                 fetchPOIsFromOverpassCorridor();
             }
@@ -172,7 +175,6 @@
         function fetchPOIsFromOverpassCorridor() {
             document.getElementById('poi-loader').classList.remove('hidden');
 
-            // Excludes non-public/private facilities via ["access"!~"private|no"]
             const overpassQuery = `
                 [out:json][timeout:60][bbox:35.0,-83.0,36.5,-78.0];
                 (
@@ -196,12 +198,14 @@
                     } catch(e) {}
                     
                     document.getElementById('status').innerText = "All stops loaded successfully.";
-                    processAndRenderPOIs(data.elements);
+                    rawPoiDataMemory = data.elements;
+                    processAndRenderPOIs(rawPoiDataMemory);
                 })
                 .catch(err => {
                     document.getElementById('poi-loader').classList.add('hidden');
                     document.getElementById('status').innerText = "Stops active (Local Demo Mode)";
-                    processAndRenderPOIs(FALLBACK_POI_DATABASE);
+                    rawPoiDataMemory = FALLBACK_POI_DATABASE;
+                    processAndRenderPOIs(rawPoiDataMemory);
                 });
         }
 
@@ -218,6 +222,7 @@
         }
 
         function processAndRenderPOIs(elements) {
+            // Remove existing markers from map array references
             allPoiMarkers.forEach(item => map.removeLayer(item.marker));
             allPoiMarkers = [];
 
@@ -238,22 +243,21 @@
                     if (distance < minDistanceMeters) minDistanceMeters = distance;
                 }
 
-                // 12000 meters ~ 7.45 miles (As-the-crow-flies 15-minute buffer limit)
-                if (minDistanceMeters > 12000) return;
+                // Checked evaluation against the active buffer variable constraint
+                if (minDistanceMeters > activeBufferMeters) return;
 
                 const tags = element.tags || {};
                 const category = getPoiCategory(tags);
                 const config = poiConfigs[category] || poiConfigs['food'];
 
-                // Dynamically display playground custom name, or clear structural fallback
                 let name = tags.name || config.name;
-                if (category === 'playground' && tags.name) {
-                    name = tags.name; // Ensures specific playground names show if mapped
-                }
-
                 let hours = tags.opening_hours || "Hours not listed (Check online)";
                 let description = tags.description || (category === 'playground' ? `Public community playground facility.` : `Verified location off the highway corridor.`);
                 let imageUrl = tags.image || config.img;
+
+                // iOS Navigation Action URLs
+                const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
+                const streetViewUrl = `https://www.google.com/maps/?q=&layer=c&cbll=${lat},${lon}`;
 
                 const popupContent = `
                     <div class="max-w-[220px] font-sans p-0.5">
@@ -263,6 +267,10 @@
                         <div class="border-t border-gray-100 pt-1.5 mt-1.5">
                             <span class="text-[9px] uppercase font-bold text-gray-400 block tracking-wider">Hours</span>
                             <p class="text-xs text-gray-700 italic font-medium">${hours}</p>
+                        </div>
+                        <div class="mt-3 flex flex-col gap-1.5">
+                            <a href="${appleMapsUrl}" target="_blank" class="block text-center bg-blue-600 text-white text-[11px] font-bold py-2.5 rounded-xl shadow-sm active:bg-blue-700 min-h-[36px]">🗺️ Route in Apple Maps</a>
+                            <a href="${streetViewUrl}" target="_blank" class="block text-center bg-gray-900 text-white text-[11px] font-bold py-2.5 rounded-xl shadow-sm active:bg-black min-h-[36px]">👁️ View Street View</a>
                         </div>
                     </div>
                 `;
@@ -278,6 +286,14 @@
                 }
             });
         }
+
+        // Buffer Dropdown Switch Execution Engine
+        document.getElementById('buffer-select').addEventListener('change', (e) => {
+            activeBufferMeters = parseInt(e.target.value);
+            if (rawPoiDataMemory.length > 0) {
+                processAndRenderPOIs(rawPoiDataMemory);
+            }
+        });
 
         // Horizontal Slider Touch Event Delegation Routing
         document.getElementById('filter-bar').addEventListener('click', (e) => {
@@ -316,12 +332,12 @@
             if (isTracking) {
                 if (watchId) navigator.geolocation.clearWatch(watchId);
                 isTracking = false;
-                geoBtn.innerText = "📍 Track Me";
-                geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm min-h-[44px]";
+                geoBtn.innerText = "📍 Track";
+                geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]";
             } else {
-                if (!navigator.geolocation) { alert("GPS hardware module missing."); return; }
+                if (!navigator.geolocation) { alert("GPS module missing."); return; }
                 geoBtn.innerText = "🛑 Stop";
-                geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm min-h-[44px]";
+                geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]";
                 isTracking = true;
 
                 watchId = navigator.geolocation.watchPosition(
@@ -337,8 +353,8 @@
                     (err) => {
                         alert("Enable location access rules inside your iOS Safari Privacy settings panel.");
                         isTracking = false;
-                        geoBtn.innerText = "📍 Track Me";
-                        geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm min-h-[44px]";
+                        geoBtn.innerText = "📍 Track";
+                        geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]";
                     },
                     { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
                 );
