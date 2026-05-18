@@ -81,22 +81,25 @@
                 <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent hidden"></div>
                 <p id="status" class="text-xs font-bold text-gray-700 truncate">System ready. Enter route parameters above.</p>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0">
+            <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[70%] sm:max-w-none">
                 <select id="buffer-select" class="bg-white text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
                     <option value="4000" selected>⏱️ 5 Min Buffer</option>
                     <option value="12000">⏱️ 15 Min Buffer</option>
                     <option value="24000">⏱️ 30 Min Buffer</option>
                 </select>
-                <button id="theme-toggle-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] active:bg-gray-100">
+                <button id="theme-toggle-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] active:bg-gray-100 whitespace-nowrap">
                     🌙 Mode
                 </button>
-                <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all">
-                    💾 Save to Master Repo
+                <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">
+                    💾 Save Repo
                 </button>
-                <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px]">
+                <button id="reset-fav-cache-btn" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">
+                    🔄 Reset Fav Cache
+                </button>
+                <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">
                     🔍 Inputs
                 </button>
-                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]">
+                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">
                     🚗 Track
                 </button>
             </div>
@@ -188,6 +191,7 @@
             });
         }
 
+        // Hoisted safely to prevent race condition crashes
         function createRouteMarkerIcon(label, classes) {
             return L.divIcon({
                 html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold w-8 h-8 text-sm border-2 ${classes}">${label}</div>`,
@@ -456,9 +460,9 @@
         const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
         const mathWorker = new Worker(URL.createObjectURL(blobObj));
 
-        // =========================================================================
-        // --- PHASE 5: OPERATIONAL LAYER DATA STREAMS & VISUAL PROPAGATIONS ---
-        // =========================================================================
+        // ==========================================
+        // --- PHASE 5: OPERATIONAL LAYER HANDLERS --
+        // ==========================================
         window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
             let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             let uniqueId = `poi_${lat}_${lon}`;
@@ -480,7 +484,6 @@
             if (routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
         };
 
-        // --- UPGRADE: Explicitly tracks global repo matches to show targeted deletion buttons ---
         window.triggerCloudDeletionTicketPipeline = function(lat, lon) {
             if (confirm("This favorite is stored permanently in the repository. Would you like to launch a secure background request to delete it for everyone?")) {
                 let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
@@ -531,7 +534,6 @@
                 const streetViewUrl = `http://googleusercontent.com/maps.google.com/maps?layer=c&cbll=${lat},${lon}`;
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
 
-                // Verify if point belongs to master repo matrix or local sandbox
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
                 let isCurrentlyStarredLocally = localStarred.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
                 
@@ -707,6 +709,7 @@
         async function runDataExecutionLayer(masterCat) {
             if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
 
+            // --- UPGRADE: Combined lazy asset initialization model hook feeds local maps cleanly ---
             if (!localJsonMemory) {
                 updateInlineStatus("Ingesting master database layer...", true);
                 try {
@@ -801,12 +804,23 @@
             triggerToast("GitHub payload prepared! Click 'Submit new issue' on the next page. 🚀");
         }
 
-        async function loadMasterRepoFavoritesOnBoot() {
+        // --- UPGRADE: Optimized baseline boot constructor safely appends cache busters on force update triggers ---
+        async function loadMasterRepoFavoritesOnBoot(forceRefresh = false) {
             try {
-                const response = await fetch('favorites.json');
+                const querySuffix = forceRefresh ? `?_=${Date.now()}` : '';
+                
+                if (forceRefresh) {
+                    updateInlineStatus("Forcing global baseline sync...", true);
+                    const resBrands = await fetch(`us_brands.json${querySuffix}`);
+                    if (resBrands.ok) { localJsonMemory = await resBrands.json(); }
+                }
+
+                const response = await fetch(`favorites.json${querySuffix}`);
                 if (response.ok) { repoFavoritesMemory = await response.json(); }
             } catch (e) { console.log("No favorites file initialized yet."); }
+            
             renderGlobalPermanentStars(); 
+            if (forceRefresh && routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
         }
 
         function runCachedAutocompleteSearch(inputElement, dropdownElement) {
@@ -955,6 +969,13 @@
             mapLayersPool[mapStyleMode].addTo(map);
             e.target.innerText = mapStyleMode === 'light' ? "🌙 Dark" : "☀️ Light";
             triggerToast(`Map skin changed to ${mapStyleMode} mode layouts.`);
+        });
+
+        // Connect cache buster button to engine loop hooks securely
+        document.getElementById('reset-fav-cache-btn').addEventListener('click', async () => {
+            triggerToast("Bypassing server data caching wrappers...", 1500);
+            await loadMasterRepoFavoritesOnBoot(true);
+            triggerToast("Server repositories synchronized successfully! 🔄");
         });
 
         function handleMasterCategorySelection(element) {
