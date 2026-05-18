@@ -5,14 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>High-Performance Hybrid Route Explorer</title>
     
-    <!-- Tailwind CSS for modern mobile UI components -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
-    <!-- Leaflet Map CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <!-- Leaflet Routing Machine CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
@@ -55,10 +52,8 @@
 </head>
 <body class="flex flex-col justify-end">
 
-    <!-- Top Collapsible Search & Filter HUD Panel -->
     <div class="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col transition-all duration-300">
         
-        <!-- Input Row -->
         <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div class="relative">
@@ -71,13 +66,12 @@
                 </div>
             </div>
             <div class="flex gap-2">
-                <button id="route-btn" class="flex-1 bg-gray-900 active:bg-black text-white text-xs font-bold py-2 px-4 rounded-xl min-h-[44px] shadow-sm transition-all flex items-center justify-center gap-1">
+                <button id="route-btn" class="w-full bg-gray-900 active:bg-black text-white text-xs font-bold py-2 px-4 rounded-xl min-h-[44px] shadow-sm transition-all flex items-center justify-center gap-1">
                     🗺️ Calculate Dynamic Route
                 </button>
             </div>
         </div>
 
-        <!-- System HUD Header Status Row -->
         <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-gray-100 bg-gray-50/50">
             <div class="flex items-center gap-2 flex-1 min-w-0">
                 <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent hidden"></div>
@@ -85,9 +79,9 @@
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
                 <select id="buffer-select" class="bg-white text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
-                    <option value="4000" selected>⏱️ 5 Min</option>
-                    <option value="12000">⏱️ 15 Min</option>
-                    <option value="24000">⏱️ 30 Min</option>
+                    <option value="4000" selected>⏱️ 5 Min Buffer</option>
+                    <option value="12000">⏱️ 15 Min Buffer</option>
+                    <option value="24000">⏱️ 30 Min Buffer</option>
                 </select>
                 <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px]">
                     🔍 Inputs
@@ -98,7 +92,6 @@
             </div>
         </div>
 
-        <!-- Row 3: Master Filter Categories -->
         <div id="master-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-1.5 border-t border-gray-100">
             <button data-cat="playground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
             <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
@@ -107,18 +100,16 @@
             <button data-cat="tourism" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
         </div>
 
-        <!-- Row 4: Contextual Dynamic Sub-menu Slider Container -->
         <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden"></div>
     </div>
 
-    <!-- Map Canvas Element -->
     <div id="map"></div>
 
-    <!-- Floating Toast Notification Stack Container -->
     <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
 
     <script>
         const MAP_INITIAL_CENTER = [35.7796, -78.6382]; 
+        const CACHE_PREFIX = 'route_hybrid_v12_';
         const OVERPASS_MIRRORS = [
             "https://overpass-api.de/api/interpreter",
             "https://overpass.kumi.systems/api/interpreter",
@@ -135,26 +126,30 @@
             tourism_dogpark: { label: '🐕', bg: 'bg-violet-600 border-violet-200 text-white', name: 'Dog Park', query: 'node["leisure"="dog_park"];', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=300&q=80' }
         };
 
+        const cleanBrandNames = {
+            "sheetz": "Sheetz", "murphyexpress": "Murphy Express", "bucees": "Buc-ee's",
+            "costcogas": "Costco Gasoline", "wawa": "Wawa", "circlek": "Circle K",
+            "mcdonalds": "McDonald's", "wendys": "Wendy's", "chickfila": "Chick-fil-A",
+            "chipotle": "Chipotle", "jerseymikes": "Jersey Mike's", "raisingcanes": "Raising Cane's"
+        };
+
         const subMenuDefinitions = {
             playground: [{ id: 'all', label: 'All Public Parks' }],
             gas: [{ id: 'all', label: 'All Selected Chains' }, { id: 'unl87', label: 'UNL 87 Listed' }, { id: 'unl88', label: 'UNL 88 / E15' }],
-            food: [{ id: 'all', label: 'All Brands' }, { id: 'raisingcanes', label: "Cane's" }, { id: 'chickfila', label: 'Chick-fil-A' }, { id: 'mcdonalds', label: "McDonald's" }, { id: 'jerseymikes', label: "Jersey Mike's" }],
+            food: [{ id: 'all', label: 'All Brands' }, { id: 'raisingcanes', label: "Raising Cane's" }, { id: 'chickfila', label: 'Chick-fil-A' }, { id: 'mcdonalds', label: "McDonald's" }, { id: 'jerseymikes', label: "Jersey Mike's" }],
             highway: [{ id: 'highway_rest', label: 'Highway Rest Areas' }, { id: 'highway_toilets', label: 'Standalone Restrooms' }],
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
 
         let allPoiMarkers = [];
-        let localBrandsMemory = null; // Instantiated once via local us_brands.json file
-        let liveDynamicMemory = [];    // Populated asynchronously via lazy rolling corridor window loops
+        let localJsonMemory = null; 
+        let liveOverpassMemory = [];   
         let routeLineCoordinates = [];
         let userMarker = null;
         let currentMasterCat = null;
         let currentSubFilter = 'all';
         let activeBufferMeters = 4000; 
-        let currentTrackingIndex = 0;   // Real-time tracking index reference along polyline geometry
-        let lastLazyLoadedIndex = -1;  // Tracks the polyline point where the last corridor sweep fired
 
-        // Canvas graphics optimization layer instantiated natively
         const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
@@ -167,7 +162,7 @@
             });
         };
 
-        // Embedded Web Worker Pipeline blob handling matrix calculations off-thread safely
+        // Off-thread parsing engine logic configuration
         const workerBlobCode = `
             function haversineDist(lat1, lon1, lat2, lon2) {
                 const R = 6371000;
@@ -178,22 +173,13 @@
             }
 
             self.onmessage = function(e) {
-                const { elements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter, isLocalJson } = e.data;
-                const validMatches = [];
+                const { localElements, liveElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
+                const finalMatchesMap = new Map();
 
-                elements.forEach(el => {
-                    const lat = el.lat || (el.center && el.center.lat);
-                    const lon = el.lon || (el.center && el.center.lon);
-                    if (!lat || !lon) return;
-
-                    const tags = el.tags || {};
-                    let concreteCat = el.concreteCat || 'excluded';
-
-                    // Parse categories depending on data source profiles
-                    if (isLocalJson) {
-                        concreteCat = el.c; // Map native short keys from local database structural schema
-                        if (currentMasterCat !== concreteCat) return;
-                        
+                // Process internal primary JSON elements first
+                if (localElements) {
+                    localElements.forEach(el => {
+                        if (el.c !== currentMasterCat) return;
                         if (currentSubFilter !== 'all') {
                             if (currentMasterCat === 'gas') {
                                 if (currentSubFilter === 'unl87' && el.g87 !== 1) return;
@@ -202,30 +188,58 @@
                                 if (el.b !== currentSubFilter) return;
                             }
                         }
-                    } else {
-                        // Enforce validation bounds on incoming overpass objects
+
+                        let minD = Infinity;
+                        for (let j = 0; j < targetsSlice.length; j++) {
+                            const d = haversineDist(el.lat, el.lon, targetsSlice[j].lat, targetsSlice[j].lng);
+                            if (d < minD) minD = d;
+                        }
+
+                        if (minD <= activeBufferMeters) {
+                            const payload = {
+                                id: "local_" + el.lat + "_" + el.lon, lat: el.lat, lon: el.lon,
+                                name: el.n, brand: el.b, category: el.c, hours: el.h || "Hours not listed",
+                                desc: el.d || "", minD: minD, isLocal: true, g87: el.g87, g88: el.g88
+                            };
+                            finalMatchesMap.set(payload.id, payload);
+                        }
+                    });
+                }
+
+                // Append live tracking updates cleanly as enrichment fallback mechanisms
+                if (liveElements) {
+                    liveElements.forEach(el => {
+                        const lat = el.lat || (el.center && el.center.lat);
+                        const lon = el.lon || (el.center && el.center.lon);
+                        if (!lat || !lon) return;
+
+                        let concreteCat = el.concreteCat || 'excluded';
                         if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
                         if (currentMasterCat === 'tourism' && concreteCat !== 'tourism_viewpoint' && concreteCat !== 'tourism_dogpark') return;
                         if (currentMasterCat === 'playground' && concreteCat !== 'playground') return;
-                    }
 
-                    // Perform targeted on-worker distance checks
-                    let minD = Infinity;
-                    for (let j = 0; j < targetsSlice.length; j++) {
-                        const d = haversineDist(lat, lon, targetsSlice[j].lat, targetsSlice[j].lng);
-                        if (d < minD) minD = d;
-                    }
+                        let minD = Infinity;
+                        for (let j = 0; j < targetsSlice.length; j++) {
+                            const d = haversineDist(lat, lon, targetsSlice[j].lat, targetsSlice[j].lng);
+                            if (d < minD) minD = d;
+                        }
 
-                    if (minD <= activeBufferMeters) {
-                        el.computedCat = concreteCat;
-                        el.minD = minD;
-                        validMatches.push(el);
-                    }
-                });
+                        if (minD <= activeBufferMeters) {
+                            const uniqueKey = "live_" + lat + "_" + lon;
+                            // Ensure duplicate data matching values do not override cached structures
+                            if (!finalMatchesMap.has(uniqueKey)) {
+                                finalMatchesMap.set(uniqueKey, {
+                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name,
+                                    brand: concreteCat, category: currentMasterCat, hours: el.tags.opening_hours || "Hours not listed",
+                                    desc: el.tags.description || "", minD: minD, isLocal: false
+                                });
+                            }
+                        }
+                    });
+                }
 
-                // Sort payload based on distance matrix rules explicitly
-                validMatches.sort((a, b) => a.minD - b.minD);
-                self.postMessage({ validMatches, isLocalJson });
+                const sortedMatches = Array.from(finalMatchesMap.values()).sort((a, b) => a.minD - b.minD);
+                self.postMessage({ sortedMatches });
             };
         `;
         const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
@@ -251,26 +265,6 @@
             else spinner.classList.add('hidden');
         }
 
-        let routingControl = L.Routing.control({
-            show: false, addWaypoints: false, draggableWaypoints: false,
-            createMarker: (i, wp) => L.marker(wp.latLng, { icon: createCustomIcon(i === 0 ? '🏁' : '⛰️', 'bg-black border-white text-white font-bold', false) })
-        }).addTo(map);
-
-        routingControl.on('routesfound', function(e) {
-            routeLineCoordinates = e.routes[0].coordinates;
-            document.getElementById('search-container').classList.add('hidden');
-            
-            liveDynamicMemory = [];
-            allPoiMarkers.forEach(m => map.removeLayer(m.marker));
-            allPoiMarkers = [];
-            currentTrackingIndex = 0;
-            lastLazyLoadedIndex = -1;
-            hideSubMenu();
-            
-            updateInlineStatus("Route ready. Tap filters below.");
-            triggerToast("Hybrid tracking engine active. Tap categories to browse.");
-        });
-
         function initAutocomplete(inputId, dropdownId) {
             const input = document.getElementById(inputId);
             const dropdown = document.getElementById(dropdownId);
@@ -294,21 +288,25 @@
                         data.forEach(item => {
                             let tokens = []; const addr = item.address;
                             if (addr) {
-                                const line1 = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
-                                const city = addr.city || addr.town || addr.village || addr.suburb || '';
-                                const state = addr.state || '';
-                                const zip = addr.postcode || '';
-                                if (line1) tokens.push(line1);
-                                if (city) tokens.push(city);
-                                if (state) tokens.push(state);
-                                if (zip) tokens.push(zip);
+                                // Explicit structural extraction parameters ensuring Address, City, State, Zip Code line format
+                                const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
+                                const cityNode = addr.city || addr.town || addr.village || addr.suburb || '';
+                                const stateNode = addr.state || '';
+                                const zipNode = addr.postcode || '';
+
+                                if (roadLine) tokens.push(roadLine);
+                                if (cityNode) tokens.push(cityNode);
+                                if (stateNode) tokens.push(stateNode);
+                                if (zipNode) tokens.push(zipNode);
                             }
-                            const cleanString = tokens.length > 0 ? tokens.join(', ') : item.display_name.split(',').slice(0, 3).join(',');
+                            
+                            const cleanOutputString = tokens.length > 0 ? tokens.join(', ') : item.display_name.split(',').slice(0, 3).join(',');
+                            
                             const option = document.createElement('div');
                             option.className = "px-3 py-2.5 hover:bg-gray-100 active:bg-gray-200 border-b border-gray-100 last:border-0 cursor-pointer truncate text-gray-700 font-medium";
-                            option.innerText = cleanString;
+                            option.innerText = cleanOutputString;
                             option.addEventListener('click', () => {
-                                input.value = cleanString;
+                                input.value = cleanOutputString;
                                 input.dataset.lat = item.lat; input.dataset.lon = item.lon;
                                 dropdown.classList.add('hidden');
                             });
@@ -324,164 +322,136 @@
 
         async function fetchWithMirrorFailover(queryPayload) {
             for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
-                const endpoint = OVERPASS_MIRRORS[i];
                 try {
-                    const response = await fetch(endpoint + "?data=" + encodeURIComponent(queryPayload));
+                    const response = await fetch(OVERPASS_MIRRORS[i] + "?data=" + encodeURIComponent(queryPayload));
                     if (response.ok) return await response.json();
-                } catch (err) { console.warn(`Mirror ${endpoint} congested. Escalating...`); }
+                } catch (err) { console.warn("Mirror link delayed. Advancing routing parameters."); }
             }
-            throw new Error("All public overpass channels overloaded.");
+            throw new Error("All data instances congested.");
         }
 
-        // --- THE HYBRID SPLIT: Core processing routing split framework ---
-        async function loadHybridCategoryPipeline(masterCat) {
-            if (routeLineCoordinates.length === 0) { alert("Calculate a route first."); return; }
+        // Execution Core Strategy: Pull internal database asset data files first, then sweep back live fallbacks on demand
+        async function runDataExecutionLayer(masterCat) {
+            if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
 
-            // Split execution path based on source type profiles
-            if (masterCat === 'gas' || masterCat === 'food') {
-                // Type Profile 1: Ingest from local high-speed database file directly
-                if (!localBrandsMemory) {
-                    updateInlineStatus("Ingesting nationwide brands database...", true);
-                    try {
-                        const response = await fetch('us_brands.json');
-                        localBrandsMemory = await response.json();
-                        triggerToast("Successfully cached US brands base file locally.");
-                    } catch (err) {
-                        updateInlineStatus("Local database missing.");
-                        triggerToast("Failed to load us_brands.json from host repository root.");
-                        return;
-                    }
+            // Ingest core base file instantly if unallocated inside active execution blocks
+            if (!localJsonMemory) {
+                updateInlineStatus("Ingesting master database layer...", true);
+                try {
+                    const res = await fetch('us_brands.json');
+                    localJsonMemory = await res.json();
+                    triggerToast("Master database file loaded completely.");
+                } catch (err) {
+                    console.error("Local data acquisition failed. Defaulting to live channels.", err);
+                    localJsonMemory = [];
                 }
-                updateInlineStatus("Analyzing static database elements...");
-                triggerOffThreadFiltering(localBrandsMemory, true);
-            } else {
-                // Type Profile 2: Lazy load rolling corridor segments on-demand dynamically using true polyline "snake" query
-                await evaluateAndTriggerRollingCorridorSweep(masterCat, false);
+            }
+
+            dispatchOffThreadAnalysis();
+
+            // Dynamic Fallback Check: Fire background serverless query checks to capture missed elements live
+            if (!cachedCategoriesFetched.has(masterCat)) {
+                await fetchLiveBackupEnrichment(masterCat);
             }
         }
 
-        // --- LAZY LOADER CORRIDOR ENGINE: Fetches 30-mile slices along true polyline snakes ---
-        async function evaluateAndTriggerRollingCorridorSweep(masterCat, isScrollAdvance = false) {
-            if (isScrollAdvance && lastLazyLoadedIndex === currentTrackingIndex) return;
+        async function fetchLiveBackupEnrichment(masterCat) {
+            updateInlineStatus("Sweeping live channels for updates...", true);
 
-            // Downsample coordinates map to sample roughly 30 miles ahead (~48,000 meters)
-            // Assuming average route point interval spacing properties of ~120 meters
-            const pointsIn30Miles = 400; 
-            const endIndex = Math.min(currentTrackingIndex + pointsIn30Miles, routeLineCoordinates.length);
-            
-            const sliceChunk = routeLineCoordinates.slice(currentTrackingIndex, endIndex);
-            if (sliceChunk.length < 5) return;
+            let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
+            routeLineCoordinates.forEach(c => {
+                if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
+                if (c.lat > maxLat) maxLat = c.lat; if (c.lng > maxLon) maxLon = c.lng;
+            });
 
-            updateInlineStatus(`Lazy-loading upcoming corridor slice window...`, true);
+            const south = (minLat - 0.25).toFixed(4); const west = (minLon - 0.25).toFixed(4);
+            const north = (maxLat + 0.25).toFixed(4); const east = (maxLon + 0.25).toFixed(4);
 
-            // Compress slice into an optimized string of coordinates pairs for the Overpass API snake query
-            let snakePointsStr = "";
-            const sampleSkipRate = 12; // High-density downsampling to bypass string length limits
-            for (let i = 0; i < sliceChunk.length; i += sampleSkipRate) {
-                snakePointsStr += `${sliceChunk[i].lat} ${sliceChunk[i].lng} `;
-            }
-            // Ensure tail end is hard-appended
-            snakePointsStr += `${sliceChunk[sliceChunk.length - 1].lat} ${sliceChunk[sliceChunk.length - 1].lng}`;
-
-            let targetedQueries = [];
-            if (masterCat === 'highway' || masterCat === 'tourism') {
-                subMenuDefinitions[masterCat].forEach(sub => {
-                    // Inject structural around corridor parameter natively
-                    const cleanQ = categoryConfigs[sub.id].query.replace(/\];/g, `](around:4000, ${snakePointsStr.trim()});`);
-                    targetedQueries.push(cleanQ);
-                });
-            } else {
-                const cleanQ = categoryConfigs[masterCat].query.replace(/\];/g, `](around:4000, ${snakePointsStr.trim()});`);
-                targetedQueries.push(cleanQ);
+            let queryTokens = [];
+            if (masterCat === 'highway' || masterCat === 'tourism' || masterCat === 'playground') {
+                const subDefs = subMenuDefinitions[masterCat];
+                subDefs.forEach(sd => { if (categoryConfigs[sd.id]) queryTokens.push(categoryConfigs[sd.id].query); });
+                if (masterCat === 'playground') queryTokens.push(categoryConfigs['playground'].query);
+            } else if (masterCat === 'gas') {
+                queryTokens.push('node["amt"]~"fuel";'); // Standard raw identifier backup values
+            } else if (masterCat === 'food') {
+                queryTokens.push('node["amenity"="fast_food"];');
             }
 
             try {
-                const rawUnionQueryStr = targetedQueries.join('');
-                const compositeQuery = `[out:json][timeout:30];(${rawUnionQueryStr});out center;`;
+                const unionString = queryTokens.join('');
+                const query = `[out:json][timeout:30][bbox:${south},${west},${north},${east}];(${unionString});out center;`;
+                const response = await fetchWithMirrorFailover(query);
                 
-                const responseData = await fetchWithMirrorFailover(compositeQuery);
-                const uniqueIds = new Set(liveDynamicMemory.map(el => el.id));
-
-                if (responseData && responseData.elements) {
-                    responseData.elements.forEach(el => {
-                        if (!uniqueIds.has(el.id)) {
-                            uniqueIds.add(el.id);
-                            // Pre-compute classification bindings to expedite thread evaluation pipelines
-                            if (el.tags.leisure === 'playground') el.concreteCat = 'playground';
-                            else if (el.tags.highway === 'rest_area') el.concreteCat = 'highway_rest';
-                            else if (el.tags.amenity === 'toilets') el.concreteCat = 'highway_toilets';
-                            else if (el.tags.tourism === 'viewpoint') el.concreteCat = 'tourism_viewpoint';
-                            else if (el.tags.leisure === 'dog_park') el.concreteCat = 'tourism_dogpark';
-                            
-                            liveDynamicMemory.push(el);
-                        }
+                if (response && response.elements) {
+                    response.elements.forEach(el => {
+                        if (el.tags.leisure === 'playground') el.concreteCat = 'playground';
+                        else if (el.tags.highway === 'rest_area') el.concreteCat = 'highway_rest';
+                        else if (el.tags.amenity === 'toilets') el.concreteCat = 'highway_toilets';
+                        else if (el.tags.tourism === 'viewpoint') el.concreteCat = 'tourism_viewpoint';
+                        else if (el.tags.leisure === 'dog_park') el.concreteCat = 'tourism_dogpark';
+                        liveOverpassMemory.push(el);
                     });
                 }
 
-                lastLazyLoadedIndex = currentTrackingIndex;
-                updateInlineStatus("Corridor slice updated.");
-                triggerToast("Dynamic 30-mile rolling window synced safely.");
-                triggerOffThreadFiltering(liveDynamicMemory, false);
-
+                cachedCategoriesFetched.add(masterCat);
+                dispatchOffThreadAnalysis();
             } catch (err) {
-                updateInlineStatus("Corridor channel error.");
-                console.error(err);
+                console.warn("Live channels congested. Rendering data entirely off static base maps arrays.");
+                updateInlineStatus("Stops active.");
             }
         }
 
-        function triggerOffThreadFiltering(dataset, isLocalJsonProfile) {
+        function dispatchOffThreadAnalysis() {
             const sliceRate = 45; const targetsSlice = [];
             for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { targetsSlice.push(routeLineCoordinates[i]); }
             if (routeLineCoordinates.length > 0) targetsSlice.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
 
             mathWorker.postMessage({
-                elements: dataset, targetsSlice: targetsSlice,
-                activeBufferMeters: activeBufferMeters, currentMasterCat: currentMasterCat, 
-                currentSubFilter: currentSubFilter, isLocalJson: isLocalJsonProfile
+                localElements: localJsonMemory, liveElements: liveOverpassMemory,
+                targetsSlice: targetsSlice, activeBufferMeters: activeBufferMeters,
+                currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
             });
         }
 
-        // Handle off-thread calculation matrix outputs
         mathWorker.onmessage = function(e) {
-            const { validMatches, isLocalJson } = e.data;
-            
+            const { sortedMatches } = e.data;
             allPoiMarkers.forEach(item => map.removeLayer(item.marker));
             allPoiMarkers = [];
             const isLarge = map.getZoom() > 13;
 
-            validMatches.forEach(el => {
-                let lat, lon, name, hours, desc, concreteCat, brandCode;
+            sortedMatches.forEach(el => {
+                const lat = el.lat; const lon = el.lon;
+                const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
                 
-                if (isLocalJson) {
-                    lat = el.lat; lon = el.lon; name = el.n; hours = el.h || "Hours not listed";
-                    desc = el.d || "Verified chain store location."; concreteCat = el.c; brandCode = el.b;
-                } else {
-                    lat = el.lat || (el.center && el.center.lat); lon = el.lon || (el.center && el.center.lon);
-                    const tags = el.tags || {}; concreteCat = el.computedCat;
-                    name = tags.name || categoryConfigs[concreteCat].name;
-                    hours = tags.opening_hours || "Hours not listed (Check online)";
-                    desc = tags.description || `Verified public facility mapped along path corridor.`;
-                    brandCode = concreteCat;
-                }
+                let popupHeadingName = cleanLabelBrand; 
+                let popupHours = el.hours || "Hours not listed";
+                let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
+                
+                // Fallback styling configurations
+                let visualCatKey = el.category;
+                if (el.brand === 'highway_rest' || el.brand === 'highway_toilets') visualCatKey = el.brand;
+                if (el.brand === 'tourism_viewpoint' || el.brand === 'tourism_dogpark') visualCatKey = el.brand;
 
-                const config = categoryConfigs[concreteCat] || categoryConfigs['food'];
+                const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'];
 
-                if (concreteCat === 'gas' && isLocalJson) {
-                    desc = `<div class="text-[10px] bg-gray-50 p-1.5 rounded-lg border border-gray-100 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
+                if (el.category === 'gas' && el.isLocal) {
+                    popupDesc = `<div class="text-[10px] bg-gray-50 p-1.5 rounded-lg border border-gray-100 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
                 }
 
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
                 const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(name)}`;
+                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + ' ' + (el.name || ''))}`;
 
                 const popupContent = `
                     <div class="w-full font-sans p-0.5">
-                        <img src="${config.img}" class="w-full h-24 object-cover rounded-lg mb-2 shadow-sm" onerror="this.style.display='none'">
-                        <h3 class="text-xs font-bold text-gray-900 truncate">${name}</h3>
-                        <div class="text-[11px] text-gray-500 leading-tight my-1">${desc}</div>
+                        <img src="${uiConfig.img}" class="w-full h-24 object-cover rounded-lg mb-2 shadow-sm" onerror="this.style.display='none'">
+                        <h3 class="text-xs font-bold text-gray-900 truncate">${popupHeadingName}</h3>
+                        ${el.isLocal && el.category !== 'gas' ? `<p class="text-[10px] text-gray-400 font-semibold leading-none mb-1">${el.name}</p>` : ''}
+                        <div class="text-[11px] text-gray-500 leading-tight my-1">${popupDesc}</div>
                         <div class="border-t border-gray-100 pt-1.5 mt-1.5">
                             <span class="text-[9px] uppercase font-bold text-gray-400 block tracking-wider">Hours</span>
-                            <p class="text-xs text-gray-700 italic font-medium truncate">${hours}</p>
+                            <p class="text-xs text-gray-700 italic font-medium truncate">${popupHours}</p>
                         </div>
                         <div class="mt-3 flex flex-col gap-1.5">
                             <a href="${appleMapsUrl}" target="_blank" class="block text-center bg-blue-600 text-white text-[11px] font-bold py-2 rounded-xl min-h-[38px] flex items-center justify-center pointer-events-auto shadow-sm">🗺️ Route in Apple Maps</a>
@@ -491,23 +461,29 @@
                     </div>
                 `;
 
-                const marker = L.marker([lat, lon], { icon: createCustomIcon(config.label, config.bg, isLarge) })
+                const marker = L.marker([lat, lon], { icon: createCustomIcon(uiConfig.label, uiConfig.bg, isLarge) })
                     .bindPopup(popupContent, { 
                         className: 'custom-popup', autoPan: true,
                         autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 250
                     });
 
-                allPoiMarkers.push({ marker: marker, category: brandCode });
+                allPoiMarkers.push({ marker: marker, category: el.brand });
                 marker.addTo(map);
             });
 
             updateInlineStatus("Stops active.");
+            triggerToast(`Rendered ${sortedMatches.length} dynamic points sorted cleanly via distance matrices.`);
         };
 
         map.on('zoomend', () => {
             const isLarge = map.getZoom() > 13;
             allPoiMarkers.forEach(item => {
-                const config = categoryConfigs[item.category] || categoryConfigs['food'] || categoryConfigs['gas'];
+                let checkKey = item.category;
+                if (categoryConfigs[checkKey] === undefined) {
+                    if (['raisingcanes','chickfila','mcdonalds','jerseymikes','wendys','chipotle'].includes(checkKey)) checkKey = 'food';
+                    else if (['sheetz','murphyexpress','bucees','costcogas','wawa','circlek'].includes(checkKey)) checkKey = 'gas';
+                }
+                const config = categoryConfigs[checkKey] || categoryConfigs['food'];
                 item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
             });
         });
@@ -516,7 +492,7 @@
             document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
             element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
             currentMasterCat = element.getAttribute('data-cat'); currentSubFilter = 'all'; 
-            generateSubMenuUI(currentMasterCat); loadHybridCategoryPipeline(currentMasterCat);
+            generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
         }
 
         function generateSubMenuUI(catId) {
@@ -541,57 +517,18 @@
             const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
             document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]");
             subPill.className = "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
-            currentSubFilter = subPill.getAttribute('data-sub'); 
-            if (currentMasterCat === 'gas' || currentMasterCat === 'food') triggerOffThreadFiltering(localBrandsMemory, true);
-            else triggerOffThreadFiltering(liveDynamicMemory, false);
+            currentSubFilter = subPill.getAttribute('data-sub'); dispatchOffThreadAnalysis();
         });
 
-        document.getElementById('buffer-select').addEventListener('change', (e) => { 
-            activeBufferMeters = parseInt(e.target.value); 
-            if (currentMasterCat === 'gas' || currentMasterCat === 'food') { if(localBrandsMemory) triggerOffThreadFiltering(localBrandsMemory, true); }
-            else { if(liveDynamicMemory.length>0) triggerOffThreadFiltering(liveDynamicMemory, false); }
-        });
-        
+        document.getElementById('buffer-select').addEventListener('change', (e) => { activeBufferMeters = parseInt(e.target.value); if (localJsonMemory) dispatchOffThreadAnalysis(); });
         document.getElementById('toggle-search-btn').addEventListener('click', () => { document.getElementById('search-container').classList.toggle('hidden'); });
 
         document.getElementById('route-btn').addEventListener('click', async () => {
             const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input'); let startLatLng, endLatLng;
             if (startInput.dataset.lat && startInput.dataset.lon) { startLatLng = L.latLng(parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon)); }
             if (endInput.dataset.lat && endInput.dataset.lon) { endLatLng = L.latLng(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon)); }
-            if (!startLatLng || !endLatLng) { alert("Please tap a valid autocomplete selection result option first."); return; }
+            if (!startLatLng || !endLatLng) { alert("Select suggested autocomplete options first."); return; }
             routingControl.setWaypoints([startLatLng, endLatLng]);
-        });
-
-        // Tracking Engine with embedded sliding route index calculator hooks
-        const geoBtn = document.getElementById('geo-btn'); let isTracking = false, watchId = null;
-        geoBtn.addEventListener('click', () => {
-            if (isTracking) { if (watchId) navigator.geolocation.clearWatch(watchId); isTracking = false; geoBtn.innerText = "📍 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; }
-            else {
-                if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
-                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
-                watchId = navigator.geolocation.watchPosition((pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
-                    map.panTo([latitude, longitude]);
-
-                    // Calculate the user's current index position along the calculated route polyline line shape
-                    if (routeLineCoordinates.length > 0) {
-                        let minDistance = Infinity; let matchingIdx = currentTrackingIndex;
-                        for (let i = currentTrackingIndex; i < Math.min(currentTrackingIndex + 50, routeLineCoordinates.length); i++) {
-                            const d = map.distance([latitude, longitude], [routeLineCoordinates[i].lat, routeLineCoordinates[i].lng]);
-                            if (d < minDistance) { minDistance = d; matchingIdx = i; }
-                        }
-                        currentTrackingIndex = matchingIdx;
-
-                        // Continuous Lazy Loader Execution Threshold Check (~15 miles driven updates loop context window)
-                        if (currentMasterCat && currentMasterCat !== 'gas' && currentMasterCat !== 'food') {
-                            if (currentTrackingIndex - lastLazyLoadedIndex > 180) {
-                                evaluateAndTriggerRollingCorridorSweep(currentMasterCat, true);
-                            }
-                        }
-                    }
-                }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
-            }
         });
     </script>
 </body>
