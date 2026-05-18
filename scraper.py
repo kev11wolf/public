@@ -3,11 +3,9 @@ import json
 import time
 import random
 
-# A rotating pool of standard user browser headers to disguise the GitHub Action environment
 USER_AGENTS = [
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/605.1.15",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 ]
 
 OVERPASS_ENDPOINTS = [
@@ -51,9 +49,6 @@ def identify_clean_brand(tags):
     return None, None, None
 
 def generate_optimized_grids():
-    """Generates an optimized grid layer matrix across the Continental US.
-    Widening steps to 3.0x4.0 degrees scales total requests down to ~110 zones
-    for maximum processing velocity."""
     grids = []
     lat_start, lat_end = 24.0, 50.0
     lon_start, lon_end = -125.0, -66.0
@@ -77,26 +72,23 @@ def generate_national_database():
     seen_unique_coords = set()
     micro_zones = generate_optimized_grids()
     
-    print(f"🚀 Launching High-Velocity Database Compiler across {len(micro_zones)} consolidated zones...")
+    print(f"🚀 Launching Database Compiler across {len(micro_zones)} active zones...")
     
     for idx, zone in enumerate(micro_zones):
-        # Drop empty offshore water grids to protect pipeline speed metrics
         if zone['south'] < 29.0 and zone['west'] < -90.0: continue
         if zone['south'] > 45.0 and zone['west'] < -120.0: continue
 
+        # --- REFINED: Stripped raw apostrophes from regex queries to guarantee server compatibility ---
         query = f"""[out:json][timeout:15][bbox:{zone['south']},{zone['west']},{zone['north']},{zone['east']}];
-        (node["brand"~"Sheetz|Chipotle|Jersey Mike|McDonald's|Wendy's|Chick-fil-A|Raising Cane|Murphy Express|Buc-ee|Wawa|Circle K|Costco",i];
-         node["name"~"Sheetz|Chipotle|Jersey Mike|McDonald's|Wendy's|Chick-fil-A|Raising Cane|Murphy Express|Buc-ee|Wawa|Circle K|Costco",i];
+        (node["brand"~"Sheetz|Chipotle|Jersey Mike|McDonald|Wendy|Chick-fil-A|Raising Cane|Murphy Express|Buc-ee|Wawa|Circle K|Costco",i];
+         node["name"~"Sheetz|Chipotle|Jersey Mike|McDonald|Wendy|Chick-fil-A|Raising Cane|Murphy Express|Buc-ee|Wawa|Circle K|Costco",i];
          node["leisure"="playground"]["access"!~"private|no"];
          way["leisure"="playground"]["access"!~"private|no"];);out center;"""
 
-        # Shuffle mirror array on every pass to balance endpoint traffic loads dynamically
         active_mirrors_pool = list(OVERPASS_ENDPOINTS)
         random.shuffle(active_mirrors_pool)
-        
         responseData = None
         
-        # --- FAILOVER LOOP ENGINE: Switches servers instantly if a timeout is reached ---
         for server_url in active_mirrors_pool:
             custom_headers = {
                 "User-Agent": random.choice(USER_AGENTS),
@@ -104,18 +96,14 @@ def generate_national_database():
                 "Referer": "https://www.openstreetmap.org/"
             }
             try:
-                # Tight 18-second connection ceiling cuts stalled pipes immediately
                 res = requests.post(server_url, data={"data": query}, headers=custom_headers, timeout=18)
                 if res.status_code == 200:
                     responseData = res.json()
-                    break # Success! Break out of mirror loop early
-                elif res.status_code == 429:
-                    print(f"   Rate limit triggered on mirror [{server_url}]. Escalating to next fallback...")
+                    break
             except Exception:
-                continue # Silent failover jump to alternative node connection channel
+                continue
 
         if not responseData:
-            print(f"⚠️ Zone [{idx+1}/{len(micro_zones)}] skipped - All server mirrors currently unresponsive.")
             continue
 
         elements = responseData.get("elements", [])
@@ -159,14 +147,18 @@ def generate_national_database():
                 compiled_pois.append(poi_node)
                 seen_unique_coords.add(coord_fingerprint)
                 
-        # Tight cooling interval window
-        time.sleep(random.uniform(1.5, 3.0))
+        time.sleep(random.uniform(1.5, 2.5))
             
+    # --- CRITICAL SAFETY STOP: Blocks execution if database array returns empty to prevent accidental deletion ---
+    if len(compiled_pois) == 0:
+        print("❌ CRITICAL EXCEPTION: Compiled list returned 0 results. Aborting save sequence to safeguard database.")
+        return
+
     print(f"\n📦 Pipeline finished! Generated {len(compiled_pois)} total points of interest across the United States.")
     
     with open("us_brands.json", "w", encoding="utf-8") as file_write:
         json.dump(compiled_pois, file_write, indent=2)
-    print("💾 Process complete. 'us_brands.json' synced cleanly to main folder tree layout.")
+    print("💾 Process complete. 'us_brands.json' written successfully.")
 
 if __name__ == "__main__":
     generate_national_database()
