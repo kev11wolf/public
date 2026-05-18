@@ -31,7 +31,7 @@
         .safe-top { padding-top: env(safe-area-inset-top); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         
-        /* Force-remove text directions itinerary layout panels completely */
+        /* Force-remove text directions itinerary panels completely */
         .leaflet-routing-container, .leaflet-routing-error, .leaflet-right {
             display: none !important;
         }
@@ -157,10 +157,16 @@
         let currentMasterCat = null;
         let currentSubFilter = 'all';
         let activeBufferMeters = 4000; 
-        let cachedCategoriesFetched = new Set(); // Protects against redundant network sweeps per trip
+        let cachedCategoriesFetched = new Set(); 
 
         const map = L.map('map', { zoomControl: false, tap: true }).setView(MAP_INITIAL_CENTER, 8);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+        // --- HOISTED FIX: Icon Builder defined explicitly early so routing configuration can reference it instantly ---
+        const createCustomIcon = (label, classes) => L.divIcon({
+            html: `<div class="flex items-center justify-center w-8 h-8 rounded-full border-2 shadow-md text-sm ${classes}">${label}</div>`,
+            className: '', iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -10]
+        });
 
         function triggerToast(text, duration = 3000) {
             const container = document.getElementById('toast-container');
@@ -182,6 +188,7 @@
             else spinner.classList.add('hidden');
         }
 
+        // Initialize Routing Machine Engine
         let routingControl = L.Routing.control({
             show: false, addWaypoints: false, draggableWaypoints: false,
             createMarker: (i, wp) => L.marker(wp.latLng, { icon: createCustomIcon(i === 0 ? '🏁' : '⛰️', 'bg-black border-white text-white font-bold') })
@@ -191,7 +198,6 @@
             routeLineCoordinates = e.routes[0].coordinates;
             document.getElementById('search-container').classList.add('hidden');
             
-            // Clear prior states completely for the new trip configuration
             rawPoiDataMemory = [];
             cachedCategoriesFetched.clear();
             allPoiMarkers.forEach(m => map.removeLayer(m.marker));
@@ -202,7 +208,6 @@
             triggerToast("Route generated successfully. Options are locked to a 5-minute buffer by default.");
         });
 
-        // Clean Autocomplete Geocoder (Strips Counties/Regions/Countries via strict address parsing loops)
         function initAutocomplete(inputId, dropdownId) {
             const input = document.getElementById(inputId);
             const dropdown = document.getElementById(dropdownId);
@@ -255,7 +260,20 @@
         initAutocomplete('start-input', 'start-autocomplete');
         initAutocomplete('end-input', 'end-autocomplete');
 
-        // Parallel Highway Segment Chunk Execution Infrastructure
+        function enforceCacheEviction(newKey, payload) {
+            try {
+                let keys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    if (localStorage.key(i).startsWith(CACHE_PREFIX)) keys.push(localStorage.key(i));
+                }
+                if (keys.length >= 15) {
+                    keys.sort();
+                    localStorage.removeItem(keys[0]);
+                }
+                localStorage.setItem(newKey, JSON.stringify(payload));
+            } catch (e) { localStorage.clear(); }
+        }
+
         async function fetchPOIsForCategory(masterCat) {
             if (routeLineCoordinates.length === 0) {
                 alert("Please calculate a route path before selecting target amenities.");
@@ -283,7 +301,6 @@
                 });
             }
 
-            // Identify target keys to retrieve from query definitions maps
             let structuralQueries = [];
             if (masterCat === 'highway' || masterCat === 'tourism') {
                 subMenuDefinitions[masterCat].forEach(sub => { structuralQueries.push(categoryConfigs[sub.id].query); });
@@ -326,10 +343,9 @@
         function isChurchProperty(tags) {
             if (tags.amenity === 'place_of_worship' || tags.religion) return true;
             const text = (tags.name || '').toLowerCase();
-            return ['church', 'chapel', 'ministry', 'baptist', 'methodist', 'lutheran', 'presbyterian', 'catholic', 'fellowship', 'christian'].some(k => text.includes(k));
+            return ['church', 'chapel', 'ministry', 'baptist', 'methodist', 'lutheran', 'presbyterian', 'catholic', 'parish', 'fellowship', 'christian'].some(k => text.includes(k));
         }
 
-        // Contextual assignment normalization loop
         function parseTargetCategory(tags) {
             if (tags.leisure === 'playground') return isChurchProperty(tags) ? 'excluded' : 'playground';
             if (tags.highway === 'rest_area') return 'highway_rest';
@@ -361,17 +377,14 @@
                 const concreteCat = parseTargetCategory(tags);
                 if (concreteCat === 'excluded') return;
 
-                // Enforce Master Navigation filtering buckets
                 if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
                 if (currentMasterCat === 'tourism' && concreteCat !== 'tourism_viewpoint' && concreteCat !== 'tourism_dogpark') return;
                 if (currentMasterCat !== 'highway' && currentMasterCat !== 'tourism' && concreteCat !== currentMasterCat) return;
 
-                // Enforce Sub-menu operational filter states
                 if (currentSubFilter !== 'all') {
                     if (currentMasterCat === 'highway' || currentMasterCat === 'tourism') {
                         if (concreteCat !== currentSubFilter) return;
                     } else if (currentMasterCat === 'gas') {
-                        // --- Fuel Variant Filtering Operations Logic ---
                         if (currentSubFilter === 'unl87' && tags["fuel:octane_87"] !== 'yes' && tags["fuel:unleaded"] !== 'yes') return;
                         if (currentSubFilter === 'unl88' && tags["fuel:octane_88"] !== 'yes' && tags["fuel:e15"] !== 'yes') return;
                     } else if (currentMasterCat === 'food') {
@@ -380,7 +393,6 @@
                     }
                 }
 
-                // Execute on-device spatial threshold distance validations
                 let minD = Infinity;
                 for (let j = 0; j < targetsSlice.length; j++) {
                     const d = map.distance([lat, lon], [targetsSlice[j].lat, targetsSlice[j].lng]);
@@ -393,7 +405,6 @@
                 let hours = tags.opening_hours || "Hours not listed (Check online)";
                 let description = tags.description || `${config.name} facility mapped along route.`;
 
-                // Sub-menu asset card information blocks mapping properties
                 if (concreteCat === 'gas') {
                     const has87 = (tags["fuel:octane_87"] === 'yes' || tags["fuel:unleaded"] === 'yes') ? '✅ Yes' : '❓ Unverified';
                     const has88 = (tags["fuel:octane_88"] === 'yes' || tags["fuel:e15"] === 'yes') ? '✅ Yes' : '❌ No/Unverified';
@@ -421,7 +432,6 @@
                     </div>
                 `;
 
-                // Smart autoPanPadding values shift map viewport area to guarantee popup headroom spacing
                 const marker = L.marker([lat, lon], { icon: createCustomIcon(config.label, config.bg) })
                     .bindPopup(popupContent, { 
                         className: 'custom-popup',
@@ -436,7 +446,6 @@
             });
         }
 
-        // --- UI Sub-menu Render/Erase Routines ---
         function handleMasterCategorySelection(element) {
             document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
             element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
@@ -457,7 +466,6 @@
             definition.forEach((sub, index) => {
                 const subButton = document.createElement('button');
                 subButton.setAttribute('data-sub', sub.id);
-                // First pill active by default configuration rules
                 subButton.className = index === 0 
                     ? "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]"
                     : "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
@@ -474,7 +482,6 @@
             currentSubFilter = 'all';
         }
 
-        // Event Handling Delegations
         document.getElementById('master-filter-bar').addEventListener('click', (e) => {
             const pill = e.target.closest('.master-pill');
             if (pill) handleMasterCategorySelection(pill);
@@ -530,7 +537,6 @@
             routingControl.setWaypoints([startLatLng, endLatLng]);
         });
 
-        // Mobile Geolocation Engine
         const geoBtn = document.getElementById('geo-btn');
         let isTracking = false, watchId = null;
 
