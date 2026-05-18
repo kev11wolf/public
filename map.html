@@ -205,6 +205,8 @@
         };
 
         let allPoiMarkers = [];
+        let globalFavoritesMarkers = []; // FIXED: Separated isolated storage container locks stars to map permanently
+        let repoFavoritesMemory = [];    
         let localJsonMemory = null; 
         let liveOverpassMemory = [];   
         let routeLineCoordinates = [];
@@ -287,7 +289,7 @@
             
             updateInlineStatus("Route ready. Tap filters below.");
             triggerToast("Route generated. Content deferred until filter selection.");
-            loadMasterRepoFavoritesOnBoot(); // Refresh global favorites view
+            renderGlobalPermanentStars(); // Enforce continuous star visibility across fresh path calculations
         });
 
         // ==========================================
@@ -436,8 +438,77 @@
             }
             
             localStorage.setItem('starred_pois', JSON.stringify(starred));
-            dispatchOffThreadAnalysis();
+            renderGlobalPermanentStars(); // Force instant structural map redraw
+            if (routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
         };
+
+        // --- FIXED LAYER PIPELINE: Renders stars as standalone permanent elements unaffected by resets or category changes ---
+        function renderGlobalPermanentStars() {
+            // Flush only the global favorites tracking markers array, leaving temp points untouched
+            globalFavoritesMarkers.forEach(m => map.removeLayer(m.marker));
+            globalFavoritesMarkers = [];
+
+            let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            
+            // Cleanly merge data streams to eliminate duplicate rendering overlaps
+            let combinedFavoritesList = [...localStarred];
+            repoFavoritesMemory.forEach(repoItem => {
+                if (!combinedFavoritesList.some(localItem => localItem.lat === repoItem.lat && localItem.lon === repoItem.lon)) {
+                    combinedFavoritesList.push(repoItem);
+                }
+            });
+
+            const isLarge = map.getZoom() > 13;
+
+            combinedFavoritesList.forEach(el => {
+                const lat = el.lat; const lon = el.lon;
+                const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
+                let popupHeadingName = el.name || cleanLabelBrand; 
+                let popupHours = el.hours || "Hours not listed";
+                let popupDesc = el.desc || "Verified favorite location pinned to map globally.";
+                
+                let visualCatKey = el.category;
+                if (el.brand === 'highway_rest' || el.brand === 'highway_toilets') visualCatKey = el.brand;
+                if (el.brand === 'tourism_viewpoint' || el.brand === 'tourism_dogpark') visualCatKey = el.brand;
+
+                const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
+
+                const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
+                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
+
+                let isCurrentlyStarredLocally = localStarred.some(item => item.id === `poi_${lat}_${lon}`);
+                let starBtnText = isCurrentlyStarredLocally ? "❌ Remove Star" : "⭐ Persistently Star";
+                let starBtnColor = isCurrentlyStarredLocally ? "bg-red-600 hover:bg-red-700" : "bg-amber-600 hover:bg-amber-700";
+
+                const popupContent = `
+                    <div class="w-full font-sans p-0.5 text-zinc-950">
+                        <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
+                        <h3 class="text-xs font-black text-black leading-tight truncate">${popupHeadingName}</h3>
+                        <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">${popupDesc}</div>
+                        <div class="border-t border-zinc-200 pt-1 mt-1">
+                            <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">Hours</span>
+                            <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
+                        </div>
+                        <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
+                            <button onclick="window.toggleStarPoiState('${lat}', '${lon}', \`${popupHeadingName.replace(/`/g, "")}\`, '${el.category}', '${el.brand}', \`${popupHours.replace(/`/g, "")}\`, \`${popupDesc.replace(/`/g, "")}\`)" class="block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm cursor-pointer active:scale-95 transition-transform text-white font-black">${starBtnText}</button>
+                            <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
+                            <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">👁️ Google Street View</a>
+                            <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
+                        </div>
+                    </div>
+                `;
+
+                const marker = L.marker([lat, lon], { icon: createStarredIcon(uiConfig.label, isLarge) })
+                    .bindPopup(popupContent, { 
+                        className: 'custom-popup', autoPan: true,
+                        autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
+                    });
+
+                globalFavoritesMarkers.push({ marker: marker, lat: lat, lon: lon, category: el.brand });
+                marker.addTo(map);
+            });
+        }
 
         function initAutocomplete(inputId, dropdownId) {
             const input = document.getElementById(inputId);
@@ -614,78 +685,6 @@
             }
         }
 
-        function dispatchOffThreadAnalysis() {
-            const sliceRate = 45; activeTargetsSliceMemory = [];
-            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
-            if (routeLineCoordinates.length > 0) activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
-
-            mathWorker.postMessage({
-                localElements: localJsonMemory, liveElements: liveOverpassMemory,
-                targetsSlice: activeTargetsSliceMemory, activeBufferMeters: activeBufferMeters,
-                currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
-            });
-        }
-
-        function buildAndRenderPoiMarker(el, forceStarredStyleProfile = false) {
-            const lat = el.lat; const lon = el.lon;
-            const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
-            let popupHeadingName = el.name || cleanLabelBrand; 
-            let popupHours = el.hours || "Hours not listed";
-            let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
-            
-            let visualCatKey = el.category;
-            if (el.brand === 'highway_rest' || el.brand === 'highway_toilets') visualCatKey = el.brand;
-            if (el.brand === 'tourism_viewpoint' || el.brand === 'tourism_dogpark') visualCatKey = el.brand;
-
-            const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
-            const isLarge = map.getZoom() > 13;
-
-            if (visualCatKey === 'gas' && el.isLocal) {
-                popupDesc = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
-            }
-
-            const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-            const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
-
-            let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-            let isStarredCurrently = starredList.some(item => item.id === `poi_${lat}_${lon}`);
-            let starBtnText = isStarredCurrently ? "❌ Remove Star" : "⭐ Persistently Star";
-            let starBtnColor = isStarredCurrently ? "bg-red-600 hover:bg-red-700" : "bg-amber-600 hover:bg-amber-700";
-
-            const popupContent = `
-                <div class="w-full font-sans p-0.5 text-zinc-950">
-                    <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
-                    <h3 class="text-xs font-black text-black leading-tight truncate">${popupHeadingName}</h3>
-                    <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">${popupDesc}</div>
-                    <div class="border-t border-zinc-200 pt-1 mt-1">
-                        <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">Hours</span>
-                        <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
-                    </div>
-                    <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
-                        <button onclick="window.toggleStarPoiState('${lat}', '${lon}', \`${popupHeadingName.replace(/`/g, "")}\`, '${el.category}', '${el.brand}', \`${popupHours.replace(/`/g, "")}\`, \`${popupDesc.replace(/`/g, "")}\`)" class="block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm cursor-pointer active:scale-95 transition-transform text-white font-black">${starBtnText}</button>
-                        <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
-                        <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">👁️ Google Street View</a>
-                        <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
-                    </div>
-                </div>
-            `;
-
-            const finalIconChoice = (forceStarredStyleProfile || isStarredCurrently) 
-                ? createStarredIcon(uiConfig.label, isLarge)
-                : createCustomIcon(uiConfig.label, uiConfig.bg, isLarge);
-
-            const marker = L.marker([lat, lon], { icon: finalIconChoice })
-                .bindPopup(popupContent, { 
-                    className: 'custom-popup', autoPan: true,
-                    autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
-                });
-
-            allPoiMarkers.push({ marker: marker, category: el.brand, lat: lat, lon: lon });
-            marker.addTo(map);
-        }
-
-        // --- GITHUB REPOSITORY AUTOMATED SYNC DATA PIPELINES ---
         function launchAutomatedGitHubSyncPipeline() {
             let starredDataString = localStorage.getItem('starred_pois') || '[]';
             let starredArray = JSON.parse(starredDataString);
@@ -694,7 +693,6 @@
                 alert("You have no starred locations saved locally! Star points first before pushing updates.");
                 return;
             }
-            // Mapped automatically to your repo path logic parameters
             const repositoryPathTarget = "kev11wolf/public";
             const minimizedJsonPayload = JSON.stringify(starredArray);
             const prefilledGitHubIssueUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_FAVORITES&body=${encodeURIComponent(minimizedJsonPayload)}`;
@@ -706,37 +704,26 @@
         async function loadMasterRepoFavoritesOnBoot() {
             try {
                 const response = await fetch('favorites.json');
-                if (!response.ok) return; 
-                
-                const repositoryFavoritesArray = await response.json();
-                repositoryFavoritesArray.forEach(element => {
-                    buildAndRenderPoiMarker(element, true);
-                });
-            } catch (e) { console.log("No favorites cache initialized yet."); }
+                if (response.ok) {
+                    repoFavoritesMemory = await response.json();
+                }
+            } catch (e) { console.log("No favorites file initialized yet."); }
+            renderGlobalPermanentStars(); // Boot rendering execution engine immediately
         }
 
         mathWorker.onmessage = function(e) {
             const { sortedMatches } = e.data;
             
+            // Purges ONLY the volatile temporary layers, leaving permanent gold stars untouched
             allPoiMarkers.forEach(item => map.removeLayer(item.marker));
             allPoiMarkers = [];
 
             sortedMatches.forEach(el => {
-                buildAndRenderPoiMarker(el, false);
-            });
+                // COLLISION CHECKER: If this coordinate is already locked by a global star, don't overlay a standard dot
+                let isCoordinateOccupiedByStar = globalFavoritesMarkers.some(m => m.lat === el.lat && m.lon === el.lon);
+                if (isCoordinateOccupiedByStar) return;
 
-            let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-            starredList.forEach(el => {
-                let minD = Infinity;
-                for (let j = 0; j < activeTargetsSliceMemory.length; j++) {
-                    const d = map.distance([el.lat, el.lon], [activeTargetsSliceMemory[j].lat, activeTargetsSliceMemory[j].lng]);
-                    if (d < minD) minD = d;
-                }
-                if (minD <= activeBufferMeters) {
-                    if (!allPoiMarkers.some(m => m.lat === el.lat && m.lon === el.lon)) {
-                        buildAndRenderPoiMarker(el, true);
-                    }
-                }
+                buildAndRenderPoiMarker(el, false);
             });
 
             const hud = document.getElementById('next-stop-hud');
@@ -756,8 +743,8 @@
 
         map.on('zoomend', () => {
             const isLarge = map.getZoom() > 13;
-            let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             
+            // Separately scale the volatile dot layer markers
             allPoiMarkers.forEach(item => {
                 let checkKey = item.category;
                 if (categoryConfigs[checkKey] === undefined) {
@@ -765,13 +752,18 @@
                     else if (['sheetz','murphyexpress','bucees','costcogas','wawa','circlek'].includes(checkKey)) checkKey = 'gas';
                 }
                 const config = categoryConfigs[checkKey] || categoryConfigs['food'] || categoryConfigs['gas'];
-                const isStarredCurrently = starredList.some(s => s.id === `poi_${item.lat}_${item.lon}`);
-                
-                if (isStarredCurrently) {
-                    item.marker.setIcon(createStarredIcon(config.label, isLarge));
-                } else {
-                    item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
+                item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
+            });
+
+            // Separately scale the absolute global shield gold star markers
+            globalFavoritesMarkers.forEach(item => {
+                let checkKey = item.category;
+                if (categoryConfigs[checkKey] === undefined) {
+                    if (['raisingcanes','chickfila','mcdonalds','jerseymikes','wendys','chipotle'].includes(checkKey)) checkKey = 'food';
+                    else if (['sheetz','murphyexpress','bucees','costcogas','wawa','circlek'].includes(checkKey)) checkKey = 'gas';
                 }
+                const config = categoryConfigs[checkKey] || categoryConfigs['food'] || categoryConfigs['gas'] || categoryConfigs['playground'];
+                item.marker.setIcon(createStarredIcon(config.label, isLarge));
             });
         });
 
@@ -808,6 +800,7 @@
             currentMasterCat = null; currentSubFilter = 'all';
         }
 
+        // --- PHASE 6: ELEMENT SELECTION COUPLING LISTENERS ---
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
             const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
