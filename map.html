@@ -212,6 +212,28 @@
         let mapStyleMode = 'light';
         let activeTargetsSliceMemory = [];
 
+        // --- FIXED: Restored createCustomIcon definition to prevent ReferenceError crashes ---
+        const createCustomIcon = (label, classes, isLarge = false) => {
+            const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
+            const sizePx = isLarge ? 44 : 32;
+            return L.divIcon({
+                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold ${sizeClass} ${classes}">${label}</div>`,
+                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
+            });
+        };
+
+        const createStarredIcon = (label, isLarge = false) => {
+            const wrapperSize = isLarge ? 'w-14 h-14 text-2xl border-4' : 'w-11 h-11 text-xl border-3';
+            const sizePx = isLarge ? 56 : 44;
+            return L.divIcon({
+                html: `<div class="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border-amber-600 text-black shadow-xl font-black relative ${wrapperSize}">
+                         ${label}
+                         <span class="absolute -bottom-1 -right-1 text-sm drop-shadow-md">⭐</span>
+                       </div>`,
+                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
+            });
+        };
+
         // ==========================================
         // --- PHASE 3: MAP TILES & ROUTING SETUP ---
         // ==========================================
@@ -230,11 +252,14 @@
             });
         };
 
+        // --- FIXED: Explicitly passed backend constructor object layer variables to silence OSRM production warnings ---
         let routingControl = L.Routing.control({
             show: false, 
             addWaypoints: false, 
             draggableWaypoints: false,
-            serviceUrl: 'https://router.project-osrm.org/route/v1',
+            router: L.Routing.osrmv1({
+                serviceUrl: 'https://router.project-osrm.org/route/v1'
+            }),
             lineOptions: {
                 styles: [
                     { color: '#0f172a', opacity: 0.25, weight: 14 }, 
@@ -261,18 +286,6 @@
             updateInlineStatus("Route ready. Tap filters below.");
             triggerToast("Route generated. Content deferred until filter selection.");
         });
-
-        const createStarredIcon = (label, isLarge = false) => {
-            const wrapperSize = isLarge ? 'w-14 h-14 text-2xl border-4' : 'w-11 h-11 text-xl border-3';
-            const sizePx = isLarge ? 56 : 44;
-            return L.divIcon({
-                html: `<div class="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border-amber-600 text-black shadow-xl font-black relative ${wrapperSize}">
-                         ${label}
-                         <span class="absolute -bottom-1 -right-1 text-sm drop-shadow-md">⭐</span>
-                       </div>`,
-                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
-            });
-        };
 
         // ==========================================
         // --- PHASE 4: WORKER MATRIX ALLOCATIONS ---
@@ -746,7 +759,6 @@
             generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
         }
 
-        // FIXED: Structural comment tags wrapped securely with no compiler snippet leakage
         function generateSubMenuUI(catId) {
             const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
             const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
