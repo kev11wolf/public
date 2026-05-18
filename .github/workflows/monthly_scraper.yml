@@ -3,7 +3,7 @@ name: Monthly US POI Database Refresher
 on:
   schedule:
     - cron: '0 0 1 * *'
-  workflow_dispatch: # Allows manual override triggers anytime
+  workflow_dispatch:
 
 jobs:
   update-data:
@@ -13,7 +13,7 @@ jobs:
     - name: Check out repository code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # Fetches full history to ensure clean automated merges
+        fetch-depth: 0
 
     - name: Set up Python runtime
       uses: actions/setup-python@v5
@@ -25,16 +25,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests
 
-    # The "-u" flag forces Python to print live log steps to your screen instantly
     - name: Run national database compiler
       run: python -u scraper.py
 
-     bondage-proof saving sequence handling background conflicts smoothly
     - name: Commit and push updated dataset
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git add us_brands.json
-        
-        # Pulls down your latest web modifications, stacks data updates on top, then pushes safely
         git diff-index --quiet HEAD || (git commit -m "Automated Monthly POI Database Sync" && git pull --rebase origin main && git push)
