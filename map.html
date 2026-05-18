@@ -31,6 +31,7 @@
         .safe-top { padding-top: env(safe-area-inset-top); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         
+        /* Force-remove text directions itinerary layout panels completely */
         .leaflet-routing-container, .leaflet-routing-error, .leaflet-right {
             display: none !important;
         }
@@ -38,6 +39,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* Modern tightly bound popup layout to prevent content spillover */
         .custom-popup .leaflet-popup-content-wrapper {
             border-radius: 16px;
             padding: 2px;
@@ -108,6 +110,7 @@
     <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
 
     <script>
+        // --- 1. GLOBAL STATE CONSTRUCTORS ---
         const MAP_INITIAL_CENTER = [35.7796, -78.6382]; 
         const CACHE_PREFIX = 'route_hybrid_v12_';
         const OVERPASS_MIRRORS = [
@@ -150,9 +153,11 @@
         let currentSubFilter = 'all';
         let activeBufferMeters = 4000; 
 
+        // --- 2. MAP INITIALIZATION ---
         const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
+        // --- 3. HOISTED HELPER ENGINES (Declared before routingControl) ---
         const createCustomIcon = (label, classes, isLarge = false) => {
             const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
             const sizePx = isLarge ? 44 : 32;
@@ -162,7 +167,24 @@
             });
         };
 
-        // Off-thread parsing engine logic configuration
+        // --- 4. SAFE INITIALIZATION OF ROUTING ENGINE ---
+        let routingControl = L.Routing.control({
+            show: false, addWaypoints: false, draggableWaypoints: false,
+            createMarker: (i, wp) => L.marker(wp.latLng, { icon: createCustomIcon(i === 0 ? '🏁' : '⛰️', 'bg-black border-white text-white font-bold', false) })
+        }).addTo(map);
+
+        routingControl.on('routesfound', function(e) {
+            routeLineCoordinates = e.routes[0].coordinates;
+            document.getElementById('search-container').classList.add('hidden');
+            
+            rawPoiDataMemory = []; cachedCategoriesFetched.clear();
+            allPoiMarkers.forEach(m => map.removeLayer(m.marker)); allPoiMarkers = [];
+            hideSubMenu();
+            updateInlineStatus("Route ready. Tap filters below.");
+            triggerToast("Route generated. Content deferred until filter selection.");
+        });
+
+        // --- 5. WORKER ENGINE DEFINITION ---
         const workerBlobCode = `
             function haversineDist(lat1, lon1, lat2, lon2) {
                 const R = 6371000;
@@ -176,7 +198,6 @@
                 const { localElements, liveElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
                 const finalMatchesMap = new Map();
 
-                // Process internal primary JSON elements first
                 if (localElements) {
                     localElements.forEach(el => {
                         if (el.c !== currentMasterCat) return;
@@ -206,7 +227,6 @@
                     });
                 }
 
-                // Append live tracking updates cleanly as enrichment fallback mechanisms
                 if (liveElements) {
                     liveElements.forEach(el => {
                         const lat = el.lat || (el.center && el.center.lat);
@@ -226,7 +246,6 @@
 
                         if (minD <= activeBufferMeters) {
                             const uniqueKey = "live_" + lat + "_" + lon;
-                            // Ensure duplicate data matching values do not override cached structures
                             if (!finalMatchesMap.has(uniqueKey)) {
                                 finalMatchesMap.set(uniqueKey, {
                                     id: uniqueKey, lat: lat, lon: lon, name: el.tags.name,
@@ -245,6 +264,7 @@
         const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
         const mathWorker = new Worker(URL.createObjectURL(blobObj));
 
+        // --- 6. CORE LOGIC FUNCTIONS ---
         function triggerToast(text, duration = 3000) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -288,7 +308,6 @@
                         data.forEach(item => {
                             let tokens = []; const addr = item.address;
                             if (addr) {
-                                // Explicit structural extraction parameters ensuring Address, City, State, Zip Code line format
                                 const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
                                 const cityNode = addr.city || addr.town || addr.village || addr.suburb || '';
                                 const stateNode = addr.state || '';
@@ -325,16 +344,14 @@
                 try {
                     const response = await fetch(OVERPASS_MIRRORS[i] + "?data=" + encodeURIComponent(queryPayload));
                     if (response.ok) return await response.json();
-                } catch (err) { console.warn("Mirror link delayed. Advancing routing parameters."); }
+                } catch (err) { console.warn("Mirror connection delayed."); }
             }
-            throw new Error("All data instances congested.");
+            throw new Error("All data networks congested.");
         }
 
-        // Execution Core Strategy: Pull internal database asset data files first, then sweep back live fallbacks on demand
         async function runDataExecutionLayer(masterCat) {
             if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
 
-            // Ingest core base file instantly if unallocated inside active execution blocks
             if (!localJsonMemory) {
                 updateInlineStatus("Ingesting master database layer...", true);
                 try {
@@ -342,14 +359,13 @@
                     localJsonMemory = await res.json();
                     triggerToast("Master database file loaded completely.");
                 } catch (err) {
-                    console.error("Local data acquisition failed. Defaulting to live channels.", err);
+                    console.error("Local data acquisition failed.", err);
                     localJsonMemory = [];
                 }
             }
 
             dispatchOffThreadAnalysis();
 
-            // Dynamic Fallback Check: Fire background serverless query checks to capture missed elements live
             if (!cachedCategoriesFetched.has(masterCat)) {
                 await fetchLiveBackupEnrichment(masterCat);
             }
@@ -373,7 +389,7 @@
                 subDefs.forEach(sd => { if (categoryConfigs[sd.id]) queryTokens.push(categoryConfigs[sd.id].query); });
                 if (masterCat === 'playground') queryTokens.push(categoryConfigs['playground'].query);
             } else if (masterCat === 'gas') {
-                queryTokens.push('node["amt"]~"fuel";'); // Standard raw identifier backup values
+                queryTokens.push('node["amenity"="fuel"];'); 
             } else if (masterCat === 'food') {
                 queryTokens.push('node["amenity"="fast_food"];');
             }
@@ -397,7 +413,6 @@
                 cachedCategoriesFetched.add(masterCat);
                 dispatchOffThreadAnalysis();
             } catch (err) {
-                console.warn("Live channels congested. Rendering data entirely off static base maps arrays.");
                 updateInlineStatus("Stops active.");
             }
         }
@@ -428,7 +443,6 @@
                 let popupHours = el.hours || "Hours not listed";
                 let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
                 
-                // Fallback styling configurations
                 let visualCatKey = el.category;
                 if (el.brand === 'highway_rest' || el.brand === 'highway_toilets') visualCatKey = el.brand;
                 if (el.brand === 'tourism_viewpoint' || el.brand === 'tourism_dogpark') visualCatKey = el.brand;
@@ -512,6 +526,7 @@
             currentMasterCat = null; currentSubFilter = 'all';
         }
 
+        // --- 7. EVENT LISTENERS ASSIGNMENTS ---
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
             const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
@@ -529,6 +544,20 @@
             if (endInput.dataset.lat && endInput.dataset.lon) { endLatLng = L.latLng(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon)); }
             if (!startLatLng || !endLatLng) { alert("Select suggested autocomplete options first."); return; }
             routingControl.setWaypoints([startLatLng, endLatLng]);
+        });
+
+        const geoBtn = document.getElementById('geo-btn'); let isTracking = false, watchId = null;
+        geoBtn.addEventListener('click', () => {
+            if (isTracking) { if (watchId) navigator.geolocation.clearWatch(watchId); isTracking = false; geoBtn.innerText = "📍 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; }
+            else {
+                if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
+                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
+                watchId = navigator.geolocation.watchPosition((pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
+                    map.panTo([latitude, longitude]);
+                }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
+            }
         });
     </script>
 </body>
