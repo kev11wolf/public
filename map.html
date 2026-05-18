@@ -91,6 +91,9 @@
                 <button id="theme-toggle-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] active:bg-gray-100">
                     🌙 Mode
                 </button>
+                <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all">
+                    💾 Save to Master Repo
+                </button>
                 <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px]">
                     🔍 Inputs
                 </button>
@@ -284,6 +287,7 @@
             
             updateInlineStatus("Route ready. Tap filters below.");
             triggerToast("Route generated. Content deferred until filter selection.");
+            loadMasterRepoFavoritesOnBoot(); // Refresh global favorites view
         });
 
         // ==========================================
@@ -424,7 +428,6 @@
                 starred.splice(matchIndex, 1);
                 triggerToast("Removed stop from persistent stars list.");
             } else {
-                // Securely stringify metadata mapping values
                 starred.push({
                     id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
                     name: String(name), category: String(category), brand: String(brand), hours: String(hours), desc: String(desc), isLocal: true
@@ -511,7 +514,7 @@
 
                     try {
                         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
-                        const res = await fetch(url, { headers: { 'User-Agent': 'High-Performance-Mobile-Map-Corridor-App' } }).then(r => r.json());
+                        const res = await fetch(url).then(r => r.json());
                         const cleanAddress = buildCleanAddressString(res.address, res.display_name);
                         
                         inputField.value = cleanAddress;
@@ -641,7 +644,6 @@
                 popupDesc = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
             }
 
-            // --- STRICT REFACTOR: Native panoramic endpoint configurations preventing 404 breaks ---
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
             const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
@@ -651,7 +653,6 @@
             let starBtnText = isStarredCurrently ? "❌ Remove Star" : "⭐ Persistently Star";
             let starBtnColor = isStarredCurrently ? "bg-red-600 hover:bg-red-700" : "bg-amber-600 hover:bg-amber-700";
 
-            // Vivid white text parameters mapped cleanly to high-contrast layout grids
             const popupContent = `
                 <div class="w-full font-sans p-0.5 text-zinc-950">
                     <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
@@ -682,6 +683,36 @@
 
             allPoiMarkers.push({ marker: marker, category: el.brand, lat: lat, lon: lon });
             marker.addTo(map);
+        }
+
+        // --- GITHUB REPOSITORY AUTOMATED SYNC DATA PIPELINES ---
+        function launchAutomatedGitHubSyncPipeline() {
+            let starredDataString = localStorage.getItem('starred_pois') || '[]';
+            let starredArray = JSON.parse(starredDataString);
+            
+            if (starredArray.length === 0) {
+                alert("You have no starred locations saved locally! Star points first before pushing updates.");
+                return;
+            }
+            // Mapped automatically to your repo path logic parameters
+            const repositoryPathTarget = "kev11wolf/public";
+            const minimizedJsonPayload = JSON.stringify(starredArray);
+            const prefilledGitHubIssueUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_FAVORITES&body=${encodeURIComponent(minimizedJsonPayload)}`;
+            
+            window.open(prefilledGitHubIssueUrl, '_blank');
+            triggerToast("GitHub payload prepared! Click 'Submit new issue' on the next page. 🚀");
+        }
+
+        async function loadMasterRepoFavoritesOnBoot() {
+            try {
+                const response = await fetch('favorites.json');
+                if (!response.ok) return; 
+                
+                const repositoryFavoritesArray = await response.json();
+                repositoryFavoritesArray.forEach(element => {
+                    buildAndRenderPoiMarker(element, true);
+                });
+            } catch (e) { console.log("No favorites cache initialized yet."); }
         }
 
         mathWorker.onmessage = function(e) {
@@ -720,7 +751,6 @@
                     hud.classList.add('hidden');
                 }
             }
-
             updateInlineStatus("Stops active.");
         };
 
@@ -788,6 +818,7 @@
 
         document.getElementById('buffer-select').addEventListener('change', (e) => { activeBufferMeters = parseInt(e.target.value); if (localJsonMemory) dispatchOffThreadAnalysis(); });
         document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
+        document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
 
         document.getElementById('route-btn').addEventListener('click', async () => {
             const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input'); let startLatLng, endLatLng;
@@ -825,6 +856,8 @@
                 }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
             }
         });
+
+        window.addEventListener('DOMContentLoaded', loadMasterRepoFavoritesOnBoot);
     </script>
 </body>
 </html>
