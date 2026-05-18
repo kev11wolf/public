@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Dynamic Route Planner & POI Finder</title>
+    <title>High-Performance Dynamic Route Explorer</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
@@ -31,7 +31,7 @@
         .safe-top { padding-top: env(safe-area-inset-top); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         
-        /* Force-remove text directions itinerary panels completely */
+        /* Force-remove text directions itinerary layout panels completely */
         .leaflet-routing-container, .leaflet-routing-error, .leaflet-right {
             display: none !important;
         }
@@ -39,7 +39,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Modern popup layout to prevent content spillover */
+        /* Modern tightly bound popup layout to prevent content spillover */
         .custom-popup .leaflet-popup-content-wrapper {
             border-radius: 16px;
             padding: 2px;
@@ -59,11 +59,11 @@
         <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div class="relative">
-                    <input id="start-input" type="text" autocomplete="off" placeholder="Start Address (e.g., Raleigh, NC)" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                    <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
                     <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden max-h-48 overflow-y-auto z-50 text-sm shadow-xl"></div>
                 </div>
                 <div class="relative">
-                    <input id="end-input" type="text" autocomplete="off" placeholder="Destination (e.g., Asheville, NC)" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                    <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
                     <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden max-h-48 overflow-y-auto z-50 text-sm shadow-xl"></div>
                 </div>
             </div>
@@ -77,7 +77,7 @@
         <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-gray-100 bg-gray-50/50">
             <div class="flex items-center gap-2 flex-1 min-w-0">
                 <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent hidden"></div>
-                <p id="status" class="text-xs font-bold text-gray-500 truncate">System idle. Enter routing parameters above.</p>
+                <p id="status" class="text-xs font-bold text-gray-500 truncate">System ready for routing input values.</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
                 <select id="buffer-select" class="bg-white text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
@@ -102,8 +102,7 @@
             <button data-cat="tourism" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
         </div>
 
-        <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden transition-all">
-            </div>
+        <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden"></div>
     </div>
 
     <div id="map"></div>
@@ -112,9 +111,8 @@
 
     <script>
         const MAP_INITIAL_CENTER = [35.7796, -78.6382]; 
-        const CACHE_PREFIX = 'route_pois_v10_';
+        const CACHE_PREFIX = 'route_pois_v11_';
         
-        // Comprehensive visual styling and query structure profiles
         const categoryConfigs = {
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', query: 'node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
             gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', query: 'node["brand"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];node["name"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
@@ -125,29 +123,12 @@
             tourism_dogpark: { label: '🐕', bg: 'bg-violet-600 border-violet-200 text-white', name: 'Dog Park', query: 'node["leisure"="dog_park"];', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=300&q=80' }
         };
 
-        // Sub-menus lookup mapping table
         const subMenuDefinitions = {
             playground: [{ id: 'all', label: 'All Public Parks' }],
-            gas: [
-                { id: 'all', label: 'All Selected Chains' },
-                { id: 'unl87', label: 'UNL 87 Listed' },
-                { id: 'unl88', label: 'UNL 88 / E15 listed' }
-            ],
-            food: [
-                { id: 'all', label: 'All Brands' },
-                { id: 'raisingcanes', label: "Cane's" },
-                { id: 'chickfila', label: 'Chick-fil-A' },
-                { id: 'mcdonalds', label: "McDonald's" },
-                { id: 'jerseymikes', label: "Jersey Mike's" }
-            ],
-            highway: [
-                { id: 'highway_rest', label: 'Highway Rest Areas' },
-                { id: 'highway_toilets', label: 'Standalone Restrooms' }
-            ],
-            tourism: [
-                { id: 'tourism_viewpoint', label: 'Scenic Overlooks' },
-                { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }
-            ]
+            gas: [{ id: 'all', label: 'All Selected Chains' }, { id: 'unl87', label: 'UNL 87 Listed' }, { id: 'unl88', label: 'UNL 88 / E15' }],
+            food: [{ id: 'all', label: 'All Brands' }, { id: 'raisingcanes', label: "Cane's" }, { id: 'chickfila', label: 'Chick-fil-A' }, { id: 'mcdonalds', label: "McDonald's" }, { id: 'jerseymikes', label: "Jersey Mike's" }],
+            highway: [{ id: 'highway_rest', label: 'Highway Rest Areas' }, { id: 'highway_toilets', label: 'Standalone Restrooms' }],
+            tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
 
         let allPoiMarkers = [];
@@ -157,16 +138,100 @@
         let currentMasterCat = null;
         let currentSubFilter = 'all';
         let activeBufferMeters = 4000; 
-        let cachedCategoriesFetched = new Set(); 
+        let cachedCategoriesFetched = new Set();
 
+        // Canvas mode explicitly set for performance hardware acceleration
         const map = L.map('map', { zoomControl: false, tap: true }).setView(MAP_INITIAL_CENTER, 8);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
-        // --- HOISTED FIX: Icon Builder defined explicitly early so routing configuration can reference it instantly ---
-        const createCustomIcon = (label, classes) => L.divIcon({
-            html: `<div class="flex items-center justify-center w-8 h-8 rounded-full border-2 shadow-md text-sm ${classes}">${label}</div>`,
-            className: '', iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -10]
-        });
+        // --- SUGGESTION 2: Dynamic UI Touch Expansion Icon Factory ---
+        const createCustomIcon = (label, classes, isLarge = false) => {
+            const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
+            const sizePx = isLarge ? 44 : 32;
+            return L.divIcon({
+                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold ${sizeClass} ${classes}">${label}</div>`,
+                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
+            });
+        };
+
+        // --- SUGGESTION 3: Inline Thread Offloading Web Worker Architecture ---
+        const workerBlobCode = `
+            function isChurchProperty(tags) {
+                if (tags.amenity === 'place_of_worship' || tags.religion) return true;
+                const text = (tags.name || '').toLowerCase();
+                return ['church', 'chapel', 'ministry', 'baptist', 'methodist', 'lutheran', 'presbyterian', 'catholic', 'parish', 'fellowship', 'christian'].some(k => text.includes(k));
+            }
+
+            function parseTargetCategory(tags) {
+                if (tags.leisure === 'playground') return isChurchProperty(tags) ? 'excluded' : 'playground';
+                if (tags.highway === 'rest_area') return 'highway_rest';
+                if (tags.amenity === 'toilets') return 'highway_toilets';
+                if (tags.tourism === 'viewpoint') return 'tourism_viewpoint';
+                if (tags.leisure === 'dog_park') return 'tourism_dogpark';
+
+                const signature = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
+                if (['murphy express', 'sheetz', 'bucee', 'buc-ee', 'costco', 'wawa', 'circle k'].some(brand => signature.includes(brand))) return 'gas';
+                if (['mcdonald', 'wendy', 'chick-fil-a', 'chick fil a', 'chipotle', 'jersey mike', 'raising cane'].some(brand => signature.includes(brand))) return 'food';
+                return 'excluded';
+            }
+
+            function haversineDist(lat1, lon1, lat2, lon2) {
+                const R = 6371000;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+            }
+
+            self.onmessage = function(e) {
+                const { elements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
+                const validMatches = [];
+
+                elements.forEach(element => {
+                    const lat = element.lat || (element.center && element.center.lat);
+                    const lon = element.lon || (element.center && element.center.lon);
+                    if (!lat || !lon) return;
+
+                    const tags = element.tags || {};
+                    const concreteCat = parseTargetCategory(tags);
+                    if (concreteCat === 'excluded') return;
+
+                    if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
+                    if (currentMasterCat === 'tourism' && concreteCat !== 'tourism_viewpoint' && concreteCat !== 'tourism_dogpark') return;
+                    if (currentMasterCat !== 'highway' && currentMasterCat !== 'tourism' && concreteCat !== currentMasterCat) return;
+
+                    if (currentSubFilter !== 'all') {
+                        if (currentMasterCat === 'highway' || currentMasterCat === 'tourism') {
+                            if (concreteCat !== currentSubFilter) return;
+                        } else if (currentMasterCat === 'gas') {
+                            if (currentSubFilter === 'unl87' && tags["fuel:octane_87"] !== 'yes' && tags["fuel:unleaded"] !== 'yes') return;
+                            if (currentSubFilter === 'unl88' && tags["fuel:octane_88"] !== 'yes' && tags["fuel:e15"] !== 'yes') return;
+                        } else if (currentMasterCat === 'food') {
+                            const label = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase().replace(/[^a-z]/g, '');
+                            if (!label.includes(currentSubFilter)) return;
+                        }
+                    }
+
+                    let minD = Infinity;
+                    for (let j = 0; j < targetsSlice.length; j++) {
+                        const d = haversineDist(lat, lon, targetsSlice[j].lat, targetsSlice[j].lng);
+                        if (d < minD) minD = d;
+                    }
+
+                    if (minD <= activeBufferMeters) {
+                        element.concreteCat = concreteCat;
+                        element.minD = minD;
+                        validMatches.push(element);
+                    }
+                });
+
+                // --- SUGGESTION 1: True Distance Matrix Array Sorting Loop Execution ---
+                validMatches.sort((a, b) => a.minD - b.minD);
+                self.postMessage({ validMatches });
+            };
+        `;
+        const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
+        const mathWorker = new Worker(URL.createObjectURL(blobObj));
 
         function triggerToast(text, duration = 3000) {
             const container = document.getElementById('toast-container');
@@ -188,26 +253,22 @@
             else spinner.classList.add('hidden');
         }
 
-        // Initialize Routing Machine Engine
         let routingControl = L.Routing.control({
             show: false, addWaypoints: false, draggableWaypoints: false,
-            createMarker: (i, wp) => L.marker(wp.latLng, { icon: createCustomIcon(i === 0 ? '🏁' : '⛰️', 'bg-black border-white text-white font-bold') })
+            createMarker: (i, wp) => L.marker(wp.latLng, { icon: createCustomIcon(i === 0 ? '🏁' : '⛰️', 'bg-black border-white text-white font-bold', false) })
         }).addTo(map);
 
         routingControl.on('routesfound', function(e) {
             routeLineCoordinates = e.routes[0].coordinates;
             document.getElementById('search-container').classList.add('hidden');
-            
-            rawPoiDataMemory = [];
-            cachedCategoriesFetched.clear();
-            allPoiMarkers.forEach(m => map.removeLayer(m.marker));
-            allPoiMarkers = [];
+            rawPoiDataMemory = []; cachedCategoriesFetched.clear();
+            allPoiMarkers.forEach(m => map.removeLayer(m.marker)); allPoiMarkers = [];
             hideSubMenu();
-            
-            updateInlineStatus("Route parsed. Select categories below to display stops.");
-            triggerToast("Route generated successfully. Options are locked to a 5-minute buffer by default.");
+            updateInlineStatus("Route parsed. Select category parameters.");
+            triggerToast("Route active. Stops deferred until selection.");
         });
 
+        // Autocomplete Address parsing structure completely ignoring County fields
         function initAutocomplete(inputId, dropdownId) {
             const input = document.getElementById(inputId);
             const dropdown = document.getElementById(dropdownId);
@@ -220,7 +281,7 @@
 
                 debounceTimer = setTimeout(() => {
                     fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=4&addressdetails=1&q=${encodeURIComponent(query)}`, {
-                        headers: { 'User-Agent': 'Dynamic-Mobile-Map-Corridor-App' }
+                        headers: { 'User-Agent': 'High-Performance-Mobile-Map-Corridor-App' }
                     })
                     .then(res => res.json())
                     .then(data => {
@@ -229,25 +290,24 @@
                         dropdown.classList.remove('hidden');
                         
                         data.forEach(item => {
-                            let tokens = [];
-                            const addr = item.address;
+                            let tokens = []; const addr = item.address;
                             if (addr) {
                                 const line1 = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
                                 const city = addr.city || addr.town || addr.village || addr.suburb || '';
                                 const state = addr.state || '';
+                                const zip = addr.postcode || '';
                                 if (line1) tokens.push(line1);
                                 if (city) tokens.push(city);
                                 if (state) tokens.push(state);
+                                if (zip) tokens.push(zip);
                             }
                             const cleanString = tokens.length > 0 ? tokens.join(', ') : item.display_name.split(',').slice(0, 3).join(',');
-                            
                             const option = document.createElement('div');
                             option.className = "px-3 py-2.5 hover:bg-gray-100 active:bg-gray-200 border-b border-gray-100 last:border-0 cursor-pointer truncate text-gray-700 font-medium";
                             option.innerText = cleanString;
                             option.addEventListener('click', () => {
                                 input.value = cleanString;
-                                input.dataset.lat = item.lat;
-                                input.dataset.lon = item.lon;
+                                input.dataset.lat = item.lat; input.dataset.lon = item.lon;
                                 dropdown.classList.add('hidden');
                             });
                             dropdown.appendChild(option);
@@ -266,141 +326,87 @@
                 for (let i = 0; i < localStorage.length; i++) {
                     if (localStorage.key(i).startsWith(CACHE_PREFIX)) keys.push(localStorage.key(i));
                 }
-                if (keys.length >= 15) {
-                    keys.sort();
-                    localStorage.removeItem(keys[0]);
-                }
+                if (keys.length >= 15) { keys.sort(); localStorage.removeItem(keys[0]); }
                 localStorage.setItem(newKey, JSON.stringify(payload));
             } catch (e) { localStorage.clear(); }
         }
 
         async function fetchPOIsForCategory(masterCat) {
-            if (routeLineCoordinates.length === 0) {
-                alert("Please calculate a route path before selecting target amenities.");
-                return;
-            }
-            if (cachedCategoriesFetched.has(masterCat)) {
+            if (routeLineCoordinates.length === 0) { alert("Calculate a route first."); return; }
+            if (cachedCategoriesFetched.has(masterCat)) { evaluateAndRenderFilteredPOIs(); return; }
+
+            updateInlineStatus(`Querying corridor nodes for ${masterCat}...`, true);
+            let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
+            routeLineCoordinates.forEach(c => {
+                if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
+                if (c.lat > maxLat) maxLat = c.lat; if (c.lng > maxLon) maxLon = c.lng;
+            });
+
+            const south = (minLat - 0.25).toFixed(4); const west = (minLon - 0.25).toFixed(4);
+            const north = (maxLat + 0.25).toFixed(4); const east = (maxLon + 0.25).toFixed(4);
+
+            const targetCacheKey = `${CACHE_PREFIX}${masterCat}_${south}_${west}_${north}_${east}`;
+            const cachedData = localStorage.getItem(targetCacheKey);
+
+            if (cachedData) {
+                cachedCategoriesFetched.add(masterCat);
+                rawPoiDataMemory.push(...JSON.parse(cachedData));
                 evaluateAndRenderFilteredPOIs();
                 return;
-            }
-
-            updateInlineStatus(`Querying data channels for ${masterCat}...`, true);
-            const pointsPerSegment = 400;
-            const boundingBoxes = [];
-
-            for (let i = 0; i < routeLineCoordinates.length; i += pointsPerSegment) {
-                const chunk = routeLineCoordinates.slice(i, i + pointsPerSegment + 20);
-                let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
-                chunk.forEach(c => {
-                    if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
-                    if (c.lat > maxLat) maxLat = c.lat; if (c.lng > maxLon) maxLon = c.lng;
-                });
-                boundingBoxes.push({
-                    south: (minLat - 0.22).toFixed(4), west: (minLon - 0.22).toFixed(4),
-                    north: (maxLat + 0.22).toFixed(4), east: (maxLon + 0.22).toFixed(4)
-                });
             }
 
             let structuralQueries = [];
             if (masterCat === 'highway' || masterCat === 'tourism') {
                 subMenuDefinitions[masterCat].forEach(sub => { structuralQueries.push(categoryConfigs[sub.id].query); });
-            } else {
-                structuralQueries.push(categoryConfigs[masterCat].query);
-            }
+            } else { structuralQueries.push(categoryConfigs[masterCat].query); }
 
             try {
-                const fetchPromises = boundingBoxes.flatMap(box => {
-                    return structuralQueries.map(subQ => {
-                        const query = `[out:json][timeout:45][bbox:${box.south},${box.west},${box.north},${box.east}];(${subQ});out center;`;
-                        return fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query)).then(res => res.json());
-                    });
-                });
+                const combinedUnionQuery = structuralQueries.join('');
+                const query = `[out:json][timeout:50][bbox:${south},${west},${north},${east}];(${combinedUnionQuery});out center;`;
+                const response = await fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query)).then(res => res.json());
+                const incomingElements = response.elements || [];
 
-                const results = await Promise.all(fetchPromises);
-                const currentSetIds = new Set(rawPoiDataMemory.map(el => el.id));
-
-                results.forEach(res => {
-                    if (res && res.elements) {
-                        res.elements.forEach(el => {
-                            if (!currentSetIds.has(el.id)) {
-                                currentSetIds.add(el.id);
-                                rawPoiDataMemory.push(el);
-                            }
-                        });
-                    }
-                });
-
+                enforceCacheEviction(targetCacheKey, incomingElements);
+                rawPoiDataMemory.push(...incomingElements);
                 cachedCategoriesFetched.add(masterCat);
-                updateInlineStatus("Stops updated.");
                 evaluateAndRenderFilteredPOIs();
-
             } catch (err) {
-                updateInlineStatus("Search timed out.");
-                triggerToast("Data node busy. Try resetting your route parameters or zoom levels.");
+                updateInlineStatus("Corridor timeout exception.");
+                triggerToast("Data server congested. Try selecting filters again.");
             }
         }
 
-        function isChurchProperty(tags) {
-            if (tags.amenity === 'place_of_worship' || tags.religion) return true;
-            const text = (tags.name || '').toLowerCase();
-            return ['church', 'chapel', 'ministry', 'baptist', 'methodist', 'lutheran', 'presbyterian', 'catholic', 'parish', 'fellowship', 'christian'].some(k => text.includes(k));
-        }
-
-        function parseTargetCategory(tags) {
-            if (tags.leisure === 'playground') return isChurchProperty(tags) ? 'excluded' : 'playground';
-            if (tags.highway === 'rest_area') return 'highway_rest';
-            if (tags.amenity === 'toilets') return 'highway_toilets';
-            if (tags.tourism === 'viewpoint') return 'tourism_viewpoint';
-            if (tags.leisure === 'dog_park') return 'tourism_dogpark';
-
-            const signature = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
-            if (['murphy express', 'sheetz', 'bucee', 'buc-ee', 'costco', 'wawa', 'circle k'].some(brand => signature.includes(brand))) return 'gas';
-            if (['mcdonald', 'wendy', 'chick-fil-a', 'chick fil a', 'chipotle', 'jersey mike', 'raising cane'].some(brand => signature.includes(brand))) return 'food';
-            
-            return 'excluded';
-        }
-
+        // Thread Handoff Pipeline passing parameters to the Web Worker pipeline matrix
         function evaluateAndRenderFilteredPOIs() {
+            updateInlineStatus("Filtering via background thread...", true);
+
+            // Downsample path geometry for fast execution inside Worker
+            const sliceRate = 45; const targetsSlice = [];
+            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { targetsSlice.push(routeLineCoordinates[i]); }
+            if (routeLineCoordinates.length > 0) targetsSlice.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
+
+            mathWorker.postMessage({
+                elements: rawPoiDataMemory, targetsSlice: targetsSlice,
+                activeBufferMeters: activeBufferMeters, currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
+            });
+        }
+
+        // Catch thread return events
+        mathWorker.onmessage = function(e) {
+            const { validMatches } = e.data;
+            
             allPoiMarkers.forEach(item => map.removeLayer(item.marker));
             allPoiMarkers = [];
 
-            const sliceRate = 8;
-            const targetsSlice = [];
-            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { targetsSlice.push(routeLineCoordinates[i]); }
+            const isLarge = map.getZoom() > 13;
 
-            rawPoiDataMemory.forEach(element => {
+            validMatches.forEach(element => {
                 const lat = element.lat || (element.center && element.center.lat);
                 const lon = element.lon || (element.center && element.center.lon);
-                if (!lat || !lon) return;
-
                 const tags = element.tags || {};
-                const concreteCat = parseTargetCategory(tags);
-                if (concreteCat === 'excluded') return;
-
-                if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
-                if (currentMasterCat === 'tourism' && concreteCat !== 'tourism_viewpoint' && concreteCat !== 'tourism_dogpark') return;
-                if (currentMasterCat !== 'highway' && currentMasterCat !== 'tourism' && concreteCat !== currentMasterCat) return;
-
-                if (currentSubFilter !== 'all') {
-                    if (currentMasterCat === 'highway' || currentMasterCat === 'tourism') {
-                        if (concreteCat !== currentSubFilter) return;
-                    } else if (currentMasterCat === 'gas') {
-                        if (currentSubFilter === 'unl87' && tags["fuel:octane_87"] !== 'yes' && tags["fuel:unleaded"] !== 'yes') return;
-                        if (currentSubFilter === 'unl88' && tags["fuel:octane_88"] !== 'yes' && tags["fuel:e15"] !== 'yes') return;
-                    } else if (currentMasterCat === 'food') {
-                        const normalizedLabel = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase().replace(/[^a-z]/g, '');
-                        if (!normalizedLabel.includes(currentSubFilter)) return;
-                    }
-                }
-
-                let minD = Infinity;
-                for (let j = 0; j < targetsSlice.length; j++) {
-                    const d = map.distance([lat, lon], [targetsSlice[j].lat, targetsSlice[j].lng]);
-                    if (d < minD) minD = d;
-                }
-                if (minD > activeBufferMeters) return;
-
+                const concreteCat = element.concreteCat;
                 const config = categoryConfigs[concreteCat] || categoryConfigs['food'];
+
                 let name = tags.name || config.name;
                 let hours = tags.opening_hours || "Hours not listed (Check online)";
                 let description = tags.description || `${config.name} facility mapped along route.`;
@@ -432,45 +438,44 @@
                     </div>
                 `;
 
-                const marker = L.marker([lat, lon], { icon: createCustomIcon(config.label, config.bg) })
+                const marker = L.marker([lat, lon], { icon: createCustomIcon(config.label, config.bg, isLarge) })
                     .bindPopup(popupContent, { 
-                        className: 'custom-popup',
-                        autoPan: true,
-                        autoPanPaddingTopLeft: L.point(15, 230),
-                        autoPanPaddingBottomRight: L.point(15, 25),
-                        maxWidth: 250
+                        className: 'custom-popup', autoPan: true,
+                        autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 250
                     });
 
                 allPoiMarkers.push({ marker: marker, category: concreteCat });
                 marker.addTo(map);
             });
-        }
+
+            updateInlineStatus("Stops rendered.");
+            triggerToast(`Rendered ${validMatches.length} sorted landmarks across thread handoff pipelines.`);
+        };
+
+        // --- SUGGESTION 2: Dynamic UI Zoom Threshold Touch Target expansion listener ---
+        map.on('zoomend', () => {
+            const isLarge = map.getZoom() > 13;
+            allPoiMarkers.forEach(item => {
+                const config = categoryConfigs[item.category] || categoryConfigs['food'];
+                // Directly re-morph properties without wiping out active popups or unmounting elements
+                item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
+            });
+        });
 
         function handleMasterCategorySelection(element) {
             document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
             element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
-            
-            currentMasterCat = element.getAttribute('data-cat');
-            currentSubFilter = 'all'; 
-            
-            generateSubMenuUI(currentMasterCat);
-            fetchPOIsForCategory(currentMasterCat);
+            currentMasterCat = element.getAttribute('data-cat'); currentSubFilter = 'all'; 
+            generateSubMenuUI(currentMasterCat); fetchPOIsForCategory(currentMasterCat);
         }
 
         function generateSubMenuUI(catId) {
-            const subBar = document.getElementById('sub-filter-bar');
-            subBar.innerHTML = '';
-            const definition = subMenuDefinitions[catId];
-            if (!definition) { subBar.classList.add('hidden'); return; }
-
+            const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
+            const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
             definition.forEach((sub, index) => {
-                const subButton = document.createElement('button');
-                subButton.setAttribute('data-sub', sub.id);
-                subButton.className = index === 0 
-                    ? "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]"
-                    : "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
-                subButton.innerText = sub.label;
-                subBar.appendChild(subButton);
+                const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
+                subButton.className = index === 0 ? "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]" : "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
+                subButton.innerText = sub.label; subBar.appendChild(subButton);
             });
             subBar.classList.remove('hidden');
         }
@@ -478,91 +483,39 @@
         function hideSubMenu() {
             document.getElementById('sub-filter-bar').classList.add('hidden');
             document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
-            currentMasterCat = null;
-            currentSubFilter = 'all';
+            currentMasterCat = null; currentSubFilter = 'all';
         }
 
-        document.getElementById('master-filter-bar').addEventListener('click', (e) => {
-            const pill = e.target.closest('.master-pill');
-            if (pill) handleMasterCategorySelection(pill);
-        });
-
+        document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
-            const subPill = e.target.closest('.sub-pill');
-            if (!subPill) return;
-
+            const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
             document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]");
             subPill.className = "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
-            
-            currentSubFilter = subPill.getAttribute('data-sub');
-            evaluateAndRenderFilteredPOIs();
+            currentSubFilter = subPill.getAttribute('data-sub'); evaluateAndRenderFilteredPOIs();
         });
 
-        document.getElementById('buffer-select').addEventListener('change', (e) => {
-            activeBufferMeters = parseInt(e.target.value);
-            if (rawPoiDataMemory.length > 0) evaluateAndRenderFilteredPOIs();
-        });
-
-        document.getElementById('toggle-search-btn').addEventListener('click', () => {
-            document.getElementById('search-container').classList.toggle('hidden');
-        });
+        document.getElementById('buffer-select').addEventListener('change', (e) => { activeBufferMeters = parseInt(e.target.value); if (rawPoiDataMemory.length > 0) evaluateAndRenderFilteredPOIs(); });
+        document.getElementById('toggle-search-btn').addEventListener('click', () => { document.getElementById('search-container').classList.toggle('hidden'); });
 
         document.getElementById('route-btn').addEventListener('click', async () => {
-            const startInput = document.getElementById('start-input');
-            const endInput = document.getElementById('end-input');
-            let startLatLng, endLatLng;
-
-            if (startInput.dataset.lat && startInput.dataset.lon) {
-                startLatLng = L.latLng(parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon));
-            } else if (startInput.value.trim()) {
-                updateInlineStatus("Resolving start...", true);
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(startInput.value)}`).then(r => r.json());
-                if (res.length > 0) startLatLng = L.latLng(parseFloat(res[0].lat), parseFloat(res[0].lon));
-            }
-
-            if (endInput.dataset.lat && endInput.dataset.lon) {
-                endLatLng = L.latLng(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon));
-            } else if (endInput.value.trim()) {
-                updateInlineStatus("Resolving destination...", true);
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(endInput.value)}`).then(r => r.json());
-                if (res.length > 0) endLatLng = L.latLng(parseFloat(res[0].lat), parseFloat(res[0].lon));
-            }
-
-            if (!startLatLng || !endLatLng) {
-                updateInlineStatus("Geocode error.");
-                alert("Addresses could not be parsed. Verify inputs.");
-                return;
-            }
-
+            const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input'); let startLatLng, endLatLng;
+            if (startInput.dataset.lat && startInput.dataset.lon) { startLatLng = L.latLng(parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon)); }
+            if (endInput.dataset.lat && endInput.dataset.lon) { endLatLng = L.latLng(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon)); }
+            if (!startLatLng || !endLatLng) { alert("Select suggested options inside autocomplete list layouts first."); return; }
             routingControl.setWaypoints([startLatLng, endLatLng]);
         });
 
-        const geoBtn = document.getElementById('geo-btn');
-        let isTracking = false, watchId = null;
-
+        const geoBtn = document.getElementById('geo-btn'); let isTracking = false, watchId = null;
         geoBtn.addEventListener('click', () => {
-            if (isTracking) {
-                if (watchId) navigator.geolocation.clearWatch(watchId);
-                isTracking = false;
-                geoBtn.innerText = "📍 Track";
-                geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]";
-            } else {
+            if (isTracking) { if (watchId) navigator.geolocation.clearWatch(watchId); isTracking = false; geoBtn.innerText = "📍 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; }
+            else {
                 if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
-                geoBtn.innerText = "🛑 Stop";
-                geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]";
-                isTracking = true;
-
-                watchId = navigator.geolocation.watchPosition(
-                    (pos) => {
-                        const { latitude, longitude } = pos.coords;
-                        if (!userMarker) {
-                            userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white') }).addTo(map);
-                        } else { userMarker.setLatLng([latitude, longitude]); }
-                        map.panTo([latitude, longitude]);
-                    },
-                    () => { isTracking = false; },
-                    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-                );
+                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
+                watchId = navigator.geolocation.watchPosition((pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
+                    map.panTo([latitude, longitude]);
+                }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
             }
         });
     </script>
