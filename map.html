@@ -39,9 +39,16 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* Modern popup layout to prevent content spillover */
         .custom-popup .leaflet-popup-content-wrapper {
             border-radius: 16px;
-            padding: 6px;
+            padding: 2px;
+            max-width: 250px !important;
+            overflow: hidden;
+        }
+        .custom-popup .leaflet-popup-content {
+            margin: 8px !important;
+            max-width: 234px !important;
         }
     </style>
 </head>
@@ -53,31 +60,32 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div class="relative">
                     <input id="start-input" type="text" autocomplete="off" placeholder="Start Address (e.g., Raleigh, NC)" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
-                    <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+                    <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden max-h-48 overflow-y-auto z-50 text-sm shadow-xl"></div>
                 </div>
                 <div class="relative">
                     <input id="end-input" type="text" autocomplete="off" placeholder="Destination (e.g., Asheville, NC)" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
-                    <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+                    <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden max-h-48 overflow-y-auto z-50 text-sm shadow-xl"></div>
                 </div>
             </div>
             <div class="flex gap-2">
-                <button id="route-btn" class="flex-1 bg-gray-900 active:bg-black text-white text-xs font-bold py-2 px-4 rounded-xl min-h-[44px] shadow-sm transition-all">
+                <button id="route-btn" class="flex-1 bg-gray-900 active:bg-black text-white text-xs font-bold py-2 px-4 rounded-xl min-h-[44px] shadow-sm transition-all flex items-center justify-center gap-1">
                     🗺️ Calculate Dynamic Route
                 </button>
             </div>
         </div>
 
         <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-gray-100 bg-gray-50/50">
-            <div class="flex-1 min-w-0">
-                <p id="status" class="text-xs font-semibold text-gray-700 truncate">Enter locations above to map your route.</p>
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+                <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent hidden"></div>
+                <p id="status" class="text-xs font-bold text-gray-500 truncate">System idle. Enter routing parameters above.</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
                 <select id="buffer-select" class="bg-white text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
-                    <option value="4000" selected>⏱️ 5 Min Buffer</option>
-                    <option value="12000">⏱️ 15 Min Buffer</option>
-                    <option value="24000">⏱️ 30 Min Buffer</option>
+                    <option value="4000" selected>⏱️ 5 Min</option>
+                    <option value="12000">⏱️ 15 Min</option>
+                    <option value="24000">⏱️ 30 Min</option>
                 </select>
-                <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 rounded-xl min-h-[44px]">
+                <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px]">
                     🔍 Inputs
                 </button>
                 <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]">
@@ -86,59 +94,93 @@
             </div>
         </div>
 
-        <div id="filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-2 border-t border-gray-100">
-            <button data-filter="all" class="filter-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]">All Stops</button>
-            <button data-filter="playground" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
-            <button data-filter="raisingcanes" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍗 Raising Cane's</button>
-            <button data-filter="sheetz" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Sheetz</button>
-            <button data-filter="mcdonalds" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍟 McDonald's</button>
-            <button data-filter="chickfila" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🐔 Chick-fil-A</button>
-            <button data-filter="chipotle" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌯 Chipotle</button>
-            <button data-filter="wendys" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Wendy's</button>
-            <button data-filter="jerseymikes" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🥪 Jersey Mike's</button>
+        <div id="master-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-1.5 border-t border-gray-100">
+            <button data-cat="playground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
+            <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
+            <button data-cat="food" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
+            <button data-cat="highway" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛣️ Highway Amenities</button>
+            <button data-cat="tourism" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
         </div>
+
+        <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden transition-all">
+            </div>
     </div>
 
     <div id="map"></div>
 
-    <div id="poi-loader" class="absolute bottom-6 left-4 right-4 z-10 bg-white/95 backdrop-blur-md rounded-xl p-4 shadow-xl border border-gray-100 safe-bottom hidden">
-        <div class="flex items-center gap-3">
-            <div class="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
-            <p id="loader-text" class="text-xs font-semibold text-gray-600">Processing path segments...</p>
-        </div>
-    </div>
+    <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
 
     <script>
         const MAP_INITIAL_CENTER = [35.7796, -78.6382]; 
-        const CACHE_PREFIX = 'route_pois_v8_';
+        const CACHE_PREFIX = 'route_pois_v10_';
         
-        const poiConfigs = {
-            playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
-            sheetz: { label: '⛽', bg: 'bg-red-600 border-red-200 text-white', name: 'Sheetz', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
-            chipotle: { label: '🌯', bg: 'bg-amber-950 border-amber-600 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a084768e?auto=format&fit=crop&w=300&q=80' },
-            raisingcanes: { label: '🍗', bg: 'bg-amber-500 border-red-700 text-white font-bold', name: "Raising Cane's", img: 'https://images.unsplash.com/photo-1562967914-608f82629a7a?auto=format&fit=crop&w=300&q=80' },
-            jerseymikes: { label: '🥪', bg: 'bg-blue-900 border-amber-400 text-amber-400 font-bold', name: "Jersey Mike's", img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
-            mcdonalds: { label: '🍟', bg: 'bg-yellow-500 border-red-600 text-red-700 font-black', name: "McDonald's", img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
-            wendys: { label: '🍔', bg: 'bg-sky-500 border-sky-200 text-white', name: "Wendy's", img: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=300&q=80' },
-            chickfila: { label: '🐔', bg: 'bg-red-700 border-white text-white', name: 'Chick-fil-A', img: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?auto=format&fit=crop&w=300&q=80' },
-            food: { label: '🍴', bg: 'bg-zinc-500 border-zinc-300 text-white', name: 'Food Stop', img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80' }
+        // Comprehensive visual styling and query structure profiles
+        const categoryConfigs = {
+            playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', query: 'node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
+            gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', query: 'node["brand"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];node["name"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
+            food: { label: '🍟', bg: 'bg-red-600 border-red-200 text-white', name: 'Fast Food', query: 'node["brand"~"McDonald\'s|Wendy\'s|Chick-fil-A|Chipotle|Jersey Mike|Raising Cane",i];node["name"~"McDonald\'s|Wendy\'s|Chick-fil-A|Raising Cane|Jersey Mike|Chipotle",i];', img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
+            highway_rest: { label: '🛣️', bg: 'bg-blue-600 border-blue-200 text-white', name: 'Rest Area', query: 'node["highway"="rest_area"];', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80' },
+            highway_toilets: { label: '🧻', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Public Restroom', query: 'node["amenity"="toilets"];', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
+            tourism_viewpoint: { label: '📷', bg: 'bg-sky-500 border-sky-200 text-white', name: 'Scenic Viewpoint', query: 'node["tourism"="viewpoint"];', img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=300&q=80' },
+            tourism_dogpark: { label: '🐕', bg: 'bg-violet-600 border-violet-200 text-white', name: 'Dog Park', query: 'node["leisure"="dog_park"];', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=300&q=80' }
+        };
+
+        // Sub-menus lookup mapping table
+        const subMenuDefinitions = {
+            playground: [{ id: 'all', label: 'All Public Parks' }],
+            gas: [
+                { id: 'all', label: 'All Selected Chains' },
+                { id: 'unl87', label: 'UNL 87 Listed' },
+                { id: 'unl88', label: 'UNL 88 / E15 listed' }
+            ],
+            food: [
+                { id: 'all', label: 'All Brands' },
+                { id: 'raisingcanes', label: "Cane's" },
+                { id: 'chickfila', label: 'Chick-fil-A' },
+                { id: 'mcdonalds', label: "McDonald's" },
+                { id: 'jerseymikes', label: "Jersey Mike's" }
+            ],
+            highway: [
+                { id: 'highway_rest', label: 'Highway Rest Areas' },
+                { id: 'highway_toilets', label: 'Standalone Restrooms' }
+            ],
+            tourism: [
+                { id: 'tourism_viewpoint', label: 'Scenic Overlooks' },
+                { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }
+            ]
         };
 
         let allPoiMarkers = [];
         let rawPoiDataMemory = []; 
         let routeLineCoordinates = [];
         let userMarker = null;
-        let activeFilter = 'all';
-        let activeBufferMeters = 4000; // 4000 meters ~ 2.5 miles (Default 5-minute detour window)
+        let currentMasterCat = null;
+        let currentSubFilter = 'all';
+        let activeBufferMeters = 4000; 
+        let cachedCategoriesFetched = new Set(); // Protects against redundant network sweeps per trip
 
         const map = L.map('map', { zoomControl: false, tap: true }).setView(MAP_INITIAL_CENTER, 8);
-
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
-        const createCustomIcon = (label, classes) => L.divIcon({
-            html: `<div class="flex items-center justify-center w-8 h-8 rounded-full border-2 shadow-md text-sm ${classes}">${label}</div>`,
-            className: '', iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -10]
-        });
+        function triggerToast(text, duration = 3000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = "bg-gray-900/95 backdrop-blur-sm text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center transition-all duration-300 opacity-0 translate-y-2 pointer-events-auto";
+            toast.innerText = text;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('opacity-0', 'translate-y-2'); }, 50);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-1');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, duration);
+        }
+
+        function updateInlineStatus(text, showSpinner = false) {
+            document.getElementById('status').innerText = text;
+            const spinner = document.getElementById('status-spinner');
+            if (showSpinner) spinner.classList.remove('hidden');
+            else spinner.classList.add('hidden');
+        }
 
         let routingControl = L.Routing.control({
             show: false, addWaypoints: false, draggableWaypoints: false,
@@ -146,15 +188,21 @@
         }).addTo(map);
 
         routingControl.on('routesfound', function(e) {
-            document.getElementById('status').innerText = "Analyzing route coordinates...";
             routeLineCoordinates = e.routes[0].coordinates;
             document.getElementById('search-container').classList.add('hidden');
             
-            // Execute segment splitting calculations based on total geographic coverage
-            segmentAndFetchPOIs(routeLineCoordinates);
+            // Clear prior states completely for the new trip configuration
+            rawPoiDataMemory = [];
+            cachedCategoriesFetched.clear();
+            allPoiMarkers.forEach(m => map.removeLayer(m.marker));
+            allPoiMarkers = [];
+            hideSubMenu();
+            
+            updateInlineStatus("Route parsed. Select categories below to display stops.");
+            triggerToast("Route generated successfully. Options are locked to a 5-minute buffer by default.");
         });
 
-        // --- Suggestion Implementation 1: Native Address Autocomplete Engine ---
+        // Clean Autocomplete Geocoder (Strips Counties/Regions/Countries via strict address parsing loops)
         function initAutocomplete(inputId, dropdownId) {
             const input = document.getElementById(inputId);
             const dropdown = document.getElementById(dropdownId);
@@ -166,7 +214,7 @@
                 if (query.length < 3) { dropdown.classList.add('hidden'); return; }
 
                 debounceTimer = setTimeout(() => {
-                    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=4&q=${encodeURIComponent(query)}`, {
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=4&addressdetails=1&q=${encodeURIComponent(query)}`, {
                         headers: { 'User-Agent': 'Dynamic-Mobile-Map-Corridor-App' }
                     })
                     .then(res => res.json())
@@ -176,11 +224,23 @@
                         dropdown.classList.remove('hidden');
                         
                         data.forEach(item => {
+                            let tokens = [];
+                            const addr = item.address;
+                            if (addr) {
+                                const line1 = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
+                                const city = addr.city || addr.town || addr.village || addr.suburb || '';
+                                const state = addr.state || '';
+                                if (line1) tokens.push(line1);
+                                if (city) tokens.push(city);
+                                if (state) tokens.push(state);
+                            }
+                            const cleanString = tokens.length > 0 ? tokens.join(', ') : item.display_name.split(',').slice(0, 3).join(',');
+                            
                             const option = document.createElement('div');
                             option.className = "px-3 py-2.5 hover:bg-gray-100 active:bg-gray-200 border-b border-gray-100 last:border-0 cursor-pointer truncate text-gray-700 font-medium";
-                            option.innerText = item.display_name;
+                            option.innerText = cleanString;
                             option.addEventListener('click', () => {
-                                input.value = item.display_name;
+                                input.value = cleanString;
                                 input.dataset.lat = item.lat;
                                 input.dataset.lon = item.lon;
                                 dropdown.classList.add('hidden');
@@ -190,278 +250,287 @@
                     }).catch(() => {});
                 }, 400);
             });
-
-            // Close lookup elements when clicking external canvas targets
-            document.addEventListener('click', (e) => {
-                if (e.target !== input) dropdown.classList.add('hidden');
-            });
         }
 
         initAutocomplete('start-input', 'start-autocomplete');
         initAutocomplete('end-input', 'end-autocomplete');
 
-        // --- Suggestion Implementation 2: Cache Eviction Strategy ---
-        function enforceCacheEviction(newKey, payload) {
-            try {
-                let keys = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    if (localStorage.key(i).startsWith(CACHE_PREFIX)) keys.push(localStorage.key(i));
-                }
-                // Evict oldest elements if dynamic trace limit ceiling is reached
-                if (keys.length >= 15) {
-                    keys.sort();
-                    localStorage.removeItem(keys[0]);
-                }
-                localStorage.setItem(newKey, JSON.stringify(payload));
-            } catch (e) {
-                localStorage.clear(); // Safety clear configuration fallback
+        // Parallel Highway Segment Chunk Execution Infrastructure
+        async function fetchPOIsForCategory(masterCat) {
+            if (routeLineCoordinates.length === 0) {
+                alert("Please calculate a route path before selecting target amenities.");
+                return;
             }
-        }
+            if (cachedCategoriesFetched.has(masterCat)) {
+                evaluateAndRenderFilteredPOIs();
+                return;
+            }
 
-        // --- Suggestion Implementation 3: Route Segment Query Splitting ---
-        async function segmentAndFetchPOIs(coordinates) {
-            document.getElementById('poi-loader').classList.remove('hidden');
-            document.getElementById('loader-text').innerText = "Dividing route into performance segments...";
-
-            // Sample coordinates down to find key nodes every ~50 miles
-            const pointsPerSegment = 400; 
+            updateInlineStatus(`Querying data channels for ${masterCat}...`, true);
+            const pointsPerSegment = 400;
             const boundingBoxes = [];
 
-            for (let i = 0; i < coordinates.length; i += pointsPerSegment) {
-                const chunk = coordinates.slice(i, i + pointsPerSegment + 20); // Maintain overlap margin
+            for (let i = 0; i < routeLineCoordinates.length; i += pointsPerSegment) {
+                const chunk = routeLineCoordinates.slice(i, i + pointsPerSegment + 20);
                 let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
-                
                 chunk.forEach(c => {
-                    if (c.lat < minLat) minLat = c.lat;
-                    if (c.lng < minLon) minLon = c.lng;
-                    if (c.lat > maxLat) maxLat = c.lat;
-                    if (c.lng > maxLon) maxLon = c.lng;
+                    if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
+                    if (c.lat > maxLat) maxLat = c.lat; if (c.lng > maxLon) maxLon = c.lng;
                 });
-
-                // Inject structural calculation padding around segment margins (~15 miles padding safety window)
                 boundingBoxes.push({
                     south: (minLat - 0.22).toFixed(4), west: (minLon - 0.22).toFixed(4),
                     north: (maxLat + 0.22).toFixed(4), east: (maxLon + 0.22).toFixed(4)
                 });
             }
 
-            // Create a unique combined cache validation lookup signature matching the path layout nodes
-            const compositeSignature = `${boundingBoxes[0].south}_${boundingBoxes[0].west}_${boundingBoxes[boundingBoxes.length-1].north}_${boundingBoxes[boundingBoxes.length-1].east}`;
-            const targetCacheKey = CACHE_PREFIX + compositeSignature;
-            const cachedData = localStorage.getItem(targetCacheKey);
-
-            if (cachedData) {
-                document.getElementById('poi-loader').classList.add('hidden');
-                document.getElementById('status').innerText = "Stops active (Offline Local Cache)";
-                rawPoiDataMemory = JSON.parse(cachedData);
-                processAndRenderPOIs(rawPoiDataMemory);
-                return;
+            // Identify target keys to retrieve from query definitions maps
+            let structuralQueries = [];
+            if (masterCat === 'highway' || masterCat === 'tourism') {
+                subMenuDefinitions[masterCat].forEach(sub => { structuralQueries.push(categoryConfigs[sub.id].query); });
+            } else {
+                structuralQueries.push(categoryConfigs[masterCat].query);
             }
 
-            let aggregatedElements = [];
-            document.getElementById('loader-text').innerText = `Downloading markers across ${boundingBoxes.length} route zones...`;
-
-            // Process parallel network sweeps using the calculated segment blocks
             try {
-                const fetchPromises = boundingBoxes.map(box => {
-                    const query = `[out:json][timeout:60][bbox:${box.south},${box.west},${box.north},${box.east}];
-                        (node["brand"~"Sheetz|Chipotle|Jersey Mike|McDonald's|Wendy's|Chick-fil-A|Raising Cane",i];
-                         node["name"~"Sheetz|Chipotle|Jersey Mike|McDonald's|Wendy's|Chick-fil-A|Raising Cane",i];
-                         node["leisure"="playground"]["access"!~"private|no"];
-                         way["leisure"="playground"]["access"!~"private|no"];); out center;`;
-                    return fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query)).then(res => res.json());
+                const fetchPromises = boundingBoxes.flatMap(box => {
+                    return structuralQueries.map(subQ => {
+                        const query = `[out:json][timeout:45][bbox:${box.south},${box.west},${box.north},${box.east}];(${subQ});out center;`;
+                        return fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query)).then(res => res.json());
+                    });
                 });
 
                 const results = await Promise.all(fetchPromises);
-                
-                // Merge arrays while stripping duplicate element IDs natively
-                const uniqueIds = new Set();
+                const currentSetIds = new Set(rawPoiDataMemory.map(el => el.id));
+
                 results.forEach(res => {
                     if (res && res.elements) {
                         res.elements.forEach(el => {
-                            if (!uniqueIds.has(el.id)) {
-                                uniqueIds.add(el.id);
-                                aggregatedElements.push(el);
+                            if (!currentSetIds.has(el.id)) {
+                                currentSetIds.add(el.id);
+                                rawPoiDataMemory.push(el);
                             }
                         });
                     }
                 });
 
-                document.getElementById('poi-loader').classList.add('hidden');
-                document.getElementById('status').innerText = "Corridor sweep synchronized successfully.";
-                
-                enforceCacheEviction(targetCacheKey, aggregatedElements);
-                rawPoiDataMemory = aggregatedElements;
-                processAndRenderPOIs(rawPoiDataMemory);
+                cachedCategoriesFetched.add(masterCat);
+                updateInlineStatus("Stops updated.");
+                evaluateAndRenderFilteredPOIs();
 
             } catch (err) {
-                document.getElementById('poi-loader').classList.add('hidden');
-                document.getElementById('status').innerText = "Network timeout. Shorten your selection path parameters.";
+                updateInlineStatus("Search timed out.");
+                triggerToast("Data node busy. Try resetting your route parameters or zoom levels.");
             }
         }
 
-        // --- Functional Requirement: Exclude Church Playgrounds ---
         function isChurchProperty(tags) {
             if (tags.amenity === 'place_of_worship' || tags.religion) return true;
+            const text = (tags.name || '').toLowerCase();
+            return ['church', 'chapel', 'ministry', 'baptist', 'methodist', 'lutheran', 'presbyterian', 'catholic', 'fellowship', 'christian'].some(k => text.includes(k));
+        }
+
+        // Contextual assignment normalization loop
+        function parseTargetCategory(tags) {
+            if (tags.leisure === 'playground') return isChurchProperty(tags) ? 'excluded' : 'playground';
+            if (tags.highway === 'rest_area') return 'highway_rest';
+            if (tags.amenity === 'toilets') return 'highway_toilets';
+            if (tags.tourism === 'viewpoint') return 'tourism_viewpoint';
+            if (tags.leisure === 'dog_park') return 'tourism_dogpark';
+
+            const signature = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
+            if (['murphy express', 'sheetz', 'bucee', 'buc-ee', 'costco', 'wawa', 'circle k'].some(brand => signature.includes(brand))) return 'gas';
+            if (['mcdonald', 'wendy', 'chick-fil-a', 'chick fil a', 'chipotle', 'jersey mike', 'raising cane'].some(brand => signature.includes(brand))) return 'food';
             
-            const nameField = (tags.name || '').toLowerCase();
-            const churchKeywords = [
-                'church', 'chapel', 'ministry', 'baptist', 'methodist', 'lutheran', 
-                'presbyterian', 'catholic', 'episcopal', 'parish', 'synagogue', 
-                'temple', 'mosque', 'tabernacle', 'christian', 'fellowship', 'lds'
-            ];
-            return churchKeywords.some(keyword => nameField.includes(keyword));
+            return 'excluded';
         }
 
-        function getPoiCategory(tags) {
-            if (tags.leisure === 'playground') {
-                return isChurchProperty(tags) ? 'excluded' : 'playground';
-            }
-            const text = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
-            if (text.includes('sheetz')) return 'sheetz';
-            if (text.includes('chipotle')) return 'chipotle';
-            if (text.includes('jersey mike')) return 'jerseymikes';
-            if (text.includes('mcdonald')) return 'mcdonalds';
-            if (text.includes('wendy')) return 'wendys';
-            if (text.includes('chick-fil-a') || text.includes('chick fil a')) return 'chickfila';
-            if (text.includes('raising cane')) return 'raisingcanes';
-            return 'food';
-        }
-
-        function processAndRenderPOIs(elements) {
+        function evaluateAndRenderFilteredPOIs() {
             allPoiMarkers.forEach(item => map.removeLayer(item.marker));
             allPoiMarkers = [];
 
             const sliceRate = 8;
-            const targetRouteSlice = [];
-            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) {
-                targetRouteSlice.push(routeLineCoordinates[i]);
-            }
+            const targetsSlice = [];
+            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { targetsSlice.push(routeLineCoordinates[i]); }
 
-            elements.forEach(element => {
+            rawPoiDataMemory.forEach(element => {
                 const lat = element.lat || (element.center && element.center.lat);
                 const lon = element.lon || (element.center && element.center.lon);
                 if (!lat || !lon) return;
 
                 const tags = element.tags || {};
-                const category = getPoiCategory(tags);
-                
-                // Exclude matches flagged as religious facilities or standard fallback omissions
-                if (category === 'excluded' || category === 'food') return;
+                const concreteCat = parseTargetCategory(tags);
+                if (concreteCat === 'excluded') return;
 
-                let minDistanceMeters = Infinity;
-                for (let j = 0; j < targetRouteSlice.length; j++) {
-                    const distance = map.distance([lat, lon], [targetRouteSlice[j].lat, targetRouteSlice[j].lng]);
-                    if (distance < minDistanceMeters) minDistanceMeters = distance;
+                // Enforce Master Navigation filtering buckets
+                if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
+                if (currentMasterCat === 'tourism' && concreteCat !== 'tourism_viewpoint' && concreteCat !== 'tourism_dogpark') return;
+                if (currentMasterCat !== 'highway' && currentMasterCat !== 'tourism' && concreteCat !== currentMasterCat) return;
+
+                // Enforce Sub-menu operational filter states
+                if (currentSubFilter !== 'all') {
+                    if (currentMasterCat === 'highway' || currentMasterCat === 'tourism') {
+                        if (concreteCat !== currentSubFilter) return;
+                    } else if (currentMasterCat === 'gas') {
+                        // --- Fuel Variant Filtering Operations Logic ---
+                        if (currentSubFilter === 'unl87' && tags["fuel:octane_87"] !== 'yes' && tags["fuel:unleaded"] !== 'yes') return;
+                        if (currentSubFilter === 'unl88' && tags["fuel:octane_88"] !== 'yes' && tags["fuel:e15"] !== 'yes') return;
+                    } else if (currentMasterCat === 'food') {
+                        const normalizedLabel = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase().replace(/[^a-z]/g, '');
+                        if (!normalizedLabel.includes(currentSubFilter)) return;
+                    }
                 }
 
-                if (minDistanceMeters > activeBufferMeters) return;
+                // Execute on-device spatial threshold distance validations
+                let minD = Infinity;
+                for (let j = 0; j < targetsSlice.length; j++) {
+                    const d = map.distance([lat, lon], [targetsSlice[j].lat, targetsSlice[j].lng]);
+                    if (d < minD) minD = d;
+                }
+                if (minD > activeBufferMeters) return;
 
-                const config = poiConfigs[category];
+                const config = categoryConfigs[concreteCat] || categoryConfigs['food'];
                 let name = tags.name || config.name;
                 let hours = tags.opening_hours || "Hours not listed (Check online)";
-                let description = tags.description || (category === 'playground' ? `Public city park playground facility.` : `Verified location off highway corridor.`);
-                let imageUrl = tags.image || config.img;
+                let description = tags.description || `${config.name} facility mapped along route.`;
 
-                // Action Link Direct Routing Generation URL Schemes
+                // Sub-menu asset card information blocks mapping properties
+                if (concreteCat === 'gas') {
+                    const has87 = (tags["fuel:octane_87"] === 'yes' || tags["fuel:unleaded"] === 'yes') ? '✅ Yes' : '❓ Unverified';
+                    const has88 = (tags["fuel:octane_88"] === 'yes' || tags["fuel:e15"] === 'yes') ? '✅ Yes' : '❌ No/Unverified';
+                    description = `<div class="text-[10px] bg-gray-50 p-1.5 rounded-lg border border-gray-100 my-1"><p>⛽ <b>UNL 87:</b> ${has87}</p><p>⚡ <b>UNL 88 (E15):</b> ${has88}</p></div>`;
+                }
+
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
                 const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-                
-                // --- Functional Requirement: Dynamic Web Search Query ---
-                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(name + ' ' + (tags.addr_city || 'North Carolina'))}`;
+                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(name + ' ' + (tags.addr_city || ''))}`;
 
                 const popupContent = `
-                    <div class="max-w-[220px] font-sans p-0.5">
-                        <img src="${imageUrl}" class="w-full h-24 object-cover rounded-lg mb-2 shadow-sm" onerror="this.style.display='none'">
-                        <h3 class="text-xs font-bold text-gray-900">${name}</h3>
-                        <p class="text-[11px] text-gray-500 leading-tight my-1">${description}</p>
+                    <div class="w-full font-sans p-0.5">
+                        <img src="${config.img}" class="w-full h-24 object-cover rounded-lg mb-2 shadow-sm" onerror="this.style.display='none'">
+                        <h3 class="text-xs font-bold text-gray-900 truncate">${name}</h3>
+                        <div class="text-[11px] text-gray-500 leading-tight my-1">${description}</div>
                         <div class="border-t border-gray-100 pt-1.5 mt-1.5">
                             <span class="text-[9px] uppercase font-bold text-gray-400 block tracking-wider">Hours</span>
-                            <p class="text-xs text-gray-700 italic font-medium">${hours}</p>
+                            <p class="text-xs text-gray-700 italic font-medium truncate">${hours}</p>
                         </div>
                         <div class="mt-3 flex flex-col gap-1.5">
-                            <a href="${appleMapsUrl}" target="_blank" class="block text-center bg-blue-600 text-white text-[11px] font-bold py-2.5 rounded-xl shadow-sm active:bg-blue-700 min-h-[38px] flex items-center justify-center">🗺️ Route in Apple Maps</a>
-                            <a href="${streetViewUrl}" target="_blank" class="block text-center bg-gray-900 text-white text-[11px] font-bold py-2.5 rounded-xl shadow-sm active:bg-black min-h-[38px] flex items-center justify-center">👁️ Google Street View</a>
-                            <a href="${googleSearchUrl}" target="_blank" class="block text-center bg-gray-100 border border-gray-200 text-gray-700 text-[11px] font-bold py-2.5 rounded-xl active:bg-gray-200 min-h-[38px] flex items-center justify-center">🌐 Search Web & Reviews</a>
+                            <a href="${appleMapsUrl}" target="_blank" class="block text-center bg-blue-600 text-white text-[11px] font-bold py-2 rounded-xl min-h-[38px] flex items-center justify-center pointer-events-auto shadow-sm">🗺️ Route in Apple Maps</a>
+                            <a href="${streetViewUrl}" target="_blank" class="block text-center bg-gray-900 text-white text-[11px] font-bold py-2 rounded-xl min-h-[38px] flex items-center justify-center pointer-events-auto shadow-sm">👁️ Google Street View</a>
+                            <a href="${googleSearchUrl}" target="_blank" class="block text-center bg-gray-100 border border-gray-200 text-gray-700 text-[11px] font-bold py-2 rounded-xl min-h-[38px] flex items-center justify-center pointer-events-auto">🌐 Search Web & Reviews</a>
                         </div>
                     </div>
                 `;
 
+                // Smart autoPanPadding values shift map viewport area to guarantee popup headroom spacing
                 const marker = L.marker([lat, lon], { icon: createCustomIcon(config.label, config.bg) })
-                    .bindPopup(popupContent, { className: 'custom-popup' });
+                    .bindPopup(popupContent, { 
+                        className: 'custom-popup',
+                        autoPan: true,
+                        autoPanPaddingTopLeft: L.point(15, 230),
+                        autoPanPaddingBottomRight: L.point(15, 25),
+                        maxWidth: 250
+                    });
 
-                allPoiMarkers.push({ marker: marker, category: category });
-
-                if (activeFilter === 'all' || activeFilter === category) {
-                    marker.addTo(map);
-                }
+                allPoiMarkers.push({ marker: marker, category: concreteCat });
+                marker.addTo(map);
             });
         }
 
-        // Route Calculation Trigger Handler
-        document.getElementById('route-btn').addEventListener('click', async () => {
-            const startInput = document.getElementById('start-input');
-            const endInput = document.getElementById('end-input');
+        // --- UI Sub-menu Render/Erase Routines ---
+        function handleMasterCategorySelection(element) {
+            document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
+            element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
+            
+            currentMasterCat = element.getAttribute('data-cat');
+            currentSubFilter = 'all'; 
+            
+            generateSubMenuUI(currentMasterCat);
+            fetchPOIsForCategory(currentMasterCat);
+        }
 
-            let startLatLng, endLatLng;
+        function generateSubMenuUI(catId) {
+            const subBar = document.getElementById('sub-filter-bar');
+            subBar.innerHTML = '';
+            const definition = subMenuDefinitions[catId];
+            if (!definition) { subBar.classList.add('hidden'); return; }
 
-            // Use cached autocomplete values if present, otherwise fall back to explicit text translation lookups
-            if (startInput.dataset.lat && startInput.dataset.lon) {
-                startLatLng = L.latLng(parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon));
-            } else if (startInput.value.trim()) {
-                document.getElementById('status').innerText = "Translating origin parameters...";
-                const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(startInput.value)}`;
-                const res = await fetch(url, { headers: { 'User-Agent': 'Dynamic-Map-App' } }).then(r => r.json());
-                if (res.length > 0) startLatLng = L.latLng(parseFloat(res[0].lat), parseFloat(res[0].lon));
-            }
+            definition.forEach((sub, index) => {
+                const subButton = document.createElement('button');
+                subButton.setAttribute('data-sub', sub.id);
+                // First pill active by default configuration rules
+                subButton.className = index === 0 
+                    ? "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]"
+                    : "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
+                subButton.innerText = sub.label;
+                subBar.appendChild(subButton);
+            });
+            subBar.classList.remove('hidden');
+        }
 
-            if (endInput.dataset.lat && endInput.dataset.lon) {
-                endLatLng = L.latLng(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon));
-            } else if (endInput.value.trim()) {
-                document.getElementById('status').innerText = "Translating destination parameters...";
-                const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(endInput.value)}`;
-                const res = await fetch(url, { headers: { 'User-Agent': 'Dynamic-Map-App' } }).then(r => r.json());
-                if (res.length > 0) endLatLng = L.latLng(parseFloat(res[0].lat), parseFloat(res[0].lon));
-            }
+        function hideSubMenu() {
+            document.getElementById('sub-filter-bar').classList.add('hidden');
+            document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
+            currentMasterCat = null;
+            currentSubFilter = 'all';
+        }
 
-            if (!startLatLng || !endLatLng) {
-                alert("Could not calculate addresses. Check spelling configurations.");
-                return;
-            }
+        // Event Handling Delegations
+        document.getElementById('master-filter-bar').addEventListener('click', (e) => {
+            const pill = e.target.closest('.master-pill');
+            if (pill) handleMasterCategorySelection(pill);
+        });
 
-            routingControl.setWaypoints([startLatLng, endLatLng]);
+        document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
+            const subPill = e.target.closest('.sub-pill');
+            if (!subPill) return;
+
+            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]");
+            subPill.className = "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
+            
+            currentSubFilter = subPill.getAttribute('data-sub');
+            evaluateAndRenderFilteredPOIs();
+        });
+
+        document.getElementById('buffer-select').addEventListener('change', (e) => {
+            activeBufferMeters = parseInt(e.target.value);
+            if (rawPoiDataMemory.length > 0) evaluateAndRenderFilteredPOIs();
         });
 
         document.getElementById('toggle-search-btn').addEventListener('click', () => {
             document.getElementById('search-container').classList.toggle('hidden');
         });
 
-        document.getElementById('buffer-select').addEventListener('change', (e) => {
-            activeBufferMeters = parseInt(e.target.value);
-            if (rawPoiDataMemory.length > 0) processAndRenderPOIs(rawPoiDataMemory);
+        document.getElementById('route-btn').addEventListener('click', async () => {
+            const startInput = document.getElementById('start-input');
+            const endInput = document.getElementById('end-input');
+            let startLatLng, endLatLng;
+
+            if (startInput.dataset.lat && startInput.dataset.lon) {
+                startLatLng = L.latLng(parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon));
+            } else if (startInput.value.trim()) {
+                updateInlineStatus("Resolving start...", true);
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(startInput.value)}`).then(r => r.json());
+                if (res.length > 0) startLatLng = L.latLng(parseFloat(res[0].lat), parseFloat(res[0].lon));
+            }
+
+            if (endInput.dataset.lat && endInput.dataset.lon) {
+                endLatLng = L.latLng(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon));
+            } else if (endInput.value.trim()) {
+                updateInlineStatus("Resolving destination...", true);
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(endInput.value)}`).then(r => r.json());
+                if (res.length > 0) endLatLng = L.latLng(parseFloat(res[0].lat), parseFloat(res[0].lon));
+            }
+
+            if (!startLatLng || !endLatLng) {
+                updateInlineStatus("Geocode error.");
+                alert("Addresses could not be parsed. Verify inputs.");
+                return;
+            }
+
+            routingControl.setWaypoints([startLatLng, endLatLng]);
         });
 
-        document.getElementById('filter-bar').addEventListener('click', (e) => {
-            const pill = e.target.closest('.filter-pill');
-            if (!pill) return;
-
-            document.querySelectorAll('.filter-pill').forEach(btn => {
-                btn.className = "filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]";
-            });
-            pill.className = "filter-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
-            
-            activeFilter = pill.getAttribute('data-filter');
-
-            allPoiMarkers.forEach(item => {
-                if (activeFilter === 'all' || item.category === activeFilter) {
-                    if (!map.hasLayer(item.marker)) item.marker.addTo(map);
-                } else {
-                    if (map.hasLayer(item.marker)) map.removeLayer(item.marker);
-                }
-            });
-        });
-
-        // Geolocation Watch Module
+        // Mobile Geolocation Engine
         const geoBtn = document.getElementById('geo-btn');
         let isTracking = false, watchId = null;
 
@@ -482,17 +551,10 @@
                         const { latitude, longitude } = pos.coords;
                         if (!userMarker) {
                             userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white') }).addTo(map);
-                        } else {
-                            userMarker.setLatLng([latitude, longitude]);
-                        }
+                        } else { userMarker.setLatLng([latitude, longitude]); }
                         map.panTo([latitude, longitude]);
                     },
-                    () => {
-                        alert("Enable location parameters inside iOS system privacy settings.");
-                        isTracking = false;
-                        geoBtn.innerText = "📍 Track";
-                        geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]";
-                    },
+                    () => { isTracking = false; },
                     { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
                 );
             }
