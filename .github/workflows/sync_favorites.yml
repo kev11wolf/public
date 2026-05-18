@@ -1,0 +1,67 @@
+name: Process Master Map Favorites Sync
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  merge-favorites:
+    if: contains(github.event.issue.title, 'DATA_SYNC_FAVORITES')
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
+    - name: Set up Python runtime
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Ingest and validate incoming payload data arrays
+      run: |
+        echo '${{ github.event.issue.body }}' > incoming.json
+        python -c "
+        import json, os
+        
+        try:
+            incoming_data = json.loads(open('incoming.json').read())
+        except Exception as e:
+            print('❌ CRITICAL ERROR: Failed to parse incoming data stream payload JSON structure.')
+            exit(1)
+            
+        if os.path.exists('favorites.json'):
+            try:
+                master_favorites = json.loads(open('favorites.json').read())
+            except:
+                master_favorites = []
+        else:
+            master_favorites = []
+            
+        fingerprints = {f\"{item['lat']}_{item['lon']}\" for item in master_favorites}
+        added_nodes = 0
+        
+        for point in incoming_data:
+            key = f\"{point['lat']}_{point['lon']}\"
+            if key not in fingerprints:
+                master_favorites.append(point)
+                fingerprints.add(key)
+                added_nodes += 1
+                
+        open('favorites.json', 'w', encoding='utf-8').write(json.dumps(master_favorites, indent=2))
+        print(f'📥 Processing complete. Synchronized +{added_nodes} unique favorite locations.')
+        "
+
+    - name: Commit and push changes safely back to tree layout
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add favorites.json
+        git commit -m "Automated Sync: Updated master favorites database" || exit 0
+        git push origin main
+
+    - name: Close tracking ticket automatically via internal systems parameters
+      run: |
+        gh issue close ${{ github.event.issue.number }} --comment "Success! Favorites mapped successfully. Closed automatically."
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
