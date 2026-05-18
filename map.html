@@ -423,7 +423,6 @@
             dispatchOffThreadAnalysis();
         };
 
-        // --- FIXED AUTOCOMPLETE MATRIX: Stripped broken header loops and optimized choice handlers ---
         function initAutocomplete(inputId, dropdownId) {
             const input = document.getElementById(inputId);
             const dropdown = document.getElementById(dropdownId);
@@ -458,7 +457,6 @@
                             option.className = "px-3 py-2.5 bg-white hover:bg-zinc-100 border-b border-zinc-100 last:border-0 cursor-pointer truncate text-zinc-950 font-bold text-xs";
                             option.innerText = cleanOutputString;
                             
-                            // High-speed selection processing catches choice markers instantly prior to input blurring rules
                             option.addEventListener('mousedown', (e) => {
                                 e.preventDefault(); 
                                 input.value = cleanOutputString;
@@ -477,7 +475,6 @@
         initAutocomplete('start-input', 'start-autocomplete');
         initAutocomplete('end-input', 'end-autocomplete');
 
-        // Dismiss autofill layouts dynamically if user touches alternative screen locations
         document.addEventListener('mousedown', (e) => {
             const startDrop = document.getElementById('start-autocomplete');
             const endDrop = document.getElementById('end-autocomplete');
@@ -749,7 +746,7 @@
             generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
         }
 
-        bin selector subMenu generator panel UI variables safely
+        // FIXED: Structural comment tags wrapped securely with no compiler snippet leakage
         function generateSubMenuUI(catId) {
             const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
             const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
