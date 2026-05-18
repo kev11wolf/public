@@ -188,6 +188,14 @@
             });
         }
 
+        // RESTORED & HOISTED CORRECTLY: Resolves the initialization crash completely
+        function createRouteMarkerIcon(label, classes) {
+            return L.divIcon({
+                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold w-8 h-8 text-sm border-2 ${classes}">${label}</div>`,
+                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+            });
+        }
+
         function dispatchOffThreadAnalysis() {
             if (routeLineCoordinates.length === 0) return;
             const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
@@ -264,7 +272,6 @@
         };
         mapLayersPool[mapStyleMode].addTo(map);
 
-        // --- FIXED MARKER COMPONENT: Custom indices handle drag pins uniquely with structured labeling profiles ---
         let routingControl = L.Routing.control({
             show: false, 
             addWaypoints: true, 
@@ -280,7 +287,7 @@
                     { color: '#60a5fa', opacity: 1, weight: 4 }      
                 ]
             },
-            createMarker: (i, wp, n) => {
+            createMarker: function(i, wp, n) {
                 let iconLabel = '⚓';
                 let bgClass = 'bg-blue-600 border-white text-white';
                 if (i === 0) { iconLabel = '🏁'; bgClass = 'bg-emerald-600 border-white text-white'; }
@@ -293,7 +300,6 @@
             }
         }).addTo(map);
 
-        // --- FIXED COUPLING HOOK: Reruns active category filters immediately on drag updates without UI resets ---
         routingControl.on('routesfound', function(e) {
             routeLineCoordinates = e.routes[0].coordinates;
             const searchContainer = document.getElementById('search-container');
@@ -303,7 +309,6 @@
             cachedCategoriesFetched.clear(); 
             allPoiMarkers.forEach(m => map.removeLayer(m.marker)); allPoiMarkers = [];
             
-            // REMOVED: Wiped the sub-menu UI reset code to ensure filter persistence
             renderGlobalPermanentStars(); 
             
             if (currentMasterCat) {
@@ -494,9 +499,7 @@
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
 
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-                
-                // --- FIXED STREET VIEW INTERPOLATION LINK ENGINE ---
-                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+                const streetViewUrl = `http://googleusercontent.com/maps.google.com/maps?layer=c&cbll=${lat},${lon}`;
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
 
                 let isCurrentlyStarredLocally = localStarred.some(item => item.id === `poi_${lat}_${lon}`);
@@ -551,7 +554,7 @@
             }
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-            const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+            const streetViewUrl = `http://googleusercontent.com/maps.google.com/maps?layer=c&cbll=${lat},${lon}`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
@@ -605,7 +608,20 @@
             }
         });
 
-        // --- PHASE 6: RESTORED ANALYSIS EXECUTION ENGINES ---
+        // ========================================================
+        // --- PHASE 6: AUTOMATED EXECUTION LAYERS & FETCH COUPLERS ---
+        // ========================================================
+        // RESTORED: Fully added missing mirror loop function handler blocks back to file scope
+        async function fetchWithMirrorFailover(queryPayload) {
+            for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
+                try {
+                    const response = await fetch(OVERPASS_MIRRORS[i] + "?data=" + encodeURIComponent(queryPayload));
+                    if (response.ok) return await response.json();
+                } catch (err) { console.warn("Mirror connection delayed."); }
+            }
+            throw new Error("All data networks congested.");
+        }
+
         async function runDataExecutionLayer(masterCat) {
             if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
 
@@ -761,16 +777,32 @@
         initAutocomplete('start-input', 'start-autocomplete');
         initAutocomplete('end-input', 'end-autocomplete');
 
-        // --- FIXED SELECTION DISMISS CONTAINER CLOSURE LOOP ---
         document.addEventListener('mousedown', (e) => {
             const startDrop = document.getElementById('start-autocomplete');
             const endDrop = document.getElementById('end-autocomplete');
-            // Verifies if interaction target falls inside input shell layout boundaries to block rapid panel blurs
             if (!document.getElementById('search-container').contains(e.target)) {
                 if (startDrop) startDrop.classList.add('hidden');
                 if (endDrop) endDrop.classList.add('hidden');
             }
         });
+
+        function generateSubMenuUI(catId) {
+            const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
+            const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
+            definition.forEach((sub, index) => {
+                const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
+                subButton.className = index === 0 ? "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]" : "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
+                subButton.innerText = sub.label; subBar.appendChild(subButton);
+            });
+            subBar.classList.remove('hidden');
+        }
+
+        function hideSubMenu() {
+            const subBar = document.getElementById('sub-filter-bar');
+            if (subBar) subBar.classList.add('hidden');
+            document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
+            currentMasterCat = null; currentSubFilter = 'all';
+        }
 
         // ======================================================
         // --- PHASE 7: ELEMENT SELECTION COUPLING LISTENERS ---
@@ -835,24 +867,6 @@
             element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
             currentMasterCat = element.getAttribute('data-cat'); currentSubFilter = 'all'; 
             generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
-        }
-
-        function generateSubMenuUI(catId) {
-            const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
-            const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
-            definition.forEach((sub, index) => {
-                const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
-                subButton.className = index === 0 ? "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]" : "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
-                subButton.innerText = sub.label; subBar.appendChild(subButton);
-            });
-            subBar.classList.remove('hidden');
-        }
-
-        function hideSubMenu() {
-            const subBar = document.getElementById('sub-filter-bar');
-            if (subBar) subBar.classList.add('hidden');
-            document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
-            currentMasterCat = null; currentSubFilter = 'all';
         }
 
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
