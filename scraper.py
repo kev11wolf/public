@@ -1,174 +1,818 @@
-import requests
-import json
-import time
-import random
-import sys
-
-USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/605.1.15"
-]
-
-OVERPASS_ENDPOINTS = [
-    "https://overpass-api.de/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
-    "https://overpass.osm.ch/api/interpreter"
-]
-
-BRAND_MAPPING = {
-    "murphy express": ("gas", "murphyexpress", "Murphy Express"),
-    "sheetz": ("gas", "sheetz", "Sheetz"),
-    "buc-ee": ("gas", "bucees", "Buc-ee's"),
-    "bucee": ("gas", "bucees", "Buc-ee's"),
-    "costco": ("gas", "costcogas", "Costco Gasoline"),
-    "wawa": ("gas", "wawa", "Wawa"),
-    "circle k": ("gas", "circlek", "Circle K"),
-    "mcdonald": ("food", "mcdonalds", "McDonald's"),
-    "wendy": ("food", "wendys", "Wendy's"),
-    "chick-fil-a": ("food", "chickfila", "Chick-fil-A"),
-    "chick fil a": ("food", "chickfila", "Chick-fil-A"),
-    "chipotle": ("food", "chipotle", "Chipotle"),
-    "jersey mike": ("food", "jerseymikes", "Jersey Mike's"),
-    "raising cane": ("food", "raisingcanes", "Raising Cane's")
-}
-
-def clean_and_validate_playground(tags):
-    if tags.get("amenity") == "place_of_worship" or tags.get("religion") is not None:
-        return None
-    name = tags.get("name", "Public Playground")
-    name_lower = name.lower()
-    religious_blacklist = ["church", "chapel", "ministry", "baptist", "methodist", "lutheran", "presbyterian", "catholic", "parish", "fellowship", "christian", "synagogue", "temple", "mosque", "tabernacle", "saints", "lds"]
-    if any(k in name_lower for k in religious_blacklist): return None
-    return name
-
-def identify_clean_brand(tags):
-    combined_text = f"{tags.get('name', '')} {tags.get('brand', '')}".lower()
-    for key, val in BRAND_MAPPING.items():
-        if key in combined_text:
-            if val[1] == "costcogas" and "fuel" not in combined_text and "gas" not in combined_text: continue
-            return val[0], val[1], val[2]
-    return None, None, None
-
-def generate_stable_grids():
-    """Generates tight 1.5 x 2.5 degree sectors. Tiny bounding boxes 
-    allow the free mapping servers to calculate results instantly without timing out."""
-    grids = []
-    lat_start, lat_end = 24.0, 50.0
-    lon_start, lon_end = -125.0, -66.0
-    lat_step = 1.5
-    lon_step = 2.5
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>High-Performance Hybrid Route Explorer</title>
     
-    curr_lat = lat_start
-    while curr_lat < lat_end:
-        curr_lon = lon_start
-        while curr_lon < lon_end:
-            grids.append({
-                "south": round(curr_lat, 2), "west": round(curr_lon, 2),
-                "north": round(curr_lat + lat_step, 2), "east": round(curr_lon + lon_step, 2)
-            })
-            curr_lon += lon_step
-        curr_lat += lat_step
-    return grids
-
-def generate_national_database():
-    compiled_pois = []
-    seen_unique_coords = set()
-    micro_zones = generate_stable_grids()
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
-    print(f"🚀 Launching Balanced Database Compiler across {len(micro_zones)} stable sectors...", flush=True)
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    for idx, zone in enumerate(micro_zones):
-        # Filter out completely empty oceanic coordinate fields to speed up execution
-        if zone['south'] < 29.0 and zone['west'] < -92.0: continue
-        if zone['south'] > 44.0 and zone['west'] < -124.0: continue
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
-        query = f"""[out:json][timeout:25][bbox:{zone['south']},{zone['west']},{zone['north']},{zone['east']}];
-        (node["brand"~"Sheetz|Chipotle|Jersey Mike|McDonald|Wendy|Chick-fil-A|Raising Cane|Murphy Express|Buc-ee|Wawa|Circle K|Costco",i];
-         node["name"~"Sheetz|Chipotle|Jersey Mike|McDonald|Wendy|Chick-fil-A|Raising Cane|Murphy Express|Buc-ee|Wawa|Circle K|Costco",i];
-         node["leisure"="playground"]["access"!~"private|no"];
-         way["leisure"="playground"]["access"!~"private|no"];);out center;"""
-
-        active_mirrors_pool = list(OVERPASS_ENDPOINTS)
-        random.shuffle(active_mirrors_pool)
-        responseData = None
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #111827;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+        }
+        .safe-top { padding-top: env(safe-area-inset-top); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         
-        for server_url in active_mirrors_pool:
-            custom_headers = {
-                "User-Agent": random.choice(USER_AGENTS),
-                "Accept": "application/json",
-                "Referer": "https://www.openstreetmap.org/"
+        .leaflet-routing-container, .leaflet-routing-error, .leaflet-right {
+            display: none !important;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .custom-popup .leaflet-popup-content-wrapper {
+            border-radius: 16px;
+            padding: 2px;
+            max-width: 250px !important;
+            overflow: hidden;
+            background-color: #ffffff;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2);
+        }
+        .custom-popup .leaflet-popup-content {
+            margin: 10px !important;
+            max-width: 230px !important;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-end">
+
+    <div class="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col transition-all duration-300">
+        
+        <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div class="relative">
+                    <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
+                    <button id="start-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
+                    <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+                </div>
+                <div class="relative">
+                    <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
+                    <button id="end-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
+                    <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="route-btn" class="w-full bg-gray-900 active:bg-black text-white text-xs font-bold py-2 px-4 rounded-xl min-h-[44px] shadow-sm transition-all flex items-center justify-center gap-1">
+                    🗺️ Calculate Dynamic Route
+                </button>
+            </div>
+        </div>
+
+        <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-gray-100 bg-gray-50/50">
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+                <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent hidden"></div>
+                <p id="status" class="text-xs font-bold text-gray-700 truncate">System ready. Enter route parameters above.</p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <select id="buffer-select" class="bg-white text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                    <option value="4000" selected>⏱️ 5 Min Buffer</option>
+                    <option value="12000">⏱️ 15 Min Buffer</option>
+                    <option value="24000">⏱️ 30 Min Buffer</option>
+                </select>
+                <button id="theme-toggle-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] active:bg-gray-100">
+                    🌙 Mode
+                </button>
+                <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px]">
+                    🔍 Inputs
+                </button>
+                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]">
+                    🚗 Track
+                </button>
+            </div>
+        </div>
+
+        <div id="master-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-1.5 border-t border-gray-100">
+            <button data-cat="playground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
+            <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
+            <button data-cat="food" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
+            <button data-cat="highway" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏢 Highway Amenities</button>
+            <button data-cat="tourism" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
+        </div>
+
+        <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden"></div>
+    </div>
+
+    <div id="next-stop-hud" class="absolute top-44 right-4 z-10 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl max-w-[200px] hidden pointer-events-none transition-all duration-300">
+        <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest leading-none mb-1">⏱️ Next Target Stop</p>
+        <h4 id="hud-poi-name" class="text-xs font-black truncate text-white">---</h4>
+        <p id="hud-poi-dist" class="text-sm font-black text-amber-400 mt-0.5">0.0 mi away</p>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
+
+    <script>
+        // ==========================================
+        // --- PHASE 1: HOISTED UTILITY FUNCTIONS ---
+        // ==========================================
+        function triggerToast(text, duration = 3000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = "bg-gray-900/95 backdrop-blur-sm text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center transition-all duration-300 opacity-0 translate-y-2 pointer-events-auto";
+            toast.innerText = text;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('opacity-0', 'translate-y-2'); }, 50);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-1');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, duration);
+        }
+
+        function updateInlineStatus(text, showSpinner = false) {
+            const statusLabel = document.getElementById('status');
+            if (statusLabel) statusLabel.innerText = text;
+            const spinner = document.getElementById('status-spinner');
+            if (spinner) {
+                if (showSpinner) spinner.classList.remove('hidden');
+                else spinner.classList.add('hidden');
             }
-            try:
-                # 30-second network gate gives slow servers plenty of room to breathe
-                res = requests.post(server_url, data={"data": query}, headers=custom_headers, timeout=30)
-                if res.status_code == 200:
-                    responseData = res.json()
-                    break
-            except Exception:
-                continue
+        }
 
-        if not responseData:
-            print(f"   Sector [{idx+1}/{len(micro_zones)}] skipped - Network timeout across all mirrors.", flush=True)
-            continue
+        function buildCleanAddressString(addr, displayNameFallback) {
+            if (!addr) return displayNameFallback.split(',').slice(0, 3).join(',');
+            let tokens = [];
+            const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
+            const cityNode = addr.city || addr.town || addr.village || addr.suburb || '';
+            const stateNode = addr.state || '';
+            const zipNode = addr.postcode || '';
 
-        elements = responseData.get("elements", [])
-        if len(elements) == 0: 
-            continue
+            if (roadLine) tokens.push(roadLine);
+            if (cityNode) tokens.push(cityNode);
+            if (stateNode) tokens.push(stateNode);
+            if (zipNode) tokens.push(zipNode);
+
+            return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
+        }
+
+        // ==========================================
+        // --- PHASE 2: GLOBAL ENVIRONMENT KEYS ---
+        // ==========================================
+        const MAP_INITIAL_CENTER = [35.7796, -78.6382]; 
+        const CACHE_PREFIX = 'route_hybrid_v12_';
+        const OVERPASS_MIRRORS = [
+            "https://overpass-api.de/api/interpreter",
+            "https://overpass.kumi.systems/api/interpreter",
+            "https://overpass.osm.ch/api/interpreter"
+        ];
+        
+        const categoryConfigs = {
+            playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', query: 'node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
+            gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
+            food: { label: '🍟', bg: 'bg-red-600 border-red-200 text-white', name: 'Fast Food', img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
+            highway_rest: { label: '🏢', bg: 'bg-blue-600 border-blue-200 text-white', name: 'Rest Area', query: 'node["highway"="rest_area"];', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80' },
+            highway_toilets: { label: '🧻', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Public Restroom', query: 'node["amenity"="toilets"];', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
+            tourism_viewpoint: { label: '📷', bg: 'bg-sky-500 border-sky-200 text-white', name: 'Scenic Viewpoint', query: 'node["tourism"="viewpoint"];', img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=300&q=80' },
+            tourism_dogpark: { label: '🐕', bg: 'bg-violet-600 border-violet-200 text-white', name: 'Dog Park', query: 'node["leisure"="dog_park"];', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=300&q=80' }
+        };
+
+        const cleanBrandNames = {
+            "sheetz": "Sheetz", "murphyexpress": "Murphy Express", "bucees": "Buc-ee's",
+            "costcogas": "Costco Gasoline", "wawa": "Wawa", "circlek": "Circle K",
+            "mcdonalds": "McDonald's", "wendys": "Wendy's", "chickfila": "Chick-fil-A",
+            "chipotle": "Chipotle", "jerseymikes": "Jersey Mike's", "raisingcanes": "Raising Cane's"
+        };
+
+        const subMenuDefinitions = {
+            playground: [{ id: 'all', label: 'All Public Parks' }],
+            gas: [{ id: 'all', label: 'All Selected Chains' }, { id: 'unl87', label: 'UNL 87 Listed' }, { id: 'unl88', label: 'UNL 88 / E15' }],
+            food: [{ id: 'all', label: 'All Brands' }, { id: 'raisingcanes', label: "Raising Cane's" }, { id: 'chickfila', label: 'Chick-fil-A' }, { id: 'mcdonalds', label: "McDonald's" }, { id: 'jerseymikes', label: "Jersey Mike's" }],
+            highway: [{ id: 'highway_rest', label: 'Highway Rest Areas' }, { id: 'highway_toilets', label: 'Standalone Restrooms' }],
+            tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
+        };
+
+        let allPoiMarkers = [];
+        let localJsonMemory = null; 
+        let liveOverpassMemory = [];   
+        let routeLineCoordinates = [];
+        let userMarker = null;
+        let currentMasterCat = null;
+        let currentSubFilter = 'all';
+        let activeBufferMeters = 4000; 
+        let cachedCategoriesFetched = new Set(); 
+        let mapStyleMode = 'light';
+        let activeTargetsSliceMemory = [];
+
+        // ==========================================
+        // --- PHASE 3: MAP TILES & ROUTING SETUP ---
+        // ==========================================
+        const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
+        
+        const mapLayersPool = {
+            light: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }),
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB' })
+        };
+        mapLayersPool[mapStyleMode].addTo(map);
+
+        const createRouteMarkerIcon = (label, classes) => {
+            return L.divIcon({
+                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold w-8 h-8 text-sm border-2 ${classes}">${label}</div>`,
+                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+            });
+        };
+
+        let routingControl = L.Routing.control({
+            show: false, 
+            addWaypoints: false, 
+            draggableWaypoints: false,
+            serviceUrl: 'https://router.project-osrm.org/route/v1',
+            lineOptions: {
+                styles: [
+                    { color: '#0f172a', opacity: 0.25, weight: 14 }, 
+                    { color: '#2563eb', opacity: 0.9, weight: 10 },  
+                    { color: '#60a5fa', opacity: 1, weight: 4 }      
+                ]
+            },
+            createMarker: (i, wp) => L.marker(wp.latLng, { icon: createRouteMarkerIcon(i === 0 ? '🏁' : '⛰️', 'bg-black border-white text-white') })
+        }).addTo(map);
+
+        routingControl.on('routesfound', function(e) {
+            routeLineCoordinates = e.routes[0].coordinates;
+            const searchContainer = document.getElementById('search-container');
+            if (searchContainer) searchContainer.classList.add('hidden');
             
-        zone_count = 0
-        for el in elements:
-            lat = el.get("lat") or (el.get("center") and el.get("center")["lat"])
-            lon = el.get("lon") or (el.get("center") and el.get("center")["lon"])
-            if not lat or not lon: continue
-                
-            coord_fingerprint = f"{round(lat, 4)}_\_{round(lon, 4)}"
-            if coord_fingerprint in seen_unique_coords: continue
-                
-            tags = el.get("tags", {})
+            liveOverpassMemory = [];          
+            cachedCategoriesFetched.clear(); 
+            allPoiMarkers.forEach(m => map.removeLayer(m.marker)); allPoiMarkers = [];
+            hideSubMenu();
             
-            if tags.get("leisure") == "playground":
-                validated_park_name = clean_and_validate_playground(tags)
-                if not validated_park_name: continue
-                    
-                compiled_pois.append({
-                    "lat": round(lat, 4), "lon": round(lon, 4), "n": validated_park_name,
-                    "b": "playground", "c": "playground", "h": tags.get("opening_hours", "Sunrise to Sunset"),
-                    "d": tags.get("description", "Public open-access park playground.")
-                })
-                seen_unique_coords.add(coord_fingerprint)
-                zone_count += 1
-            else:
-                cat_slug, brand_slug, official_brand_name = identify_clean_brand(tags)
-                if not cat_slug: continue
-                    
-                poi_node = {
-                    "lat": round(lat, 4), "lon": round(lon, 4), "n": official_brand_name,
-                    "b": brand_slug, "c": cat_slug, "h": tags.get("opening_hours", "Hours vary by location"),
-                    "d": tags.get("description", "Verified chain location mapped off highway route bounds.")
+            const hud = document.getElementById('next-stop-hud');
+            if (hud) hud.classList.add('hidden');
+            
+            updateInlineStatus("Route ready. Tap filters below.");
+            triggerToast("Route generated. Content deferred until filter selection.");
+        });
+
+        const createStarredIcon = (label, isLarge = false) => {
+            const wrapperSize = isLarge ? 'w-14 h-14 text-2xl border-4' : 'w-11 h-11 text-xl border-3';
+            const sizePx = isLarge ? 56 : 44;
+            return L.divIcon({
+                html: `<div class="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border-amber-600 text-black shadow-xl font-black relative ${wrapperSize}">
+                         ${label}
+                         <span class="absolute -bottom-1 -right-1 text-sm drop-shadow-md">⭐</span>
+                       </div>`,
+                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
+            });
+        };
+
+        // ==========================================
+        // --- PHASE 4: WORKER MATRIX ALLOCATIONS ---
+        // ==========================================
+        const workerBlobCode = `
+            function haversineDist(lat1, lon1, lat2, lon2) {
+                const R = 6371000;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+            }
+
+            function parseLiveBackupTargetCategory(tags) {
+                if (tags.leisure === 'playground') {
+                    var n = (tags.name || '').toLowerCase();
+                    if (['church','chapel','ministry','baptist','methodist','lutheran','presbyterian','catholic','parish','fellowship','christian'].some(k => n.includes(k))) return 'excluded';
+                    return 'playground';
                 }
-                if cat_slug == "gas":
-                    poi_node["g87"] = 1 if (tags.get("fuel:octane_87") == "yes" or tags.get("fuel:unleaded") == "yes") else 1
-                    poi_node["g88"] = 1 if (tags.get("fuel:octane_88") == "yes" or tags.get("fuel:e15") == "yes") else 0
-                    
-                compiled_pois.append(poi_node)
-                seen_unique_coords.add(coord_fingerprint)
-                zone_count += 1
+                if (tags.highway === 'rest_area') return 'highway_rest';
+                if (tags.amenity === 'toilets') return 'highway_toilets';
+                if (tags.tourism === 'viewpoint') return 'tourism_viewpoint';
+                if (tags.leisure === 'dog_park') return 'tourism_dogpark';
+
+                var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
+                if (['murphy express', 'sheetz', 'bucee', 'buc-ee', 'costco', 'wawa', 'circle k'].some(b => sig.includes(b))) return 'gas';
+                if (['mcdonald', 'wendy', 'chick-fil-a', 'chick fil a', 'chipotle', 'jersey mike', 'raising cane'].some(b => sig.includes(b))) return 'food';
+                return 'excluded';
+            }
+
+            function getCleanBrandSlug(tags) {
+                var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
+                if (sig.includes('sheetz')) return 'sheetz';
+                if (sig.includes('murphy')) return 'murphyexpress';
+                if (sig.includes('bucee') || sig.includes('buc-ee')) return 'bucees';
+                if (sig.includes('costco')) return 'costcogas';
+                if (sig.includes('wawa')) return 'wawa';
+                if (sig.includes('circle k')) return 'circlek';
+                if (sig.includes('mcdonald')) return 'mcdonalds';
+                if (sig.includes('wendy')) return 'wendys';
+                if (sig.includes('chick-fil-a') || sig.includes('chick fil a')) return 'chickfila';
+                if (sig.includes('chipotle')) return 'chipotle';
+                if (sig.includes('jersey mike')) return 'jerseymikes';
+                if (sig.includes('raising cane')) return 'raisingcanes';
+                return 'excluded';
+            }
+
+            self.onmessage = function(e) {
+                const { localElements, liveElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
+                const finalMatchesMap = new Map();
+
+                if (localElements) {
+                    localElements.forEach(el => {
+                        if (el.c !== currentMasterCat) return;
+                        if (currentSubFilter !== 'all') {
+                            if (currentMasterCat === 'gas') {
+                                if (currentSubFilter === 'unl87' && el.g87 !== 1) return;
+                                if (currentSubFilter === 'unl88' && el.g88 !== 1) return;
+                            } else if (currentMasterCat === 'food') {
+                                if (el.b !== currentSubFilter) return;
+                            }
+                        }
+
+                        let minD = Infinity;
+                        for (let j = 0; j < targetsSlice.length; j++) {
+                            const d = haversineDist(el.lat, el.lon, targetsSlice[j].lat, targetsSlice[j].lng);
+                            if (d < minD) minD = d;
+                        }
+
+                        if (minD <= activeBufferMeters) {
+                            const payload = {
+                                id: "local_" + el.lat + "_" + el.lon, lat: el.lat, lon: el.lon,
+                                name: el.n, brand: el.b, category: el.c, hours: el.h || "Hours not listed",
+                                desc: el.d || "", minD: minD, isLocal: true, g87: el.g87, g88: el.g88
+                            };
+                            finalMatchesMap.set(payload.id, payload);
+                        }
+                    });
+                }
+
+                if (liveElements) {
+                    liveElements.forEach(el => {
+                        const lat = el.lat || (el.center && el.center.lat);
+                        const lon = el.lon || (el.center && el.center.lon);
+                        if (!lat || !lon) return;
+
+                        let concreteCat = parseLiveBackupTargetCategory(el.tags || {});
+                        if (concreteCat === 'excluded') return;
+
+                        if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
+                        if (currentMasterCat === 'tourism' && concreteCat !== 'tourism_viewpoint' && concreteCat !== 'tourism_dogpark') return;
+                        if (currentMasterCat === 'playground' && concreteCat !== 'playground') return;
+                        if ((currentMasterCat === 'gas' || currentMasterCat === 'food') && concreteCat !== currentMasterCat) return;
+
+                        var brandSlug = getCleanBrandSlug(el.tags || {});
+                        if (currentMasterCat === 'gas' || currentMasterCat === 'food') {
+                            if (brandSlug === 'excluded') return;
+                            if (currentSubFilter !== 'all' && brandSlug !== currentSubFilter) return;
+                        }
+
+                        let minD = Infinity;
+                        for (let j = 0; j < targetsSlice.length; j++) {
+                            const d = haversineDist(lat, lon, targetsSlice[j].lat, targetsSlice[j].lng);
+                            if (d < minD) minD = d;
+                        }
+
+                        if (minD <= activeBufferMeters) {
+                            const uniqueKey = "live_" + lat + "_" + lon;
+                            if (!finalMatchesMap.has(uniqueKey)) {
+                                finalMatchesMap.set(uniqueKey, {
+                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || "Public Facility",
+                                    brand: brandSlug !== 'excluded' ? brandSlug : concreteCat, category: currentMasterCat, 
+                                    hours: el.tags.opening_hours || "Hours not listed",
+                                    desc: el.tags.description || "", minD: minD, isLocal: false
+                                });
+                            }
+                        }
+                    });
+                }
+
+                const sortedMatches = Array.from(finalMatchesMap.values()).sort((a, b) => a.minD - b.minD);
+                self.postMessage({ sortedMatches });
+            };
+        `;
+        const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
+        const mathWorker = new Worker(URL.createObjectURL(blobObj));
+
+        // ==========================================
+        // --- PHASE 5: EVENT COUPLING MATRIX -----
+        // ==========================================
+        window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
+            let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            let uniqueId = `poi_${lat}_${lon}`;
+            let matchIndex = starred.findIndex(item => item.id === uniqueId);
+            
+            if (matchIndex > -1) {
+                starred.splice(matchIndex, 1);
+                triggerToast("Removed stop from persistent stars list.");
+            } else {
+                starred.push({
+                    id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
+                    name, category, brand, hours, desc, isLocal: true
+                });
+                triggerToast("Persistent Gold Star saved to storage! ⭐");
+            }
+            
+            localStorage.setItem('starred_pois', JSON.stringify(starred));
+            dispatchOffThreadAnalysis();
+        };
+
+        function initAutocomplete(inputId, dropdownId) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            let debounceTimer;
+
+            input.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                const query = input.value.trim();
+                if (query.length < 3) { 
+                    dropdown.innerHTML = '';
+                    dropdown.classList.add('hidden'); 
+                    return; 
+                }
+
+                debounceTimer = setTimeout(() => {
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=${encodeURIComponent(query)}`)
+                    .then(res => {
+                        if (!res.ok) throw new Error("API Channel fault");
+                        return res.json();
+                    })
+                    .then(data => {
+                        dropdown.innerHTML = '';
+                        if (!data || data.length === 0) { 
+                            dropdown.classList.add('hidden'); 
+                            return; 
+                        }
+                        dropdown.classList.remove('hidden');
+                        
+                        data.forEach(item => {
+                            const cleanOutputString = buildCleanAddressString(item.address, item.display_name);
+                            const option = document.createElement('div');
+                            option.className = "px-3 py-2.5 bg-white hover:bg-zinc-100 border-b border-zinc-100 last:border-0 cursor-pointer truncate text-zinc-950 font-bold text-xs";
+                            option.innerText = cleanOutputString;
+                            
+                            option.addEventListener('mousedown', (e) => {
+                                e.preventDefault(); 
+                                input.value = cleanOutputString;
+                                input.dataset.lat = item.lat; 
+                                input.dataset.lon = item.lon;
+                                dropdown.innerHTML = '';
+                                dropdown.classList.add('hidden');
+                            });
+                            dropdown.appendChild(option);
+                        });
+                    }).catch(() => {});
+                }, 400);
+            });
+        }
+
+        initAutocomplete('start-input', 'start-autocomplete');
+        initAutocomplete('end-input', 'end-autocomplete');
+
+        document.addEventListener('mousedown', (e) => {
+            const startDrop = document.getElementById('start-autocomplete');
+            const endDrop = document.getElementById('end-autocomplete');
+            if (e.target.id !== 'start-input' && startDrop) startDrop.classList.add('hidden');
+            if (e.target.id !== 'end-input' && endDrop) endDrop.classList.add('hidden');
+        });
+
+        function bindInputFieldGeolocator(buttonId, inputId) {
+            document.getElementById(buttonId).addEventListener('click', () => {
+                if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
+                updateInlineStatus("Acquiring coordinates...", true);
                 
-        if zone_count > 0:
-            print(f"📥 Sector [{idx+1}/{len(micro_zones)}] saved. Added +{zone_count} new entries. Total database size: {len(compiled_pois)}", flush=True)
-            
-        time.sleep(random.uniform(1.0, 2.0))
-            
-    if len(compiled_pois) == 0:
-        print("❌ CRITICAL EXCEPTION: Compiled list returned 0 results. Aborting save sequence to safeguard database.", flush=True)
-        sys.exit(1)
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    const inputField = document.getElementById(inputId);
+                    
+                    inputField.dataset.lat = lat;
+                    inputField.dataset.lon = lon;
+                    inputField.value = "Acquiring address tokens...";
 
-    print(f"\n📦 Pipeline finished! Generated {len(compiled_pois)} total points of interest across the United States.", flush=True)
-    
-    with open("us_brands.json", "w", encoding="utf-8") as file_write:
-        json.dump(compiled_pois, file_write, indent=2)
-    print("💾 Process complete. 'us_brands.json' written successfully.", flush=True)
+                    try {
+                        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
+                        const res = await fetch(url, { headers: { 'User-Agent': 'High-Performance-Mobile-Map-Corridor-App' } }).then(r => r.json());
+                        const cleanAddress = buildCleanAddressString(res.address, res.display_name);
+                        
+                        inputField.value = cleanAddress;
+                        updateInlineStatus("Position locked mapping framework.");
+                        triggerToast("Position synchronized inside input metrics.");
+                    } catch (err) {
+                        inputField.value = `${lat.toFixed(4)}, ${lon.toFixed(4)} (GPS Coordinates)`;
+                        updateInlineStatus("Coordinates pinned directly.");
+                    }
+                }, () => {
+                    alert("Please enable positioning rules within system settings panels.");
+                    updateInlineStatus("GPS connection failed.");
+                }, { enableHighAccuracy: true, timeout: 8000 });
+            });
+        }
 
-if __name__ == "__main__":
-    generate_national_database()
+        bindInputFieldGeolocator('start-locate-btn', 'start-input');
+        bindInputFieldGeolocator('end-locate-btn', 'end-input');
+
+        async function fetchWithMirrorFailover(queryPayload) {
+            for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
+                try {
+                    const response = await fetch(OVERPASS_MIRRORS[i] + "?data=" + encodeURIComponent(queryPayload));
+                    if (response.ok) return await response.json();
+                } catch (err) { console.warn("Mirror connection delayed."); }
+            }
+            throw new Error("All data networks congested.");
+        }
+
+        async function runDataExecutionLayer(masterCat) {
+            if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
+
+            if (!localJsonMemory) {
+                updateInlineStatus("Ingesting master database layer...", true);
+                try {
+                    const res = await fetch('us_brands.json');
+                    localJsonMemory = await res.json();
+                    triggerToast("Master database file loaded completely.");
+                } catch (err) {
+                    console.error("Local data acquisition failed.", err);
+                    localJsonMemory = [];
+                }
+            }
+
+            dispatchOffThreadAnalysis();
+
+            if (!cachedCategoriesFetched.has(masterCat)) {
+                await fetchLiveBackupEnrichment(masterCat);
+            }
+        }
+
+        async function fetchLiveBackupEnrichment(masterCat) {
+            updateInlineStatus("Sweeping live channels for updates...", true);
+
+            let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
+            routeLineCoordinates.forEach(c => {
+                if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
+                if (c.lat > maxLat) maxLat = c.lat; if (c.lng > maxLon) maxLon = c.lng;
+            });
+
+            const south = (minLat - 0.25).toFixed(4); const west = (minLon - 0.25).toFixed(4);
+            const north = (maxLat + 0.25).toFixed(4); const east = (maxLon + 0.25).toFixed(4);
+
+            let queryTokens = [];
+            if (masterCat === 'playground') {
+                queryTokens.push('node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];');
+            } else if (masterCat === 'highway') {
+                queryTokens.push('node["highway"="rest_area"];node["amenity"="toilets"];');
+            } else if (masterCat === 'tourism') {
+                queryTokens.push('node["tourism"="viewpoint"];node["leisure"="dog_park"];');
+            } else if (masterCat === 'gas') {
+                queryTokens.push('node["brand"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];node["name"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];');
+            } else if (masterCat === 'food') {
+                queryTokens.push('node["brand"~"McDonald\'s|Wendy\'s|Chick-fil-A|Chipotle|Jersey Mike|Raising Cane",i];node["name"~"McDonald\'s|Wendy\'s|Chick-fil-A|Raising Cane|Jersey Mike|Chipotle",i];');
+            }
+
+            try {
+                const unionString = queryTokens.join('');
+                const query = `[out:json][timeout:30][bbox:${south},${west},${north},${east}];(${unionString});out center;`;
+                const response = await fetchWithMirrorFailover(query);
+                
+                if (response && response.elements) {
+                    response.elements.forEach(el => {
+                        if (el.tags.leisure === 'playground') el.concreteCat = 'playground';
+                        else if (el.tags.highway === 'rest_area') el.concreteCat = 'highway_rest';
+                        else if (el.tags.amenity === 'toilets') el.concreteCat = 'highway_toilets';
+                        else if (el.tags.tourism === 'viewpoint') el.concreteCat = 'tourism_viewpoint';
+                        else if (el.tags.leisure === 'dog_park') el.concreteCat = 'tourism_dogpark';
+                        liveOverpassMemory.push(el);
+                    });
+                }
+
+                cachedCategoriesFetched.add(masterCat);
+                dispatchOffThreadAnalysis();
+            } catch (err) {
+                updateInlineStatus("Stops active.");
+            }
+        }
+
+        function dispatchOffThreadAnalysis() {
+            const sliceRate = 45; activeTargetsSliceMemory = [];
+            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
+            if (routeLineCoordinates.length > 0) activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
+
+            mathWorker.postMessage({
+                localElements: localJsonMemory, liveElements: liveOverpassMemory,
+                targetsSlice: activeTargetsSliceMemory, activeBufferMeters: activeBufferMeters,
+                currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
+            });
+        }
+
+        function buildAndRenderPoiMarker(el, forceStarredStyleProfile = false) {
+            const lat = el.lat; const lon = el.lon;
+            const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
+            let popupHeadingName = el.name || cleanLabelBrand; 
+            let popupHours = el.hours || "Hours not listed";
+            let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
+            
+            let visualCatKey = el.category;
+            if (el.brand === 'highway_rest' || el.brand === 'highway_toilets') visualCatKey = el.brand;
+            if (el.brand === 'tourism_viewpoint' || el.brand === 'tourism_dogpark') visualCatKey = el.brand;
+
+            const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
+            const isLarge = map.getZoom() > 13;
+
+            if (visualCatKey === 'gas' && el.isLocal) {
+                popupDesc = `<div class="text-[10px] bg-zinc-100 p-2 rounded-lg border border-zinc-200 font-bold text-zinc-900 my-1.5"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
+            }
+
+            const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
+            const streetViewUrl = `http://googleusercontent.com/maps.google.com/maps?layer=c&cbll=${lat},${lon}`;
+            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + ' ' + (el.isLocal ? '' : el.name))}`;
+
+            let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            let isStarredCurrently = starredList.some(item => item.id === `poi_${lat}_${lon}`);
+            let starBtnText = isStarredCurrently ? "❌ Remove Persistent Star" : "⭐ Persistently Star Stop";
+            let starBtnColor = isStarredCurrently ? "bg-red-600 hover:bg-red-700 text-white border-red-800" : "bg-amber-400 hover:bg-amber-500 text-zinc-950 border-amber-600";
+
+            const popupContent = `
+                <div class="w-full font-sans p-0.5 text-zinc-950">
+                    <img src="${uiConfig.img}" class="w-full h-24 object-cover rounded-lg mb-2 shadow-sm" onerror="this.style.display='none'">
+                    <h3 class="text-xs font-black text-black leading-tight">${popupHeadingName}</h3>
+                    ${el.isLocal && el.category !== 'gas' ? `<p class="text-[10px] text-zinc-900 font-bold tracking-tight mb-1">${el.name}</p>` : ''}
+                    <div class="text-[11px] text-black font-semibold leading-tight my-1.5">${popupDesc}</div>
+                    <div class="border-t border-zinc-200 pt-1.5 mt-1.5">
+                        <span class="text-[9px] uppercase font-black text-zinc-900 block tracking-wider">Hours</span>
+                        <p class="text-xs text-black italic font-black truncate">${popupHours}</p>
+                    </div>
+                    <div class="mt-3 flex flex-col gap-1.5">
+                        <button onclick="window.toggleStarPoiState('${lat}', '${lon}', \`${popupHeadingName.replace(/'/g, "\\'")}\`, '${el.category}', '${el.brand}', \`${popupHours.replace(/'/g, "\\'")}\`, \`${popupDesc.replace(/'/g, "\\'")}\`)" class="block w-full text-center ${starBtnColor} text-[11px] font-black py-2 rounded-xl min-h-[38px] cursor-pointer border shadow-md active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">${starBtnText}</button>
+                        <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-white text-[11px] font-black py-2.5 rounded-xl border border-blue-900 shadow-sm active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">A Route in Apple Maps</a>
+                        <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-900 hover:bg-black text-white text-[11px] font-black py-2.5 rounded-xl border border-zinc-950 shadow-sm active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">👁️ Google Street View</a>
+                        <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-black py-2.5 rounded-xl border border-emerald-900 shadow-sm active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">🌐 Search Web & Reviews</a>
+                    </div>
+                </div>
+            `;
+
+            const finalIconChoice = (forceStarredStyleProfile || isStarredCurrently) 
+                ? createStarredIcon(uiConfig.label, isLarge)
+                : createCustomIcon(uiConfig.label, uiConfig.bg, isLarge);
+
+            const marker = L.marker([lat, lon], { icon: finalIconChoice })
+                .bindPopup(popupContent, { 
+                    className: 'custom-popup', autoPan: true,
+                    autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 250
+                });
+
+            allPoiMarkers.push({ marker: marker, category: el.brand, lat: lat, lon: lon });
+            marker.addTo(map);
+        }
+
+        mathWorker.onmessage = function(e) {
+            const { sortedMatches } = e.data;
+            
+            allPoiMarkers.forEach(item => map.removeLayer(item.marker));
+            allPoiMarkers = [];
+
+            sortedMatches.forEach(el => {
+                buildAndRenderPoiMarker(el, false);
+            });
+
+            let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            starredList.forEach(el => {
+                let minD = Infinity;
+                for (let j = 0; j < activeTargetsSliceMemory.length; j++) {
+                    const d = map.distance([el.lat, el.lon], [activeTargetsSliceMemory[j].lat, activeTargetsSliceMemory[j].lng]);
+                    if (d < minD) minD = d;
+                }
+                if (minD <= activeBufferMeters) {
+                    if (!allPoiMarkers.some(m => m.lat === el.lat && m.lon === el.lon)) {
+                        buildAndRenderPoiMarker(el, true);
+                    }
+                }
+            });
+
+            const hud = document.getElementById('next-stop-hud');
+            if (hud) {
+                if (sortedMatches.length > 0) {
+                    const nextStop = sortedMatches[0];
+                    const distanceInMiles = (nextStop.minD * 0.000621371).toFixed(1);
+                    document.getElementById('hud-poi-name').innerText = cleanBrandNames[nextStop.brand] || nextStop.name;
+                    document.getElementById('hud-poi-dist').innerText = `${distanceInMiles} miles away`;
+                    hud.classList.remove('hidden');
+                } else {
+                    hud.classList.add('hidden');
+                }
+            }
+
+            updateInlineStatus("Stops active.");
+        };
+
+        map.on('zoomend', () => {
+            const isLarge = map.getZoom() > 13;
+            let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            
+            allPoiMarkers.forEach(item => {
+                let checkKey = item.category;
+                if (categoryConfigs[checkKey] === undefined) {
+                    if (['raisingcanes','chickfila','mcdonalds','jerseymikes','wendys','chipotle'].includes(checkKey)) checkKey = 'food';
+                    else if (['sheetz','murphyexpress','bucees','costcogas','wawa','circlek'].includes(checkKey)) checkKey = 'gas';
+                }
+                const config = categoryConfigs[checkKey] || categoryConfigs['food'] || categoryConfigs['gas'];
+                const isStarredCurrently = starredList.some(s => s.id === `poi_${item.lat}_${item.lon}`);
+                
+                if (isStarredCurrently) {
+                    item.marker.setIcon(createStarredIcon(config.label, isLarge));
+                } else {
+                    item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
+                }
+            });
+        });
+
+        document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
+            map.removeLayer(mapLayersPool[mapStyleMode]);
+            mapStyleMode = mapStyleMode === 'light' ? 'dark' : 'light';
+            mapLayersPool[mapStyleMode].addTo(map);
+            e.target.innerText = mapStyleMode === 'light' ? "🌙 Dark" : "☀️ Light";
+            triggerToast(`Map skin changed to ${mapStyleMode} mode layouts.`);
+        });
+
+        function handleMasterCategorySelection(element) {
+            document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
+            element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
+            currentMasterCat = element.getAttribute('data-cat'); currentSubFilter = 'all'; 
+            generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
+        }
+
+        // FIXED: Structural comment tags wrapped securely with no compiler snippet leakage
+        function generateSubMenuUI(catId) {
+            const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
+            const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
+            definition.forEach((sub, index) => {
+                const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
+                subButton.className = index === 0 ? "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]" : "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
+                subButton.innerText = sub.label; subBar.appendChild(subButton);
+            });
+            subBar.classList.remove('hidden');
+        }
+
+        function hideSubMenu() {
+            const subBar = document.getElementById('sub-filter-bar');
+            if (subBar) subBar.classList.add('hidden');
+            document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
+            currentMasterCat = null; currentSubFilter = 'all';
+        }
+
+        // --- PHASE 6: ELEMENT SELECTION COUPLING LISTENERS ---
+        document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
+        document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
+            const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
+            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]");
+            subPill.className = "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
+            currentSubFilter = subPill.getAttribute('data-sub'); dispatchOffThreadAnalysis();
+        });
+
+        document.getElementById('buffer-select').addEventListener('change', (e) => { activeBufferMeters = parseInt(e.target.value); if (localJsonMemory) dispatchOffThreadAnalysis(); });
+        document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
+
+        document.getElementById('route-btn').addEventListener('click', async () => {
+            const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input'); let startLatLng, endLatLng;
+            if (startInput.dataset.lat && startInput.dataset.lon) { startLatLng = L.latLng(parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon)); }
+            if (endInput.dataset.lat && endInput.dataset.lon) { endLatLng = L.latLng(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon)); }
+            if (!startLatLng || !endLatLng) { alert("Select suggested autocomplete options first."); return; }
+            routingControl.setWaypoints([startLatLng, endLatLng]);
+        });
+
+        const geoBtn = document.getElementById('geo-btn'); let isTracking = false, watchId = null;
+        geoBtn.addEventListener('click', () => {
+            if (isTracking) { if (watchId) navigator.geolocation.clearWatch(watchId); isTracking = false; geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; }
+            else {
+                if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
+                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
+                watchId = navigator.geolocation.watchPosition((pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
+                    map.panTo([latitude, longitude]);
+
+                    if (routeLineCoordinates.length > 0) {
+                        let minDistanceToRouteLine = Infinity;
+                        for (let i = 0; i < routeLineCoordinates.length; i++) {
+                            const d = map.distance([latitude, longitude], [routeLineCoordinates[i].lat, routeLineCoordinates[i].lng]);
+                            if (d < minDistanceToRouteLine) minDistanceToRouteLine = d;
+                        }
+
+                        if (minDistanceToRouteLine > 805) {
+                            triggerToast("Off-route deviation detected! Updating path variables...", 4000);
+                            const currentGpsLocationLatLng = L.latLng(latitude, longitude);
+                            const currentTargetDestinationLatLng = routingControl.getWaypoints()[1].latLng;
+                            routingControl.setWaypoints([currentGpsLocationLatLng, currentTargetDestinationLatLng]);
+                        }
+                    }
+                }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
+            }
+        });
+    </script>
+</body>
+</html>
