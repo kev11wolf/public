@@ -31,7 +31,6 @@
         .safe-top { padding-top: env(safe-area-inset-top); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         
-        /* Force-remove text directions itinerary layout panels completely */
         .leaflet-routing-container, .leaflet-routing-error, .leaflet-right {
             display: none !important;
         }
@@ -39,7 +38,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Modern tightly bound popup layout to prevent content spillover */
         .custom-popup .leaflet-popup-content-wrapper {
             border-radius: 16px;
             padding: 2px;
@@ -152,12 +150,13 @@
         let currentMasterCat = null;
         let currentSubFilter = 'all';
         let activeBufferMeters = 4000; 
+        let cachedCategoriesFetched = new Set(); // FIXED: Initialized globally to resolve the reference crash
 
         // --- 2. MAP INITIALIZATION ---
         const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
-        // --- 3. HOISTED HELPER ENGINES (Declared before routingControl) ---
+        // --- 3. HOISTED HELPER ENGINES ---
         const createCustomIcon = (label, classes, isLarge = false) => {
             const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
             const sizePx = isLarge ? 44 : 32;
@@ -167,7 +166,7 @@
             });
         };
 
-        // --- 4. SAFE INITIALIZATION OF ROUTING ENGINE ---
+        // --- 4. ROUTING ENGINE CONFIGURATION ---
         let routingControl = L.Routing.control({
             show: false, addWaypoints: false, draggableWaypoints: false,
             createMarker: (i, wp) => L.marker(wp.latLng, { icon: createCustomIcon(i === 0 ? '🏁' : '⛰️', 'bg-black border-white text-white font-bold', false) })
@@ -177,14 +176,16 @@
             routeLineCoordinates = e.routes[0].coordinates;
             document.getElementById('search-container').classList.add('hidden');
             
-            rawPoiDataMemory = []; cachedCategoriesFetched.clear();
+            liveOverpassMemory = [];          // FIXED: Safely points to memory stack array
+            cachedCategoriesFetched.clear(); // FIXED: Executes without ReferenceError triggers
             allPoiMarkers.forEach(m => map.removeLayer(m.marker)); allPoiMarkers = [];
             hideSubMenu();
+            
             updateInlineStatus("Route ready. Tap filters below.");
             triggerToast("Route generated. Content deferred until filter selection.");
         });
 
-        // --- 5. WORKER ENGINE DEFINITION ---
+        // --- 5. BACKGROUND WORKER ENGINE ---
         const workerBlobCode = `
             function haversineDist(lat1, lon1, lat2, lon2) {
                 const R = 6371000;
@@ -264,7 +265,7 @@
         const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
         const mathWorker = new Worker(URL.createObjectURL(blobObj));
 
-        // --- 6. CORE LOGIC FUNCTIONS ---
+        // --- 6. USER INTERFACE CONTROLLERS ---
         function triggerToast(text, duration = 3000) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -526,7 +527,7 @@
             currentMasterCat = null; currentSubFilter = 'all';
         }
 
-        // --- 7. EVENT LISTENERS ASSIGNMENTS ---
+        // --- 7. ACTIVE EVENT LISTENERS ---
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
             const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
