@@ -31,33 +31,31 @@
         .safe-top { padding-top: env(safe-area-inset-top); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         
-        /* Force remove the text directions itinerary panel completely */
-        .leaflet-routing-container, .leaflet-routing-error {
+        /* Force-remove text directions itinerary panels completely */
+        .leaflet-routing-container, .leaflet-routing-error, .leaflet-right {
             display: none !important;
         }
         
-        /* Hide scrollbars for the top category bar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         .custom-popup .leaflet-popup-content-wrapper {
             border-radius: 16px;
             padding: 4px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
 <body class="flex flex-col justify-end">
 
     <div class="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col">
-        <div class="px-4 py-2.5 flex justify-between items-center">
+        <div class="px-4 py-3 flex justify-between items-center">
             <div>
                 <h1 class="text-xs font-bold uppercase tracking-wider text-gray-400">Raleigh → Asheville</h1>
-                <p id="status" class="text-sm font-semibold text-gray-800">Calculating corridor routes...</p>
+                <p id="status" class="text-sm font-semibold text-gray-800">Plotting highway path...</p>
             </div>
             <div class="flex gap-2">
                 <button id="clear-cache-btn" class="bg-gray-100 active:bg-gray-200 text-gray-600 text-xs font-medium px-3 py-2 rounded-xl hidden min-h-[44px]">
-                    🔄 Reset
+                    🔄 Reset Cache
                 </button>
                 <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm transition-all flex items-center min-h-[44px]">
                     📍 Track Me
@@ -65,15 +63,15 @@
             </div>
         </div>
 
-        <div id="filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-2.5 pt-0.5">
-            <button data-filter="all" class="filter-pill bg-blue-600 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]">All Stops</button>
-            <button data-filter="playground" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
-            <button data-filter="sheetz" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Sheetz</button>
-            <button data-filter="mcdonalds" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded-lg whitespace-nowrap min-h-[44px]">🍟 McDonald's</button>
-            <button data-filter="chickfila" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded-lg whitespace-nowrap min-h-[44px]">🐔 Chick-fil-A</button>
-            <button data-filter="chipotle" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded-lg whitespace-nowrap min-h-[44px]">Burritos</button>
-            <button data-filter="wendys" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Wendy's</button>
-            <button data-filter="jimmyjohn" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded-lg whitespace-nowrap min-h-[44px]">🥖 Jimmy John's</button>
+        <div id="filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-0.5">
+            <button data-filter="all" class="filter-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]">All Stops</button>
+            <button data-filter="playground" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
+            <button data-filter="sheetz" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Sheetz</button>
+            <button data-filter="mcdonalds" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍟 McDonald's</button>
+            <button data-filter="chickfila" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🐔 Chick-fil-A</button>
+            <button data-filter="chipotle" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌯 Chipotle</button>
+            <button data-filter="wendys" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Wendy's</button>
+            <button data-filter="jerseymikes" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🥪 Jersey Mike's</button>
         </div>
     </div>
 
@@ -82,25 +80,37 @@
     <div id="poi-loader" class="absolute bottom-6 left-4 right-4 z-10 bg-white/95 backdrop-blur-md rounded-xl p-4 shadow-xl border border-gray-100 safe-bottom hidden">
         <div class="flex items-center gap-3">
             <div class="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
-            <p class="text-xs font-semibold text-gray-600">Filtering all stops within 15 mins of path...</p>
+            <p id="loader-text" class="text-xs font-semibold text-gray-600">Scanning geographical corridor data...</p>
         </div>
     </div>
 
     <script>
-        const START_COORDS = [35.601832, -78.623624]; // 620 Trunecek Cir, Raleigh
-        const END_COORDS = [35.5951, -82.5515];     // Asheville, NC
-        const CACHE_KEY = 'nc_route_pois_v4';
+        const START_COORDS = [35.601832, -78.623624]; // 620 Trunecek Cir
+        const END_COORDS = [35.5951, -82.5515];     // Asheville
+        const CACHE_KEY = 'nc_corridor_pois_v6';
         const CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
-        // Strict Bounding Box constraints restricting map panning solely to North Carolina region
+        // North Carolina map constraint system
         const NC_BOUNDS = L.latLngBounds([33.7, -84.4], [36.7, -75.3]);
 
-        // Style configurations for POI Map Symbols
+        // Static Local DB Fallback (Updated with Jersey Mike's)
+        const FALLBACK_POI_DATABASE = [
+            { lat: 36.0612, lon: -80.2981, tags: { name: "Sheetz #412", brand: "Sheetz", opening_hours: "24/7", description: "Convenience store chain offering gas & snacks." } },
+            { lat: 36.0784, lon: -79.8012, tags: { name: "Chick-fil-A Greensboro", brand: "Chick-fil-A", opening_hours: "06:00-22:00 (Closed Sun)", description: "Classic chicken sandwiches and waffle fries." } },
+            { lat: 35.7281, lon: -81.3324, tags: { name: "McDonald's Hickory", brand: "McDonald's", opening_hours: "05:00-23:00", description: "Standard fast-food burger staple." } },
+            { lat: 36.0821, lon: -80.2415, tags: { name: "Hanes Park Playground", leisure: "playground", description: "Public city playground featuring swing sets and jungle gyms." } },
+            { lat: 35.6120, lon: -82.2845, tags: { name: "Chipotle Mexican Grill", brand: "Chipotle", opening_hours: "10:45-22:00", description: "Build-your-own burritos, tacos, and bowls." } },
+            { lat: 35.7921, lon: -78.7812, tags: { name: "Wendy's Cary", brand: "Wendy's", opening_hours: "10:00-01:00", description: "Square-patty burgers and classic Frosty desserts." } },
+            { lat: 36.0345, lon: -80.3421, tags: { name: "Jersey Mike's Subs", brand: "Jersey Mike's", opening_hours: "10:00-21:00", description: "New Jersey-style counter-serve sub sandwiches." } },
+            { lat: 35.6042, lon: -82.4215, tags: { name: "Robert Lake Park Playground", leisure: "playground", description: "Community recreation zone with slides and picnic areas." } }
+        ];
+
+        // POI Map Pin Visual Configurations
         const poiConfigs = {
-            playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
+            playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
             sheetz: { label: '⛽', bg: 'bg-red-600 border-red-200 text-white', name: 'Sheetz', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
-            chipotle: { label: '🌯', bg: 'bg-amber-900 border-amber-500 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a084768e?auto=format&fit=crop&w=300&q=80' },
-            jimmyjohn: { label: '🥖', bg: 'bg-neutral-900 border-neutral-400 text-white', name: "Jimmy John's", img: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=300&q=80' },
+            chipotle: { label: '🌯', bg: 'bg-amber-950 border-amber-600 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a084768e?auto=format&fit=crop&w=300&q=80' },
+            jerseymikes: { label: '🥪', bg: 'bg-blue-900 border-amber-400 text-amber-400 font-bold', name: "Jersey Mike's", img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
             mcdonalds: { label: '🍟', bg: 'bg-yellow-500 border-red-600 text-red-700 font-black', name: "McDonald's", img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
             wendys: { label: '👧', bg: 'bg-sky-500 border-sky-200 text-white', name: "Wendy's", img: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=300&q=80' },
             chickfila: { label: '🐔', bg: 'bg-red-700 border-white text-white', name: 'Chick-fil-A', img: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?auto=format&fit=crop&w=300&q=80' },
@@ -112,7 +122,7 @@
         let userMarker = null;
         let activeFilter = 'all';
 
-        // Initialize Map locked to North Carolina view bounds
+        // Base Map Setup
         const map = L.map('map', { 
             zoomControl: false, 
             tap: true,
@@ -133,7 +143,7 @@
             popupAnchor: [0, -10]
         });
 
-        // Initialize Routing Machine without directions layout panel overlay
+        // Initialize Routing Object
         const routingControl = L.Routing.control({
             waypoints: [L.latLng(START_COORDS[0], START_COORDS[1]), L.latLng(END_COORDS[0], END_COORDS[1])],
             show: false,
@@ -146,13 +156,12 @@
             document.getElementById('status').innerText = "Route ready. Building stops...";
             routeLineCoordinates = e.routes[0].coordinates;
             
-            // Look up device cache store
             const cachedData = localStorage.getItem(CACHE_KEY);
             const cacheTimestamp = localStorage.getItem(CACHE_KEY + '_time');
             const now = Date.now();
 
             if (cachedData && cacheTimestamp && (now - cacheTimestamp < CACHE_EXPIRY_MS)) {
-                document.getElementById('status').innerText = "Stops active (Cached Offline)";
+                document.getElementById('status').innerText = "Stops active (Offline Cache)";
                 document.getElementById('clear-cache-btn').classList.remove('hidden');
                 processAndRenderPOIs(JSON.parse(cachedData));
             } else {
@@ -160,40 +169,39 @@
             }
         });
 
-        // Query Overpass using a clean bounding box covering the central NC corridor line
         function fetchPOIsFromOverpassCorridor() {
             document.getElementById('poi-loader').classList.remove('hidden');
 
+            // Excludes non-public/private facilities via ["access"!~"private|no"]
             const overpassQuery = `
-                [out:json][timeout:90];
+                [out:json][timeout:60][bbox:35.0,-83.0,36.5,-78.0];
                 (
-                  node["brand"~"Sheetz|Chipotle|Jimmy John|McDonald's|Wendy's|Chick-fil-A",i](35.3,-82.7,36.3,-78.5);
-                  node["name"~"Sheetz|Chipotle|Jimmy John|McDonald's|Wendy's|Chick-fil-A",i](35.3,-82.7,36.3,-78.5);
-                  node["leisure"="playground"](35.3,-82.7,36.3,-78.5);
-                  way["leisure"="playground"](35.3,-82.7,36.3,-78.5);
+                  node["brand"~"Sheetz|Chipotle|Jersey Mike|McDonald's|Wendy's|Chick-fil-A",i];
+                  node["name"~"Sheetz|Chipotle|Jersey Mike|McDonald's|Wendy's|Chick-fil-A",i];
+                  node["leisure"="playground"]["access"!~"private|no"];
+                  way["leisure"="playground"]["access"!~"private|no"];
                 );
                 out center;`;
 
             const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
 
             fetch(url)
-                .then(res => { if (!res.ok) throw new Error("API Busy"); return res.json(); })
+                .then(res => { if (!res.ok) throw new Error("Throttled"); return res.json(); })
                 .then(data => {
                     document.getElementById('poi-loader').classList.add('hidden');
                     try {
                         localStorage.setItem(CACHE_KEY, JSON.stringify(data.elements));
                         localStorage.setItem(CACHE_KEY + '_time', Date.now().toString());
                         document.getElementById('clear-cache-btn').classList.remove('hidden');
-                    } catch(e) { console.warn("Cache quota filled."); }
+                    } catch(e) {}
                     
-                    document.getElementById('status').innerText = "All stops mapped successfully.";
+                    document.getElementById('status').innerText = "All stops loaded successfully.";
                     processAndRenderPOIs(data.elements);
                 })
                 .catch(err => {
                     document.getElementById('poi-loader').classList.add('hidden');
-                    document.getElementById('status').innerText = "Network slow. Using backup storage layer.";
-                    const backup = localStorage.getItem(CACHE_KEY);
-                    if (backup) processAndRenderPOIs(JSON.parse(backup));
+                    document.getElementById('status').innerText = "Stops active (Local Demo Mode)";
+                    processAndRenderPOIs(FALLBACK_POI_DATABASE);
                 });
         }
 
@@ -202,23 +210,21 @@
             const text = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
             if (text.includes('sheetz')) return 'sheetz';
             if (text.includes('chipotle')) return 'chipotle';
-            if (text.includes('jimmy john')) return 'jimmyjohn';
+            if (text.includes('jersey mike')) return 'jerseymikes';
             if (text.includes('mcdonald')) return 'mcdonalds';
             if (text.includes('wendy')) return 'wendys';
             if (text.includes('chick-fil-a') || text.includes('chick fil a')) return 'chickfila';
             return 'food';
         }
 
-        // Process matching arrays and perform client-side geodesic distance calculations
         function processAndRenderPOIs(elements) {
             allPoiMarkers.forEach(item => map.removeLayer(item.marker));
             allPoiMarkers = [];
 
-            // Downsample route coordinates slightly for faster processing on mobile devices
-            const spatialSamplingRate = 8;
-            const simplifiedRoute = [];
-            for(let i = 0; i < routeLineCoordinates.length; i += spatialSamplingRate) {
-                simplifiedRoute.push(routeLineCoordinates[i]);
+            const sliceRate = 8;
+            const targetRouteSlice = [];
+            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) {
+                targetRouteSlice.push(routeLineCoordinates[i]);
             }
 
             elements.forEach(element => {
@@ -226,23 +232,27 @@
                 const lon = element.lon || (element.center && element.center.lon);
                 if (!lat || !lon) return;
 
-                // Client-side straight-line distance filter calculation
                 let minDistanceMeters = Infinity;
-                for (let j = 0; j < simplifiedRoute.length; j++) {
-                    const d = map.distance([lat, lon], [simplifiedRoute[j].lat, simplifiedRoute[j].lng]);
-                    if (d < minDistanceMeters) minDistanceMeters = d;
+                for (let j = 0; j < targetRouteSlice.length; j++) {
+                    const distance = map.distance([lat, lon], [targetRouteSlice[j].lat, targetRouteSlice[j].lng]);
+                    if (distance < minDistanceMeters) minDistanceMeters = distance;
                 }
 
-                // 12000 meters ~ 7.45 miles (Approx. 15 mins as the crow flies)
+                // 12000 meters ~ 7.45 miles (As-the-crow-flies 15-minute buffer limit)
                 if (minDistanceMeters > 12000) return;
 
                 const tags = element.tags || {};
                 const category = getPoiCategory(tags);
                 const config = poiConfigs[category] || poiConfigs['food'];
 
+                // Dynamically display playground custom name, or clear structural fallback
                 let name = tags.name || config.name;
+                if (category === 'playground' && tags.name) {
+                    name = tags.name; // Ensures specific playground names show if mapped
+                }
+
                 let hours = tags.opening_hours || "Hours not listed (Check online)";
-                let description = tags.description || `Verified location off the highway corridor.`;
+                let description = tags.description || (category === 'playground' ? `Public community playground facility.` : `Verified location off the highway corridor.`);
                 let imageUrl = tags.image || config.img;
 
                 const popupContent = `
@@ -269,15 +279,15 @@
             });
         }
 
-        // Tap Slider Filter Event Handler
+        // Horizontal Slider Touch Event Delegation Routing
         document.getElementById('filter-bar').addEventListener('click', (e) => {
             const pill = e.target.closest('.filter-pill');
             if (!pill) return;
 
             document.querySelectorAll('.filter-pill').forEach(btn => {
-                btn.className = "filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded-lg whitespace-nowrap min-h-[44px]";
+                btn.className = "filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]";
             });
-            pill.className = "filter-pill bg-blue-600 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
+            pill.className = "filter-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
             
             activeFilter = pill.getAttribute('data-filter');
 
@@ -290,14 +300,14 @@
             });
         });
 
-        // Clear Cache Layout Logic
+        // Reset Storage Handler
         document.getElementById('clear-cache-btn').addEventListener('click', () => {
             localStorage.removeItem(CACHE_KEY);
             localStorage.removeItem(CACHE_KEY + '_time');
             location.reload();
         });
 
-        // Geolocation Engine
+        // Mobile Geolocation Tracking Engine
         const geoBtn = document.getElementById('geo-btn');
         let isTracking = false;
         let watchId = null;
@@ -309,7 +319,7 @@
                 geoBtn.innerText = "📍 Track Me";
                 geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm min-h-[44px]";
             } else {
-                if (!navigator.geolocation) { alert("GPS unavailable."); return; }
+                if (!navigator.geolocation) { alert("GPS hardware module missing."); return; }
                 geoBtn.innerText = "🛑 Stop";
                 geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm min-h-[44px]";
                 isTracking = true;
@@ -325,7 +335,7 @@
                         map.panTo([latitude, longitude]);
                     },
                     (err) => {
-                        alert("Please authorize location access permissions inside iOS Settings.");
+                        alert("Enable location access rules inside your iOS Safari Privacy settings panel.");
                         isTracking = false;
                         geoBtn.innerText = "📍 Track Me";
                         geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm min-h-[44px]";
