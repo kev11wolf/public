@@ -121,8 +121,52 @@
     <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
 
     <script>
-        // --- 1. GLOBAL STATE CONSTRUCTORS ---
-        const MAP_INITIAL_CENTER = [35.7796, -78.6382]; 
+        // ==========================================
+        // --- PHASE 1: HOISTED UTILITY FUNCTIONS ---
+        // ==========================================
+        function triggerToast(text, duration = 3000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = "bg-gray-900/95 backdrop-blur-sm text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center transition-all duration-300 opacity-0 translate-y-2 pointer-events-auto";
+            toast.innerText = text;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('opacity-0', 'translate-y-2'); }, 50);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-1');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, duration);
+        }
+
+        function updateInlineStatus(text, showSpinner = false) {
+            const statusLabel = document.getElementById('status');
+            if (statusLabel) statusLabel.innerText = text;
+            const spinner = document.getElementById('status-spinner');
+            if (spinner) {
+                if (showSpinner) spinner.classList.remove('hidden');
+                else spinner.classList.add('hidden');
+            }
+        }
+
+        function buildCleanAddressString(addr, displayNameFallback) {
+            if (!addr) return displayNameFallback.split(',').slice(0, 3).join(',');
+            let tokens = [];
+            const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
+            const cityNode = addr.city || addr.town || addr.village || addr.suburb || '';
+            const stateNode = addr.state || '';
+            const zipNode = addr.postcode || '';
+
+            if (roadLine) tokens.push(roadLine);
+            if (cityNode) tokens.push(cityNode);
+            if (stateNode) tokens.push(stateNode);
+            if (zipNode) tokens.push(zipNode);
+
+            return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
+        }
+
+        // ==========================================
+        // --- PHASE 2: GLOBAL ENVIRONMENT KEYS ---
+        // ==========================================
         const CACHE_PREFIX = 'route_hybrid_v12_';
         const OVERPASS_MIRRORS = [
             "https://overpass-api.de/api/interpreter",
@@ -167,7 +211,9 @@
         let mapStyleMode = 'light';
         let activeTargetsSliceMemory = [];
 
-        // --- 2. MAP LAYER PROFILES ---
+        // ==========================================
+        // --- PHASE 3: MAP TILES & ROUTING SETUP ---
+        // ==========================================
         const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
         
         const mapLayersPool = {
@@ -176,17 +222,47 @@
         };
         mapLayersPool[mapStyleMode].addTo(map);
 
-        // --- 3. HOISTED HELPER ENGINES & ICON BUILDERS ---
-        const createCustomIcon = (label, classes, isLarge = false) => {
-            const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
-            const sizePx = isLarge ? 44 : 32;
+        // Custom icon generation metrics
+        const createRouteMarkerIcon = (label, classes) => {
             return L.divIcon({
-                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold ${sizeClass} ${classes}">${label}</div>`,
-                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
+                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold w-8 h-8 text-sm border-2 ${classes}">${label}</div>`,
+                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
             });
         };
 
-        // --- UPGRADE: Large Gold Star Icon with Central category emoji projection layer ---
+        // Explicitly set the OSRM endpoint parameters to satisfy LRM checks and prevent console spam
+        let routingControl = L.Routing.control({
+            show: false, 
+            addWaypoints: false, 
+            draggableWaypoints: false,
+            serviceUrl: 'https://router.project-osrm.org/route/v1',
+            lineOptions: {
+                styles: [
+                    { color: '#0f172a', opacity: 0.25, weight: 14 }, 
+                    { color: '#2563eb', opacity: 0.9, weight: 10 },  
+                    { color: '#60a5fa', opacity: 1, weight: 4 }      
+                ]
+            },
+            createMarker: (i, wp) => L.marker(wp.latLng, { icon: createRouteMarkerIcon(i === 0 ? '🏁' : '⛰️', 'bg-black border-white text-white') })
+        }).addTo(map);
+
+        routingControl.on('routesfound', function(e) {
+            routeLineCoordinates = e.routes[0].coordinates;
+            const searchContainer = document.getElementById('search-container');
+            if (searchContainer) searchContainer.classList.add('hidden');
+            
+            liveOverpassMemory = [];          
+            cachedCategoriesFetched.clear(); 
+            allPoiMarkers.forEach(m => map.removeLayer(m.marker)); allPoiMarkers = [];
+            hideSubMenu();
+            
+            const hud = document.getElementById('next-stop-hud');
+            if (hud) hud.classList.add('hidden');
+            
+            updateInlineStatus("Route ready. Tap filters below.");
+            triggerToast("Route generated. Content deferred until filter selection.");
+        });
+
         const createStarredIcon = (label, isLarge = false) => {
             const wrapperSize = isLarge ? 'w-14 h-14 text-2xl border-4' : 'w-11 h-11 text-xl border-3';
             const sizePx = isLarge ? 56 : 44;
@@ -199,34 +275,9 @@
             });
         };
 
-        // --- 4. HIGH-VISIBILITY ROUTING CONFIGURATION ---
-        let routingControl = L.Routing.control({
-            show: false, addWaypoints: false, draggableWaypoints: false,
-            lineOptions: {
-                styles: [
-                    { color: '#0f172a', opacity: 0.25, weight: 14 }, // Heavy baseline track border shadow
-                    { color: '#2563eb', opacity: 0.9, weight: 10 },  // Cobalt Blue main body line
-                    { color: '#60a5fa', opacity: 1, weight: 4 }      // High neon center highlight core line
-                ]
-            },
-            createMarker: (i, wp) => L.marker(wp.latLng, { icon: createCustomIcon(i === 0 ? '🏁' : '⛰️', 'bg-black border-white text-white font-bold', false) })
-        }).addTo(map);
-
-        routingControl.on('routesfound', function(e) {
-            routeLineCoordinates = e.routes[0].coordinates;
-            document.getElementById('search-container').classList.add('hidden');
-            
-            liveOverpassMemory = [];          
-            cachedCategoriesFetched.clear(); 
-            allPoiMarkers.forEach(m => map.removeLayer(m.marker)); allPoiMarkers = [];
-            hideSubMenu();
-            document.getElementById('next-stop-hud').classList.add('hidden');
-            
-            updateInlineStatus("Route ready. Tap filters below.");
-            triggerToast("Route generated. Content deferred until filter selection.");
-        });
-
-        // --- 5. BACKGROUND WORKER ENGINE ---
+        // ==========================================
+        // --- PHASE 4: WORKER MATRIX ALLOCATIONS ---
+        // ==========================================
         const workerBlobCode = `
             function haversineDist(lat1, lon1, lat2, lon2) {
                 const R = 6371000;
@@ -312,7 +363,6 @@
                         let concreteCat = parseLiveBackupTargetCategory(el.tags || {});
                         if (concreteCat === 'excluded') return;
 
-                        // --- FIX 1: Strict live backup category alignment checker ---
                         if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
                         if (currentMasterCat === 'tourism' && concreteCat !== 'tourism_viewpoint' && concreteCat !== 'tourism_dogpark') return;
                         if (currentMasterCat === 'playground' && concreteCat !== 'playground') return;
@@ -351,7 +401,9 @@
         const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
         const mathWorker = new Worker(URL.createObjectURL(blobObj));
 
-        // --- 6. GLOBAL PERSISTENT STARRING HUB ENGINE ---
+        // ==========================================
+        // --- PHASE 5: EVENT COUPLING MATRIX -----
+        // ==========================================
         window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
             let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             let uniqueId = `poi_${lat}_${lon}`;
@@ -369,25 +421,8 @@
             }
             
             localStorage.setItem('starred_pois', JSON.stringify(starred));
-            // Fire layout re-evaluations instantly to trigger graphic rendering changes
             dispatchOffThreadAnalysis();
         };
-
-        function buildCleanAddressString(addr, displayNameFallback) {
-            if (!addr) return displayNameFallback.split(',').slice(0, 3).join(',');
-            let tokens = [];
-            const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
-            const cityNode = addr.city || addr.town || addr.village || addr.suburb || '';
-            const stateNode = addr.state || '';
-            const zipNode = addr.postcode || '';
-
-            if (roadLine) tokens.push(roadLine);
-            if (cityNode) tokens.push(cityNode);
-            if (stateNode) tokens.push(stateNode);
-            if (zipNode) tokens.push(zipNode);
-
-            return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
-        }
 
         function initAutocomplete(inputId, dropdownId) {
             const input = document.getElementById(inputId);
@@ -464,16 +499,6 @@
 
         bindInputFieldGeolocator('start-locate-btn', 'start-input');
         bindInputFieldGeolocator('end-locate-btn', 'end-input');
-
-        async function fetchWithMirrorFailover(queryPayload) {
-            for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
-                try {
-                    const response = await fetch(OVERPASS_MIRRORS[i] + "?data=" + encodeURIComponent(queryPayload));
-                    if (response.ok) return await response.json();
-                } catch (err) { console.warn("Mirror connection delayed."); }
-            }
-            throw new Error("All data networks congested.");
-        }
 
         async function runDataExecutionLayer(masterCat) {
             if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
@@ -557,12 +582,9 @@
             });
         }
 
-        // Shared singular marker render execution block mapping logic configurations securely
         function buildAndRenderPoiMarker(el, forceStarredStyleProfile = false) {
             const lat = el.lat; const lon = el.lon;
             const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
-            
-            // Dynamic naming matrices prioritize the unique name of the actual point
             let popupHeadingName = el.name || cleanLabelBrand; 
             let popupHours = el.hours || "Hours not listed";
             let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
@@ -578,17 +600,16 @@
                 popupDesc = `<div class="text-[10px] bg-zinc-100 p-2 rounded-lg border border-zinc-200 font-bold text-zinc-900 my-1.5"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
             }
 
-            // High contrast popup layout adjustments with explicit bold vivid action tracking links
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
             const streetViewUrl = `http://googleusercontent.com/maps.google.com/maps?layer=c&cbll=${lat},${lon}`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + ' ' + (el.isLocal ? '' : el.name))}`;
 
-            // Check dynamic persistence state parameters
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             let isStarredCurrently = starredList.some(item => item.id === `poi_${lat}_${lon}`);
-            let starBtnText = isStarredCurrently ? "❌ Remove Persistent Star" : "⭐ persitently Star Stop";
-            let starBtnColor = isStarredCurrently ? "bg-red-700 hover:bg-red-800 text-white border-red-900" : "bg-amber-400 hover:bg-amber-500 text-zinc-950 border-amber-600";
+            let starBtnText = isStarredCurrently ? "❌ Remove Persistent Star" : "⭐ Persistently Star Stop";
+            let starBtnColor = isStarredCurrently ? "bg-red-600 hover:bg-red-700 text-white border-red-800" : "bg-amber-400 hover:bg-amber-500 text-zinc-950 border-amber-600";
 
+            // Upgraded high-contrast button styles for readability
             const popupContent = `
                 <div class="w-full font-sans p-0.5 text-zinc-950">
                     <img src="${uiConfig.img}" class="w-full h-24 object-cover rounded-lg mb-2 shadow-sm" onerror="this.style.display='none'">
@@ -600,15 +621,14 @@
                         <p class="text-xs text-black italic font-black truncate">${popupHours}</p>
                     </div>
                     <div class="mt-3 flex flex-col gap-1.5">
-                        <button onclick="window.toggleStarPoiState('${lat}', '${lon}', \`${popupHeadingName.replace(/'/g, "\\'")}\`, '${el.category}', '${el.brand}', \`${popupHours.replace(/'/g, "\\'")}\`, \`${popupDesc.replace(/'/g, "\\'")}\`)" class="block text-center ${starBtnColor} text-[11px] font-black py-2 rounded-xl min-h-[38px] cursor-pointer border shadow-md active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">${starBtnText}</button>
-                        <a href="${appleMapsUrl}" target="_blank" class="block text-center bg-blue-700 hover:bg-blue-800 text-white text-[11px] font-black py-2.5 rounded-xl border border-blue-900 shadow-sm active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">🗺️ Route in Apple Maps</a>
-                        <a href="${streetViewUrl}" target="_blank" class="block text-center bg-zinc-900 hover:bg-black text-white text-[11px] font-black py-2.5 rounded-xl border border-zinc-950 shadow-sm active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">👁️ Google Street View</a>
-                        <a href="${googleSearchUrl}" target="_blank" class="block text-center bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-black py-2.5 rounded-xl border border-emerald-900 shadow-sm active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">🌐 Search Web & Reviews</a>
+                        <button onclick="window.toggleStarPoiState('${lat}', '${lon}', \`${popupHeadingName.replace(/'/g, "\\'")}\`, '${el.category}', '${el.brand}', \`${popupHours.replace(/'/g, "\\'")}\`, \`${popupDesc.replace(/'/g, "\\'")}\`)" class="block w-full text-center ${starBtnColor} text-[11px] font-black py-2 rounded-xl min-h-[38px] cursor-pointer border shadow-md active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">${starBtnText}</button>
+                        <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-white text-[11px] font-black py-2.5 rounded-xl border border-blue-900 shadow-sm active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">A Route in Apple Maps</a>
+                        <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-900 hover:bg-black text-white text-[11px] font-black py-2.5 rounded-xl border border-zinc-950 shadow-sm active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">👁️ Google Street View</a>
+                        <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-black py-2.5 rounded-xl border border-emerald-900 shadow-sm active:scale-95 transition-transform flex items-center justify-center pointer-events-auto">🌐 Search Web & Reviews</a>
                     </div>
                 </div>
             `;
 
-            // --- FIX 2: Choose Gold Star or specific item style configuration rules securely ---
             const finalIconChoice = (forceStarredStyleProfile || isStarredCurrently) 
                 ? createStarredIcon(uiConfig.label, isLarge)
                 : createCustomIcon(uiConfig.label, uiConfig.bg, isLarge);
@@ -626,16 +646,13 @@
         mathWorker.onmessage = function(e) {
             const { sortedMatches } = e.data;
             
-            // --- FIX 2: Pure purge clearance strategy guarantees only selected filters show up as dots on canvas ---
             allPoiMarkers.forEach(item => map.removeLayer(item.marker));
             allPoiMarkers = [];
 
-            // Render verified filtered category layers
             sortedMatches.forEach(el => {
                 buildAndRenderPoiMarker(el, false);
             });
 
-            // --- FIX 2: persistent starring extraction scans corridor bounds bypassing master categories filters ---
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             starredList.forEach(el => {
                 let minD = Infinity;
@@ -644,23 +661,23 @@
                     if (d < minD) minD = d;
                 }
                 if (minD <= activeBufferMeters) {
-                    // Prevent rendering double overlays if the starred element is inside the current active filter layer
                     if (!allPoiMarkers.some(m => m.lat === el.lat && m.lon === el.lon)) {
                         buildAndRenderPoiMarker(el, true);
                     }
                 }
             });
 
-            // Update Next Stop floating HUD insights statistics
             const hud = document.getElementById('next-stop-hud');
-            if (sortedMatches.length > 0) {
-                const nextStop = sortedMatches[0];
-                const distanceInMiles = (nextStop.minD * 0.000621371).toFixed(1);
-                document.getElementById('hud-poi-name').innerText = cleanBrandNames[nextStop.brand] || nextStop.name;
-                document.getElementById('hud-poi-dist').innerText = `${distanceInMiles} miles away`;
-                hud.classList.remove('hidden');
-            } else {
-                hud.classList.add('hidden');
+            if (hud) {
+                if (sortedMatches.length > 0) {
+                    const nextStop = sortedMatches[0];
+                    const distanceInMiles = (nextStop.minD * 0.000621371).toFixed(1);
+                    document.getElementById('hud-poi-name').innerText = cleanBrandNames[nextStop.brand] || nextStop.name;
+                    document.getElementById('hud-poi-dist').innerText = `${distanceInMiles} miles away`;
+                    hud.classList.remove('hidden');
+                } else {
+                    hud.classList.add('hidden');
+                }
             }
 
             updateInlineStatus("Stops active.");
@@ -687,7 +704,6 @@
             });
         });
 
-        // --- MAP THEME SWITCH LAYER CONTROL ---
         document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
             map.removeLayer(mapLayersPool[mapStyleMode]);
             mapStyleMode = mapStyleMode === 'light' ? 'dark' : 'light';
@@ -715,7 +731,8 @@
         }
 
         function hideSubMenu() {
-            document.getElementById('sub-filter-bar').classList.add('hidden');
+            const subBar = document.getElementById('sub-filter-bar');
+            if (subBar) subBar.classList.add('hidden');
             document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
             currentMasterCat = null; currentSubFilter = 'all';
         }
@@ -729,7 +746,7 @@
         });
 
         document.getElementById('buffer-select').addEventListener('change', (e) => { activeBufferMeters = parseInt(e.target.value); if (localJsonMemory) dispatchOffThreadAnalysis(); });
-        document.getElementById('toggle-search-btn').addEventListener('click', () => { document.getElementById('search-container').classList.toggle('hidden'); });
+        document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
 
         document.getElementById('route-btn').addEventListener('click', async () => {
             const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input'); let startLatLng, endLatLng;
@@ -739,7 +756,6 @@
             routingControl.setWaypoints([startLatLng, endLatLng]);
         });
 
-        // Tracking Engine tracking user positions with dynamic route deviation auto-recalculations handlers
         const geoBtn = document.getElementById('geo-btn'); let isTracking = false, watchId = null;
         geoBtn.addEventListener('click', () => {
             if (isTracking) { if (watchId) navigator.geolocation.clearWatch(watchId); isTracking = false; geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; }
@@ -751,7 +767,6 @@
                     if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
                     map.panTo([latitude, longitude]);
 
-                    // --- HIGHWAY NAVIGATION EXTENSION: Auto path tracking recalculator ---
                     if (routeLineCoordinates.length > 0) {
                         let minDistanceToRouteLine = Infinity;
                         for (let i = 0; i < routeLineCoordinates.length; i++) {
@@ -759,13 +774,10 @@
                             if (d < minDistanceToRouteLine) minDistanceToRouteLine = d;
                         }
 
-                        // Trigger dynamic reset loop if user drifts further than 0.5 miles (~805 meters) off target track
                         if (minDistanceToRouteLine > 805) {
-                            triggerToast("Off-route deviation detected! Updating path variables natively...", 4000);
+                            triggerToast("Off-route deviation detected! Updating path variables...", 4000);
                             const currentGpsLocationLatLng = L.latLng(latitude, longitude);
                             const currentTargetDestinationLatLng = routingControl.getWaypoints()[1].latLng;
-                            
-                            // Re-route dynamically using current GPS position as the clean origin value
                             routingControl.setWaypoints([currentGpsLocationLatLng, currentTargetDestinationLatLng]);
                         }
                     }
