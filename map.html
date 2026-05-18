@@ -59,14 +59,14 @@
         <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div class="relative">
-                    <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                    <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
                     <button id="start-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
-                    <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden max-h-48 overflow-y-auto z-50 text-sm shadow-xl"></div>
+                    <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
                 </div>
                 <div class="relative">
-                    <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                    <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
                     <button id="end-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
-                    <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden max-h-48 overflow-y-auto z-50 text-sm shadow-xl"></div>
+                    <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
                 </div>
             </div>
             <div class="flex gap-2">
@@ -167,7 +167,7 @@
         // ==========================================
         // --- PHASE 2: GLOBAL ENVIRONMENT KEYS ---
         // ==========================================
-        const MAP_INITIAL_CENTER = [35.7796, -78.6382]; // RESTORED: Fixed the initialization crash variable
+        const MAP_INITIAL_CENTER = [35.7796, -78.6382]; 
         const CACHE_PREFIX = 'route_hybrid_v12_';
         const OVERPASS_MIRRORS = [
             "https://overpass-api.de/api/interpreter",
@@ -423,6 +423,68 @@
             dispatchOffThreadAnalysis();
         };
 
+        // --- FIXED AUTOCOMPLETE MATRIX: Stripped broken header loops and optimized choice handlers ---
+        function initAutocomplete(inputId, dropdownId) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            let debounceTimer;
+
+            input.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                const query = input.value.trim();
+                if (query.length < 3) { 
+                    dropdown.innerHTML = '';
+                    dropdown.classList.add('hidden'); 
+                    return; 
+                }
+
+                debounceTimer = setTimeout(() => {
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=${encodeURIComponent(query)}`)
+                    .then(res => {
+                        if (!res.ok) throw new Error("API Channel fault");
+                        return res.json();
+                    })
+                    .then(data => {
+                        dropdown.innerHTML = '';
+                        if (!data || data.length === 0) { 
+                            dropdown.classList.add('hidden'); 
+                            return; 
+                        }
+                        dropdown.classList.remove('hidden');
+                        
+                        data.forEach(item => {
+                            const cleanOutputString = buildCleanAddressString(item.address, item.display_name);
+                            const option = document.createElement('div');
+                            option.className = "px-3 py-2.5 bg-white hover:bg-zinc-100 border-b border-zinc-100 last:border-0 cursor-pointer truncate text-zinc-950 font-bold text-xs";
+                            option.innerText = cleanOutputString;
+                            
+                            // High-speed selection processing catches choice markers instantly prior to input blurring rules
+                            option.addEventListener('mousedown', (e) => {
+                                e.preventDefault(); 
+                                input.value = cleanOutputString;
+                                input.dataset.lat = item.lat; 
+                                input.dataset.lon = item.lon;
+                                dropdown.innerHTML = '';
+                                dropdown.classList.add('hidden');
+                            });
+                            dropdown.appendChild(option);
+                        });
+                    }).catch(() => {});
+                }, 400);
+            });
+        }
+
+        initAutocomplete('start-input', 'start-autocomplete');
+        initAutocomplete('end-input', 'end-autocomplete');
+
+        // Dismiss autofill layouts dynamically if user touches alternative screen locations
+        document.addEventListener('mousedown', (e) => {
+            const startDrop = document.getElementById('start-autocomplete');
+            const endDrop = document.getElementById('end-autocomplete');
+            if (e.target.id !== 'start-input' && startDrop) startDrop.classList.add('hidden');
+            if (e.target.id !== 'end-input' && endDrop) endDrop.classList.add('hidden');
+        });
+
         function bindInputFieldGeolocator(buttonId, inputId) {
             document.getElementById(buttonId).addEventListener('click', () => {
                 if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
@@ -458,6 +520,16 @@
 
         bindInputFieldGeolocator('start-locate-btn', 'start-input');
         bindInputFieldGeolocator('end-locate-btn', 'end-input');
+
+        async function fetchWithMirrorFailover(queryPayload) {
+            for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
+                try {
+                    const response = await fetch(OVERPASS_MIRRORS[i] + "?data=" + encodeURIComponent(queryPayload));
+                    if (response.ok) return await response.json();
+                } catch (err) { console.warn("Mirror connection delayed."); }
+            }
+            throw new Error("All data networks congested.");
+        }
 
         async function runDataExecutionLayer(masterCat) {
             if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
@@ -677,6 +749,7 @@
             generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
         }
 
+        bin selector subMenu generator panel UI variables safely
         function generateSubMenuUI(catId) {
             const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
             const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
