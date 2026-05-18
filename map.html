@@ -125,9 +125,9 @@
     <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
 
     <script>
-        // ===============================================
-        // --- PHASE 1: HOISTED CORE ANALYSIS ENGINES ---
-        // ===============================================
+        // =======================================================
+        // --- PHASE 1: HOISTED UTILITIES & MARKER ICON BUILDERS ---
+        // =======================================================
         function triggerToast(text, duration = 3000) {
             const container = document.getElementById('toast-container');
             if (!container) return;
@@ -168,10 +168,38 @@
             return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
         }
 
+        function createCustomIcon(label, classes, isLarge = false) {
+            const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
+            const sizePx = isLarge ? 44 : 32;
+            return L.divIcon({
+                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold ${sizeClass} ${classes}">${label}</div>`,
+                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
+            });
+        }
+
+        function createStarredIcon(label, isLarge = false) {
+            const wrapperSize = isLarge ? 'w-14 h-14 text-2xl border-4' : 'w-11 h-11 text-xl border-3';
+            const sizePx = isLarge ? 56 : 44;
+            return L.divIcon({
+                html: `<div class="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border-amber-600 text-black shadow-xl font-black relative ${wrapperSize}">
+                         ${label}
+                         <span class="absolute -bottom-1 -right-1 text-sm drop-shadow-md">⭐</span>
+                       </div>`,
+                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
+            });
+        }
+
+        // --- UPGRADE: Adaptive density analysis calculations scale slice checks based on route length metrics ---
         function dispatchOffThreadAnalysis() {
             if (routeLineCoordinates.length === 0) return;
-            const sliceRate = 45; activeTargetsSliceMemory = [];
-            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
+            
+            // Constrain checkpoint evaluation pool to exactly ~50 points across short or cross-country distances
+            const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
+            activeTargetsSliceMemory = [];
+            
+            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { 
+                activeTargetsSliceMemory.push(routeLineCoordinates[i]); 
+            }
             if (routeLineCoordinates.length > 0) activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
 
             mathWorker.postMessage({
@@ -191,6 +219,7 @@
             "https://overpass.kumi.systems/api/interpreter",
             "https://overpass.osm.ch/api/interpreter"
         ];
+        const autocompleteQueryMemoryCache = new Map(); // --- UPGRADE: Global memory dictionary layer blocks autocomplete duplication loops
         
         const categoryConfigs = {
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', query: 'node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
@@ -229,7 +258,6 @@
         let activeBufferMeters = 4000; 
         let cachedCategoriesFetched = new Set(); 
         let mapStyleMode = 'light';
-        let activeTargetsSliceMemory = [];
 
         // ==========================================
         // --- PHASE 3: MAP TILES & ROUTING SETUP ---
@@ -249,7 +277,6 @@
             });
         };
 
-        // --- UPGRADE: Activated structural drag-and-drop path manipulation waypoints ---
         let routingControl = L.Routing.control({
             show: false, 
             addWaypoints: true, 
@@ -466,7 +493,7 @@
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
 
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+                const streetViewUrl = `http://googleusercontent.com/maps.google.com/maps?layer=c&cbll=${lat},${lon}`;
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
 
                 let isCurrentlyStarredLocally = localStarred.some(item => item.id === `poi_${lat}_${lon}`);
@@ -483,7 +510,7 @@
                             <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
                         </div>
                         <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
-                            <button onclick="window.toggleStarPoiState('${lat}', '${lon}', \`${popupHeadingName.replace(/`/g, "")}\`, '${el.category}', '${el.brand}', \`${popupHours.replace(/`/g, "")}\`, \`${popupDesc.replace(/`/g, "")}\`)" class="block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm cursor-pointer active:scale-95 transition-transform text-white font-black">${starBtnText}</button>
+                            <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm cursor-pointer active:scale-95 transition-transform text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
                             <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
                             <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">👁️ Google Street View</a>
                             <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
@@ -539,7 +566,7 @@
                         <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
                     </div>
                     <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
-                        <button onclick="window.toggleStarPoiState('${lat}', '${lon}', \`${popupHeadingName.replace(/`/g, "")}\`, '${el.category}', '${el.brand}', \`${popupHours.replace(/`/g, "")}\`, \`${popupDesc.replace(/`/g, "")}\`)" class="block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm cursor-pointer active:scale-95 transition-transform text-white font-black">${starBtnText}</button>
+                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm cursor-pointer active:scale-95 transition-transform text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
                         <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
                         <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">👁️ Google Street View</a>
                         <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm active:scale-95 transition-transform text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
@@ -560,6 +587,20 @@
             allPoiMarkers.push({ marker: marker, category: el.brand, lat: lat, lon: lon });
             marker.addTo(map);
         }
+
+        map.on('popupopen', function(e) {
+            const popupElement = e.popup.getElement();
+            const starButton = popupElement.querySelector('.star-toggle-trigger');
+            if (starButton) {
+                starButton.addEventListener('click', function() {
+                    window.toggleStarPoiState(
+                        starButton.dataset.lat, starButton.dataset.lon, starButton.dataset.name,
+                        starButton.dataset.cat, starButton.dataset.brand, starButton.dataset.hours, starButton.dataset.desc
+                    );
+                    map.closePopup();
+                });
+            }
+        });
 
         function generateSubMenuUI(catId) {
             const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
@@ -594,6 +635,78 @@
             } catch (e) { console.log("No favorites file initialized yet."); }
             renderGlobalPermanentStars(); 
         }
+
+        // --- UPGRADE: In-memory dictionary layer blocks rate-limiting across typing and deleting actions cleanly ---
+        function runCachedAutocompleteSearch(inputElement, dropdownElement) {
+            const query = inputElement.value.trim();
+            if (query.length < 3) {
+                dropdownElement.innerHTML = '';
+                dropdownElement.classList.add('hidden');
+                return;
+            }
+
+            // Return instant data from cache map if available to protect public Nominatim instances
+            if (autocompleteQueryMemoryCache.has(query)) {
+                renderAutocompleteDropdownDOM(autocompleteQueryMemoryCache.get(query), inputElement, dropdownElement);
+                return;
+            }
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=${encodeURIComponent(query)}`)
+            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+            .then(data => {
+                autocompleteQueryMemoryCache.set(query, data);
+                renderAutocompleteDropdownDOM(data, inputElement, dropdownElement);
+            }).catch(() => {});
+        }
+
+        function renderAutocompleteDropdownDOM(data, inputElement, dropdownElement) {
+            dropdownElement.innerHTML = '';
+            if (!data || data.length === 0) {
+                dropdownElement.classList.add('hidden');
+                return;
+            }
+            dropdownElement.classList.remove('hidden');
+
+            data.forEach(item => {
+                const cleanOutputString = buildCleanAddressString(item.address, item.display_name);
+                const option = document.createElement('div');
+                option.className = "px-3 py-2.5 bg-white hover:bg-zinc-100 border-b border-zinc-100 last:border-0 cursor-pointer truncate text-zinc-950 font-bold text-xs";
+                option.innerText = cleanOutputString;
+
+                option.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    inputElement.value = cleanOutputString;
+                    inputElement.dataset.lat = item.lat;
+                    inputElement.dataset.lon = item.lon;
+                    dropdownElement.innerHTML = '';
+                    dropdownElement.classList.add('hidden');
+                });
+                dropdownElement.appendChild(option);
+            });
+        }
+
+        function initAutocomplete(inputId, dropdownId) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            let debounceTimer;
+
+            input.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    runCachedAutocompleteSearch(input, dropdown);
+                }, 400);
+            });
+        }
+
+        initAutocomplete('start-input', 'start-autocomplete');
+        initAutocomplete('end-input', 'end-autocomplete');
+
+        document.addEventListener('mousedown', (e) => {
+            const startDrop = document.getElementById('start-autocomplete');
+            const endDrop = document.getElementById('end-autocomplete');
+            if (e.target.id !== 'start-input' && startDrop) startDrop.classList.add('hidden');
+            if (e.target.id !== 'end-input' && endDrop) endDrop.classList.add('hidden');
+        });
 
         mathWorker.onmessage = function(e) {
             const { sortedMatches } = e.data;
@@ -664,9 +777,9 @@
             currentMasterCat = null; currentSubFilter = 'all';
         }
 
-        // ==================================================
+        // ======================================================
         // --- PHASE 7: ELEMENT SELECTION COUPLING LISTENERS ---
-        // ==================================================
+        // ======================================================
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
             const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
