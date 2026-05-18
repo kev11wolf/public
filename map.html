@@ -38,7 +38,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Compact, crisp mobile popup constraints preventing text line expansion overflows */
         .custom-popup .leaflet-popup-content-wrapper {
             border-radius: 14px;
             padding: 1px;
@@ -177,6 +176,7 @@
             });
         }
 
+        // HOISTED CORRECTLY: Resolves page-boot ReferenceErrors cleanly
         function createStarredIcon(label, isLarge = false) {
             const wrapperSize = isLarge ? 'w-14 h-14 text-2xl border-4' : 'w-11 h-11 text-xl border-3';
             const sizePx = isLarge ? 56 : 44;
@@ -189,17 +189,11 @@
             });
         }
 
-        // --- UPGRADE: Adaptive density analysis calculations scale slice checks based on route length metrics ---
         function dispatchOffThreadAnalysis() {
             if (routeLineCoordinates.length === 0) return;
-            
-            // Constrain checkpoint evaluation pool to exactly ~50 points across short or cross-country distances
             const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
             activeTargetsSliceMemory = [];
-            
-            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { 
-                activeTargetsSliceMemory.push(routeLineCoordinates[i]); 
-            }
+            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
             if (routeLineCoordinates.length > 0) activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
 
             mathWorker.postMessage({
@@ -219,7 +213,7 @@
             "https://overpass.kumi.systems/api/interpreter",
             "https://overpass.osm.ch/api/interpreter"
         ];
-        const autocompleteQueryMemoryCache = new Map(); // --- UPGRADE: Global memory dictionary layer blocks autocomplete duplication loops
+        const autocompleteQueryMemoryCache = new Map(); 
         
         const categoryConfigs = {
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', query: 'node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
@@ -258,6 +252,7 @@
         let activeBufferMeters = 4000; 
         let cachedCategoriesFetched = new Set(); 
         let mapStyleMode = 'light';
+        let activeTargetsSliceMemory = [];
 
         // ==========================================
         // --- PHASE 3: MAP TILES & ROUTING SETUP ---
@@ -613,7 +608,78 @@
             subBar.classList.remove('hidden');
         }
 
-        // --- PHASE 6: DOM LOGIC HANDSHAKES ---
+        // --- PHASE 6: AUTOMATED EXECUTION LAYERS & FETCH COUPLERS ---
+        // RESTORED: Resolves the filter-pills Uncaught ReferenceErrors completely
+        async function runDataExecutionLayer(masterCat) {
+            if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
+
+            if (!localJsonMemory) {
+                updateInlineStatus("Ingesting master database layer...", true);
+                try {
+                    const res = await fetch('us_brands.json');
+                    localJsonMemory = await res.json();
+                    triggerToast("Master database file loaded completely.");
+                } catch (err) {
+                    console.error("Local database layer ingestion failed.", err);
+                    localJsonMemory = [];
+                }
+            }
+
+            dispatchOffThreadAnalysis();
+
+            if (!cachedCategoriesFetched.has(masterCat)) {
+                await fetchLiveBackupEnrichment(masterCat);
+            }
+        }
+
+        async function fetchLiveBackupEnrichment(masterCat) {
+            updateInlineStatus("Sweeping live channels for updates...", true);
+
+            let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
+            routeLineCoordinates.forEach(c => {
+                if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
+                if (c.lat > maxLat) maxLat = c.lat; if (c.lng > maxLon) maxLon = c.lng;
+            });
+
+            const south = (minLat - 0.25).toFixed(4); const west = (minLon - 0.25).toFixed(4);
+            const north = (maxLat + 0.25).toFixed(4); const east = (maxLon + 0.25).toFixed(4);
+
+            let queryTokens = [];
+            if (masterCat === 'playground') {
+                queryTokens.push('node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];');
+            } else if (masterCat === 'highway') {
+                queryTokens.push('node["highway"="rest_area"];node["amenity"="toilets"];');
+            } else if (masterCat === 'tourism') {
+                queryTokens.push('node["tourism"="viewpoint"];node["leisure"="dog_park"];');
+            } else if (masterCat === 'gas') {
+                queryTokens.push('node["brand"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];node["name"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];');
+            } else if (masterCat === 'food') {
+                queryTokens.push('node["brand"~"McDonald\'s|Wendy\'s|Chick-fil-A|Chipotle|Jersey Mike|Raising Cane",i];node["name"~"McDonald\'s|Wendy\'s|Chick-fil-A|Raising Cane|Jersey Mike|Chipotle",i];');
+            }
+
+            try {
+                const unionString = queryTokens.join('');
+                const query = `[out:json][timeout:30][bbox:${south},${west},${north},${east}];(${unionString});out center;`;
+                const response = await fetchWithMirrorFailover(query);
+                
+                if (response && response.elements) {
+                    response.elements.forEach(el => {
+                        if (el.tags.leisure === 'playground') el.concreteCat = 'playground';
+                        else if (el.tags.highway === 'rest_area') el.concreteCat = 'highway_rest';
+                        else if (el.tags.amenity === 'toilets') el.concreteCat = 'highway_toilets';
+                        else if (el.tags.tourism === 'viewpoint') el.concreteCat = 'tourism_viewpoint';
+                        else if (el.tags.leisure === 'dog_park') el.concreteCat = 'tourism_dogpark';
+                        liveOverpassMemory.push(el);
+                    });
+                }
+
+                cachedCategoriesFetched.add(masterCat);
+                dispatchOffThreadAnalysis();
+            } catch (err) {
+                updateInlineStatus("Stops active.");
+            }
+        }
+
         function launchAutomatedGitHubSyncPipeline() {
             let starredDataString = localStorage.getItem('starred_pois') || '[]';
             let starredArray = JSON.parse(starredDataString);
@@ -636,7 +702,6 @@
             renderGlobalPermanentStars(); 
         }
 
-        // --- UPGRADE: In-memory dictionary layer blocks rate-limiting across typing and deleting actions cleanly ---
         function runCachedAutocompleteSearch(inputElement, dropdownElement) {
             const query = inputElement.value.trim();
             if (query.length < 3) {
@@ -645,7 +710,6 @@
                 return;
             }
 
-            // Return instant data from cache map if available to protect public Nominatim instances
             if (autocompleteQueryMemoryCache.has(query)) {
                 renderAutocompleteDropdownDOM(autocompleteQueryMemoryCache.get(query), inputElement, dropdownElement);
                 return;
@@ -708,6 +772,9 @@
             if (e.target.id !== 'end-input' && endDrop) endDrop.classList.add('hidden');
         });
 
+        // ==========================================
+        // --- PHASE 7: ELEMENT DOM EVENT LISTENERS -
+        // ==========================================
         mathWorker.onmessage = function(e) {
             const { sortedMatches } = e.data;
             allPoiMarkers.forEach(item => map.removeLayer(item.marker));
@@ -777,9 +844,6 @@
             currentMasterCat = null; currentSubFilter = 'all';
         }
 
-        // ======================================================
-        // --- PHASE 7: ELEMENT SELECTION COUPLING LISTENERS ---
-        // ======================================================
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
             const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
