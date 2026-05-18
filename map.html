@@ -98,7 +98,7 @@
             <button data-cat="playground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
             <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
             <button data-cat="food" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
-            <button data-cat="highway" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛣️ Highway Amenities</button>
+            <button data-cat="highway" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏢 Highway Amenities</button>
             <button data-cat="tourism" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
         </div>
 
@@ -111,7 +111,14 @@
 
     <script>
         const MAP_INITIAL_CENTER = [35.7796, -78.6382]; 
-        const CACHE_PREFIX = 'route_pois_v11_';
+        const CACHE_PREFIX = 'route_pois_v12_';
+        
+        // Failover Pool of free public global Overpass API endpoints
+        const OVERPASS_MIRRORS = [
+            "https://overpass-api.de/api/interpreter",
+            "https://overpass.kumi.systems/api/interpreter",
+            "https://overpass.osm.ch/api/interpreter"
+        ];
         
         const categoryConfigs = {
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', query: 'node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
@@ -140,11 +147,9 @@
         let activeBufferMeters = 4000; 
         let cachedCategoriesFetched = new Set();
 
-        // Canvas mode explicitly set for performance hardware acceleration
-        const map = L.map('map', { zoomControl: false, tap: true }).setView(MAP_INITIAL_CENTER, 8);
+        const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
-        // --- SUGGESTION 2: Dynamic UI Touch Expansion Icon Factory ---
         const createCustomIcon = (label, classes, isLarge = false) => {
             const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
             const sizePx = isLarge ? 44 : 32;
@@ -154,7 +159,7 @@
             });
         };
 
-        // --- SUGGESTION 3: Inline Thread Offloading Web Worker Architecture ---
+        // Embedded Hardware Accelerated Multi-threaded Calculation Web Worker
         const workerBlobCode = `
             function isChurchProperty(tags) {
                 if (tags.amenity === 'place_of_worship' || tags.religion) return true;
@@ -225,7 +230,6 @@
                     }
                 });
 
-                // --- SUGGESTION 1: True Distance Matrix Array Sorting Loop Execution ---
                 validMatches.sort((a, b) => a.minD - b.minD);
                 self.postMessage({ validMatches });
             };
@@ -261,14 +265,14 @@
         routingControl.on('routesfound', function(e) {
             routeLineCoordinates = e.routes[0].coordinates;
             document.getElementById('search-container').classList.add('hidden');
+            
             rawPoiDataMemory = []; cachedCategoriesFetched.clear();
             allPoiMarkers.forEach(m => map.removeLayer(m.marker)); allPoiMarkers = [];
             hideSubMenu();
-            updateInlineStatus("Route parsed. Select category parameters.");
-            triggerToast("Route active. Stops deferred until selection.");
+            updateInlineStatus("Route ready. Tap filters below.");
+            triggerToast("Route generated. Content deferred until filter selection.");
         });
 
-        // Autocomplete Address parsing structure completely ignoring County fields
         function initAutocomplete(inputId, dropdownId) {
             const input = document.getElementById(inputId);
             const dropdown = document.getElementById(dropdownId);
@@ -331,56 +335,114 @@
             } catch (e) { localStorage.clear(); }
         }
 
+        // Network Request Execution Wrapper with Automatic Multi-Server Failover Routing Engine
+        async function fetchWithMirrorFailover(queryPayload) {
+            for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
+                const endpoint = OVERPASS_MIRRORS[i];
+                const targetUrl = endpoint + "?data=" + encodeURIComponent(queryPayload);
+                try {
+                    updateInlineStatus(`Querying Server Layer [${i+1}/${OVERPASS_MIRRORS.length}]...`, true);
+                    const response = await fetch(targetUrl);
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                    console.warn(`Endpoint mirror [${endpoint}] rejected payload parameters. Retrying alternative route channel.`);
+                } catch (err) {
+                    console.warn(`Connection timeout or CORS blocking met on mirror link [${endpoint}]. Advancing loop allocation.`);
+                }
+            }
+            throw new Error("All public Overpass data servers are currently busy or congested.");
+        }
+
+        // Hardened Segment Pipeline preventing massive scale server timeouts
         async function fetchPOIsForCategory(masterCat) {
             if (routeLineCoordinates.length === 0) { alert("Calculate a route first."); return; }
             if (cachedCategoriesFetched.has(masterCat)) { evaluateAndRenderFilteredPOIs(); return; }
 
-            updateInlineStatus(`Querying corridor nodes for ${masterCat}...`, true);
-            let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
-            routeLineCoordinates.forEach(c => {
-                if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
-                if (c.lat > maxLat) maxLat = c.lat; if (c.lng > maxLon) maxLon = c.lng;
-            });
+            updateInlineStatus("Slicing trip coordinates...", true);
+            
+            // Chunk long trips down into 4 isolated segments to eliminate Server Timeout bounds
+            const segmentCount = 4;
+            const pointsPerSegment = Math.ceil(routeLineCoordinates.length / segmentCount);
+            const boundingBoxes = [];
 
-            const south = (minLat - 0.25).toFixed(4); const west = (minLon - 0.25).toFixed(4);
-            const north = (maxLat + 0.25).toFixed(4); const east = (maxLon + 0.25).toFixed(4);
-
-            const targetCacheKey = `${CACHE_PREFIX}${masterCat}_${south}_${west}_${north}_${east}`;
-            const cachedData = localStorage.getItem(targetCacheKey);
-
-            if (cachedData) {
-                cachedCategoriesFetched.add(masterCat);
-                rawPoiDataMemory.push(...JSON.parse(cachedData));
-                evaluateAndRenderFilteredPOIs();
-                return;
+            for (let i = 0; i < routeLineCoordinates.length; i += pointsPerSegment) {
+                const chunk = routeLineCoordinates.slice(i, i + pointsPerSegment + 25);
+                let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
+                chunk.forEach(c => {
+                    if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
+                    if (c.lat > maxLat) maxLat = c.lat; if (c.lng > maxLon) maxLon = c.lng;
+                });
+                boundingBoxes.push({
+                    south: (minLat - 0.22).toFixed(4), west: (minLon - 0.22).toFixed(4),
+                    north: (maxLat + 0.22).toFixed(4), east: (maxLon + 0.22).toFixed(4)
+                });
             }
 
             let structuralQueries = [];
             if (masterCat === 'highway' || masterCat === 'tourism') {
                 subMenuDefinitions[masterCat].forEach(sub => { structuralQueries.push(categoryConfigs[sub.id].query); });
             } else { structuralQueries.push(categoryConfigs[masterCat].query); }
+            const combinedUnionQuery = structuralQueries.join('');
 
-            try {
-                const combinedUnionQuery = structuralQueries.join('');
-                const query = `[out:json][timeout:50][bbox:${south},${west},${north},${east}];(${combinedUnionQuery});out center;`;
-                const response = await fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query)).then(res => res.json());
-                const incomingElements = response.elements || [];
+            updateInlineStatus("Checking offline disk store...", true);
+            const firstBox = boundingBoxes[0];
+            const lastBox = boundingBoxes[boundingBoxes.length - 1];
+            const targetCacheKey = `${CACHE_PREFIX}${masterCat}_${firstBox.south}_${firstBox.west}_${lastBox.north}_${lastBox.east}`;
+            const cachedData = localStorage.getItem(targetCacheKey);
 
-                enforceCacheEviction(targetCacheKey, incomingElements);
-                rawPoiDataMemory.push(...incomingElements);
+            if (cachedData) {
+                updateInlineStatus("Stops rendered.");
                 cachedCategoriesFetched.add(masterCat);
+                rawPoiDataMemory.push(...JSON.parse(cachedData));
                 evaluateAndRenderFilteredPOIs();
+                return;
+            }
+
+            let temporaryCollection = [];
+            
+            // SEQUENTIAL EXECUTION LOOP: Resolves bounding segments one after another to eliminate network congestion limits
+            try {
+                for (let k = 0; k < boundingBoxes.length; k++) {
+                    const box = boundingBoxes[k];
+                    updateInlineStatus(`Downloading sub-zone segment [${k + 1}/${boundingBoxes.length}]...`, true);
+                    
+                    const queryPayload = `[out:json][timeout:35][bbox:${box.south},${box.west},${box.north},${box.east}];(${combinedUnionQuery});out center;`;
+                    
+                    // Route request payload through the automatic mirror failover channel wrapper
+                    const responseData = await fetchWithMirrorFailover(queryPayload);
+                    if (responseData && responseData.elements) {
+                        temporaryCollection.push(...responseData.elements);
+                    }
+                }
+
+                // Strip localized duplicates out across merged segment arrays
+                const baseMemoryIds = new Set(rawPoiDataMemory.map(el => el.id));
+                const filteredNewElements = [];
+
+                temporaryCollection.forEach(el => {
+                    if (!baseMemoryIds.has(el.id)) {
+                        baseMemoryIds.add(el.id);
+                        filteredNewElements.push(el);
+                        rawPoiDataMemory.push(el);
+                    }
+                });
+
+                enforceCacheEviction(targetCacheKey, filteredNewElements);
+                cachedCategoriesFetched.add(masterCat);
+                
+                updateInlineStatus("Stops rendered.");
+                evaluateAndRenderFilteredPOIs();
+
             } catch (err) {
-                updateInlineStatus("Corridor timeout exception.");
-                triggerToast("Data server congested. Try selecting filters again.");
+                updateInlineStatus("All servers congested.");
+                triggerToast("Data channels currently unavailable. Try changing filters or waiting a brief moment.");
+                console.error(err);
             }
         }
 
-        // Thread Handoff Pipeline passing parameters to the Web Worker pipeline matrix
         function evaluateAndRenderFilteredPOIs() {
-            updateInlineStatus("Filtering via background thread...", true);
-
-            // Downsample path geometry for fast execution inside Worker
+            updateInlineStatus("Offloading coordinate check to Worker...", true);
             const sliceRate = 45; const targetsSlice = [];
             for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { targetsSlice.push(routeLineCoordinates[i]); }
             if (routeLineCoordinates.length > 0) targetsSlice.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
@@ -391,13 +453,10 @@
             });
         }
 
-        // Catch thread return events
         mathWorker.onmessage = function(e) {
             const { validMatches } = e.data;
-            
             allPoiMarkers.forEach(item => map.removeLayer(item.marker));
             allPoiMarkers = [];
-
             const isLarge = map.getZoom() > 13;
 
             validMatches.forEach(element => {
@@ -449,15 +508,13 @@
             });
 
             updateInlineStatus("Stops rendered.");
-            triggerToast(`Rendered ${validMatches.length} sorted landmarks across thread handoff pipelines.`);
+            triggerToast(`Rendered ${validMatches.length} distance-sorted stops.`);
         };
 
-        // --- SUGGESTION 2: Dynamic UI Zoom Threshold Touch Target expansion listener ---
         map.on('zoomend', () => {
             const isLarge = map.getZoom() > 13;
             allPoiMarkers.forEach(item => {
                 const config = categoryConfigs[item.category] || categoryConfigs['food'];
-                // Directly re-morph properties without wiping out active popups or unmounting elements
                 item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
             });
         });
