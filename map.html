@@ -167,6 +167,7 @@
         // ==========================================
         // --- PHASE 2: GLOBAL ENVIRONMENT KEYS ---
         // ==========================================
+        const MAP_INITIAL_CENTER = [35.7796, -78.6382]; // RESTORED: Fixed the initialization crash variable
         const CACHE_PREFIX = 'route_hybrid_v12_';
         const OVERPASS_MIRRORS = [
             "https://overpass-api.de/api/interpreter",
@@ -222,7 +223,6 @@
         };
         mapLayersPool[mapStyleMode].addTo(map);
 
-        // Custom icon generation metrics
         const createRouteMarkerIcon = (label, classes) => {
             return L.divIcon({
                 html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold w-8 h-8 text-sm border-2 ${classes}">${label}</div>`,
@@ -230,7 +230,6 @@
             });
         };
 
-        // Explicitly set the OSRM endpoint parameters to satisfy LRM checks and prevent console spam
         let routingControl = L.Routing.control({
             show: false, 
             addWaypoints: false, 
@@ -424,46 +423,6 @@
             dispatchOffThreadAnalysis();
         };
 
-        function initAutocomplete(inputId, dropdownId) {
-            const input = document.getElementById(inputId);
-            const dropdown = document.getElementById(dropdownId);
-            let debounceTimer;
-
-            input.addEventListener('input', () => {
-                clearTimeout(debounceTimer);
-                const query = input.value;
-                if (query.length < 3) { dropdown.classList.add('hidden'); return; }
-
-                debounceTimer = setTimeout(() => {
-                    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=4&addressdetails=1&q=${encodeURIComponent(query)}`, {
-                        headers: { 'User-Agent': 'High-Performance-Mobile-Map-Corridor-App' }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        dropdown.innerHTML = '';
-                        if (data.length === 0) { dropdown.classList.add('hidden'); return; }
-                        dropdown.classList.remove('hidden');
-                        
-                        data.forEach(item => {
-                            const cleanOutputString = buildCleanAddressString(item.address, item.display_name);
-                            const option = document.createElement('div');
-                            option.className = "px-3 py-2.5 hover:bg-gray-100 active:bg-gray-200 border-b border-gray-100 last:border-0 cursor-pointer truncate text-gray-700 font-medium";
-                            option.innerText = cleanOutputString;
-                            option.addEventListener('click', () => {
-                                input.value = cleanOutputString;
-                                input.dataset.lat = item.lat; input.dataset.lon = item.lon;
-                                dropdown.classList.add('hidden');
-                            });
-                            dropdown.appendChild(option);
-                        });
-                    }).catch(() => {});
-                }, 400);
-            });
-        }
-
-        initAutocomplete('start-input', 'start-autocomplete');
-        initAutocomplete('end-input', 'end-autocomplete');
-
         function bindInputFieldGeolocator(buttonId, inputId) {
             document.getElementById(buttonId).addEventListener('click', () => {
                 if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
@@ -609,7 +568,6 @@
             let starBtnText = isStarredCurrently ? "❌ Remove Persistent Star" : "⭐ Persistently Star Stop";
             let starBtnColor = isStarredCurrently ? "bg-red-600 hover:bg-red-700 text-white border-red-800" : "bg-amber-400 hover:bg-amber-500 text-zinc-950 border-amber-600";
 
-            // Upgraded high-contrast button styles for readability
             const popupContent = `
                 <div class="w-full font-sans p-0.5 text-zinc-950">
                     <img src="${uiConfig.img}" class="w-full h-24 object-cover rounded-lg mb-2 shadow-sm" onerror="this.style.display='none'">
@@ -737,6 +695,7 @@
             currentMasterCat = null; currentSubFilter = 'all';
         }
 
+        // --- PHASE 6: ELEMENT SELECTION COUPLING LISTENERS ---
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
             const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
