@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NC Route Planner</title>
+    <title>Dynamic Route Planner & POI Finder</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
@@ -47,30 +47,49 @@
 </head>
 <body class="flex flex-col justify-end">
 
-    <div class="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col">
-        <div class="px-4 py-3 flex justify-between items-center gap-2">
+    <div class="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col transition-all duration-300">
+        
+        <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div class="relative">
+                    <input id="start-input" type="text" autocomplete="off" placeholder="Start Address (e.g., Raleigh, NC)" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                    <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+                </div>
+                <div class="relative">
+                    <input id="end-input" type="text" autocomplete="off" placeholder="Destination (e.g., Asheville, NC)" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                    <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="route-btn" class="flex-1 bg-gray-900 active:bg-black text-white text-xs font-bold py-2 px-4 rounded-xl min-h-[44px] shadow-sm transition-all">
+                    🗺️ Calculate Dynamic Route
+                </button>
+            </div>
+        </div>
+
+        <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-gray-100 bg-gray-50/50">
             <div class="flex-1 min-w-0">
-                <h1 class="text-xs font-bold uppercase tracking-wider text-gray-400 truncate">Raleigh → Asheville</h1>
-                <p id="status" class="text-sm font-semibold text-gray-800 truncate">Plotting highway path...</p>
+                <p id="status" class="text-xs font-semibold text-gray-700 truncate">Enter locations above to map your route.</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
-                <select id="buffer-select" class="bg-gray-100 active:bg-gray-200 text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
-                    <option value="4000">⏱️ 5 Min Max</option>
-                    <option value="12000" selected>⏱️ 15 Min Max</option>
-                    <option value="24000">⏱️ 30 Min Max</option>
+                <select id="buffer-select" class="bg-white text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                    <option value="4000" selected>⏱️ 5 Min Buffer</option>
+                    <option value="12000">⏱️ 15 Min Buffer</option>
+                    <option value="24000">⏱️ 30 Min Buffer</option>
                 </select>
-                <button id="clear-cache-btn" class="bg-gray-100 active:bg-gray-200 text-gray-600 text-xs font-medium px-2.5 py-2 rounded-xl hidden min-h-[44px]">
-                    🔄 Reset
+                <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 rounded-xl min-h-[44px]">
+                    🔍 Inputs
                 </button>
-                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm transition-all min-h-[44px]">
+                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]">
                     📍 Track
                 </button>
             </div>
         </div>
 
-        <div id="filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-0.5">
+        <div id="filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-2 border-t border-gray-100">
             <button data-filter="all" class="filter-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]">All Stops</button>
             <button data-filter="playground" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
+            <button data-filter="raisingcanes" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍗 Raising Cane's</button>
             <button data-filter="sheetz" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Sheetz</button>
             <button data-filter="mcdonalds" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍟 McDonald's</button>
             <button data-filter="chickfila" class="filter-pill bg-gray-100 text-gray-700 text-xs font-medium px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🐔 Chick-fil-A</button>
@@ -85,33 +104,19 @@
     <div id="poi-loader" class="absolute bottom-6 left-4 right-4 z-10 bg-white/95 backdrop-blur-md rounded-xl p-4 shadow-xl border border-gray-100 safe-bottom hidden">
         <div class="flex items-center gap-3">
             <div class="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
-            <p id="loader-text" class="text-xs font-semibold text-gray-600">Scanning geographical corridor data...</p>
+            <p id="loader-text" class="text-xs font-semibold text-gray-600">Processing path segments...</p>
         </div>
     </div>
 
     <script>
-        const START_COORDS = [35.601832, -78.623624]; // 620 Trunecek Cir
-        const END_COORDS = [35.5951, -82.5515];     // Asheville
-        const CACHE_KEY = 'nc_corridor_pois_v7';
-        const CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
-
-        const NC_BOUNDS = L.latLngBounds([33.7, -84.4], [36.7, -75.3]);
-
-        const FALLBACK_POI_DATABASE = [
-            { lat: 36.0612, lon: -80.2981, tags: { name: "Sheetz #412", brand: "Sheetz", opening_hours: "24/7", description: "Convenience store chain offering gas & snacks." } },
-            { lat: 36.0784, lon: -79.8012, tags: { name: "Chick-fil-A Greensboro", brand: "Chick-fil-A", opening_hours: "06:00-22:00 (Closed Sun)", description: "Classic chicken sandwiches and waffle fries." } },
-            { lat: 35.7281, lon: -81.3324, tags: { name: "McDonald's Hickory", brand: "McDonald's", opening_hours: "05:00-23:00", description: "Standard fast-food burger staple." } },
-            { lat: 36.0821, lon: -80.2415, tags: { name: "Hanes Park Playground", leisure: "playground", description: "Public city playground featuring swing sets and jungle gyms." } },
-            { lat: 35.6120, lon: -82.2845, tags: { name: "Chipotle Mexican Grill", brand: "Chipotle", opening_hours: "10:45-22:00", description: "Build-your-own burritos, tacos, and bowls." } },
-            { lat: 35.7921, lon: -78.7812, tags: { name: "Wendy's Cary", brand: "Wendy's", opening_hours: "10:00-01:00", description: "Square-patty burgers and classic Frosty desserts." } },
-            { lat: 36.0345, lon: -80.3421, tags: { name: "Jersey Mike's Subs", brand: "Jersey Mike's", opening_hours: "10:00-21:00", description: "New Jersey-style counter-serve sub sandwiches." } },
-            { lat: 35.6042, lon: -82.4215, tags: { name: "Robert Lake Park Playground", leisure: "playground", description: "Community recreation zone with slides and picnic areas." } }
-        ];
-
+        const MAP_INITIAL_CENTER = [35.7796, -78.6382]; 
+        const CACHE_PREFIX = 'route_pois_v8_';
+        
         const poiConfigs = {
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
             sheetz: { label: '⛽', bg: 'bg-red-600 border-red-200 text-white', name: 'Sheetz', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
             chipotle: { label: '🌯', bg: 'bg-amber-950 border-amber-600 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a084768e?auto=format&fit=crop&w=300&q=80' },
+            raisingcanes: { label: '🍗', bg: 'bg-amber-500 border-red-700 text-white font-bold', name: "Raising Cane's", img: 'https://images.unsplash.com/photo-1562967914-608f82629a7a?auto=format&fit=crop&w=300&q=80' },
             jerseymikes: { label: '🥪', bg: 'bg-blue-900 border-amber-400 text-amber-400 font-bold', name: "Jersey Mike's", img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
             mcdonalds: { label: '🍟', bg: 'bg-yellow-500 border-red-600 text-red-700 font-black', name: "McDonald's", img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
             wendys: { label: '🍔', bg: 'bg-sky-500 border-sky-200 text-white', name: "Wendy's", img: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=300&q=80' },
@@ -120,97 +125,198 @@
         };
 
         let allPoiMarkers = [];
-        let rawPoiDataMemory = []; // Permanent database layer in-memory cache
+        let rawPoiDataMemory = []; 
         let routeLineCoordinates = [];
         let userMarker = null;
         let activeFilter = 'all';
-        let activeBufferMeters = 12000; // Default matching radius (15-minute straight line equivalent)
+        let activeBufferMeters = 4000; // 4000 meters ~ 2.5 miles (Default 5-minute detour window)
 
-        const map = L.map('map', { 
-            zoomControl: false, 
-            tap: true,
-            maxBounds: NC_BOUNDS,
-            maxBoundsViscosity: 1.0,
-            minZoom: 7
-        }).setView([35.75, -80.5], 8);
+        const map = L.map('map', { zoomControl: false, tap: true }).setView(MAP_INITIAL_CENTER, 8);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
         const createCustomIcon = (label, classes) => L.divIcon({
             html: `<div class="flex items-center justify-center w-8 h-8 rounded-full border-2 shadow-md text-sm ${classes}">${label}</div>`,
-            className: '',
-            iconSize: [32, 32],
-            iconAnchor: [16, 16],
-            popupAnchor: [0, -10]
+            className: '', iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -10]
         });
 
-        const routingControl = L.Routing.control({
-            waypoints: [L.latLng(START_COORDS[0], START_COORDS[1]), L.latLng(END_COORDS[0], END_COORDS[1])],
-            show: false,
-            addWaypoints: false,
-            draggableWaypoints: false,
+        let routingControl = L.Routing.control({
+            show: false, addWaypoints: false, draggableWaypoints: false,
             createMarker: (i, wp) => L.marker(wp.latLng, { icon: createCustomIcon(i === 0 ? '🏁' : '⛰️', 'bg-black border-white text-white font-bold') })
         }).addTo(map);
 
         routingControl.on('routesfound', function(e) {
-            document.getElementById('status').innerText = "Route ready. Building stops...";
+            document.getElementById('status').innerText = "Analyzing route coordinates...";
             routeLineCoordinates = e.routes[0].coordinates;
+            document.getElementById('search-container').classList.add('hidden');
             
-            const cachedData = localStorage.getItem(CACHE_KEY);
-            const cacheTimestamp = localStorage.getItem(CACHE_KEY + '_time');
-            const now = Date.now();
-
-            if (cachedData && cacheTimestamp && (now - cacheTimestamp < CACHE_EXPIRY_MS)) {
-                document.getElementById('status').innerText = "Stops active (Offline Cache)";
-                document.getElementById('clear-cache-btn').classList.remove('hidden');
-                rawPoiDataMemory = JSON.parse(cachedData);
-                processAndRenderPOIs(rawPoiDataMemory);
-            } else {
-                fetchPOIsFromOverpassCorridor();
-            }
+            // Execute segment splitting calculations based on total geographic coverage
+            segmentAndFetchPOIs(routeLineCoordinates);
         });
 
-        function fetchPOIsFromOverpassCorridor() {
+        // --- Suggestion Implementation 1: Native Address Autocomplete Engine ---
+        function initAutocomplete(inputId, dropdownId) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            let debounceTimer;
+
+            input.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                const query = input.value;
+                if (query.length < 3) { dropdown.classList.add('hidden'); return; }
+
+                debounceTimer = setTimeout(() => {
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=4&q=${encodeURIComponent(query)}`, {
+                        headers: { 'User-Agent': 'Dynamic-Mobile-Map-Corridor-App' }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        dropdown.innerHTML = '';
+                        if (data.length === 0) { dropdown.classList.add('hidden'); return; }
+                        dropdown.classList.remove('hidden');
+                        
+                        data.forEach(item => {
+                            const option = document.createElement('div');
+                            option.className = "px-3 py-2.5 hover:bg-gray-100 active:bg-gray-200 border-b border-gray-100 last:border-0 cursor-pointer truncate text-gray-700 font-medium";
+                            option.innerText = item.display_name;
+                            option.addEventListener('click', () => {
+                                input.value = item.display_name;
+                                input.dataset.lat = item.lat;
+                                input.dataset.lon = item.lon;
+                                dropdown.classList.add('hidden');
+                            });
+                            dropdown.appendChild(option);
+                        });
+                    }).catch(() => {});
+                }, 400);
+            });
+
+            // Close lookup elements when clicking external canvas targets
+            document.addEventListener('click', (e) => {
+                if (e.target !== input) dropdown.classList.add('hidden');
+            });
+        }
+
+        initAutocomplete('start-input', 'start-autocomplete');
+        initAutocomplete('end-input', 'end-autocomplete');
+
+        // --- Suggestion Implementation 2: Cache Eviction Strategy ---
+        function enforceCacheEviction(newKey, payload) {
+            try {
+                let keys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    if (localStorage.key(i).startsWith(CACHE_PREFIX)) keys.push(localStorage.key(i));
+                }
+                // Evict oldest elements if dynamic trace limit ceiling is reached
+                if (keys.length >= 15) {
+                    keys.sort();
+                    localStorage.removeItem(keys[0]);
+                }
+                localStorage.setItem(newKey, JSON.stringify(payload));
+            } catch (e) {
+                localStorage.clear(); // Safety clear configuration fallback
+            }
+        }
+
+        // --- Suggestion Implementation 3: Route Segment Query Splitting ---
+        async function segmentAndFetchPOIs(coordinates) {
             document.getElementById('poi-loader').classList.remove('hidden');
+            document.getElementById('loader-text').innerText = "Dividing route into performance segments...";
 
-            const overpassQuery = `
-                [out:json][timeout:60][bbox:35.0,-83.0,36.5,-78.0];
-                (
-                  node["brand"~"Sheetz|Chipotle|Jersey Mike|McDonald's|Wendy's|Chick-fil-A",i];
-                  node["name"~"Sheetz|Chipotle|Jersey Mike|McDonald's|Wendy's|Chick-fil-A",i];
-                  node["leisure"="playground"]["access"!~"private|no"];
-                  way["leisure"="playground"]["access"!~"private|no"];
-                );
-                out center;`;
+            // Sample coordinates down to find key nodes every ~50 miles
+            const pointsPerSegment = 400; 
+            const boundingBoxes = [];
 
-            const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
-
-            fetch(url)
-                .then(res => { if (!res.ok) throw new Error("Throttled"); return res.json(); })
-                .then(data => {
-                    document.getElementById('poi-loader').classList.add('hidden');
-                    try {
-                        localStorage.setItem(CACHE_KEY, JSON.stringify(data.elements));
-                        localStorage.setItem(CACHE_KEY + '_time', Date.now().toString());
-                        document.getElementById('clear-cache-btn').classList.remove('hidden');
-                    } catch(e) {}
-                    
-                    document.getElementById('status').innerText = "All stops loaded successfully.";
-                    rawPoiDataMemory = data.elements;
-                    processAndRenderPOIs(rawPoiDataMemory);
-                })
-                .catch(err => {
-                    document.getElementById('poi-loader').classList.add('hidden');
-                    document.getElementById('status').innerText = "Stops active (Local Demo Mode)";
-                    rawPoiDataMemory = FALLBACK_POI_DATABASE;
-                    processAndRenderPOIs(rawPoiDataMemory);
+            for (let i = 0; i < coordinates.length; i += pointsPerSegment) {
+                const chunk = coordinates.slice(i, i + pointsPerSegment + 20); // Maintain overlap margin
+                let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
+                
+                chunk.forEach(c => {
+                    if (c.lat < minLat) minLat = c.lat;
+                    if (c.lng < minLon) minLon = c.lng;
+                    if (c.lat > maxLat) maxLat = c.lat;
+                    if (c.lng > maxLon) maxLon = c.lng;
                 });
+
+                // Inject structural calculation padding around segment margins (~15 miles padding safety window)
+                boundingBoxes.push({
+                    south: (minLat - 0.22).toFixed(4), west: (minLon - 0.22).toFixed(4),
+                    north: (maxLat + 0.22).toFixed(4), east: (maxLon + 0.22).toFixed(4)
+                });
+            }
+
+            // Create a unique combined cache validation lookup signature matching the path layout nodes
+            const compositeSignature = `${boundingBoxes[0].south}_${boundingBoxes[0].west}_${boundingBoxes[boundingBoxes.length-1].north}_${boundingBoxes[boundingBoxes.length-1].east}`;
+            const targetCacheKey = CACHE_PREFIX + compositeSignature;
+            const cachedData = localStorage.getItem(targetCacheKey);
+
+            if (cachedData) {
+                document.getElementById('poi-loader').classList.add('hidden');
+                document.getElementById('status').innerText = "Stops active (Offline Local Cache)";
+                rawPoiDataMemory = JSON.parse(cachedData);
+                processAndRenderPOIs(rawPoiDataMemory);
+                return;
+            }
+
+            let aggregatedElements = [];
+            document.getElementById('loader-text').innerText = `Downloading markers across ${boundingBoxes.length} route zones...`;
+
+            // Process parallel network sweeps using the calculated segment blocks
+            try {
+                const fetchPromises = boundingBoxes.map(box => {
+                    const query = `[out:json][timeout:60][bbox:${box.south},${box.west},${box.north},${box.east}];
+                        (node["brand"~"Sheetz|Chipotle|Jersey Mike|McDonald's|Wendy's|Chick-fil-A|Raising Cane",i];
+                         node["name"~"Sheetz|Chipotle|Jersey Mike|McDonald's|Wendy's|Chick-fil-A|Raising Cane",i];
+                         node["leisure"="playground"]["access"!~"private|no"];
+                         way["leisure"="playground"]["access"!~"private|no"];); out center;`;
+                    return fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query)).then(res => res.json());
+                });
+
+                const results = await Promise.all(fetchPromises);
+                
+                // Merge arrays while stripping duplicate element IDs natively
+                const uniqueIds = new Set();
+                results.forEach(res => {
+                    if (res && res.elements) {
+                        res.elements.forEach(el => {
+                            if (!uniqueIds.has(el.id)) {
+                                uniqueIds.add(el.id);
+                                aggregatedElements.push(el);
+                            }
+                        });
+                    }
+                });
+
+                document.getElementById('poi-loader').classList.add('hidden');
+                document.getElementById('status').innerText = "Corridor sweep synchronized successfully.";
+                
+                enforceCacheEviction(targetCacheKey, aggregatedElements);
+                rawPoiDataMemory = aggregatedElements;
+                processAndRenderPOIs(rawPoiDataMemory);
+
+            } catch (err) {
+                document.getElementById('poi-loader').classList.add('hidden');
+                document.getElementById('status').innerText = "Network timeout. Shorten your selection path parameters.";
+            }
+        }
+
+        // --- Functional Requirement: Exclude Church Playgrounds ---
+        function isChurchProperty(tags) {
+            if (tags.amenity === 'place_of_worship' || tags.religion) return true;
+            
+            const nameField = (tags.name || '').toLowerCase();
+            const churchKeywords = [
+                'church', 'chapel', 'ministry', 'baptist', 'methodist', 'lutheran', 
+                'presbyterian', 'catholic', 'episcopal', 'parish', 'synagogue', 
+                'temple', 'mosque', 'tabernacle', 'christian', 'fellowship', 'lds'
+            ];
+            return churchKeywords.some(keyword => nameField.includes(keyword));
         }
 
         function getPoiCategory(tags) {
-            if (tags.leisure === 'playground') return 'playground';
+            if (tags.leisure === 'playground') {
+                return isChurchProperty(tags) ? 'excluded' : 'playground';
+            }
             const text = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
             if (text.includes('sheetz')) return 'sheetz';
             if (text.includes('chipotle')) return 'chipotle';
@@ -218,11 +324,11 @@
             if (text.includes('mcdonald')) return 'mcdonalds';
             if (text.includes('wendy')) return 'wendys';
             if (text.includes('chick-fil-a') || text.includes('chick fil a')) return 'chickfila';
+            if (text.includes('raising cane')) return 'raisingcanes';
             return 'food';
         }
 
         function processAndRenderPOIs(elements) {
-            // Remove existing markers from map array references
             allPoiMarkers.forEach(item => map.removeLayer(item.marker));
             allPoiMarkers = [];
 
@@ -237,27 +343,32 @@
                 const lon = element.lon || (element.center && element.center.lon);
                 if (!lat || !lon) return;
 
+                const tags = element.tags || {};
+                const category = getPoiCategory(tags);
+                
+                // Exclude matches flagged as religious facilities or standard fallback omissions
+                if (category === 'excluded' || category === 'food') return;
+
                 let minDistanceMeters = Infinity;
                 for (let j = 0; j < targetRouteSlice.length; j++) {
                     const distance = map.distance([lat, lon], [targetRouteSlice[j].lat, targetRouteSlice[j].lng]);
                     if (distance < minDistanceMeters) minDistanceMeters = distance;
                 }
 
-                // Checked evaluation against the active buffer variable constraint
                 if (minDistanceMeters > activeBufferMeters) return;
 
-                const tags = element.tags || {};
-                const category = getPoiCategory(tags);
-                const config = poiConfigs[category] || poiConfigs['food'];
-
+                const config = poiConfigs[category];
                 let name = tags.name || config.name;
                 let hours = tags.opening_hours || "Hours not listed (Check online)";
-                let description = tags.description || (category === 'playground' ? `Public community playground facility.` : `Verified location off the highway corridor.`);
+                let description = tags.description || (category === 'playground' ? `Public city park playground facility.` : `Verified location off highway corridor.`);
                 let imageUrl = tags.image || config.img;
 
-                // iOS Navigation Action URLs
+                // Action Link Direct Routing Generation URL Schemes
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-                const streetViewUrl = `https://www.google.com/maps/?q=&layer=c&cbll=${lat},${lon}`;
+                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+                
+                // --- Functional Requirement: Dynamic Web Search Query ---
+                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(name + ' ' + (tags.addr_city || 'North Carolina'))}`;
 
                 const popupContent = `
                     <div class="max-w-[220px] font-sans p-0.5">
@@ -269,15 +380,15 @@
                             <p class="text-xs text-gray-700 italic font-medium">${hours}</p>
                         </div>
                         <div class="mt-3 flex flex-col gap-1.5">
-                            <a href="${appleMapsUrl}" target="_blank" class="block text-center bg-blue-600 text-white text-[11px] font-bold py-2.5 rounded-xl shadow-sm active:bg-blue-700 min-h-[36px]">🗺️ Route in Apple Maps</a>
-                            <a href="${streetViewUrl}" target="_blank" class="block text-center bg-gray-900 text-white text-[11px] font-bold py-2.5 rounded-xl shadow-sm active:bg-black min-h-[36px]">👁️ View Street View</a>
+                            <a href="${appleMapsUrl}" target="_blank" class="block text-center bg-blue-600 text-white text-[11px] font-bold py-2.5 rounded-xl shadow-sm active:bg-blue-700 min-h-[38px] flex items-center justify-center">🗺️ Route in Apple Maps</a>
+                            <a href="${streetViewUrl}" target="_blank" class="block text-center bg-gray-900 text-white text-[11px] font-bold py-2.5 rounded-xl shadow-sm active:bg-black min-h-[38px] flex items-center justify-center">👁️ Google Street View</a>
+                            <a href="${googleSearchUrl}" target="_blank" class="block text-center bg-gray-100 border border-gray-200 text-gray-700 text-[11px] font-bold py-2.5 rounded-xl active:bg-gray-200 min-h-[38px] flex items-center justify-center">🌐 Search Web & Reviews</a>
                         </div>
                     </div>
                 `;
 
-                const marker = L.marker([lat, lon], {
-                    icon: createCustomIcon(config.label, config.bg)
-                }).bindPopup(popupContent, { className: 'custom-popup' });
+                const marker = L.marker([lat, lon], { icon: createCustomIcon(config.label, config.bg) })
+                    .bindPopup(popupContent, { className: 'custom-popup' });
 
                 allPoiMarkers.push({ marker: marker, category: category });
 
@@ -287,15 +398,49 @@
             });
         }
 
-        // Buffer Dropdown Switch Execution Engine
-        document.getElementById('buffer-select').addEventListener('change', (e) => {
-            activeBufferMeters = parseInt(e.target.value);
-            if (rawPoiDataMemory.length > 0) {
-                processAndRenderPOIs(rawPoiDataMemory);
+        // Route Calculation Trigger Handler
+        document.getElementById('route-btn').addEventListener('click', async () => {
+            const startInput = document.getElementById('start-input');
+            const endInput = document.getElementById('end-input');
+
+            let startLatLng, endLatLng;
+
+            // Use cached autocomplete values if present, otherwise fall back to explicit text translation lookups
+            if (startInput.dataset.lat && startInput.dataset.lon) {
+                startLatLng = L.latLng(parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon));
+            } else if (startInput.value.trim()) {
+                document.getElementById('status').innerText = "Translating origin parameters...";
+                const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(startInput.value)}`;
+                const res = await fetch(url, { headers: { 'User-Agent': 'Dynamic-Map-App' } }).then(r => r.json());
+                if (res.length > 0) startLatLng = L.latLng(parseFloat(res[0].lat), parseFloat(res[0].lon));
             }
+
+            if (endInput.dataset.lat && endInput.dataset.lon) {
+                endLatLng = L.latLng(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon));
+            } else if (endInput.value.trim()) {
+                document.getElementById('status').innerText = "Translating destination parameters...";
+                const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(endInput.value)}`;
+                const res = await fetch(url, { headers: { 'User-Agent': 'Dynamic-Map-App' } }).then(r => r.json());
+                if (res.length > 0) endLatLng = L.latLng(parseFloat(res[0].lat), parseFloat(res[0].lon));
+            }
+
+            if (!startLatLng || !endLatLng) {
+                alert("Could not calculate addresses. Check spelling configurations.");
+                return;
+            }
+
+            routingControl.setWaypoints([startLatLng, endLatLng]);
         });
 
-        // Horizontal Slider Touch Event Delegation Routing
+        document.getElementById('toggle-search-btn').addEventListener('click', () => {
+            document.getElementById('search-container').classList.toggle('hidden');
+        });
+
+        document.getElementById('buffer-select').addEventListener('change', (e) => {
+            activeBufferMeters = parseInt(e.target.value);
+            if (rawPoiDataMemory.length > 0) processAndRenderPOIs(rawPoiDataMemory);
+        });
+
         document.getElementById('filter-bar').addEventListener('click', (e) => {
             const pill = e.target.closest('.filter-pill');
             if (!pill) return;
@@ -316,17 +461,9 @@
             });
         });
 
-        // Reset Storage Handler
-        document.getElementById('clear-cache-btn').addEventListener('click', () => {
-            localStorage.removeItem(CACHE_KEY);
-            localStorage.removeItem(CACHE_KEY + '_time');
-            location.reload();
-        });
-
-        // Mobile Geolocation Tracking Engine
+        // Geolocation Watch Module
         const geoBtn = document.getElementById('geo-btn');
-        let isTracking = false;
-        let watchId = null;
+        let isTracking = false, watchId = null;
 
         geoBtn.addEventListener('click', () => {
             if (isTracking) {
@@ -335,7 +472,7 @@
                 geoBtn.innerText = "📍 Track";
                 geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]";
             } else {
-                if (!navigator.geolocation) { alert("GPS module missing."); return; }
+                if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
                 geoBtn.innerText = "🛑 Stop";
                 geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]";
                 isTracking = true;
@@ -350,8 +487,8 @@
                         }
                         map.panTo([latitude, longitude]);
                     },
-                    (err) => {
-                        alert("Enable location access rules inside your iOS Safari Privacy settings panel.");
+                    () => {
+                        alert("Enable location parameters inside iOS system privacy settings.");
                         isTracking = false;
                         geoBtn.innerText = "📍 Track";
                         geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]";
