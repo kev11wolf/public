@@ -2,10 +2,12 @@ import requests
 import json
 import time
 import random
+import sys
 
 USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/605.1.15"
 ]
 
 OVERPASS_ENDPOINTS = [
@@ -48,12 +50,14 @@ def identify_clean_brand(tags):
             return val[0], val[1], val[2]
     return None, None, None
 
-def generate_optimized_grids():
+def generate_stable_grids():
+    """Generates tight 1.5 x 2.5 degree sectors. Tiny bounding boxes 
+    allow the free mapping servers to calculate results instantly without timing out."""
     grids = []
     lat_start, lat_end = 24.0, 50.0
     lon_start, lon_end = -125.0, -66.0
-    lat_step = 3.0
-    lon_step = 4.0
+    lat_step = 1.5
+    lon_step = 2.5
     
     curr_lat = lat_start
     while curr_lat < lat_end:
@@ -70,16 +74,16 @@ def generate_optimized_grids():
 def generate_national_database():
     compiled_pois = []
     seen_unique_coords = set()
-    micro_zones = generate_optimized_grids()
+    micro_zones = generate_stable_grids()
     
-    print(f"🚀 Launching Database Compiler across {len(micro_zones)} active zones...")
+    print(f"🚀 Launching Balanced Database Compiler across {len(micro_zones)} stable sectors...", flush=True)
     
     for idx, zone in enumerate(micro_zones):
-        if zone['south'] < 29.0 and zone['west'] < -90.0: continue
-        if zone['south'] > 45.0 and zone['west'] < -120.0: continue
+        # Filter out completely empty oceanic coordinate fields to speed up execution
+        if zone['south'] < 29.0 and zone['west'] < -92.0: continue
+        if zone['south'] > 44.0 and zone['west'] < -124.0: continue
 
-        # --- REFINED: Stripped raw apostrophes from regex queries to guarantee server compatibility ---
-        query = f"""[out:json][timeout:15][bbox:{zone['south']},{zone['west']},{zone['north']},{zone['east']}];
+        query = f"""[out:json][timeout:25][bbox:{zone['south']},{zone['west']},{zone['north']},{zone['east']}];
         (node["brand"~"Sheetz|Chipotle|Jersey Mike|McDonald|Wendy|Chick-fil-A|Raising Cane|Murphy Express|Buc-ee|Wawa|Circle K|Costco",i];
          node["name"~"Sheetz|Chipotle|Jersey Mike|McDonald|Wendy|Chick-fil-A|Raising Cane|Murphy Express|Buc-ee|Wawa|Circle K|Costco",i];
          node["leisure"="playground"]["access"!~"private|no"];
@@ -92,11 +96,12 @@ def generate_national_database():
         for server_url in active_mirrors_pool:
             custom_headers = {
                 "User-Agent": random.choice(USER_AGENTS),
-                "Accept": "application/json, text/javascript, */*; q=0.01",
+                "Accept": "application/json",
                 "Referer": "https://www.openstreetmap.org/"
             }
             try:
-                res = requests.post(server_url, data={"data": query}, headers=custom_headers, timeout=18)
+                # 30-second network gate gives slow servers plenty of room to breathe
+                res = requests.post(server_url, data={"data": query}, headers=custom_headers, timeout=30)
                 if res.status_code == 200:
                     responseData = res.json()
                     break
@@ -104,19 +109,20 @@ def generate_national_database():
                 continue
 
         if not responseData:
+            print(f"   Sector [{idx+1}/{len(micro_zones)}] skipped - Network timeout across all mirrors.", flush=True)
             continue
 
         elements = responseData.get("elements", [])
-        if len(elements) == 0: continue
+        if len(elements) == 0: 
+            continue
             
-        print(f"📥 Zone [{idx+1}/{len(micro_zones)}] processed successfully. Extracted {len(elements)} items.")
-        
+        zone_count = 0
         for el in elements:
             lat = el.get("lat") or (el.get("center") and el.get("center")["lat"])
             lon = el.get("lon") or (el.get("center") and el.get("center")["lon"])
             if not lat or not lon: continue
                 
-            coord_fingerprint = f"{round(lat, 4)}_{round(lon, 4)}"
+            coord_fingerprint = f"{round(lat, 4)}_\_{round(lon, 4)}"
             if coord_fingerprint in seen_unique_coords: continue
                 
             tags = el.get("tags", {})
@@ -131,6 +137,7 @@ def generate_national_database():
                     "d": tags.get("description", "Public open-access park playground.")
                 })
                 seen_unique_coords.add(coord_fingerprint)
+                zone_count += 1
             else:
                 cat_slug, brand_slug, official_brand_name = identify_clean_brand(tags)
                 if not cat_slug: continue
@@ -146,19 +153,22 @@ def generate_national_database():
                     
                 compiled_pois.append(poi_node)
                 seen_unique_coords.add(coord_fingerprint)
+                zone_count += 1
                 
-        time.sleep(random.uniform(1.5, 2.5))
+        if zone_count > 0:
+            print(f"📥 Sector [{idx+1}/{len(micro_zones)}] saved. Added +{zone_count} new entries. Total database size: {len(compiled_pois)}", flush=True)
             
-    # --- CRITICAL SAFETY STOP: Blocks execution if database array returns empty to prevent accidental deletion ---
+        time.sleep(random.uniform(1.0, 2.0))
+            
     if len(compiled_pois) == 0:
-        print("❌ CRITICAL EXCEPTION: Compiled list returned 0 results. Aborting save sequence to safeguard database.")
-        return
+        print("❌ CRITICAL EXCEPTION: Compiled list returned 0 results. Aborting save sequence to safeguard database.", flush=True)
+        sys.exit(1)
 
-    print(f"\n📦 Pipeline finished! Generated {len(compiled_pois)} total points of interest across the United States.")
+    print(f"\n📦 Pipeline finished! Generated {len(compiled_pois)} total points of interest across the United States.", flush=True)
     
     with open("us_brands.json", "w", encoding="utf-8") as file_write:
         json.dump(compiled_pois, file_write, indent=2)
-    print("💾 Process complete. 'us_brands.json' written successfully.")
+    print("💾 Process complete. 'us_brands.json' written successfully.", flush=True)
 
 if __name__ == "__main__":
     generate_national_database()
