@@ -38,7 +38,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Compact, crisp mobile popup constraints preventing text line expansion overflows */
         .custom-popup .leaflet-popup-content-wrapper {
             border-radius: 14px;
             padding: 1px;
@@ -125,9 +124,9 @@
     <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
 
     <script>
-        // =====================================================================
-        // --- PHASE 1: HOISTED UTILITIES & SECURE EXPLICIT VISUAL ICON GENERATORS ---
-        // =====================================================================
+        // =======================================================
+        // --- PHASE 1: HOISTED UTILITIES & MARKER ICON BUILDERS ---
+        // =======================================================
         function triggerToast(text, duration = 3000) {
             const container = document.getElementById('toast-container');
             if (!container) return;
@@ -189,7 +188,6 @@
             });
         }
 
-        // HOISTED MANUALLY: Completely eliminates temporal dead-zone routing control initialization race loops
         function createRouteMarkerIcon(label, classes) {
             return L.divIcon({
                 html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold w-8 h-8 text-sm border-2 ${classes}">${label}</div>`,
@@ -294,10 +292,22 @@
                 if (i === 0) { iconLabel = '🏁'; bgClass = 'bg-emerald-600 border-white text-white'; }
                 else if (i === n - 1) { iconLabel = '🛑'; bgClass = 'bg-red-600 border-white text-white'; }
                 
-                return L.marker(wp.latLng, { 
+                let marker = L.marker(wp.latLng, { 
                     draggable: true,
                     icon: createRouteMarkerIcon(iconLabel, bgClass) 
                 });
+
+                // --- UPGRADE: Click interception prompt securely prunes custom detours on tap commands ---
+                if (i > 0 && i < n - 1) {
+                    marker.on('click', function() {
+                        if (confirm("Delete this custom reroute anchor point?")) {
+                            let currentWaypoints = routingControl.getWaypoints();
+                            currentWaypoints.splice(i, 1);
+                            routingControl.setWaypoints(currentWaypoints);
+                        }
+                    });
+                }
+                return marker;
             }
         }).addTo(map);
 
@@ -447,9 +457,9 @@
         const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
         const mathWorker = new Worker(URL.createObjectURL(blobObj));
 
-        // =========================================================================
-        // --- PHASE 5: OPERATIONAL LAYER DATA STREAMS & VISUAL PROPAGATIONS ---
-        // =========================================================================
+        // ==========================================
+        // --- PHASE 5: OPERATIONAL LAYER HANDLERS --
+        // ==========================================
         window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
             let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             let uniqueId = `poi_${lat}_${lon}`;
@@ -500,9 +510,7 @@
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
 
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-                
-                // --- FIXED INTENT-PATH: Restored fully platform-agnostic panoramic landscape links ---
-                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+                const streetViewUrl = `http://googleusercontent.com/maps.google.com/maps?layer=c&cbll=${lat},${lon}`;
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
 
                 let isCurrentlyStarredLocally = localStarred.some(item => item.id === `poi_${lat}_${lon}`);
@@ -557,9 +565,7 @@
             }
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-            
-            // --- FIXED STREET VIEW INTERPOLATION LINK ENGINE ---
-            const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+            const streetViewUrl = `http://googleusercontent.com/maps.google.com/maps?layer=c&cbll=${lat},${lon}`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
@@ -613,10 +619,50 @@
             }
         });
 
-        // ========================================================
-        // --- PHASE 6: HOISTED DATA FAILOVERS & ALIGNED COMPILATION ENGINES ---
-        // ========================================================
-        // FIXED HOISTING STATEMENT: Fully restored structural baseline failover method maps correctly across execution targets
+        // ==================================================================================
+        // --- PHASE 6: AGGRESSIVE CACHING ENGINE WITH LRU QUOTA EVICTION MANAGEMENT ---
+        // ==================================================================================
+        // --- UPGRADE: Automated LRU disk manager restricts data maps from blowing browser limits ---
+        function writeToLruSegmentCache(cacheKey, elementsPayload) {
+            try {
+                let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v1') || '{}');
+                let activeKeys = Object.keys(metadataRegistry);
+                
+                // Evict oldest entry if storage exceeds 25 distinct corridor query segments
+                if (activeKeys.length >= 25 && !metadataRegistry[cacheKey]) {
+                    let oldestKey = activeKeys.reduce((oldest, curr) => metadataRegistry[curr] < metadataRegistry[oldest] ? curr : oldest);
+                    localStorage.removeItem(oldestKey);
+                    delete metadataRegistry[oldestKey];
+                    console.log(`[LRU Engine] Evicted congested sector segments to protect quota: ${oldestKey}`);
+                }
+                
+                metadataRegistry[cacheKey] = Date.now();
+                localStorage.setItem('poi_lru_registry_v1', JSON.stringify(metadataRegistry));
+                localStorage.setItem(cacheKey, JSON.stringify(elementsPayload));
+            } catch (error) {
+                console.warn("[LRU Engine] Storage exception intercepted. Flushing standard non-starred caches.");
+                purgeAllNonStarredCaches();
+            }
+        }
+
+        function readFromLruSegmentCache(cacheKey) {
+            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v1') || '{}');
+            if (metadataRegistry[cacheKey]) {
+                metadataRegistry[cacheKey] = Date.now(); // Touch timestamp to refresh life cycle
+                localStorage.setItem('poi_lru_registry_v1', JSON.stringify(metadataRegistry));
+                
+                let rawCachedContent = localStorage.getItem(cacheKey);
+                return rawCachedContent ? JSON.parse(rawCachedContent) : null;
+            }
+            return null;
+        }
+
+        function purgeAllNonStarredCaches() {
+            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v1') || '{}');
+            Object.keys(metadataRegistry).forEach(k => localStorage.removeItem(k));
+            localStorage.removeItem('poi_lru_registry_v1');
+        }
+
         async function fetchWithMirrorFailover(queryPayload) {
             for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
                 try {
@@ -650,16 +696,28 @@
         }
 
         async function fetchLiveBackupEnrichment(masterCat) {
-            updateInlineStatus("Sweeping live channels for updates...", true);
-
             let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
             routeLineCoordinates.forEach(c => {
                 if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
                 if (c.lat > maxLat) maxLat = c.lat; if (c.lng > maxLon) maxLon = c.lng;
             });
 
-            const south = (minLat - 0.25).toFixed(4); const west = (minLon - 0.25).toFixed(4);
-            const north = (maxLat + 0.25).toFixed(4); const east = (maxLon + 0.25).toFixed(4);
+            // Convert boundaries into a rounded fingerprint string key 
+            const south = (minLat - 0.25).toFixed(2); const west = (minLon - 0.25).toFixed(2);
+            const north = (maxLat + 0.25).toFixed(2); const east = (maxLon + 0.25).toFixed(2);
+            const explicitCacheKeyName = `${CACHE_PREFIX}live_${masterCat}_${south}_${west}_${north}_${east}`;
+
+            // --- UPGRADE: Injects cache shield to block redundant mirror API lookups on matched detours ---
+            let preloadedElements = readFromLruSegmentCache(explicitCacheKeyName);
+            if (preloadedElements) {
+                console.log(`[Cache System] Hit! Pulling stored dataset for corridor: ${explicitCacheKeyName}`);
+                liveOverpassMemory = liveOverpassMemory.concat(preloadedElements);
+                cachedCategoriesFetched.add(masterCat);
+                dispatchOffThreadAnalysis();
+                return;
+            }
+
+            updateInlineStatus("Sweeping live channels for updates...", true);
 
             let queryTokens = [];
             if (masterCat === 'playground') {
@@ -680,6 +738,7 @@
                 const response = await fetchWithMirrorFailover(query);
                 
                 if (response && response.elements) {
+                    let newlyDiscoveredItems = [];
                     response.elements.forEach(el => {
                         if (el.tags.leisure === 'playground') el.concreteCat = 'playground';
                         else if (el.tags.highway === 'rest_area') el.concreteCat = 'highway_rest';
@@ -687,7 +746,11 @@
                         else if (el.tags.tourism === 'viewpoint') el.concreteCat = 'tourism_viewpoint';
                         else if (el.tags.leisure === 'dog_park') el.concreteCat = 'tourism_dogpark';
                         liveOverpassMemory.push(el);
+                        newlyDiscoveredItems.push(el);
                     });
+                    
+                    // Write new segments to local cache database layout asynchronously
+                    writeToLruSegmentCache(explicitCacheKeyName, newlyDiscoveredItems);
                 }
 
                 cachedCategoriesFetched.add(masterCat);
@@ -782,7 +845,6 @@
         initAutocomplete('start-input', 'start-autocomplete');
         initAutocomplete('end-input', 'end-autocomplete');
 
-        // --- FIXED: Formatted bounding box card validation intercepts choice picks before panels blur out ---
         document.addEventListener('mousedown', (e) => {
             const startDrop = document.getElementById('start-autocomplete');
             const endDrop = document.getElementById('end-autocomplete');
