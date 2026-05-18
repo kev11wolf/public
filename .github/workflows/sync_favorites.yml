@@ -5,8 +5,8 @@ on:
     types: [opened]
 
 jobs:
-  merge-favorites:
-    if: contains(github.event.issue.title, 'DATA_SYNC_FAVORITES')
+  merge-or-delete-favorites:
+    if: contains(github.event.issue.title, 'DATA_SYNC_FAVORITES') || contains(github.event.issue.title, 'DATA_DELETE_FAVORITE')
     runs-on: ubuntu-latest
 
     steps:
@@ -18,16 +18,20 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Ingest and validate incoming payload data arrays
+    - name: Process Favorites Action Payload
+      env:
+        ISSUE_TITLE: ${{ github.event.issue.title }}
       run: |
         echo '${{ github.event.issue.body }}' > incoming.json
         python -c "
         import json, os
         
+        issue_title = os.environ.get('ISSUE_TITLE', '')
+        
         try:
             incoming_data = json.loads(open('incoming.json').read())
         except Exception as e:
-            print('❌ CRITICAL ERROR: Failed to parse incoming data stream payload JSON structure.')
+            print('❌ CRITICAL ERROR: Failed to parse incoming payload data stream.')
             exit(1)
             
         if os.path.exists('favorites.json'):
@@ -38,18 +42,30 @@ jobs:
         else:
             master_favorites = []
             
-        fingerprints = {f\"{item['lat']}_{item['lon']}\" for item in master_favorites}
-        added_nodes = 0
-        
-        for point in incoming_data:
-            key = f\"{point['lat']}_{point['lon']}\"
-            if key not in fingerprints:
-                master_favorites.append(point)
-                fingerprints.add(key)
-                added_nodes += 1
+        if 'DATA_DELETE_FAVORITE' in issue_title:
+            # TARGETED DELETION ENGINE
+            target_lat = incoming_data.get('lat')
+            target_lon = incoming_data.get('lon')
+            original_length = len(master_favorites)
+            
+            # Filter out the specific coordinate mismatch fingerprint
+            master_favorites = [item for item in master_favorites if not (round(item['lat'], 4) == round(target_lat, 4) and round(item['lon'], 4) == round(target_lon, 4))]
+            
+            print(f'🗑️ Targeted Deletion Complete. Removed {original_length - len(master_favorites)} node matching coordinates.')
+        else:
+            # STANDARD ADDITION ENGINE
+            fingerprints = {f\"{item['lat']}_{item['lon']}\" for item in master_favorites}
+            added_nodes = 0
+            
+            for point in incoming_data:
+                key = f\"{point['lat']}_{point['lon']}\"
+                if key not in fingerprints:
+                    master_favorites.append(point)
+                    fingerprints.add(key)
+                    added_nodes += 1
+            print(f'📥 Additions Complete. Synchronized +{added_nodes} unique favorite locations.')
                 
         open('favorites.json', 'w', encoding='utf-8').write(json.dumps(master_favorites, indent=2))
-        print(f'📥 Processing complete. Synchronized +{added_nodes} unique favorite locations.')
         "
 
     - name: Commit and push changes safely back to tree layout
@@ -57,11 +73,11 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git add favorites.json
-        git commit -m "Automated Sync: Updated master favorites database" || exit 0
+        git commit -m "Automated Sync: Modified master favorites database" || exit 0
         git push origin main
 
     - name: Close tracking ticket automatically via internal systems parameters
       run: |
-        gh issue close ${{ github.event.issue.number }} --comment "Success! Favorites mapped successfully. Closed automatically."
+        gh issue close ${{ github.event.issue.number }} --comment "Success! Master dataset updated and redeployed. Closing ticket."
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
