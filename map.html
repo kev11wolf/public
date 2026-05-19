@@ -303,9 +303,8 @@
         let routeBufferPolyline = null;
 
         // ==========================================================
-        // --- PHASE 3: FIXED VARIABLE INSTANTIATION (NAMESPACE SAFETY) ---
+        // --- PHASE 3: MAP VARIABLE INITIALIZATION (RESOLVED COLLISION) ---
         // ==========================================================
-        // FIXED COLLISION BUG: Map variable renamed to mainMap to block window.map collision parameters
         const mainMap = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
         
         const mapLayersPool = {
@@ -365,6 +364,207 @@
             routeBufferPolyline.setStyle({ weight: Math.max(4, calculatedPixelWidthWeight) });
         }
 
+        routingControl.on('routesfound', function(e) {
+            routeLineCoordinates = e.routes[0].coordinates;
+            const searchContainer = document.getElementById('search-container');
+            if (searchContainer) searchContainer.classList.add('hidden');
+            
+            const totalDistanceMeters = e.routes[0].summary.totalDistance;
+            const totalDistanceMiles = (totalDistanceMeters * 0.000621371).toFixed(1);
+            const stickyPanel = document.getElementById('route-mileage-sticky');
+            if (stickyPanel) {
+                document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
+                stickyPanel.classList.remove('hidden');
+            }
+
+            liveOverpassMemory = [];          
+            cachedCategoriesFetched.clear(); 
+            poiClusterGroup.clearLayers();
+            allPoiMarkersMemoryMap = [];
+            
+            if (routeBufferPolyline) {
+                mainMap.removeLayer(routeBufferPolyline);
+            }
+            routeBufferPolyline = L.polyline(routeLineCoordinates, {
+                color: '#3b82f6',
+                opacity: 0.15,
+                lineCap: 'round',
+                lineJoin: 'round',
+                interactive: false
+            }).addTo(mainMap);
+            routeBufferPolyline.bringToBack();
+            updateBufferVisualizerWeight();
+
+            renderGlobalPermanentStars(); 
+            
+            if (currentMasterCat) {
+                runDataExecutionLayer(currentMasterCat);
+                triggerToast("Recalculating corridor points around detour path...", 2000);
+            } else {
+                updateInlineStatus("Route ready. Tap filters below.");
+                triggerToast("Route generated. Content deferred until filter selection.");
+            }
+        });
+
+        // ==========================================
+        // --- PHASE 4: WORKER MATRIX ALLOCATIONS ---
+        // ==========================================
+        const workerBlobCode = `
+            function haversineDist(lat1, lon1, lat2, lon2) {
+                const R = 6371000;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+            }
+
+            function parseLiveBackupTargetCategory(tags) {
+                var nLower = (tags.name || '').toLowerCase();
+                var bLower = (tags.brand || '').toLowerCase();
+                var dLower = (tags.description || '').toLowerCase();
+                var sig = (nLower + ' ' + bLower).toLowerCase();
+                
+                if (sig.includes('starbucks')) return 'coffee';
+                
+                if (!tags.name) return 'excluded';
+                if (nLower.includes('national') || dLower.includes('national')) {
+                    if (!tags.boundary && !tags.amenity && !tags.leisure && !nLower.includes('sheetz') && !nLower.includes('wawa') && !nLower.includes('circlek')) {
+                        return 'excluded';
+                    }
+                }
+                if (tags.admin_level || tags.boundary === 'administrative' || tags.boundary === 'protected_area') return 'excluded';
+
+                if (tags.leisure === 'playground') {
+                    if (['church','chapel','ministry','baptist','methodist','lutheran','presbyterian','catholic','parish','fellowship','christian'].some(k => sig.includes(k))) return 'excluded';
+                    return 'playground';
+                }
+                if (tags.highway === 'rest_area') return 'highway_rest';
+                if (tags.amenity === 'toilets') return 'highway_toilets';
+                if (tags.tourism === 'viewpoint') return 'tourism_viewpoint';
+                if (tags.leisure === 'dog_park') return 'tourism_dogpark';
+                
+                if (tags.boundary === 'national_park') return 'national_park';
+                if (tags.leisure === 'nature_reserve') return 'nature_reserve';
+                if (tags.tourism === 'attraction') return 'attraction';
+                if (tags.amenity === 'hospital') return 'hospital';
+                if (tags.amenity === 'veterinary') return 'veterinary';
+
+                return 'excluded';
+            }
+
+            function getCleanBrandSlug(tags) {
+                var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
+                if (sig.includes('starbucks')) return 'starbucks';
+                if (!tags.name) return 'excluded';
+                if (sig.includes('sheetz')) return 'sheetz';
+                if (sig.includes('murphy')) return 'murphyexpress';
+                if (sig.includes('bucee') || sig.includes('buc-ee')) return 'bucees';
+                if (sig.includes('costco')) return 'costcogas';
+                if (sig.includes('wawa')) return 'wawa';
+                if (sig.includes('circle k')) return 'circlek';
+                if (sig.includes('mcdonald')) return 'mcdonalds';
+                if (sig.includes('wendy')) return 'wendys';
+                if (sig.includes('chick-fil-a') || sig.includes('chick fil a')) return 'chickfila';
+                if (sig.includes('chipotle')) return 'chipotle';
+                if (sig.includes('jersey mike')) return 'jerseymikes';
+                if (sig.includes('raising cane')) return 'raisingcanes';
+                return 'excluded';
+            }
+
+            self.onmessage = function(e) {
+                const { localElements, liveElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
+                const finalMatchesMap = new Map();
+
+                if (localElements) {
+                    localElements.forEach(el => {
+                        if (el.c !== currentMasterCat) return;
+                        
+                        var nameCheck = (el.n || '').toLowerCase();
+                        var descCheck = (el.d || '').toLowerCase();
+                        if (nameCheck.includes('national') || descCheck.includes('national')) return;
+
+                        if (currentSubFilter !== 'all') {
+                            if (currentMasterCat === 'gas') {
+                                if (currentSubFilter === 'unl87' && el.g87 !== 1) return;
+                                if (currentSubFilter === 'unl88' && el.g88 !== 1) return;
+                            } else {
+                                if (el.b !== currentSubFilter) return;
+                            }
+                        }
+
+                        let minD = Infinity;
+                        for (let j = 0; j < targetsSlice.length; j++) {
+                            const d = haversineDist(el.lat, el.lon, targetsSlice[j].lat, targetsSlice[j].lng);
+                            if (d < minD) minD = d;
+                        }
+
+                        if (minD <= activeBufferMeters) {
+                            const payload = {
+                                id: "local_" + el.lat + "_" + el.lon, lat: el.lat, lon: el.lon,
+                                name: el.n, brand: el.b, category: el.c, hours: el.h || "Hours not listed",
+                                desc: el.d || "", minD: minD, isLocal: true, g87: el.g87, g88: el.g88
+                            };
+                            finalMatchesMap.set(payload.id, payload);
+                        }
+                    });
+                }
+
+                if (liveElements) {
+                    liveElements.forEach(el => {
+                        const lat = el.lat || (el.center && el.center.lat);
+                        const lon = el.lon || (el.center && el.center.lon);
+                        if (!lat || !lon) return;
+
+                        let tags = el.tags || {};
+                        let concreteCat = parseLiveBackupTargetCategory(tags);
+                        if (concreteCat === 'excluded') return;
+
+                        if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
+                        if (currentMasterCat === 'tourism' && concreteCat !== 'tourism_viewpoint' && concreteCat !== 'tourism_dogpark') return;
+                        if (currentMasterCat === 'playground' && concreteCat !== 'playground') return;
+                        if (currentMasterCat === 'coffee' && concreteCat !== 'coffee') return;
+                        if (currentMasterCat === 'parks' && !['national_park', 'nature_reserve', 'attraction'].includes(concreteCat)) return;
+                        if (currentMasterCat === 'medical' && !['hospital', 'veterinary'].includes(concreteCat)) return;
+                        if ((currentMasterCat === 'gas' || currentMasterCat === 'food') && concreteCat !== currentMasterCat) return;
+
+                        var brandSlug = getCleanBrandSlug(tags);
+                        if (brandSlug === 'excluded') {
+                            brandSlug = concreteCat;
+                        }
+                        
+                        if (currentSubFilter !== 'all' && brandSlug !== currentSubFilter) return;
+
+                        let minD = Infinity;
+                        for (let j = 0; j < targetsSlice.length; j++) {
+                            const d = haversineDist(lat, lon, targetsSlice[j].lat, targetsSlice[j].lng);
+                            if (d < minD) minD = d;
+                        }
+
+                        if (minD <= activeBufferMeters) {
+                            const uniqueKey = "live_" + lat + "_" + lon;
+                            if (!finalMatchesMap.has(uniqueKey)) {
+                                finalMatchesMap.set(uniqueKey, {
+                                    id: uniqueKey, lat: lat, lon: lon, name: tags.name || tags.brand || tags.operator || "Starbucks",
+                                    brand: brandSlug, category: currentMasterCat, 
+                                    hours: tags.opening_hours || "Hours not listed",
+                                    desc: tags.description || "", minD: minD, isLocal: false,
+                                    rawTags: tags
+                                });
+                            }
+                        }
+                    });
+                }
+
+                const sortedMatches = Array.from(finalMatchesMap.values()).sort((a, b) => a.minD - b.minD);
+                self.postMessage({ sortedMatches });
+            };
+        `;
+        const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
+        const mathWorker = new Worker(URL.createObjectURL(blobObj));
+
+        // ==========================================
+        // --- PHASE 5: OPERATIONAL LAYER HANDLERS --
+        // ==========================================
         window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
             let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             let uniqueId = `poi_${lat}_${lon}`;
@@ -401,6 +601,8 @@
                 triggerToast("Deletions package built! Click Submit on the next window tab.");
             }
         };
+
+        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
 
         function renderGlobalPermanentStars() {
             globalFavoritesMarkers.forEach(m => poiClusterGroup.removeLayer(m.marker));
@@ -499,7 +701,7 @@
             if (categoryConfigs[el.brand]) { visualCatKey = el.brand; }
 
             const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
-            const isLarge = map.getZoom() > 13;
+            const isLarge = mainMap.getZoom() > 13;
 
             let fuelBadgeHtml = '';
             if (visualCatKey === 'gas' || el.category === 'gas') {
@@ -552,91 +754,10 @@
             poiClusterGroup.addLayer(marker);
         }
 
-        mainMap.on('popupopen', function(e) {
-            const popupElement = e.popup.getElement();
-            const starButton = popupElement.querySelector('.star-toggle-trigger');
-            if (starButton) {
-                starButton.addEventListener('click', function() {
-                    window.toggleStarPoiState(
-                        starButton.dataset.lat, starButton.dataset.lon, starButton.dataset.name,
-                        starButton.dataset.cat, starButton.dataset.brand, starButton.dataset.hours, starButton.dataset.desc
-                    );
-                    mainMap.closePopup();
-                });
-            }
-            
-            const deleteButton = popupElement.querySelector('.global-delete-trigger');
-            if (deleteButton) {
-                deleteButton.addEventListener('click', function() {
-                    window.triggerCloudDeletionTicketPipeline(deleteButton.dataset.lat, deleteButton.dataset.lon);
-                });
-            }
-        });
-
-        // ==================================================================================
-        // --- PHASE 6: AGGRESSIVE CACHING ENGINE WITH LRU & TTL EXPIRE MANAGEMENT ---
-        // ==================================================================================
-        function writeToLruSegmentCache(cacheKey, elementsPayload) {
-            try {
-                let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
-                let activeKeys = Object.keys(metadataRegistry);
-                
-                if (activeKeys.length >= 25 && !metadataRegistry[cacheKey]) {
-                    let oldestKey = activeKeys.reduce((oldest, curr) => metadataRegistry[curr].lastAccessed < metadataRegistry[oldest].lastAccessed ? curr : oldest);
-                    localStorage.removeItem(oldestKey);
-                    delete metadataRegistry[oldestKey];
-                }
-                
-                metadataRegistry[cacheKey] = {
-                    lastAccessed: Date.now(),
-                    bornAt: Date.now()
-                };
-                localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
-                localStorage.setItem(cacheKey, JSON.stringify(elementsPayload));
-            } catch (error) {
-                purgeAllNonStarredCaches();
-            }
-        }
-
-        function readFromLruSegmentCache(cacheKey) {
-            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
-            if (metadataRegistry[cacheKey]) {
-                const age = Date.now() - metadataRegistry[cacheKey].bornAt;
-                const expirationWindow = 24 * 60 * 60 * 1000; 
-                
-                if (age > expirationWindow) {
-                    localStorage.removeItem(cacheKey);
-                    delete metadataRegistry[cacheKey];
-                    localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
-                    return null;
-                }
-                
-                metadataRegistry[cacheKey].lastAccessed = Date.now(); 
-                localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
-                let rawCachedContent = localStorage.getItem(cacheKey);
-                return rawCachedContent ? JSON.parse(rawCachedContent) : null;
-            }
-            return null;
-        }
-
-        function purgeAllNonStarredCaches() {
-            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
-            Object.keys(metadataRegistry).forEach(k => localStorage.removeItem(k));
-            localStorage.removeItem('poi_lru_registry_v2');
-        }
-
-        async function fetchWithMirrorFailover(queryPayload) {
-            for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
-                try {
-                    const response = await fetch(OVERPASS_MIRRORS[i] + "?data=" + encodeURIComponent(queryPayload));
-                    if (response.ok) return await response.json();
-                } catch (err) { console.warn("Mirror connection delayed."); }
-            }
-            throw new Error("All data networks congested.");
-        }
-
+        // ======================================================
+        // --- PHASE 6: AGGRESSIVE CACHING ENGINE WITH LRU ENGINE ---
+        // ======================================================
         async function runDataExecutionLayer(masterCat) {
-            // FIXED RACE CONDITION GATEWAY: Asynchronously hooks Leaflet LRM instance variables fallback values
             if (routeLineCoordinates.length === 0 && routingControl._routes && routingControl._routes[0]) {
                 routeLineCoordinates = routingControl._routes[0].coordinates;
             }
@@ -956,8 +1077,34 @@
         }
 
         // ======================================================
-        // --- PHASE 7: ELEMENT SELECTION COUPLING LISTENERS ---
+        // --- PHASE 7: ELEMENT SELECTION COUPLING LISTENERS (RESTORED) ---
         // ======================================================
+        // COMPILATION FIX: Re-instated the missing mathWorker processing array block
+        mathWorker.onmessage = function(e) {
+            const { sortedMatches } = e.data;
+            
+            poiClusterGroup.clearLayers();
+            allPoiMarkersMemoryMap = [];
+
+            sortedMatches.forEach(el => {
+                let isCoordinateOccupiedByStar = globalFavoritesMarkers.some(m => roundCoords(m.lat) === roundCoords(el.lat) && roundCoords(m.lon) === roundCoords(el.lon));
+                if (isCoordinateOccupiedByStar) return;
+                buildAndRenderPoiMarker(el, false);
+            });
+
+            const hud = document.getElementById('next-stop-hud');
+            if (hud) {
+                if (sortedMatches.length > 0) {
+                    const nextStop = sortedMatches[0];
+                    const distanceInMiles = (nextStop.minD * 0.000621371).toFixed(1);
+                    document.getElementById('hud-poi-name').innerText = cleanBrandNames[nextStop.brand] || nextStop.name;
+                    document.getElementById('hud-poi-dist').innerText = `${distanceInMiles} miles away`;
+                    hud.classList.remove('hidden');
+                } else { hud.classList.add('hidden'); }
+            }
+            updateInlineStatus("Stops active.");
+        };
+
         document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
             mainMap.removeLayer(mapLayersPool[mapStyleMode]);
             mapStyleMode = mapStyleMode === 'light' ? 'dark' : 'light';
@@ -972,7 +1119,6 @@
             triggerToast("Server repositories synchronized successfully! 🔄");
         });
 
-        // FIXED SPLIT EVENT LISTENERS: Separated zoomend and moveend into clean individual executions
         mainMap.on('zoomend', handleMapViewStateRefreshUpdate);
         mainMap.on('moveend', handleMapViewStateRefreshUpdate);
 
