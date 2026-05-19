@@ -17,6 +17,12 @@ BRAND_SLUG = "mcdonalds"      # The machine-readable slug saved to "b"
 CATEGORY_SLUG = "food"        # The category slug saved to "c" (e.g., food, gas)
 DISPLAY_NAME = "McDonald's"   # The clean name saved to "n"
 
+# CRITICAL TIMEOUT FIX: Restrict the database scan to specific categories.
+# This stops the server from scanning non-relevant elements like roads or trees.
+# For fast food chains, use: '"amenity"~"fast_food|restaurant"'
+# For gas stations, use:    '"amenity"="fuel"'
+AMENITY_FILTER = '"amenity"~"fast_food|restaurant"'
+
 # Keywords used to filter out offices or inactive storefronts
 BLACKLIST = [
     "corporate", "office", "headquarters", "hq", "distribution", 
@@ -26,7 +32,7 @@ BLACKLIST = [
 # ==========================================
 # SCRAPER CORE
 # ==========================================
-# Exclusively using global data mirrors to avoid the regional empty-response trap
+# Completely removed the regional Swiss mirror (osm.ch) to avoid empty data traps
 OVERPASS_ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
     "https://lz4.overpass-api.de/api/interpreter",
@@ -36,13 +42,14 @@ OVERPASS_ENDPOINTS = [
 
 
 def build_bbox_query():
+    # Injecting the amenity filter drastically accelerates database retrieval speeds
     return (
         f'[out:json][timeout:60][bbox:{BBOX}];\n'
         f'(\n'
-        f'  node["brand"~"{BRAND_SEARCH}",i];\n'
-        f'  way["brand"~"{BRAND_SEARCH}",i];\n'
-        f'  node["name"~"{BRAND_SEARCH}",i];\n'
-        f'  way["name"~"{BRAND_SEARCH}",i];\n'
+        f'  node[{AMENITY_FILTER}]["brand"~"{BRAND_SEARCH}",i];\n'
+        f'  way[{AMENITY_FILTER}]["brand"~"{BRAND_SEARCH}",i];\n'
+        f'  node[{AMENITY_FILTER}]["name"~"{BRAND_SEARCH}",i];\n'
+        f'  way[{AMENITY_FILTER}]["name"~"{BRAND_SEARCH}",i];\n'
         f');\n'
         f'out center;'
     )
@@ -70,9 +77,9 @@ def fetch_data():
             
             if res.status_code == 200:
                 raw_json = res.json()
-                # If a server returns an empty elements array, keep cycling to be safe
+                # Ensure the global mirror actually returned elements before stopping
                 if not raw_json.get("elements"):
-                    print(f"  Server {server_url} returned 0 results. Trying next global mirror...", flush=True)
+                    print(f"  Server {server_url} returned a blank dataset. Trying next mirror...", flush=True)
                     continue
                 print(f"  Successfully retrieved data from {server_url}!", flush=True)
                 return raw_json
@@ -116,7 +123,7 @@ def main():
 
     raw_data = fetch_data()
     if not raw_data:
-        print("Error: All global Overpass mirrors failed or returned empty datasets.")
+        print("Error: All global Overpass mirrors failed, timed out, or returned empty datasets.")
         return
 
     elements = raw_data.get("elements", [])
