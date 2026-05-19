@@ -234,8 +234,9 @@
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', query: 'node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
             gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
             food: { label: '🍟', bg: 'bg-red-600 border-red-200 text-white', name: 'Fast Food', img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
-            highway_rest: { label: '🏢', bg: 'bg-blue-600 border-blue-200 text-white', name: 'Rest Area', query: 'node["highway"="rest_area"];', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80' },
-            highway_toilets: { label: '🧻', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Public Restroom', query: 'node["amenity"="toilets"];', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
+            chipotle: { label: '🌯', bg: 'bg-amber-800 border-amber-500 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a0847685?auto=format&fit=crop&w=300&q=80' },
+            highway_rest: { label: '🪑', bg: 'bg-blue-600 border-blue-200 text-white', name: 'Rest Area', query: 'node["highway"="rest_area"];', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80' },
+            highway_toilets: { label: '🚻', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Public Restroom', query: 'node["amenity"="toilets"];', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
             tourism_viewpoint: { label: '📷', bg: 'bg-sky-500 border-sky-200 text-white', name: 'Scenic Viewpoint', query: 'node["tourism"="viewpoint"];', img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=300&q=80' },
             tourism_dogpark: { label: '🐕', bg: 'bg-violet-600 border-violet-200 text-white', name: 'Dog Park', query: 'node["leisure"="dog_park"];', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=300&q=80' }
         };
@@ -250,8 +251,8 @@
         const subMenuDefinitions = {
             playground: [{ id: 'all', label: 'All Public Parks' }],
             gas: [{ id: 'all', label: 'All Selected Chains' }, { id: 'unl87', label: 'UNL 87 Listed' }, { id: 'unl88', label: 'UNL 88 / E15' }],
-            food: [{ id: 'all', label: 'All Brands' }, { id: 'raisingcanes', label: "Raising Cane's" }, { id: 'chickfila', label: 'Chick-fil-A' }, { id: 'mcdonalds', label: "McDonald's" }, { id: 'jerseymikes', label: "Jersey Mike's" }],
-            highway: [{ id: 'highway_rest', label: 'Highway Rest Areas' }, { id: 'highway_toilets', label: 'Standalone Restrooms' }],
+            food: [{ id: 'all', label: 'All Brands' }, { id: 'chipotle', label: 'Chipotle' }, { id: 'raisingcanes', label: "Raising Cane's" }, { id: 'chickfila', label: 'Chick-fil-A' }, { id: 'mcdonalds', label: "McDonald's" }, { id: 'jerseymikes', label: "Jersey Mike's" }],
+            highway: [{ id: 'highway_rest', label: '🪑 Highway Rest Areas' }, { id: 'highway_toilets', label: '🚻 Standalone Restrooms' }],
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
 
@@ -532,6 +533,7 @@
                 let visualCatKey = el.category;
                 if (el.brand === 'highway_rest' || el.brand === 'highway_toilets') visualCatKey = el.brand;
                 if (el.brand === 'tourism_viewpoint' || el.brand === 'tourism_dogpark') visualCatKey = el.brand;
+                if (el.brand === 'chipotle') visualCatKey = 'chipotle';
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
 
@@ -590,6 +592,7 @@
             let visualCatKey = el.category;
             if (el.brand === 'highway_rest' || el.brand === 'highway_toilets') visualCatKey = el.brand;
             if (el.brand === 'tourism_viewpoint' || el.brand === 'tourism_dogpark') visualCatKey = el.brand;
+            if (el.brand === 'chipotle') visualCatKey = 'chipotle';
 
             const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
             const isLarge = map.getZoom() > 13;
@@ -951,6 +954,7 @@
                     if (['raisingcanes','chickfila','mcdonalds','jerseymikes','wendys','chipotle'].includes(checkKey)) checkKey = 'food';
                     else if (['sheetz','murphyexpress','bucees','costcogas','wawa','circlek'].includes(checkKey)) checkKey = 'gas';
                 }
+                if (item.category === 'chipotle') checkKey = 'chipotle';
                 const config = categoryConfigs[checkKey] || categoryConfigs['food'] || categoryConfigs['gas'];
                 item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
             });
@@ -961,6 +965,7 @@
                     if (['raisingcanes','chickfila','mcdonalds','jerseymikes','wendys','chipotle'].includes(checkKey)) checkKey = 'food';
                     else if (['sheetz','murphyexpress','bucees','costcogas','wawa','circlek'].includes(checkKey)) checkKey = 'gas';
                 }
+                if (item.category === 'chipotle') checkKey = 'chipotle';
                 const config = categoryConfigs[checkKey] || categoryConfigs['food'] || categoryConfigs['gas'] || categoryConfigs['playground'];
                 item.marker.setIcon(createStarredIcon(config.label, isLarge));
             });
