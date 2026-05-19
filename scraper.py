@@ -17,8 +17,8 @@ BRAND_SLUG = "mcdonalds"      # The machine-readable slug saved to "b"
 CATEGORY_SLUG = "food"        # The category slug saved to "c" (e.g., food, gas)
 DISPLAY_NAME = "McDonald's"   # The clean name saved to "n"
 
-# CRITICAL TIMEOUT FIX: Restrict the database scan to specific categories.
-# This stops the server from scanning non-relevant elements like roads or trees.
+# CRITICAL TIMEOUT FIX: Restricts the database scan to specific categories.
+# This stops the server from scanning non-relevant elements like roads, trees, or houses.
 # For fast food chains, use: '"amenity"~"fast_food|restaurant"'
 # For gas stations, use:    '"amenity"="fuel"'
 AMENITY_FILTER = '"amenity"~"fast_food|restaurant"'
