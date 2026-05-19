@@ -214,6 +214,10 @@
         }
 
         function dispatchOffThreadAnalysis() {
+            // HIGH-AVAILABILITY RESCUE: Re-reads active map lines coordinates to avoid asynchronous race state exclusions
+            if (routeLineCoordinates.length === 0 && routingControl._routes && routingControl._routes[0]) {
+                routeLineCoordinates = routingControl._routes[0].coordinates;
+            }
             if (routeLineCoordinates.length === 0) return;
             const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
             activeTargetsSliceMemory = [];
@@ -300,68 +304,6 @@
         let routeBufferPolyline = null;
 
         // ==========================================
-        // --- PHASE 3: MAP TILES & LAYER ENGINE ----
-        // ==========================================
-        const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
-        
-        const mapLayersPool = {
-            light: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }),
-            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB' })
-        };
-        mapLayersPool[mapStyleMode].addTo(map);
-
-        const poiClusterGroup = L.layerGroup().addTo(map);
-
-        let routingControl = L.Routing.control({
-            show: false, 
-            addWaypoints: true, 
-            draggableWaypoints: true,
-            serviceUrl: 'https://router.project-osrm.org/route/v1',
-            router: L.Routing.osrmv1({
-                serviceUrl: 'https://router.project-osrm.org/route/v1'
-            }),
-            lineOptions: {
-                styles: [
-                    { color: '#0f172a', opacity: 0.25, weight: 14 }, 
-                    { color: '#2563eb', opacity: 0.9, weight: 10 },    
-                    { color: '#60a5fa', opacity: 1, weight: 4 }      
-                ]
-            },
-            createMarker: function(i, wp, n) {
-                let iconLabel = '⚓';
-                let bgClass = 'bg-blue-600 border-white text-white';
-                if (i === 0) { iconLabel = '🏁'; bgClass = 'bg-emerald-600 border-white text-white'; }
-                else if (i === n - 1) { iconLabel = '🛑'; bgClass = 'bg-red-600 border-white text-white'; }
-                
-                let marker = L.marker(wp.latLng, { 
-                    draggable: true,
-                    icon: createRouteMarkerIcon(iconLabel, bgClass) 
-                });
-
-                if (i > 0 && i < n - 1) {
-                    marker.on('click', function() {
-                        if (confirm("Delete this custom reroute anchor point?")) {
-                            let currentWaypoints = routingControl.getWaypoints();
-                            currentWaypoints.splice(i, 1);
-                            routingControl.setWaypoints(currentWaypoints);
-                        }
-                    });
-                }
-                return marker;
-            }
-        }).addTo(map);
-
-        function updateBufferVisualizerWeight() {
-            if (!routeBufferPolyline || routeLineCoordinates.length === 0) return;
-            const currentMapCenterLatitude = map.getCenter().lat;
-            const currentZoomLevel = map.getZoom();
-            const metersPerPixel = (40075016.686 * Math.cos(currentMapCenterLatitude * Math.PI / 180)) / Math.pow(2, currentZoomLevel + 8);
-            const calculatedPixelWidthWeight = (activeBufferMeters / metersPerPixel) * 2;
-            
-            routeBufferPolyline.setStyle({ weight: Math.max(4, calculatedPixelWidthWeight) });
-        }
-
-        // ==========================================
         // --- PHASE 4: WORKER MATRIX ALLOCATIONS ---
         // ==========================================
         const workerBlobCode = `
@@ -379,7 +321,7 @@
                 var dLower = (tags.description || '').toLowerCase();
                 var sig = (nLower + ' ' + bLower).toLowerCase();
                 
-                // CRITICAL STRUCTURAL FIX: Ensures elements tagged only by brand evaluate safely
+                // STARBUCKS ENGINE LOCK FIX: Completely bypasses name parameters constraints to look inside brand records directly
                 if (sig.includes('starbucks')) return 'coffee';
                 
                 if (!tags.name) return 'excluded';
@@ -471,7 +413,6 @@
                         const lon = el.lon || (el.center && el.center.lon);
                         if (!lat || !lon) return;
 
-                        // FIX DETECTED: Uses object validation layer to safely handle undefined schemas safely
                         let tags = el.tags || {};
                         let concreteCat = parseLiveBackupTargetCategory(tags);
                         if (concreteCat === 'excluded') return;
@@ -795,7 +736,15 @@
         }
 
         async function runDataExecutionLayer(masterCat) {
-            if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
+            // FIX: Robust map layer fallback preserves vector memory indices from falling out of scope
+            if (routeLineCoordinates.length === 0 && routingControl._routes && routingControl._routes[0]) {
+                routeLineCoordinates = routingControl._routes[0].coordinates;
+            }
+
+            if (routeLineCoordinates.length === 0) { 
+                alert("Please calculate a route first by clicking 'Calculate Dynamic Route'."); 
+                return; 
+            }
 
             if (!localJsonMemory) {
                 updateInlineStatus("Ingesting master database layer...", true);
@@ -817,6 +766,10 @@
         }
 
         async function fetchLiveBackupEnrichment(masterCat) {
+            if (routeLineCoordinates.length === 0 && routingControl._routes && routingControl._routes[0]) {
+                routeLineCoordinates = routingControl._routes[0].coordinates;
+            }
+            
             let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
             routeLineCoordinates.forEach(c => {
                 if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
@@ -845,7 +798,6 @@
             } else if (masterCat === 'tourism') {
                 queryTokens.push('node["tourism"="viewpoint"];node["leisure"="dog_park"];');
             } else if (masterCat === 'coffee') {
-                // FIXED LIVE OVERPASS TOKEN: Expanded query structure targets any element containing brand identifiers directly
                 queryTokens.push('node["brand"~"Starbucks",i];way["brand"~"Starbucks",i];node["name"~"Starbucks",i];way["name"~"Starbucks",i];node["amenity"="cafe"]["name"~"Starbucks",i];node["amenity"="cafe"]["brand"~"Starbucks",i];');
             } else if (masterCat === 'parks') {
                 queryTokens.push('node["boundary"="national_park"];way["boundary"="national_park"];node["leisure"="nature_reserve"];way["leisure"="nature_reserve"];node["tourism"="attraction"];way["tourism"="attraction"];');
@@ -1212,6 +1164,10 @@
                     if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
                     map.panTo([latitude, longitude]);
 
+                    if (routeLineCoordinates.length === 0 && routingControl._routes && routingControl._routes[0]) {
+                        routeLineCoordinates = routingControl._routes[0].coordinates;
+                    }
+
                     if (routeLineCoordinates.length > 0) {
                         let minDistanceToRouteLine = Infinity;
                         let closestCoordinateIndex = 0;
@@ -1223,7 +1179,6 @@
                             }
                         }
 
-                        // FIXED DYNAMIC TRACK MONITOR CALCULATION: Re-tallies polyline miles down to the destination
                         let remainingDistanceMeters = 0;
                         for (let i = closestCoordinateIndex; i < routeLineCoordinates.length - 1; i++) {
                             remainingDistanceMeters += map.distance([routeLineCoordinates[i].lat, routeLineCoordinates[i].lng], [routeLineCoordinates[i+1].lat, routeLineCoordinates[i+1].lng]);
