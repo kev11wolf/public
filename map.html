@@ -10,50 +10,34 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
     <style>
         body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
+            margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #111827;
         }
-        #map {
-            height: 100%;
-            width: 100%;
-            z-index: 1;
-        }
+        #map { height: 100%; width: 100%; z-index: 1; }
         .safe-top { padding-top: env(safe-area-inset-top); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-        
-        .leaflet-routing-container, .leaflet-routing-error, .leaflet-right {
-            display: none !important;
-        }
-        
+        .leaflet-routing-container, .leaflet-routing-error, .leaflet-right { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         .custom-popup .leaflet-popup-content-wrapper {
-            border-radius: 14px;
-            padding: 1px;
-            max-width: 210px !important;
-            overflow: hidden;
-            background-color: #ffffff;
+            border-radius: 14px; padding: 1px; max-width: 210px !important;
+            overflow: hidden; background-color: #ffffff;
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
         }
-        .custom-popup .leaflet-popup-content {
-            margin: 6px !important;
-            max-width: 198px !important;
-        }
-        .custom-popup .leaflet-popup-content a,
-        .custom-popup .leaflet-popup-content button {
-            color: #ffffff !important;
-            text-decoration: none !important;
+        .custom-popup .leaflet-popup-content { margin: 6px !important; max-width: 198px !important; }
+        .custom-popup .leaflet-popup-content a, .custom-popup .leaflet-popup-content button {
+            color: #ffffff !important; text-decoration: none !important;
         }
     </style>
 </head>
@@ -92,24 +76,12 @@
                     <option value="12000">⏱️ 15 Min Buffer</option>
                     <option value="24000">⏱️ 30 Min Buffer</option>
                 </select>
-                <button id="theme-toggle-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] active:bg-gray-100 whitespace-nowrap">
-                    🌙 Mode
-                </button>
-                <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">
-                    💾 Save Repo Favorites
-                </button>
-                <button id="sync-discoveries-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">
-                    📢 Copy Full us_brands.json
-                </button>
-                <button id="reset-fav-cache-btn" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">
-                    🔄 Reset Fav Cache
-                </button>
-                <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">
-                    🔍 Inputs
-                </button>
-                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">
-                    🚗 Track
-                </button>
+                <button id="theme-toggle-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] active:bg-gray-100 whitespace-nowrap">🌙 Mode</button>
+                <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
+                <button id="sync-discoveries-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">📢 Copy Full us_brands.json</button>
+                <button id="reset-fav-cache-btn" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">🔄 Reset Fav Cache</button>
+                <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">🔍 Inputs</button>
+                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">🚗 Track</button>
             </div>
         </div>
 
@@ -173,15 +145,10 @@
             if (!addr) return displayNameFallback.split(',').slice(0, 3).join(',');
             let tokens = [];
             const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
-            const cityNode = addr.city || addr.town || addr.village || addr.suburb || '';
-            const stateNode = addr.state || '';
-            const zipNode = addr.postcode || '';
-
             if (roadLine) tokens.push(roadLine);
-            if (cityNode) tokens.push(cityNode);
-            if (stateNode) tokens.push(stateNode);
-            if (zipNode) tokens.push(zipNode);
-
+            if (addr.city || addr.town || addr.village || addr.suburb) tokens.push(addr.city || addr.town || addr.village || addr.suburb);
+            if (addr.state) tokens.push(addr.state);
+            if (addr.postcode) tokens.push(addr.postcode);
             return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
         }
 
@@ -198,10 +165,7 @@
             const wrapperSize = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
             const sizePx = isLarge ? 44 : 32;
             return L.divIcon({
-                html: `<div class="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border-amber-600 text-black shadow-md font-black relative ${wrapperSize}">
-                         ${label}
-                         <span class="absolute -bottom-1 -right-1 text-[10px] drop-shadow-sm">⭐</span>
-                       </div>`,
+                html: `<div class="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border-amber-600 text-black shadow-md font-black relative ${wrapperSize}">${label}<span class="absolute -bottom-1 -right-1 text-[10px] drop-shadow-sm">⭐</span></div>`,
                 className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
             });
         }
@@ -310,16 +274,15 @@
         };
         mapLayersPool[mapStyleMode].addTo(map);
 
-        const poiClusterGroup = L.layerGroup().addTo(map);
+        // PERFORMANCE FIX: Upgraded to MarkerClusterGroup to prevent browser hang on dense queries
+        const poiClusterGroup = L.markerClusterGroup({ disableClusteringAtZoom: 14, maxClusterRadius: 40 }).addTo(map);
 
         let routingControl = L.Routing.control({
             show: false, 
             addWaypoints: true, 
             draggableWaypoints: true,
             serviceUrl: 'https://router.project-osrm.org/route/v1',
-            router: L.Routing.osrmv1({
-                serviceUrl: 'https://router.project-osrm.org/route/v1'
-            }),
+            router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
             lineOptions: {
                 styles: [
                     { color: '#0f172a', opacity: 0.25, weight: 14 }, 
@@ -334,8 +297,7 @@
                 else if (i === n - 1) { iconLabel = '🛑'; bgClass = 'bg-red-600 border-white text-white'; }
                 
                 let marker = L.marker(wp.latLng, { 
-                    draggable: true,
-                    icon: createRouteMarkerIcon(iconLabel, bgClass) 
+                    draggable: true, icon: createRouteMarkerIcon(iconLabel, bgClass) 
                 });
 
                 if (i > 0 && i < n - 1) {
@@ -366,7 +328,6 @@
             const searchContainer = document.getElementById('search-container');
             if (searchContainer) searchContainer.classList.add('hidden');
             
-            // STICKY TRIP MONITOR ENGAGEMENT: Compiles polyline paths metrics safely into overlay layout
             const totalDistanceMeters = e.routes[0].summary.totalDistance;
             const totalDistanceMiles = (totalDistanceMeters * 0.000621371).toFixed(1);
             const stickyPanel = document.getElementById('route-mileage-sticky');
@@ -380,15 +341,9 @@
             poiClusterGroup.clearLayers();
             allPoiMarkersMemoryMap = [];
             
-            if (routeBufferPolyline) {
-                map.removeLayer(routeBufferPolyline);
-            }
+            if (routeBufferPolyline) { map.removeLayer(routeBufferPolyline); }
             routeBufferPolyline = L.polyline(routeLineCoordinates, {
-                color: '#3b82f6',
-                opacity: 0.15,
-                lineCap: 'round',
-                lineJoin: 'round',
-                interactive: false
+                color: '#3b82f6', opacity: 0.15, lineCap: 'round', lineJoin: 'round', interactive: false
             }).addTo(map);
             routeBufferPolyline.bringToBack();
             updateBufferVisualizerWeight();
@@ -422,7 +377,6 @@
                 var dLower = (tags.description || '').toLowerCase();
                 var sig = (nLower + ' ' + bLower).toLowerCase();
                 
-                // STARBUCKS EXCLUSION REMOVAL: Bypasses the strict tags.name validation loops entirely
                 if (sig.includes('starbucks')) return 'coffee';
                 
                 if (nLower.includes('national') || dLower.includes('national')) {
@@ -471,10 +425,22 @@
             self.onmessage = function(e) {
                 const { localElements, liveElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
                 const finalMatchesMap = new Map();
+                
+                // PERFORMANCE FIX: Pre-compute strict bounding box for entire route slice
+                let minTlat = 90, maxTlat = -90, minTlon = 180, maxTlon = -180;
+                for(let j=0; j<targetsSlice.length; j++) {
+                    if (targetsSlice[j].lat < minTlat) minTlat = targetsSlice[j].lat;
+                    if (targetsSlice[j].lat > maxTlat) maxTlat = targetsSlice[j].lat;
+                    if (targetsSlice[j].lng < minTlon) minTlon = targetsSlice[j].lng;
+                    if (targetsSlice[j].lng > maxTlon) maxTlon = targetsSlice[j].lng;
+                }
+                const bufferDeg = activeBufferMeters / 111000;
+                const validBounds = { n: maxTlat + bufferDeg, s: minTlat - bufferDeg, e: maxTlon + bufferDeg, w: minTlon - bufferDeg };
 
                 if (localElements) {
                     localElements.forEach(el => {
                         if (el.c !== currentMasterCat) return;
+                        if (el.lat > validBounds.n || el.lat < validBounds.s || el.lon > validBounds.e || el.lon < validBounds.w) return;
                         
                         var nameCheck = (el.n || '').toLowerCase();
                         var descCheck = (el.d || '').toLowerCase();
@@ -511,6 +477,7 @@
                         const lat = el.lat || (el.center && el.center.lat);
                         const lon = el.lon || (el.center && el.center.lon);
                         if (!lat || !lon) return;
+                        if (lat > validBounds.n || lat < validBounds.s || lon > validBounds.e || lon < validBounds.w) return;
 
                         let concreteCat = parseLiveBackupTargetCategory(el.tags || {});
                         if (concreteCat === 'excluded') return;
@@ -628,11 +595,8 @@
                 if (categoryConfigs[el.brand]) { visualCatKey = el.brand; }
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
-
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
                 const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-                
-                // CRITICAL CORRECTION: Forces localized review triggers using explicit geoloc operators
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -652,7 +616,6 @@
                     fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
                 }
 
-                // MILEAGE MILESTONE PREDICTOR: Appends a visual callout item tracking custom detour distance offsets
                 const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
                 let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
 
@@ -716,7 +679,6 @@
             let starBtnText = isStarredCurrently ? "❌ Remove Local Star" : "⭐ Persistently Star";
             let starBtnColor = isStarredCurrently ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
 
-            // MILEAGE MILESTONE PREDICTOR: Appends a visual callout item tracking custom detour distance offsets
             const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
             let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
 
@@ -789,10 +751,7 @@
                     delete metadataRegistry[oldestKey];
                 }
                 
-                metadataRegistry[cacheKey] = {
-                    lastAccessed: Date.now(),
-                    bornAt: Date.now()
-                };
+                metadataRegistry[cacheKey] = { lastAccessed: Date.now(), bornAt: Date.now() };
                 localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
                 localStorage.setItem(cacheKey, JSON.stringify(elementsPayload));
             } catch (error) {
@@ -881,23 +840,24 @@
             updateInlineStatus("Sweeping live channels for updates...", true);
 
             let queryTokens = [];
+            
+            // SYNTAX FIX: Upgraded to 'nwr' syntax and corrected case-insensitive PCRE modifiers for OverpassQL
             if (masterCat === 'playground') {
-                queryTokens.push('node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];');
+                queryTokens.push('nwr["leisure"="playground"]["access"!~"(?i)(private|no)"];');
             } else if (masterCat === 'highway') {
                 queryTokens.push('node["highway"="rest_area"];node["amenity"="toilets"];');
             } else if (masterCat === 'tourism') {
                 queryTokens.push('node["tourism"="viewpoint"];node["leisure"="dog_park"];');
             } else if (masterCat === 'coffee') {
-                // EXPLICIT SELECTION OPTIMIZATION: Overwrites subset structures to guarantee un-named brand nodes populate cleanly
-                queryTokens.push('node["brand"~"Starbucks",i];way["brand"~"Starbucks",i];node["name"~"Starbucks",i];way["name"~"Starbucks",i];node["amenity"="cafe"]["name"~"Starbucks",i];node["amenity"="cafe"]["brand"~"Starbucks",i];');
+                queryTokens.push('nwr["brand"~"(?i)starbucks"];nwr["name"~"(?i)starbucks"];');
             } else if (masterCat === 'parks') {
-                queryTokens.push('node["boundary"="national_park"];way["boundary"="national_park"];node["leisure"="nature_reserve"];way["leisure"="nature_reserve"];node["tourism"="attraction"];way["tourism"="attraction"];');
+                queryTokens.push('nwr["boundary"="national_park"];nwr["leisure"="nature_reserve"];nwr["tourism"="attraction"];');
             } else if (masterCat === 'medical') {
-                queryTokens.push('node["amenity"="hospital"];way["amenity"="hospital"];node["amenity"="veterinary"];way["amenity"="veterinary"];');
+                queryTokens.push('nwr["amenity"="hospital"];nwr["amenity"="veterinary"];');
             } else if (masterCat === 'gas') {
-                queryTokens.push('node["brand"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];node["name"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];');
+                queryTokens.push('nwr["brand"~"(?i)(Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K)"];nwr["name"~"(?i)(Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K)"];');
             } else if (masterCat === 'food') {
-                queryTokens.push('node["brand"~"McDonald\'s|Wendy\'s|Chick-fil-A|Chipotle|Jersey Mike|Raising Cane",i];node["name"~"McDonald\'s|Wendy\'s|Chick-fil-A|Raising Cane|Jersey Mike|Chipotle",i];');
+                queryTokens.push('nwr["brand"~"(?i)(McDonald\'s|Wendy\'s|Chick-fil-A|Chipotle|Jersey Mike|Raising Cane)"];nwr["name"~"(?i)(McDonald\'s|Wendy\'s|Chick-fil-A|Raising Cane|Jersey Mike|Chipotle)"];');
             }
 
             try {
@@ -984,13 +944,10 @@
                     else if (sig.includes('raising cane')) brandSlug = 'raisingcanes';
 
                     let simplifiedPoi = {
-                        lat: roundCoords(lat),
-                        lon: roundCoords(lon),
-                        n: labelName,
-                        b: brandSlug,
+                        lat: roundCoords(lat), lon: roundCoords(lon),
+                        n: labelName, b: brandSlug,
                         c: (normalizedCat.startsWith('highway') ? 'highway' : normalizedCat.startsWith('tourism') ? 'tourism' : ['national_park', 'nature_reserve', 'attraction'].includes(normalizedCat) ? 'parks' : ['hospital', 'veterinary'].includes(normalizedCat) ? 'medical' : normalizedCat === 'coffee' ? 'coffee' : normalizedCat),
-                        h: tags.opening_hours || "",
-                        d: tags.description || ""
+                        h: tags.opening_hours || "", d: tags.description || ""
                     };
 
                     if (simplifiedPoi.c === 'gas') {
@@ -1009,9 +966,7 @@
             navigator.clipboard.writeText(comprehensiveJsonString).then(() => {
                 triggerToast(`Copied! Total items in clipboard dataset: ${unifiedDatabaseList.length}`);
                 alert(`Export Complete!\n\nSuccessfully compiled ${unifiedDatabaseList.length} total database records.\n\nThe updated dataset code has been copied to your system clipboard. Open 'us_brands.json' in your editor, replace everything, and save!`);
-            }).catch(() => {
-                alert("System clipboard write access rejected by permission controls.");
-            });
+            }).catch(() => { alert("System clipboard write access rejected by permission controls."); });
         }
 
         function launchAutomatedGitHubSyncPipeline() {
@@ -1110,9 +1065,7 @@
 
             input.addEventListener('input', () => {
                 clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    runCachedAutocompleteSearch(input, dropdown);
-                }, 400);
+                debounceTimer = setTimeout(() => { runCachedAutocompleteSearch(input, dropdown); }, 400);
             });
         }
 
@@ -1261,12 +1214,10 @@
                         for (let i = 0; i < routeLineCoordinates.length; i++) {
                             const d = map.distance([latitude, longitude], [routeLineCoordinates[i].lat, routeLineCoordinates[i].lng]);
                             if (d < minDistanceToRouteLine) {
-                                minDistanceToRouteLine = d;
-                                closestCoordinateIndex = i;
+                                minDistanceToRouteLine = d; closestCoordinateIndex = i;
                             }
                         }
 
-                        // STICKY TRIP MONITOR LIVE UPDATE: Computes distance remaining from current route segment projection indices
                         let remainingDistanceMeters = 0;
                         for (let i = closestCoordinateIndex; i < routeLineCoordinates.length - 1; i++) {
                             remainingDistanceMeters += map.distance([routeLineCoordinates[i].lat, routeLineCoordinates[i].lng], [routeLineCoordinates[i+1].lat, routeLineCoordinates[i+1].lng]);
@@ -1275,7 +1226,6 @@
                         const stickyLabelValue = document.getElementById('sticky-total-dist');
                         if (stickyLabelValue) stickyLabelValue.innerText = remainingDistanceMiles;
 
-                        // REROUTING LOGIC TRIPS: If user drifts past 0.5 miles from active line geometry paths, update parameters
                         if (minDistanceToRouteLine > 805) {
                             triggerToast("Off-route deviation detected! Updating path variables...", 4000);
                             const currentGpsLocationLatLng = L.latLng(latitude, longitude);
@@ -1287,10 +1237,8 @@
             }
         });
 
-        // MENU INTERACTION PROPAGATION GUARDS: Prevents swipe panels from pulling leaflet map positions unexpectedly
         window.addEventListener('DOMContentLoaded', () => {
             loadMasterRepoFavoritesOnBoot();
-            
             const interactiveControlBars = ['master-filter-bar', 'sub-filter-bar', 'search-container'];
             interactiveControlBars.forEach(id => {
                 const element = document.getElementById(id);
