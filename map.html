@@ -9,10 +9,6 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
@@ -274,8 +270,8 @@
         };
         mapLayersPool[mapStyleMode].addTo(map);
 
-        // PERFORMANCE FIX: Upgraded to MarkerClusterGroup to prevent browser hang on dense queries
-        const poiClusterGroup = L.markerClusterGroup({ disableClusteringAtZoom: 14, maxClusterRadius: 40 }).addTo(map);
+        // Standard flat layer architecture—completely cluster-free rendering loops
+        const poiClusterGroup = L.layerGroup().addTo(map);
 
         let routingControl = L.Routing.control({
             show: false, 
@@ -400,6 +396,11 @@
                 if (tags.tourism === 'attraction') return 'attraction';
                 if (tags.amenity === 'hospital') return 'hospital';
                 if (tags.amenity === 'veterinary') return 'veterinary';
+                if (tags.amenity === 'fuel') return 'gas';
+                if (tags.amenity === 'fast_food' || tags.amenity === 'restaurant') return 'food';
+                
+                if (["mcdonald", "wendy", "chick-fil-a", "chipotle", "jersey mike", "raising cane"].some(k => sig.includes(k))) return 'food';
+                if (["sheetz", "wawa", "murphy", "bucee", "circle k", "costco"].some(k => sig.includes(k))) return 'gas';
 
                 return 'excluded';
             }
@@ -424,9 +425,10 @@
 
             self.onmessage = function(e) {
                 const { localElements, liveElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
-                const finalMatchesMap = new Map();
+                const finalMatches = [];
+                const DEDUPE_RADIUS_METERS = 40; // Proximity threshold limits duplicate nodes/ways for the exact same location
                 
-                // PERFORMANCE FIX: Pre-compute strict bounding box for entire route slice
+                // PHASE 4 ENHANCEMENT 1: Mathematical boundary pre-check rejects distant variables instantly
                 let minTlat = 90, maxTlat = -90, minTlon = 180, maxTlon = -180;
                 for(let j=0; j<targetsSlice.length; j++) {
                     if (targetsSlice[j].lat < minTlat) minTlat = targetsSlice[j].lat;
@@ -434,26 +436,43 @@
                     if (targetsSlice[j].lng < minTlon) minTlon = targetsSlice[j].lng;
                     if (targetsSlice[j].lng > maxTlon) maxTlon = targetsSlice[j].lng;
                 }
-                const bufferDeg = activeBufferMeters / 111000;
+                const bufferDeg = (activeBufferMeters + 2000) / 111000;
                 const validBounds = { n: maxTlat + bufferDeg, s: minTlat - bufferDeg, e: maxTlon + bufferDeg, w: minTlon - bufferDeg };
+
+                function checkAndAddSpatialDedupe(payload) {
+                    for (let k = 0; k < finalMatches.length; k++) {
+                        let existing = finalMatches[k];
+                        let d = haversineDist(payload.lat, payload.lon, existing.lat, existing.lon);
+                        if (d < DEDUPE_RADIUS_METERS) {
+                            let pName = payload.name.toLowerCase();
+                            let eName = existing.name.toLowerCase();
+                            if (payload.brand === existing.brand || (pName.includes('starbucks') && eName.includes('starbucks')) || pName.substring(0,5) === eName.substring(0,5)) {
+                                return; // Proximity overlap confirmed. Discarding duplicate geometry object safely.
+                            }
+                        }
+                    }
+                    finalMatches.push(payload);
+                }
 
                 if (localElements) {
                     localElements.forEach(el => {
-                        if (el.c !== currentMasterCat) return;
+                        let normName = (el.n || '');
+                        let normBrand = (el.b || '');
+                        let normCat = el.c;
+                        
+                        // DATA AUDIT FIX: Intercept taxonomy inconsistencies globally to isolate Starbucks to coffee
+                        if (normName.toLowerCase().includes('starbucks') || normBrand.toLowerCase().includes('starbucks')) {
+                            normCat = 'coffee';
+                            normBrand = 'starbucks';
+                        }
+
+                        if (normCat !== currentMasterCat) return;
                         if (el.lat > validBounds.n || el.lat < validBounds.s || el.lon > validBounds.e || el.lon < validBounds.w) return;
                         
-                        var nameCheck = (el.n || '').toLowerCase();
-                        var descCheck = (el.d || '').toLowerCase();
-                        if (nameCheck.includes('national') || descCheck.includes('national')) return;
+                        var nameCheck = normName.toLowerCase();
+                        if (nameCheck.includes('national')) return;
 
-                        if (currentSubFilter !== 'all') {
-                            if (currentMasterCat === 'gas') {
-                                if (currentSubFilter === 'unl87' && el.g87 !== 1) return;
-                                if (currentSubFilter === 'unl88' && el.g88 !== 1) return;
-                            } else {
-                                if (el.b !== currentSubFilter) return;
-                            }
-                        }
+                        if (currentSubFilter !== 'all' && normBrand !== currentSubFilter) return;
 
                         let minD = Infinity;
                         for (let j = 0; j < targetsSlice.length; j++) {
@@ -462,12 +481,11 @@
                         }
 
                         if (minD <= activeBufferMeters) {
-                            const payload = {
+                            checkAndAddSpatialDedupe({
                                 id: "local_" + el.lat + "_" + el.lon, lat: el.lat, lon: el.lon,
-                                name: el.n, brand: el.b, category: el.c, hours: el.h || "Hours not listed",
+                                name: normName, brand: normBrand, category: normCat, hours: el.h || "Hours not listed",
                                 desc: el.d || "", minD: minD, isLocal: true, g87: el.g87, g88: el.g88
-                            };
-                            finalMatchesMap.set(payload.id, payload);
+                            });
                         }
                     });
                 }
@@ -482,19 +500,20 @@
                         let concreteCat = parseLiveBackupTargetCategory(el.tags || {});
                         if (concreteCat === 'excluded') return;
 
-                        if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
-                        if (currentMasterCat === 'tourism' && concreteCat !== 'tourism_viewpoint' && concreteCat !== 'tourism_dogpark') return;
-                        if (currentMasterCat === 'playground' && concreteCat !== 'playground') return;
-                        if (currentMasterCat === 'coffee' && concreteCat !== 'coffee') return;
-                        if (currentMasterCat === 'parks' && !['national_park', 'nature_reserve', 'attraction'].includes(concreteCat)) return;
-                        if (currentMasterCat === 'medical' && !['hospital', 'veterinary'].includes(concreteCat)) return;
-                        if ((currentMasterCat === 'gas' || currentMasterCat === 'food') && concreteCat !== currentMasterCat) return;
+                        let elementMasterCat = 'excluded';
+                        if (concreteCat === 'coffee') elementMasterCat = 'coffee';
+                        else if (concreteCat === 'playground') elementMasterCat = 'playground';
+                        else if (['highway_rest', 'highway_toilets'].includes(concreteCat)) elementMasterCat = 'highway';
+                        else if (['tourism_viewpoint', 'tourism_dogpark'].includes(concreteCat)) elementMasterCat = 'tourism';
+                        else if (['national_park', 'nature_reserve', 'attraction'].includes(concreteCat)) elementMasterCat = 'parks';
+                        else if (['hospital', 'veterinary'].includes(concreteCat)) elementMasterCat = 'medical';
+                        else if (concreteCat === 'gas') elementMasterCat = 'gas';
+                        else if (concreteCat === 'food') elementMasterCat = 'food';
+
+                        if (elementMasterCat !== currentMasterCat) return;
 
                         var brandSlug = getCleanBrandSlug(el.tags || {});
-                        if (brandSlug === 'excluded') {
-                            brandSlug = concreteCat;
-                        }
-                        
+                        if (brandSlug === 'excluded') { brandSlug = concreteCat; }
                         if (currentSubFilter !== 'all' && brandSlug !== currentSubFilter) return;
 
                         let minD = Infinity;
@@ -504,21 +523,17 @@
                         }
 
                         if (minD <= activeBufferMeters) {
-                            const uniqueKey = "live_" + lat + "_" + lon;
-                            if (!finalMatchesMap.has(uniqueKey)) {
-                                finalMatchesMap.set(uniqueKey, {
-                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || el.tags.brand || el.tags.operator || "Starbucks",
-                                    brand: brandSlug, category: currentMasterCat, 
-                                    hours: el.tags.opening_hours || "Hours not listed",
-                                    desc: el.tags.description || "", minD: minD, isLocal: false,
-                                    rawTags: el.tags
-                                });
-                            }
+                            checkAndAddSpatialDedupe({
+                                id: "live_" + lat + "_" + lon, lat: lat, lon: lon, name: el.tags.name || el.tags.brand || el.tags.operator || "Starbucks",
+                                brand: brandSlug, category: currentMasterCat, 
+                                hours: el.tags.opening_hours || "Hours not listed",
+                                desc: el.tags.description || "", minD: minD, isLocal: false
+                            });
                         }
                     });
                 }
 
-                const sortedMatches = Array.from(finalMatchesMap.values()).sort((a, b) => a.minD - b.minD);
+                const sortedMatches = finalMatches.sort((a, b) => a.minD - b.minD);
                 self.postMessage({ sortedMatches });
             };
         `;
@@ -819,15 +834,30 @@
         }
 
         async function fetchLiveBackupEnrichment(masterCat) {
-            let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
-            routeLineCoordinates.forEach(c => {
-                if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
-                if (c.lat > maxLat) maxLat = c.lat; if (c.lng > maxLon) maxLon = c.lng;
-            });
+            // PHASE 4 ENHANCEMENT 2: Intelligently sample route positions to minimize request overhead
+            let sampledCoords = [];
+            if (routeLineCoordinates.length > 0) {
+                sampledCoords.push(routeLineCoordinates[0]);
+                let lastPoint = routeLineCoordinates[0];
+                for (let i = 1; i < routeLineCoordinates.length; i++) {
+                    let d = map.distance([lastPoint.lat, lastPoint.lng], [routeLineCoordinates[i].lat, routeLineCoordinates[i].lng]);
+                    if (d >= activeBufferMeters) {
+                        sampledCoords.push(routeLineCoordinates[i]);
+                        lastPoint = routeLineCoordinates[i];
+                    }
+                }
+                let dest = routeLineCoordinates[routeLineCoordinates.length - 1];
+                if (map.distance([lastPoint.lat, lastPoint.lng], [dest.lat, dest.lng]) > 500) {
+                    sampledCoords.push(dest);
+                }
+            }
+            if (sampledCoords.length > 40) {
+                let step = Math.ceil(sampledCoords.length / 40);
+                sampledCoords = sampledCoords.filter((_, idx) => idx % step === 0 || idx === sampledCoords.length - 1);
+            }
 
-            const south = (minLat - 0.25).toFixed(2); const west = (minLon - 0.25).toFixed(2);
-            const north = (maxLat + 0.25).toFixed(2); const east = (maxLon + 0.25).toFixed(2);
-            const explicitCacheKeyName = `${CACHE_PREFIX}live_${masterCat}_${south}_west_${north}_east`;
+            const uniqueCacheKeyString = sampledCoords.map(c => `${c.lat.toFixed(3)}_${c.lng.toFixed(3)}`).join(',');
+            const explicitCacheKeyName = `${CACHE_PREFIX}live_${masterCat}_${uniqueCacheKeyString.substring(0, 45)}`;
 
             let preloadedElements = readFromLruSegmentCache(explicitCacheKeyName);
             if (preloadedElements) {
@@ -839,30 +869,37 @@
 
             updateInlineStatus("Sweeping live channels for updates...", true);
 
-            let queryTokens = [];
+            let queryParts = [];
+            let selectors = [];
             
-            // SYNTAX FIX: Upgraded to 'nwr' syntax and corrected case-insensitive PCRE modifiers for OverpassQL
             if (masterCat === 'playground') {
-                queryTokens.push('nwr["leisure"="playground"]["access"!~"(?i)(private|no)"];');
+                selectors.push('nwr["leisure"="playground"]["access"!~"private|no"]');
             } else if (masterCat === 'highway') {
-                queryTokens.push('node["highway"="rest_area"];node["amenity"="toilets"];');
+                selectors.push('node["highway"="rest_area"]', 'node["amenity"="toilets"]');
             } else if (masterCat === 'tourism') {
-                queryTokens.push('node["tourism"="viewpoint"];node["leisure"="dog_park"];');
+                selectors.push('node["tourism"="viewpoint"]', 'node["leisure"="dog_park"]');
             } else if (masterCat === 'coffee') {
-                queryTokens.push('nwr["brand"~"(?i)starbucks"];nwr["name"~"(?i)starbucks"];');
+                selectors.push('nwr["brand"~"starbucks",i]', 'nwr["name"~"starbucks",i]');
             } else if (masterCat === 'parks') {
-                queryTokens.push('nwr["boundary"="national_park"];nwr["leisure"="nature_reserve"];nwr["tourism"="attraction"];');
+                selectors.push('nwr["boundary"="national_park"]', 'nwr["leisure"="nature_reserve"]', 'nwr["tourism"="attraction"]');
             } else if (masterCat === 'medical') {
-                queryTokens.push('nwr["amenity"="hospital"];nwr["amenity"="veterinary"];');
+                selectors.push('nwr["amenity"="hospital"]', 'nwr["amenity"="veterinary"]');
             } else if (masterCat === 'gas') {
-                queryTokens.push('nwr["brand"~"(?i)(Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K)"];nwr["name"~"(?i)(Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K)"];');
+                selectors.push('nwr["brand"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i]', 'nwr["name"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i]');
             } else if (masterCat === 'food') {
-                queryTokens.push('nwr["brand"~"(?i)(McDonald\'s|Wendy\'s|Chick-fil-A|Chipotle|Jersey Mike|Raising Cane)"];nwr["name"~"(?i)(McDonald\'s|Wendy\'s|Chick-fil-A|Raising Cane|Jersey Mike|Chipotle)"];');
+                selectors.push('nwr["brand"~"McDonald\'s|Wendy\'s|Chick-fil-A|Chipotle|Jersey Mike|Raising Cane",i]', 'nwr["name"~"McDonald\'s|Wendy\'s|Chick-fil-A|Raising Cane|Jersey Mike|Chipotle",i]');
             }
 
+            // Construct proper Overpass QL coordinate loops to pull along narrower route tracks cleanly
+            sampledCoords.forEach(c => {
+                selectors.forEach(sel => {
+                    queryParts.push(`${sel}(around:${activeBufferMeters},${c.lat.toFixed(5)},${c.lng.toFixed(5)});`);
+                });
+            });
+
             try {
-                const unionString = queryTokens.join('');
-                const query = `[out:json][timeout:30][bbox:${south},${west},${north},${east}];(${unionString});out center;`;
+                const unionString = queryParts.join('');
+                const query = `[out:json][timeout:30];(${unionString});out center;`;
                 const response = await fetchWithMirrorFailover(query);
                 
                 if (response && response.elements) {
