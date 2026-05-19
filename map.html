@@ -13,10 +13,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-
     <style>
         body, html {
             margin: 0;
@@ -54,7 +50,6 @@
             margin: 6px !important;
             max-width: 198px !important;
         }
-        /* Forces button and anchor link text to be crisp white inside colored button pills */
         .custom-popup .leaflet-popup-content a,
         .custom-popup .leaflet-popup-content button {
             color: #ffffff !important;
@@ -192,13 +187,14 @@
             });
         }
 
+        // Standardized dynamic icon dimensions to prevent clipping on zero-clustering maps
         function createStarredIcon(label, isLarge = false) {
-            const wrapperSize = isLarge ? 'w-14 h-14 text-2xl border-4' : 'w-11 h-11 text-xl border-3';
-            const sizePx = isLarge ? 56 : 44;
+            const wrapperSize = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
+            const sizePx = isLarge ? 44 : 32;
             return L.divIcon({
-                html: `<div class="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border-amber-600 text-black shadow-xl font-black relative ${wrapperSize}">
+                html: `<div class="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border-amber-600 text-black shadow-md font-black relative ${wrapperSize}">
                          ${label}
-                         <span class="absolute -bottom-1 -right-1 text-sm drop-shadow-md">⭐</span>
+                         <span class="absolute -bottom-1 -right-1 text-[10px] drop-shadow-sm">⭐</span>
                        </div>`,
                 className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
             });
@@ -278,9 +274,9 @@
         let mapStyleMode = 'light';
         let activeTargetsSliceMemory = [];
 
-        // ==========================================
-        // --- PHASE 3: MAP TILES & CLUSTER SETUP ---
-        // ==========================================
+        // ========================================================
+        // --- PHASE 3: MAP TILES & LAYER GROUP SETUP (UNGROUPED) ---
+        // ========================================================
         const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
         
         const mapLayersPool = {
@@ -289,13 +285,8 @@
         };
         mapLayersPool[mapStyleMode].addTo(map);
 
-        // Marker Cluster Manager - Prevents mobile UI rendering drop slowdowns
-        const poiClusterGroup = L.markerClusterGroup({
-            spiderfyOnMaxZoom: true,
-            showCoverageOnHover: false,
-            zoomToBoundsOnClick: true,
-            maxClusterRadius: 45
-        }).addTo(map);
+        // REMOVED GROUPING: Swapped L.markerClusterGroup for native unclustered L.layerGroup
+        const poiClusterGroup = L.layerGroup().addTo(map);
 
         let routingControl = L.Routing.control({
             show: false, 
@@ -612,7 +603,7 @@
             if (el.brand === 'tourism_viewpoint' || el.brand === 'tourism_dogpark') visualCatKey = el.brand;
             if (el.brand === 'chipotle') visualCatKey = 'chipotle';
 
-            const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
+                const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
             const isLarge = map.getZoom() > 13;
 
             if (visualCatKey === 'gas' && el.isLocal) {
@@ -825,9 +816,9 @@
             }
         }
 
-        // ==========================================
-        // --- NEW COUPLING: AUTOMATED BRAND SYNC ---
-        // ==========================================
+        // ==============================================================
+        // --- FIXED COUPLING: CLIPBOARD FALLBACK AUTOMATED REPO SYNC ---
+        // ==============================================================
         function pushNewlyDiscoveredLiveBrandsToRepoDatabase() {
             if (!liveOverpassMemory || liveOverpassMemory.length === 0) {
                 alert("No live Overpass map objects have been fetched yet! Browse a route and filter categories first.");
@@ -849,7 +840,6 @@
 
                 const checkKey = `${roundCoords(lat)}_${roundCoords(lon)}`;
                 if (!databaseComparisonSet.has(checkKey)) {
-                    // Extract tag details safely to match expected us_brands.json scheme
                     let tags = el.tags || {};
                     let normalizedCat = el.concreteCat || 'food';
                     let labelName = tags.name || tags.brand || "Public Facility";
@@ -882,14 +872,13 @@
                         d: tags.description || ""
                     };
 
-                    // Fuel flags parsing
                     if (simplifiedPoi.c === 'gas') {
                         simplifiedPoi.g87 = (tags["fuel:octane_87"] === 'yes' || tags["fuel:unleaded"] === 'yes') ? 1 : 1;
                         simplifiedPoi.g88 = (tags["fuel:octane_88"] === 'yes' || tags["fuel:e15"] === 'yes') ? 1 : 0;
                     }
 
                     objectsToContribute.push(simplifiedPoi);
-                    databaseComparisonSet.add(checkKey); // Avoid duplicate entries in single batch
+                    databaseComparisonSet.add(checkKey);
                 }
             });
 
@@ -898,19 +887,25 @@
                 return;
             }
 
-            // Cap the payload batch size to prevent hitting GitHub issue body constraints (~65k characters)
-            const maximumBatchLimit = 50;
-            const finalSyncBatch = objectsToContribute.slice(0, maximumBatchLimit);
-            
-            if (confirm(`Discovered ${objectsToContribute.length} new locations absent from your repo database. Push first batch of (${finalSyncBatch.length}) to us_brands.json?`)) {
+            // Fixed URL Overflow: Writes large array objects to clipboard automatically
+            if (confirm(`Discovered ${objectsToContribute.length} new locations. Copying dataset to clipboard. Click OK to open your Repository issue page!`)) {
                 const repositoryPathTarget = "kev11wolf/public";
-                const minimizedJsonPayload = JSON.stringify(finalSyncBatch);
-                const prefilledGitHubIssueUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_NEW_BRANDS&body=${encodeURIComponent(minimizedJsonPayload)}`;
-                window.open(prefilledGitHubIssueUrl, '_blank');
-                triggerToast("Live updates compiled! Submit issue to run background action worker.");
+                const minimizedJsonPayload = JSON.stringify(objectsToContribute, null, 2);
+                
+                navigator.clipboard.writeText(minimizedJsonPayload).then(() => {
+                    const prefilledGitHubIssueUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_NEW_BRANDS&body=${encodeURIComponent("PASTE_CLIPBOARD_DATA_HERE")}`;
+                    window.open(prefilledGitHubIssueUrl, '_blank');
+                    triggerToast("Dataset loaded into clipboard! Paste (Ctrl+V) directly into the issue body.");
+                }).catch(() => {
+                    alert("Clipboard access blocked. Slicing data into minor packages to force query parameters fallback...");
+                    const fallbackSlice = objectsToContribute.slice(0, 3);
+                    const fallbackUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_NEW_BRANDS&body=${encodeURIComponent(JSON.stringify(fallbackSlice))}`;
+                    window.open(fallbackUrl, '_blank');
+                });
             }
         }
 
+        // Fixed URL Overflow: Swapped direct URL query parameters injection out for clean Clipboard interactions
         function launchAutomatedGitHubSyncPipeline() {
             let starredDataString = localStorage.getItem('starred_pois') || '[]';
             let starredArray = JSON.parse(starredDataString);
@@ -918,11 +913,21 @@
                 alert("You have no starred locations saved locally! Star points first before pushing updates.");
                 return;
             }
-            const repositoryPathTarget = "kev11wolf/public";
-            const minimizedJsonPayload = JSON.stringify(starredArray);
-            const prefilledGitHubIssueUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_FAVORITES&body=${encodeURIComponent(minimizedJsonPayload)}`;
-            window.open(prefilledGitHubIssueUrl, '_blank');
-            triggerToast("GitHub payload prepared! Click 'Submit new issue' on the next page. 🚀");
+            
+            if (confirm(`Exporting your ${starredArray.length} local favorites. Copied data to clipboard! Click OK to build Repository Sync ticket.`)) {
+                const repositoryPathTarget = "kev11wolf/public";
+                const minimizedJsonPayload = JSON.stringify(starredArray, null, 2);
+                
+                navigator.clipboard.writeText(minimizedJsonPayload).then(() => {
+                    const prefilledGitHubIssueUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_FAVORITES&body=${encodeURIComponent("PASTE_CLIPBOARD_DATA_HERE")}`;
+                    window.open(prefilledGitHubIssueUrl, '_blank');
+                    triggerToast("Favorites copied to clipboard! Paste (Ctrl+V) into GitHub issue body. 🚀");
+                }).catch(() => {
+                    const fallbackSlice = starredArray.slice(0, 3);
+                    const fallbackUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_FAVORITES&body=${encodeURIComponent(JSON.stringify(fallbackSlice))}`;
+                    window.open(fallbackUrl, '_blank');
+                });
+            }
         }
 
         async function loadMasterRepoFavoritesOnBoot(forceRefresh = false) {
@@ -1039,7 +1044,6 @@
         mathWorker.onmessage = function(e) {
             const { sortedMatches } = e.data;
             
-            // Wipe cluster layer entries safely
             poiClusterGroup.clearLayers();
             allPoiMarkersMemoryMap = [];
 
@@ -1139,7 +1143,6 @@
                 watchId = navigator.geolocation.watchPosition((pos) => {
                     const { latitude, longitude } = pos.coords;
                     
-                    // Optimization: Debounced Distance Check (Ignore updates under 25 meters to save mobile battery)
                     if (lastUserGpsCoord) {
                         const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord);
                         if (distanceMoved < 25) return; 
