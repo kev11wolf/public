@@ -8,7 +8,11 @@ import requests
 # Change these values when switching chains!
 # ==========================================
 OUTPUT_FILE = "us_brands.json"
-TARGET_STATE = "US-NC"        # ISO 3166-2 state code (e.g., US-NC, US-TX, US-CA)
+
+# North Carolina's bounding box coordinates (South, West, North, East)
+# This completely replaces the slow 'area' lookup logic
+BBOX = "33.75,-84.33,36.59,-75.46" 
+
 BRAND_SEARCH = "McDonald"     # The regex string passed to Overpass
 BRAND_SLUG = "mcdonalds"      # The machine-readable slug saved to "b"
 CATEGORY_SLUG = "food"        # The category slug saved to "c" (e.g., food, gas)
@@ -30,50 +34,46 @@ OVERPASS_ENDPOINTS = [
 ]
 
 
-def build_single_state_query():
+def build_bbox_query():
+    # Injecting the bounding box directly into the query metadata header
     return (
-        f'[out:json][timeout:90];\n'
-        f'area["ISO3166-2"="{TARGET_STATE}"]->.search_area;\n'
+        f'[out:json][timeout:60][bbox:{BBOX}];\n'
         f'(\n'
-        f'  node["brand"~"{BRAND_SEARCH}",i](area.search_area);\n'
-        f'  way["brand"~"{BRAND_SEARCH}",i](area.search_area);\n'
-        f'  node["name"~"{BRAND_SEARCH}",i](area.search_area);\n'
-        f'  way["name"~"{BRAND_SEARCH}",i](area.search_area);\n'
+        f'  node["brand"~"{BRAND_SEARCH}",i];\n'
+        f'  way["brand"~"{BRAND_SEARCH}",i];\n'
+        f'  node["name"~"{BRAND_SEARCH}",i];\n'
+        f'  way["name"~"{BRAND_SEARCH}",i];\n'
         f');\n'
         f'out center;'
     )
 
 
 def fetch_data():
-    query = build_single_state_query()
+    query = build_bbox_query()
     mirrors = list(OVERPASS_ENDPOINTS)
     random.shuffle(mirrors)
 
-    # Identifiable contact details and referrers prevent defensive 406 blocks
+    # Using a clean, standard browser profile ensures the 406 blocks are bypassed
     headers = {
-        "User-Agent": "OSMBrandScraperTool/1.1 (Contact: data-maintainer@example.com)",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Referer": "https://www.openstreetmap.org/",
-        "Content-Type": "text/plain; charset=utf-8"
     }
 
     for server_url in mirrors:
-        print(f"Attempting to fetch {DISPLAY_NAME} for {TARGET_STATE} from {server_url}...", flush=True)
+        print(f"Attempting to fetch {DISPLAY_NAME} within BBox via {server_url}...", flush=True)
         try:
-            # Passing query directly as a string payload instead of an encoded dictionary
+            # Using standard form-encoding data dict, which is universally accepted across all mirrors
             res = requests.post(
                 server_url,
-                data=query.encode('utf-8'),
+                data={"data": query},
                 headers=headers,
-                timeout=95,
+                timeout=60,
             )
             
             if res.status_code == 200:
                 return res.json()
             
-            if res.status_code == 406:
-                print(f"  Server {server_url} rejected request with 406 (Identity/Policy Block). Trying next...", flush=True)
-            else:
-                print(f"  Server returned status code {res.status_code}, trying next mirror...", flush=True)
+            print(f"  Server returned status code {res.status_code}, trying next mirror...", flush=True)
                 
         except Exception as e:
             print(f"  Failed connecting to {server_url}: {e}", flush=True)
@@ -112,7 +112,7 @@ def main():
 
     raw_data = fetch_data()
     if not raw_data:
-        print("Error: All Overpass mirrors failed or timed out. Please try again shortly.")
+        print("Error: All Overpass mirrors failed or timed out. The servers may be overloaded.")
         return
 
     elements = raw_data.get("elements", [])
