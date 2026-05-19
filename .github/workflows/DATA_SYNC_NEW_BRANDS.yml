@@ -1,0 +1,52 @@
+name: Sync Contributed Map Data
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  append_discovered_brands:
+    if: contains(github.event.issue.title, 'DATA_SYNC_NEW_BRANDS')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Append Objects To Base File
+        run: |
+          import json
+          import os
+
+          issue_body = """${{ github.event.issue.body }}"""
+          new_items = json.loads(issue_body.strip())
+
+          file_path = "us_brands.json"
+          existing_data = []
+          if os.path.exists(file_path):
+              with open(file_path, "r", encoding="utf-8") as f:
+                  existing_data = json.load(f)
+
+          # Avoid coordinates collision duplicates
+          existing_coords = {f"{round(x['lat'], 4)}_{round(x['lon'], 4)}" for x in existing_data}
+          
+          added_count = 0
+          for item in new_items:
+              coord_key = f"{round(item['lat'], 4)}_{round(item['lon'], 4)}"
+              if coord_key not in existing_coords:
+                  existing_data.append(item)
+                  existing_coords.add(coord_key)
+                  added_count += 1
+
+          print(f"Adding {added_count} brand modifications safely to file.")
+          
+          with open(file_path, "w", encoding="utf-8") as f:
+              json.dump(existing_data, f, indent=2)
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "actions@github.com"
+          git add us_brands.json
+          git commit -m "Auto-append live POI discoveries from UI contributions"
+          git push
