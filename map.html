@@ -96,10 +96,10 @@
                     🌙 Mode
                 </button>
                 <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">
-                    💾 Save Repo
+                    💾 Save Repo Favorites
                 </button>
                 <button id="sync-discoveries-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">
-                    📢 Sync Live Finds
+                    📢 Copy Full us_brands.json
                 </button>
                 <button id="reset-fav-cache-btn" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">
                     🔄 Reset Fav Cache
@@ -283,8 +283,6 @@
         let cachedCategoriesFetched = new Set(); 
         let mapStyleMode = 'light';
         let activeTargetsSliceMemory = [];
-        
-        // CORRIDOR VISUALIZER: Container layer allocation
         let routeBufferPolyline = null;
 
         // ==========================================
@@ -339,13 +337,10 @@
             }
         }).addTo(map);
 
-        // CORRIDOR VISUALIZER: Dynamic pixel scaler math executor node
         function updateBufferVisualizerWeight() {
             if (!routeBufferPolyline || routeLineCoordinates.length === 0) return;
             const currentMapCenterLatitude = map.getCenter().lat;
             const currentZoomLevel = map.getZoom();
-            
-            // Standard meters-to-pixels formula mapping layout variables
             const metersPerPixel = (40075016.686 * Math.cos(currentMapCenterLatitude * Math.PI / 180)) / Math.pow(2, currentZoomLevel + 8);
             const calculatedPixelWidthWeight = (activeBufferMeters / metersPerPixel) * 2;
             
@@ -362,7 +357,6 @@
             poiClusterGroup.clearLayers();
             allPoiMarkersMemoryMap = [];
             
-            // CORRIDOR VISUALIZER: Invalidation and regeneration engine setup
             if (routeBufferPolyline) {
                 map.removeLayer(routeBufferPolyline);
             }
@@ -400,9 +394,19 @@
             }
 
             function parseLiveBackupTargetCategory(tags) {
+                // EXPLICIT SCRUBBING GUARD: Erases administrative and un-named regional polygon centroids
+                if (!tags.name) return 'excluded';
+                if (tags.admin_level || tags.boundary === 'administrative' || tags.boundary === 'protected_area') return 'excluded';
+
+                var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
+                
+                // PRIORITY HIERARCHY MATCHING: Evaluates exact brand targets before exploring generic criteria matches
+                if (sig.includes('starbucks')) return 'coffee';
+                if (['murphy express', 'sheetz', 'bucee', 'buc-ee', 'costco', 'wawa', 'circle k'].some(b => sig.includes(b))) return 'gas';
+                if (['mcdonald', 'wendy', 'chick-fil-a', 'chick fil a', 'chipotle', 'jersey mike', 'raising cane'].some(b => sig.includes(b))) return 'food';
+
                 if (tags.leisure === 'playground') {
-                    var n = (tags.name || '').toLowerCase();
-                    if (['church','chapel','ministry','baptist','methodist','lutheran','presbyterian','catholic','parish','fellowship','christian'].some(k => n.includes(k))) return 'excluded';
+                    if (['church','chapel','ministry','baptist','methodist','lutheran','presbyterian','catholic','parish','fellowship','christian'].some(k => sig.includes(k))) return 'excluded';
                     return 'playground';
                 }
                 if (tags.highway === 'rest_area') return 'highway_rest';
@@ -410,21 +414,17 @@
                 if (tags.tourism === 'viewpoint') return 'tourism_viewpoint';
                 if (tags.leisure === 'dog_park') return 'tourism_dogpark';
                 
-                // LAZY LOADER PIPELINE: Strategic categories evaluation engine updates
                 if (tags.boundary === 'national_park') return 'national_park';
                 if (tags.leisure === 'nature_reserve') return 'nature_reserve';
                 if (tags.tourism === 'attraction') return 'attraction';
                 if (tags.amenity === 'hospital') return 'hospital';
                 if (tags.amenity === 'veterinary') return 'veterinary';
 
-                var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
-                if (sig.includes('starbucks')) return 'coffee';
-                if (['murphy express', 'sheetz', 'bucee', 'buc-ee', 'costco', 'wawa', 'circle k'].some(b => sig.includes(b))) return 'gas';
-                if (['mcdonald', 'wendy', 'chick-fil-a', 'chick fil a', 'chipotle', 'jersey mike', 'raising cane'].some(b => sig.includes(b))) return 'food';
                 return 'excluded';
             }
 
             function getCleanBrandSlug(tags) {
+                if (!tags.name) return 'excluded';
                 var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
                 if (sig.includes('starbucks')) return 'starbucks';
                 if (sig.includes('sheetz')) return 'sheetz';
@@ -484,7 +484,6 @@
                         let concreteCat = parseLiveBackupTargetCategory(el.tags || {});
                         if (concreteCat === 'excluded') return;
 
-                        // LAZY LOADER PIPELINE: Sub-filters routing engine matrix additions
                         if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
                         if (currentMasterCat === 'tourism' && concreteCat !== 'tourism_viewpoint' && concreteCat !== 'tourism_dogpark') return;
                         if (currentMasterCat === 'playground' && concreteCat !== 'playground') return;
@@ -510,7 +509,7 @@
                             const uniqueKey = "live_" + lat + "_" + lon;
                             if (!finalMatchesMap.has(uniqueKey)) {
                                 finalMatchesMap.set(uniqueKey, {
-                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || el.tags.operator || "Public Facility",
+                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || el.tags.operator,
                                     brand: brandSlug, category: currentMasterCat, 
                                     hours: el.tags.opening_hours || "Hours not listed",
                                     desc: el.tags.description || "", minD: minD, isLocal: false,
@@ -593,13 +592,16 @@
                 let popupDesc = el.desc || "Verified favorite location pinned to map globally.";
                 
                 let visualCatKey = el.category;
-                if (['highway_rest', 'highway_toilets', 'tourism_viewpoint', 'tourism_dogpark', 'chipotle', 'coffee', 'parks', 'medical'].includes(el.brand)) visualCatKey = el.brand;
+                if (el.brand === 'starbucks') visualCatKey = 'coffee';
+                else if (['highway_rest', 'highway_toilets', 'tourism_viewpoint', 'tourism_dogpark', 'chipotle', 'parks', 'medical'].includes(el.brand)) visualCatKey = el.brand;
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
 
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
                 const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + ' ' + lat + ' ' + lon)}`;
+                
+                // HYPER-LOCALIZED ENGINE: Interrogates Google review indexes forced straight to coordinates bounds
+                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews " + parseFloat(lat).toFixed(4) + ", " + parseFloat(lon).toFixed(4))}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
                 let isCurrentlyStarredLocally = localStarred.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
@@ -650,7 +652,8 @@
             let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
             
             let visualCatKey = el.category;
-            if (['highway_rest', 'highway_toilets', 'tourism_viewpoint', 'tourism_dogpark', 'chipotle', 'coffee', 'parks', 'medical'].includes(el.brand)) visualCatKey = el.brand;
+            if (el.brand === 'starbucks') visualCatKey = 'coffee';
+            else if (['highway_rest', 'highway_toilets', 'tourism_viewpoint', 'tourism_dogpark', 'chipotle', 'parks', 'medical'].includes(el.brand)) visualCatKey = el.brand;
 
             const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
             const isLarge = map.getZoom() > 13;
@@ -661,7 +664,9 @@
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
             const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + ' ' + lat + ' ' + lon)}`;
+            
+            // HYPER-LOCALIZED ENGINE: Interrogates Google review indexes forced straight to coordinates bounds
+            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews " + parseFloat(lat).toFixed(4) + ", " + parseFloat(lon).toFixed(4))}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
@@ -826,7 +831,6 @@
 
             updateInlineStatus("Sweeping live channels for updates...", true);
 
-            // LAZY LOADER PIPELINE: Overpass Query syntax array parameters updates
             let queryTokens = [];
             if (masterCat === 'playground') {
                 queryTokens.push('node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];');
@@ -878,28 +882,22 @@
             }
         }
 
+        // UNIFIED COMPREHENSIVE OVERWRITE SYNC ENGINE: Merges base array + live array directly to clipboard
         function pushNewlyDiscoveredLiveBrandsToRepoDatabase() {
-            if (!liveOverpassMemory || liveOverpassMemory.length === 0) {
-                alert("No live Overpass map objects have been fetched yet! Browse a route and filter categories first.");
-                return;
-            }
+            let unifiedDatabaseList = localJsonMemory ? [...localJsonMemory] : [];
+            let trackedCoordinatesSet = new Set(unifiedDatabaseList.map(item => `${roundCoords(item.lat)}_${roundCoords(item.lon)}`));
             
-            let databaseComparisonSet = new Set();
-            if (localJsonMemory) {
-                localJsonMemory.forEach(item => {
-                    databaseComparisonSet.add(`${roundCoords(item.lat)}_${roundCoords(item.lon)}`);
-                });
-            }
-
-            let objectsToContribute = [];
+            let addedCount = 0;
             liveOverpassMemory.forEach(el => {
                 const lat = el.lat || (el.center && el.center.lat);
                 const lon = el.lon || (el.center && el.center.lon);
                 if (!lat || !lon) return;
 
                 const checkKey = `${roundCoords(lat)}_${roundCoords(lon)}`;
-                if (!databaseComparisonSet.has(checkKey)) {
+                if (!trackedCoordinatesSet.has(checkKey)) {
                     let tags = el.tags || {};
+                    if (!tags.name) return; // Discards missing names immediately
+
                     let normalizedCat = el.concreteCat || 'food';
                     let labelName = tags.name || tags.brand || "Public Facility";
                     
@@ -934,31 +932,20 @@
                         simplifiedPoi.g88 = (tags["fuel:octane_88"] === 'yes' || tags["fuel:e15"] === 'yes') ? 1 : 0;
                     }
 
-                    objectsToContribute.push(simplifiedPoi);
-                    databaseComparisonSet.add(checkKey);
+                    unifiedDatabaseList.push(simplifiedPoi);
+                    trackedCoordinatesSet.add(checkKey);
+                    addedCount += 1;
                 }
             });
 
-            if (objectsToContribute.length === 0) {
-                alert("Your local database is already 100% up to date with all live objects along this path sequence!");
-                return;
-            }
-
-            if (confirm(`Discovered ${objectsToContribute.length} new locations. Copying dataset to clipboard. Click OK to open your Repository issue page!`)) {
-                const repositoryPathTarget = "kev11wolf/public";
-                const minimizedJsonPayload = JSON.stringify(objectsToContribute, null, 2);
-                
-                navigator.clipboard.writeText(minimizedJsonPayload).then(() => {
-                    const prefilledGitHubIssueUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_NEW_BRANDS&body=${encodeURIComponent("PASTE_CLIPBOARD_DATA_HERE")}`;
-                    window.open(prefilledGitHubIssueUrl, '_blank');
-                    triggerToast("Dataset loaded into clipboard! Paste (Ctrl+V) directly into the issue body.");
-                }).catch(() => {
-                    alert("Clipboard access blocked. Slicing data into minor packages to force query parameters fallback...");
-                    const fallbackSlice = objectsToContribute.slice(0, 3);
-                    const fallbackUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_NEW_BRANDS&body=${encodeURIComponent(JSON.stringify(fallbackSlice))}`;
-                    window.open(fallbackUrl, '_blank');
-                });
-            }
+            const comprehensiveJsonString = JSON.stringify(unifiedDatabaseList, null, 2);
+            
+            navigator.clipboard.writeText(comprehensiveJsonString).then(() => {
+                triggerToast(`Copied! Total items in clipboard dataset: ${unifiedDatabaseList.length}`);
+                alert(`Export Complete!\n\nSuccessfully compiled ${unifiedDatabaseList.length} total database records (${addedCount} new corridor discoveries blended seamlessly).\n\nThe full generated code structure has been copied to your system clipboard. Open 'us_brands.json' in your project editor, select all, paste this output, and commit directly!`);
+            }).catch(() => {
+                alert("System clipboard write access rejected by permission controls.");
+            });
         }
 
         function launchAutomatedGitHubSyncPipeline() {
@@ -986,7 +973,6 @@
         }
 
         async function loadMasterRepoFavoritesOnBoot(forceRefresh = false) {
-            usesEvFastChargingNetwork = false;
             try {
                 const querySuffix = forceRefresh ? `?_=${Date.now()}` : '';
                 
@@ -1123,7 +1109,6 @@
         };
 
         map.on('zoomend moveend', () => {
-            // CORRIDOR VISUALIZER: Sync rendering thickness during camera pan vectors
             updateBufferVisualizerWeight();
 
             const isLarge = map.getZoom() > 13;
@@ -1185,7 +1170,6 @@
 
         document.getElementById('buffer-select').addEventListener('change', (e) => { 
             activeBufferMeters = parseInt(e.target.value); 
-            // CORRIDOR VISUALIZER: Trigger width adaptation instantly
             updateBufferVisualizerWeight();
             if (localJsonMemory) dispatchOffThreadAnalysis(); 
         });
