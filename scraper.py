@@ -14,28 +14,15 @@ BRAND_SLUG = "mcdonalds"      # The machine-readable slug saved to "b"
 CATEGORY_SLUG = "food"        # The category slug saved to "c" (e.g., food, gas)
 DISPLAY_NAME = "McDonald's"   # The clean name saved to "n"
 
-# Add any keywords here (case-insensitive) to skip unwanted matches
-# e.g., corporate offices, distribution centers, closed locations, or training centers
+# Keywords used to filter out offices or inactive storefronts
 BLACKLIST = [
-    "corporate", 
-    "office", 
-    "headquarters", 
-    "hq", 
-    "distribution", 
-    "training", 
-    "closed", 
-    "historical", 
-    "warehouse"
+    "corporate", "office", "headquarters", "hq", "distribution", 
+    "training", "closed", "historical", "warehouse"
 ]
 
 # ==========================================
 # SCRAPER CORE
 # ==========================================
-USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-]
-
 OVERPASS_ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
@@ -62,35 +49,46 @@ def fetch_data():
     mirrors = list(OVERPASS_ENDPOINTS)
     random.shuffle(mirrors)
 
+    # Identifiable contact details and referrers prevent defensive 406 blocks
+    headers = {
+        "User-Agent": "OSMBrandScraperTool/1.1 (Contact: data-maintainer@example.com)",
+        "Referer": "https://www.openstreetmap.org/",
+        "Content-Type": "text/plain; charset=utf-8"
+    }
+
     for server_url in mirrors:
         print(f"Attempting to fetch {DISPLAY_NAME} for {TARGET_STATE} from {server_url}...", flush=True)
         try:
+            # Passing query directly as a string payload instead of an encoded dictionary
             res = requests.post(
                 server_url,
-                data={"data": query},
-                headers={"User-Agent": random.choice(USER_AGENTS), "Content-Type": "text/plain"},
+                data=query.encode('utf-8'),
+                headers=headers,
                 timeout=95,
             )
+            
             if res.status_code == 200:
                 return res.json()
-            print(f"  Server returned status code {res.status_code}, trying next mirror...", flush=True)
+            
+            if res.status_code == 406:
+                print(f"  Server {server_url} rejected request with 406 (Identity/Policy Block). Trying next...", flush=True)
+            else:
+                print(f"  Server returned status code {res.status_code}, trying next mirror...", flush=True)
+                
         except Exception as e:
             print(f"  Failed connecting to {server_url}: {e}", flush=True)
     return None
 
 
 def is_blacklisted(tags):
-    """Checks the location's name and brand tags against the blacklist."""
     name = tags.get("name", "").lower()
     brand = tags.get("brand", "").lower()
     description = tags.get("description", "").lower()
     
-    # Check if any blacklisted keyword exists in the tags
     for word in BLACKLIST:
         if word in name or word in brand or word in description:
             return True
             
-    # Explicitly catch OpenStreetMap lifecycle prefixes indicating closed status
     if tags.get("was:brand") or tags.get("old_brand") or tags.get("disused") == "yes":
         return True
         
@@ -101,20 +99,17 @@ def main():
     compiled_pois = []
     seen_coords = set()
     
-    # 1. Load existing data if it exists so we safely append to us_brands.json
     if os.path.exists(OUTPUT_FILE):
         try:
             with open(OUTPUT_FILE, "r", encoding="utf-8") as fh:
                 compiled_pois = json.load(fh)
                 for poi in compiled_pois:
-                    # Creating unique fingerprint via coordinates to guarantee no duplicates inside the file
                     fingerprint = f"{round(poi['lat'], 4)}_{round(poi['lon'], 4)}"
                     seen_coords.add(fingerprint)
             print(f"Loaded {len(compiled_pois)} existing POIs from {OUTPUT_FILE}")
         except Exception as e:
             print(f"Could not read existing file ({e}). Starting fresh.")
 
-    # 2. Run the single state query
     raw_data = fetch_data()
     if not raw_data:
         print("Error: All Overpass mirrors failed or timed out. Please try again shortly.")
@@ -124,21 +119,17 @@ def main():
     new_entries_count = 0
     blacklisted_count = 0
 
-    # 3. Parse data
     for el in elements:
         lat = el.get("lat") or (el.get("center") or {}).get("lat")
         lon = el.get("lon") or (el.get("center") or {}).get("lon")
         if not lat or not lon:
             continue
 
-        # Coordinate-based deduplication
         fingerprint = f"{round(lat, 4)}_{round(lon, 4)}"
         if fingerprint in seen_coords:
             continue
 
         tags = el.get("tags", {})
-        
-        # Apply the blacklist filter
         if is_blacklisted(tags):
             blacklisted_count += 1
             continue
@@ -153,7 +144,6 @@ def main():
             "d":   tags.get("description", "Verified chain location mapped off regional route bounds."),
         }
         
-        # Automatically capture fuel attributes if you configure this for a gas station run
         if CATEGORY_SLUG == "gas":
             poi["g87"] = 1 if (tags.get("fuel:octane_87") == "yes" or tags.get("fuel:unleaded") == "yes") else 1
             poi["g88"] = 1 if (tags.get("fuel:octane_88") == "yes" or tags.get("fuel:e15") == "yes") else 0
@@ -162,7 +152,6 @@ def main():
         seen_coords.add(fingerprint)
         new_entries_count += 1
 
-    # 4. Save cleanly appended data back to us_brands.json
     with open(OUTPUT_FILE, "w", encoding="utf-8") as fh:
         json.dump(compiled_pois, fh, indent=2)
 
