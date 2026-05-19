@@ -117,6 +117,9 @@
             <button data-cat="playground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
             <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
             <button data-cat="food" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
+            <button data-cat="coffee" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">☕ Coffee</button>
+            <button data-cat="parks" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Parks & Attractions</button>
+            <button data-cat="medical" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏥 Emergency & Med</button>
             <button data-cat="highway" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏢 Highway Amenities</button>
             <button data-cat="tourism" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
         </div>
@@ -187,7 +190,6 @@
             });
         }
 
-        // Standardized dynamic icon dimensions to prevent clipping on zero-clustering maps
         function createStarredIcon(label, isLarge = false) {
             const wrapperSize = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
             const sizePx = isLarge ? 44 : 32;
@@ -234,27 +236,35 @@
         const autocompleteQueryMemoryCache = new Map(); 
         
         const categoryConfigs = {
-            playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', query: 'node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
+            playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
             gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
             food: { label: '🍟', bg: 'bg-red-600 border-red-200 text-white', name: 'Fast Food', img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
             chipotle: { label: '🌯', bg: 'bg-amber-800 border-amber-500 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a0847685?auto=format&fit=crop&w=300&q=80' },
-            highway_rest: { label: '🪑', bg: 'bg-blue-600 border-blue-200 text-white', name: 'Rest Area', query: 'node["highway"="rest_area"];', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80' },
-            highway_toilets: { label: '🚻', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Public Restroom', query: 'node["amenity"="toilets"];', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
-            tourism_viewpoint: { label: '📷', bg: 'bg-sky-500 border-sky-200 text-white', name: 'Scenic Viewpoint', query: 'node["tourism"="viewpoint"];', img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=300&q=80' },
-            tourism_dogpark: { label: '🐕', bg: 'bg-violet-600 border-violet-200 text-white', name: 'Dog Park', query: 'node["leisure"="dog_park"];', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=300&q=80' }
+            coffee: { label: '☕', bg: 'bg-amber-950 border-amber-800 text-white', name: 'Starbucks Coffee', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80' },
+            parks: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Parks & Attractions', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
+            medical: { label: '🏥', bg: 'bg-rose-600 border-rose-400 text-white', name: 'Emergency Medical', img: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=300&q=80' },
+            highway_rest: { label: '🪑', bg: 'bg-blue-600 border-blue-200 text-white', name: 'Rest Area', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80' },
+            highway_toilets: { label: '🚻', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Public Restroom', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
+            tourism_viewpoint: { label: '📷', bg: 'bg-sky-500 border-sky-200 text-white', name: 'Scenic Viewpoint', img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=300&q=80' },
+            tourism_dogpark: { label: '🐕', bg: 'bg-violet-600 border-violet-200 text-white', name: 'Dog Park', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=300&q=80' }
         };
 
         const cleanBrandNames = {
             "sheetz": "Sheetz", "murphyexpress": "Murphy Express", "bucees": "Buc-ee's",
             "costcogas": "Costco Gasoline", "wawa": "Wawa", "circlek": "Circle K",
             "mcdonalds": "McDonald's", "wendys": "Wendy's", "chickfila": "Chick-fil-A",
-            "chipotle": "Chipotle", "jerseymikes": "Jersey Mike's", "raisingcanes": "Raising Cane's"
+            "chipotle": "Chipotle", "jerseymikes": "Jersey Mike's", "raisingcanes": "Raising Cane's",
+            "starbucks": "Starbucks", "hospital": "Major Hospital", "veterinary": "Veterinary Clinic",
+            "national_park": "National Park", "nature_reserve": "Nature Reserve", "attraction": "Tourist Attraction"
         };
 
         const subMenuDefinitions = {
             playground: [{ id: 'all', label: 'All Public Parks' }],
             gas: [{ id: 'all', label: 'All Selected Chains' }, { id: 'unl87', label: 'UNL 87 Listed' }, { id: 'unl88', label: 'UNL 88 / E15' }],
             food: [{ id: 'all', label: 'All Brands' }, { id: 'chipotle', label: 'Chipotle' }, { id: 'raisingcanes', label: "Raising Cane's" }, { id: 'chickfila', label: 'Chick-fil-A' }, { id: 'mcdonalds', label: "McDonald's" }, { id: 'jerseymikes', label: "Jersey Mike's" }],
+            coffee: [{ id: 'all', label: 'Starbucks Only' }],
+            parks: [{ id: 'all', label: 'All Parks & Attractions' }, { id: 'national_park', label: '🏞️ National Parks' }, { id: 'nature_reserve', label: '🌲 Nature Reserves' }, { id: 'attraction', label: '🎡 Attractions' }],
+            medical: [{ id: 'all', label: 'All Infrastructure' }, { id: 'hospital', label: '🏥 Major Hospitals' }, { id: 'veterinary', label: '🐕 Vet Clinics' }],
             highway: [{ id: 'highway_rest', label: '🪑 Highway Rest Areas' }, { id: 'highway_toilets', label: '🚻 Standalone Restrooms' }],
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
@@ -273,10 +283,13 @@
         let cachedCategoriesFetched = new Set(); 
         let mapStyleMode = 'light';
         let activeTargetsSliceMemory = [];
+        
+        // CORRIDOR VISUALIZER: Container layer allocation
+        let routeBufferPolyline = null;
 
-        // ========================================================
-        // --- PHASE 3: MAP TILES & LAYER GROUP SETUP (UNGROUPED) ---
-        // ========================================================
+        // ==========================================
+        // --- PHASE 3: MAP TILES & LAYER ENGINE ----
+        // ==========================================
         const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
         
         const mapLayersPool = {
@@ -285,7 +298,6 @@
         };
         mapLayersPool[mapStyleMode].addTo(map);
 
-        // REMOVED GROUPING: Swapped L.markerClusterGroup for native unclustered L.layerGroup
         const poiClusterGroup = L.layerGroup().addTo(map);
 
         let routingControl = L.Routing.control({
@@ -327,6 +339,19 @@
             }
         }).addTo(map);
 
+        // CORRIDOR VISUALIZER: Dynamic pixel scaler math executor node
+        function updateBufferVisualizerWeight() {
+            if (!routeBufferPolyline || routeLineCoordinates.length === 0) return;
+            const currentMapCenterLatitude = map.getCenter().lat;
+            const currentZoomLevel = map.getZoom();
+            
+            // Standard meters-to-pixels formula mapping layout variables
+            const metersPerPixel = (40075016.686 * Math.cos(currentMapCenterLatitude * Math.PI / 180)) / Math.pow(2, currentZoomLevel + 8);
+            const calculatedPixelWidthWeight = (activeBufferMeters / metersPerPixel) * 2;
+            
+            routeBufferPolyline.setStyle({ weight: Math.max(4, calculatedPixelWidthWeight) });
+        }
+
         routingControl.on('routesfound', function(e) {
             routeLineCoordinates = e.routes[0].coordinates;
             const searchContainer = document.getElementById('search-container');
@@ -337,6 +362,20 @@
             poiClusterGroup.clearLayers();
             allPoiMarkersMemoryMap = [];
             
+            // CORRIDOR VISUALIZER: Invalidation and regeneration engine setup
+            if (routeBufferPolyline) {
+                map.removeLayer(routeBufferPolyline);
+            }
+            routeBufferPolyline = L.polyline(routeLineCoordinates, {
+                color: '#3b82f6',
+                opacity: 0.15,
+                lineCap: 'round',
+                lineJoin: 'round',
+                interactive: false
+            }).addTo(map);
+            routeBufferPolyline.bringToBack();
+            updateBufferVisualizerWeight();
+
             renderGlobalPermanentStars(); 
             
             if (currentMasterCat) {
@@ -370,8 +409,16 @@
                 if (tags.amenity === 'toilets') return 'highway_toilets';
                 if (tags.tourism === 'viewpoint') return 'tourism_viewpoint';
                 if (tags.leisure === 'dog_park') return 'tourism_dogpark';
+                
+                // LAZY LOADER PIPELINE: Strategic categories evaluation engine updates
+                if (tags.boundary === 'national_park') return 'national_park';
+                if (tags.leisure === 'nature_reserve') return 'nature_reserve';
+                if (tags.tourism === 'attraction') return 'attraction';
+                if (tags.amenity === 'hospital') return 'hospital';
+                if (tags.amenity === 'veterinary') return 'veterinary';
 
                 var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
+                if (sig.includes('starbucks')) return 'coffee';
                 if (['murphy express', 'sheetz', 'bucee', 'buc-ee', 'costco', 'wawa', 'circle k'].some(b => sig.includes(b))) return 'gas';
                 if (['mcdonald', 'wendy', 'chick-fil-a', 'chick fil a', 'chipotle', 'jersey mike', 'raising cane'].some(b => sig.includes(b))) return 'food';
                 return 'excluded';
@@ -379,6 +426,7 @@
 
             function getCleanBrandSlug(tags) {
                 var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
+                if (sig.includes('starbucks')) return 'starbucks';
                 if (sig.includes('sheetz')) return 'sheetz';
                 if (sig.includes('murphy')) return 'murphyexpress';
                 if (sig.includes('bucee') || sig.includes('buc-ee')) return 'bucees';
@@ -405,7 +453,7 @@
                             if (currentMasterCat === 'gas') {
                                 if (currentSubFilter === 'unl87' && el.g87 !== 1) return;
                                 if (currentSubFilter === 'unl88' && el.g88 !== 1) return;
-                            } else if (currentMasterCat === 'food') {
+                            } else {
                                 if (el.b !== currentSubFilter) return;
                             }
                         }
@@ -436,16 +484,21 @@
                         let concreteCat = parseLiveBackupTargetCategory(el.tags || {});
                         if (concreteCat === 'excluded') return;
 
+                        // LAZY LOADER PIPELINE: Sub-filters routing engine matrix additions
                         if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
                         if (currentMasterCat === 'tourism' && concreteCat !== 'tourism_viewpoint' && concreteCat !== 'tourism_dogpark') return;
                         if (currentMasterCat === 'playground' && concreteCat !== 'playground') return;
+                        if (currentMasterCat === 'coffee' && concreteCat !== 'coffee') return;
+                        if (currentMasterCat === 'parks' && !['national_park', 'nature_reserve', 'attraction'].includes(concreteCat)) return;
+                        if (currentMasterCat === 'medical' && !['hospital', 'veterinary'].includes(concreteCat)) return;
                         if ((currentMasterCat === 'gas' || currentMasterCat === 'food') && concreteCat !== currentMasterCat) return;
 
                         var brandSlug = getCleanBrandSlug(el.tags || {});
-                        if (currentMasterCat === 'gas' || currentMasterCat === 'food') {
-                            if (brandSlug === 'excluded') return;
-                            if (currentSubFilter !== 'all' && brandSlug !== currentSubFilter) return;
+                        if (brandSlug === 'excluded') {
+                            brandSlug = concreteCat;
                         }
+                        
+                        if (currentSubFilter !== 'all' && brandSlug !== currentSubFilter) return;
 
                         let minD = Infinity;
                         for (let j = 0; j < targetsSlice.length; j++) {
@@ -457,8 +510,8 @@
                             const uniqueKey = "live_" + lat + "_" + lon;
                             if (!finalMatchesMap.has(uniqueKey)) {
                                 finalMatchesMap.set(uniqueKey, {
-                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || "Public Facility",
-                                    brand: brandSlug !== 'excluded' ? brandSlug : concreteCat, category: currentMasterCat, 
+                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || el.tags.operator || "Public Facility",
+                                    brand: brandSlug, category: currentMasterCat, 
                                     hours: el.tags.opening_hours || "Hours not listed",
                                     desc: el.tags.description || "", minD: minD, isLocal: false,
                                     rawTags: el.tags
@@ -500,7 +553,7 @@
         };
 
         window.triggerCloudDeletionTicketPipeline = function(lat, lon) {
-            if (confirm("This favorite is stored permanently in the repository. Would you like to launch a secure background request to delete it for everyone?")) {
+            if (confirm("This favorite is stored permanently in the repository. Open request page to drop it?")) {
                 let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
                 localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
                 localStorage.setItem('starred_pois', JSON.stringify(localStarred));
@@ -540,15 +593,13 @@
                 let popupDesc = el.desc || "Verified favorite location pinned to map globally.";
                 
                 let visualCatKey = el.category;
-                if (el.brand === 'highway_rest' || el.brand === 'highway_toilets') visualCatKey = el.brand;
-                if (el.brand === 'tourism_viewpoint' || el.brand === 'tourism_dogpark') visualCatKey = el.brand;
-                if (el.brand === 'chipotle') visualCatKey = 'chipotle';
+                if (['highway_rest', 'highway_toilets', 'tourism_viewpoint', 'tourism_dogpark', 'chipotle', 'coffee', 'parks', 'medical'].includes(el.brand)) visualCatKey = el.brand;
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
 
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
                 const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
+                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + ' ' + lat + ' ' + lon)}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
                 let isCurrentlyStarredLocally = localStarred.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
@@ -599,11 +650,9 @@
             let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
             
             let visualCatKey = el.category;
-            if (el.brand === 'highway_rest' || el.brand === 'highway_toilets') visualCatKey = el.brand;
-            if (el.brand === 'tourism_viewpoint' || el.brand === 'tourism_dogpark') visualCatKey = el.brand;
-            if (el.brand === 'chipotle') visualCatKey = 'chipotle';
+            if (['highway_rest', 'highway_toilets', 'tourism_viewpoint', 'tourism_dogpark', 'chipotle', 'coffee', 'parks', 'medical'].includes(el.brand)) visualCatKey = el.brand;
 
-                const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
+            const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
             const isLarge = map.getZoom() > 13;
 
             if (visualCatKey === 'gas' && el.isLocal) {
@@ -612,7 +661,7 @@
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
             const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
+            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + ' ' + lat + ' ' + lon)}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
@@ -701,7 +750,7 @@
             let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
             if (metadataRegistry[cacheKey]) {
                 const age = Date.now() - metadataRegistry[cacheKey].bornAt;
-                const expirationWindow = 24 * 60 * 60 * 1000; // 24-Hour TTL Expiry Check
+                const expirationWindow = 24 * 60 * 60 * 1000; 
                 
                 if (age > expirationWindow) {
                     localStorage.removeItem(cacheKey);
@@ -777,6 +826,7 @@
 
             updateInlineStatus("Sweeping live channels for updates...", true);
 
+            // LAZY LOADER PIPELINE: Overpass Query syntax array parameters updates
             let queryTokens = [];
             if (masterCat === 'playground') {
                 queryTokens.push('node["leisure"="playground"]["access"!~"private|no"];way["leisure"="playground"]["access"!~"private|no"];');
@@ -784,6 +834,12 @@
                 queryTokens.push('node["highway"="rest_area"];node["amenity"="toilets"];');
             } else if (masterCat === 'tourism') {
                 queryTokens.push('node["tourism"="viewpoint"];node["leisure"="dog_park"];');
+            } else if (masterCat === 'coffee') {
+                queryTokens.push('node["brand"~"Starbucks",i];node["name"~"Starbucks",i];way["brand"~"Starbucks",i];way["name"~"Starbucks",i];');
+            } else if (masterCat === 'parks') {
+                queryTokens.push('node["boundary"="national_park"];way["boundary"="national_park"];node["leisure"="nature_reserve"];way["leisure"="nature_reserve"];node["tourism"="attraction"];way["tourism"="attraction"];');
+            } else if (masterCat === 'medical') {
+                queryTokens.push('node["amenity"="hospital"];way["amenity"="hospital"];node["amenity"="veterinary"];way["amenity"="veterinary"];');
             } else if (masterCat === 'gas') {
                 queryTokens.push('node["brand"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];node["name"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i];');
             } else if (masterCat === 'food') {
@@ -803,6 +859,12 @@
                         else if (el.tags.amenity === 'toilets') el.concreteCat = 'highway_toilets';
                         else if (el.tags.tourism === 'viewpoint') el.concreteCat = 'tourism_viewpoint';
                         else if (el.tags.leisure === 'dog_park') el.concreteCat = 'tourism_dogpark';
+                        else if (el.tags.boundary === 'national_park') el.concreteCat = 'national_park';
+                        else if (el.tags.leisure === 'nature_reserve') el.concreteCat = 'nature_reserve';
+                        else if (el.tags.tourism === 'attraction') el.concreteCat = 'attraction';
+                        else if (el.tags.amenity === 'hospital') el.concreteCat = 'hospital';
+                        else if (el.tags.amenity === 'veterinary') el.concreteCat = 'veterinary';
+                        
                         liveOverpassMemory.push(el);
                         newlyDiscoveredItems.push(el);
                     });
@@ -816,9 +878,6 @@
             }
         }
 
-        // ==============================================================
-        // --- FIXED COUPLING: CLIPBOARD FALLBACK AUTOMATED REPO SYNC ---
-        // ==============================================================
         function pushNewlyDiscoveredLiveBrandsToRepoDatabase() {
             if (!liveOverpassMemory || liveOverpassMemory.length === 0) {
                 alert("No live Overpass map objects have been fetched yet! Browse a route and filter categories first.");
@@ -844,30 +903,28 @@
                     let normalizedCat = el.concreteCat || 'food';
                     let labelName = tags.name || tags.brand || "Public Facility";
                     
-                    let brandSlug = 'playground';
-                    if (normalizedCat !== 'playground') {
-                        let sig = (labelName + ' ' + (tags.brand || '')).toLowerCase();
-                        if (sig.includes('sheetz')) brandSlug = 'sheetz';
-                        else if (sig.includes('murphy')) brandSlug = 'murphyexpress';
-                        else if (sig.includes('bucee')) brandSlug = 'bucees';
-                        else if (sig.includes('costco')) brandSlug = 'costcogas';
-                        else if (sig.includes('wawa')) brandSlug = 'wawa';
-                        else if (sig.includes('circle k')) brandSlug = 'circlek';
-                        else if (sig.includes('mcdonald')) brandSlug = 'mcdonalds';
-                        else if (sig.includes('wendy')) brandSlug = 'wendys';
-                        else if (sig.includes('chick-fil-a') || sig.includes('chick fil a')) brandSlug = 'chickfila';
-                        else if (sig.includes('chipotle')) brandSlug = 'chipotle';
-                        else if (sig.includes('jersey mike')) brandSlug = 'jerseymikes';
-                        else if (sig.includes('raising cane')) brandSlug = 'raisingcanes';
-                        else brandSlug = normalizedCat;
-                    }
+                    let brandSlug = normalizedCat;
+                    let sig = (labelName + ' ' + (tags.brand || '')).toLowerCase();
+                    if (sig.includes('starbucks')) brandSlug = 'starbucks';
+                    else if (sig.includes('sheetz')) brandSlug = 'sheetz';
+                    else if (sig.includes('murphy')) brandSlug = 'murphyexpress';
+                    else if (sig.includes('bucee')) brandSlug = 'bucees';
+                    else if (sig.includes('costco')) brandSlug = 'costcogas';
+                    else if (sig.includes('wawa')) brandSlug = 'wawa';
+                    else if (sig.includes('circle k')) brandSlug = 'circlek';
+                    else if (sig.includes('mcdonald')) brandSlug = 'mcdonalds';
+                    else if (sig.includes('wendy')) brandSlug = 'wendys';
+                    else if (sig.includes('chick-fil-a') || sig.includes('chick fil a')) brandSlug = 'chickfila';
+                    else if (sig.includes('chipotle')) brandSlug = 'chipotle';
+                    else if (sig.includes('jersey mike')) brandSlug = 'jerseymikes';
+                    else if (sig.includes('raising cane')) brandSlug = 'raisingcanes';
 
                     let simplifiedPoi = {
                         lat: roundCoords(lat),
                         lon: roundCoords(lon),
                         n: labelName,
                         b: brandSlug,
-                        c: (normalizedCat.startsWith('highway') ? 'highway' : normalizedCat.startsWith('tourism') ? 'tourism' : normalizedCat),
+                        c: (normalizedCat.startsWith('highway') ? 'highway' : normalizedCat.startsWith('tourism') ? 'tourism' : ['national_park', 'nature_reserve', 'attraction'].includes(normalizedCat) ? 'parks' : ['hospital', 'veterinary'].includes(normalizedCat) ? 'medical' : normalizedCat === 'coffee' ? 'coffee' : normalizedCat),
                         h: tags.opening_hours || "",
                         d: tags.description || ""
                     };
@@ -887,7 +944,6 @@
                 return;
             }
 
-            // Fixed URL Overflow: Writes large array objects to clipboard automatically
             if (confirm(`Discovered ${objectsToContribute.length} new locations. Copying dataset to clipboard. Click OK to open your Repository issue page!`)) {
                 const repositoryPathTarget = "kev11wolf/public";
                 const minimizedJsonPayload = JSON.stringify(objectsToContribute, null, 2);
@@ -905,7 +961,6 @@
             }
         }
 
-        // Fixed URL Overflow: Swapped direct URL query parameters injection out for clean Clipboard interactions
         function launchAutomatedGitHubSyncPipeline() {
             let starredDataString = localStorage.getItem('starred_pois') || '[]';
             let starredArray = JSON.parse(starredDataString);
@@ -931,6 +986,7 @@
         }
 
         async function loadMasterRepoFavoritesOnBoot(forceRefresh = false) {
+            usesEvFastChargingNetwork = false;
             try {
                 const querySuffix = forceRefresh ? `?_=${Date.now()}` : '';
                 
@@ -1066,15 +1122,20 @@
             updateInlineStatus("Stops active.");
         };
 
-        map.on('zoomend', () => {
+        map.on('zoomend moveend', () => {
+            // CORRIDOR VISUALIZER: Sync rendering thickness during camera pan vectors
+            updateBufferVisualizerWeight();
+
             const isLarge = map.getZoom() > 13;
             allPoiMarkersMemoryMap.forEach(item => {
                 let checkKey = item.category;
                 if (categoryConfigs[checkKey] === undefined) {
                     if (['raisingcanes','chickfila','mcdonalds','jerseymikes','wendys','chipotle'].includes(checkKey)) checkKey = 'food';
                     else if (['sheetz','murphyexpress','bucees','costcogas','wawa','circlek'].includes(checkKey)) checkKey = 'gas';
+                    else if (checkKey === 'starbucks') checkKey = 'coffee';
+                    else if (['national_park', 'nature_reserve', 'attraction'].includes(checkKey)) checkKey = 'parks';
+                    else if (['hospital', 'veterinary'].includes(checkKey)) checkKey = 'medical';
                 }
-                if (item.category === 'chipotle') checkKey = 'chipotle';
                 const config = categoryConfigs[checkKey] || categoryConfigs['food'] || categoryConfigs['gas'];
                 item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
             });
@@ -1084,8 +1145,10 @@
                 if (categoryConfigs[checkKey] === undefined) {
                     if (['raisingcanes','chickfila','mcdonalds','jerseymikes','wendys','chipotle'].includes(checkKey)) checkKey = 'food';
                     else if (['sheetz','murphyexpress','bucees','costcogas','wawa','circlek'].includes(checkKey)) checkKey = 'gas';
+                    else if (checkKey === 'starbucks') checkKey = 'coffee';
+                    else if (['national_park', 'nature_reserve', 'attraction'].includes(checkKey)) checkKey = 'parks';
+                    else if (['hospital', 'veterinary'].includes(checkKey)) checkKey = 'medical';
                 }
-                if (item.category === 'chipotle') checkKey = 'chipotle';
                 const config = categoryConfigs[checkKey] || categoryConfigs['food'] || categoryConfigs['gas'] || categoryConfigs['playground'];
                 item.marker.setIcon(createStarredIcon(config.label, isLarge));
             });
@@ -1120,7 +1183,13 @@
             currentSubFilter = subPill.getAttribute('data-sub'); dispatchOffThreadAnalysis();
         });
 
-        document.getElementById('buffer-select').addEventListener('change', (e) => { activeBufferMeters = parseInt(e.target.value); if (localJsonMemory) dispatchOffThreadAnalysis(); });
+        document.getElementById('buffer-select').addEventListener('change', (e) => { 
+            activeBufferMeters = parseInt(e.target.value); 
+            // CORRIDOR VISUALIZER: Trigger width adaptation instantly
+            updateBufferVisualizerWeight();
+            if (localJsonMemory) dispatchOffThreadAnalysis(); 
+        });
+        
         document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
         document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
         document.getElementById('sync-discoveries-btn').addEventListener('click', pushNewlyDiscoveredLiveBrandsToRepoDatabase);
