@@ -235,7 +235,7 @@
         ];
         const autocompleteQueryMemoryCache = new Map(); 
         
-        // CUSTOM BRAND CONFIG MATRIX: Integrates specific asset layout behaviors and custom emoji shapes directly
+        // REVISED BRAND MAPPING CONFIG: Swapped asset label tokens to align with requested emojis
         const categoryConfigs = {
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
             gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
@@ -269,7 +269,7 @@
             "national_park": "National Park", "nature_reserve": "Nature Reserve", "attraction": "Tourist Attraction"
         };
 
-        // FIXED VERBIAGE ADJUSTMENT: Changed "Starbucks Only" selector label token to "Starbucks"
+        // ADJUSTED SUBMENU LABELS: Changed "Starbucks Only" selector key string to read "Starbucks"
         const subMenuDefinitions = {
             playground: [{ id: 'all', label: 'All Public Parks' }],
             gas: [{ id: 'all', label: 'All Selected Chains' }, { id: 'unl87', label: 'UNL 87 Listed' }, { id: 'unl88', label: 'UNL 88 / E15' }],
@@ -406,7 +406,7 @@
             }
 
             function parseLiveBackupTargetCategory(tags) {
-                // FIXED STARBUCKS DISCOVERY ENGINE: Evaluates element signature schemas even if the explicit name string parameter is empty
+                // BUG FIX LAZY LOADER ENGINE: Swapped requirement guard away from strict tags.name checks so brand-only Starbucks nodes evaluate correctly
                 if (!tags.name && !tags.brand) return 'excluded';
                 
                 var nLower = (tags.name || '').toLowerCase();
@@ -618,7 +618,6 @@
                 let popupHours = el.hours || "Hours not listed";
                 let popupDesc = el.desc || "Verified favorite location pinned to map globally.";
                 
-                // SINGLE ARCHITECTURE RESOLUTION: Selects localized keys matching explicit brand labels
                 let visualCatKey = el.category;
                 if (categoryConfigs[el.brand]) { visualCatKey = el.brand; }
 
@@ -626,7 +625,9 @@
 
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
                 const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews " + parseFloat(lat).toFixed(4) + ", " + parseFloat(lon).toFixed(4))}`;
+                
+                // REVISED STRING METHOD: Configured explicit coordinate pairs mapping criteria inside local query arrays
+                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
                 let isCurrentlyStarredLocally = localStarred.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
@@ -697,7 +698,9 @@
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
             const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews " + parseFloat(lat).toFixed(4) + ", " + parseFloat(lon).toFixed(4))}`;
+            
+            // REVISED STRING METHOD: Configured explicit coordinate pairs mapping criteria inside local query arrays
+            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
@@ -871,6 +874,7 @@
             } else if (masterCat === 'tourism') {
                 queryTokens.push('node["tourism"="viewpoint"];node["leisure"="dog_park"];');
             } else if (masterCat === 'coffee') {
+                // EXPLICIT UNION RESOLUTION: Bundles multiple element configurations to expand raw loading limits
                 queryTokens.push('node["brand"~"Starbucks",i];node["name"~"Starbucks",i];way["brand"~"Starbucks",i];way["name"~"Starbucks",i];node["amenity"="cafe"]["name"~"Starbucks",i];node["amenity"="cafe"]["brand"~"Starbucks",i];');
             } else if (masterCat === 'parks') {
                 queryTokens.push('node["boundary"="national_park"];way["boundary"="national_park"];node["leisure"="nature_reserve"];way["leisure"="nature_reserve"];node["tourism"="attraction"];way["tourism"="attraction"];');
@@ -890,16 +894,20 @@
                 if (response && response.elements) {
                     let newlyDiscoveredItems = [];
                     response.elements.forEach(el => {
-                        if (el.tags.leisure === 'playground') el.concreteCat = 'playground';
-                        else if (el.tags.highway === 'rest_area') el.concreteCat = 'highway_rest';
-                        else if (el.tags.amenity === 'toilets') el.concreteCat = 'highway_toilets';
-                        else if (el.tags.tourism === 'viewpoint') el.concreteCat = 'tourism_viewpoint';
-                        else if (el.tags.leisure === 'dog_park') el.concreteCat = 'tourism_dogpark';
-                        else if (el.tags.boundary === 'national_park') el.concreteCat = 'national_park';
-                        else if (el.tags.leisure === 'nature_reserve') el.concreteCat = 'nature_reserve';
-                        else if (el.tags.tourism === 'attraction') el.concreteCat = 'attraction';
-                        else if (el.tags.amenity === 'hospital') el.concreteCat = 'hospital';
-                        else if (el.tags.amenity === 'veterinary') el.concreteCat = 'veterinary';
+                        let tags = el.tags || {};
+                        let signature = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
+
+                        if (signature.includes('starbucks')) el.concreteCat = 'starbucks';
+                        else if (tags.leisure === 'playground') el.concreteCat = 'playground';
+                        else if (tags.highway === 'rest_area') el.concreteCat = 'highway_rest';
+                        else if (tags.amenity === 'toilets') el.concreteCat = 'highway_toilets';
+                        else if (tags.tourism === 'viewpoint') el.concreteCat = 'tourism_viewpoint';
+                        else if (tags.leisure === 'dog_park') el.concreteCat = 'tourism_dogpark';
+                        else if (tags.boundary === 'national_park') el.concreteCat = 'national_park';
+                        else if (tags.leisure === 'nature_reserve') el.concreteCat = 'nature_reserve';
+                        else if (tags.tourism === 'attraction') el.concreteCat = 'attraction';
+                        else if (tags.amenity === 'hospital') el.concreteCat = 'hospital';
+                        else if (tags.amenity === 'veterinary') el.concreteCat = 'veterinary';
                         
                         liveOverpassMemory.push(el);
                         newlyDiscoveredItems.push(el);
@@ -1156,7 +1164,6 @@
             updateBufferVisualizerWeight();
             const isLarge = map.getZoom() > 13;
 
-            // COMPACT TRANSLATION ITERATOR: References precompiled visual state allocations safely
             allPoiMarkersMemoryMap.forEach(item => {
                 const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
                 item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
@@ -1252,7 +1259,20 @@
             }
         });
 
-        window.addEventListener('DOMContentLoaded', loadMasterRepoFavoritesOnBoot);
+        // BUG FIX MOBILE SWIPE ISOLATION: Intercepts toolbar container gestures to prevent map drag shifts
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMasterRepoFavoritesOnBoot();
+            
+            const interactiveControlBars = ['master-filter-bar', 'sub-filter-bar', 'search-container'];
+            interactiveControlBars.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    L.DomEvent.on(element, 'touchstart touchmove touchend mousedown dblclick contextmenu', L.DomEvent.stopPropagation);
+                    L.DomEvent.disableClickPropagation(element);
+                    L.DomEvent.disableScrollPropagation(element);
+                }
+            });
+        });
     </script>
 </body>
 </html>
