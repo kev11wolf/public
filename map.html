@@ -213,6 +213,8 @@
             });
         }
 
+        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
+
         function dispatchOffThreadAnalysis() {
             if (routeLineCoordinates.length === 0 && routingControl._routes && routingControl._routes[0]) {
                 routeLineCoordinates = routingControl._routes[0].coordinates;
@@ -302,9 +304,10 @@
         let activeTargetsSliceMemory = [];
         let routeBufferPolyline = null;
 
-        // ==========================================================
-        // --- PHASE 3: MAP VARIABLE INITIALIZATION (RESOLVED COLLISION) ---
-        // ==========================================================
+        // ==========================================
+        // --- PHASE 3: MAP TILES & LAYER ENGINE ----
+        // ==========================================
+        // AUDIT RESOLUTION: Assigned variable instance strictly to mainMap boundary namespace
         const mainMap = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
         
         const mapLayersPool = {
@@ -565,45 +568,6 @@
         // ==========================================
         // --- PHASE 5: OPERATIONAL LAYER HANDLERS --
         // ==========================================
-        window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
-            let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-            let uniqueId = `poi_${lat}_${lon}`;
-            let matchIndex = starred.findIndex(item => item.id === uniqueId);
-            
-            if (matchIndex > -1) {
-                starred.splice(matchIndex, 1);
-                triggerToast("Removed stop from local stars list.");
-            } else {
-                starred.push({
-                    id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
-                    name: String(name), category: String(category), brand: String(brand), hours: String(hours), desc: String(desc), isLocal: true
-                });
-                triggerToast("Saved stop to local device memory! ⭐");
-            }
-            
-            localStorage.setItem('starred_pois', JSON.stringify(starred));
-            renderGlobalPermanentStars(); 
-            if (routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
-        };
-
-        window.triggerCloudDeletionTicketPipeline = function(lat, lon) {
-            if (confirm("This favorite is stored permanently in the repository. Open request page to drop it?")) {
-                let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-                localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
-                localStorage.setItem('starred_pois', JSON.stringify(localStarred));
-                
-                const targetRepositoryPath = "kev11wolf/public";
-                const payloadString = JSON.stringify({ lat: parseFloat(lat), lon: parseFloat(lon) });
-                const issueUrl = `https://github.com/${targetRepositoryPath}/issues/new?title=DATA_DELETE_FAVORITE&body=${encodeURIComponent(payloadString)}`;
-                
-                window.open(issueUrl, '_blank');
-                mainMap.closePopup();
-                triggerToast("Deletions package built! Click Submit on the next window tab.");
-            }
-        };
-
-        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
-
         function renderGlobalPermanentStars() {
             globalFavoritesMarkers.forEach(m => poiClusterGroup.removeLayer(m.marker));
             globalFavoritesMarkers = [];
@@ -968,118 +932,35 @@
             }
         }
 
-        async function loadMasterRepoFavoritesOnBoot(forceRefresh = false) {
-            try {
-                const querySuffix = forceRefresh ? `?_=${Date.now()}` : '';
-                
-                if (forceRefresh) {
-                    updateInlineStatus("Forcing global baseline sync...", true);
-                    const resBrands = await fetch(`us_brands.json${querySuffix}`);
-                    if (resBrands.ok) { localJsonMemory = await resBrands.json(); }
-                }
-
-                const response = await fetch(`favorites.json${querySuffix}`);
-                if (response.ok) { repoFavoritesMemory = await response.json(); }
-            } catch (e) { console.log("No favorites file initialized yet."); }
-            
-            renderGlobalPermanentStars(); 
-            if (forceRefresh && routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
-        }
-
-        function runCachedAutocompleteSearch(inputElement, dropdownElement) {
-            const query = inputElement.value.trim();
-            if (query.length < 3) {
-                dropdownElement.innerHTML = '';
-                dropdownElement.classList.add('hidden');
-                return;
-            }
-
-            if (autocompleteQueryMemoryCache.has(query)) {
-                renderAutocompleteDropdownDOM(autocompleteQueryMemoryCache.get(query), inputElement, dropdownElement);
-                return;
-            }
-
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=${encodeURIComponent(query)}`)
-            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
-            .then(data => {
-                autocompleteQueryMemoryCache.set(query, data);
-                renderAutocompleteDropdownDOM(data, inputElement, dropdownElement);
-            }).catch(() => {});
-        }
-
-        function renderAutocompleteDropdownDOM(data, inputElement, dropdownElement) {
-            dropdownElement.innerHTML = '';
-            if (!data || data.length === 0) {
-                dropdownElement.classList.add('hidden');
-                return;
-            }
-            dropdownElement.classList.remove('hidden');
-
-            data.forEach(item => {
-                const cleanOutputString = buildCleanAddressString(item.address, item.display_name);
-                const option = document.createElement('div');
-                option.className = "px-3 py-2.5 bg-white hover:bg-zinc-100 border-b border-zinc-100 last:border-0 cursor-pointer truncate text-zinc-950 font-bold text-xs";
-                option.innerText = cleanOutputString;
-
-                option.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    inputElement.value = cleanOutputString;
-                    inputElement.dataset.lat = item.lat;
-                    inputElement.dataset.lon = item.lon;
-                    dropdownElement.innerHTML = '';
-                    dropdownElement.classList.add('hidden');
-                });
-                dropdownElement.appendChild(option);
-            });
-        }
-
-        function initAutocomplete(inputId, dropdownId) {
-            const input = document.getElementById(inputId);
-            const dropdown = document.getElementById(dropdownId);
-            let debounceTimer;
-
-            input.addEventListener('input', () => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    runCachedAutocompleteSearch(input, dropdown);
-                }, 400);
-            });
-        }
-
-        initAutocomplete('start-input', 'start-autocomplete');
-        initAutocomplete('end-input', 'end-autocomplete');
-
-        document.addEventListener('mousedown', (e) => {
-            const startDrop = document.getElementById('start-autocomplete');
-            const endDrop = document.getElementById('end-autocomplete');
-            if (!document.getElementById('search-container').contains(e.target)) {
-                if (startDrop) startDrop.classList.add('hidden');
-                if (endDrop) endDrop.classList.add('hidden');
-            }
-        });
-
-        function generateSubMenuUI(catId) {
-            const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
-            const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
-            definition.forEach((sub, index) => {
-                const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
-                subButton.className = index === 0 ? "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]" : "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
-                subButton.innerText = sub.label; subBar.appendChild(subButton);
-            });
-            subBar.classList.remove('hidden');
-        }
-
-        function hideSubMenu() {
-            const subBar = document.getElementById('sub-filter-bar');
-            if (subBar) subBar.classList.add('hidden');
+        // ==============================================================
+        // --- PHASE 7: HOISTED EVENT HOOK EXECUTIONS & ACTION PAIRINGS ---
+        // ==============================================================
+        // AUDIT RESOLUTION: Promoted selection logic modules to hoisted declarations to solve reference errors
+        function handleMasterCategorySelection(element) {
             document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
-            currentMasterCat = null; currentSubFilter = 'all';
+            element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
+            currentMasterCat = element.getAttribute('data-cat'); 
+            currentSubFilter = 'all'; 
+            generateSubMenuUI(currentMasterCat); 
+            runDataExecutionLayer(currentMasterCat);
         }
 
-        // ======================================================
-        // --- PHASE 7: ELEMENT SELECTION COUPLING LISTENERS (RESTORED) ---
-        // ======================================================
-        // COMPILATION FIX: Re-instated the missing mathWorker processing array block
+        function handleMapViewStateRefreshUpdate() {
+            updateBufferVisualizerWeight();
+            const isLarge = mainMap.getZoom() > 13;
+
+            allPoiMarkersMemoryMap.forEach(item => {
+                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
+                item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
+            });
+
+            globalFavoritesMarkers.forEach(item => {
+                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
+                item.marker.setIcon(createStarredIcon(config.label, isLarge));
+            });
+        }
+
+        // AUDIT RESOLUTION: Re-allocated the missing message parsing event pipeline back into tracking memory
         mathWorker.onmessage = function(e) {
             const { sortedMatches } = e.data;
             
@@ -1105,6 +986,12 @@
             updateInlineStatus("Stops active.");
         };
 
+        // ==============================================================
+        // --- PHASE 8: DOM LEVEL EVENT INVOCATIONS & BINDING LOOPS -----
+        // ==============================================================
+        mainMap.on('zoomend', handleMapViewStateRefreshUpdate);
+        mainMap.on('moveend', handleMapViewStateRefreshUpdate);
+
         document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
             mainMap.removeLayer(mapLayersPool[mapStyleMode]);
             mapStyleMode = mapStyleMode === 'light' ? 'dark' : 'light';
@@ -1118,24 +1005,6 @@
             await loadMasterRepoFavoritesOnBoot(true);
             triggerToast("Server repositories synchronized successfully! 🔄");
         });
-
-        mainMap.on('zoomend', handleMapViewStateRefreshUpdate);
-        mainMap.on('moveend', handleMapViewStateRefreshUpdate);
-
-        function handleMapViewStateRefreshUpdate() {
-            updateBufferVisualizerWeight();
-            const isLarge = mainMap.getZoom() > 13;
-
-            allPoiMarkersMemoryMap.forEach(item => {
-                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
-                item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
-            });
-
-            globalFavoritesMarkers.forEach(item => {
-                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
-                item.marker.setIcon(createStarredIcon(config.label, isLarge));
-            });
-        }
 
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
