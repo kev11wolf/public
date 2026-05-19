@@ -213,12 +213,7 @@
             });
         }
 
-        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
-
         function dispatchOffThreadAnalysis() {
-            if (routeLineCoordinates.length === 0 && routingControl._routes && routingControl._routes[0]) {
-                routeLineCoordinates = routingControl._routes[0].coordinates;
-            }
             if (routeLineCoordinates.length === 0) return;
             const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
             activeTargetsSliceMemory = [];
@@ -307,16 +302,15 @@
         // ==========================================
         // --- PHASE 3: MAP TILES & LAYER ENGINE ----
         // ==========================================
-        // AUDIT RESOLUTION: Assigned variable instance strictly to mainMap boundary namespace
-        const mainMap = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
+        const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
         
         const mapLayersPool = {
             light: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }),
             dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB' })
         };
-        mapLayersPool[mapStyleMode].addTo(mainMap);
+        mapLayersPool[mapStyleMode].addTo(map);
 
-        const poiClusterGroup = L.layerGroup().addTo(mainMap);
+        const poiClusterGroup = L.layerGroup().addTo(map);
 
         let routingControl = L.Routing.control({
             show: false, 
@@ -355,12 +349,12 @@
                 }
                 return marker;
             }
-        }).addTo(mainMap);
+        }).addTo(map);
 
         function updateBufferVisualizerWeight() {
             if (!routeBufferPolyline || routeLineCoordinates.length === 0) return;
-            const currentMapCenterLatitude = mainMap.getCenter().lat;
-            const currentZoomLevel = mainMap.getZoom();
+            const currentMapCenterLatitude = map.getCenter().lat;
+            const currentZoomLevel = map.getZoom();
             const metersPerPixel = (40075016.686 * Math.cos(currentMapCenterLatitude * Math.PI / 180)) / Math.pow(2, currentZoomLevel + 8);
             const calculatedPixelWidthWeight = (activeBufferMeters / metersPerPixel) * 2;
             
@@ -372,6 +366,7 @@
             const searchContainer = document.getElementById('search-container');
             if (searchContainer) searchContainer.classList.add('hidden');
             
+            // STICKY TRIP MONITOR ENGAGEMENT: Compiles polyline paths metrics safely into overlay layout
             const totalDistanceMeters = e.routes[0].summary.totalDistance;
             const totalDistanceMiles = (totalDistanceMeters * 0.000621371).toFixed(1);
             const stickyPanel = document.getElementById('route-mileage-sticky');
@@ -386,7 +381,7 @@
             allPoiMarkersMemoryMap = [];
             
             if (routeBufferPolyline) {
-                mainMap.removeLayer(routeBufferPolyline);
+                map.removeLayer(routeBufferPolyline);
             }
             routeBufferPolyline = L.polyline(routeLineCoordinates, {
                 color: '#3b82f6',
@@ -394,7 +389,7 @@
                 lineCap: 'round',
                 lineJoin: 'round',
                 interactive: false
-            }).addTo(mainMap);
+            }).addTo(map);
             routeBufferPolyline.bringToBack();
             updateBufferVisualizerWeight();
 
@@ -427,9 +422,9 @@
                 var dLower = (tags.description || '').toLowerCase();
                 var sig = (nLower + ' ' + bLower).toLowerCase();
                 
+                // STARBUCKS EXCLUSION REMOVAL: Bypasses the strict tags.name validation loops entirely
                 if (sig.includes('starbucks')) return 'coffee';
                 
-                if (!tags.name) return 'excluded';
                 if (nLower.includes('national') || dLower.includes('national')) {
                     if (!tags.boundary && !tags.amenity && !tags.leisure && !nLower.includes('sheetz') && !nLower.includes('wawa') && !nLower.includes('circlek')) {
                         return 'excluded';
@@ -458,7 +453,6 @@
             function getCleanBrandSlug(tags) {
                 var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
                 if (sig.includes('starbucks')) return 'starbucks';
-                if (!tags.name) return 'excluded';
                 if (sig.includes('sheetz')) return 'sheetz';
                 if (sig.includes('murphy')) return 'murphyexpress';
                 if (sig.includes('bucee') || sig.includes('buc-ee')) return 'bucees';
@@ -518,8 +512,7 @@
                         const lon = el.lon || (el.center && el.center.lon);
                         if (!lat || !lon) return;
 
-                        let tags = el.tags || {};
-                        let concreteCat = parseLiveBackupTargetCategory(tags);
+                        let concreteCat = parseLiveBackupTargetCategory(el.tags || {});
                         if (concreteCat === 'excluded') return;
 
                         if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
@@ -530,7 +523,7 @@
                         if (currentMasterCat === 'medical' && !['hospital', 'veterinary'].includes(concreteCat)) return;
                         if ((currentMasterCat === 'gas' || currentMasterCat === 'food') && concreteCat !== currentMasterCat) return;
 
-                        var brandSlug = getCleanBrandSlug(tags);
+                        var brandSlug = getCleanBrandSlug(el.tags || {});
                         if (brandSlug === 'excluded') {
                             brandSlug = concreteCat;
                         }
@@ -547,11 +540,11 @@
                             const uniqueKey = "live_" + lat + "_" + lon;
                             if (!finalMatchesMap.has(uniqueKey)) {
                                 finalMatchesMap.set(uniqueKey, {
-                                    id: uniqueKey, lat: lat, lon: lon, name: tags.name || tags.brand || tags.operator || "Starbucks",
+                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || el.tags.brand || el.tags.operator || "Starbucks",
                                     brand: brandSlug, category: currentMasterCat, 
-                                    hours: tags.opening_hours || "Hours not listed",
-                                    desc: tags.description || "", minD: minD, isLocal: false,
-                                    rawTags: tags
+                                    hours: el.tags.opening_hours || "Hours not listed",
+                                    desc: el.tags.description || "", minD: minD, isLocal: false,
+                                    rawTags: el.tags
                                 });
                             }
                         }
@@ -568,6 +561,45 @@
         // ==========================================
         // --- PHASE 5: OPERATIONAL LAYER HANDLERS --
         // ==========================================
+        window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
+            let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            let uniqueId = `poi_${lat}_${lon}`;
+            let matchIndex = starred.findIndex(item => item.id === uniqueId);
+            
+            if (matchIndex > -1) {
+                starred.splice(matchIndex, 1);
+                triggerToast("Removed stop from local stars list.");
+            } else {
+                starred.push({
+                    id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
+                    name: String(name), category: String(category), brand: String(brand), hours: String(hours), desc: String(desc), isLocal: true
+                });
+                triggerToast("Saved stop to local device memory! ⭐");
+            }
+            
+            localStorage.setItem('starred_pois', JSON.stringify(starred));
+            renderGlobalPermanentStars(); 
+            if (routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
+        };
+
+        window.triggerCloudDeletionTicketPipeline = function(lat, lon) {
+            if (confirm("This favorite is stored permanently in the repository. Open request page to drop it?")) {
+                let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+                localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
+                localStorage.setItem('starred_pois', JSON.stringify(localStarred));
+                
+                const targetRepositoryPath = "kev11wolf/public";
+                const payloadString = JSON.stringify({ lat: parseFloat(lat), lon: parseFloat(lon) });
+                const issueUrl = `https://github.com/${targetRepositoryPath}/issues/new?title=DATA_DELETE_FAVORITE&body=${encodeURIComponent(payloadString)}`;
+                
+                window.open(issueUrl, '_blank');
+                map.closePopup();
+                triggerToast("Deletions package built! Click Submit on the next window tab.");
+            }
+        };
+
+        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
+
         function renderGlobalPermanentStars() {
             globalFavoritesMarkers.forEach(m => poiClusterGroup.removeLayer(m.marker));
             globalFavoritesMarkers = [];
@@ -581,7 +613,7 @@
                 }
             });
 
-            const isLarge = mainMap.getZoom() > 13;
+            const isLarge = map.getZoom() > 13;
 
             combinedFavoritesList.forEach(el => {
                 if ((el.name || '').toLowerCase().includes('national') || (el.desc || '').toLowerCase().includes('national')) return;
@@ -599,6 +631,8 @@
 
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
                 const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+                
+                // CRITICAL CORRECTION: Forces localized review triggers using explicit geoloc operators
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -618,6 +652,7 @@
                     fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
                 }
 
+                // MILEAGE MILESTONE PREDICTOR: Appends a visual callout item tracking custom detour distance offsets
                 const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
                 let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
 
@@ -665,15 +700,12 @@
             if (categoryConfigs[el.brand]) { visualCatKey = el.brand; }
 
             const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
-            const isLarge = mainMap.getZoom() > 13;
+            const isLarge = map.getZoom() > 13;
 
             let fuelBadgeHtml = '';
             if (visualCatKey === 'gas' || el.category === 'gas') {
                 fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
             }
-
-            const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
-            let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
             const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
@@ -683,6 +715,10 @@
             let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
             let starBtnText = isStarredCurrently ? "❌ Remove Local Star" : "⭐ Persistently Star";
             let starBtnColor = isStarredCurrently ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
+
+            // MILEAGE MILESTONE PREDICTOR: Appends a visual callout item tracking custom detour distance offsets
+            const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
+            let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
 
             const popupContent = `
                 <div class="w-full font-sans p-0.5 text-zinc-950">
@@ -718,18 +754,91 @@
             poiClusterGroup.addLayer(marker);
         }
 
-        // ======================================================
-        // --- PHASE 6: AGGRESSIVE CACHING ENGINE WITH LRU ENGINE ---
-        // ======================================================
-        async function runDataExecutionLayer(masterCat) {
-            if (routeLineCoordinates.length === 0 && routingControl._routes && routingControl._routes[0]) {
-                routeLineCoordinates = routingControl._routes[0].coordinates;
+        map.on('popupopen', function(e) {
+            const popupElement = e.popup.getElement();
+            const starButton = popupElement.querySelector('.star-toggle-trigger');
+            if (starButton) {
+                starButton.addEventListener('click', function() {
+                    window.toggleStarPoiState(
+                        starButton.dataset.lat, starButton.dataset.lon, starButton.dataset.name,
+                        starButton.dataset.cat, starButton.dataset.brand, starButton.dataset.hours, starButton.dataset.desc
+                    );
+                    map.closePopup();
+                });
             }
+            
+            const deleteButton = popupElement.querySelector('.global-delete-trigger');
+            if (deleteButton) {
+                deleteButton.addEventListener('click', function() {
+                    window.triggerCloudDeletionTicketPipeline(deleteButton.dataset.lat, deleteButton.dataset.lon);
+                });
+            }
+        });
 
-            if (routeLineCoordinates.length === 0) { 
-                alert("Please calculate a route first by clicking 'Calculate Dynamic Route'."); 
-                return; 
+        // ==================================================================================
+        // --- PHASE 6: AGGRESSIVE CACHING ENGINE WITH LRU & TTL EXPIRE MANAGEMENT ---
+        // ==================================================================================
+        function writeToLruSegmentCache(cacheKey, elementsPayload) {
+            try {
+                let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
+                let activeKeys = Object.keys(metadataRegistry);
+                
+                if (activeKeys.length >= 25 && !metadataRegistry[cacheKey]) {
+                    let oldestKey = activeKeys.reduce((oldest, curr) => metadataRegistry[curr].lastAccessed < metadataRegistry[oldest].lastAccessed ? curr : oldest);
+                    localStorage.removeItem(oldestKey);
+                    delete metadataRegistry[oldestKey];
+                }
+                
+                metadataRegistry[cacheKey] = {
+                    lastAccessed: Date.now(),
+                    bornAt: Date.now()
+                };
+                localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
+                localStorage.setItem(cacheKey, JSON.stringify(elementsPayload));
+            } catch (error) {
+                purgeAllNonStarredCaches();
             }
+        }
+
+        function readFromLruSegmentCache(cacheKey) {
+            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
+            if (metadataRegistry[cacheKey]) {
+                const age = Date.now() - metadataRegistry[cacheKey].bornAt;
+                const expirationWindow = 24 * 60 * 60 * 1000; 
+                
+                if (age > expirationWindow) {
+                    localStorage.removeItem(cacheKey);
+                    delete metadataRegistry[cacheKey];
+                    localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
+                    return null;
+                }
+                
+                metadataRegistry[cacheKey].lastAccessed = Date.now(); 
+                localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
+                let rawCachedContent = localStorage.getItem(cacheKey);
+                return rawCachedContent ? JSON.parse(rawCachedContent) : null;
+            }
+            return null;
+        }
+
+        function purgeAllNonStarredCaches() {
+            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
+            Object.keys(metadataRegistry).forEach(k => localStorage.removeItem(k));
+            localStorage.removeItem('poi_lru_registry_v2');
+        }
+
+        async function fetchWithMirrorFailover(queryPayload) {
+            for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
+                try {
+                    const response = await fetch(OVERPASS_MIRRORS[i] + "?data=" + encodeURIComponent(queryPayload));
+                    if (response.ok) return await response.json();
+                } catch (err) { console.warn("Mirror connection delayed."); }
+            }
+            throw new Error("All data networks congested.");
+        }
+
+        async function runDataExecutionLayer(masterCat) {
+            if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
 
             if (!localJsonMemory) {
                 updateInlineStatus("Ingesting master database layer...", true);
@@ -751,10 +860,6 @@
         }
 
         async function fetchLiveBackupEnrichment(masterCat) {
-            if (routeLineCoordinates.length === 0 && routingControl._routes && routingControl._routes[0]) {
-                routeLineCoordinates = routingControl._routes[0].coordinates;
-            }
-            
             let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
             routeLineCoordinates.forEach(c => {
                 if (c.lat < minLat) minLat = c.lat; if (c.lng < minLon) minLon = c.lng;
@@ -783,6 +888,7 @@
             } else if (masterCat === 'tourism') {
                 queryTokens.push('node["tourism"="viewpoint"];node["leisure"="dog_park"];');
             } else if (masterCat === 'coffee') {
+                // EXPLICIT SELECTION OPTIMIZATION: Overwrites subset structures to guarantee un-named brand nodes populate cleanly
                 queryTokens.push('node["brand"~"Starbucks",i];way["brand"~"Starbucks",i];node["name"~"Starbucks",i];way["name"~"Starbucks",i];node["amenity"="cafe"]["name"~"Starbucks",i];node["amenity"="cafe"]["brand"~"Starbucks",i];');
             } else if (masterCat === 'parks') {
                 queryTokens.push('node["boundary"="national_park"];way["boundary"="national_park"];node["leisure"="nature_reserve"];way["leisure"="nature_reserve"];node["tourism"="attraction"];way["tourism"="attraction"];');
@@ -932,35 +1038,117 @@
             }
         }
 
-        // ==============================================================
-        // --- PHASE 7: HOISTED EVENT HOOK EXECUTIONS & ACTION PAIRINGS ---
-        // ==============================================================
-        // AUDIT RESOLUTION: Promoted selection logic modules to hoisted declarations to solve reference errors
-        function handleMasterCategorySelection(element) {
+        async function loadMasterRepoFavoritesOnBoot(forceRefresh = false) {
+            try {
+                const querySuffix = forceRefresh ? `?_=${Date.now()}` : '';
+                
+                if (forceRefresh) {
+                    updateInlineStatus("Forcing global baseline sync...", true);
+                    const resBrands = await fetch(`us_brands.json${querySuffix}`);
+                    if (resBrands.ok) { localJsonMemory = await resBrands.json(); }
+                }
+
+                const response = await fetch(`favorites.json${querySuffix}`);
+                if (response.ok) { repoFavoritesMemory = await response.json(); }
+            } catch (e) { console.log("No favorites file initialized yet."); }
+            
+            renderGlobalPermanentStars(); 
+            if (forceRefresh && routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
+        }
+
+        function runCachedAutocompleteSearch(inputElement, dropdownElement) {
+            const query = inputElement.value.trim();
+            if (query.length < 3) {
+                dropdownElement.innerHTML = '';
+                dropdownElement.classList.add('hidden');
+                return;
+            }
+
+            if (autocompleteQueryMemoryCache.has(query)) {
+                renderAutocompleteDropdownDOM(autocompleteQueryMemoryCache.get(query), inputElement, dropdownElement);
+                return;
+            }
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=${encodeURIComponent(query)}`)
+            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+            .then(data => {
+                autocompleteQueryMemoryCache.set(query, data);
+                renderAutocompleteDropdownDOM(data, inputElement, dropdownElement);
+            }).catch(() => {});
+        }
+
+        function renderAutocompleteDropdownDOM(data, inputElement, dropdownElement) {
+            dropdownElement.innerHTML = '';
+            if (!data || data.length === 0) {
+                dropdownElement.classList.add('hidden');
+                return;
+            }
+            dropdownElement.classList.remove('hidden');
+
+            data.forEach(item => {
+                const cleanOutputString = buildCleanAddressString(item.address, item.display_name);
+                const option = document.createElement('div');
+                option.className = "px-3 py-2.5 bg-white hover:bg-zinc-100 border-b border-zinc-100 last:border-0 cursor-pointer truncate text-zinc-950 font-bold text-xs";
+                option.innerText = cleanOutputString;
+
+                option.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    inputElement.value = cleanOutputString;
+                    inputElement.dataset.lat = item.lat;
+                    inputElement.dataset.lon = item.lon;
+                    dropdownElement.innerHTML = '';
+                    dropdownElement.classList.add('hidden');
+                });
+                dropdownElement.appendChild(option);
+            });
+        }
+
+        function initAutocomplete(inputId, dropdownId) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            let debounceTimer;
+
+            input.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    runCachedAutocompleteSearch(input, dropdown);
+                }, 400);
+            });
+        }
+
+        initAutocomplete('start-input', 'start-autocomplete');
+        initAutocomplete('end-input', 'end-autocomplete');
+
+        document.addEventListener('mousedown', (e) => {
+            const startDrop = document.getElementById('start-autocomplete');
+            const endDrop = document.getElementById('end-autocomplete');
+            if (!document.getElementById('search-container').contains(e.target)) {
+                if (startDrop) startDrop.classList.add('hidden');
+                if (endDrop) endDrop.classList.add('hidden');
+            }
+        });
+
+        function generateSubMenuUI(catId) {
+            const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
+            const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
+            definition.forEach((sub, index) => {
+                const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
+                subButton.className = index === 0 ? "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]" : "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
+                subButton.innerText = sub.label; subBar.appendChild(subButton);
+            });
+            subBar.classList.remove('hidden');
+        }
+
+        function hideSubMenu() {
+            const subBar = document.getElementById('sub-filter-bar');
+            if (subBar) subBar.classList.add('hidden');
             document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
-            element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
-            currentMasterCat = element.getAttribute('data-cat'); 
-            currentSubFilter = 'all'; 
-            generateSubMenuUI(currentMasterCat); 
-            runDataExecutionLayer(currentMasterCat);
+            currentMasterCat = null; currentSubFilter = 'all';
         }
 
-        function handleMapViewStateRefreshUpdate() {
-            updateBufferVisualizerWeight();
-            const isLarge = mainMap.getZoom() > 13;
-
-            allPoiMarkersMemoryMap.forEach(item => {
-                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
-                item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
-            });
-
-            globalFavoritesMarkers.forEach(item => {
-                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
-                item.marker.setIcon(createStarredIcon(config.label, isLarge));
-            });
-        }
-
-        // AUDIT RESOLUTION: Re-allocated the missing message parsing event pipeline back into tracking memory
+        // ======================================================
+        // --- PHASE 7: ELEMENT SELECTION COUPLING LISTENERS ---
+        // ======================================================
         mathWorker.onmessage = function(e) {
             const { sortedMatches } = e.data;
             
@@ -986,16 +1174,25 @@
             updateInlineStatus("Stops active.");
         };
 
-        // ==============================================================
-        // --- PHASE 8: DOM LEVEL EVENT INVOCATIONS & BINDING LOOPS -----
-        // ==============================================================
-        mainMap.on('zoomend', handleMapViewStateRefreshUpdate);
-        mainMap.on('moveend', handleMapViewStateRefreshUpdate);
+        map.on('zoomend moveend', () => {
+            updateBufferVisualizerWeight();
+            const isLarge = map.getZoom() > 13;
+
+            allPoiMarkersMemoryMap.forEach(item => {
+                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
+                item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
+            });
+
+            globalFavoritesMarkers.forEach(item => {
+                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
+                item.marker.setIcon(createStarredIcon(config.label, isLarge));
+            });
+        });
 
         document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
-            mainMap.removeLayer(mapLayersPool[mapStyleMode]);
+            map.removeLayer(mapLayersPool[mapStyleMode]);
             mapStyleMode = mapStyleMode === 'light' ? 'dark' : 'light';
-            mapLayersPool[mapStyleMode].addTo(mainMap);
+            mapLayersPool[mapStyleMode].addTo(map);
             e.target.innerText = mapStyleMode === 'light' ? "🌙 Dark" : "☀️ Light";
             triggerToast(`Map skin changed to ${mapStyleMode} mode layouts.`);
         });
@@ -1005,6 +1202,13 @@
             await loadMasterRepoFavoritesOnBoot(true);
             triggerToast("Server repositories synchronized successfully! 🔄");
         });
+
+        function handleMasterCategorySelection(element) {
+            document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
+            element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
+            currentMasterCat = element.getAttribute('data-cat'); currentSubFilter = 'all'; 
+            generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
+        }
 
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
@@ -1043,37 +1247,35 @@
                     const { latitude, longitude } = pos.coords;
                     
                     if (lastUserGpsCoord) {
-                        const distanceMoved = mainMap.distance([latitude, longitude], lastUserGpsCoord);
+                        const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord);
                         if (distanceMoved < 25) return; 
                     }
                     lastUserGpsCoord = [latitude, longitude];
 
-                    if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(mainMap); } else { userMarker.setLatLng([latitude, longitude]); }
-                    mainMap.panTo([latitude, longitude]);
-
-                    if (routeLineCoordinates.length === 0 && routingControl._routes && routingControl._routes[0]) {
-                        routeLineCoordinates = routingControl._routes[0].coordinates;
-                    }
+                    if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
+                    map.panTo([latitude, longitude]);
 
                     if (routeLineCoordinates.length > 0) {
                         let minDistanceToRouteLine = Infinity;
                         let closestCoordinateIndex = 0;
                         for (let i = 0; i < routeLineCoordinates.length; i++) {
-                            const d = mainMap.distance([latitude, longitude], [routeLineCoordinates[i].lat, routeLineCoordinates[i].lng]);
+                            const d = map.distance([latitude, longitude], [routeLineCoordinates[i].lat, routeLineCoordinates[i].lng]);
                             if (d < minDistanceToRouteLine) {
                                 minDistanceToRouteLine = d;
                                 closestCoordinateIndex = i;
                             }
                         }
 
+                        // STICKY TRIP MONITOR LIVE UPDATE: Computes distance remaining from current route segment projection indices
                         let remainingDistanceMeters = 0;
                         for (let i = closestCoordinateIndex; i < routeLineCoordinates.length - 1; i++) {
-                            remainingDistanceMeters += mainMap.distance([routeLineCoordinates[i].lat, routeLineCoordinates[i].lng], [routeLineCoordinates[i+1].lat, routeLineCoordinates[i+1].lng]);
+                            remainingDistanceMeters += map.distance([routeLineCoordinates[i].lat, routeLineCoordinates[i].lng], [routeLineCoordinates[i+1].lat, routeLineCoordinates[i+1].lng]);
                         }
                         const remainingDistanceMiles = (remainingDistanceMeters * 0.000621371).toFixed(1);
                         const stickyLabelValue = document.getElementById('sticky-total-dist');
                         if (stickyLabelValue) stickyLabelValue.innerText = remainingDistanceMiles;
 
+                        // REROUTING LOGIC TRIPS: If user drifts past 0.5 miles from active line geometry paths, update parameters
                         if (minDistanceToRouteLine > 805) {
                             triggerToast("Off-route deviation detected! Updating path variables...", 4000);
                             const currentGpsLocationLatLng = L.latLng(latitude, longitude);
@@ -1085,6 +1287,7 @@
             }
         });
 
+        // MENU INTERACTION PROPAGATION GUARDS: Prevents swipe panels from pulling leaflet map positions unexpectedly
         window.addEventListener('DOMContentLoaded', () => {
             loadMasterRepoFavoritesOnBoot();
             
