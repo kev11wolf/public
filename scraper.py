@@ -20,45 +20,16 @@ OVERPASS_ENDPOINTS = [
     "https://overpass.osm.ch/api/interpreter",
 ]
 
+# Stripped down exclusively to McDonald's to speed up parsing
 BRAND_MAPPING = {
-    "murphy express":  ("gas",  "murphyexpress", "Murphy Express"),
-    "sheetz":          ("gas",  "sheetz",        "Sheetz"),
-    "buc-ee":          ("gas",  "bucees",        "Buc-ee's"),
-    "bucee":           ("gas",  "bucees",        "Buc-ee's"),
-    "costco":          ("gas",  "costcogas",     "Costco Gasoline"),
-    "wawa":            ("gas",  "wawa",          "Wawa"),
-    "circle k":        ("gas",  "circlek",       "Circle K"),
-    "mcdonald":        ("food", "mcdonalds",     "McDonald's"),
-    "wendy":           ("food", "wendys",        "Wendy's"),
-    "chick-fil-a":     ("food", "chickfila",     "Chick-fil-A"),
-    "chick fil a":     ("food", "chickfila",     "Chick-fil-A"),
-    "chipotle":        ("food", "chipotle",      "Chipotle"),
-    "jersey mike":     ("food", "jerseymikes",   "Jersey Mike's"),
-    "raising cane":    ("food", "raisingcanes",  "Raising Cane's"),
+    "mcdonald": ("food", "mcdonalds", "McDonald's"),
 }
-
-RELIGIOUS_BLACKLIST = [
-    "church", "chapel", "ministry", "baptist", "methodist", "lutheran",
-    "presbyterian", "catholic", "parish", "fellowship", "christian",
-    "synagogue", "temple", "mosque", "tabernacle", "saints", "lds",
-]
-
-
-def clean_and_validate_playground(tags):
-    if tags.get("amenity") == "place_of_worship" or tags.get("religion") is not None:
-        return None
-    name = tags.get("name", "Public Playground")
-    if any(k in name.lower() for k in RELIGIOUS_BLACKLIST):
-        return None
-    return name
 
 
 def identify_clean_brand(tags):
     combined = f"{tags.get('name', '')} {tags.get('brand', '')}".lower()
     for key, val in BRAND_MAPPING.items():
         if key in combined:
-            if val[1] == "costcogas" and "fuel" not in combined and "gas" not in combined:
-                continue
             return val
     return None, None, None
 
@@ -83,10 +54,8 @@ def generate_nc_grids():
 
 
 def build_overpass_query(zone):
-    brand_re = (
-        "Sheetz|Chipotle|Jersey Mike|McDonald|Wendy|Chick-fil-A|"
-        "Raising Cane|Murphy Express|Buc-ee|Wawa|Circle K|Costco"
-    )
+    # Only querying for McDonald's removes massive overhead from the Overpass engine
+    brand_re = "McDonald"
     bbox = f"{zone['south']},{zone['west']},{zone['north']},{zone['east']}"
     return (
         f'[out:json][timeout:30][bbox:{bbox}];\n'
@@ -96,8 +65,6 @@ def build_overpass_query(zone):
         f'  way["brand"~"{brand_re}",i](area.nc);\n'
         f'  node["name"~"{brand_re}",i](area.nc);\n'
         f'  way["name"~"{brand_re}",i](area.nc);\n'
-        f'  node["leisure"="playground"]["access"!~"private|no"](area.nc);\n'
-        f'  way["leisure"="playground"]["access"!~"private|no"](area.nc);\n'
         f');\n'
         f'out center;'
     )
@@ -149,11 +116,11 @@ def query_overpass(query, max_retries=3):
 
 
 def generate_nc_database():
-    output_file = "nc_brands.json"
+    output_file = "us_brands.json"
     compiled_pois = []
     seen_coords   = set()
     
-    # 1. Check for existing partial data to avoid repeating work or losing state
+    # 1. Load existing data to append and avoid duplicate matching
     if os.path.exists(output_file):
         try:
             with open(output_file, "r", encoding="utf-8") as fh:
@@ -167,7 +134,7 @@ def generate_nc_database():
 
     micro_zones = generate_nc_grids()
     
-    # 2. Slice grids if CLI indices are supplied: python script.py [start_idx] [end_idx]
+    # 2. Slice grids if CLI indices are supplied
     start_idx = 0
     end_idx = len(micro_zones)
     if len(sys.argv) > 1:
@@ -208,45 +175,22 @@ def generate_nc_database():
                 continue
 
             tags = el.get("tags", {})
+            cat_slug, brand_slug, display_name = identify_clean_brand(tags)
+            
+            if not cat_slug:
+                continue
 
-            if tags.get("leisure") == "playground":
-                name = clean_and_validate_playground(tags)
-                if not name:
-                    continue
-                compiled_pois.append({
-                    "lat": round(lat, 4),
-                    "lon": round(lon, 4),
-                    "n":   name,
-                    "b":   "playground",
-                    "c":   "playground",
-                    "h":   tags.get("opening_hours", "Sunrise to Sunset"),
-                    "d":   tags.get("description",   "Public open-access park playground."),
-                })
-            else:
-                cat_slug, brand_slug, display_name = identify_clean_brand(tags)
-                if not cat_slug:
-                    continue
-
-                poi = {
-                    "lat": round(lat, 4),
-                    "lon": round(lon, 4),
-                    "n":   display_name,
-                    "b":   brand_slug,
-                    "c":   cat_slug,
-                    "h":   tags.get("opening_hours", "Hours vary by location"),
-                    "d":   tags.get("description",   "Verified chain location mapped off highway route bounds."),
-                }
-                if cat_slug == "gas":
-                    poi["g87"] = 1 if (
-                        tags.get("fuel:octane_87") == "yes" or
-                        tags.get("fuel:unleaded")  == "yes"
-                    ) else 1
-                    poi["g88"] = 1 if (
-                        tags.get("fuel:octane_88") == "yes" or
-                        tags.get("fuel:e15")       == "yes"
-                    ) else 0
-                compiled_pois.append(poi)
-
+            poi = {
+                "lat": round(lat, 4),
+                "lon": round(lon, 4),
+                "n":   display_name,
+                "b":   brand_slug,
+                "c":   cat_slug,
+                "h":   tags.get("opening_hours", "Hours vary by location"),
+                "d":   tags.get("description",   "Verified chain location mapped off highway route bounds."),
+            }
+            
+            compiled_pois.append(poi)
             seen_coords.add(fingerprint)
             zone_count += 1
 
@@ -256,11 +200,11 @@ def generate_nc_database():
                 f"Total Compiled: {len(compiled_pois)}",
                 flush=True,
             )
-            # Save incrementally after every successful zone block parsed
+            # Incremental safe rewrite to append elements without corrupting JSON structures
             with open(output_file, "w", encoding="utf-8") as fh:
                 json.dump(compiled_pois, fh, indent=2)
 
-        time.sleep(random.uniform(2.0, 4.0))
+        time.sleep(random.uniform(1.5, 3.0))
 
     print(f"\nPipeline execution batch complete -- {len(compiled_pois)} total POIs saved.", flush=True)
 
