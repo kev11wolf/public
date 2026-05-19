@@ -50,6 +50,12 @@
             margin: 6px !important;
             max-width: 198px !important;
         }
+        /* Forces button and anchor link text to be crisp white inside colored button pills */
+        .custom-popup .leaflet-popup-content a,
+        .custom-popup .leaflet-popup-content button {
+            color: #ffffff !important;
+            text-decoration: none !important;
+        }
     </style>
 </head>
 <body class="flex flex-col justify-end">
@@ -191,7 +197,6 @@
             });
         }
 
-        // Hoisted safely to prevent race condition crashes
         function createRouteMarkerIcon(label, classes) {
             return L.divIcon({
                 html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold w-8 h-8 text-sm border-2 ${classes}">${label}</div>`,
@@ -286,7 +291,7 @@
             lineOptions: {
                 styles: [
                     { color: '#0f172a', opacity: 0.25, weight: 14 }, 
-                    { color: '#2563eb', opacity: 0.9, weight: 10 },  
+                    { color: '#2563eb', opacity: 0.9, weight: 10 },    
                     { color: '#60a5fa', opacity: 1, weight: 4 }      
                 ]
             },
@@ -531,7 +536,7 @@
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
 
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-                const streetViewUrl = `http://googleusercontent.com/maps.google.com/maps?layer=c&cbll=${lat},${lon}`;
+                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -594,7 +599,7 @@
             }
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-            const streetViewUrl = `http://googleusercontent.com/maps.google.com/maps?layer=c&cbll=${lat},${lon}`;
+            const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName)}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
@@ -709,7 +714,6 @@
         async function runDataExecutionLayer(masterCat) {
             if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
 
-            // --- UPGRADE: Combined lazy asset initialization model hook feeds local maps cleanly ---
             if (!localJsonMemory) {
                 updateInlineStatus("Ingesting master database layer...", true);
                 try {
@@ -804,7 +808,6 @@
             triggerToast("GitHub payload prepared! Click 'Submit new issue' on the next page. 🚀");
         }
 
-        // --- UPGRADE: Optimized baseline boot constructor safely appends cache busters on force update triggers ---
         async function loadMasterRepoFavoritesOnBoot(forceRefresh = false) {
             try {
                 const querySuffix = forceRefresh ? `?_=${Date.now()}` : '';
@@ -971,7 +974,6 @@
             triggerToast(`Map skin changed to ${mapStyleMode} mode layouts.`);
         });
 
-        // Connect cache buster button to engine loop hooks securely
         document.getElementById('reset-fav-cache-btn').addEventListener('click', async () => {
             triggerToast("Bypassing server data caching wrappers...", 1500);
             await loadMasterRepoFavoritesOnBoot(true);
