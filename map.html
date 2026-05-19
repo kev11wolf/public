@@ -270,7 +270,7 @@
         };
         mapLayersPool[mapStyleMode].addTo(map);
 
-        // Standard flat layer architecture—completely cluster-free rendering loops
+        // Standard flat mapping group to render explicit points cleanly without visual grouping anchors
         const poiClusterGroup = L.layerGroup().addTo(map);
 
         let routingControl = L.Routing.control({
@@ -370,16 +370,12 @@
             function parseLiveBackupTargetCategory(tags) {
                 var nLower = (tags.name || '').toLowerCase();
                 var bLower = (tags.brand || '').toLowerCase();
-                var dLower = (tags.description || '').toLowerCase();
                 var sig = (nLower + ' ' + bLower).toLowerCase();
                 
+                // CRITICAL SEPARATION LOCK: Forces Starbucks away from generic parsing tags directly to coffee
                 if (sig.includes('starbucks')) return 'coffee';
                 
-                if (nLower.includes('national') || dLower.includes('national')) {
-                    if (!tags.boundary && !tags.amenity && !tags.leisure && !nLower.includes('sheetz') && !nLower.includes('wawa') && !nLower.includes('circlek')) {
-                        return 'excluded';
-                    }
-                }
+                if (nLower.includes('national')) return 'excluded';
                 if (tags.admin_level || tags.boundary === 'administrative' || tags.boundary === 'protected_area') return 'excluded';
 
                 if (tags.leisure === 'playground') {
@@ -426,9 +422,9 @@
             self.onmessage = function(e) {
                 const { localElements, liveElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
                 const finalMatches = [];
-                const DEDUPE_RADIUS_METERS = 40; // Proximity threshold limits duplicate nodes/ways for the exact same location
+                const SPATIAL_DEDUPE_MAX_RADIUS_METERS = 40; // Rejects duplicate geometries within proximity boundary
                 
-                // PHASE 4 ENHANCEMENT 1: Mathematical boundary pre-check rejects distant variables instantly
+                // STEP 1 INTEGRATION: Spatial Bounding Index Envelope
                 let minTlat = 90, maxTlat = -90, minTlon = 180, maxTlon = -180;
                 for(let j=0; j<targetsSlice.length; j++) {
                     if (targetsSlice[j].lat < minTlat) minTlat = targetsSlice[j].lat;
@@ -436,22 +432,22 @@
                     if (targetsSlice[j].lng < minTlon) minTlon = targetsSlice[j].lng;
                     if (targetsSlice[j].lng > maxTlon) maxTlon = targetsSlice[j].lng;
                 }
-                const bufferDeg = (activeBufferMeters + 2000) / 111000;
-                const validBounds = { n: maxTlat + bufferDeg, s: minTlat - bufferDeg, e: maxTlon + bufferDeg, w: minTlon - bufferDeg };
+                const degPad = (activeBufferMeters + 2000) / 111000;
+                const spatialEnvelope = { n: maxTlat + degPad, s: minTlat - degPad, e: maxTlon + degPad, w: minTlon - degPad };
 
-                function checkAndAddSpatialDedupe(payload) {
+                function runSpatialDeduplicationAnalysis(payload) {
                     for (let k = 0; k < finalMatches.length; k++) {
-                        let existing = finalMatches[k];
-                        let d = haversineDist(payload.lat, payload.lon, existing.lat, existing.lon);
-                        if (d < DEDUPE_RADIUS_METERS) {
-                            let pName = payload.name.toLowerCase();
-                            let eName = existing.name.toLowerCase();
-                            if (payload.brand === existing.brand || (pName.includes('starbucks') && eName.includes('starbucks')) || pName.substring(0,5) === eName.substring(0,5)) {
-                                return; // Proximity overlap confirmed. Discarding duplicate geometry object safely.
+                        let matchingRef = finalMatches[k];
+                        let separationMeters = haversineDist(payload.lat, payload.lon, matchingRef.lat, matchingRef.lon);
+                        if (separationMeters < SPATIAL_DEDUPE_MAX_RADIUS_METERS) {
+                            let pLabel = payload.name.toLowerCase();
+                            let rLabel = matchingRef.name.toLowerCase();
+                            if (payload.brand === matchingRef.brand || (pLabel.includes('starbucks') && rLabel.includes('starbucks')) || pLabel.substring(0,5) === rLabel.substring(0,5)) {
+                                return true; // Confirmed duplicate geometry. Dropped.
                             }
                         }
                     }
-                    finalMatches.push(payload);
+                    return false;
                 }
 
                 if (localElements) {
@@ -460,18 +456,14 @@
                         let normBrand = (el.b || '');
                         let normCat = el.c;
                         
-                        // DATA AUDIT FIX: Intercept taxonomy inconsistencies globally to isolate Starbucks to coffee
                         if (normName.toLowerCase().includes('starbucks') || normBrand.toLowerCase().includes('starbucks')) {
                             normCat = 'coffee';
                             normBrand = 'starbucks';
                         }
 
                         if (normCat !== currentMasterCat) return;
-                        if (el.lat > validBounds.n || el.lat < validBounds.s || el.lon > validBounds.e || el.lon < validBounds.w) return;
-                        
-                        var nameCheck = normName.toLowerCase();
-                        if (nameCheck.includes('national')) return;
-
+                        if (el.lat > spatialEnvelope.n || el.lat < spatialEnvelope.s || el.lon > spatialEnvelope.e || el.lon < spatialEnvelope.w) return;
+                        if (normName.toLowerCase().includes('national')) return;
                         if (currentSubFilter !== 'all' && normBrand !== currentSubFilter) return;
 
                         let minD = Infinity;
@@ -481,11 +473,12 @@
                         }
 
                         if (minD <= activeBufferMeters) {
-                            checkAndAddSpatialDedupe({
+                            let obj = {
                                 id: "local_" + el.lat + "_" + el.lon, lat: el.lat, lon: el.lon,
                                 name: normName, brand: normBrand, category: normCat, hours: el.h || "Hours not listed",
                                 desc: el.d || "", minD: minD, isLocal: true, g87: el.g87, g88: el.g88
-                            });
+                            };
+                            if (!runSpatialDeduplicationAnalysis(obj)) finalMatches.push(obj);
                         }
                     });
                 }
@@ -495,7 +488,7 @@
                         const lat = el.lat || (el.center && el.center.lat);
                         const lon = el.lon || (el.center && el.center.lon);
                         if (!lat || !lon) return;
-                        if (lat > validBounds.n || lat < validBounds.s || lon > validBounds.e || lon < validBounds.w) return;
+                        if (lat > spatialEnvelope.n || lat < spatialEnvelope.s || lon > spatialEnvelope.e || lon < spatialEnvelope.w) return;
 
                         let concreteCat = parseLiveBackupTargetCategory(el.tags || {});
                         if (concreteCat === 'excluded') return;
@@ -523,12 +516,13 @@
                         }
 
                         if (minD <= activeBufferMeters) {
-                            checkAndAddSpatialDedupe({
+                            let obj = {
                                 id: "live_" + lat + "_" + lon, lat: lat, lon: lon, name: el.tags.name || el.tags.brand || el.tags.operator || "Starbucks",
                                 brand: brandSlug, category: currentMasterCat, 
                                 hours: el.tags.opening_hours || "Hours not listed",
                                 desc: el.tags.description || "", minD: minD, isLocal: false
-                            });
+                            };
+                            if (!runSpatialDeduplicationAnalysis(obj)) finalMatches.push(obj);
                         }
                     });
                 }
@@ -801,12 +795,17 @@
             localStorage.removeItem('poi_lru_registry_v2');
         }
 
+        // NETWORKING SECURITY OVERWRITE: Swapped out broken GET strings to robust urlencoded POST bodies
         async function fetchWithMirrorFailover(queryPayload) {
             for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
                 try {
-                    const response = await fetch(OVERPASS_MIRRORS[i] + "?data=" + encodeURIComponent(queryPayload));
+                    const response = await fetch(OVERPASS_MIRRORS[i], {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'data=' + encodeURIComponent(queryPayload)
+                    });
                     if (response.ok) return await response.json();
-                } catch (err) { console.warn("Mirror connection delayed."); }
+                } catch (err) { console.warn("Mirror connectivity failover triggered."); }
             }
             throw new Error("All data networks congested.");
         }
@@ -834,7 +833,7 @@
         }
 
         async function fetchLiveBackupEnrichment(masterCat) {
-            // PHASE 4 ENHANCEMENT 2: Intelligently sample route positions to minimize request overhead
+            // STEP 2 RE-ENGINEERING: Down-sample and group path sequence points efficiently
             let sampledCoords = [];
             if (routeLineCoordinates.length > 0) {
                 sampledCoords.push(routeLineCoordinates[0]);
@@ -851,8 +850,10 @@
                     sampledCoords.push(dest);
                 }
             }
-            if (sampledCoords.length > 40) {
-                let step = Math.ceil(sampledCoords.length / 40);
+            
+            // Hard ceiling prevents query payloads from exceeding Overpass execution node weights
+            if (sampledCoords.length > 25) {
+                let step = Math.ceil(sampledCoords.length / 25);
                 sampledCoords = sampledCoords.filter((_, idx) => idx % step === 0 || idx === sampledCoords.length - 1);
             }
 
@@ -890,7 +891,7 @@
                 selectors.push('nwr["brand"~"McDonald\'s|Wendy\'s|Chick-fil-A|Chipotle|Jersey Mike|Raising Cane",i]', 'nwr["name"~"McDonald\'s|Wendy\'s|Chick-fil-A|Raising Cane|Jersey Mike|Chipotle",i]');
             }
 
-            // Construct proper Overpass QL coordinate loops to pull along narrower route tracks cleanly
+            // Create precise corridor coordinates maps cleanly using valid syntax loops
             sampledCoords.forEach(c => {
                 selectors.forEach(sel => {
                     queryParts.push(`${sel}(around:${activeBufferMeters},${c.lat.toFixed(5)},${c.lng.toFixed(5)});`);
