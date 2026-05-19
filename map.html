@@ -394,13 +394,21 @@
             }
 
             function parseLiveBackupTargetCategory(tags) {
-                // EXPLICIT SCRUBBING GUARD: Erases administrative and un-named regional polygon centroids
                 if (!tags.name) return 'excluded';
+                
+                // EXPLICIT SCRUBBING GUARD: Erases artificial test database components and large regional boundaries
+                var nLower = (tags.name || '').toLowerCase();
+                var dLower = (tags.description || '').toLowerCase();
+                if (nLower.includes('national') || dLower.includes('national')) {
+                    // Check if it's actually an infrastructure tag instead of a test artifact keyword
+                    if (!tags.boundary && !tags.amenity && !tags.leisure && !nLower.includes('starbucks') && !nLower.includes('sheetz') && !nLower.includes('wawa') && !nLower.includes('circlek')) {
+                        return 'excluded';
+                    }
+                }
                 if (tags.admin_level || tags.boundary === 'administrative' || tags.boundary === 'protected_area') return 'excluded';
 
                 var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
                 
-                // PRIORITY HIERARCHY MATCHING: Evaluates exact brand targets before exploring generic criteria matches
                 if (sig.includes('starbucks')) return 'coffee';
                 if (['murphy express', 'sheetz', 'bucee', 'buc-ee', 'costco', 'wawa', 'circle k'].some(b => sig.includes(b))) return 'gas';
                 if (['mcdonald', 'wendy', 'chick-fil-a', 'chick fil a', 'chipotle', 'jersey mike', 'raising cane'].some(b => sig.includes(b))) return 'food';
@@ -449,6 +457,12 @@
                 if (localElements) {
                     localElements.forEach(el => {
                         if (el.c !== currentMasterCat) return;
+                        
+                        // PROGRAMMATIC SCRUBBING ENGINE: Drop custom national placeholder mock records instantly
+                        var nameCheck = (el.n || '').toLowerCase();
+                        var descCheck = (el.d || '').toLowerCase();
+                        if (nameCheck.includes('national') || descCheck.includes('national')) return;
+
                         if (currentSubFilter !== 'all') {
                             if (currentMasterCat === 'gas') {
                                 if (currentSubFilter === 'unl87' && el.g87 !== 1) return;
@@ -585,6 +599,9 @@
             const isLarge = map.getZoom() > 13;
 
             combinedFavoritesList.forEach(el => {
+                // Programmatic exclusion loop during static runtime render iterations
+                if ((el.name || '').toLowerCase().includes('national') || (el.desc || '').toLowerCase().includes('national')) return;
+
                 const lat = el.lat; const lon = el.lon;
                 const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
                 let popupHeadingName = el.name || cleanLabelBrand; 
@@ -599,8 +616,6 @@
 
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
                 const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-                
-                // HYPER-LOCALIZED ENGINE: Interrogates Google review indexes forced straight to coordinates bounds
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews " + parseFloat(lat).toFixed(4) + ", " + parseFloat(lon).toFixed(4))}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -615,11 +630,18 @@
                     actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm cursor-pointer active:scale-95 transition-transform text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
                 }
 
+                // FIXED INTERPOLATION STRUCT: Isolates gas fuel badges completely away from description text schemas
+                let fuelBadgeHtml = '';
+                if (visualCatKey === 'gas') {
+                    fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
+                }
+
                 const popupContent = `
                     <div class="w-full font-sans p-0.5 text-zinc-950">
                         <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
                         <h3 class="text-xs font-black text-black leading-tight truncate">${popupHeadingName}</h3>
                         <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">${popupDesc}</div>
+                        ${fuelBadgeHtml}
                         <div class="border-t border-zinc-200 pt-1 mt-1">
                             <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">Hours</span>
                             <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
@@ -645,6 +667,8 @@
         }
 
         function buildAndRenderPoiMarker(el, forceStarredStyleProfile = false) {
+            if ((el.name || '').toLowerCase().includes('national') || (el.desc || '').toLowerCase().includes('national')) return;
+
             const lat = el.lat; const lon = el.lon;
             const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
             let popupHeadingName = el.name || cleanLabelBrand; 
@@ -658,14 +682,14 @@
             const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
             const isLarge = map.getZoom() > 13;
 
-            if (visualCatKey === 'gas' && el.isLocal) {
-                popupDesc = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
+            // FIXED INTERPOLATION STRUCT: Isolates gas fuel badges completely away from description text schemas
+            let fuelBadgeHtml = '';
+            if (visualCatKey === 'gas') {
+                fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
             }
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
             const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-            
-            // HYPER-LOCALIZED ENGINE: Interrogates Google review indexes forced straight to coordinates bounds
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews " + parseFloat(lat).toFixed(4) + ", " + parseFloat(lon).toFixed(4))}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
@@ -678,6 +702,7 @@
                     <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
                     <h3 class="text-xs font-black text-black leading-tight truncate">${popupHeadingName}</h3>
                     <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">${popupDesc}</div>
+                    ${fuelBadgeHtml}
                     <div class="border-t border-zinc-200 pt-1 mt-1">
                         <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">Hours</span>
                         <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
@@ -882,9 +907,16 @@
             }
         }
 
-        // UNIFIED COMPREHENSIVE OVERWRITE SYNC ENGINE: Merges base array + live array directly to clipboard
         function pushNewlyDiscoveredLiveBrandsToRepoDatabase() {
             let unifiedDatabaseList = localJsonMemory ? [...localJsonMemory] : [];
+            
+            // Programmatic scrubbing operation: wipes existing placeholder targets from the runtime active array base
+            unifiedDatabaseList = unifiedDatabaseList.filter(item => {
+                var n = (item.n || '').toLowerCase();
+                var d = (item.d || '').toLowerCase();
+                return !(n.includes('national') || d.includes('national'));
+            });
+
             let trackedCoordinatesSet = new Set(unifiedDatabaseList.map(item => `${roundCoords(item.lat)}_${roundCoords(item.lon)}`));
             
             let addedCount = 0;
@@ -896,7 +928,13 @@
                 const checkKey = `${roundCoords(lat)}_${roundCoords(lon)}`;
                 if (!trackedCoordinatesSet.has(checkKey)) {
                     let tags = el.tags || {};
-                    if (!tags.name) return; // Discards missing names immediately
+                    if (!tags.name) return;
+
+                    var nameCheck = (tags.name || '').toLowerCase();
+                    var descCheck = (tags.description || '').toLowerCase();
+                    if (nameCheck.includes('national') || descCheck.includes('national')) {
+                        if (!tags.boundary && !tags.amenity && !tags.leisure && !nameCheck.includes('starbucks')) return;
+                    }
 
                     let normalizedCat = el.concreteCat || 'food';
                     let labelName = tags.name || tags.brand || "Public Facility";
@@ -942,7 +980,7 @@
             
             navigator.clipboard.writeText(comprehensiveJsonString).then(() => {
                 triggerToast(`Copied! Total items in clipboard dataset: ${unifiedDatabaseList.length}`);
-                alert(`Export Complete!\n\nSuccessfully compiled ${unifiedDatabaseList.length} total database records (${addedCount} new corridor discoveries blended seamlessly).\n\nThe full generated code structure has been copied to your system clipboard. Open 'us_brands.json' in your project editor, select all, paste this output, and commit directly!`);
+                alert(`Export Complete!\n\nSuccessfully compiled ${unifiedDatabaseList.length} total database records.\n\nThe updated dataset code has been copied to your system clipboard. Open 'us_brands.json' in your editor, replace everything, and save!`);
             }).catch(() => {
                 alert("System clipboard write access rejected by permission controls.");
             });
