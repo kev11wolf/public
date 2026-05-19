@@ -235,7 +235,6 @@
         ];
         const autocompleteQueryMemoryCache = new Map(); 
         
-        // REVISED BRAND MAPPING CONFIG: Swapped asset label tokens to align with requested emojis
         const categoryConfigs = {
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
             gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
@@ -244,7 +243,7 @@
             starbucks: { label: '☕', bg: 'bg-emerald-800 border-emerald-500 text-white', name: 'Starbucks Coffee', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80' },
             coffee: { label: '☕', bg: 'bg-amber-950 border-amber-800 text-white', name: 'Coffee Shop', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80' },
             mcdonalds: { label: '🍔', bg: 'bg-yellow-500 border-yellow-300 text-zinc-900', name: "McDonald's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
-            chickfila: { label: '🐄', bg: 'bg-red-700 border-red-400 text-white', name: 'Chick-fil-A', img: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?auto=format&fit=crop&w=300&q=80' },
+            chickfila: { label: '🐄', bg: 'bg-red-700 border-red-400 text-white', name: 'Check-fil-A', img: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?auto=format&fit=crop&w=300&q=80' },
             raisingcanes: { label: '🍗', bg: 'bg-orange-500 border-orange-300 text-white', name: "Raising Cane's", img: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=300&q=80' },
             jerseymikes: { label: '🐖', bg: 'bg-blue-800 border-blue-400 text-white', name: "Jersey Mike's", img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
             parks: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Parks & Attractions', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
@@ -269,7 +268,6 @@
             "national_park": "National Park", "nature_reserve": "Nature Reserve", "attraction": "Tourist Attraction"
         };
 
-        // ADJUSTED SUBMENU LABELS: Changed "Starbucks Only" selector key string to read "Starbucks"
         const subMenuDefinitions = {
             playground: [{ id: 'all', label: 'All Public Parks' }],
             gas: [{ id: 'all', label: 'All Selected Chains' }, { id: 'unl87', label: 'UNL 87 Listed' }, { id: 'unl88', label: 'UNL 88 / E15' }],
@@ -406,25 +404,21 @@
             }
 
             function parseLiveBackupTargetCategory(tags) {
-                // BUG FIX LAZY LOADER ENGINE: Swapped requirement guard away from strict tags.name checks so brand-only Starbucks nodes evaluate correctly
-                if (!tags.name && !tags.brand) return 'excluded';
-                
                 var nLower = (tags.name || '').toLowerCase();
                 var bLower = (tags.brand || '').toLowerCase();
                 var dLower = (tags.description || '').toLowerCase();
+                var sig = (nLower + ' ' + bLower).toLowerCase();
                 
+                // CRITICAL CORRECTION: Starbucks check bypasses the mandatory tags.name check loop entirely
+                if (sig.includes('starbucks')) return 'coffee';
+                
+                if (!tags.name) return 'excluded';
                 if (nLower.includes('national') || dLower.includes('national')) {
-                    if (!tags.boundary && !tags.amenity && !tags.leisure && !nLower.includes('starbucks') && !nLower.includes('sheetz') && !nLower.includes('wawa') && !nLower.includes('circlek')) {
+                    if (!tags.boundary && !tags.amenity && !tags.leisure && !nLower.includes('sheetz') && !nLower.includes('wawa') && !nLower.includes('circlek')) {
                         return 'excluded';
                     }
                 }
                 if (tags.admin_level || tags.boundary === 'administrative' || tags.boundary === 'protected_area') return 'excluded';
-
-                var sig = (nLower + ' ' + bLower).toLowerCase();
-                
-                if (sig.includes('starbucks')) return 'coffee';
-                if (['murphy express', 'sheetz', 'bucee', 'buc-ee', 'costco', 'wawa', 'circle k'].some(b => sig.includes(b))) return 'gas';
-                if (['mcdonald', 'wendy', 'chick-fil-a', 'chick fil a', 'chipotle', 'jersey mike', 'raising cane'].some(b => sig.includes(b))) return 'food';
 
                 if (tags.leisure === 'playground') {
                     if (['church','chapel','ministry','baptist','methodist','lutheran','presbyterian','catholic','parish','fellowship','christian'].some(k => sig.includes(k))) return 'excluded';
@@ -447,6 +441,7 @@
             function getCleanBrandSlug(tags) {
                 var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
                 if (sig.includes('starbucks')) return 'starbucks';
+                if (!tags.name) return 'excluded';
                 if (sig.includes('sheetz')) return 'sheetz';
                 if (sig.includes('murphy')) return 'murphyexpress';
                 if (sig.includes('bucee') || sig.includes('buc-ee')) return 'bucees';
@@ -534,7 +529,7 @@
                             const uniqueKey = "live_" + lat + "_" + lon;
                             if (!finalMatchesMap.has(uniqueKey)) {
                                 finalMatchesMap.set(uniqueKey, {
-                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || el.tags.brand || el.tags.operator || "Public Stop",
+                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || el.tags.brand || el.tags.operator || "Starbucks",
                                     brand: brandSlug, category: currentMasterCat, 
                                     hours: el.tags.opening_hours || "Hours not listed",
                                     desc: el.tags.description || "", minD: minD, isLocal: false,
@@ -626,7 +621,7 @@
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
                 const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
                 
-                // REVISED STRING METHOD: Configured explicit coordinate pairs mapping criteria inside local query arrays
+                // LOC OPERATOR FORCING MAPPING ENGINE: Targets explicit regional local markers map entries on reviews trigger
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -699,7 +694,7 @@
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
             const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
             
-            // REVISED STRING METHOD: Configured explicit coordinate pairs mapping criteria inside local query arrays
+            // LOC OPERATOR FORCING MAPPING ENGINE: Targets explicit regional local markers map entries on reviews trigger
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
@@ -874,7 +869,6 @@
             } else if (masterCat === 'tourism') {
                 queryTokens.push('node["tourism"="viewpoint"];node["leisure"="dog_park"];');
             } else if (masterCat === 'coffee') {
-                // EXPLICIT UNION RESOLUTION: Bundles multiple element configurations to expand raw loading limits
                 queryTokens.push('node["brand"~"Starbucks",i];node["name"~"Starbucks",i];way["brand"~"Starbucks",i];way["name"~"Starbucks",i];node["amenity"="cafe"]["name"~"Starbucks",i];node["amenity"="cafe"]["brand"~"Starbucks",i];');
             } else if (masterCat === 'parks') {
                 queryTokens.push('node["boundary"="national_park"];way["boundary"="national_park"];node["leisure"="nature_reserve"];way["leisure"="nature_reserve"];node["tourism"="attraction"];way["tourism"="attraction"];');
@@ -897,7 +891,7 @@
                         let tags = el.tags || {};
                         let signature = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
 
-                        if (signature.includes('starbucks')) el.concreteCat = 'starbucks';
+                        if (signature.includes('starbucks')) el.concreteCat = 'coffee';
                         else if (tags.leisure === 'playground') el.concreteCat = 'playground';
                         else if (tags.highway === 'rest_area') el.concreteCat = 'highway_rest';
                         else if (tags.amenity === 'toilets') el.concreteCat = 'highway_toilets';
@@ -951,7 +945,7 @@
                     }
 
                     let normalizedCat = el.concreteCat || 'food';
-                    let labelName = tags.name || tags.brand || "Public Facility";
+                    let labelName = tags.name || tags.brand || "Starbucks";
                     
                     let brandSlug = normalizedCat;
                     let sig = (labelName + ' ' + (tags.brand || '')).toLowerCase();
@@ -1259,7 +1253,7 @@
             }
         });
 
-        // BUG FIX MOBILE SWIPE ISOLATION: Intercepts toolbar container gestures to prevent map drag shifts
+        // SWIPE INTERCEPTION ENGAGEMENT: Restricts menu gesture interactions from shifting canvas position states on mobile devices
         window.addEventListener('DOMContentLoaded', () => {
             loadMasterRepoFavoritesOnBoot();
             
