@@ -10,7 +10,6 @@ import requests
 OUTPUT_FILE = "us_brands.json"
 
 # North Carolina's bounding box coordinates (South, West, North, East)
-# This completely replaces the slow 'area' lookup logic
 BBOX = "33.75,-84.33,36.59,-75.46" 
 
 BRAND_SEARCH = "McDonald"     # The regex string passed to Overpass
@@ -27,15 +26,16 @@ BLACKLIST = [
 # ==========================================
 # SCRAPER CORE
 # ==========================================
+# Exclusively using global data mirrors to avoid the regional empty-response trap
 OVERPASS_ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
+    "https://lz4.overpass-api.de/api/interpreter",
+    "https://z.overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
-    "https://overpass.osm.ch/api/interpreter",
 ]
 
 
 def build_bbox_query():
-    # Injecting the bounding box directly into the query metadata header
     return (
         f'[out:json][timeout:60][bbox:{BBOX}];\n'
         f'(\n'
@@ -53,7 +53,6 @@ def fetch_data():
     mirrors = list(OVERPASS_ENDPOINTS)
     random.shuffle(mirrors)
 
-    # Using a clean, standard browser profile ensures the 406 blocks are bypassed
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Referer": "https://www.openstreetmap.org/",
@@ -62,7 +61,6 @@ def fetch_data():
     for server_url in mirrors:
         print(f"Attempting to fetch {DISPLAY_NAME} within BBox via {server_url}...", flush=True)
         try:
-            # Using standard form-encoding data dict, which is universally accepted across all mirrors
             res = requests.post(
                 server_url,
                 data={"data": query},
@@ -71,7 +69,13 @@ def fetch_data():
             )
             
             if res.status_code == 200:
-                return res.json()
+                raw_json = res.json()
+                # If a server returns an empty elements array, keep cycling to be safe
+                if not raw_json.get("elements"):
+                    print(f"  Server {server_url} returned 0 results. Trying next global mirror...", flush=True)
+                    continue
+                print(f"  Successfully retrieved data from {server_url}!", flush=True)
+                return raw_json
             
             print(f"  Server returned status code {res.status_code}, trying next mirror...", flush=True)
                 
@@ -112,7 +116,7 @@ def main():
 
     raw_data = fetch_data()
     if not raw_data:
-        print("Error: All Overpass mirrors failed or timed out. The servers may be overloaded.")
+        print("Error: All global Overpass mirrors failed or returned empty datasets.")
         return
 
     elements = raw_data.get("elements", [])
