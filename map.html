@@ -361,49 +361,6 @@
             routeBufferPolyline.setStyle({ weight: Math.max(4, calculatedPixelWidthWeight) });
         }
 
-        routingControl.on('routesfound', function(e) {
-            routeLineCoordinates = e.routes[0].coordinates;
-            const searchContainer = document.getElementById('search-container');
-            if (searchContainer) searchContainer.classList.add('hidden');
-            
-            // STICKY TRIP MONITOR ENGAGEMENT: Compiles polyline paths metrics safely into overlay layout
-            const totalDistanceMeters = e.routes[0].summary.totalDistance;
-            const totalDistanceMiles = (totalDistanceMeters * 0.000621371).toFixed(1);
-            const stickyPanel = document.getElementById('route-mileage-sticky');
-            if (stickyPanel) {
-                document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
-                stickyPanel.classList.remove('hidden');
-            }
-
-            liveOverpassMemory = [];          
-            cachedCategoriesFetched.clear(); 
-            poiClusterGroup.clearLayers();
-            allPoiMarkersMemoryMap = [];
-            
-            if (routeBufferPolyline) {
-                map.removeLayer(routeBufferPolyline);
-            }
-            routeBufferPolyline = L.polyline(routeLineCoordinates, {
-                color: '#3b82f6',
-                opacity: 0.15,
-                lineCap: 'round',
-                lineJoin: 'round',
-                interactive: false
-            }).addTo(map);
-            routeBufferPolyline.bringToBack();
-            updateBufferVisualizerWeight();
-
-            renderGlobalPermanentStars(); 
-            
-            if (currentMasterCat) {
-                runDataExecutionLayer(currentMasterCat);
-                triggerToast("Recalculating corridor points around detour path...", 2000);
-            } else {
-                updateInlineStatus("Route ready. Tap filters below.");
-                triggerToast("Route generated. Content deferred until filter selection.");
-            }
-        });
-
         // ==========================================
         // --- PHASE 4: WORKER MATRIX ALLOCATIONS ---
         // ==========================================
@@ -422,9 +379,10 @@
                 var dLower = (tags.description || '').toLowerCase();
                 var sig = (nLower + ' ' + bLower).toLowerCase();
                 
-                // STARBUCKS EXCLUSION REMOVAL: Bypasses the strict tags.name validation loops entirely
+                // CRITICAL STRUCTURAL FIX: Ensures elements tagged only by brand evaluate safely
                 if (sig.includes('starbucks')) return 'coffee';
                 
+                if (!tags.name) return 'excluded';
                 if (nLower.includes('national') || dLower.includes('national')) {
                     if (!tags.boundary && !tags.amenity && !tags.leisure && !nLower.includes('sheetz') && !nLower.includes('wawa') && !nLower.includes('circlek')) {
                         return 'excluded';
@@ -453,6 +411,7 @@
             function getCleanBrandSlug(tags) {
                 var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
                 if (sig.includes('starbucks')) return 'starbucks';
+                if (!tags.name) return 'excluded';
                 if (sig.includes('sheetz')) return 'sheetz';
                 if (sig.includes('murphy')) return 'murphyexpress';
                 if (sig.includes('bucee') || sig.includes('buc-ee')) return 'bucees';
@@ -512,7 +471,9 @@
                         const lon = el.lon || (el.center && el.center.lon);
                         if (!lat || !lon) return;
 
-                        let concreteCat = parseLiveBackupTargetCategory(el.tags || {});
+                        // FIX DETECTED: Uses object validation layer to safely handle undefined schemas safely
+                        let tags = el.tags || {};
+                        let concreteCat = parseLiveBackupTargetCategory(tags);
                         if (concreteCat === 'excluded') return;
 
                         if (currentMasterCat === 'highway' && concreteCat !== 'highway_rest' && concreteCat !== 'highway_toilets') return;
@@ -523,7 +484,7 @@
                         if (currentMasterCat === 'medical' && !['hospital', 'veterinary'].includes(concreteCat)) return;
                         if ((currentMasterCat === 'gas' || currentMasterCat === 'food') && concreteCat !== currentMasterCat) return;
 
-                        var brandSlug = getCleanBrandSlug(el.tags || {});
+                        var brandSlug = getCleanBrandSlug(tags);
                         if (brandSlug === 'excluded') {
                             brandSlug = concreteCat;
                         }
@@ -540,11 +501,11 @@
                             const uniqueKey = "live_" + lat + "_" + lon;
                             if (!finalMatchesMap.has(uniqueKey)) {
                                 finalMatchesMap.set(uniqueKey, {
-                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || el.tags.brand || el.tags.operator || "Starbucks",
+                                    id: uniqueKey, lat: lat, lon: lon, name: tags.name || tags.brand || tags.operator || "Starbucks",
                                     brand: brandSlug, category: currentMasterCat, 
-                                    hours: el.tags.opening_hours || "Hours not listed",
-                                    desc: el.tags.description || "", minD: minD, isLocal: false,
-                                    rawTags: el.tags
+                                    hours: tags.opening_hours || "Hours not listed",
+                                    desc: tags.description || "", minD: minD, isLocal: false,
+                                    rawTags: tags
                                 });
                             }
                         }
@@ -631,8 +592,6 @@
 
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
                 const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-                
-                // CRITICAL CORRECTION: Forces localized review triggers using explicit geoloc operators
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -652,7 +611,6 @@
                     fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
                 }
 
-                // MILEAGE MILESTONE PREDICTOR: Appends a visual callout item tracking custom detour distance offsets
                 const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
                 let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
 
@@ -707,6 +665,9 @@
                 fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
             }
 
+            const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
+            let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
+
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
             const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
@@ -715,10 +676,6 @@
             let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
             let starBtnText = isStarredCurrently ? "❌ Remove Local Star" : "⭐ Persistently Star";
             let starBtnColor = isStarredCurrently ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
-
-            // MILEAGE MILESTONE PREDICTOR: Appends a visual callout item tracking custom detour distance offsets
-            const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
-            let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
 
             const popupContent = `
                 <div class="w-full font-sans p-0.5 text-zinc-950">
@@ -888,7 +845,7 @@
             } else if (masterCat === 'tourism') {
                 queryTokens.push('node["tourism"="viewpoint"];node["leisure"="dog_park"];');
             } else if (masterCat === 'coffee') {
-                // EXPLICIT SELECTION OPTIMIZATION: Overwrites subset structures to guarantee un-named brand nodes populate cleanly
+                // FIXED LIVE OVERPASS TOKEN: Expanded query structure targets any element containing brand identifiers directly
                 queryTokens.push('node["brand"~"Starbucks",i];way["brand"~"Starbucks",i];node["name"~"Starbucks",i];way["name"~"Starbucks",i];node["amenity"="cafe"]["name"~"Starbucks",i];node["amenity"="cafe"]["brand"~"Starbucks",i];');
             } else if (masterCat === 'parks') {
                 queryTokens.push('node["boundary"="national_park"];way["boundary"="national_park"];node["leisure"="nature_reserve"];way["leisure"="nature_reserve"];node["tourism"="attraction"];way["tourism"="attraction"];');
@@ -1266,7 +1223,7 @@
                             }
                         }
 
-                        // STICKY TRIP MONITOR LIVE UPDATE: Computes distance remaining from current route segment projection indices
+                        // FIXED DYNAMIC TRACK MONITOR CALCULATION: Re-tallies polyline miles down to the destination
                         let remainingDistanceMeters = 0;
                         for (let i = closestCoordinateIndex; i < routeLineCoordinates.length - 1; i++) {
                             remainingDistanceMeters += map.distance([routeLineCoordinates[i].lat, routeLineCoordinates[i].lng], [routeLineCoordinates[i+1].lat, routeLineCoordinates[i+1].lng]);
@@ -1275,7 +1232,6 @@
                         const stickyLabelValue = document.getElementById('sticky-total-dist');
                         if (stickyLabelValue) stickyLabelValue.innerText = remainingDistanceMiles;
 
-                        // REROUTING LOGIC TRIPS: If user drifts past 0.5 miles from active line geometry paths, update parameters
                         if (minDistanceToRouteLine > 805) {
                             triggerToast("Off-route deviation detected! Updating path variables...", 4000);
                             const currentGpsLocationLatLng = L.latLng(latitude, longitude);
@@ -1287,7 +1243,6 @@
             }
         });
 
-        // MENU INTERACTION PROPAGATION GUARDS: Prevents swipe panels from pulling leaflet map positions unexpectedly
         window.addEventListener('DOMContentLoaded', () => {
             loadMasterRepoFavoritesOnBoot();
             
