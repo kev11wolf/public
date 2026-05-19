@@ -235,14 +235,25 @@
         ];
         const autocompleteQueryMemoryCache = new Map(); 
         
+        // CUSTOM BRAND CONFIG MATRIX: Integrates specific asset layout behaviors and custom emoji shapes directly
         const categoryConfigs = {
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
             gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
             food: { label: '🍟', bg: 'bg-red-600 border-red-200 text-white', name: 'Fast Food', img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
             chipotle: { label: '🌯', bg: 'bg-amber-800 border-amber-500 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a0847685?auto=format&fit=crop&w=300&q=80' },
-            coffee: { label: '☕', bg: 'bg-amber-950 border-amber-800 text-white', name: 'Starbucks Coffee', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80' },
+            starbucks: { label: '☕', bg: 'bg-emerald-800 border-emerald-500 text-white', name: 'Starbucks Coffee', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80' },
+            coffee: { label: '☕', bg: 'bg-amber-950 border-amber-800 text-white', name: 'Coffee Shop', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80' },
+            mcdonalds: { label: '🍔', bg: 'bg-yellow-500 border-yellow-300 text-zinc-900', name: "McDonald's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
+            chickfila: { label: '🐄', bg: 'bg-red-700 border-red-400 text-white', name: 'Chick-fil-A', img: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?auto=format&fit=crop&w=300&q=80' },
+            raisingcanes: { label: '🍗', bg: 'bg-orange-500 border-orange-300 text-white', name: "Raising Cane's", img: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=300&q=80' },
+            jerseymikes: { label: '🐖', bg: 'bg-blue-800 border-blue-400 text-white', name: "Jersey Mike's", img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
             parks: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Parks & Attractions', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
+            attraction: { label: '🎡', bg: 'bg-purple-600 border-purple-300 text-white', name: 'Tourist Attraction', img: 'https://images.unsplash.com/photo-1473163928189-364b2c4e1135?auto=format&fit=crop&w=300&q=80' },
+            national_park: { label: '🏞️', bg: 'bg-emerald-800 border-emerald-600 text-white', name: 'National Park', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
+            nature_reserve: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Nature Reserve', img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=300&q=80' },
             medical: { label: '🏥', bg: 'bg-rose-600 border-rose-400 text-white', name: 'Emergency Medical', img: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=300&q=80' },
+            hospital: { label: '🏥', bg: 'bg-rose-600 border-rose-400 text-white', name: 'Major Hospital', img: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=300&q=80' },
+            veterinary: { label: '🐕', bg: 'bg-indigo-500 border-indigo-300 text-white', name: 'Veterinary Clinic', img: 'https://images.unsplash.com/photo-1581888227599-779811939961?auto=format&fit=crop&w=300&q=80' },
             highway_rest: { label: '🪑', bg: 'bg-blue-600 border-blue-200 text-white', name: 'Rest Area', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80' },
             highway_toilets: { label: '🚻', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Public Restroom', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
             tourism_viewpoint: { label: '📷', bg: 'bg-sky-500 border-sky-200 text-white', name: 'Scenic Viewpoint', img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=300&q=80' },
@@ -258,11 +269,12 @@
             "national_park": "National Park", "nature_reserve": "Nature Reserve", "attraction": "Tourist Attraction"
         };
 
+        // FIXED VERBIAGE ADJUSTMENT: Changed "Starbucks Only" selector label token to "Starbucks"
         const subMenuDefinitions = {
             playground: [{ id: 'all', label: 'All Public Parks' }],
             gas: [{ id: 'all', label: 'All Selected Chains' }, { id: 'unl87', label: 'UNL 87 Listed' }, { id: 'unl88', label: 'UNL 88 / E15' }],
             food: [{ id: 'all', label: 'All Brands' }, { id: 'chipotle', label: 'Chipotle' }, { id: 'raisingcanes', label: "Raising Cane's" }, { id: 'chickfila', label: 'Chick-fil-A' }, { id: 'mcdonalds', label: "McDonald's" }, { id: 'jerseymikes', label: "Jersey Mike's" }],
-            coffee: [{ id: 'all', label: 'Starbucks Only' }],
+            coffee: [{ id: 'all', label: 'Starbucks' }],
             parks: [{ id: 'all', label: 'All Parks & Attractions' }, { id: 'national_park', label: '🏞️ National Parks' }, { id: 'nature_reserve', label: '🌲 Nature Reserves' }, { id: 'attraction', label: '🎡 Attractions' }],
             medical: [{ id: 'all', label: 'All Infrastructure' }, { id: 'hospital', label: '🏥 Major Hospitals' }, { id: 'veterinary', label: '🐕 Vet Clinics' }],
             highway: [{ id: 'highway_rest', label: '🪑 Highway Rest Areas' }, { id: 'highway_toilets', label: '🚻 Standalone Restrooms' }],
@@ -394,20 +406,21 @@
             }
 
             function parseLiveBackupTargetCategory(tags) {
-                if (!tags.name) return 'excluded';
+                // FIXED STARBUCKS DISCOVERY ENGINE: Evaluates element signature schemas even if the explicit name string parameter is empty
+                if (!tags.name && !tags.brand) return 'excluded';
                 
-                // EXPLICIT SCRUBBING GUARD: Erases artificial test database components and large regional boundaries
                 var nLower = (tags.name || '').toLowerCase();
+                var bLower = (tags.brand || '').toLowerCase();
                 var dLower = (tags.description || '').toLowerCase();
+                
                 if (nLower.includes('national') || dLower.includes('national')) {
-                    // Check if it's actually an infrastructure tag instead of a test artifact keyword
                     if (!tags.boundary && !tags.amenity && !tags.leisure && !nLower.includes('starbucks') && !nLower.includes('sheetz') && !nLower.includes('wawa') && !nLower.includes('circlek')) {
                         return 'excluded';
                     }
                 }
                 if (tags.admin_level || tags.boundary === 'administrative' || tags.boundary === 'protected_area') return 'excluded';
 
-                var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
+                var sig = (nLower + ' ' + bLower).toLowerCase();
                 
                 if (sig.includes('starbucks')) return 'coffee';
                 if (['murphy express', 'sheetz', 'bucee', 'buc-ee', 'costco', 'wawa', 'circle k'].some(b => sig.includes(b))) return 'gas';
@@ -432,7 +445,6 @@
             }
 
             function getCleanBrandSlug(tags) {
-                if (!tags.name) return 'excluded';
                 var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
                 if (sig.includes('starbucks')) return 'starbucks';
                 if (sig.includes('sheetz')) return 'sheetz';
@@ -458,7 +470,6 @@
                     localElements.forEach(el => {
                         if (el.c !== currentMasterCat) return;
                         
-                        // PROGRAMMATIC SCRUBBING ENGINE: Drop custom national placeholder mock records instantly
                         var nameCheck = (el.n || '').toLowerCase();
                         var descCheck = (el.d || '').toLowerCase();
                         if (nameCheck.includes('national') || descCheck.includes('national')) return;
@@ -523,7 +534,7 @@
                             const uniqueKey = "live_" + lat + "_" + lon;
                             if (!finalMatchesMap.has(uniqueKey)) {
                                 finalMatchesMap.set(uniqueKey, {
-                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || el.tags.operator,
+                                    id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || el.tags.brand || el.tags.operator || "Public Stop",
                                     brand: brandSlug, category: currentMasterCat, 
                                     hours: el.tags.opening_hours || "Hours not listed",
                                     desc: el.tags.description || "", minD: minD, isLocal: false,
@@ -599,7 +610,6 @@
             const isLarge = map.getZoom() > 13;
 
             combinedFavoritesList.forEach(el => {
-                // Programmatic exclusion loop during static runtime render iterations
                 if ((el.name || '').toLowerCase().includes('national') || (el.desc || '').toLowerCase().includes('national')) return;
 
                 const lat = el.lat; const lon = el.lon;
@@ -608,9 +618,9 @@
                 let popupHours = el.hours || "Hours not listed";
                 let popupDesc = el.desc || "Verified favorite location pinned to map globally.";
                 
+                // SINGLE ARCHITECTURE RESOLUTION: Selects localized keys matching explicit brand labels
                 let visualCatKey = el.category;
-                if (el.brand === 'starbucks') visualCatKey = 'coffee';
-                else if (['highway_rest', 'highway_toilets', 'tourism_viewpoint', 'tourism_dogpark', 'chipotle', 'parks', 'medical'].includes(el.brand)) visualCatKey = el.brand;
+                if (categoryConfigs[el.brand]) { visualCatKey = el.brand; }
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
 
@@ -630,9 +640,8 @@
                     actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm cursor-pointer active:scale-95 transition-transform text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
                 }
 
-                // FIXED INTERPOLATION STRUCT: Isolates gas fuel badges completely away from description text schemas
                 let fuelBadgeHtml = '';
-                if (visualCatKey === 'gas') {
+                if (el.category === 'gas' || visualCatKey === 'gas') {
                     fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
                 }
 
@@ -661,7 +670,7 @@
                         autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
                     });
 
-                globalFavoritesMarkers.push({ marker: marker, lat: lat, lon: lon, category: el.brand });
+                globalFavoritesMarkers.push({ marker: marker, visualKey: visualCatKey });
                 poiClusterGroup.addLayer(marker);
             });
         }
@@ -676,15 +685,13 @@
             let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
             
             let visualCatKey = el.category;
-            if (el.brand === 'starbucks') visualCatKey = 'coffee';
-            else if (['highway_rest', 'highway_toilets', 'tourism_viewpoint', 'tourism_dogpark', 'chipotle', 'parks', 'medical'].includes(el.brand)) visualCatKey = el.brand;
+            if (categoryConfigs[el.brand]) { visualCatKey = el.brand; }
 
             const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
             const isLarge = map.getZoom() > 13;
 
-            // FIXED INTERPOLATION STRUCT: Isolates gas fuel badges completely away from description text schemas
             let fuelBadgeHtml = '';
-            if (visualCatKey === 'gas') {
+            if (visualCatKey === 'gas' || el.category === 'gas') {
                 fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
             }
 
@@ -726,7 +733,7 @@
                     autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
                 });
 
-            allPoiMarkersMemoryMap.push({ marker: marker, category: el.brand, lat: lat, lon: lon });
+            allPoiMarkersMemoryMap.push({ marker: marker, visualKey: visualCatKey });
             poiClusterGroup.addLayer(marker);
         }
 
@@ -864,7 +871,7 @@
             } else if (masterCat === 'tourism') {
                 queryTokens.push('node["tourism"="viewpoint"];node["leisure"="dog_park"];');
             } else if (masterCat === 'coffee') {
-                queryTokens.push('node["brand"~"Starbucks",i];node["name"~"Starbucks",i];way["brand"~"Starbucks",i];way["name"~"Starbucks",i];');
+                queryTokens.push('node["brand"~"Starbucks",i];node["name"~"Starbucks",i];way["brand"~"Starbucks",i];way["name"~"Starbucks",i];node["amenity"="cafe"]["name"~"Starbucks",i];node["amenity"="cafe"]["brand"~"Starbucks",i];');
             } else if (masterCat === 'parks') {
                 queryTokens.push('node["boundary"="national_park"];way["boundary"="national_park"];node["leisure"="nature_reserve"];way["leisure"="nature_reserve"];node["tourism"="attraction"];way["tourism"="attraction"];');
             } else if (masterCat === 'medical') {
@@ -910,7 +917,6 @@
         function pushNewlyDiscoveredLiveBrandsToRepoDatabase() {
             let unifiedDatabaseList = localJsonMemory ? [...localJsonMemory] : [];
             
-            // Programmatic scrubbing operation: wipes existing placeholder targets from the runtime active array base
             unifiedDatabaseList = unifiedDatabaseList.filter(item => {
                 var n = (item.n || '').toLowerCase();
                 var d = (item.d || '').toLowerCase();
@@ -928,9 +934,9 @@
                 const checkKey = `${roundCoords(lat)}_${roundCoords(lon)}`;
                 if (!trackedCoordinatesSet.has(checkKey)) {
                     let tags = el.tags || {};
-                    if (!tags.name) return;
+                    if (!tags.name && !tags.brand) return;
 
-                    var nameCheck = (tags.name || '').toLowerCase();
+                    var nameCheck = (tags.name || tags.brand || '').toLowerCase();
                     var descCheck = (tags.description || '').toLowerCase();
                     if (nameCheck.includes('national') || descCheck.includes('national')) {
                         if (!tags.boundary && !tags.amenity && !tags.leisure && !nameCheck.includes('starbucks')) return;
@@ -1148,31 +1154,16 @@
 
         map.on('zoomend moveend', () => {
             updateBufferVisualizerWeight();
-
             const isLarge = map.getZoom() > 13;
+
+            // COMPACT TRANSLATION ITERATOR: References precompiled visual state allocations safely
             allPoiMarkersMemoryMap.forEach(item => {
-                let checkKey = item.category;
-                if (categoryConfigs[checkKey] === undefined) {
-                    if (['raisingcanes','chickfila','mcdonalds','jerseymikes','wendys','chipotle'].includes(checkKey)) checkKey = 'food';
-                    else if (['sheetz','murphyexpress','bucees','costcogas','wawa','circlek'].includes(checkKey)) checkKey = 'gas';
-                    else if (checkKey === 'starbucks') checkKey = 'coffee';
-                    else if (['national_park', 'nature_reserve', 'attraction'].includes(checkKey)) checkKey = 'parks';
-                    else if (['hospital', 'veterinary'].includes(checkKey)) checkKey = 'medical';
-                }
-                const config = categoryConfigs[checkKey] || categoryConfigs['food'] || categoryConfigs['gas'];
+                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
                 item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
             });
 
             globalFavoritesMarkers.forEach(item => {
-                let checkKey = item.category;
-                if (categoryConfigs[checkKey] === undefined) {
-                    if (['raisingcanes','chickfila','mcdonalds','jerseymikes','wendys','chipotle'].includes(checkKey)) checkKey = 'food';
-                    else if (['sheetz','murphyexpress','bucees','costcogas','wawa','circlek'].includes(checkKey)) checkKey = 'gas';
-                    else if (checkKey === 'starbucks') checkKey = 'coffee';
-                    else if (['national_park', 'nature_reserve', 'attraction'].includes(checkKey)) checkKey = 'parks';
-                    else if (['hospital', 'veterinary'].includes(checkKey)) checkKey = 'medical';
-                }
-                const config = categoryConfigs[checkKey] || categoryConfigs['food'] || categoryConfigs['gas'] || categoryConfigs['playground'];
+                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
                 item.marker.setIcon(createStarredIcon(config.label, isLarge));
             });
         });
