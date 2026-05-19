@@ -1,17 +1,39 @@
 import os
-import sys
 import json
-import time
 import random
 import requests
 
+# ==========================================
+# CONFIGURATION BLOCK
+# Change these values when switching chains!
+# ==========================================
+OUTPUT_FILE = "us_brands.json"
+TARGET_STATE = "US-NC"        # ISO 3166-2 state code (e.g., US-NC, US-TX, US-CA)
+BRAND_SEARCH = "McDonald"     # The regex string passed to Overpass
+BRAND_SLUG = "mcdonalds"      # The machine-readable slug saved to "b"
+CATEGORY_SLUG = "food"        # The category slug saved to "c" (e.g., food, gas)
+DISPLAY_NAME = "McDonald's"   # The clean name saved to "n"
+
+# Add any keywords here (case-insensitive) to skip unwanted matches
+# e.g., corporate offices, distribution centers, closed locations, or training centers
+BLACKLIST = [
+    "corporate", 
+    "office", 
+    "headquarters", 
+    "hq", 
+    "distribution", 
+    "training", 
+    "closed", 
+    "historical", 
+    "warehouse"
+]
+
+# ==========================================
+# SCRAPER CORE
+# ==========================================
 USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) "
-    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/605.1.15",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
 ]
 
 OVERPASS_ENDPOINTS = [
@@ -20,194 +42,135 @@ OVERPASS_ENDPOINTS = [
     "https://overpass.osm.ch/api/interpreter",
 ]
 
-# Stripped down exclusively to McDonald's to speed up parsing
-BRAND_MAPPING = {
-    "mcdonald": ("food", "mcdonalds", "McDonald's"),
-}
 
-
-def identify_clean_brand(tags):
-    combined = f"{tags.get('name', '')} {tags.get('brand', '')}".lower()
-    for key, val in BRAND_MAPPING.items():
-        if key in combined:
-            return val
-    return None, None, None
-
-
-def generate_nc_grids():
-    """Generates a tight bounding box grid covering only North Carolina."""
-    grids = []
-    # NC Approximate bounding bounds: Lat 33.5 to 37.0, Lon -84.5 to -75.0
-    curr_lat = 33.5
-    while curr_lat < 37.0:
-        curr_lon = -84.5
-        while curr_lon < -75.0:
-            grids.append({
-                "south": round(curr_lat, 2),
-                "west":  round(curr_lon, 2),
-                "north": round(curr_lat + 0.5, 2),
-                "east":  round(curr_lon + 1.0, 2),
-            })
-            curr_lon += 1.0
-        curr_lat += 0.5
-    return grids
-
-
-def build_overpass_query(zone):
-    # Only querying for McDonald's removes massive overhead from the Overpass engine
-    brand_re = "McDonald"
-    bbox = f"{zone['south']},{zone['west']},{zone['north']},{zone['east']}"
+def build_single_state_query():
     return (
-        f'[out:json][timeout:30][bbox:{bbox}];\n'
-        f'area["ISO3166-2"="US-NC"]->.nc;\n'
+        f'[out:json][timeout:90];\n'
+        f'area["ISO3166-2"="{TARGET_STATE}"]->.search_area;\n'
         f'(\n'
-        f'  node["brand"~"{brand_re}",i](area.nc);\n'
-        f'  way["brand"~"{brand_re}",i](area.nc);\n'
-        f'  node["name"~"{brand_re}",i](area.nc);\n'
-        f'  way["name"~"{brand_re}",i](area.nc);\n'
+        f'  node["brand"~"{BRAND_SEARCH}",i](area.search_area);\n'
+        f'  way["brand"~"{BRAND_SEARCH}",i](area.search_area);\n'
+        f'  node["name"~"{BRAND_SEARCH}",i](area.search_area);\n'
+        f'  way["name"~"{BRAND_SEARCH}",i](area.search_area);\n'
         f');\n'
         f'out center;'
     )
 
 
-def _headers():
-    return {
-        "User-Agent":   random.choice(USER_AGENTS),
-        "Content-Type": "text/plain",
-        "Referer":      "https://www.openstreetmap.org/",
-    }
-
-
-def query_overpass(query, max_retries=3):
+def fetch_data():
+    query = build_single_state_query()
     mirrors = list(OVERPASS_ENDPOINTS)
     random.shuffle(mirrors)
 
     for server_url in mirrors:
-        for attempt in range(max_retries):
-            try:
-                res = requests.post(
-                    server_url,
-                    data={"data": query},
-                    headers=_headers(),
-                    timeout=35,
-                )
-
-                if res.status_code == 429:
-                    wait = 60 * (attempt + 1)
-                    print(f"    Waiting {wait}s (rate-limited by {server_url})...", flush=True)
-                    time.sleep(wait)
-                    continue
-
-                if res.status_code == 200:
-                    return res.json()
-
-                print(f"    HTTP {res.status_code} from {server_url}", flush=True)
-                break
-
-            except requests.exceptions.Timeout:
-                backoff = 5 * (attempt + 1)
-                print(f"    Timeout (attempt {attempt + 1}) on {server_url}. Retrying in {backoff}s...", flush=True)
-                time.sleep(backoff)
-            except Exception as exc:
-                print(f"    Error on {server_url}: {exc}", flush=True)
-                break
-
+        print(f"Attempting to fetch {DISPLAY_NAME} for {TARGET_STATE} from {server_url}...", flush=True)
+        try:
+            res = requests.post(
+                server_url,
+                data={"data": query},
+                headers={"User-Agent": random.choice(USER_AGENTS), "Content-Type": "text/plain"},
+                timeout=95,
+            )
+            if res.status_code == 200:
+                return res.json()
+            print(f"  Server returned status code {res.status_code}, trying next mirror...", flush=True)
+        except Exception as e:
+            print(f"  Failed connecting to {server_url}: {e}", flush=True)
     return None
 
 
-def generate_nc_database():
-    output_file = "us_brands.json"
-    compiled_pois = []
-    seen_coords   = set()
+def is_blacklisted(tags):
+    """Checks the location's name and brand tags against the blacklist."""
+    name = tags.get("name", "").lower()
+    brand = tags.get("brand", "").lower()
+    description = tags.get("description", "").lower()
     
-    # 1. Load existing data to append and avoid duplicate matching
-    if os.path.exists(output_file):
+    # Check if any blacklisted keyword exists in the tags
+    for word in BLACKLIST:
+        if word in name or word in brand or word in description:
+            return True
+            
+    # Explicitly catch OpenStreetMap lifecycle prefixes indicating closed status
+    if tags.get("was:brand") or tags.get("old_brand") or tags.get("disused") == "yes":
+        return True
+        
+    return False
+
+
+def main():
+    compiled_pois = []
+    seen_coords = set()
+    
+    # 1. Load existing data if it exists so we safely append to us_brands.json
+    if os.path.exists(OUTPUT_FILE):
         try:
-            with open(output_file, "r", encoding="utf-8") as fh:
+            with open(OUTPUT_FILE, "r", encoding="utf-8") as fh:
                 compiled_pois = json.load(fh)
                 for poi in compiled_pois:
+                    # Creating unique fingerprint via coordinates to guarantee no duplicates inside the file
                     fingerprint = f"{round(poi['lat'], 4)}_{round(poi['lon'], 4)}"
                     seen_coords.add(fingerprint)
-            print(f"Resuming task. Loaded {len(compiled_pois)} existing POIs from {output_file}", flush=True)
+            print(f"Loaded {len(compiled_pois)} existing POIs from {OUTPUT_FILE}")
         except Exception as e:
-            print(f"Could not load existing file ({e}). Starting clean.", flush=True)
+            print(f"Could not read existing file ({e}). Starting fresh.")
 
-    micro_zones = generate_nc_grids()
-    
-    # 2. Slice grids if CLI indices are supplied
-    start_idx = 0
-    end_idx = len(micro_zones)
-    if len(sys.argv) > 1:
-        try:
-            start_idx = int(sys.argv[1])
-            if len(sys.argv) > 2:
-                end_idx = int(sys.argv[2])
-            print(f"Processing limited chunk slice: indices {start_idx} to {end_idx}", flush=True)
-        except ValueError:
-            print("Invalid CLI arguments. Processing all grids.", flush=True)
+    # 2. Run the single state query
+    raw_data = fetch_data()
+    if not raw_data:
+        print("Error: All Overpass mirrors failed or timed out. Please try again shortly.")
+        return
 
-    target_zones = micro_zones[start_idx:end_idx]
-    print(f"Launching scraper across {len(target_zones)} micro-sectors for NC...", flush=True)
+    elements = raw_data.get("elements", [])
+    new_entries_count = 0
+    blacklisted_count = 0
 
-    for slice_idx, zone in enumerate(target_zones):
-        actual_global_idx = start_idx + slice_idx
+    # 3. Parse data
+    for el in elements:
+        lat = el.get("lat") or (el.get("center") or {}).get("lat")
+        lon = el.get("lon") or (el.get("center") or {}).get("lon")
+        if not lat or not lon:
+            continue
+
+        # Coordinate-based deduplication
+        fingerprint = f"{round(lat, 4)}_{round(lon, 4)}"
+        if fingerprint in seen_coords:
+            continue
+
+        tags = el.get("tags", {})
         
-        query    = build_overpass_query(zone)
-        response = query_overpass(query)
-
-        if response is None:
-            print(f"    Sector [{actual_global_idx + 1}/{len(micro_zones)}] skipped -- all mirrors failed.", flush=True)
+        # Apply the blacklist filter
+        if is_blacklisted(tags):
+            blacklisted_count += 1
             continue
 
-        elements = response.get("elements", [])
-        if not elements:
-            continue
+        poi = {
+            "lat": round(lat, 4),
+            "lon": round(lon, 4),
+            "n":   DISPLAY_NAME,
+            "b":   BRAND_SLUG,
+            "c":   CATEGORY_SLUG,
+            "h":   tags.get("opening_hours", "Hours vary by location"),
+            "d":   tags.get("description", "Verified chain location mapped off regional route bounds."),
+        }
+        
+        # Automatically capture fuel attributes if you configure this for a gas station run
+        if CATEGORY_SLUG == "gas":
+            poi["g87"] = 1 if (tags.get("fuel:octane_87") == "yes" or tags.get("fuel:unleaded") == "yes") else 1
+            poi["g88"] = 1 if (tags.get("fuel:octane_88") == "yes" or tags.get("fuel:e15") == "yes") else 0
 
-        zone_count = 0
-        for el in elements:
-            lat = el.get("lat") or (el.get("center") or {}).get("lat")
-            lon = el.get("lon") or (el.get("center") or {}).get("lon")
-            if not lat or not lon:
-                continue
+        compiled_pois.append(poi)
+        seen_coords.add(fingerprint)
+        new_entries_count += 1
 
-            fingerprint = f"{round(lat, 4)}_{round(lon, 4)}"
-            if fingerprint in seen_coords:
-                continue
+    # 4. Save cleanly appended data back to us_brands.json
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as fh:
+        json.dump(compiled_pois, fh, indent=2)
 
-            tags = el.get("tags", {})
-            cat_slug, brand_slug, display_name = identify_clean_brand(tags)
-            
-            if not cat_slug:
-                continue
-
-            poi = {
-                "lat": round(lat, 4),
-                "lon": round(lon, 4),
-                "n":   display_name,
-                "b":   brand_slug,
-                "c":   cat_slug,
-                "h":   tags.get("opening_hours", "Hours vary by location"),
-                "d":   tags.get("description",   "Verified chain location mapped off highway route bounds."),
-            }
-            
-            compiled_pois.append(poi)
-            seen_coords.add(fingerprint)
-            zone_count += 1
-
-        if zone_count > 0:
-            print(
-                f"Sector [{actual_global_idx + 1}/{len(micro_zones)}] +{zone_count} entries. "
-                f"Total Compiled: {len(compiled_pois)}",
-                flush=True,
-            )
-            # Incremental safe rewrite to append elements without corrupting JSON structures
-            with open(output_file, "w", encoding="utf-8") as fh:
-                json.dump(compiled_pois, fh, indent=2)
-
-        time.sleep(random.uniform(1.5, 3.0))
-
-    print(f"\nPipeline execution batch complete -- {len(compiled_pois)} total POIs saved.", flush=True)
+    print(f"\nExecution Complete:")
+    print(f" -> Added {new_entries_count} new entries.")
+    print(f" -> Filtered out {blacklisted_count} locations matching blacklist rules.")
+    print(f" -> Total records inside {OUTPUT_FILE}: {len(compiled_pois)}")
 
 
 if __name__ == "__main__":
-    generate_nc_database()
+    main()
