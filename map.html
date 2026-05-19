@@ -13,6 +13,10 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
     <style>
         body, html {
             margin: 0;
@@ -98,6 +102,9 @@
                 </button>
                 <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">
                     💾 Save Repo
+                </button>
+                <button id="sync-discoveries-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">
+                    📢 Sync Live Finds
                 </button>
                 <button id="reset-fav-cache-btn" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">
                     🔄 Reset Fav Cache
@@ -256,13 +263,14 @@
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
 
-        let allPoiMarkers = [];
+        let allPoiMarkersMemoryMap = [];
         let globalFavoritesMarkers = []; 
         let repoFavoritesMemory = [];    
         let localJsonMemory = null; 
         let liveOverpassMemory = [];   
         let routeLineCoordinates = [];
         let userMarker = null;
+        let lastUserGpsCoord = null;
         let currentMasterCat = null;
         let currentSubFilter = 'all';
         let activeBufferMeters = 4000; 
@@ -271,7 +279,7 @@
         let activeTargetsSliceMemory = [];
 
         // ==========================================
-        // --- PHASE 3: MAP TILES & ROUTING SETUP ---
+        // --- PHASE 3: MAP TILES & CLUSTER SETUP ---
         // ==========================================
         const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 8);
         
@@ -280,6 +288,14 @@
             dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB' })
         };
         mapLayersPool[mapStyleMode].addTo(map);
+
+        // Marker Cluster Manager - Prevents mobile UI rendering drop slowdowns
+        const poiClusterGroup = L.markerClusterGroup({
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true,
+            maxClusterRadius: 45
+        }).addTo(map);
 
         let routingControl = L.Routing.control({
             show: false, 
@@ -327,7 +343,8 @@
             
             liveOverpassMemory = [];          
             cachedCategoriesFetched.clear(); 
-            allPoiMarkers.forEach(m => map.removeLayer(m.marker)); allPoiMarkers = [];
+            poiClusterGroup.clearLayers();
+            allPoiMarkersMemoryMap = [];
             
             renderGlobalPermanentStars(); 
             
@@ -452,7 +469,8 @@
                                     id: uniqueKey, lat: lat, lon: lon, name: el.tags.name || "Public Facility",
                                     brand: brandSlug !== 'excluded' ? brandSlug : concreteCat, category: currentMasterCat, 
                                     hours: el.tags.opening_hours || "Hours not listed",
-                                    desc: el.tags.description || "", minD: minD, isLocal: false
+                                    desc: el.tags.description || "", minD: minD, isLocal: false,
+                                    rawTags: el.tags
                                 });
                             }
                         }
@@ -509,7 +527,7 @@
         function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
 
         function renderGlobalPermanentStars() {
-            globalFavoritesMarkers.forEach(m => map.removeLayer(m.marker));
+            globalFavoritesMarkers.forEach(m => poiClusterGroup.removeLayer(m.marker));
             globalFavoritesMarkers = [];
 
             let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
@@ -578,7 +596,7 @@
                     });
 
                 globalFavoritesMarkers.push({ marker: marker, lat: lat, lon: lon, category: el.brand });
-                marker.addTo(map);
+                poiClusterGroup.addLayer(marker);
             });
         }
 
@@ -638,8 +656,8 @@
                     autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
                 });
 
-            allPoiMarkers.push({ marker: marker, category: el.brand, lat: lat, lon: lon });
-            marker.addTo(map);
+            allPoiMarkersMemoryMap.push({ marker: marker, category: el.brand, lat: lat, lon: lon });
+            poiClusterGroup.addLayer(marker);
         }
 
         map.on('popupopen', function(e) {
@@ -664,34 +682,45 @@
         });
 
         // ==================================================================================
-        // --- PHASE 6: AGGRESSIVE CACHING ENGINE WITH LRU QUOTA EVICTION MANAGEMENT ---
+        // --- PHASE 6: AGGRESSIVE CACHING ENGINE WITH LRU & TTL EXPIRE MANAGEMENT ---
         // ==================================================================================
         function writeToLruSegmentCache(cacheKey, elementsPayload) {
             try {
-                let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v1') || '{}');
+                let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
                 let activeKeys = Object.keys(metadataRegistry);
                 
                 if (activeKeys.length >= 25 && !metadataRegistry[cacheKey]) {
-                    let oldestKey = activeKeys.reduce((oldest, curr) => metadataRegistry[curr] < metadataRegistry[oldest] ? curr : oldest);
+                    let oldestKey = activeKeys.reduce((oldest, curr) => metadataRegistry[curr].lastAccessed < metadataRegistry[oldest].lastAccessed ? curr : oldest);
                     localStorage.removeItem(oldestKey);
                     delete metadataRegistry[oldestKey];
-                    console.log(`[LRU Engine] Evicted oldest sector segment cache: ${oldestKey}`);
                 }
                 
-                metadataRegistry[cacheKey] = Date.now();
-                localStorage.setItem('poi_lru_registry_v1', JSON.stringify(metadataRegistry));
+                metadataRegistry[cacheKey] = {
+                    lastAccessed: Date.now(),
+                    bornAt: Date.now()
+                };
+                localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
                 localStorage.setItem(cacheKey, JSON.stringify(elementsPayload));
             } catch (error) {
-                console.warn("[LRU Engine] Cache full. Flushing non-starred cache records.");
                 purgeAllNonStarredCaches();
             }
         }
 
         function readFromLruSegmentCache(cacheKey) {
-            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v1') || '{}');
+            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
             if (metadataRegistry[cacheKey]) {
-                metadataRegistry[cacheKey] = Date.now(); 
-                localStorage.setItem('poi_lru_registry_v1', JSON.stringify(metadataRegistry));
+                const age = Date.now() - metadataRegistry[cacheKey].bornAt;
+                const expirationWindow = 24 * 60 * 60 * 1000; // 24-Hour TTL Expiry Check
+                
+                if (age > expirationWindow) {
+                    localStorage.removeItem(cacheKey);
+                    delete metadataRegistry[cacheKey];
+                    localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
+                    return null;
+                }
+                
+                metadataRegistry[cacheKey].lastAccessed = Date.now(); 
+                localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
                 let rawCachedContent = localStorage.getItem(cacheKey);
                 return rawCachedContent ? JSON.parse(rawCachedContent) : null;
             }
@@ -699,9 +728,9 @@
         }
 
         function purgeAllNonStarredCaches() {
-            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v1') || '{}');
+            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
             Object.keys(metadataRegistry).forEach(k => localStorage.removeItem(k));
-            localStorage.removeItem('poi_lru_registry_v1');
+            localStorage.removeItem('poi_lru_registry_v2');
         }
 
         async function fetchWithMirrorFailover(queryPayload) {
@@ -745,11 +774,10 @@
 
             const south = (minLat - 0.25).toFixed(2); const west = (minLon - 0.25).toFixed(2);
             const north = (maxLat + 0.25).toFixed(2); const east = (maxLon + 0.25).toFixed(2);
-            const explicitCacheKeyName = `${CACHE_PREFIX}live_${masterCat}_${south}_${west}_${north}_${east}`;
+            const explicitCacheKeyName = `${CACHE_PREFIX}live_${masterCat}_${south}_west_${north}_east`;
 
             let preloadedElements = readFromLruSegmentCache(explicitCacheKeyName);
             if (preloadedElements) {
-                console.log(`[Cache System] Hit for: ${explicitCacheKeyName}`);
                 liveOverpassMemory = liveOverpassMemory.concat(preloadedElements);
                 cachedCategoriesFetched.add(masterCat);
                 dispatchOffThreadAnalysis();
@@ -794,6 +822,92 @@
                 dispatchOffThreadAnalysis();
             } catch (err) {
                 updateInlineStatus("Stops active.");
+            }
+        }
+
+        // ==========================================
+        // --- NEW COUPLING: AUTOMATED BRAND SYNC ---
+        // ==========================================
+        function pushNewlyDiscoveredLiveBrandsToRepoDatabase() {
+            if (!liveOverpassMemory || liveOverpassMemory.length === 0) {
+                alert("No live Overpass map objects have been fetched yet! Browse a route and filter categories first.");
+                return;
+            }
+            
+            let databaseComparisonSet = new Set();
+            if (localJsonMemory) {
+                localJsonMemory.forEach(item => {
+                    databaseComparisonSet.add(`${roundCoords(item.lat)}_${roundCoords(item.lon)}`);
+                });
+            }
+
+            let objectsToContribute = [];
+            liveOverpassMemory.forEach(el => {
+                const lat = el.lat || (el.center && el.center.lat);
+                const lon = el.lon || (el.center && el.center.lon);
+                if (!lat || !lon) return;
+
+                const checkKey = `${roundCoords(lat)}_${roundCoords(lon)}`;
+                if (!databaseComparisonSet.has(checkKey)) {
+                    // Extract tag details safely to match expected us_brands.json scheme
+                    let tags = el.tags || {};
+                    let normalizedCat = el.concreteCat || 'food';
+                    let labelName = tags.name || tags.brand || "Public Facility";
+                    
+                    let brandSlug = 'playground';
+                    if (normalizedCat !== 'playground') {
+                        let sig = (labelName + ' ' + (tags.brand || '')).toLowerCase();
+                        if (sig.includes('sheetz')) brandSlug = 'sheetz';
+                        else if (sig.includes('murphy')) brandSlug = 'murphyexpress';
+                        else if (sig.includes('bucee')) brandSlug = 'bucees';
+                        else if (sig.includes('costco')) brandSlug = 'costcogas';
+                        else if (sig.includes('wawa')) brandSlug = 'wawa';
+                        else if (sig.includes('circle k')) brandSlug = 'circlek';
+                        else if (sig.includes('mcdonald')) brandSlug = 'mcdonalds';
+                        else if (sig.includes('wendy')) brandSlug = 'wendys';
+                        else if (sig.includes('chick-fil-a') || sig.includes('chick fil a')) brandSlug = 'chickfila';
+                        else if (sig.includes('chipotle')) brandSlug = 'chipotle';
+                        else if (sig.includes('jersey mike')) brandSlug = 'jerseymikes';
+                        else if (sig.includes('raising cane')) brandSlug = 'raisingcanes';
+                        else brandSlug = normalizedCat;
+                    }
+
+                    let simplifiedPoi = {
+                        lat: roundCoords(lat),
+                        lon: roundCoords(lon),
+                        n: labelName,
+                        b: brandSlug,
+                        c: (normalizedCat.startsWith('highway') ? 'highway' : normalizedCat.startsWith('tourism') ? 'tourism' : normalizedCat),
+                        h: tags.opening_hours || "",
+                        d: tags.description || ""
+                    };
+
+                    // Fuel flags parsing
+                    if (simplifiedPoi.c === 'gas') {
+                        simplifiedPoi.g87 = (tags["fuel:octane_87"] === 'yes' || tags["fuel:unleaded"] === 'yes') ? 1 : 1;
+                        simplifiedPoi.g88 = (tags["fuel:octane_88"] === 'yes' || tags["fuel:e15"] === 'yes') ? 1 : 0;
+                    }
+
+                    objectsToContribute.push(simplifiedPoi);
+                    databaseComparisonSet.add(checkKey); // Avoid duplicate entries in single batch
+                }
+            });
+
+            if (objectsToContribute.length === 0) {
+                alert("Your local database is already 100% up to date with all live objects along this path sequence!");
+                return;
+            }
+
+            // Cap the payload batch size to prevent hitting GitHub issue body constraints (~65k characters)
+            const maximumBatchLimit = 50;
+            const finalSyncBatch = objectsToContribute.slice(0, maximumBatchLimit);
+            
+            if (confirm(`Discovered ${objectsToContribute.length} new locations absent from your repo database. Push first batch of (${finalSyncBatch.length}) to us_brands.json?`)) {
+                const repositoryPathTarget = "kev11wolf/public";
+                const minimizedJsonPayload = JSON.stringify(finalSyncBatch);
+                const prefilledGitHubIssueUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_NEW_BRANDS&body=${encodeURIComponent(minimizedJsonPayload)}`;
+                window.open(prefilledGitHubIssueUrl, '_blank');
+                triggerToast("Live updates compiled! Submit issue to run background action worker.");
             }
         }
 
@@ -924,8 +1038,10 @@
         // ======================================================
         mathWorker.onmessage = function(e) {
             const { sortedMatches } = e.data;
-            allPoiMarkers.forEach(item => map.removeLayer(item.marker));
-            allPoiMarkers = [];
+            
+            // Wipe cluster layer entries safely
+            poiClusterGroup.clearLayers();
+            allPoiMarkersMemoryMap = [];
 
             sortedMatches.forEach(el => {
                 let isCoordinateOccupiedByStar = globalFavoritesMarkers.some(m => roundCoords(m.lat) === roundCoords(el.lat) && roundCoords(m.lon) === roundCoords(el.lon));
@@ -948,7 +1064,7 @@
 
         map.on('zoomend', () => {
             const isLarge = map.getZoom() > 13;
-            allPoiMarkers.forEach(item => {
+            allPoiMarkersMemoryMap.forEach(item => {
                 let checkKey = item.category;
                 if (categoryConfigs[checkKey] === undefined) {
                     if (['raisingcanes','chickfila','mcdonalds','jerseymikes','wendys','chipotle'].includes(checkKey)) checkKey = 'food';
@@ -1003,6 +1119,7 @@
         document.getElementById('buffer-select').addEventListener('change', (e) => { activeBufferMeters = parseInt(e.target.value); if (localJsonMemory) dispatchOffThreadAnalysis(); });
         document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
         document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
+        document.getElementById('sync-discoveries-btn').addEventListener('click', pushNewlyDiscoveredLiveBrandsToRepoDatabase);
 
         document.getElementById('route-btn').addEventListener('click', async () => {
             const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input'); let startLatLng, endLatLng;
@@ -1018,8 +1135,17 @@
             else {
                 if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
                 geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
+                
                 watchId = navigator.geolocation.watchPosition((pos) => {
                     const { latitude, longitude } = pos.coords;
+                    
+                    // Optimization: Debounced Distance Check (Ignore updates under 25 meters to save mobile battery)
+                    if (lastUserGpsCoord) {
+                        const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord);
+                        if (distanceMoved < 25) return; 
+                    }
+                    lastUserGpsCoord = [latitude, longitude];
+
                     if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
                     map.panTo([latitude, longitude]);
 
