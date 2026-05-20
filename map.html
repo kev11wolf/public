@@ -42,14 +42,19 @@
     <div class="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col transition-all duration-300">
         
         <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div class="relative">
-                    <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div class="relative flex-1">
+                    <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
+                    <button id="start-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
                     <button id="start-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
                     <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
                 </div>
-                <div class="relative">
-                    <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
+                
+                <button id="swap-locations-btn" type="button" class="self-center p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 active:scale-95 rounded-xl text-sm font-bold transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shadow-sm">⇆</button>
+                
+                <div class="relative flex-1">
+                    <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
+                    <button id="end-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
                     <button id="end-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
                     <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
                 </div>
@@ -74,8 +79,7 @@
                 </select>
                 <button id="theme-toggle-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] active:bg-gray-100 whitespace-nowrap">🌙 Mode</button>
                 <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
-                <button id="sync-discoveries-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">📢 Copy Full us_brands.json</button>
-                <button id="reset-fav-cache-btn" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">🔄 Reset Fav Cache</button>
+                <button id="reset-fav-cache-btn" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">🔄 Sync Global Base</button>
                 <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">🔍 Inputs</button>
                 <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">🚗 Track</button>
             </div>
@@ -99,6 +103,11 @@
         <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest leading-none mb-1">⏱️ Next Target Stop</p>
         <h4 id="hud-poi-name" class="text-xs font-black truncate text-white">---</h4>
         <p id="hud-poi-dist" class="text-sm font-black text-amber-400 mt-0.5">0.0 mi away</p>
+    </div>
+
+    <div class="absolute bottom-24 right-4 z-10 flex flex-col gap-2">
+        <button id="zoom-in-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">＋</button>
+        <button id="zoom-out-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">－</button>
     </div>
 
     <div id="route-mileage-sticky" class="absolute bottom-6 left-4 z-10 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 px-4 py-2.5 rounded-xl shadow-xl hidden font-black text-xs transition-all duration-300 pointer-events-auto">
@@ -181,7 +190,7 @@
             if (routeLineCoordinates.length > 0) activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
 
             mathWorker.postMessage({
-                localElements: localJsonMemory, liveElements: liveOverpassMemory,
+                localElements: localJsonMemory,
                 targetsSlice: activeTargetsSliceMemory, activeBufferMeters: activeBufferMeters,
                 currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
             });
@@ -191,12 +200,6 @@
         // --- PHASE 2: GLOBAL ENVIRONMENT KEYS ---
         // ==========================================
         const MAP_INITIAL_CENTER = [35.7796, -78.6382]; 
-        const CACHE_PREFIX = 'route_hybrid_v12_';
-        const OVERPASS_MIRRORS = [
-            "https://overpass-api.de/api/interpreter",
-            "https://overpass.kumi.systems/api/interpreter",
-            "https://overpass.osm.ch/api/interpreter"
-        ];
         const autocompleteQueryMemoryCache = new Map(); 
         
         const categoryConfigs = {
@@ -247,19 +250,17 @@
         let globalFavoritesMarkers = []; 
         let repoFavoritesMemory = [];    
         let localJsonMemory = null; 
-        let liveOverpassMemory = [];   
         let routeLineCoordinates = [];
         let userMarker = null;
         let lastUserGpsCoord = null;
         let currentMasterCat = null;
         let currentSubFilter = 'all';
         let activeBufferMeters = 4000; 
-        let cachedCategoriesFetched = new Set(); 
         let mapStyleMode = 'light';
         let activeTargetsSliceMemory = [];
         let routeBufferPolyline = null;
 
-        // Auto-Center Safety Tracking Variables
+        // Auto-Center Operational Flags
         let allowAutoCenter = true;
         let autoCenterTimeoutId = null;
 
@@ -274,7 +275,6 @@
         };
         mapLayersPool[mapStyleMode].addTo(map);
 
-        // Standard flat mapping group to render explicit points cleanly without visual grouping anchors
         const poiClusterGroup = L.layerGroup().addTo(map);
 
         let routingControl = L.Routing.control({
@@ -336,8 +336,6 @@
                 stickyPanel.classList.remove('hidden');
             }
 
-            liveOverpassMemory = [];          
-            cachedCategoriesFetched.clear(); 
             poiClusterGroup.clearLayers();
             allPoiMarkersMemoryMap = [];
             
@@ -359,9 +357,9 @@
             }
         });
 
-        // ==========================================
-        // --- PHASE 4: WORKER MATRIX ALLOCATIONS ---
-        // ==========================================
+        // ==============================================================
+        // --- PHASE 4: HIGH-SPEED WORKER MATRIX (LOCAL METRICS ONLY) ---
+        // ==============================================================
         const workerBlobCode = `
             function haversineDist(lat1, lon1, lat2, lon2) {
                 const R = 6371000;
@@ -371,62 +369,15 @@
                 return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
             }
 
-            function parseLiveBackupTargetCategory(tags) {
-                var nLower = (tags.name || '').toLowerCase();
-                var bLower = (tags.brand || '').toLowerCase();
-                var sig = (nLower + ' ' + bLower).toLowerCase();
-                
-                if (sig.includes('starbucks')) return 'coffee';
-                
-                if (nLower.includes('national')) return 'excluded';
-                if (tags.admin_level || tags.boundary === 'administrative' || tags.boundary === 'protected_area') return 'excluded';
-
-                if (tags.leisure === 'playground') {
-                    if (['church','chapel','ministry','baptist','methodist','lutheran','presbyterian','catholic','parish','fellowship','christian'].some(k => sig.includes(k))) return 'excluded';
-                    return 'playground';
-                }
-                if (tags.highway === 'rest_area') return 'highway_rest';
-                if (tags.amenity === 'toilets') return 'highway_toilets';
-                if (tags.tourism === 'viewpoint') return 'tourism_viewpoint';
-                if (tags.leisure === 'dog_park') return 'tourism_dogpark';
-                
-                if (tags.boundary === 'national_park') return 'national_park';
-                if (tags.leisure === 'nature_reserve') return 'nature_reserve';
-                if (tags.tourism === 'attraction') return 'attraction';
-                if (tags.amenity === 'hospital') return 'hospital';
-                if (tags.amenity === 'veterinary') return 'veterinary';
-                if (tags.amenity === 'fuel') return 'gas';
-                if (tags.amenity === 'fast_food' || tags.amenity === 'restaurant') return 'food';
-                
-                if (["mcdonald", "wendy", "chick-fil-a", "chipotle", "jersey mike", "raising cane"].some(k => sig.includes(k))) return 'food';
-                if (["sheetz", "wawa", "murphy", "bucee", "circle k", "costco"].some(k => sig.includes(k))) return 'gas';
-
-                return 'excluded';
-            }
-
-            function getCleanBrandSlug(tags) {
-                var sig = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
-                if (sig.includes('starbucks')) return 'starbucks';
-                if (sig.includes('sheetz')) return 'sheetz';
-                if (sig.includes('murphy')) return 'murphyexpress';
-                if (sig.includes('bucee') || sig.includes('buc-ee')) return 'bucees';
-                if (sig.includes('costco')) return 'costcogas';
-                if (sig.includes('wawa')) return 'wawa';
-                if (sig.includes('circle k')) return 'circlek';
-                if (sig.includes('mcdonald')) return 'mcdonalds';
-                if (sig.includes('wendy')) return 'wendys';
-                if (sig.includes('chick-fil-a') || sig.includes('chick fil a')) return 'chickfila';
-                if (sig.includes('chipotle')) return 'chipotle';
-                if (sig.includes('jersey mike')) return 'jerseymikes';
-                if (sig.includes('raising cane')) return 'raisingcanes';
-                return 'excluded';
-            }
-
             self.onmessage = function(e) {
-                const { localElements, liveElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
+                const { localElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
                 const finalMatches = [];
-                const SPATIAL_DEDUPE_MAX_RADIUS_METERS = 40; 
                 
+                if (!localElements) {
+                    self.postMessage({ sortedMatches: [] });
+                    return;
+                }
+
                 let minTlat = 90, maxTlat = -90, minTlon = 180, maxTlon = -180;
                 for(let j=0; j<targetsSlice.length; j++) {
                     if (targetsSlice[j].lat < minTlat) minTlat = targetsSlice[j].lat;
@@ -437,97 +388,33 @@
                 const degPad = (activeBufferMeters + 2000) / 111000;
                 const spatialEnvelope = { n: maxTlat + degPad, s: minTlat - degPad, e: maxTlon + degPad, w: minTlon - degPad };
 
-                function runSpatialDeduplicationAnalysis(payload) {
-                    for (let k = 0; k < finalMatches.length; k++) {
-                        let matchingRef = finalMatches[k];
-                        let separationMeters = haversineDist(payload.lat, payload.lon, matchingRef.lat, matchingRef.lon);
-                        if (separationMeters < SPATIAL_DEDUPE_MAX_RADIUS_METERS) {
-                            let pLabel = payload.name.toLowerCase();
-                            let rLabel = matchingRef.name.toLowerCase();
-                            if (payload.brand === matchingRef.brand || pLabel === rLabel || pLabel.includes(rLabel) || rLabel.includes(pLabel)) {
-                                return true; 
-                            }
-                        }
+                localElements.forEach(el => {
+                    let normBrand = (el.b || '');
+                    let normCat = el.c;
+
+                    if (normCat !== currentMasterCat) return;
+                    if (el.lat > spatialEnvelope.n || el.lat < spatialEnvelope.s || el.lon > spatialEnvelope.e || el.lon < spatialEnvelope.w) return;
+                    
+                    // Submenu gas filter overrides
+                    if (currentSubFilter === 'unl87' && el.g87 !== 1) return;
+                    if (currentSubFilter === 'unl88' && el.g88 !== 1) return;
+                    // Standard brand tag match filters
+                    if (currentSubFilter !== 'all' && currentSubFilter !== 'unl87' && currentSubFilter !== 'unl88' && normBrand !== currentSubFilter) return;
+
+                    let minD = Infinity;
+                    for (let j = 0; j < targetsSlice.length; j++) {
+                        const d = haversineDist(el.lat, el.lon, targetsSlice[j].lat, targetsSlice[j].lng);
+                        if (d < minD) minD = d;
                     }
-                    return false;
-                }
 
-                if (localElements) {
-                    localElements.forEach(el => {
-                        let normName = (el.n || '');
-                        let normBrand = (el.b || '');
-                        let normCat = el.c;
-                        
-                        if (normName.toLowerCase().includes('starbucks') || normBrand.toLowerCase().includes('starbucks')) {
-                            normCat = 'coffee';
-                            normBrand = 'starbucks';
-                        }
-
-                        if (normCat !== currentMasterCat) return;
-                        if (el.lat > spatialEnvelope.n || el.lat < spatialEnvelope.s || el.lon > spatialEnvelope.e || el.lon < spatialEnvelope.w) return;
-                        if (normName.toLowerCase().includes('national')) return;
-                        if (currentSubFilter !== 'all' && normBrand !== currentSubFilter) return;
-
-                        let minD = Infinity;
-                        for (let j = 0; j < targetsSlice.length; j++) {
-                            const d = haversineDist(el.lat, el.lon, targetsSlice[j].lat, targetsSlice[j].lng);
-                            if (d < minD) minD = d;
-                        }
-
-                        if (minD <= activeBufferMeters) {
-                            let obj = {
-                                id: "local_" + el.lat + "_" + el.lon, lat: el.lat, lon: el.lon,
-                                name: normName, brand: normBrand, category: normCat, hours: el.h || "Hours not listed",
-                                desc: el.d || "", minD: minD, isLocal: true, g87: el.g87, g88: el.g88
-                            };
-                            if (!runSpatialDeduplicationAnalysis(obj)) finalMatches.push(obj);
-                        }
-                    });
-                }
-
-                if (liveElements) {
-                    liveElements.forEach(el => {
-                        const lat = el.lat || (el.center && el.center.lat);
-                        const lon = el.lon || (el.center && el.center.lon);
-                        if (!lat || !lon) return;
-                        if (lat > spatialEnvelope.n || lat < spatialEnvelope.s || lon > spatialEnvelope.e || lon < spatialEnvelope.w) return;
-
-                        let concreteCat = parseLiveBackupTargetCategory(el.tags || {});
-                        if (concreteCat === 'excluded') return;
-
-                        let elementMasterCat = 'excluded';
-                        if (concreteCat === 'coffee') elementMasterCat = 'coffee';
-                        else if (concreteCat === 'playground') elementMasterCat = 'playground';
-                        else if (['highway_rest', 'highway_toilets'].includes(concreteCat)) elementMasterCat = 'highway';
-                        else if (['tourism_viewpoint', 'tourism_dogpark'].includes(concreteCat)) elementMasterCat = 'tourism';
-                        else if (['national_park', 'nature_reserve', 'attraction'].includes(concreteCat)) elementMasterCat = 'parks';
-                        else if (['hospital', 'veterinary'].includes(concreteCat)) elementMasterCat = 'medical';
-                        else if (concreteCat === 'gas') elementMasterCat = 'gas';
-                        else if (concreteCat === 'food') elementMasterCat = 'food';
-
-                        if (elementMasterCat !== currentMasterCat) return;
-
-                        var brandSlug = getCleanBrandSlug(el.tags || {});
-                        if (brandSlug === 'excluded') { brandSlug = concreteCat; }
-                        if (currentSubFilter !== 'all' && brandSlug !== currentSubFilter) return;
-
-                        let minD = Infinity;
-                        for (let j = 0; j < targetsSlice.length; j++) {
-                            const d = haversineDist(lat, lon, targetsSlice[j].lat, targetsSlice[j].lng);
-                            if (d < minD) minD = d;
-                        }
-
-                        if (minD <= activeBufferMeters) {
-                            let obj = {
-                                id: "live_" + lat + "_" + lon, lat: lat, lon: lon, name: el.tags.name || el.tags.brand || el.tags.operator || "Starbucks",
-                                brand: brandSlug, category: currentMasterCat, 
-                                hours: el.tags.opening_hours || "Hours not listed",
-                                desc: el.tags.description || "", minD: minD, isLocal: false
-                            };
-                            if (!runSpatialDeduplicationAnalysis(obj)) finalMatches.push(obj);
-                        }
-                    });
-                }
+                    if (minD <= activeBufferMeters) {
+                        finalMatches.push({
+                            id: "local_" + el.lat + "_" + el.lon, lat: el.lat, lon: el.lon,
+                            name: el.n, brand: normBrand, category: normCat, hours: el.h || "Hours not listed",
+                            desc: el.d || "", minD: minD, isLocal: true, g87: el.g87, g88: el.g88
+                        });
+                    }
+                });
 
                 const sortedMatches = finalMatches.sort((a, b) => a.minD - b.minD);
                 self.postMessage({ sortedMatches });
@@ -602,8 +489,8 @@
                 let popupHours = el.hours || "Hours not listed";
                 let popupDesc = el.desc || "Verified favorite location pinned to map globally.";
                 
-                let visualCatKey = el.brand;
-                if (!categoryConfigs[visualCatKey]) { visualCatKey = el.category; }
+                let visualCatKey = el.category;
+                if (categoryConfigs[el.brand]) { visualCatKey = el.brand; }
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
@@ -748,69 +635,6 @@
             }
         });
 
-        // ==================================================================================
-        // --- PHASE 6: AGGRESSIVE CACHING ENGINE WITH LRU & TTL EXPIRE MANAGEMENT ---
-        // ==================================================================================
-        function writeToLruSegmentCache(cacheKey, elementsPayload) {
-            try {
-                let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
-                let activeKeys = Object.keys(metadataRegistry);
-                
-                if (activeKeys.length >= 25 && !metadataRegistry[cacheKey]) {
-                    let oldestKey = activeKeys.reduce((oldest, curr) => metadataRegistry[curr].lastAccessed < metadataRegistry[oldest].lastAccessed ? curr : oldest);
-                    localStorage.removeItem(oldestKey);
-                    delete metadataRegistry[oldestKey];
-                }
-                
-                metadataRegistry[cacheKey] = { lastAccessed: Date.now(), bornAt: Date.now() };
-                localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
-                localStorage.setItem(cacheKey, JSON.stringify(elementsPayload));
-            } catch (error) {
-                purgeAllNonStarredCaches();
-            }
-        }
-
-        function readFromLruSegmentCache(cacheKey) {
-            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
-            if (metadataRegistry[cacheKey]) {
-                const age = Date.now() - metadataRegistry[cacheKey].bornAt;
-                const expirationWindow = 24 * 60 * 60 * 1000; 
-                
-                if (age > expirationWindow) {
-                    localStorage.removeItem(cacheKey);
-                    delete metadataRegistry[cacheKey];
-                    localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
-                    return null;
-                }
-                
-                metadataRegistry[cacheKey].lastAccessed = Date.now(); 
-                localStorage.setItem('poi_lru_registry_v2', JSON.stringify(metadataRegistry));
-                let rawCachedContent = localStorage.getItem(cacheKey);
-                return rawCachedContent ? JSON.parse(rawCachedContent) : null;
-            }
-            return null;
-        }
-
-        function purgeAllNonStarredCaches() {
-            let metadataRegistry = JSON.parse(localStorage.getItem('poi_lru_registry_v2') || '{}');
-            Object.keys(metadataRegistry).forEach(k => localStorage.removeItem(k));
-            localStorage.removeItem('poi_lru_registry_v2');
-        }
-
-        async function fetchWithMirrorFailover(queryPayload) {
-            for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
-                try {
-                    const response = await fetch(OVERPASS_MIRRORS[i], {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: 'data=' + encodeURIComponent(queryPayload)
-                    });
-                    if (response.ok) return await response.json();
-                } catch (err) { console.warn("Mirror connectivity failover triggered."); }
-            }
-            throw new Error("All data networks congested.");
-        }
-
         async function runDataExecutionLayer(masterCat) {
             if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
 
@@ -821,188 +645,11 @@
                     localJsonMemory = await res.json();
                     triggerToast("Master database file loaded completely.");
                 } catch (err) {
-                    console.error("Local database layer ingestion failed.", err);
+                    print("Local database layer ingestion failed.", err);
                     localJsonMemory = [];
                 }
             }
-
             dispatchOffThreadAnalysis();
-
-            if (!cachedCategoriesFetched.has(masterCat)) {
-                await fetchLiveBackupEnrichment(masterCat);
-            }
-        }
-
-        async function fetchLiveBackupEnrichment(masterCat) {
-            let sampledCoords = [];
-            if (routeLineCoordinates.length > 0) {
-                sampledCoords.push(routeLineCoordinates[0]);
-                let lastPoint = routeLineCoordinates[0];
-                for (let i = 1; i < routeLineCoordinates.length; i++) {
-                    let d = map.distance([lastPoint.lat, lastPoint.lng], [routeLineCoordinates[i].lat, routeLineCoordinates[i].lng]);
-                    if (d >= activeBufferMeters) {
-                        sampledCoords.push(routeLineCoordinates[i]);
-                        lastPoint = routeLineCoordinates[i];
-                    }
-                }
-                let dest = routeLineCoordinates[routeLineCoordinates.length - 1];
-                if (map.distance([lastPoint.lat, lastPoint.lng], [dest.lat, dest.lng]) > 500) {
-                    sampledCoords.push(dest);
-                }
-            }
-            
-            if (sampledCoords.length > 25) {
-                let step = Math.ceil(sampledCoords.length / 25);
-                sampledCoords = sampledCoords.filter((_, idx) => idx % step === 0 || idx === sampledCoords.length - 1);
-            }
-
-            const uniqueCacheKeyString = sampledCoords.map(c => `${c.lat.toFixed(3)}_${c.lng.toFixed(3)}`).join(',');
-            const explicitCacheKeyName = `${CACHE_PREFIX}live_${masterCat}_${uniqueCacheKeyString.substring(0, 45)}`;
-
-            let preloadedElements = readFromLruSegmentCache(explicitCacheKeyName);
-            if (preloadedElements) {
-                liveOverpassMemory = liveOverpassMemory.concat(preloadedElements);
-                cachedCategoriesFetched.add(masterCat);
-                dispatchOffThreadAnalysis();
-                return;
-            }
-
-            updateInlineStatus("Sweeping live channels for updates...", true);
-
-            let queryParts = [];
-            let selectors = [];
-            
-            if (masterCat === 'playground') {
-                selectors.push('nwr["leisure"="playground"]["access"!~"private|no"]');
-            } else if (masterCat === 'highway') {
-                selectors.push('node["highway"="rest_area"]', 'node["amenity"="toilets"]');
-            } else if (masterCat === 'tourism') {
-                selectors.push('node["tourism"="viewpoint"]', 'node["leisure"="dog_park"]');
-            } else if (masterCat === 'coffee') {
-                selectors.push('nwr["brand"~"starbucks",i]', 'nwr["name"~"starbucks",i]');
-            } else if (masterCat === 'parks') {
-                selectors.push('nwr["boundary"="national_park"]', 'nwr["leisure"="nature_reserve"]', 'nwr["tourism"="attraction"]');
-            } else if (masterCat === 'medical') {
-                selectors.push('nwr["amenity"="hospital"]', 'nwr["amenity"="veterinary"]');
-            } else if (masterCat === 'gas') {
-                selectors.push('nwr["brand"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i]', 'nwr["name"~"Murphy Express|Sheetz|Buc-ee\'s|Costco|Wawa|Circle K",i]');
-            } else if (masterCat === 'food') {
-                selectors.push('nwr["brand"~"McDonald\'s|Wendy\'s|Chick-fil-A|Chipotle|Jersey Mike|Raising Cane",i]', 'nwr["name"~"McDonald\'s|Wendy\'s|Chick-fil-A|Raising Cane|Jersey Mike|Chipotle",i]');
-            }
-
-            sampledCoords.forEach(c => {
-                selectors.forEach(sel => {
-                    queryParts.push(`${sel}(around:${activeBufferMeters},${c.lat.toFixed(5)},${c.lng.toFixed(5)});`);
-                });
-            });
-
-            try {
-                const unionString = queryParts.join('');
-                const query = `[out:json][timeout:30];(${unionString});out center;`;
-                const response = await fetchWithMirrorFailover(query);
-                
-                if (response && response.elements) {
-                    let newlyDiscoveredItems = [];
-                    response.elements.forEach(el => {
-                        let tags = el.tags || {};
-                        let signature = ((tags.name || '') + ' ' + (tags.brand || '')).toLowerCase();
-
-                        if (signature.includes('starbucks')) el.concreteCat = 'coffee';
-                        else if (tags.leisure === 'playground') el.concreteCat = 'playground';
-                        else if (tags.highway === 'rest_area') el.concreteCat = 'highway_rest';
-                        else if (tags.amenity === 'toilets') el.concreteCat = 'highway_toilets';
-                        else if (tags.tourism === 'viewpoint') el.concreteCat = 'tourism_viewpoint';
-                        else if (tags.leisure === 'dog_park') el.concreteCat = 'tourism_dogpark';
-                        else if (tags.boundary === 'national_park') el.concreteCat = 'national_park';
-                        else if (tags.leisure === 'nature_reserve') el.concreteCat = 'nature_reserve';
-                        else if (tags.tourism === 'attraction') el.concreteCat = 'attraction';
-                        else if (tags.amenity === 'hospital') el.concreteCat = 'hospital';
-                        else if (tags.amenity === 'veterinary') el.concreteCat = 'veterinary';
-                        
-                        liveOverpassMemory.push(el);
-                        newlyDiscoveredItems.push(el);
-                    });
-                    writeToLruSegmentCache(explicitCacheKeyName, newlyDiscoveredItems);
-                }
-
-                cachedCategoriesFetched.add(masterCat);
-                dispatchOffThreadAnalysis();
-            } catch (err) {
-                updateInlineStatus("Stops active.");
-            }
-        }
-
-        function pushNewlyDiscoveredLiveBrandsToRepoDatabase() {
-            let unifiedDatabaseList = localJsonMemory ? [...localJsonMemory] : [];
-            
-            unifiedDatabaseList = unifiedDatabaseList.filter(item => {
-                var n = (item.n || '').toLowerCase();
-                var d = (item.d || '').toLowerCase();
-                return !(n.includes('national') || d.includes('national'));
-            });
-
-            let trackedCoordinatesSet = new Set(unifiedDatabaseList.map(item => `${roundCoords(item.lat)}_${roundCoords(item.lon)}`));
-            
-            let addedCount = 0;
-            liveOverpassMemory.forEach(el => {
-                const lat = el.lat || (el.center && el.center.lat);
-                const lon = el.lon || (el.center && el.center.lon);
-                if (!lat || !lon) return;
-
-                const checkKey = `${roundCoords(lat)}_${roundCoords(lon)}`;
-                if (!trackedCoordinatesSet.has(checkKey)) {
-                    let tags = el.tags || {};
-                    if (!tags.name && !tags.brand) return;
-
-                    var nameCheck = (tags.name || tags.brand || '').toLowerCase();
-                    var descCheck = (tags.description || '').toLowerCase();
-                    if (nameCheck.includes('national') || descCheck.includes('national')) {
-                        if (!tags.boundary && !tags.amenity && !tags.leisure && !nameCheck.includes('starbucks')) return;
-                    }
-
-                    let normalizedCat = el.concreteCat || 'food';
-                    let labelName = tags.name || tags.brand || "Starbucks";
-                    
-                    let brandSlug = normalizedCat;
-                    let sig = (labelName + ' ' + (tags.brand || '')).toLowerCase();
-                    if (sig.includes('starbucks')) brandSlug = 'starbucks';
-                    else if (sig.includes('sheetz')) brandSlug = 'sheetz';
-                    else if (sig.includes('murphy')) brandSlug = 'murphyexpress';
-                    else if (sig.includes('bucee')) brandSlug = 'bucees';
-                    else if (sig.includes('costco')) brandSlug = 'costcogas';
-                    else if (sig.includes('wawa')) brandSlug = 'wawa';
-                    else if (sig.includes('circle k')) brandSlug = 'circlek';
-                    else if (sig.includes('mcdonald')) brandSlug = 'mcdonalds';
-                    else if (sig.includes('wendy')) brandSlug = 'wendys';
-                    else if (sig.includes('chick-fil-a') || sig.includes('chick fil a')) brandSlug = 'chickfila';
-                    else if (sig.includes('chipotle')) brandSlug = 'chipotle';
-                    else if (sig.includes('jersey mike')) brandSlug = 'jerseymikes';
-                    else if (sig.includes('raising cane')) brandSlug = 'raisingcanes';
-
-                    let simplifiedPoi = {
-                        lat: roundCoords(lat), lon: roundCoords(lon),
-                        n: labelName, b: brandSlug,
-                        c: (normalizedCat.startsWith('highway') ? 'highway' : normalizedCat.startsWith('tourism') ? 'tourism' : ['national_park', 'nature_reserve', 'attraction'].includes(normalizedCat) ? 'parks' : ['hospital', 'veterinary'].includes(normalizedCat) ? 'medical' : normalizedCat === 'coffee' ? 'coffee' : normalizedCat),
-                        h: tags.opening_hours || "", d: tags.description || ""
-                    };
-
-                    if (simplifiedPoi.c === 'gas') {
-                        simplifiedPoi.g87 = (tags["fuel:octane_87"] === 'yes' || tags["fuel:unleaded"] === 'yes') ? 1 : 1;
-                        simplifiedPoi.g88 = (tags["fuel:octane_88"] === 'yes' || tags["fuel:e15"] === 'yes') ? 1 : 0;
-                    }
-
-                    unifiedDatabaseList.push(simplifiedPoi);
-                    trackedCoordinatesSet.add(checkKey);
-                    addedCount += 1;
-                }
-            });
-
-            const comprehensiveJsonString = JSON.stringify(unifiedDatabaseList, null, 2);
-            
-            navigator.clipboard.writeText(comprehensiveJsonString).then(() => {
-                triggerToast(`Copied! Total items in clipboard dataset: ${unifiedDatabaseList.length}`);
-                alert(`Export Complete!\n\nSuccessfully compiled ${unifiedDatabaseList.length} total database records.\n\nThe updated dataset code has been copied to your system clipboard. Open 'us_brands.json' in your editor, replace everything, and save!`);
-            }).catch(() => { alert("System clipboard write access rejected by permission controls."); });
         }
 
         function launchAutomatedGitHubSyncPipeline() {
@@ -1041,15 +688,19 @@
 
                 const response = await fetch(`favorites.json${querySuffix}`);
                 if (response.ok) { repoFavoritesMemory = await response.json(); }
-            } catch (e) { console.log("No favorites file initialized yet."); }
+            } catch (e) { print("No favorites file initialized yet."); }
             
             renderGlobalPermanentStars(); 
             if (forceRefresh && routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
         }
 
-        // Optimized US Only Autocomplete Engine
         function runCachedAutocompleteSearch(inputElement, dropdownElement) {
             const query = inputElement.value.trim();
+            const clearBtn = document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn');
+            
+            if (query.length > 0) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
+
             if (query.length < 3) {
                 dropdownElement.innerHTML = '';
                 dropdownElement.classList.add('hidden');
@@ -1094,6 +745,7 @@
                     inputElement.dataset.lon = item.lon;
                     dropdownElement.innerHTML = '';
                     dropdownElement.classList.add('hidden');
+                    document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn').classList.remove('hidden');
                 });
                 dropdownElement.appendChild(option);
             });
@@ -1109,7 +761,6 @@
                 debounceTimer = setTimeout(() => { runCachedAutocompleteSearch(input, dropdown); }, 400);
             });
             
-            // Auto close on blur
             input.addEventListener('blur', () => {
                 setTimeout(() => { dropdown.classList.add('hidden'); }, 200);
             });
@@ -1117,6 +768,54 @@
 
         initAutocomplete('start-input', 'start-autocomplete');
         initAutocomplete('end-input', 'end-autocomplete');
+
+        document.getElementById('start-clear-btn').addEventListener('click', (e) => {
+            const input = document.getElementById('start-input');
+            input.value = ''; delete input.dataset.lat; delete input.dataset.lon;
+            e.target.classList.add('hidden');
+        });
+
+        document.getElementById('end-clear-btn').addEventListener('click', (e) => {
+            const input = document.getElementById('end-input');
+            input.value = ''; delete input.dataset.lat; delete input.dataset.lon;
+            e.target.classList.add('hidden');
+        });
+
+        document.getElementById('swap-locations-btn').addEventListener('click', () => {
+            const startInput = document.getElementById('start-input');
+            const endInput = document.getElementById('end-input');
+            const startClear = document.getElementById('start-clear-btn');
+            const endClear = document.getElementById('end-clear-btn');
+
+            const tempVal = startInput.value; startInput.value = endInput.value; endInput.value = tempVal;
+            const tempLat = startInput.dataset.lat; startInput.dataset.lat = endInput.dataset.lat || ''; endInput.dataset.lat = tempLat || '';
+            const tempLon = startInput.dataset.lon; startInput.dataset.lon = endInput.dataset.lon || ''; endInput.dataset.lon = tempLon || '';
+
+            if (startInput.value.length > 0) startClear.classList.remove('hidden'); else startClear.classList.add('hidden');
+            if (endInput.value.length > 0) endClear.classList.remove('hidden'); else endClear.classList.add('hidden');
+
+            triggerToast("Swapped start & final parameters.");
+        });
+
+        function computeTargetCenteringNode() {
+            if (routeLineCoordinates.length > 0 && lastUserGpsCoord) {
+                const routeBoundsCenter = L.polyline(routeLineCoordinates).getBounds().getCenter();
+                return L.latLng((routeBoundsCenter.lat + lastUserGpsCoord[0]) / 2, (routeBoundsCenter.lng + lastUserGpsCoord[1]) / 2);
+            } else if (routeLineCoordinates.length > 0) {
+                return L.polyline(routeLineCoordinates).getBounds().getCenter();
+            } else if (lastUserGpsCoord) {
+                return L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]);
+            }
+            return map.getCenter();
+        }
+
+        document.getElementById('zoom-in-btn').addEventListener('click', () => {
+            map.setView(computeTargetCenteringNode(), map.getZoom() + 1);
+        });
+
+        document.getElementById('zoom-out-btn').addEventListener('click', () => {
+            map.setView(computeTargetCenteringNode(), map.getZoom() - 1);
+        });
 
         document.addEventListener('mousedown', (e) => {
             const startDrop = document.getElementById('start-autocomplete');
@@ -1173,7 +872,6 @@
             updateInlineStatus("Stops active.");
         };
 
-        // Reset tracking timer callback logic
         function triggerAutoCenterDelay() {
             if (!isTracking) return;
             allowAutoCenter = false;
@@ -1181,10 +879,9 @@
             autoCenterTimeoutId = setTimeout(() => {
                 allowAutoCenter = true;
                 triggerToast("Auto-centering lock re-engaged.", 1000);
-            }, 20000); // 20 Seconds Override Delay Lock
+            }, 20000); 
         }
 
-        // Bind interactive triggers
         map.on('movestart dragstart zoomstart', () => {
             triggerAutoCenterDelay();
         });
@@ -1213,9 +910,9 @@
         });
 
         document.getElementById('reset-fav-cache-btn').addEventListener('click', async () => {
-            triggerToast("Bypassing server data caching wrappers...", 1500);
+            triggerToast("Forcing baseline synchronization layer...", 1500);
             await loadMasterRepoFavoritesOnBoot(true);
-            triggerToast("Server repositories synchronized successfully! 🔄");
+            triggerToast("Local database synced up successfully! 🔄");
         });
 
         function handleMasterCategorySelection(element) {
@@ -1241,7 +938,6 @@
         
         document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
         document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
-        document.getElementById('sync-discoveries-btn').addEventListener('click', pushNewlyDiscoveredLiveBrandsToRepoDatabase);
 
         document.getElementById('route-btn').addEventListener('click', async () => {
             const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input'); let startLatLng, endLatLng;
@@ -1276,7 +972,6 @@
 
                     if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
                     
-                    // Respect user interaction delay map rules
                     if (allowAutoCenter) {
                         map.panTo([latitude, longitude]);
                     }
