@@ -85,7 +85,7 @@
 
         <div id="master-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-1.5 border-t border-gray-100">
             <button data-cat="playground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
-            <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
+            <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">👑 Gas Stations</button>
             <button data-cat="food" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
             <button data-cat="shopping" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛒 Shopping & Services</button>
             <button data-cat="parks" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Parks & Attractions</button>
@@ -119,9 +119,10 @@
 
     <script>
         // =====================================================================
-        // --- PHASE 1: HOISTED GLOBAL REPO ARCHITECTURE CONSTANT DEFINITIONS --
+        // --- PHASE 1: HOISTED GLOBAL CONSTANTS & VARIABLE MEMORY TIERS ------
         // =====================================================================
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
+        const autocompleteQueryMemoryCache = new Map(); 
         
         const STATE_BOUNDS_LOOKUP = {
             "alabama":        { s: 30.1, n: 35.1, w: -88.6, e: -84.8 },
@@ -259,7 +260,7 @@
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
 
-        // Global Dynamic Allocation States
+        // Variable Array Configuration Matrices
         let allPoiMarkersMemoryMap = [];
         let globalFavoritesMarkers = []; 
         let repoFavoritesMemory = [];    
@@ -277,7 +278,7 @@
         let autoCenterTimeoutId = null;
 
         // ==========================================
-        // --- PHASE 4: MAP INITIALIZATION ENGINE ---
+        // --- PHASE 2: MAP INITIALIZATION CORES ----
         // ==========================================
         const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 5);
         
@@ -288,7 +289,7 @@
         mapLayersPool[mapStyleMode].addTo(map);
 
         const poiClusterGroup = L.layerGroup().addTo(map);
-        const favoritesLayerGroup = L.layerGroup().addTo(map); // Never gets cleared by automated routines
+        const favoritesLayerGroup = L.layerGroup().addTo(map); 
 
         let routingControl = L.Routing.control({
             show: false, 
@@ -323,6 +324,69 @@
             }
         }).addTo(map);
 
+        // ==============================================================
+        // --- PHASE 3: STATIC COMPILATION UTILITIES --------------------
+        // ==============================================================
+        function buildCleanAddressString(addr, displayNameFallback) {
+            if (!addr) return displayNameFallback.split(',').slice(0, 3).join(',');
+            let tokens = [];
+            const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
+            if (roadLine) tokens.push(roadLine);
+            if (addr.city || addr.town || addr.village || addr.suburb) tokens.push(addr.city || addr.town || addr.village || addr.suburb);
+            if (addr.state) tokens.push(addr.state);
+            if (addr.postcode) tokens.push(addr.postcode);
+            return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
+        }
+
+        function triggerToast(text, duration = 3000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = "bg-gray-900/95 backdrop-blur-sm text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center transition-all duration-300 opacity-0 translate-y-2 pointer-events-auto";
+            toast.innerText = text;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('opacity-0', 'translate-y-2'); }, 50);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-1');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, duration);
+        }
+
+        function updateInlineStatus(text, showSpinner = false) {
+            const statusLabel = document.getElementById('status');
+            if (statusLabel) statusLabel.innerText = text;
+            const spinner = document.getElementById('status-spinner');
+            if (spinner) {
+                if (showSpinner) spinner.classList.remove('hidden');
+                else spinner.classList.add('hidden');
+            }
+        }
+
+        function createCustomIcon(label, classes, isLarge = false) {
+            const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
+            const sizePx = isLarge ? 44 : 32;
+            return L.divIcon({
+                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold ${sizeClass} ${classes}">${label}</div>`,
+                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
+            });
+        }
+
+        function createStarredIcon(label, isLarge = false) {
+            const wrapperSize = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
+            const sizePx = isLarge ? 44 : 32;
+            return L.divIcon({
+                html: `<div class="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border-amber-600 text-black shadow-md font-black relative ${wrapperSize}">${label}<span class="absolute -bottom-1 -right-1 text-[10px] drop-shadow-sm">⭐</span></div>`,
+                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
+            });
+        }
+
+        function createRouteMarkerIcon(label, classes) {
+            return L.divIcon({
+                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold w-8 h-8 text-sm border-2 ${classes}">${label}</div>`,
+                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+            });
+        }
+
         function updateBufferVisualizerWeight() {
             if (!routeBufferPolyline || routeLineCoordinates.length === 0) return;
             const currentMapCenterLatitude = map.getCenter().lat;
@@ -332,183 +396,187 @@
             routeBufferPolyline.setStyle({ weight: Math.max(4, calculatedPixelWidthWidth) });
         }
 
-        routingControl.on('routesfound', async function(e) {
-            routeLineCoordinates = e.routes[0].coordinates;
-            const searchContainer = document.getElementById('search-container');
-            if (searchContainer) searchContainer.classList.add('hidden');
-            
-            const totalDistanceMeters = e.routes[0].summary.totalDistance;
-            const totalDistanceMiles = (totalDistanceMeters * 0.000621371).toFixed(1);
-            const stickyPanel = document.getElementById('route-mileage-sticky');
-            if (stickyPanel) {
-                document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
-                stickyPanel.classList.remove('hidden');
-            }
+        function dispatchOffThreadAnalysis() {
+            if (routeLineCoordinates.length === 0) return;
+            const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
+            activeTargetsSliceMemory = [];
+            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
+            if (routeLineCoordinates.length > 0) activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
 
-            poiClusterGroup.clearLayers();
-            allPoiMarkersMemoryMap = [];
-            
-            if (routeBufferPolyline) { map.removeLayer(routeBufferPolyline); }
-            routeBufferPolyline = L.polyline(routeLineCoordinates, {
-                color: '#3b82f6', opacity: 0.15, lineCap: 'round', lineJoin: 'round', interactive: false
-            }).addTo(map);
-            routeBufferPolyline.bringToBack();
-            updateBufferVisualizerWeight();
-
-            const activeCrossedStates = calculateIntersectedStates(routeLineCoordinates);
-            updateInlineStatus(`Crossed state borders mapped: [${activeCrossedStates.length} States identified]`, true);
-            
-            localJsonMemory = [];
-            
-            await Promise.all(activeCrossedStates.map(async (stateName) => {
-                try {
-                    const response = await fetch(`data/${stateName}_brands.json`);
-                    if (response.ok) {
-                        const stateData = await response.json();
-                        localJsonMemory = localJsonMemory.concat(stateData);
-                    }
-                } catch(err) {
-                    console.warn(`Shard loop pass error for state variable: ${stateName}`, err);
-                }
-            }));
-
-            triggerToast(`Loaded multi-state configuration data parameters.`);
-            renderGlobalPermanentStars(); 
-            
-            if (currentMasterCat && currentSubFilter !== 'none') {
-                runDataExecutionLayer(currentMasterCat);
-            } else {
-                updateInlineStatus("Route calculations complete. Apply filters.");
-            }
-        });
-
-        // --- PHASE 5: RUN MULTI-THREADED ANALYSIS WEB WORKER ENGINE ---
-        const workerBlobCode = `
-            function haversineDist(lat1, lon1, lat2, lon2) {
-                const R = 6371000;
-                const dLat = (lat2 - lat1) * Math.PI / 180;
-                const dLon = (lon2 - lon1) * Math.PI / 180;
-                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-                return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-            }
-
-            self.onmessage = function(e) {
-                const { localElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
-                const finalMatches = [];
-                if (!localElements || currentSubFilter === 'none') {
-                    self.postMessage({ sortedMatches: [] });
-                    return;
-                }
-
-                let minTlat = 90, maxTlat = -90, minTlon = 180, maxTlon = -180;
-                for(let j=0; j<targetsSlice.length; j++) {
-                    if (targetsSlice[j].lat < minTlat) minTlat = targetsSlice[j].lat;
-                    if (targetsSlice[j].lat > maxTlat) maxTlat = targetsSlice[j].lat;
-                    if (targetsSlice[j].lng < minTlon) minTlon = targetsSlice[j].lng;
-                    if (targetsSlice[j].lng > maxTlon) maxTlon = targetsSlice[j].lng;
-                }
-                const degPad = (activeBufferMeters + 2000) / 111000;
-                const spatialEnvelope = { n: maxTlat + degPad, s: minTlat - degPad, e: maxTlon + degPad, w: minTlon - degPad };
-
-                localElements.forEach(el => {
-                    let normBrand = (el.b || '');
-                    let normCat = el.c;
-                    let effectiveCat = normCat;
-
-                    if (effectiveCat !== currentMasterCat) return;
-                    if (el.lat > spatialEnvelope.n || el.lat < spatialEnvelope.s || el.lon > spatialEnvelope.e || el.lon < spatialEnvelope.w) return;
-                    
-                    let isMatch = false;
-                    if (currentSubFilter === 'unl87' && el.g87 === 1) isMatch = true;
-                    else if (currentSubFilter === 'unl88' && el.g88 === 1) isMatch = true;
-                    else if (normBrand === currentSubFilter) isMatch = true;
-                    else if (normCat === currentSubFilter) isMatch = true;
-                    else if (currentSubFilter === 'highway_rest' && (normCat === 'highway_rest' || normBrand === 'highway_rest')) isMatch = true;
-                    else if (currentSubFilter === 'highway_toilets' && (normCat === 'highway_toilets' || normBrand === 'highway_toilets')) isMatch = true;
-                    else if (currentSubFilter === 'tourism_viewpoint' && (normCat === 'tourism_viewpoint' || normBrand === 'tourism_viewpoint')) isMatch = true;
-                    else if (currentSubFilter === 'tourism_dogpark' && (normCat === 'tourism_dogpark' || normBrand === 'tourism_dogpark')) isMatch = true;
-                    
-                    if (!isMatch) return;
-
-                    let minD = Infinity;
-                    for (let j = 0; j < targetsSlice.length; j++) {
-                        const d = haversineDist(el.lat, el.lon, targetsSlice[j].lat, targetsSlice[j].lng);
-                        if (d < minD) minD = d;
-                    }
-
-                    if (minD <= activeBufferMeters) {
-                        finalMatches.push({
-                            id: "local_" + el.lat + "_" + el.lon, lat: el.lat, lon: el.lon,
-                            name: el.n, brand: normBrand, category: effectiveCat, hours: el.h || "Hours not listed",
-                            desc: el.d || "", minD: minD, isLocal: true, g87: el.g87, g88: el.g88
-                        });
-                    }
-                });
-
-                const sortedMatches = finalMatches.sort((a, b) => a.minD - b.minD);
-                self.postMessage({ sortedMatches });
-            };
-        `;
-        const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
-        const mathWorker = new Worker(URL.createObjectURL(blobObj));
-
-        // --- PHASE 6: PIN ADAPTATION & CORE DATA FLOW ENGINE ROUTINES ---
-        async function runDataExecutionLayer(masterCat) {
-            if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
-            dispatchOffThreadAnalysis();
-        }
-
-        function runCachedAutocompleteSearch(inputElement, dropdownElement) {
-            const query = inputElement.value.trim();
-            const clearBtn = document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn');
-            
-            if (query.length > 0) clearBtn.classList.remove('hidden');
-            else clearBtn.classList.add('hidden');
-
-            if (query.length < 3) {
-                dropdownElement.innerHTML = ''; dropdownElement.classList.add('hidden'); return;
-            }
-
-            if (autocompleteQueryMemoryCache.has(query)) {
-                renderAutocompleteDropdownDOM(autocompleteQueryMemoryCache.get(query), inputElement, dropdownElement); return;
-            }
-
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&countrycodes=us&q=${encodeURIComponent(query)}`)
-            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
-            .then(data => {
-                autocompleteQueryMemoryCache.set(query, data);
-                renderAutocompleteDropdownDOM(data, inputElement, dropdownElement);
-            }).catch(() => {});
-        }
-
-        function renderAutocompleteDropdownDOM(data, inputElement, dropdownElement) {
-            dropdownElement.innerHTML = '';
-            if (!data || data.length === 0) {
-                const noResult = document.createElement('div');
-                noResult.className = "px-3 py-2.5 bg-gray-50 text-gray-500 italic text-xs select-none rounded-xl";
-                noResult.innerText = "No locations found in the US";
-                dropdownElement.appendChild(noResult); dropdownElement.classList.remove('hidden'); return;
-            }
-            dropdownElement.classList.remove('hidden');
-
-            data.forEach(item => {
-                const cleanOutputString = buildCleanAddressString(item.address, item.display_name);
-                const option = document.createElement('div');
-                option.className = "px-3 py-2.5 bg-white hover:bg-blue-50 border-b border-gray-100 last:border-0 cursor-pointer truncate text-zinc-900 font-semibold text-xs transition-colors";
-                option.innerText = cleanOutputString;
-
-                option.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    inputElement.value = cleanOutputString;
-                    inputElement.dataset.lat = item.lat;
-                    inputElement.dataset.lon = item.lon;
-                    dropdownElement.innerHTML = ''; dropdownElement.classList.add('hidden');
-                    document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn').classList.remove('hidden');
-                });
-                dropdownElement.appendChild(option);
+            mathWorker.postMessage({
+                localElements: localJsonMemory,
+                targetsSlice: activeTargetsSliceMemory, activeBufferMeters: activeBufferMeters,
+                currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
             });
         }
 
+        function computeTargetCenteringNode() {
+            if (routeLineCoordinates.length > 0 && lastUserGpsCoord) {
+                const routeBoundsCenter = L.polyline(routeLineCoordinates).getBounds().getCenter();
+                return L.latLng((routeBoundsCenter.lat + lastUserGpsCoord[0]) / 2, (routeBoundsCenter.lng + lastUserGpsCoord[1]) / 2);
+            } else if (routeLineCoordinates.length > 0) {
+                return L.polyline(routeLineCoordinates).getBounds().getCenter();
+            } else if (lastUserGpsCoord) {
+                return L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]);
+            }
+            return map.getCenter();
+        }
+
+        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
+
+        function triggerAutoCenterDelay() {
+            if (!isTracking) return;
+            allowAutoCenter = false; clearTimeout(autoCenterTimeoutId);
+            autoCenterTimeoutId = setTimeout(() => { allowAutoCenter = true; }, 20000); 
+        }
+
+        // ==============================================================
+        // --- PHASE 4: DATA RENDERING LAYERS ---------------------------
+        // ==============================================================
+        function renderGlobalPermanentStars() {
+            favoritesLayerGroup.clearLayers();
+            globalFavoritesMarkers = [];
+
+            let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            let combinedFavoritesList = [...localStarred];
+            
+            repoFavoritesMemory.forEach(repoItem => {
+                if (!combinedFavoritesList.some(localItem => roundCoords(localItem.lat) === roundCoords(repoItem.lat) && roundCoords(localItem.lon) === roundCoords(repoItem.lon))) {
+                    combinedFavoritesList.push(repoItem);
+                }
+            });
+
+            const isLarge = map.getZoom() > 13;
+
+            combinedFavoritesList.forEach(el => {
+                const lat = el.lat; const lon = el.lon;
+                const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
+                let popupHeadingName = el.name || cleanLabelBrand; 
+                let popupHours = el.hours || "Hours not listed";
+                let popupDesc = el.desc || "Verified favorite location pinned to map globally.";
+                
+                let visualCatKey = el.category;
+                if (categoryConfigs[el.brand]) { visualCatKey = el.brand; }
+
+                const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
+                const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
+                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
+
+                let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
+                let isCurrentlyStarredLocally = localStarred.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
+                
+                let actionBtnHtml = '';
+                if (existsInMasterRepoJson) {
+                    actionBtnHtml = `<button class="global-delete-trigger block w-full text-center bg-red-600 hover:bg-red-700 text-[10px] py-1.5 rounded-xl border border-red-800 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}">🗑️ Delete From Global Repo</button>`;
+                } else {
+                    let starBtnText = isCurrentlyStarredLocally ? "❌ Remove Local Star" : "⭐ Persistently Star";
+                    let starBtnColor = isCurrentlyStarredLocally ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
+                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
+                }
+
+                let fuelBadgeHtml = '';
+                if (el.category === 'gas' || visualCatKey === 'gas') {
+                    fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
+                }
+
+                const popupContent = `
+                    <div class="w-full font-sans p-0.5 text-zinc-950">
+                        <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
+                        <h3 class="text-xs font-black text-black leading-tight truncate">${popupHeadingName}</h3>
+                        <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">${popupDesc}</div>
+                        ${fuelBadgeHtml}
+                        <div class="border-t border-zinc-200 pt-1 mt-1">
+                            <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">Hours</span>
+                            <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
+                        </div>
+                        <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
+                            ${actionBtnHtml}
+                            <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
+                            <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
+                            <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
+                        </div>
+                    </div>
+                `;
+
+                const marker = L.marker([lat, lon], { icon: createStarredIcon(uiConfig.label, isLarge) })
+                    .bindPopup(popupContent, { 
+                        className: 'custom-popup', autoPan: true,
+                        autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
+                    });
+
+                globalFavoritesMarkers.push({ marker: marker, visualKey: visualCatKey, lat: lat, lon: lon });
+                favoritesLayerGroup.addLayer(marker); 
+            });
+        }
+
+        function buildAndRenderPoiMarker(el, forceStarredStyleProfile = false) {
+            const lat = el.lat; const lon = el.lon;
+            const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
+            let popupHeadingName = el.name || cleanLabelBrand; 
+            let popupHours = el.hours || "Hours not listed";
+            let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
+            
+            let visualCatKey = el.brand;
+            if (!categoryConfigs[visualCatKey]) { visualCatKey = el.category; }
+
+            const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
+            const isLarge = map.getZoom() > 13;
+
+            let fuelBadgeHtml = '';
+            if (visualCatKey === 'gas' || el.category === 'gas') {
+                fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
+            }
+
+            const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
+            const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
+
+            let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
+            let starBtnText = isStarredCurrently ? "❌ Remove Local Star" : "⭐ Persistently Star";
+            let starBtnColor = isStarredCurrently ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
+
+            const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
+            let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
+
+            const popupContent = `
+                <div class="w-full font-sans p-0.5 text-zinc-950">
+                    <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
+                    <h3 class="text-xs font-black text-black leading-tight truncate">${popupHeadingName}</h3>
+                    <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">${popupDesc}</div>
+                    ${mileagePredictorBadgeHtml}
+                    ${fuelBadgeHtml}
+                    <div class="border-t border-zinc-200 pt-1 mt-1">
+                        <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">Hours</span>
+                        <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
+                    </div>
+                    <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
+                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
+                        <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
+                        <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
+                        <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
+                    </div>
+                </div>
+            `;
+
+            const finalIconChoice = (forceStarredStyleProfile || isStarredCurrently) 
+                ? createStarredIcon(uiConfig.label, isLarge)
+                : createCustomIcon(uiConfig.label, uiConfig.bg, isLarge);
+
+            const marker = L.marker([lat, lon], { icon: finalIconChoice })
+                .bindPopup(popupContent, { 
+                    className: 'custom-popup', autoPan: true,
+                    autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
+                });
+
+            allPoiMarkersMemoryMap.push({ marker: marker, visualKey: visualCatKey });
+            poiClusterGroup.addLayer(marker);
+        }
+
+        // ==========================================
+        // --- PHASE 5: AUTOCOMPLETE METHODS --------
+        // ==========================================
         function initAutocomplete(inputId, dropdownId) {
             const input = document.getElementById(inputId); const dropdown = document.getElementById(dropdownId); let debounceTimer;
             input.addEventListener('input', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => { runCachedAutocompleteSearch(input, dropdown); }, 400); });
@@ -518,6 +586,9 @@
         initAutocomplete('start-input', 'start-autocomplete');
         initAutocomplete('end-input', 'end-autocomplete');
 
+        // ==========================================
+        // --- PHASE 6: DOM INTERACTION TRIGGERS ----
+        // ==========================================
         document.getElementById('start-clear-btn').addEventListener('click', (e) => {
             const input = document.getElementById('start-input'); input.value = ''; delete input.dataset.lat; delete input.dataset.lon; e.target.classList.add('hidden');
         });
@@ -536,28 +607,6 @@
             triggerToast("Swapped start & final parameters.");
         });
 
-        function computeTargetCenteringNode() {
-            if (routeLineCoordinates.length > 0 && lastUserGpsCoord) {
-                const routeBoundsCenter = L.polyline(routeLineCoordinates).getBounds().getCenter();
-                return L.latLng((routeBoundsCenter.lat + lastUserGpsCoord[0]) / 2, (routeBoundsCenter.lng + lastUserGpsCoord[1]) / 2);
-            } else if (routeLineCoordinates.length > 0) {
-                return L.polyline(routeLineCoordinates).getBounds().getCenter();
-            } else if (lastUserGpsCoord) {
-                return L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]);
-            }
-            return map.getCenter();
-        }
-
-        document.getElementById('zoom-in-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() + 1); });
-        document.getElementById('zoom-out-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() - 1); });
-
-        document.addEventListener('mousedown', (e) => {
-            const startDrop = document.getElementById('start-autocomplete'); const endDrop = document.getElementById('end-autocomplete');
-            if (!document.getElementById('search-container').contains(e.target)) {
-                if (startDrop) startDrop.classList.add('hidden'); if (endDrop) endDrop.classList.add('hidden');
-            }
-        });
-
         function generateSubMenuUI(catId) {
             const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
             const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
@@ -567,36 +616,6 @@
                 subButton.innerText = sub.label; subBar.appendChild(subButton);
             });
             subBar.classList.remove('hidden');
-        }
-
-        mathWorker.onmessage = function(e) {
-            const { sortedMatches } = e.data;
-            poiClusterGroup.clearLayers();
-            allPoiMarkersMemoryMap = [];
-
-            sortedMatches.forEach(el => {
-                let isCoordinateOccupiedByStar = globalFavoritesMarkers.some(m => roundCoords(m.lat) === roundCoords(el.lat) && roundCoords(m.lon) === roundCoords(el.lon));
-                if (isCoordinateOccupiedByStar) return;
-                buildAndRenderPoiMarker(el, false);
-            });
-
-            const hud = document.getElementById('next-stop-hud');
-            if (hud) {
-                if (sortedMatches.length > 0) {
-                    const nextStop = sortedMatches[0];
-                    const distanceInMiles = (nextStop.minD * 0.000621371).toFixed(1);
-                    document.getElementById('hud-poi-name').innerText = cleanBrandNames[nextStop.brand] || nextStop.name;
-                    document.getElementById('hud-poi-dist').innerText = `${distanceInMiles} miles away`;
-                    hud.classList.remove('hidden');
-                } else { hud.classList.add('hidden'); }
-            }
-            updateInlineStatus("Stops active.");
-        };
-
-        function triggerAutoCenterDelay() {
-            if (!isTracking) return;
-            allowAutoCenter = false; clearTimeout(autoCenterTimeoutId);
-            autoCenterTimeoutId = setTimeout(() => { allowAutoCenter = true; }, 20000); 
         }
 
         map.on('movestart dragstart zoomstart', () => { triggerAutoCenterDelay(); });
@@ -700,129 +719,9 @@
             }
         });
 
-        // --- PHASE 7: DEVICE PERMANENCE LAYERS & PERSISTENT FAVORITES ---
-        window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
-            let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-            let uniqueId = `poi_${lat}_${lon}`;
-            let matchIndex = starred.findIndex(item => item.id === uniqueId);
-            
-            if (matchIndex > -1) {
-                starred.splice(matchIndex, 1);
-                triggerToast("Removed stop reference from local layer.");
-            } else {
-                starred.push({
-                    id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
-                    name: String(name), category: String(category), brand: String(brand), hours: String(hours), desc: String(desc)
-                });
-                triggerToast("Saved stop reference parameters to map! ⭐");
-            }
-            
-            localStorage.setItem('starred_pois', JSON.stringify(starred));
-            renderGlobalPermanentStars(); 
-            if (routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
-        };
-
-        window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
-            let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-            let uniqueId = `poi_${lat}_${lon}`;
-            let matchIndex = starred.findIndex(item => item.id === uniqueId);
-            
-            if (matchIndex > -1) {
-                starred.splice(matchIndex, 1);
-                triggerToast("Removed stop from local settings.");
-            } else {
-                starred.push({
-                    id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
-                    name: String(name), category: String(category), brand: String(brand), hours: String(hours), desc: String(desc), isLocal: true
-                });
-                triggerToast("Saved stop to local device memory! ⭐");
-            }
-            
-            localStorage.setItem('starred_pois', JSON.stringify(starred));
-            renderGlobalPermanentStars(); 
-            if (routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
-        };
-
-        window.triggerCloudDeletionTicketPipeline = function(lat, lon) {
-            if (confirm("This favorite is stored permanently in the repository. Open request page to drop it?")) {
-                let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-                localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
-                localStorage.setItem('starred_pois', JSON.stringify(localStarred));
-                
-                const targetRepositoryPath = "kev11wolf/public";
-                const payloadString = JSON.stringify({ lat: parseFloat(lat), lon: parseFloat(lon) });
-                const issueUrl = `https://github.com/${targetRepositoryPath}/issues/new?title=DATA_DELETE_FAVORITE&body=${encodeURIComponent(payloadString)}`;
-                
-                window.open(issueUrl, '_blank');
-                map.closePopup();
-                triggerToast("Deletions package built! Click Submit on the next window tab.");
-            }
-        };
-
-        async function buildAndRenderPoiMarker(el, forceStarredStyleProfile = false) {
-            const lat = el.lat; const lon = el.lon;
-            const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
-            let popupHeadingName = el.name || cleanLabelBrand; 
-            let popupHours = el.hours || "Hours not listed";
-            let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
-            
-            let visualCatKey = el.brand;
-            if (!categoryConfigs[visualCatKey]) { visualCatKey = el.category; }
-
-            const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
-            const isLarge = map.getZoom() > 13;
-
-            let fuelBadgeHtml = '';
-            if (visualCatKey === 'gas' || el.category === 'gas') {
-                fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
-            }
-
-            const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-            const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
-
-            let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-            let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
-            let starBtnText = isStarredCurrently ? "❌ Remove Local Star" : "⭐ Persistently Star";
-            let starBtnColor = isStarredCurrently ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
-
-            const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
-            let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
-
-            const popupContent = `
-                <div class="w-full font-sans p-0.5 text-zinc-950">
-                    <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
-                    <h3 class="text-xs font-black text-black leading-tight truncate">${popupHeadingName}</h3>
-                    <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">${popupDesc}</div>
-                    ${mileagePredictorBadgeHtml}
-                    ${fuelBadgeHtml}
-                    <div class="border-t border-zinc-200 pt-1 mt-1">
-                        <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">Hours</span>
-                        <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
-                    </div>
-                    <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
-                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
-                        <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
-                        <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
-                        <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
-                    </div>
-                </div>
-            `;
-
-            const finalIconChoice = (forceStarredStyleProfile || isStarredCurrently) 
-                ? createStarredIcon(uiConfig.label, isLarge)
-                : createCustomIcon(uiConfig.label, uiConfig.bg, isLarge);
-
-            const marker = L.marker([lat, lon], { icon: finalIconChoice })
-                .bindPopup(popupContent, { 
-                    className: 'custom-popup', autoPan: true,
-                    autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
-                });
-
-            allPoiMarkersMemoryMap.push({ marker: marker, visualKey: visualCatKey });
-            poiClusterGroup.addLayer(marker);
-        }
-
+        // ==========================================
+        // --- PHASE 7: DEVICE BOOTSTRAP PIPELINES ---
+        // ==========================================
         async function loadMasterRepoFavoritesOnBoot() {
             try {
                 const response = await fetch('favorites.json');
