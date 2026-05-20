@@ -259,6 +259,10 @@
         let activeTargetsSliceMemory = [];
         let routeBufferPolyline = null;
 
+        // Auto-Center Safety Tracking Variables
+        let allowAutoCenter = true;
+        let autoCenterTimeoutId = null;
+
         // ==========================================
         // --- PHASE 3: MAP TILES & LAYER ENGINE ----
         // ==========================================
@@ -372,7 +376,6 @@
                 var bLower = (tags.brand || '').toLowerCase();
                 var sig = (nLower + ' ' + bLower).toLowerCase();
                 
-                // CRITICAL SEPARATION LOCK: Forces Starbucks away from generic parsing tags directly to coffee
                 if (sig.includes('starbucks')) return 'coffee';
                 
                 if (nLower.includes('national')) return 'excluded';
@@ -422,9 +425,8 @@
             self.onmessage = function(e) {
                 const { localElements, liveElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
                 const finalMatches = [];
-                const SPATIAL_DEDUPE_MAX_RADIUS_METERS = 40; // Rejects duplicate geometries within proximity boundary
+                const SPATIAL_DEDUPE_MAX_RADIUS_METERS = 40; 
                 
-                // STEP 1 INTEGRATION: Spatial Bounding Index Envelope
                 let minTlat = 90, maxTlat = -90, minTlon = 180, maxTlon = -180;
                 for(let j=0; j<targetsSlice.length; j++) {
                     if (targetsSlice[j].lat < minTlat) minTlat = targetsSlice[j].lat;
@@ -442,8 +444,8 @@
                         if (separationMeters < SPATIAL_DEDUPE_MAX_RADIUS_METERS) {
                             let pLabel = payload.name.toLowerCase();
                             let rLabel = matchingRef.name.toLowerCase();
-                            if (payload.brand === matchingRef.brand || (pLabel.includes('starbucks') && rLabel.includes('starbucks')) || pLabel.substring(0,5) === rLabel.substring(0,5)) {
-                                return true; // Confirmed duplicate geometry. Dropped.
+                            if (payload.brand === matchingRef.brand || pLabel === rLabel || pLabel.includes(rLabel) || rLabel.includes(pLabel)) {
+                                return true; 
                             }
                         }
                     }
@@ -600,8 +602,8 @@
                 let popupHours = el.hours || "Hours not listed";
                 let popupDesc = el.desc || "Verified favorite location pinned to map globally.";
                 
-                let visualCatKey = el.category;
-                if (categoryConfigs[el.brand]) { visualCatKey = el.brand; }
+                let visualCatKey = el.brand;
+                if (!categoryConfigs[visualCatKey]) { visualCatKey = el.category; }
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
@@ -668,8 +670,8 @@
             let popupHours = el.hours || "Hours not listed";
             let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
             
-            let visualCatKey = el.category;
-            if (categoryConfigs[el.brand]) { visualCatKey = el.brand; }
+            let visualCatKey = el.brand;
+            if (!categoryConfigs[visualCatKey]) { visualCatKey = el.category; }
 
             const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
             const isLarge = map.getZoom() > 13;
@@ -795,7 +797,6 @@
             localStorage.removeItem('poi_lru_registry_v2');
         }
 
-        // NETWORKING SECURITY OVERWRITE: Swapped out broken GET strings to robust urlencoded POST bodies
         async function fetchWithMirrorFailover(queryPayload) {
             for (let i = 0; i < OVERPASS_MIRRORS.length; i++) {
                 try {
@@ -833,7 +834,6 @@
         }
 
         async function fetchLiveBackupEnrichment(masterCat) {
-            // STEP 2 RE-ENGINEERING: Down-sample and group path sequence points efficiently
             let sampledCoords = [];
             if (routeLineCoordinates.length > 0) {
                 sampledCoords.push(routeLineCoordinates[0]);
@@ -851,7 +851,6 @@
                 }
             }
             
-            // Hard ceiling prevents query payloads from exceeding Overpass execution node weights
             if (sampledCoords.length > 25) {
                 let step = Math.ceil(sampledCoords.length / 25);
                 sampledCoords = sampledCoords.filter((_, idx) => idx % step === 0 || idx === sampledCoords.length - 1);
@@ -891,7 +890,6 @@
                 selectors.push('nwr["brand"~"McDonald\'s|Wendy\'s|Chick-fil-A|Chipotle|Jersey Mike|Raising Cane",i]', 'nwr["name"~"McDonald\'s|Wendy\'s|Chick-fil-A|Raising Cane|Jersey Mike|Chipotle",i]');
             }
 
-            // Create precise corridor coordinates maps cleanly using valid syntax loops
             sampledCoords.forEach(c => {
                 selectors.forEach(sel => {
                     queryParts.push(`${sel}(around:${activeBufferMeters},${c.lat.toFixed(5)},${c.lng.toFixed(5)});`);
@@ -1049,6 +1047,7 @@
             if (forceRefresh && routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
         }
 
+        // Optimized US Only Autocomplete Engine
         function runCachedAutocompleteSearch(inputElement, dropdownElement) {
             const query = inputElement.value.trim();
             if (query.length < 3) {
@@ -1062,7 +1061,7 @@
                 return;
             }
 
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=${encodeURIComponent(query)}`)
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&countrycodes=us&q=${encodeURIComponent(query)}`)
             .then(res => { if (!res.ok) throw new Error(); return res.json(); })
             .then(data => {
                 autocompleteQueryMemoryCache.set(query, data);
@@ -1073,7 +1072,11 @@
         function renderAutocompleteDropdownDOM(data, inputElement, dropdownElement) {
             dropdownElement.innerHTML = '';
             if (!data || data.length === 0) {
-                dropdownElement.classList.add('hidden');
+                const noResult = document.createElement('div');
+                noResult.className = "px-3 py-2.5 bg-gray-50 text-gray-500 italic text-xs select-none rounded-xl";
+                noResult.innerText = "No locations found in the US";
+                dropdownElement.appendChild(noResult);
+                dropdownElement.classList.remove('hidden');
                 return;
             }
             dropdownElement.classList.remove('hidden');
@@ -1081,7 +1084,7 @@
             data.forEach(item => {
                 const cleanOutputString = buildCleanAddressString(item.address, item.display_name);
                 const option = document.createElement('div');
-                option.className = "px-3 py-2.5 bg-white hover:bg-zinc-100 border-b border-zinc-100 last:border-0 cursor-pointer truncate text-zinc-950 font-bold text-xs";
+                option.className = "px-3 py-2.5 bg-white hover:bg-blue-50 border-b border-gray-100 last:border-0 cursor-pointer truncate text-zinc-900 font-semibold text-xs transition-colors";
                 option.innerText = cleanOutputString;
 
                 option.addEventListener('mousedown', (e) => {
@@ -1104,6 +1107,11 @@
             input.addEventListener('input', () => {
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(() => { runCachedAutocompleteSearch(input, dropdown); }, 400);
+            });
+            
+            // Auto close on blur
+            input.addEventListener('blur', () => {
+                setTimeout(() => { dropdown.classList.add('hidden'); }, 200);
             });
         }
 
@@ -1164,6 +1172,22 @@
             }
             updateInlineStatus("Stops active.");
         };
+
+        // Reset tracking timer callback logic
+        function triggerAutoCenterDelay() {
+            if (!isTracking) return;
+            allowAutoCenter = false;
+            clearTimeout(autoCenterTimeoutId);
+            autoCenterTimeoutId = setTimeout(() => {
+                allowAutoCenter = true;
+                triggerToast("Auto-centering lock re-engaged.", 1000);
+            }, 20000); // 20 Seconds Override Delay Lock
+        }
+
+        // Bind interactive triggers
+        map.on('movestart dragstart zoomstart', () => {
+            triggerAutoCenterDelay();
+        });
 
         map.on('zoomend moveend', () => {
             updateBufferVisualizerWeight();
@@ -1229,7 +1253,14 @@
 
         const geoBtn = document.getElementById('geo-btn'); let isTracking = false, watchId = null;
         geoBtn.addEventListener('click', () => {
-            if (isTracking) { if (watchId) navigator.geolocation.clearWatch(watchId); isTracking = false; geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; }
+            if (isTracking) { 
+                if (watchId) navigator.geolocation.clearWatch(watchId); 
+                isTracking = false; 
+                allowAutoCenter = true;
+                clearTimeout(autoCenterTimeoutId);
+                geoBtn.innerText = "🚗 Track"; 
+                geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
+            }
             else {
                 if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
                 geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
@@ -1244,7 +1275,11 @@
                     lastUserGpsCoord = [latitude, longitude];
 
                     if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
-                    map.panTo([latitude, longitude]);
+                    
+                    // Respect user interaction delay map rules
+                    if (allowAutoCenter) {
+                        map.panTo([latitude, longitude]);
+                    }
 
                     if (routeLineCoordinates.length > 0) {
                         let minDistanceToRouteLine = Infinity;
