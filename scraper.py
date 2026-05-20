@@ -1,176 +1,226 @@
-import os
 import json
-import random
+import os
 import requests
+import time
+import sys
 
-# ==========================================
-# CONFIGURATION BLOCK
-# Change these values when switching chains!
-# ==========================================
-OUTPUT_FILE = "us_brands.json"
-
-# North Carolina's bounding box coordinates (South, West, North, East)
-BBOX = "33.75,-84.33,36.59,-75.46" 
-
-BRAND_SEARCH = "McDonald"     # The regex string passed to Overpass
-BRAND_SLUG = "mcdonalds"      # The machine-readable slug saved to "b"
-CATEGORY_SLUG = "food"        # The category slug saved to "c" (e.g., food, gas)
-DISPLAY_NAME = "McDonald's"   # The clean name saved to "n"
-
-# CRITICAL TIMEOUT FIX: Restricts the database scan to specific categories.
-# This stops the server from scanning non-relevant elements like roads, trees, or houses.
-# For fast food chains, use: '"amenity"~"fast_food|restaurant"'
-# For gas stations, use:    '"amenity"="fuel"'
-AMENITY_FILTER = '"amenity"~"fast_food|restaurant"'
-
-# Keywords used to filter out offices or inactive storefronts
-BLACKLIST = [
-    "corporate", "office", "headquarters", "hq", "distribution", 
-    "training", "closed", "historical", "warehouse"
-]
-
-# ==========================================
-# SCRAPER CORE
-# ==========================================
-# Completely removed the regional Swiss mirror (osm.ch) to avoid empty data traps
+# Redundant Overpass API endpoints to fallback on if one is down or timing out
 OVERPASS_ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
-    "https://lz4.overpass-api.de/api/interpreter",
-    "https://z.overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.osm.ch/api/interpreter"
 ]
 
+def get_overpass_query(search_criteria):
+    """Generates an index-optimized Overpass QL query template."""
+    return f"""
+    [out:json][timeout:120][maxsize:268435456];
+    area["ISO3166-2"="US-NC"]->.searchArea;
+    (
+      {search_criteria}
+    );
+    out center;
+    """
 
-def build_bbox_query():
-    # Injecting the amenity filter drastically accelerates database retrieval speeds
-    return (
-        f'[out:json][timeout:60][bbox:{BBOX}];\n'
-        f'(\n'
-        f'  node[{AMENITY_FILTER}]["brand"~"{BRAND_SEARCH}",i];\n'
-        f'  way[{AMENITY_FILTER}]["brand"~"{BRAND_SEARCH}",i];\n'
-        f'  node[{AMENITY_FILTER}]["name"~"{BRAND_SEARCH}",i];\n'
-        f'  way[{AMENITY_FILTER}]["name"~"{BRAND_SEARCH}",i];\n'
-        f');\n'
-        f'out center;'
-    )
-
-
-def fetch_data():
-    query = build_bbox_query()
-    mirrors = list(OVERPASS_ENDPOINTS)
-    random.shuffle(mirrors)
-
+def fetch_category_with_fallback(criteria, category_name):
+    """Tries multiple Overpass endpoints with proper headers, backoffs, and tracking."""
+    query = get_overpass_query(criteria)
+    
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Referer": "https://www.openstreetmap.org/",
+        "User-Agent": "NCBrandDataFetcher/1.2 (https://github.com/kev11wolf/public; automated open-source data pull)",
+        "Accept-Encoding": "gzip, deflate"
     }
-
-    for server_url in mirrors:
-        print(f"Attempting to fetch {DISPLAY_NAME} within BBox via {server_url}...", flush=True)
-        try:
-            res = requests.post(
-                server_url,
-                data={"data": query},
-                headers=headers,
-                timeout=60,
-            )
-            
-            if res.status_code == 200:
-                raw_json = res.json()
-                # Ensure the global mirror actually returned elements before stopping
-                if not raw_json.get("elements"):
-                    print(f"  Server {server_url} returned a blank dataset. Trying next mirror...", flush=True)
-                    continue
-                print(f"  Successfully retrieved data from {server_url}!", flush=True)
-                return raw_json
-            
-            print(f"  Server returned status code {res.status_code}, trying next mirror...", flush=True)
+    
+    for endpoint in OVERPASS_ENDPOINTS:
+        print(f"[{category_name}] Attempting fetch from: {endpoint}")
+        for attempt in range(1, 4):
+            try:
+                response = requests.post(
+                    endpoint, 
+                    data={'data': query}, 
+                    headers=headers, 
+                    timeout=(15, 140)
+                )
                 
-        except Exception as e:
-            print(f"  Failed connecting to {server_url}: {e}", flush=True)
+                if response.status_code == 200:
+                    try:
+                        data = response.json()
+                        elements = data.get('elements', [])
+                        
+                        # Catch empty sets on unstable mirror caches
+                        if len(elements) == 0 and endpoint != "https://overpass-api.de/api/interpreter" and category_name not in ["bucees", "wawa"]:
+                            print(f"![WARN] Mirror server returned 0 items suspiciously for {category_name}. Shifting mirror...")
+                            break
+                            
+                        print(f"Successfully fetched {len(elements)} items for {category_name}.")
+                        return elements
+                    except json.JSONDecodeError as je:
+                        print(f"![ERROR] JSON Parse failure on {endpoint}. Error: {je}")
+                        break
+                        
+                elif response.status_code == 429:
+                    wait_time = attempt * 25
+                    print(f"![WARN] Rate limited (429). Waiting {wait_time}s...")
+                    time.sleep(wait_time)
+                elif response.status_code == 504:
+                    print(f"![WARN] Gateway Timeout (504) on {endpoint}. Shifting mirror...")
+                    break
+                else:
+                    print(f"![ERROR] HTTP Error {response.status_code} from {endpoint}")
+                    break
+
+            except requests.exceptions.Timeout as te:
+                print(f"![TIMEOUT] Network timeout reached on {endpoint}. Details: {te}")
+                time.sleep(5)
+            except requests.exceptions.ConnectionError as ce:
+                print(f"![CONNECTION ERROR] Failed to connect to {endpoint}. Details: {ce}")
+                time.sleep(5)
+            except Exception as e:
+                print(f"![UNEXPECTED ERROR] An unhandled exception occurred: {e}")
+                time.sleep(5)
+                
+        print(f"Moving away from endpoint: {endpoint}\n")
+        
+    print(f"!!! [CRITICAL FAILURE] All endpoints failed for category: {category_name} !!!")
     return None
 
-
-def is_blacklisted(tags):
-    name = tags.get("name", "").lower()
-    brand = tags.get("brand", "").lower()
-    description = tags.get("description", "").lower()
-    
-    for word in BLACKLIST:
-        if word in name or word in brand or word in description:
-            return True
-            
-    if tags.get("was:brand") or tags.get("old_brand") or tags.get("disused") == "yes":
-        return True
-        
-    return False
-
+def generate_unique_key(item):
+    """Creates a deterministic unique string key based on rounded lat, lon, and brand slug."""
+    try:
+        return f"{round(float(item['lat']), 4)}_{round(float(item['lon']), 4)}_{item['b']}"
+    except KeyError:
+        return None
 
 def main():
-    compiled_pois = []
-    seen_coords = set()
-    
-    if os.path.exists(OUTPUT_FILE):
+    output_filename = "us_brands.json"
+    existing_records = []
+    seen_keys = set()
+
+    if os.path.exists(output_filename):
         try:
-            with open(OUTPUT_FILE, "r", encoding="utf-8") as fh:
-                compiled_pois = json.load(fh)
-                for poi in compiled_pois:
-                    fingerprint = f"{round(poi['lat'], 4)}_{round(poi['lon'], 4)}"
-                    seen_coords.add(fingerprint)
-            print(f"Loaded {len(compiled_pois)} existing POIs from {OUTPUT_FILE}")
+            with open(output_filename, "r", encoding="utf-8") as file:
+                existing_records = json.load(file)
+                if isinstance(existing_records, list):
+                    for item in existing_records:
+                        key = generate_unique_key(item)
+                        if key:
+                            seen_keys.add(key)
+            print(f"Loaded {len(existing_records)} existing baseline records from {output_filename}.")
         except Exception as e:
-            print(f"Could not read existing file ({e}). Starting fresh.")
+            print(f"![ERROR] Could not read existing file. Error: {e}")
 
-    raw_data = fetch_data()
-    if not raw_data:
-        print("Error: All global Overpass mirrors failed, timed out, or returned empty datasets.")
-        return
+    # CRITICAL FIX: Removed case-insensitive lookup modifier `,i`
+    # Replaced with explicit fast character ranges that utilize OSM database indices perfectly
+    targets = {
+        "chickfila": 'nwr["brand"~"Chick-[fF]il-[aA]"](area.searchArea); nwr["name"~"Chick-[fF]il-[aA]"](area.searchArea);',
+        "mcdonalds": 'nwr["brand"~"Mc[dD]onald"](area.searchArea); nwr["name"~"Mc[dD]onald"](area.searchArea);',
+        "chipotle": 'nwr["brand"~"Chipotle"](area.searchArea); nwr["name"~"Chipotle"](area.searchArea);',
+        "starbucks": 'nwr["brand"~"Starbucks"](area.searchArea); nwr["name"~"Starbucks"](area.searchArea);',
+        "raisingcanes": 'nwr["brand"~"Raising Cane"](area.searchArea); nwr["name"~"Raising Cane"](area.searchArea);',
+        "jerseymikes": 'nwr["brand"~"Jersey Mike"](area.searchArea); nwr["name"~"Jersey Mike"](area.searchArea);',
+        "sheetz": 'nwr["brand"~"Sheetz"](area.searchArea); nwr["name"~"Sheetz"](area.searchArea);',
+        "bucees": 'nwr["brand"~"Buc-ee"](area.searchArea); nwr["name"~"Buc-ee"](area.searchArea);',
+        "wawa": 'nwr["brand"~"Wawa"](area.searchArea); nwr["name"~"Wawa"](area.searchArea);',
+        "circlek": 'nwr["brand"~"Circle K"](area.searchArea); nwr["name"~"Circle K"](area.searchArea);',
+        "rest_stops": 'nwr["highway"="rest_area"](area.searchArea);',
+        "playgrounds": 'nwr["leisure"="playground"](area.searchArea);'
+    }
 
-    elements = raw_data.get("elements", [])
-    new_entries_count = 0
-    blacklisted_count = 0
+    religious_blacklist = [
+        'church', 'ministries', 'baptist', 'methodist', 'catholic', 'lutheran', 
+        'presbyterian', 'episcopal', 'synagogue', 'mosque', 'temple', 'parish', 
+        'christian', 'chapel', 'fellowship', 'worship', 'adventist', 'saints'
+    ]
 
-    for el in elements:
-        lat = el.get("lat") or (el.get("center") or {}).get("lat")
-        lon = el.get("lon") or (el.get("center") or {}).get("lon")
-        if not lat or not lon:
-            continue
+    new_additions_count = 0
+    failed_categories = []
 
-        fingerprint = f"{round(lat, 4)}_{round(lon, 4)}"
-        if fingerprint in seen_coords:
-            continue
-
-        tags = el.get("tags", {})
-        if is_blacklisted(tags):
-            blacklisted_count += 1
-            continue
-
-        poi = {
-            "lat": round(lat, 4),
-            "lon": round(lon, 4),
-            "n":   DISPLAY_NAME,
-            "b":   BRAND_SLUG,
-            "c":   CATEGORY_SLUG,
-            "h":   tags.get("opening_hours", "Hours vary by location"),
-            "d":   tags.get("description", "Verified chain location mapped off regional route bounds."),
-        }
+    for key, criteria in targets.items():
+        elements = fetch_category_with_fallback(criteria, key)
         
-        if CATEGORY_SLUG == "gas":
-            poi["g87"] = 1 if (tags.get("fuel:octane_87") == "yes" or tags.get("fuel:unleaded") == "yes") else 1
-            poi["g88"] = 1 if (tags.get("fuel:octane_88") == "yes" or tags.get("fuel:e15") == "yes") else 0
+        if elements is None:
+            failed_categories.append(key)
+            continue
+            
+        for elem in elements:
+            tags = elem.get('tags', {})
+            lat = elem.get('lat') or elem.get('center', {}).get('lat')
+            lon = elem.get('lon') or elem.get('center', {}).get('lon')
+            if not lat or not lon:
+                continue
 
-        compiled_pois.append(poi)
-        seen_coords.add(fingerprint)
-        new_entries_count += 1
+            name = tags.get('name', f"Unbranded {key}" if key in ["rest_stops", "playgrounds"] else f"{key} Location")
+            brand_raw = tags.get('brand', '').lower()
+            name_raw = name.lower()
+            
+            b_slug, c_tag, desc = key, "food", f"Official {key} location."
 
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as fh:
-        json.dump(compiled_pois, fh, indent=2)
+            # Map categories cleanly based on structural match rules
+            if "chick-fil-a" in brand_raw or "chick-fil-a" in name_raw:
+                b_slug = "chickfila"
+            elif "mcdonald" in brand_raw or "mcdonald" in name_raw:
+                b_slug = "mcdonalds"
+            elif "chipotle" in brand_raw or "chipotle" in name_raw:
+                b_slug = "chipotle"
+            elif "starbucks" in brand_raw or "starbucks" in name_raw:
+                b_slug = "starbucks"
+            elif "raising cane" in brand_raw or "raising cane" in name_raw:
+                b_slug = "raisingcanes"
+            elif "jersey mike" in brand_raw or "jersey mike" in name_raw:
+                b_slug = "jerseymikes"
 
-    print(f"\nExecution Complete:")
-    print(f" -> Added {new_entries_count} new entries.")
-    print(f" -> Filtered out {blacklisted_count} locations matching blacklist rules.")
-    print(f" -> Total records inside {OUTPUT_FILE}: {len(compiled_pois)}")
+            if key in ["sheetz", "bucees", "wawa", "circlek"]:
+                c_tag = "gas"
+                b_slug = key
+            elif key == "rest_stops":
+                b_slug, c_tag, desc = "rest_stop", "travel", "State-maintained highway rest area."
+            elif key == "playgrounds":
+                meta_text = f"{name} {tags.get('operator', '')} {tags.get('description', '')}".lower()
+                if any(keyword in meta_text for keyword in religious_blacklist):
+                    continue
+                b_slug, c_tag, desc = "playground", "recreation", "Public community playground facility."
 
+            temp_record = {"lat": round(lat, 4), "lon": round(lon, 4), "b": b_slug}
+            record_key = generate_unique_key(temp_record)
+            
+            if record_key in seen_keys:
+                continue
+
+            record = {
+                "lat": round(lat, 4),
+                "lon": round(lon, 4),
+                "n": name,
+                "b": b_slug,
+                "c": c_tag
+            }
+
+            if c_tag == "gas":
+                record["g87"] = 1
+                record["g88"] = 1 if b_slug == "sheetz" else 0
+
+            record["h"] = tags.get('opening_hours', '24/7' if c_tag in ['gas', 'travel'] else 'Varies')
+            record["d"] = desc
+            
+            existing_records.append(record)
+            seen_keys.add(record_key)
+            new_additions_count += 1
+        
+        # Courteous delay tracking to protect target APIs
+        time.sleep(5)
+
+    try:
+        with open(output_filename, "w", encoding="utf-8") as file:
+            json.dump(existing_records, file, indent=2)
+        print(f"\nProcessing Complete!")
+        print(f"-> Added {new_additions_count} new unique locations.")
+        print(f"-> Total records now inside '{output_filename}': {len(existing_records)}")
+    except Exception as e:
+        print(f"![CRITICAL] Failed writing out data: {e}")
+        sys.exit(1)
+
+    if failed_categories:
+        print(f"\n![ALERT] Complete structural failures for: {failed_categories}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
