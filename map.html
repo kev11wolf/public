@@ -37,7 +37,7 @@
         }
     </style>
 </head>
-<body class="flex flex-col justify-end">
+<body class="flex flex-col justify-end text-zinc-950 selection:bg-blue-500 selection:text-white">
 
     <div class="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col transition-all duration-300">
         
@@ -119,11 +119,13 @@
 
     <script>
         // =====================================================================
-        // --- PHASE 1: HOISTED GLOBAL CONSTANTS & VARIABLE CONFIG LAYOUTS ----
+        // --- PHASE 1: HOISTED ROOT-LEVEL CONSTANT DECLARATIONS & BOUNDS -----
         // =====================================================================
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
         const autocompleteQueryMemoryCache = new Map(); 
+        let mathWorker = null; 
         
+        // Comprehensive 50-State Geographic Bounding Box Alignment Dictionary Grid Framework Matrix
         const STATE_BOUNDS_LOOKUP = {
             "alabama":        { s: 30.1, n: 35.1, w: -88.6, e: -84.8 },
             "alaska":         { s: 51.0, n: 71.5, w: -179.9, e: -129.9 },
@@ -260,7 +262,7 @@
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
 
-        // Variable Array Configuration Layout States
+        // Core Dynamic State Containers
         let allPoiMarkersMemoryMap = [];
         let globalFavoritesMarkers = []; 
         let repoFavoritesMemory = [];    
@@ -279,9 +281,9 @@
         let isTracking = false;
         let watchId = null;
 
-        // ==========================================================
-        // --- PHASE 2: RESILIENT NATIVE EMBEDDED SYSTEM FUNCTIONS ---
-        // ==========================================================
+        // =====================================================================
+        // --- PHASE 2: STANDARD EXPLICIT STRUCTURED HELPER FUNCTIONS ---------
+        // =====================================================================
         function triggerToast(text, duration = 3000) {
             const container = document.getElementById('toast-container');
             if (!container) return;
@@ -342,39 +344,65 @@
             });
         }
 
-        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
-
         function triggerAutoCenterDelay() {
             if (!isTracking) return;
-            allowAutoCenter = false; clearTimeout(autoCenterTimeoutId);
+            allowAutoCenter = false; 
+            clearTimeout(autoCenterTimeoutId);
             autoCenterTimeoutId = setTimeout(() => { allowAutoCenter = true; }, 20000); 
         }
 
+        function updateBufferVisualizerWeight() {
+            if (!routeBufferPolyline || routeLineCoordinates.length === 0) return;
+            const currentMapCenterLatitude = map.getCenter().lat;
+            const currentZoomLevel = map.getZoom();
+            const metersPerPixel = (40075016.686 * Math.cos(currentMapCenterLatitude * Math.PI / 180)) / Math.pow(2, currentZoomLevel + 8);
+            const calculatedPixelWidthWidth = (activeBufferMeters / metersPerPixel) * 2;
+            routeBufferPolyline.setStyle({ weight: Math.max(4, calculatedPixelWidthWidth) });
+        }
+
         function dispatchOffThreadAnalysis() {
-            if (routeLineCoordinates.length === 0) return;
+            if (!routeLineCoordinates || routeLineCoordinates.length === 0) return;
             const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
             activeTargetsSliceMemory = [];
             for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
-            if (routeLineCoordinates.length > 0) activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
+            activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
 
-            mathWorker.postMessage({
-                localElements: localJsonMemory,
-                targetsSlice: activeTargetsSliceMemory, activeBufferMeters: activeBufferMeters,
-                currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
-            });
+            if (mathWorker) {
+                mathWorker.postMessage({
+                    localElements: localJsonMemory, targetsSlice: activeTargetsSliceMemory, activeBufferMeters: activeBufferMeters,
+                    currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
+                });
+            }
         }
 
-        async function runDataExecutionLayer(masterCat) {
+        function runDataExecutionLayer(masterCat) {
             if ((!routeLineCoordinates || routeLineCoordinates.length === 0) && routingControl._routes && routingControl._routes[0]) {
                 routeLineCoordinates = routingControl._routes[0].coordinates;
             }
             if (!routeLineCoordinates || routeLineCoordinates.length === 0) { 
-                alert("Please calculate a route first before selecting options filters."); 
+                alert("Please calculate a route first before matching system filters."); 
                 return; 
             }
             dispatchOffThreadAnalysis();
         }
 
+        function computeTargetCenteringNode() {
+            if (routeLineCoordinates.length > 0 && lastUserGpsCoord) {
+                const routeBoundsCenter = L.polyline(routeLineCoordinates).getBounds().getCenter();
+                return L.latLng((routeBoundsCenter.lat + lastUserGpsCoord[0]) / 2, (routeBoundsCenter.lng + lastUserGpsCoord[1]) / 2);
+            } else if (routeLineCoordinates.length > 0) {
+                return L.polyline(routeLineCoordinates).getBounds().getCenter();
+            } else if (lastUserGpsCoord) {
+                return L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]);
+            }
+            return map.getCenter();
+        }
+
+        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
+
+        // =====================================================================
+        // --- PHASE 3: POI MARKER RENDERING LAYER ENGINE ----------------------
+        // =====================================================================
         function renderGlobalPermanentStars() {
             favoritesLayerGroup.clearLayers();
             globalFavoritesMarkers = [];
@@ -402,7 +430,7 @@
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+                const streetViewUrl = `http://maps.google.com/maps?q=&layer=c&cbll=${lat},${lon}`;
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -410,11 +438,11 @@
                 
                 let actionBtnHtml = '';
                 if (existsInMasterRepoJson) {
-                    actionBtnHtml = `<button class="global-delete-trigger block w-full text-center bg-red-600 hover:bg-red-700 text-[10px] py-1.5 rounded-xl border border-red-800 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}">🗑️ Delete From Global Repo</button>`;
+                    actionBtnHtml = `<button class="global-delete-trigger block w-full text-center bg-red-600 hover:bg-red-700 text-[10px] py-1.5 rounded-xl border border-red-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}">🗑️ Delete From Global Repo</button>`;
                 } else {
                     let starBtnText = isCurrentlyStarredLocally ? "❌ Remove Local Star" : "⭐ Persistently Star";
                     let starBtnColor = isCurrentlyStarredLocally ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
-                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
+                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
                 }
 
                 let fuelBadgeHtml = '';
@@ -471,7 +499,7 @@
             }
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-            const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+            const streetViewUrl = `http://maps.google.com/maps?q=&layer=c&cbll=${lat},${lon}`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
@@ -494,7 +522,7 @@
                         <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
                     </div>
                     <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
-                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
+                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
                         <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
                         <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
                         <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
@@ -516,6 +544,9 @@
             poiClusterGroup.addLayer(marker);
         }
 
+        // =====================================================================
+        // --- PHASE 4: NOMINATIM GEOLOCATION & AUTOCOMPLETE ENGINE -----------
+        // =====================================================================
         function runCachedAutocompleteSearch(inputElement, dropdownElement) {
             const query = inputElement.value.trim();
             const clearBtn = document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn');
@@ -567,6 +598,9 @@
             });
         }
 
+        // =====================================================================
+        // --- PHASE 5: USER MENU FILTERS & SIDE PANEL HUD LOGIC ---------------
+        // =====================================================================
         function handleMasterCategorySelection(element) {
             document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
             element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
@@ -587,6 +621,9 @@
             subBar.classList.remove('hidden');
         }
 
+        // =====================================================================
+        // --- PHASE 6: SYNCHRONOUS LOCAL & REMOTE GIT DATABASE CONNECTORS -----
+        // =====================================================================
         async function loadMasterRepoFavoritesOnBoot() {
             try {
                 const response = await fetch('favorites.json');
@@ -595,7 +632,7 @@
                 console.log(`Loaded ${repoFavoritesMemory.length} global repository favorites.`);
                 renderGlobalPermanentStars();
             } catch (err) {
-                console.warn("Global repository favorites layer empty or uninitialized.");
+                console.warn("Global repository favorites layer uninitialized or empty.");
             }
         }
 
@@ -606,7 +643,7 @@
                 updateInlineStatus("Formatting cloud packaging container variables...", true);
                 const filteredPayload = localStarredList.map(item => ({
                     lat: roundCoords(item.lat), lon: roundCoords(item.lon), n: String(item.name),
-                    b: String(item.brand), c: String(item.category), h: String(item.hours), d: String(item.desc)
+                    b: String(item.brand), c: String(item.category), h: String(item.hours || 'Varies'), d: String(item.desc || '')
                 }));
                 const targetRepositoryPath = "kev11wolf/public";
                 const formattedJSONString = JSON.stringify(filteredPayload, null, 2);
@@ -617,41 +654,119 @@
             }
         }
 
-        // ==============================================================
-        // --- PHASE 5: RUN OFF-THREAD WORKER ROUTING THREAD COMPILER ---
-        // ==============================================================
-        mathWorker.onmessage = function(e) {
-            const { sortedMatches } = e.data;
-            poiClusterGroup.clearLayers();
-            allPoiMarkersMemoryMap = [];
-
-            sortedMatches.forEach(el => {
-                let isCoordinateOccupiedByStar = globalFavoritesMarkers.some(m => roundCoords(m.lat) === roundCoords(el.lat) && roundCoords(m.lon) === roundCoords(el.lon));
-                if (isCoordinateOccupiedByStar) return;
-                buildAndRenderPoiMarker(el, false);
-            });
-
-            const hud = document.getElementById('next-stop-hud');
-            if (hud) {
-                if (sortedMatches.length > 0) {
-                    const nextStop = sortedMatches[0];
-                    const distanceInMiles = (nextStop.minD * 0.000621371).toFixed(1);
-                    document.getElementById('hud-poi-name').innerText = cleanBrandNames[nextStop.brand] || nextStop.name;
-                    document.getElementById('hud-poi-dist').innerText = `${distanceInMiles} miles away`;
-                    hud.classList.remove('hidden');
-                } else { hud.classList.add('hidden'); }
+        window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
+            let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            let uniqueId = `poi_${lat}_${lon}`;
+            let matchIndex = starred.findIndex(item => item.id === uniqueId);
+            
+            if (matchIndex > -1) {
+                starred.splice(matchIndex, 1);
+                triggerToast("Removed stop from local device stars configuration.");
+            } else {
+                starred.push({
+                    id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
+                    name: String(name), category: String(category), brand: String(brand), hours: String(hours), desc: String(desc), isLocal: true
+                });
+                triggerToast("Saved stop to local device memory! ⭐");
             }
-            updateInlineStatus("Stops active.");
+            
+            localStorage.setItem('starred_pois', JSON.stringify(starred));
+            renderGlobalPermanentStars(); 
+            if (routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
         };
 
-        // ==========================================
-        // --- PHASE 6: INPUT EVENT EVENT ENGINE ----
-        // ==========================================
+        window.triggerCloudDeletionTicketPipeline = function(lat, lon) {
+            if (confirm("This favorite is stored permanently in the repository. Open request page to drop it?")) {
+                let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+                localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
+                localStorage.setItem('starred_pois', JSON.stringify(localStarred));
+                
+                const targetRepositoryPath = "kev11wolf/public";
+                const payloadString = JSON.stringify({ lat: parseFloat(lat), lon: parseFloat(lon) });
+                const issueUrl = `https://github.com/${targetRepositoryPath}/issues/new?title=DATA_DELETE_FAVORITE&body=${encodeURIComponent(payloadString)}`;
+                
+                window.open(issueUrl, '_blank');
+                map.closePopup();
+                triggerToast("Deletions package built! Click Submit on the next window tab.");
+            }
+        };
+
+        // =====================================================================
+        // --- PHASE 7: WEB WORKER CALL HANDLERS & ASYNC CHANNELS --------------
+        // =====================================================================
+        if (mathWorker) {
+            mathWorker.onmessage = function(e) {
+                const { sortedMatches } = e.data;
+                poiClusterGroup.clearLayers();
+                allPoiMarkersMemoryMap = [];
+
+                sortedMatches.forEach(el => {
+                    let isCoordinateOccupiedByStar = globalFavoritesMarkers.some(m => roundCoords(m.lat) === roundCoords(el.lat) && roundCoords(m.lon) === roundCoords(el.lon));
+                    if (isCoordinateOccupiedByStar) return;
+                    buildAndRenderPoiMarker(el, false);
+                });
+
+                const hud = document.getElementById('next-stop-hud');
+                if (hud) {
+                    if (sortedMatches.length > 0) {
+                        const nextStop = sortedMatches[0];
+                        const distanceInMiles = (nextStop.minD * 0.000621371).toFixed(1);
+                        document.getElementById('hud-poi-name').innerText = cleanBrandNames[nextStop.brand] || nextStop.name;
+                        document.getElementById('hud-poi-dist').innerText = `${distanceInMiles} miles away`;
+                        hud.classList.remove('hidden');
+                    } else { hud.classList.add('hidden'); }
+                }
+                updateInlineStatus("Stops active.");
+            };
+        }
+
+        // =====================================================================
+        // --- PHASE 8: LEAFLET UI EVENT ACTIONS & GLOBAL SYSTEM BINDINGS ------
+        // =====================================================================
+        map.on('popupopen', function(e) {
+            const popupElement = e.popup.getElement();
+            const starButton = popupElement.querySelector('.star-toggle-trigger');
+            if (starButton) {
+                starButton.addEventListener('click', function() {
+                    window.toggleStarPoiState(
+                        starButton.dataset.lat, starButton.dataset.lon, starButton.dataset.name,
+                        starButton.dataset.cat, starButton.dataset.brand, starButton.dataset.hours, starButton.dataset.desc
+                    );
+                    map.closePopup();
+                });
+            }
+            
+            const deleteButton = popupElement.querySelector('.global-delete-trigger');
+            if (deleteButton) {
+                deleteButton.addEventListener('click', function() {
+                    window.triggerCloudDeletionTicketPipeline(deleteButton.dataset.lat, deleteButton.dataset.lon);
+                });
+            }
+        });
+
+        map.on('zoomend moveend', function() {
+            updateBufferVisualizerWeight();
+            const isLarge = map.getZoom() > 13;
+
+            allPoiMarkersMemoryMap.forEach(item => {
+                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
+                item.marker.setIcon(createCustomIcon(config.label, config.bg, isLarge));
+            });
+
+            globalFavoritesMarkers.forEach(item => {
+                const config = categoryConfigs[item.visualKey] || categoryConfigs['food'];
+                item.marker.setIcon(createStarredIcon(config.label, isLarge));
+            });
+        });
+
+        // =====================================================================
+        // --- PHASE 9: INTERACTIVE DOM LISTENERS & AUTOMATION WIRING --------
+        // =====================================================================
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
             const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
-            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm transition-colors hover:bg-gray-50");
+            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] transition-colors hover:bg-gray-50 text-zinc-700");
             subPill.className = "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
             currentSubFilter = subPill.getAttribute('data-sub'); dispatchOffThreadAnalysis();
         });
@@ -661,36 +776,83 @@
             if (localJsonMemory && currentSubFilter !== 'none') dispatchOffThreadAnalysis(); 
         });
         
-        document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
+        document.getElementById('toggle-search-btn').addEventListener('click', () => { document.getElementById('search-container').classList.toggle('hidden'); });
         document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
 
         document.getElementById('route-btn').addEventListener('click', async () => {
-            const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input'); let startLatLng, endLatLng;
-            if (startInput.dataset.lat && startInput.dataset.lon) { startLatLng = L.latLng(parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon)); }
-            if (endInput.dataset.lat && endInput.dataset.lon) { endLatLng = L.latLng(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon)); }
-            if (!startLatLng || !endLatLng) { alert("Select suggested autocomplete options first."); return; }
-            routingControl.setWaypoints([startLatLng, endLatLng]);
+            const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input');
+            if (!startInput.dataset.lat || !endInput.dataset.lat) { alert("Select suggested autocomplete options first."); return; }
+            routingControl.setWaypoints([L.latLng(startInput.dataset.lat, startInput.dataset.lon), L.latLng(endInput.dataset.lat, endInput.dataset.lon)]);
         });
 
+        document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
+            map.removeLayer(mapLayersPool[mapStyleMode]);
+            mapStyleMode = mapStyleMode === 'light' ? 'dark' : 'light';
+            mapLayersPool[mapStyleMode].addTo(map);
+            e.target.innerText = mapStyleMode === 'light' ? "🌙 Dark" : "☀️ Light";
+            triggerToast(`Map skin changed to ${mapStyleMode} mode layouts.`);
+        });
+
+        document.getElementById('zoom-in-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() + 1); });
+        document.getElementById('zoom-out-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() - 1); });
+
+        // =====================================================================
+        // --- PHASE 10: GEOLOCATION HARDWARE WATCH TELEMETRY PIPELINE ---------
+        // =====================================================================
+        const geoBtn = document.getElementById('geo-btn');
+        geoBtn.addEventListener('click', () => {
+            if (isTracking) { 
+                if (watchId) navigator.geolocation.clearWatch(watchId); 
+                isTracking = false; allowAutoCenter = true; clearTimeout(autoCenterTimeoutId);
+                geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
+            } else {
+                if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
+                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
+                watchId = navigator.geolocation.watchPosition((pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    if (lastUserGpsCoord) {
+                        const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord); if (distanceMoved < 25) return; 
+                    }
+                    lastUserGpsCoord = [latitude, longitude];
+                    if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
+                    if (allowAutoCenter) map.panTo([latitude, longitude]);
+
+                    if (routeLineCoordinates.length > 0) {
+                        let minDistanceToRouteLine = Infinity; let closestCoordinateIndex = 0;
+                        for (let i = 0; i < routeLineCoordinates.length; i++) {
+                            const d = map.distance([latitude, longitude], [routeLineCoordinates[i].lat, routeLineCoordinates[i].lng]);
+                            if (d < minDistanceToRouteLine) { minDistanceToRouteLine = d; closestCoordinateIndex = i; }
+                        }
+                        let remainingDistanceMeters = 0;
+                        for (let i = closestCoordinateIndex; i < routeLineCoordinates.length - 1; i++) {
+                            remainingDistanceMeters += map.distance([routeLineCoordinates[i].lat, routeLineCoordinates[i].lng], [routeLineCoordinates[i+1].lat, routeLineCoordinates[i+1].lng]);
+                        }
+                        const remainingDistanceMiles = (remainingDistanceMeters * 0.000621371).toFixed(1);
+                        const stickyLabelValue = document.getElementById('sticky-total-dist');
+                        if (stickyLabelValue) stickyLabelValue.innerText = remainingDistanceMiles;
+
+                        if (minDistanceToRouteLine > 805) {
+                            triggerToast("Off-route deviation detected! Updating path variables...", 4000);
+                            const currentGpsLocationLatLng = L.latLng(latitude, longitude);
+                            const currentTargetDestinationLatLng = routingControl.getWaypoints()[1].latLng;
+                            routingControl.setWaypoints([currentGpsLocationLatLng, currentTargetDestinationLatLng]);
+                        }
+                    }
+                }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
+            }
+        });
+
+        // =====================================================================
+        // --- PHASE 11: INITIAL APPLICATION DOMContentLoaded BOOTSTRAPPER -----
+        // =====================================================================
         window.addEventListener('DOMContentLoaded', () => {
-            const inputFieldsToWire = ['start-input', 'end-input'];
-            inputFieldsToWire.forEach(id => {
-                const el = document.getElementById(id);
-                let debounceTimer;
-                el.addEventListener('input', () => {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(() => {
-                        runCachedAutocompleteSearch(el, document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete'));
-                    }, 400);
-                });
-                el.addEventListener('blur', () => {
-                    setTimeout(() => {
-                        document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete').classList.add('hidden');
-                    }, 200);
-                });
+            ['start-input', 'end-input'].forEach(id => {
+                const el = document.getElementById(id); let debounceTimer;
+                el.addEventListener('input', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => { runCachedAutocompleteSearch(el, document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete')); }, 400); });
             });
 
             loadMasterRepoFavoritesOnBoot();
+
             const interactiveControlBars = ['master-filter-bar', 'sub-filter-bar', 'search-container'];
             interactiveControlBars.forEach(id => {
                 const element = document.getElementById(id);
