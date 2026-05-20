@@ -26,7 +26,6 @@ class NationalPOIExtractor(osmium.SimpleHandler):
         self.seen_keys = set()
 
     def load_existing_dataset(self, filename):
-        """Safely loads baseline database array using missing key protection templates."""
         if os.path.exists(filename):
             try:
                 with open(filename, "r", encoding="utf-8") as file:
@@ -41,9 +40,9 @@ class NationalPOIExtractor(osmium.SimpleHandler):
                                 if key not in self.seen_keys:
                                     self.seen_keys.add(key)
                                     self.output_records.append(item)
-                print(f"Loaded {len(self.output_records)} baseline points safely into tracking memory.")
+                print(f"Successfully loaded {len(self.output_records)} existing state baseline points.")
             except Exception as e:
-                print(f"![WARN] Baseline parsing skipped safely: {e}. Preserving pipeline flow.")
+                print(f"![WARN] Baseline parsing skipped safely: {e}")
 
     def process_node_tags(self, tags, lat, lon):
         if not lat or not lon:
@@ -59,7 +58,6 @@ class NationalPOIExtractor(osmium.SimpleHandler):
 
         b_slug, c_tag, desc = None, "food", "Official location."
 
-        # Brand Mapping Profiles
         if "chick-fil-a" in brand or "chick-fil-a" in name_lower:
             b_slug = "chickfila"
         elif "mcdonald" in brand or "mcdonald" in name_lower:
@@ -82,8 +80,6 @@ class NationalPOIExtractor(osmium.SimpleHandler):
             b_slug, c_tag = "wawa", "gas"
         elif "circle k" in brand or "circle k" in name_lower:
             b_slug, c_tag = "circlek", "gas"
-            
-        # Specialized Layout Mappings
         elif highway == "rest_area":
             b_slug, c_tag, desc = "highway_rest", "highway", "State-maintained highway rest area."
         elif amenity == "toilets":
@@ -150,31 +146,35 @@ class NationalPOIExtractor(osmium.SimpleHandler):
             except osmium.InvalidLocationError: pass
 
     def area(self, a):
-        """FIX: Extracts coordinate points from the outer boundary ring of multi-polygon park structures."""
         if a.tags:
             try:
                 for ring in a.outer_rings():
                     for node in ring:
-                        # Extract the first valid latitude and longitude coordinate pair found inside the boundary shape
                         self.process_node_tags(dict(a.tags), node.lat, node.lon)
                         return 
             except:
                 pass
 
 if __name__ == "__main__":
-    output_filename = "us_brands.json"
+    if len(sys.argv) < 2:
+        print("![ERROR] Missing target state name configuration parameter.")
+        sys.exit(1)
+        
+    state_slug = sys.argv[1]
+    os.makedirs("data", exist_ok=True)
+    output_filename = f"data/{state_slug}_brands.json"
     pbf_target = "region_map.osm.pbf"
 
     if not os.path.exists(pbf_target):
-        print("![ERROR] Local map data layer file missing.")
+        print(f"![ERROR] Local binary data file layer missing for target parameter: {state_slug}")
         sys.exit(1)
 
     extractor = NationalPOIExtractor()
     extractor.load_existing_dataset(output_filename)
     
-    print("Executing hyper-fast streaming parsing pass over binary layers...")
+    print(f"Running high-speed local stream extractor loop for target parameter: {state_slug}...")
     extractor.apply_file(pbf_target, locations=True)
 
     with open(output_filename, "w", encoding="utf-8") as file:
         json.dump(extractor.output_records, file, indent=2)
-    print(f"Success! Current combined database size tracking: {len(extractor.output_records)} records.")
+    print(f"Success! {state_slug} data sync complete. Rows saved: {len(extractor.output_records)}")
