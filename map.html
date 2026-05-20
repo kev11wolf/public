@@ -119,7 +119,7 @@
 
     <script>
         // =====================================================================
-        // --- PHASE 1: HOISTED GLOBAL CONSTANTS & VARIABLE MEMORY TIERS ------
+        // --- PHASE 1: HOISTED GLOBAL CONSTANTS & VARIABLE CONFIGS -----------
         // =====================================================================
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
         const autocompleteQueryMemoryCache = new Map(); 
@@ -260,7 +260,7 @@
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
 
-        // Storage Matrix Memory Layout States
+        // Variable Array Management Allocation Tiers
         let allPoiMarkersMemoryMap = [];
         let globalFavoritesMarkers = []; 
         let repoFavoritesMemory = [];    
@@ -278,7 +278,7 @@
         let autoCenterTimeoutId = null;
 
         // ==========================================
-        // --- PHASE 2: MAP INITIALIZATION LAYERS ---
+        // --- PHASE 2: MAP INITIALIZATION CORES ----
         // ==========================================
         const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 5);
         
@@ -325,7 +325,7 @@
         }).addTo(map);
 
         // ==============================================================
-        // --- PHASE 3: HIGH-SPEED CORRIDOR BACKGROUND WEB WORKER -------
+        // --- PHASE 3: HIGH-SPEED BACKGROUND WEB WORKER THREAD ---------
         // ==============================================================
         const workerBlobCode = `
             function haversineDist(lat1, lon1, lat2, lon2) {
@@ -397,11 +397,12 @@
         const mathWorker = new Worker(URL.createObjectURL(blobObj));
 
         // ==============================================================
-        // --- PHASE 4: RESTRUCTURED EXPLICIT FUNCTION MACROS ----------
+        // --- PHASE 4: SECURE STANDARD HOISTED HELPER FUNCTIONS --------
         // ==============================================================
         function calculateIntersectedStates(routeCoords) {
             const matchedStates = new Set();
             const sampleRate = Math.max(1, Math.floor(routeCoords.length / 100));
+            
             for (let i = 0; i < routeCoords.length; i += sampleRate) {
                 const pt = routeCoords[i];
                 for (const [stateName, bbox] of Object.entries(STATE_BOUNDS_LOOKUP)) {
@@ -473,27 +474,18 @@
             });
         }
 
-        function computeTargetCenteringNode() {
-            if (routeLineCoordinates.length > 0 && lastUserGpsCoord) {
-                const routeBoundsCenter = L.polyline(routeLineCoordinates).getBounds().getCenter();
-                return L.latLng((routeBoundsCenter.lat + lastUserGpsCoord[0]) / 2, (routeBoundsCenter.lng + lastUserGpsCoord[1]) / 2);
-            } else if (routeLineCoordinates.length > 0) {
-                return L.polyline(routeLineCoordinates).getBounds().getCenter();
-            } else if (lastUserGpsCoord) {
-                return L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]);
-            }
-            return map.getCenter();
-        }
-
         function triggerAutoCenterDelay() {
             if (!isTracking) return;
             allowAutoCenter = false; clearTimeout(autoCenterTimeoutId);
             autoCenterTimeoutId = setTimeout(() => { allowAutoCenter = true; }, 20000); 
         }
 
+        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
+
         function renderGlobalPermanentStars() {
             favoritesLayerGroup.clearLayers();
             globalFavoritesMarkers = [];
+
             let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             let combinedFavoritesList = [...localStarred];
             
@@ -504,6 +496,7 @@
             });
 
             const isLarge = map.getZoom() > 13;
+
             combinedFavoritesList.forEach(el => {
                 const lat = el.lat; const lon = el.lon;
                 const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
@@ -630,18 +623,71 @@
             poiClusterGroup.addLayer(marker);
         }
 
+        async function runDataExecutionLayer(masterCat) {
+            // CRITICAL FIX: Auto recovery intercept reads coordinate points out of native cache boundaries
+            if ((!routeLineCoordinates || routeLineCoordinates.length === 0) && routingControl._routes && routingControl._routes[0]) {
+                routeLineCoordinates = routingControl._routes[0].coordinates;
+            }
+            
+            if (!routeLineCoordinates || routeLineCoordinates.length === 0) { 
+                alert("Please calculate a route first. If you already generated a route, click the Calculate Route button again to refresh cache layers."); 
+                return; 
+            }
+            dispatchOffThreadAnalysis();
+        }
+
         // ==========================================
         // --- PHASE 5: AUTOCOMPLETE METHODS --------
         // ==========================================
-        function generateSubMenuUI(catId) {
-            const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
-            const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
-            definition.forEach((sub) => {
-                const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
-                subButton.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm text-zinc-700 transition-colors hover:bg-gray-50";
-                subButton.innerText = sub.label; subBar.appendChild(subButton);
+        function runCachedAutocompleteSearch(inputElement, dropdownElement) {
+            const query = inputElement.value.trim();
+            const clearBtn = document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn');
+            
+            if (query.length > 0) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
+
+            if (query.length < 3) {
+                dropdownElement.innerHTML = ''; dropdownElement.classList.add('hidden'); return;
+            }
+
+            if (autocompleteQueryMemoryCache.has(query)) {
+                renderAutocompleteDropdownDOM(autocompleteQueryMemoryCache.get(query), inputElement, dropdownElement); return;
+            }
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&countrycodes=us&q=${encodeURIComponent(query)}`)
+            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+            .then(data => {
+                autocompleteQueryMemoryCache.set(query, data);
+                renderAutocompleteDropdownDOM(data, inputElement, dropdownElement);
+            }).catch(() => {});
+        }
+
+        function renderAutocompleteDropdownDOM(data, inputElement, dropdownElement) {
+            dropdownElement.innerHTML = '';
+            if (!data || data.length === 0) {
+                const noResult = document.createElement('div');
+                noResult.className = "px-3 py-2.5 bg-gray-50 text-gray-500 italic text-xs select-none rounded-xl";
+                noResult.innerText = "No locations found in the US";
+                dropdownElement.appendChild(noResult); dropdownElement.classList.remove('hidden'); return;
+            }
+            dropdownElement.classList.remove('hidden');
+
+            data.forEach(item => {
+                const cleanOutputString = buildCleanAddressString(item.address, item.display_name);
+                const option = document.createElement('div');
+                option.className = "px-3 py-2.5 bg-white hover:bg-blue-50 border-b border-gray-100 last:border-0 cursor-pointer truncate text-zinc-900 font-semibold text-xs transition-colors";
+                option.innerText = cleanOutputString;
+
+                option.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    inputElement.value = cleanOutputString;
+                    inputElement.dataset.lat = item.lat;
+                    inputElement.dataset.lon = item.lon;
+                    dropdownElement.innerHTML = ''; dropdownElement.classList.add('hidden');
+                    document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn').classList.remove('hidden');
+                });
+                dropdownElement.appendChild(option);
             });
-            subBar.classList.remove('hidden');
         }
 
         function handleMasterCategorySelection(element) {
@@ -653,9 +699,38 @@
             generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
         }
 
+        function generateSubMenuUI(catId) {
+            const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
+            const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
+            definition.forEach((sub) => {
+                const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
+                subButton.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm text-zinc-700 transition-colors hover:bg-gray-50";
+                subButton.innerText = sub.label; subBar.appendChild(subButton);
+            });
+            subBar.classList.remove('hidden');
+        }
+
         // ==========================================
-        // --- PHASE 6: DOM INTERACTION TRIGGERS ----
+        // --- PHASE 6: INTERACTIVE INPUT EVENT LISTERS
         // ==========================================
+        document.getElementById('start-clear-btn').addEventListener('click', (e) => {
+            const input = document.getElementById('start-input'); input.value = ''; delete input.dataset.lat; delete input.dataset.lon; e.target.classList.add('hidden');
+        });
+        document.getElementById('end-clear-btn').addEventListener('click', (e) => {
+            const input = document.getElementById('end-input'); input.value = ''; delete input.dataset.lat; delete input.dataset.lon; e.target.classList.add('hidden');
+        });
+
+        document.getElementById('swap-locations-btn').addEventListener('click', () => {
+            const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input');
+            const startClear = document.getElementById('start-clear-btn'); const endClear = document.getElementById('end-clear-btn');
+            const tempVal = startInput.value; startInput.value = endInput.value; endInput.value = tempVal;
+            const tempLat = startInput.dataset.lat; startInput.dataset.lat = endInput.dataset.lat || ''; endInput.dataset.lat = tempLat || '';
+            const tempLon = startInput.dataset.lon; startInput.dataset.lon = endInput.dataset.lon || ''; endInput.dataset.lon = tempLon || '';
+            if (startInput.value.length > 0) startClear.classList.remove('hidden'); else startClear.classList.add('hidden');
+            if (endInput.value.length > 0) endClear.classList.remove('hidden'); else endClear.classList.add('hidden');
+            triggerToast("Swapped start & final parameters.");
+        });
+
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
@@ -730,7 +805,7 @@
         });
 
         // ==========================================
-        // --- PHASE 7: REPO MANAGEMENT LAYER -------
+        // --- PHASE 7: BOOTSTRAP RESYNC LAYERS -----
         // ==========================================
         async function loadMasterRepoFavoritesOnBoot() {
             try {
