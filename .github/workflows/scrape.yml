@@ -2,8 +2,8 @@ name: Stream Native Map Extraction Pipeline
 
 on:
   schedule:
-    - cron: '0 0 1 * *' # Executes automatically on the 1st day of every month
-  workflow_dispatch:     # Keeps manual execution force button ready
+    - cron: '0 0 1 * *' # Automatically updates on the 1st of every month
+  workflow_dispatch:     # Keeps the manual run button enabled
 
 jobs:
   build:
@@ -14,6 +14,8 @@ jobs:
     steps:
     - name: Checkout Source Code Tree
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # CRITICAL: Fetches full history so git can rebase changes safely
 
     - name: Initialize Environment Engine
       uses: actions/setup-python@v5
@@ -22,11 +24,11 @@ jobs:
 
     - name: Install System Architecture Requirements
       run: |
+        sudo apt-get update && sudo apt-get install -y libexpat1-dev zlib1g-dev libbz2-dev
         python -m pip install --upgrade pip
         pip install requests osmium
 
     - name: Stream Target State Map Slice
-      # Targets North Carolina. Change link path to scale or modify target territories.
       run: |
         curl -L -o region_map.osm.pbf https://download.geofabrik.de/north-america/us/north-carolina-latest.osm.pbf
 
@@ -36,10 +38,20 @@ jobs:
     - name: Clean Scratchpad Workspace File Storage Assets
       run: rm -f region_map.osm.pbf
 
-    - name: Deploy Compiled Matrix Array
+    - name: Deploy Compiled Matrix Array Safely
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
         git add us_brands.json
-        git diff-index --quiet HEAD || git commit -m "Automated update of index layers via offline binary maps engine"
-        git push
+        
+        # Only commit if changes actually exist
+        if ! git diff-index --quiet HEAD; then
+          git commit -m "Automated update of index layers via offline binary maps engine"
+          
+          # CRITICAL FIX: Pull down remote updates made while the script was running
+          # and seamlessly place our data updates on top of them
+          git pull --rebase origin main
+          
+          git push origin main
+        fi
