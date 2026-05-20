@@ -87,6 +87,7 @@
             <button data-cat="playground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
             <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
             <button data-cat="food" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
+            <button data-cat="shopping" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛒 Shopping & Services</button>
             <button data-cat="parks" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Parks & Attractions</button>
             <button data-cat="medical" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏥 Emergency & Med</button>
             <button data-cat="highway" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏢 Highway Amenities</button>
@@ -117,29 +118,62 @@
     <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
 
     <script>
-        // --- PHASE 1: HIGH-PERFORMANCE CLIENT-SIDE STATE BOUNDING BOX ENGINE ---
+        // --- PHASE 1: COMPREHENSIVE 50-STATE BOUNDING BOX MATRIX ENGINE ---
         const STATE_BOUNDS_LOOKUP = {
-            "north-carolina": { s: 33.7, n: 36.6, w: -84.4, e: -75.4 },
-            "south-carolina": { s: 32.0, n: 35.3, w: -83.4, e: -78.4 },
-            "virginia":       { s: 36.5, n: 39.5, w: -83.7, e: -75.0 },
-            "georgia":        { s: 30.3, n: 35.1, w: -85.7, e: -80.7 },
-            "florida":        { s: 24.3, n: 31.0, w: -87.7, e: -79.9 },
-            "maryland":       { s: 37.8, n: 39.8, w: -79.5, e: -74.9 },
-            "delaware":       { s: 38.4, n: 39.9, w: -75.8, e: -74.9 },
-            "pennsylvania":   { s: 39.7, n: 42.3, w: -80.6, e: -74.6 },
-            "new-jersey":     { s: 38.9, n: 41.4, w: -75.6, e: -73.8 },
-            "new-york":       { s: 40.4, n: 45.1, w: -79.8, e: -71.7 },
-            "texas":          { s: 25.8, n: 36.5, w: -106.7, e: -93.5 },
+            "alabama":        { s: 30.1, n: 35.1, w: -88.6, e: -84.8 },
+            "alaska":         { s: 51.0, n: 71.5, w: -179.9, e: -129.9 },
+            "arizona":        { s: 31.3, n: 37.1, w: -114.9, e: -109.0 },
+            "arkansas":       { s: 33.0, n: 36.6, w: -94.7, e: -89.6 },
             "california":     { s: 32.5, n: 42.1, w: -124.5, e: -114.1 },
-            "ohio":           { s: 38.3, n: 42.0, w: -84.9, e: -80.5 },
+            "colorado":       { s: 36.9, n: 41.1, w: -109.1, e: -102.0 },
+            "connecticut":    { s: 40.9, n: 42.1, w: -73.8, e: -71.7 },
+            "delaware":       { s: 38.4, n: 39.9, w: -75.8, e: -74.9 },
+            "florida":        { s: 24.3, n: 31.0, w: -87.7, e: -79.9 },
+            "georgia":        { s: 30.3, n: 35.1, w: -85.7, e: -80.7 },
+            "hawaii":         { s: 18.9, n: 22.3, w: -160.3, e: -154.7 },
+            "idaho":          { s: 41.9, n: 49.1, w: -117.3, e: -111.0 },
             "illinois":       { s: 36.9, n: 42.6, w: -91.6, e: -87.4 },
+            "indiana":        { s: 37.7, n: 41.8, w: -88.1, e: -84.7 },
+            "iowa":           { s: 40.3, n: 43.6, w: -96.7, e: -90.1 },
+            "kansas":         { s: 36.9, n: 40.1, w: -102.1, e: -94.5 },
+            "kentucky":       { s: 36.4, n: 39.2, w: -89.6, e: -81.9 },
+            "louisiana":      { s: 28.9, n: 33.1, w: -94.1, e: -88.7 },
+            "maine":          { s: 43.0, n: 47.5, w: -71.2, e: -66.8 },
+            "maryland":       { s: 37.8, n: 39.8, w: -79.5, e: -74.9 },
+            "massachusetts":  { s: 41.2, n: 42.9, w: -73.6, e: -69.9 },
             "michigan":       { s: 41.7, n: 47.5, w: -90.5, e: -82.1 },
-            "tennessee":      { s: 34.9, n: 36.7, w: -90.4, e: -81.6 }
+            "minnesota":      { s: 43.4, n: 49.4, w: -97.3, e: -89.4 },
+            "mississippi":    { s: 30.1, n: 35.1, w: -91.7, e: -88.0 },
+            "missouri":       { s: 35.9, n: 40.7, w: -95.8, e: -89.0 },
+            "montana":        { s: 44.3, n: 49.1, w: -116.1, e: -104.0 },
+            "nebraska":       { s: 39.9, n: 43.1, w: -104.1, e: -95.3 },
+            "nevada":         { s: 35.0, n: 42.1, w: -120.1, e: -114.0 },
+            "new-hampshire":  { s: 42.6, n: 45.4, w: -72.6, e: -70.5 },
+            "new-jersey":     { s: 38.9, n: 41.4, w: -75.6, e: -73.8 },
+            "new-mexico":     { s: 31.3, n: 37.1, w: -109.1, e: -103.0 },
+            "new-york":       { s: 40.4, n: 45.1, w: -79.8, e: -71.7 },
+            "north-carolina": { s: 33.7, n: 36.6, w: -84.4, e: -75.4 },
+            "north-dakota":   { s: 45.9, n: 49.1, w: -104.1, e: -96.5 },
+            "ohio":           { s: 38.3, n: 42.0, w: -84.9, e: -80.5 },
+            "oklahoma":       { s: 33.6, n: 37.1, w: -103.1, e: -94.4 },
+            "oregon":         { s: 41.9, n: 46.3, w: -124.6, e: -116.4 },
+            "pennsylvania":   { s: 39.7, n: 42.3, w: -80.6, e: -74.6 },
+            "rhode-island":   { s: 41.1, n: 42.1, w: -71.9, e: -71.1 },
+            "south-carolina": { s: 32.0, n: 35.3, w: -83.4, e: -78.4 },
+            "south-dakota":   { s: 42.4, n: 46.0, w: -104.2, e: -96.4 },
+            "tennessee":      { s: 34.9, n: 36.7, w: -90.4, e: -81.6 },
+            "texas":          { s: 25.8, n: 36.5, w: -106.7, e: -93.5 },
+            "utah":           { s: 36.9, n: 42.1, w: -114.1, e: -109.0 },
+            "vermont":        { s: 42.7, n: 45.1, w: -73.5, e: -71.4 },
+            "virginia":       { s: 36.5, n: 39.5, w: -83.7, e: -75.0 },
+            "washington":     { s: 45.5, n: 49.1, w: -124.8, e: -116.9 },
+            "west-virginia":  { s: 37.1, n: 40.7, w: -82.7, e: -77.7 },
+            "wisconsin":      { s: 42.4, n: 47.1, w: -92.9, e: -86.7 },
+            "wyoming":        { s: 40.9, n: 45.1, w: -111.1, e: -104.0 }
         };
 
         function calculateIntersectedStates(routeCoords) {
             const matchedStates = new Set();
-            // High-speed index tracking sampling step rate
             const sampleRate = Math.max(1, Math.floor(routeCoords.length / 100));
             
             for (let i = 0; i < routeCoords.length; i += sampleRate) {
@@ -153,82 +187,7 @@
             return Array.from(matchedStates);
         }
 
-        // --- PHASE 2: HOISTED UTILITIES & MARKER ICON BUILDERS ---
-        function triggerToast(text, duration = 3000) {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            const toast = document.createElement('div');
-            toast.className = "bg-gray-900/95 backdrop-blur-sm text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center transition-all duration-300 opacity-0 translate-y-2 pointer-events-auto";
-            toast.innerText = text;
-            container.appendChild(toast);
-            setTimeout(() => { toast.classList.remove('opacity-0', 'translate-y-2'); }, 50);
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-1');
-                setTimeout(() => { toast.remove(); }, 300);
-            }, duration);
-        }
-
-        function updateInlineStatus(text, showSpinner = false) {
-            const statusLabel = document.getElementById('status');
-            if (statusLabel) statusLabel.innerText = text;
-            const spinner = document.getElementById('status-spinner');
-            if (spinner) {
-                if (showSpinner) spinner.classList.remove('hidden');
-                else spinner.classList.add('hidden');
-            }
-        }
-
-        function buildCleanAddressString(addr, displayNameFallback) {
-            if (!addr) return displayNameFallback.split(',').slice(0, 3).join(',');
-            let tokens = [];
-            const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
-            if (roadLine) tokens.push(roadLine);
-            if (addr.city || addr.town || addr.village || addr.suburb) tokens.push(addr.city || addr.town || addr.village || addr.suburb);
-            if (addr.state) tokens.push(addr.state);
-            if (addr.postcode) tokens.push(addr.postcode);
-            return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
-        }
-
-        function createCustomIcon(label, classes, isLarge = false) {
-            const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
-            const sizePx = isLarge ? 44 : 32;
-            return L.divIcon({
-                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold ${sizeClass} ${classes}">${label}</div>`,
-                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
-            });
-        }
-
-        function createStarredIcon(label, isLarge = false) {
-            const wrapperSize = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
-            const sizePx = isLarge ? 44 : 32;
-            return L.divIcon({
-                html: `<div class="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border-amber-600 text-black shadow-md font-black relative ${wrapperSize}">${label}<span class="absolute -bottom-1 -right-1 text-[10px] drop-shadow-sm">⭐</span></div>`,
-                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
-            });
-        }
-
-        function createRouteMarkerIcon(label, classes) {
-            return L.divIcon({
-                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold w-8 h-8 text-sm border-2 ${classes}">${label}</div>`,
-                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
-            });
-        }
-
-        function dispatchOffThreadAnalysis() {
-            if (routeLineCoordinates.length === 0) return;
-            const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
-            activeTargetsSliceMemory = [];
-            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
-            if (routeLineCoordinates.length > 0) activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
-
-            mathWorker.postMessage({
-                localElements: localJsonMemory,
-                targetsSlice: activeTargetsSliceMemory, activeBufferMeters: activeBufferMeters,
-                currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
-            });
-        }
-
-        // --- PHASE 3: GLOBAL ENVIRONMENT KEYS ---
+        // --- PHASE 2: VISUAL MARKS ICON GENERATOR LAYER ---
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
         const autocompleteQueryMemoryCache = new Map(); 
         
@@ -236,14 +195,24 @@
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
             gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
             food: { label: '🍟', bg: 'bg-red-600 border-red-200 text-white', name: 'Fast Food', img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
+            shopping: { label: '🛒', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Shopping & Services', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            walmart: { label: '🔵', bg: 'bg-blue-600 border-blue-300 text-white', name: 'Walmart', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            target: { label: '🎯', bg: 'bg-red-600 border-red-300 text-white', name: 'Target', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            dollartree: { label: '🌳', bg: 'bg-green-600 border-green-300 text-white', name: 'Dollar Tree', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            costco: { label: '📦', bg: 'bg-blue-800 border-blue-400 text-white', name: 'Costco Wholesale', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            staples: { label: '📎', bg: 'bg-red-700 border-red-400 text-white', name: 'Staples', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            upsstore: { label: '📦', bg: 'bg-amber-800 border-amber-600 text-white', name: 'The UPS Store', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
             chipotle: { label: '🌯', bg: 'bg-amber-800 border-amber-500 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a0847685?auto=format&fit=crop&w=300&q=80' },
             starbucks: { label: '☕', bg: 'bg-emerald-800 border-emerald-500 text-white', name: 'Starbucks Coffee', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80' },
-            coffee: { label: '☕', bg: 'bg-amber-950 border-amber-800 text-white', name: 'Coffee Shop', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80' },
             mcdonalds: { label: '🍔', bg: 'bg-yellow-500 border-yellow-300 text-zinc-900', name: "McDonald's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
             chickfila: { label: '🐄', bg: 'bg-red-700 border-red-400 text-white', name: 'Chick-fil-A', img: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?auto=format&fit=crop&w=300&q=80' },
             wendys: { label: '🍔', bg: 'bg-red-500 border-red-300 text-white', name: "Wendy's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
             raisingcanes: { label: '🍗', bg: 'bg-orange-500 border-orange-300 text-white', name: "Raising Cane's", img: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=300&q=80' },
             jerseymikes: { label: '🐖', bg: 'bg-blue-800 border-blue-400 text-white', name: "Jersey Mike's", img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
+            culvers: { label: '🍦', bg: 'bg-blue-600 border-blue-300 text-white', name: "Culver's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
+            shakeshack: { label: '🍔', bg: 'bg-green-700 border-green-400 text-white', name: 'Shake Shack', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
+            innout: { label: '🌴', bg: 'bg-yellow-400 border-red-600 text-zinc-950', name: 'In-N-Out Burger', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
+            potbelly: { label: '🥪', bg: 'bg-orange-700 border-orange-400 text-white', name: 'Potbelly', img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
             parks: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Parks & Attractions', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
             attraction: { label: '🎡', bg: 'bg-purple-600 border-purple-300 text-white', name: 'Tourist Attraction', img: 'https://images.unsplash.com/photo-1473163928189-364b2c4e1135?auto=format&fit=crop&w=300&q=80' },
             national_park: { label: '🏞️', bg: 'bg-emerald-800 border-emerald-600 text-white', name: 'National Park', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
@@ -261,7 +230,10 @@
             "sheetz": "Sheetz", "bucees": "Buc-ee's", "wawa": "Wawa", "circlek": "Circle K",
             "mcdonalds": "McDonald's", "wendys": "Wendy's", "chickfila": "Chick-fil-A",
             "chipotle": "Chipotle", "jerseymikes": "Jersey Mike's", "raisingcanes": "Raising Cane's",
-            "starbucks": "Starbucks", "hospital": "Major Hospital", "veterinary": "Veterinary Clinic",
+            "culvers": "Culver's", "shakeshack": "Shake Shack", "innout": "In-N-Out", "potbelly": "Potbelly",
+            "walmart": "Walmart", "target": "Target", "costco": "Costco Wholesale", "dollartree": "Dollar Tree",
+            "staples": "Staples", "upsstore": "The UPS Store", "starbucks": "Starbucks",
+            "hospital": "Major Hospital", "veterinary": "Veterinary Clinic",
             "national_park": "National Park", "nature_reserve": "Nature Reserve", "attraction": "Tourist Attraction"
         };
 
@@ -282,7 +254,19 @@
                 { id: 'chickfila', label: 'Chick-fil-A' }, 
                 { id: 'mcdonalds', label: "McDonald's" }, 
                 { id: 'wendys', label: "Wendy's" },
-                { id: 'jerseymikes', label: "Jersey Mike's" }
+                { id: 'jerseymikes', label: "Jersey Mike's" },
+                { id: 'culvers', label: "Culver's" },
+                { id: 'shakeshack', label: "Shake Shack" },
+                { id: 'innout', label: "In-N-Out" },
+                { id: 'potbelly', label: "Potbelly" }
+            ],
+            shopping: [
+                { id: 'walmart', label: 'Walmart' },
+                { id: 'target', label: 'Target' },
+                { id: 'costco', label: 'Costco Wholesale' },
+                { id: 'dollartree', label: 'Dollar Tree' },
+                { id: 'staples', label: 'Staples' },
+                { id: 'upsstore', label: 'UPS Store' }
             ],
             parks: [{ id: 'national_park', label: '🏞️ National Parks' }, { id: 'nature_reserve', label: '🌲 Nature Reserves' }, { id: 'attraction', label: '🎡 Attractions' }],
             medical: [{ id: 'hospital', label: '🏥 Major Hospitals' }, { id: 'veterinary', label: '🐕 Vet Clinics' }],
@@ -306,7 +290,7 @@
         let allowAutoCenter = true;
         let autoCenterTimeoutId = null;
 
-        // --- PHASE 4: MAP INITIALIZATION & SEPARATE LAYER ENGINE ---
+        // --- PHASE 3: MAP TILES INITIALIZATION ENGINE ---
         const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 5);
         
         const mapLayersPool = {
@@ -315,9 +299,9 @@
         };
         mapLayersPool[mapStyleMode].addTo(map);
 
-        // Separate layer groups to keep categories isolated from stars
+        // Separate layer groups ensure volatile data flushes cleanly without ever purging user favorite stars
         const poiClusterGroup = L.layerGroup().addTo(map);
-        const favoritesLayerGroup = L.layerGroup().addTo(map); // CRITICAL: This never gets cleared by filters
+        const favoritesLayerGroup = L.layerGroup().addTo(map); 
 
         let routingControl = L.Routing.control({
             show: false, 
@@ -384,13 +368,11 @@
             routeBufferPolyline.bringToBack();
             updateBufferVisualizerWeight();
 
-            // CRITICAL FIX: Cross-reference interstate routes to extract targeted shards dynamically
             const activeCrossedStates = calculateIntersectedStates(routeLineCoordinates);
-            updateInlineStatus(`Crossed border boundaries mapped: [${activeCrossedStates.length} States found]`, true);
+            updateInlineStatus(`Crossed borders mapped: [${activeCrossedStates.length} States identified]`, true);
             
             localJsonMemory = [];
             
-            // Execute parallel network stream requests across state shards concurrently
             await Promise.all(activeCrossedStates.map(async (stateName) => {
                 try {
                     const response = await fetch(`data/${stateName}_brands.json`);
@@ -403,7 +385,7 @@
                 }
             }));
 
-            triggerToast(`Loaded corridor parameters across states lines smoothly.`);
+            triggerToast(`Loaded corridor parameters across state lines smoothly.`);
             renderGlobalPermanentStars(); 
             
             if (currentMasterCat && currentSubFilter !== 'none') {
@@ -413,7 +395,7 @@
             }
         });
 
-        // --- PHASE 5: MULTI-THREADED ANALYSIS WORKER ---
+        // --- PHASE 4: OFF-THREAD WORKER ROUTING MATRIX ---
         const workerBlobCode = `
             function haversineDist(lat1, lon1, lat2, lon2) {
                 const R = 6371000;
@@ -445,7 +427,6 @@
                     let normBrand = (el.b || '');
                     let normCat = el.c;
                     let effectiveCat = normCat;
-                    if (normCat === 'coffee' || normBrand === 'starbucks') effectiveCat = 'food';
 
                     if (effectiveCat !== currentMasterCat) return;
                     if (el.lat > spatialEnvelope.n || el.lat < spatialEnvelope.s || el.lon > spatialEnvelope.e || el.lon < spatialEnvelope.w) return;
@@ -484,7 +465,7 @@
         const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
         const mathWorker = new Worker(URL.createObjectURL(blobObj));
 
-        // --- PHASE 6: OPERATIONAL VISUALIZATION HANDLERS ---
+        // --- PHASE 5: DEVICE PERMANENCE POI DATA HANDLERS ---
         window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
             let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
             let uniqueId = `poi_${lat}_${lon}`;
@@ -492,13 +473,13 @@
             
             if (matchIndex > -1) {
                 starred.splice(matchIndex, 1);
-                triggerToast("Removed stop from local device configuration layers.");
+                triggerToast("Removed stop from local configuration maps.");
             } else {
                 starred.push({
                     id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
                     name: String(name), category: String(category), brand: String(brand), hours: String(hours), desc: String(desc), isLocal: true
                 });
-                triggerToast("Saved stop to local device memory! ⭐");
+                triggerToast("Saved stop to device storage variables! ⭐");
             }
             
             localStorage.setItem('starred_pois', JSON.stringify(starred));
@@ -525,7 +506,6 @@
         function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
 
         function renderGlobalPermanentStars() {
-            // CRITICAL FIX: Direct visual rendering separation layers to ensure stars stay pinned
             favoritesLayerGroup.clearLayers();
             globalFavoritesMarkers = [];
 
@@ -555,16 +535,16 @@
                 const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
-                let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
+                let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(r.lon));
                 let isCurrentlyStarredLocally = localStarred.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
                 
                 let actionBtnHtml = '';
                 if (existsInMasterRepoJson) {
-                    actionBtnHtml = `<button class="global-delete-trigger block w-full text-center bg-red-600 hover:bg-red-700 text-[10px] py-1.5 rounded-xl border border-red-800 shadow-sm cursor-pointer active:scale-95 transition-transform text-white font-black" data-lat="${lat}" data-lon="${lon}">🗑️ Delete From Global Repo</button>`;
+                    actionBtnHtml = `<button class="global-delete-trigger block w-full text-center bg-red-600 hover:bg-red-700 text-[10px] py-1.5 rounded-xl border border-red-800 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}">🗑️ Delete From Global Repo</button>`;
                 } else {
                     let starBtnText = isCurrentlyStarredLocally ? "❌ Remove Local Star" : "⭐ Persistently Star";
                     let starBtnColor = isCurrentlyStarredLocally ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
-                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm cursor-pointer active:scale-95 transition-transform text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
+                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
                 }
 
                 let fuelBadgeHtml = '';
@@ -598,7 +578,7 @@
                     });
 
                 globalFavoritesMarkers.push({ marker: marker, visualKey: visualCatKey, lat: lat, lon: lon });
-                favoritesLayerGroup.addLayer(marker); // Added to isolated favoritesLayerGroup layer configuration
+                favoritesLayerGroup.addLayer(marker); 
             });
         }
 
@@ -644,7 +624,7 @@
                         <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
                     </div>
                     <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
-                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm cursor-pointer active:scale-95 transition-transform text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
+                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
                         <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
                         <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
                         <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
@@ -797,7 +777,7 @@
             const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
             definition.forEach((sub) => {
                 const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
-                subButton.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm transition-colors hover:bg-gray-50";
+                subButton.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm text-zinc-700 transition-colors hover:bg-gray-50";
                 subButton.innerText = sub.label; subBar.appendChild(subButton);
             });
             subBar.classList.remove('hidden');
@@ -934,7 +914,7 @@
             }
         });
 
-        // --- PHASE 7: CLOUD INTEGRATION & REPO MECHANICS ---
+        // --- PHASE 6: CLOUD INTEGRATION & REPO MECHANICS ---
         async function loadMasterRepoFavoritesOnBoot() {
             try {
                 const response = await fetch('favorites.json');
