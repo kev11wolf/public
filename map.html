@@ -89,7 +89,6 @@
             <button data-cat="playground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
             <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
             <button data-cat="food" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
-            <button data-cat="coffee" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">☕ Coffee</button>
             <button data-cat="parks" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Parks & Attractions</button>
             <button data-cat="medical" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏥 Emergency & Med</button>
             <button data-cat="highway" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏢 Highway Amenities</button>
@@ -157,6 +156,7 @@
             return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
         }
 
+        // Enforce robust category configuration checks for dynamic styles
         function createCustomIcon(label, classes, isLarge = false) {
             const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
             const sizePx = isLarge ? 44 : 32;
@@ -235,11 +235,19 @@
             "national_park": "National Park", "nature_reserve": "Nature Reserve", "attraction": "Tourist Attraction"
         };
 
+        // Embedded Starbucks Sub-Pill Routing Targets directly within food category configurations
         const subMenuDefinitions = {
             playground: [{ id: 'all', label: 'All Public Parks' }],
             gas: [{ id: 'all', label: 'All Selected Chains' }, { id: 'unl87', label: 'UNL 87 Listed' }, { id: 'unl88', label: 'UNL 88 / E15' }],
-            food: [{ id: 'all', label: 'All Brands' }, { id: 'chipotle', label: 'Chipotle' }, { id: 'raisingcanes', label: "Raising Cane's" }, { id: 'chickfila', label: 'Chick-fil-A' }, { id: 'mcdonalds', label: "McDonald's" }, { id: 'jerseymikes', label: "Jersey Mike's" }],
-            coffee: [{ id: 'all', label: 'Starbucks' }],
+            food: [
+                { id: 'all', label: 'All Brands' }, 
+                { id: 'starbucks', label: '☕ Starbucks' },
+                { id: 'chipotle', label: 'Chipotle' }, 
+                { id: 'raisingcanes', label: "Raising Cane's" }, 
+                { id: 'chickfila', label: 'Chick-fil-A' }, 
+                { id: 'mcdonalds', label: "McDonald's" }, 
+                { id: 'jerseymikes', label: "Jersey Mike's" }
+            ],
             parks: [{ id: 'all', label: 'All Parks & Attractions' }, { id: 'national_park', label: '🏞️ National Parks' }, { id: 'nature_reserve', label: '🌲 Nature Reserves' }, { id: 'attraction', label: '🎡 Attractions' }],
             medical: [{ id: 'all', label: 'All Infrastructure' }, { id: 'hospital', label: '🏥 Major Hospitals' }, { id: 'veterinary', label: '🐕 Vet Clinics' }],
             highway: [{ id: 'highway_rest', label: '🪑 Highway Rest Areas' }, { id: 'highway_toilets', label: '🚻 Standalone Restrooms' }],
@@ -392,13 +400,18 @@
                     let normBrand = (el.b || '');
                     let normCat = el.c;
 
-                    if (normCat !== currentMasterCat) return;
+                    // NORMALIZATION LAYER: Group coffee or Starbucks into food master class boundaries
+                    let effectiveCat = normCat;
+                    if (normCat === 'coffee' || normBrand === 'starbucks') {
+                        effectiveCat = 'food';
+                    }
+
+                    if (effectiveCat !== currentMasterCat) return;
+                    
                     if (el.lat > spatialEnvelope.n || el.lat < spatialEnvelope.s || el.lon > spatialEnvelope.e || el.lon < spatialEnvelope.w) return;
                     
-                    // Submenu gas filter overrides
                     if (currentSubFilter === 'unl87' && el.g87 !== 1) return;
                     if (currentSubFilter === 'unl88' && el.g88 !== 1) return;
-                    // Standard brand tag match filters
                     if (currentSubFilter !== 'all' && currentSubFilter !== 'unl87' && currentSubFilter !== 'unl88' && normBrand !== currentSubFilter) return;
 
                     let minD = Infinity;
@@ -410,7 +423,7 @@
                     if (minD <= activeBufferMeters) {
                         finalMatches.push({
                             id: "local_" + el.lat + "_" + el.lon, lat: el.lat, lon: el.lon,
-                            name: el.n, brand: normBrand, category: normCat, hours: el.h || "Hours not listed",
+                            name: el.n, brand: normBrand, category: effectiveCat, hours: el.h || "Hours not listed",
                             desc: el.d || "", minD: minD, isLocal: true, g87: el.g87, g88: el.g88
                         });
                     }
@@ -645,7 +658,7 @@
                     localJsonMemory = await res.json();
                     triggerToast("Master database file loaded completely.");
                 } catch (err) {
-                    print("Local database layer ingestion failed.", err);
+                    console.error("Local database layer ingestion failed.", err);
                     localJsonMemory = [];
                 }
             }
@@ -688,7 +701,7 @@
 
                 const response = await fetch(`favorites.json${querySuffix}`);
                 if (response.ok) { repoFavoritesMemory = await response.json(); }
-            } catch (e) { print("No favorites file initialized yet."); }
+            } catch (e) { console.log("No favorites file initialized yet."); }
             
             renderGlobalPermanentStars(); 
             if (forceRefresh && routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
@@ -1003,19 +1016,6 @@
                     }
                 }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
             }
-        });
-
-        window.addEventListener('DOMContentLoaded', () => {
-            loadMasterRepoFavoritesOnBoot();
-            const interactiveControlBars = ['master-filter-bar', 'sub-filter-bar', 'search-container'];
-            interactiveControlBars.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    L.DomEvent.on(element, 'touchstart touchmove touchend mousedown dblclick contextmenu', L.DomEvent.stopPropagation);
-                    L.DomEvent.disableClickPropagation(element);
-                    L.DomEvent.disableScrollPropagation(element);
-                }
-            });
         });
     </script>
 </body>
