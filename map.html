@@ -77,9 +77,7 @@
                     <option value="12000">⏱️ 15 Min Buffer</option>
                     <option value="24000">⏱️ 30 Min Buffer</option>
                 </select>
-                <button id="theme-toggle-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] active:bg-gray-100 whitespace-nowrap">🌙 Mode</button>
                 <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
-                <button id="reset-fav-cache-btn" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">🔄 Sync Global Base</button>
                 <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">🔍 Inputs</button>
                 <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">🚗 Track</button>
             </div>
@@ -104,7 +102,8 @@
         <p id="hud-poi-dist" class="text-sm font-black text-amber-400 mt-0.5">0.0 mi away</p>
     </div>
 
-    <div class="absolute bottom-24 right-4 z-10 flex flex-col gap-2">
+    <div class="absolute bottom-24 right-4 z-10 flex flex-col gap-2 items-center">
+        <button id="theme-toggle-btn" class="bg-white/95 backdrop-blur-md border border-gray-200 text-zinc-900 font-bold rounded-xl shadow-xl text-xs px-2.5 h-11 flex items-center justify-center active:scale-95 transition-all select-none cursor-pointer whitespace-nowrap">🌙 Mode</button>
         <button id="zoom-in-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">＋</button>
         <button id="zoom-out-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">－</button>
     </div>
@@ -156,7 +155,6 @@
             return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
         }
 
-        // Enforce robust category configuration checks for dynamic styles
         function createCustomIcon(label, classes, isLarge = false) {
             const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
             const sizePx = isLarge ? 44 : 32;
@@ -235,12 +233,20 @@
             "national_park": "National Park", "nature_reserve": "Nature Reserve", "attraction": "Tourist Attraction"
         };
 
-        // Embedded Starbucks Sub-Pill Routing Targets directly within food category configurations
+        // Removed all default broad category "All POIs" options to enforce specific brand selections
         const subMenuDefinitions = {
-            playground: [{ id: 'all', label: 'All Public Parks' }],
-            gas: [{ id: 'all', label: 'All Selected Chains' }, { id: 'unl87', label: 'UNL 87 Listed' }, { id: 'unl88', label: 'UNL 88 / E15' }],
+            playground: [{ id: 'playground', label: '🛝 Public Playgrounds' }],
+            gas: [
+                { id: 'sheetz', label: 'Sheetz' },
+                { id: 'wawa', label: 'Wawa' },
+                { id: 'bucees', label: "Buc-ee's" },
+                { id: 'circlek', label: 'Circle K' },
+                { id: 'costcogas', label: 'Costco Gas' },
+                { id: 'murphyexpress', label: 'Murphy Express' },
+                { id: 'unl87', label: '⛽ UNL 87' }, 
+                { id: 'unl88', label: '⚡ UNL 88 / E15' }
+            ],
             food: [
-                { id: 'all', label: 'All Brands' }, 
                 { id: 'starbucks', label: '☕ Starbucks' },
                 { id: 'chipotle', label: 'Chipotle' }, 
                 { id: 'raisingcanes', label: "Raising Cane's" }, 
@@ -248,8 +254,8 @@
                 { id: 'mcdonalds', label: "McDonald's" }, 
                 { id: 'jerseymikes', label: "Jersey Mike's" }
             ],
-            parks: [{ id: 'all', label: 'All Parks & Attractions' }, { id: 'national_park', label: '🏞️ National Parks' }, { id: 'nature_reserve', label: '🌲 Nature Reserves' }, { id: 'attraction', label: '🎡 Attractions' }],
-            medical: [{ id: 'all', label: 'All Infrastructure' }, { id: 'hospital', label: '🏥 Major Hospitals' }, { id: 'veterinary', label: '🐕 Vet Clinics' }],
+            parks: [{ id: 'national_park', label: '🏞️ National Parks' }, { id: 'nature_reserve', label: '🌲 Nature Reserves' }, { id: 'attraction', label: '🎡 Attractions' }],
+            medical: [{ id: 'hospital', label: '🏥 Major Hospitals' }, { id: 'veterinary', label: '🐕 Vet Clinics' }],
             highway: [{ id: 'highway_rest', label: '🪑 Highway Rest Areas' }, { id: 'highway_toilets', label: '🚻 Standalone Restrooms' }],
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
@@ -262,13 +268,14 @@
         let userMarker = null;
         let lastUserGpsCoord = null;
         let currentMasterCat = null;
-        let currentSubFilter = 'all';
+        
+        // Enforce strict hidden baseline rule until individual category button gets pressed
+        let currentSubFilter = 'none'; 
         let activeBufferMeters = 4000; 
         let mapStyleMode = 'light';
         let activeTargetsSliceMemory = [];
         let routeBufferPolyline = null;
 
-        // Auto-Center Operational Flags
         let allowAutoCenter = true;
         let autoCenterTimeoutId = null;
 
@@ -356,12 +363,12 @@
 
             renderGlobalPermanentStars(); 
             
-            if (currentMasterCat) {
+            if (currentMasterCat && currentSubFilter !== 'none') {
                 runDataExecutionLayer(currentMasterCat);
                 triggerToast("Recalculating corridor points around detour path...", 2000);
             } else {
                 updateInlineStatus("Route ready. Tap filters below.");
-                triggerToast("Route generated. Content deferred until filter selection.");
+                triggerToast("Route generated. Content deferred until specific brand filter selection.");
             }
         });
 
@@ -381,7 +388,8 @@
                 const { localElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
                 const finalMatches = [];
                 
-                if (!localElements) {
+                // Enforce instant escape pipeline if no micro category target filter is selected
+                if (!localElements || currentSubFilter === 'none') {
                     self.postMessage({ sortedMatches: [] });
                     return;
                 }
@@ -400,19 +408,25 @@
                     let normBrand = (el.b || '');
                     let normCat = el.c;
 
-                    // NORMALIZATION LAYER: Group coffee or Starbucks into food master class boundaries
                     let effectiveCat = normCat;
                     if (normCat === 'coffee' || normBrand === 'starbucks') {
                         effectiveCat = 'food';
                     }
 
                     if (effectiveCat !== currentMasterCat) return;
-                    
                     if (el.lat > spatialEnvelope.n || el.lat < spatialEnvelope.s || el.lon > spatialEnvelope.e || el.lon < spatialEnvelope.w) return;
                     
-                    if (currentSubFilter === 'unl87' && el.g87 !== 1) return;
-                    if (currentSubFilter === 'unl88' && el.g88 !== 1) return;
-                    if (currentSubFilter !== 'all' && currentSubFilter !== 'unl87' && currentSubFilter !== 'unl88' && normBrand !== currentSubFilter) return;
+                    let isMatch = false;
+                    if (currentSubFilter === 'unl87' && el.g87 === 1) isMatch = true;
+                    else if (currentSubFilter === 'unl88' && el.g88 === 1) isMatch = true;
+                    else if (normBrand === currentSubFilter) isMatch = true;
+                    else if (normCat === currentSubFilter) isMatch = true;
+                    else if (currentSubFilter === 'highway_rest' && (normCat === 'highway_rest' || normBrand === 'highway_rest')) isMatch = true;
+                    else if (currentSubFilter === 'highway_toilets' && (normCat === 'highway_toilets' || normBrand === 'highway_toilets')) isMatch = true;
+                    else if (currentSubFilter === 'tourism_viewpoint' && (normCat === 'tourism_viewpoint' || normBrand === 'tourism_viewpoint')) isMatch = true;
+                    else if (currentSubFilter === 'tourism_dogpark' && (normCat === 'tourism_dogpark' || normBrand === 'tourism_dogpark')) isMatch = true;
+                    
+                    if (!isMatch) return;
 
                     let minD = Infinity;
                     for (let j = 0; j < targetsSlice.length; j++) {
@@ -665,48 +679,6 @@
             dispatchOffThreadAnalysis();
         }
 
-        function launchAutomatedGitHubSyncPipeline() {
-            let starredDataString = localStorage.getItem('starred_pois') || '[]';
-            let starredArray = JSON.parse(starredDataString);
-            if (starredArray.length === 0) {
-                alert("You have no starred locations saved locally! Star points first before pushing updates.");
-                return;
-            }
-            
-            if (confirm(`Exporting your ${starredArray.length} local favorites. Copied data to clipboard! Click OK to build Repository Sync ticket.`)) {
-                const repositoryPathTarget = "kev11wolf/public";
-                const minimizedJsonPayload = JSON.stringify(starredArray, null, 2);
-                
-                navigator.clipboard.writeText(minimizedJsonPayload).then(() => {
-                    const prefilledGitHubIssueUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_FAVORITES&body=${encodeURIComponent("PASTE_CLIPBOARD_DATA_HERE")}`;
-                    window.open(prefilledGitHubIssueUrl, '_blank');
-                    triggerToast("Favorites copied to clipboard! Paste (Ctrl+V) into GitHub issue body. 🚀");
-                }).catch(() => {
-                    const fallbackSlice = starredArray.slice(0, 3);
-                    const fallbackUrl = `https://github.com/${repositoryPathTarget}/issues/new?title=DATA_SYNC_FAVORITES&body=${encodeURIComponent(JSON.stringify(fallbackSlice))}`;
-                    window.open(fallbackUrl, '_blank');
-                });
-            }
-        }
-
-        async function loadMasterRepoFavoritesOnBoot(forceRefresh = false) {
-            try {
-                const querySuffix = forceRefresh ? `?_=${Date.now()}` : '';
-                
-                if (forceRefresh) {
-                    updateInlineStatus("Forcing global baseline sync...", true);
-                    const resBrands = await fetch(`us_brands.json${querySuffix}`);
-                    if (resBrands.ok) { localJsonMemory = await resBrands.json(); }
-                }
-
-                const response = await fetch(`favorites.json${querySuffix}`);
-                if (response.ok) { repoFavoritesMemory = await response.json(); }
-            } catch (e) { console.log("No favorites file initialized yet."); }
-            
-            renderGlobalPermanentStars(); 
-            if (forceRefresh && routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
-        }
-
         function runCachedAutocompleteSearch(inputElement, dropdownElement) {
             const query = inputElement.value.trim();
             const clearBtn = document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn');
@@ -839,12 +811,13 @@
             }
         });
 
+        // Generates sub-pills without selecting an item by default
         function generateSubMenuUI(catId) {
             const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
             const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
-            definition.forEach((sub, index) => {
+            definition.forEach((sub) => {
                 const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
-                subButton.className = index === 0 ? "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]" : "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
+                subButton.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm transition-colors hover:bg-gray-50";
                 subButton.innerText = sub.label; subBar.appendChild(subButton);
             });
             subBar.classList.remove('hidden');
@@ -854,7 +827,7 @@
             const subBar = document.getElementById('sub-filter-bar');
             if (subBar) subBar.classList.add('hidden');
             document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
-            currentMasterCat = null; currentSubFilter = 'all';
+            currentMasterCat = null; currentSubFilter = 'none';
         }
 
         // ======================================================
@@ -922,31 +895,37 @@
             triggerToast(`Map skin changed to ${mapStyleMode} mode layouts.`);
         });
 
-        document.getElementById('reset-fav-cache-btn').addEventListener('click', async () => {
-            triggerToast("Forcing baseline synchronization layer...", 1500);
-            await loadMasterRepoFavoritesOnBoot(true);
-            triggerToast("Local database synced up successfully! 🔄");
-        });
-
+        // Enforce total isolation wipe rules across master category modifications
         function handleMasterCategorySelection(element) {
             document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
             element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
-            currentMasterCat = element.getAttribute('data-cat'); currentSubFilter = 'all'; 
-            generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
+            
+            currentMasterCat = element.getAttribute('data-cat'); 
+            currentSubFilter = 'none'; // Lock filtering queries until granular brands are selected
+            
+            poiClusterGroup.clearLayers();
+            allPoiMarkersMemoryMap = [];
+            const hud = document.getElementById('next-stop-hud');
+            if (hud) hud.classList.add('hidden');
+            
+            generateSubMenuUI(currentMasterCat); 
+            runDataExecutionLayer(currentMasterCat);
         }
 
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
+        
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
             const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
-            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]");
+            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm transition-colors hover:bg-gray-50");
             subPill.className = "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
-            currentSubFilter = subPill.getAttribute('data-sub'); dispatchOffThreadAnalysis();
+            currentSubFilter = subPill.getAttribute('data-sub'); 
+            dispatchOffThreadAnalysis();
         });
 
         document.getElementById('buffer-select').addEventListener('change', (e) => { 
             activeBufferMeters = parseInt(e.target.value); 
             updateBufferVisualizerWeight();
-            if (localJsonMemory) dispatchOffThreadAnalysis(); 
+            if (localJsonMemory && currentSubFilter !== 'none') dispatchOffThreadAnalysis(); 
         });
         
         document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
@@ -1016,6 +995,19 @@
                     }
                 }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
             }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMasterRepoFavoritesOnBoot();
+            const interactiveControlBars = ['master-filter-bar', 'sub-filter-bar', 'search-container'];
+            interactiveControlBars.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    L.DomEvent.on(element, 'touchstart touchmove touchend mousedown dblclick contextmenu', L.DomEvent.stopPropagation);
+                    L.DomEvent.disableClickPropagation(element);
+                    L.DomEvent.disableScrollPropagation(element);
+                }
+            });
         });
     </script>
 </body>
