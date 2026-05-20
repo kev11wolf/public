@@ -118,7 +118,11 @@
     <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
 
     <script>
-        // --- PHASE 1: COMPREHENSIVE 50-STATE BOUNDING BOX MATRIX ENGINE ---
+        // =====================================================================
+        // --- PHASE 1: HOISTED GLOBAL REPO ARCHITECTURE CONSTANT DEFINITIONS --
+        // =====================================================================
+        const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
+        
         const STATE_BOUNDS_LOOKUP = {
             "alabama":        { s: 30.1, n: 35.1, w: -88.6, e: -84.8 },
             "alaska":         { s: 51.0, n: 71.5, w: -179.9, e: -129.9 },
@@ -172,99 +176,6 @@
             "wyoming":        { s: 40.9, n: 45.1, w: -111.1, e: -104.0 }
         };
 
-        function calculateIntersectedStates(routeCoords) {
-            const matchedStates = new Set();
-            const sampleRate = Math.max(1, Math.floor(routeCoords.length / 100));
-            
-            for (let i = 0; i < routeCoords.length; i += sampleRate) {
-                const pt = routeCoords[i];
-                for (const [stateName, bbox] of Object.entries(STATE_BOUNDS_LOOKUP)) {
-                    if (pt.lat >= bbox.s && pt.lat <= bbox.n && pt.lng >= bbox.w && pt.lng <= bbox.e) {
-                        matchedStates.add(stateName);
-                    }
-                }
-            }
-            return Array.from(matchedStates);
-        }
-
-        // --- PHASE 2: RESTORED BASELINE FUNCTIONAL UTILITIES ---
-        function triggerToast(text, duration = 3000) {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            const toast = document.createElement('div');
-            toast.className = "bg-gray-900/95 backdrop-blur-sm text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center transition-all duration-300 opacity-0 translate-y-2 pointer-events-auto";
-            toast.innerText = text;
-            container.appendChild(toast);
-            setTimeout(() => { toast.classList.remove('opacity-0', 'translate-y-2'); }, 50);
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-1');
-                setTimeout(() => { toast.remove(); }, 300);
-            }, duration);
-        }
-
-        function updateInlineStatus(text, showSpinner = false) {
-            const statusLabel = document.getElementById('status');
-            if (statusLabel) statusLabel.innerText = text;
-            const spinner = document.getElementById('status-spinner');
-            if (spinner) {
-                if (showSpinner) spinner.classList.remove('hidden');
-                else spinner.classList.add('hidden');
-            }
-        }
-
-        function buildCleanAddressString(addr, displayNameFallback) {
-            if (!addr) return displayNameFallback.split(',').slice(0, 3).join(',');
-            let tokens = [];
-            const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
-            if (roadLine) tokens.push(roadLine);
-            if (addr.city || addr.town || addr.village || addr.suburb) tokens.push(addr.city || addr.town || addr.village || addr.suburb);
-            if (addr.state) tokens.push(addr.state);
-            if (addr.postcode) tokens.push(addr.postcode);
-            return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
-        }
-
-        function createCustomIcon(label, classes, isLarge = false) {
-            const sizeClass = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
-            const sizePx = isLarge ? 44 : 32;
-            return L.divIcon({
-                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold ${sizeClass} ${classes}">${label}</div>`,
-                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
-            });
-        }
-
-        function createStarredIcon(label, isLarge = false) {
-            const wrapperSize = isLarge ? 'w-11 h-11 text-xl border-3' : 'w-8 h-8 text-sm border-2';
-            const sizePx = isLarge ? 44 : 32;
-            return L.divIcon({
-                html: `<div class="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border-amber-600 text-black shadow-md font-black relative ${wrapperSize}">${label}<span class="absolute -bottom-1 -right-1 text-[10px] drop-shadow-sm">⭐</span></div>`,
-                className: '', iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2], popupAnchor: [0, -sizePx / 4]
-            });
-        }
-
-        function createRouteMarkerIcon(label, classes) {
-            return L.divIcon({
-                html: `<div class="flex items-center justify-center rounded-full shadow-md font-bold w-8 h-8 text-sm border-2 ${classes}">${label}</div>`,
-                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
-            });
-        }
-
-        function dispatchOffThreadAnalysis() {
-            if (routeLineCoordinates.length === 0) return;
-            const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
-            activeTargetsSliceMemory = [];
-            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
-            if (routeLineCoordinates.length > 0) activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
-
-            mathWorker.postMessage({
-                localElements: localJsonMemory,
-                targetsSlice: activeTargetsSliceMemory, activeBufferMeters: activeBufferMeters,
-                currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
-            });
-        }
-
-        // --- PHASE 3: TAXONOMY DATA DICTIONARIES ---
-        const autocompleteQueryMemoryCache = new Map(); 
-        
         const categoryConfigs = {
             playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
             gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
@@ -305,9 +216,9 @@
             "mcdonalds": "McDonald's", "wendys": "Wendy's", "chickfila": "Chick-fil-A",
             "chipotle": "Chipotle", "jerseymikes": "Jersey Mike's", "raisingcanes": "Raising Cane's",
             "culvers": "Culver's", "shakeshack": "Shake Shack", "innout": "In-N-Out", "potbelly": "Potbelly",
-            "walmart": "Walmart", "target": "Target", "costco": "Costco Wholesale", "dollartree": "Dollar Tree",
-            "staples": "Staples", "upsstore": "The UPS Store", "starbucks": "Starbucks",
-            "hospital": "Major Hospital", "veterinary": "Veterinary Clinic",
+            "walmart": "Walmart Supercenter", "target": "Target Store Hub", "costco": "Costco Wholesale", 
+            "dollartree": "Dollar Tree Discount", "staples": "Staples Office Business", "upsstore": "UPS Shipping Center",
+            "starbucks": "Starbucks", "hospital": "Major Hospital", "veterinary": "Veterinary Clinic",
             "national_park": "National Park", "nature_reserve": "Nature Reserve", "attraction": "Tourist Attraction"
         };
 
@@ -336,11 +247,11 @@
             ],
             shopping: [
                 { id: 'walmart', label: 'Walmart Supercenters' },
-                { id: 'target', label: 'Target Store Hubs' },
+                { id: 'target', label: 'Target Hubs' },
                 { id: 'costco', label: 'Costco Warehouse' },
                 { id: 'dollartree', label: 'Dollar Tree Discounts' },
-                { id: 'staples', label: 'Staples Office Business' },
-                { id: 'upsstore', label: 'UPS Shipping Center' }
+                { id: 'staples', label: 'Staples Office' },
+                { id: 'upsstore', label: 'UPS Store Shipping' }
             ],
             parks: [{ id: 'national_park', label: '🏞️ National Parks' }, { id: 'nature_reserve', label: '🌲 Nature Reserves' }, { id: 'attraction', label: '🎡 Attractions' }],
             medical: [{ id: 'hospital', label: '🏥 Major Hospitals' }, { id: 'veterinary', label: '🐕 Vet Clinics' }],
@@ -348,6 +259,7 @@
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
 
+        // Global Dynamic Allocation States
         let allPoiMarkersMemoryMap = [];
         let globalFavoritesMarkers = []; 
         let repoFavoritesMemory = [];    
@@ -364,7 +276,9 @@
         let allowAutoCenter = true;
         let autoCenterTimeoutId = null;
 
-        // --- PHASE 4: MAP DRAWING SUB-SYSTEMS ---
+        // ==========================================
+        // --- PHASE 4: MAP INITIALIZATION ENGINE ---
+        // ==========================================
         const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 5);
         
         const mapLayersPool = {
@@ -374,7 +288,7 @@
         mapLayersPool[mapStyleMode].addTo(map);
 
         const poiClusterGroup = L.layerGroup().addTo(map);
-        const favoritesLayerGroup = L.layerGroup().addTo(map); 
+        const favoritesLayerGroup = L.layerGroup().addTo(map); // Never gets cleared by automated routines
 
         let routingControl = L.Routing.control({
             show: false, 
@@ -409,6 +323,15 @@
             }
         }).addTo(map);
 
+        function updateBufferVisualizerWeight() {
+            if (!routeBufferPolyline || routeLineCoordinates.length === 0) return;
+            const currentMapCenterLatitude = map.getCenter().lat;
+            const currentZoomLevel = map.getZoom();
+            const metersPerPixel = (40075016.686 * Math.cos(currentMapCenterLatitude * Math.PI / 180)) / Math.pow(2, currentZoomLevel + 8);
+            const calculatedPixelWidthWidth = (activeBufferMeters / metersPerPixel) * 2;
+            routeBufferPolyline.setStyle({ weight: Math.max(4, calculatedPixelWidthWidth) });
+        }
+
         routingControl.on('routesfound', async function(e) {
             routeLineCoordinates = e.routes[0].coordinates;
             const searchContainer = document.getElementById('search-container');
@@ -433,7 +356,7 @@
             updateBufferVisualizerWeight();
 
             const activeCrossedStates = calculateIntersectedStates(routeLineCoordinates);
-            updateInlineStatus(`Crossed border zones mapped: [${activeCrossedStates.length} States identified]`, true);
+            updateInlineStatus(`Crossed state borders mapped: [${activeCrossedStates.length} States identified]`, true);
             
             localJsonMemory = [];
             
@@ -445,21 +368,21 @@
                         localJsonMemory = localJsonMemory.concat(stateData);
                     }
                 } catch(err) {
-                    console.warn(`Shard loop pass skipped for target: ${stateName}`, err);
+                    console.warn(`Shard loop pass error for state variable: ${stateName}`, err);
                 }
             }));
 
-            triggerToast(`Loaded multi-state configuration data tables.`);
+            triggerToast(`Loaded multi-state configuration data parameters.`);
             renderGlobalPermanentStars(); 
             
             if (currentMasterCat && currentSubFilter !== 'none') {
                 runDataExecutionLayer(currentMasterCat);
             } else {
-                updateInlineStatus("Route configuration active. Choose filters.");
+                updateInlineStatus("Route calculations complete. Apply filters.");
             }
         });
 
-        // --- PHASE 5: RUN OFF-THREAD WORKER ROUTING THREAD ---
+        // --- PHASE 5: RUN MULTI-THREADED ANALYSIS WEB WORKER ENGINE ---
         const workerBlobCode = `
             function haversineDist(lat1, lon1, lat2, lon2) {
                 const R = 6371000;
@@ -529,206 +452,7 @@
         const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
         const mathWorker = new Worker(URL.createObjectURL(blobObj));
 
-        // --- PHASE 6: OPERATIONAL RECONCILIATION PIN ROUTINES ---
-        window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
-            let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-            let uniqueId = `poi_${lat}_${lon}`;
-            let matchIndex = starred.findIndex(item => item.id === uniqueId);
-            
-            if (matchIndex > -1) {
-                starred.splice(matchIndex, 1);
-                triggerToast("Removed stop reference coordinates layer safely.");
-            } else {
-                starred.push({
-                    id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
-                    name: String(name), category: String(category), brand: String(brand), hours: String(hours), desc: String(desc), isLocal: true
-                });
-                triggerToast("Saved stop reference parameters to device layer! ⭐");
-            }
-            
-            localStorage.setItem('starred_pois', JSON.stringify(starred));
-            renderGlobalPermanentStars(); 
-            if (routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
-        };
-
-        window.triggerCloudDeletionTicketPipeline = function(lat, lon) {
-            if (confirm("This favorite is stored permanently in the repository. Open request page to drop it?")) {
-                let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-                localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
-                localStorage.setItem('starred_pois', JSON.stringify(localStarred));
-                
-                const targetRepositoryPath = "kev11wolf/public";
-                const payloadString = JSON.stringify({ lat: parseFloat(lat), lon: parseFloat(lon) });
-                const issueUrl = `https://github.com/${targetRepositoryPath}/issues/new?title=DATA_DELETE_FAVORITE&body=${encodeURIComponent(payloadString)}`;
-                
-                window.open(issueUrl, '_blank');
-                map.closePopup();
-                triggerToast("Deletions package built! Click Submit on the next window tab.");
-            }
-        };
-
-        function renderGlobalPermanentStars() {
-            favoritesLayerGroup.clearLayers();
-            globalFavoritesMarkers = [];
-
-            let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-            let combinedFavoritesList = [...localStarred];
-            
-            repoFavoritesMemory.forEach(repoItem => {
-                if (!combinedFavoritesList.some(localItem => roundCoords(localItem.lat) === roundCoords(repoItem.lat) && roundCoords(localItem.lon) === roundCoords(repoItem.lon))) {
-                    combinedFavoritesList.push(repoItem);
-                }
-            });
-
-            const isLarge = map.getZoom() > 13;
-
-            combinedFavoritesList.forEach(el => {
-                const lat = el.lat; const lon = el.lon;
-                const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
-                let popupHeadingName = el.name || cleanLabelBrand; 
-                let popupHours = el.hours || "Hours not listed";
-                let popupDesc = el.desc || "Verified favorite location pinned to map globally.";
-                
-                let visualCatKey = el.category;
-                if (categoryConfigs[el.brand]) { visualCatKey = el.brand; }
-
-                const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
-                const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
-
-                let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
-                let isCurrentlyStarredLocally = localStarred.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
-                
-                let actionBtnHtml = '';
-                if (existsInMasterRepoJson) {
-                    actionBtnHtml = `<button class="global-delete-trigger block w-full text-center bg-red-600 hover:bg-red-700 text-[10px] py-1.5 rounded-xl border border-red-800 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}">🗑️ Delete From Global Repo</button>`;
-                } else {
-                    let starBtnText = isCurrentlyStarredLocally ? "❌ Remove Local Star" : "⭐ Persistently Star";
-                    let starBtnColor = isCurrentlyStarredLocally ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
-                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
-                }
-
-                let fuelBadgeHtml = '';
-                if (el.category === 'gas' || visualCatKey === 'gas') {
-                    fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
-                }
-
-                const popupContent = `
-                    <div class="w-full font-sans p-0.5 text-zinc-950">
-                        <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
-                        <h3 class="text-xs font-black text-black leading-tight truncate">${popupHeadingName}</h3>
-                        <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">${popupDesc}</div>
-                        ${fuelBadgeHtml}
-                        <div class="border-t border-zinc-200 pt-1 mt-1">
-                            <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">Hours</span>
-                            <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
-                        </div>
-                        <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
-                            ${actionBtnHtml}
-                            <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
-                            <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
-                            <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
-                        </div>
-                    </div>
-                `;
-
-                const marker = L.marker([lat, lon], { icon: createStarredIcon(uiConfig.label, isLarge) })
-                    .bindPopup(popupContent, { 
-                        className: 'custom-popup', autoPan: true,
-                        autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
-                    });
-
-                globalFavoritesMarkers.push({ marker: marker, visualKey: visualCatKey, lat: lat, lon: lon });
-                favoritesLayerGroup.addLayer(marker); 
-            });
-        }
-
-        function buildAndRenderPoiMarker(el, forceStarredStyleProfile = false) {
-            const lat = el.lat; const lon = el.lon;
-            const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
-            let popupHeadingName = el.name || cleanLabelBrand; 
-            let popupHours = el.hours || "Hours not listed";
-            let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
-            
-            let visualCatKey = el.brand;
-            if (!categoryConfigs[visualCatKey]) { visualCatKey = el.category; }
-
-            const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
-            const isLarge = map.getZoom() > 13;
-
-            let fuelBadgeHtml = '';
-            if (visualCatKey === 'gas' || el.category === 'gas') {
-                fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
-            }
-
-            const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-            const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
-
-            let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-            let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
-            let starBtnText = isStarredCurrently ? "❌ Remove Local Star" : "⭐ Persistently Star";
-            let starBtnColor = isStarredCurrently ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
-
-            const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
-            let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
-
-            const popupContent = `
-                <div class="w-full font-sans p-0.5 text-zinc-950">
-                    <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
-                    <h3 class="text-xs font-black text-black leading-tight truncate">${popupHeadingName}</h3>
-                    <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">${popupDesc}</div>
-                    ${mileagePredictorBadgeHtml}
-                    ${fuelBadgeHtml}
-                    <div class="border-t border-zinc-200 pt-1 mt-1">
-                        <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">Hours</span>
-                        <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
-                    </div>
-                    <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
-                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
-                        <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
-                        <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
-                        <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
-                    </div>
-                </div>
-            `;
-
-            const finalIconChoice = (forceStarredStyleProfile || isStarredCurrently) 
-                ? createStarredIcon(uiConfig.label, isLarge)
-                : createCustomIcon(uiConfig.label, uiConfig.bg, isLarge);
-
-            const marker = L.marker([lat, lon], { icon: finalIconChoice })
-                .bindPopup(popupContent, { 
-                    className: 'custom-popup', autoPan: true,
-                    autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
-                });
-
-            allPoiMarkersMemoryMap.push({ marker: marker, visualKey: visualCatKey });
-            poiClusterGroup.addLayer(marker);
-        }
-
-        map.on('popupopen', function(e) {
-            const popupElement = e.popup.getElement();
-            const starButton = popupElement.querySelector('.star-toggle-trigger');
-            if (starButton) {
-                starButton.addEventListener('click', function() {
-                    window.toggleStarPoiState(
-                        starButton.dataset.lat, starButton.dataset.lon, starButton.dataset.name,
-                        starButton.dataset.cat, starButton.dataset.brand, starButton.dataset.hours, starButton.dataset.desc
-                    );
-                    map.closePopup();
-                });
-            }
-            
-            const deleteButton = popupElement.querySelector('.global-delete-trigger');
-            if (deleteButton) {
-                deleteButton.addEventListener('click', function() {
-                    window.triggerCloudDeletionTicketPipeline(deleteButton.dataset.lat, deleteButton.dataset.lon);
-                });
-            }
-        });
-
+        // --- PHASE 6: PIN ADAPTATION & CORE DATA FLOW ENGINE ROUTINES ---
         async function runDataExecutionLayer(masterCat) {
             if (routeLineCoordinates.length === 0) { alert("Please calculate a route first."); return; }
             dispatchOffThreadAnalysis();
@@ -844,8 +568,6 @@
             });
             subBar.classList.remove('hidden');
         }
-
-        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
 
         mathWorker.onmessage = function(e) {
             const { sortedMatches } = e.data;
@@ -978,7 +700,129 @@
             }
         });
 
-        // --- PHASE 6: CLOUD INTEGRATION & REPO MECHANICS ---
+        // --- PHASE 7: DEVICE PERMANENCE LAYERS & PERSISTENT FAVORITES ---
+        window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
+            let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            let uniqueId = `poi_${lat}_${lon}`;
+            let matchIndex = starred.findIndex(item => item.id === uniqueId);
+            
+            if (matchIndex > -1) {
+                starred.splice(matchIndex, 1);
+                triggerToast("Removed stop reference from local layer.");
+            } else {
+                starred.push({
+                    id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
+                    name: String(name), category: String(category), brand: String(brand), hours: String(hours), desc: String(desc)
+                });
+                triggerToast("Saved stop reference parameters to map! ⭐");
+            }
+            
+            localStorage.setItem('starred_pois', JSON.stringify(starred));
+            renderGlobalPermanentStars(); 
+            if (routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
+        };
+
+        window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
+            let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            let uniqueId = `poi_${lat}_${lon}`;
+            let matchIndex = starred.findIndex(item => item.id === uniqueId);
+            
+            if (matchIndex > -1) {
+                starred.splice(matchIndex, 1);
+                triggerToast("Removed stop from local settings.");
+            } else {
+                starred.push({
+                    id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
+                    name: String(name), category: String(category), brand: String(brand), hours: String(hours), desc: String(desc), isLocal: true
+                });
+                triggerToast("Saved stop to local device memory! ⭐");
+            }
+            
+            localStorage.setItem('starred_pois', JSON.stringify(starred));
+            renderGlobalPermanentStars(); 
+            if (routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
+        };
+
+        window.triggerCloudDeletionTicketPipeline = function(lat, lon) {
+            if (confirm("This favorite is stored permanently in the repository. Open request page to drop it?")) {
+                let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+                localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
+                localStorage.setItem('starred_pois', JSON.stringify(localStarred));
+                
+                const targetRepositoryPath = "kev11wolf/public";
+                const payloadString = JSON.stringify({ lat: parseFloat(lat), lon: parseFloat(lon) });
+                const issueUrl = `https://github.com/${targetRepositoryPath}/issues/new?title=DATA_DELETE_FAVORITE&body=${encodeURIComponent(payloadString)}`;
+                
+                window.open(issueUrl, '_blank');
+                map.closePopup();
+                triggerToast("Deletions package built! Click Submit on the next window tab.");
+            }
+        };
+
+        async function buildAndRenderPoiMarker(el, forceStarredStyleProfile = false) {
+            const lat = el.lat; const lon = el.lon;
+            const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
+            let popupHeadingName = el.name || cleanLabelBrand; 
+            let popupHours = el.hours || "Hours not listed";
+            let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
+            
+            let visualCatKey = el.brand;
+            if (!categoryConfigs[visualCatKey]) { visualCatKey = el.category; }
+
+            const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
+            const isLarge = map.getZoom() > 13;
+
+            let fuelBadgeHtml = '';
+            if (visualCatKey === 'gas' || el.category === 'gas') {
+                fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
+            }
+
+            const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
+            const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
+
+            let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
+            let starBtnText = isStarredCurrently ? "❌ Remove Local Star" : "⭐ Persistently Star";
+            let starBtnColor = isStarredCurrently ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
+
+            const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
+            let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
+
+            const popupContent = `
+                <div class="w-full font-sans p-0.5 text-zinc-950">
+                    <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
+                    <h3 class="text-xs font-black text-black leading-tight truncate">${popupHeadingName}</h3>
+                    <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">${popupDesc}</div>
+                    ${mileagePredictorBadgeHtml}
+                    ${fuelBadgeHtml}
+                    <div class="border-t border-zinc-200 pt-1 mt-1">
+                        <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">Hours</span>
+                        <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
+                    </div>
+                    <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
+                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
+                        <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
+                        <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
+                        <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
+                    </div>
+                </div>
+            `;
+
+            const finalIconChoice = (forceStarredStyleProfile || isStarredCurrently) 
+                ? createStarredIcon(uiConfig.label, isLarge)
+                : createCustomIcon(uiConfig.label, uiConfig.bg, isLarge);
+
+            const marker = L.marker([lat, lon], { icon: finalIconChoice })
+                .bindPopup(popupContent, { 
+                    className: 'custom-popup', autoPan: true,
+                    autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
+                });
+
+            allPoiMarkersMemoryMap.push({ marker: marker, visualKey: visualCatKey });
+            poiClusterGroup.addLayer(marker);
+        }
+
         async function loadMasterRepoFavoritesOnBoot() {
             try {
                 const response = await fetch('favorites.json');
