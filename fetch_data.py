@@ -23,41 +23,58 @@ def get_overpass_query(search_criteria):
     """
 
 def fetch_category_with_fallback(criteria, category_name):
-    """Tries multiple Overpass endpoints with exponential backoff and explicit error tracing."""
+    """Tries multiple Overpass endpoints with proper headers, backoffs, and tracking."""
     query = get_overpass_query(criteria)
+    
+    # Crucial Header Addition: Tells the server who we are so they don't throw 406 blocks
+    headers = {
+        "User-Agent": "NCBrandDataFetcher/1.1 (https://github.com/kev11wolf/public; automated open-source data pull)",
+        "Accept-Encoding": "gzip, deflate"
+    }
     
     for endpoint in OVERPASS_ENDPOINTS:
         print(f"[{category_name}] Attempting fetch from: {endpoint}")
         for attempt in range(1, 4):
             try:
-                # Optimized low-level request timeout configuration
-                response = requests.post(endpoint, data={'data': query}, timeout=(15, 210))
+                response = requests.post(
+                    endpoint, 
+                    data={'data': query}, 
+                    headers=headers, 
+                    timeout=(15, 210)
+                )
                 
                 if response.status_code == 200:
                     try:
                         data = response.json()
                         elements = data.get('elements', [])
+                        
+                        # Fix for silent empty sets on unstable mirrors
+                        if len(elements) == 0 and endpoint != "https://overpass-api.de/api/interpreter":
+                            print(f"![WARN] Server returned 0 items for {category_name}. Skipping mirror validation...")
+                            break
+                            
                         print(f"Successfully fetched {len(elements)} items for {category_name}.")
                         return elements
                     except json.JSONDecodeError as je:
-                        print(f"![ERROR] JSON Parse failure on {endpoint} for {category_name}. Error: {je}")
-                        print(f"Raw snippet: {response.text[:500]}")
-                        break # Break retry loop, try next endpoint mirror
+                        print(f"![ERROR] JSON Parse failure on {endpoint}. Error: {je}")
+                        break
                         
+                elif response.status_code == 406:
+                    print(f"![CRITICAL] 406 Blocked on {endpoint}. Header profile rejected.")
+                    break
                 elif response.status_code == 429:
                     wait_time = attempt * 20
-                    print(f"![WARN] Rate limited (429) by server. Backing off for {wait_time}s (Attempt {attempt}/3)...")
+                    print(f"![WARN] Rate limited (429). Waiting {wait_time}s...")
                     time.sleep(wait_time)
                 elif response.status_code == 504:
-                    print(f"![WARN] Gateway Timeout (504) on server side for {category_name}. Shifting to next mirror...")
+                    print(f"![WARN] Gateway Timeout (504) on {endpoint}. Shifting mirror...")
                     break
                 else:
-                    print(f"![ERROR] HTTP Error {response.status_code} returned from {endpoint}")
-                    print(f"Server response text: {response.text[:300]}")
+                    print(f"![ERROR] HTTP Error {response.status_code} from {endpoint}")
                     break
 
             except requests.exceptions.Timeout as te:
-                print(f"![TIMEOUT] Network timeout reached on {endpoint} (Attempt {attempt}/3). Details: {te}")
+                print(f"![TIMEOUT] Network timeout reached on {endpoint}. Details: {te}")
                 time.sleep(5)
             except requests.exceptions.ConnectionError as ce:
                 print(f"![CONNECTION ERROR] Failed to connect to {endpoint}. Details: {ce}")
@@ -68,9 +85,8 @@ def fetch_category_with_fallback(criteria, category_name):
                 
         print(f"Moving away from endpoint: {endpoint}\n")
         
-    print(f"!!! [CRITICAL FAILURE] All endpoints failed to fetch data for category: {category_name} !!!")
-    print(f"Failed query payload for debugging:\n{query}\n")
-    return None # Return None to signify failure vs an empty list (0 results found)
+    print(f"!!! [CRITICAL FAILURE] All endpoints failed for category: {category_name} !!!")
+    return None
 
 def generate_unique_key(item):
     """Creates a deterministic unique string key based on rounded lat, lon, and brand slug."""
@@ -84,24 +100,19 @@ def main():
     existing_records = []
     seen_keys = set()
 
-    # Step 1: Load existing data if it exists to safely append
     if os.path.exists(output_filename):
         try:
             with open(output_filename, "r", encoding="utf-8") as file:
                 existing_records = json.load(file)
-                if not isinstance(existing_records, list):
-                    print("![ERROR] Existing file format is invalid (not a JSON array). Initializing empty array.")
-                    existing_records = []
-                else:
+                if isinstance(existing_records, list):
                     for item in existing_records:
                         key = generate_unique_key(item)
                         if key:
                             seen_keys.add(key)
             print(f"Loaded {len(existing_records)} existing baseline records from {output_filename}.")
         except Exception as e:
-            print(f"![ERROR] Could not read existing {output_filename} file. Error: {e}. Starting fresh.")
+            print(f"![ERROR] Could not read existing file. Error: {e}")
 
-    # Individual targeted segments to keep payload weights down
     targets = {
         "chickfila": 'nwr["brand"~"Chick-fil-A",i]',
         "mcdonalds": 'nwr["brand"~"McDonald\'s",i]',
@@ -129,7 +140,6 @@ def main():
     for key, criteria in targets.items():
         elements = fetch_category_with_fallback(criteria, key)
         
-        # If an explicit None is returned, it means it completely timed out across all endpoints
         if elements is None:
             failed_categories.append(key)
             continue
@@ -154,20 +164,12 @@ def main():
                     continue
                 b_slug, c_tag, desc = "playground", "recreation", "Public community playground facility."
 
-            # Construct temporary dictionary record to validate uniqueness
-            temp_record = {
-                "lat": round(lat, 4),
-                "lon": round(lon, 4),
-                "b": b_slug
-            }
-            
+            temp_record = {"lat": round(lat, 4), "lon": round(lon, 4), "b": b_slug}
             record_key = generate_unique_key(temp_record)
             
-            # De-duplication check: Skip if this specific spot already exists in the JSON file
             if record_key in seen_keys:
                 continue
 
-            # Populate additional fields for new records
             record = {
                 "lat": round(lat, 4),
                 "lon": round(lon, 4),
@@ -187,10 +189,8 @@ def main():
             seen_keys.add(record_key)
             new_additions_count += 1
         
-        # Courteous pause between category changes to keep APIs healthy
         time.sleep(6)
 
-    # Step 3: Write combined datasets back out
     try:
         with open(output_filename, "w", encoding="utf-8") as file:
             json.dump(existing_records, file, indent=2)
@@ -198,14 +198,12 @@ def main():
         print(f"-> Added {new_additions_count} new unique locations.")
         print(f"-> Total records now inside '{output_filename}': {len(existing_records)}")
     except Exception as e:
-        print(f"![CRITICAL] Failed writing out to {output_filename}. Data lost! Error: {e}")
+        print(f"![CRITICAL] Failed writing out data: {e}")
         sys.exit(1)
 
-    # Report overall pipeline state status to GitHub summary logs
     if failed_categories:
-        print(f"\n![ALERT] The following categories encountered complete structural failures: {failed_categories}")
-        print("Review the console logs above to find the raw queries and specific failure exceptions.")
-        sys.exit(1) # Fail step so GitHub alerts you immediately, while preserving saved data
+        print(f"\n![ALERT] Complete structural failures for: {failed_categories}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
