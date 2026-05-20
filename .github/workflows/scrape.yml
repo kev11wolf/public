@@ -1,13 +1,24 @@
-name: Stream Native Map Extraction Pipeline
+name: Multi-State Automated Data Pipeline Matrix
 
 on:
   schedule:
-    - cron: '0 0 1 * *' # Automatically updates on the 1st of every month
-  workflow_dispatch:     # Keeps the manual run button enabled
+    - cron: '0 0 1 * *' # Automated pass on the 1st day of every month
+  workflow_dispatch:     # Keeps manual execution force button enabled
 
 jobs:
-  build:
+  build-matrix:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 3 # Polite crawling throttling boundary limits
+      fail-fast: false
+      matrix:
+        # State identifiers mapped precisely to Geofabrik sub-directories
+        state: [
+          north-carolina, south-carolina, virginia, georgia, florida,
+          maryland, delaware, pennsylvania, new-jersey, new-york,
+          texas, california, ohio, illinois, michigan, tennessee
+        ]
+
     permissions:
       contents: write
 
@@ -15,7 +26,7 @@ jobs:
     - name: Checkout Source Code Tree
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # CRITICAL: Fetches full history so git can rebase changes safely
+        fetch-depth: 0
 
     - name: Initialize Environment Engine
       uses: actions/setup-python@v5
@@ -28,12 +39,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests osmium
 
-    - name: Stream Target State Map Slice
+    - name: Stream Target State Map Slice From Mirror
       run: |
-        curl -L -o region_map.osm.pbf https://download.geofabrik.de/north-america/us/north-carolina-latest.osm.pbf
+        curl -L -o region_map.osm.pbf https://download.geofabrik.de/north-america/us/${{ matrix.state }}-latest.osm.pbf
 
-    - name: Trigger Processing Script Execution Layer
-      run: python fetch_data_pbf.py
+    - name: Execute Native Multi-State Matrix Extraction Pass
+      run: python fetch_data_pbf.py ${{ matrix.state }}
 
     - name: Clean Scratchpad Workspace File Storage Assets
       run: rm -f region_map.osm.pbf
@@ -43,15 +54,14 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
-        git add us_brands.json
+        # Explicit target tracking for the specific modified state file
+        git add data/${{ matrix.state }}_brands.json
         
-        # Only commit if changes actually exist
         if ! git diff-index --quiet HEAD; then
-          git commit -m "Automated update of index layers via offline binary maps engine"
+          git commit -m "Automated database layer compilation run complete for target state: ${{ matrix.state }}"
           
-          # CRITICAL FIX: Pull down remote updates made while the script was running
-          # and seamlessly place our data updates on top of them
-          git pull --rebase origin main
-          
-          git push origin main
+          # Retry loop loop with rebase to manage concurrent push merges gracefully
+          for i in {1..5}; do
+            git pull --rebase origin main && git push origin main && break || sleep 15
+          done
         fi
