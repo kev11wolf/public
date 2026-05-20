@@ -119,7 +119,7 @@
 
     <script>
         // =====================================================================
-        // --- PHASE 1: HOISTED GLOBAL CONSTANTS & VARIABLE CONFIGS -----------
+        // --- PHASE 1: HOISTED GLOBAL CONSTANTS & VARIABLE CONFIG LAYOUTS ----
         // =====================================================================
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
         const autocompleteQueryMemoryCache = new Map(); 
@@ -260,7 +260,7 @@
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
 
-        // Variable Array Management Allocation Tiers
+        // Variable Array Configuration Layout States
         let allPoiMarkersMemoryMap = [];
         let globalFavoritesMarkers = []; 
         let repoFavoritesMemory = [];    
@@ -276,155 +276,12 @@
         let routeBufferPolyline = null;
         let allowAutoCenter = true;
         let autoCenterTimeoutId = null;
+        let isTracking = false;
+        let watchId = null;
 
-        // ==========================================
-        // --- PHASE 2: MAP INITIALIZATION CORES ----
-        // ==========================================
-        const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 5);
-        
-        const mapLayersPool = {
-            light: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }),
-            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB' })
-        };
-        mapLayersPool[mapStyleMode].addTo(map);
-
-        const poiClusterGroup = L.layerGroup().addTo(map);
-        const favoritesLayerGroup = L.layerGroup().addTo(map); 
-
-        let routingControl = L.Routing.control({
-            show: false, 
-            addWaypoints: true, 
-            draggableWaypoints: true,
-            serviceUrl: 'https://router.project-osrm.org/route/v1',
-            router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
-            lineOptions: {
-                styles: [
-                    { color: '#0f172a', opacity: 0.25, weight: 14 }, 
-                    { color: '#2563eb', opacity: 0.9, weight: 10 },    
-                    { color: '#60a5fa', opacity: 1, weight: 4 }      
-                ]
-            },
-            createMarker: function(i, wp, n) {
-                let iconLabel = '⚓';
-                let bgClass = 'bg-blue-600 border-white text-white';
-                if (i === 0) { iconLabel = '🏁'; bgClass = 'bg-emerald-600 border-white text-white'; }
-                else if (i === n - 1) { iconLabel = '🛑'; bgClass = 'bg-red-600 border-white text-white'; }
-                
-                let marker = L.marker(wp.latLng, { draggable: true, icon: createRouteMarkerIcon(iconLabel, bgClass) });
-                if (i > 0 && i < n - 1) {
-                    marker.on('click', function() {
-                        if (confirm("Delete this custom reroute anchor point?")) {
-                            let currentWaypoints = routingControl.getWaypoints();
-                            currentWaypoints.splice(i, 1);
-                            routingControl.setWaypoints(currentWaypoints);
-                        }
-                    });
-                }
-                return marker;
-            }
-        }).addTo(map);
-
-        // ==============================================================
-        // --- PHASE 3: HIGH-SPEED BACKGROUND WEB WORKER THREAD ---------
-        // ==============================================================
-        const workerBlobCode = `
-            function haversineDist(lat1, lon1, lat2, lon2) {
-                const R = 6371000;
-                const dLat = (lat2 - lat1) * Math.PI / 180;
-                const dLon = (lon2 - lon1) * Math.PI / 180;
-                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-                return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-            }
-
-            self.onmessage = function(e) {
-                const { localElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
-                const finalMatches = [];
-                if (!localElements || currentSubFilter === 'none') {
-                    self.postMessage({ sortedMatches: [] });
-                    return;
-                }
-
-                let minTlat = 90, maxTlat = -90, minTlon = 180, maxTlon = -180;
-                for(let j=0; j<targetsSlice.length; j++) {
-                    if (targetsSlice[j].lat < minTlat) minTlat = targetsSlice[j].lat;
-                    if (targetsSlice[j].lat > maxTlat) maxTlat = targetsSlice[j].lat;
-                    if (targetsSlice[j].lng < minTlon) minTlon = targetsSlice[j].lng;
-                    if (targetsSlice[j].lng > maxTlon) maxTlon = targetsSlice[j].lng;
-                }
-                const degPad = (activeBufferMeters + 2000) / 111000;
-                const spatialEnvelope = { n: maxTlat + degPad, s: minTlat - degPad, e: maxTlon + degPad, w: minTlon - degPad };
-
-                localElements.forEach(el => {
-                    let normBrand = (el.b || '');
-                    let normCat = el.c;
-                    let effectiveCat = normCat;
-
-                    if (effectiveCat !== currentMasterCat) return;
-                    if (el.lat > spatialEnvelope.n || el.lat < spatialEnvelope.s || el.lon > spatialEnvelope.e || el.lon < spatialEnvelope.w) return;
-                    
-                    let isMatch = false;
-                    if (currentSubFilter === 'unl87' && el.g87 === 1) isMatch = true;
-                    else if (currentSubFilter === 'unl88' && el.g88 === 1) isMatch = true;
-                    else if (normBrand === currentSubFilter) isMatch = true;
-                    else if (normCat === currentSubFilter) isMatch = true;
-                    else if (currentSubFilter === 'highway_rest' && (normCat === 'highway_rest' || normBrand === 'highway_rest')) isMatch = true;
-                    else if (currentSubFilter === 'highway_toilets' && (normCat === 'highway_toilets' || normBrand === 'highway_toilets')) isMatch = true;
-                    else if (currentSubFilter === 'tourism_viewpoint' && (normCat === 'tourism_viewpoint' || normBrand === 'tourism_viewpoint')) isMatch = true;
-                    else if (currentSubFilter === 'tourism_dogpark' && (normCat === 'tourism_dogpark' || normBrand === 'tourism_dogpark')) isMatch = true;
-                    
-                    if (!isMatch) return;
-
-                    let minD = Infinity;
-                    for (let j = 0; j < targetsSlice.length; j++) {
-                        const d = haversineDist(el.lat, el.lon, targetsSlice[j].lat, targetsSlice[j].lng);
-                        if (d < minD) minD = d;
-                    }
-
-                    if (minD <= activeBufferMeters) {
-                        finalMatches.push({
-                            id: "local_" + el.lat + "_" + el.lon, lat: el.lat, lon: el.lon,
-                            name: el.n, brand: normBrand, category: effectiveCat, hours: el.h || "Hours not listed",
-                            desc: el.d || "", minD: minD, isLocal: true, g87: el.g87, g88: el.g88
-                        });
-                    }
-                });
-
-                const sortedMatches = finalMatches.sort((a, b) => a.minD - b.minD);
-                self.postMessage({ sortedMatches });
-            };
-        `;
-        const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
-        const mathWorker = new Worker(URL.createObjectURL(blobObj));
-
-        // ==============================================================
-        // --- PHASE 4: SECURE STANDARD HOISTED HELPER FUNCTIONS --------
-        // ==============================================================
-        function calculateIntersectedStates(routeCoords) {
-            const matchedStates = new Set();
-            const sampleRate = Math.max(1, Math.floor(routeCoords.length / 100));
-            
-            for (let i = 0; i < routeCoords.length; i += sampleRate) {
-                const pt = routeCoords[i];
-                for (const [stateName, bbox] of Object.entries(STATE_BOUNDS_LOOKUP)) {
-                    if (pt.lat >= bbox.s && pt.lat <= bbox.n && pt.lng >= bbox.w && pt.lng <= bbox.e) {
-                        matchedStates.add(stateName);
-                    }
-                }
-            }
-            return Array.from(matchedStates);
-        }
-
-        function buildCleanAddressString(addr, displayNameFallback) {
-            if (!addr) return displayNameFallback.split(',').slice(0, 3).join(',');
-            let tokens = [];
-            const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
-            if (roadLine) tokens.push(roadLine);
-            if (addr.city || addr.town || addr.village || addr.suburb) tokens.push(addr.city || addr.town || addr.village || addr.suburb);
-            if (addr.state) tokens.push(addr.state);
-            if (addr.postcode) tokens.push(addr.postcode);
-            return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
-        }
-
+        // ==========================================================
+        // --- PHASE 2: RESILIENT NATIVE EMBEDDED SYSTEM FUNCTIONS ---
+        // ==========================================================
         function triggerToast(text, duration = 3000) {
             const container = document.getElementById('toast-container');
             if (!container) return;
@@ -447,6 +304,17 @@
                 if (showSpinner) spinner.classList.remove('hidden');
                 else spinner.classList.add('hidden');
             }
+        }
+
+        function buildCleanAddressString(addr, displayNameFallback) {
+            if (!addr) return displayNameFallback.split(',').slice(0, 3).join(',');
+            let tokens = [];
+            const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
+            if (roadLine) tokens.push(roadLine);
+            if (addr.city || addr.town || addr.village || addr.suburb) tokens.push(addr.city || addr.town || addr.village || addr.suburb);
+            if (addr.state) tokens.push(addr.state);
+            if (addr.postcode) tokens.push(addr.postcode);
+            return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
         }
 
         function createCustomIcon(label, classes, isLarge = false) {
@@ -474,13 +342,38 @@
             });
         }
 
+        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
+
         function triggerAutoCenterDelay() {
             if (!isTracking) return;
             allowAutoCenter = false; clearTimeout(autoCenterTimeoutId);
             autoCenterTimeoutId = setTimeout(() => { allowAutoCenter = true; }, 20000); 
         }
 
-        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
+        function dispatchOffThreadAnalysis() {
+            if (routeLineCoordinates.length === 0) return;
+            const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
+            activeTargetsSliceMemory = [];
+            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
+            if (routeLineCoordinates.length > 0) activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
+
+            mathWorker.postMessage({
+                localElements: localJsonMemory,
+                targetsSlice: activeTargetsSliceMemory, activeBufferMeters: activeBufferMeters,
+                currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
+            });
+        }
+
+        async function runDataExecutionLayer(masterCat) {
+            if ((!routeLineCoordinates || routeLineCoordinates.length === 0) && routingControl._routes && routingControl._routes[0]) {
+                routeLineCoordinates = routingControl._routes[0].coordinates;
+            }
+            if (!routeLineCoordinates || routeLineCoordinates.length === 0) { 
+                alert("Please calculate a route first before selecting options filters."); 
+                return; 
+            }
+            dispatchOffThreadAnalysis();
+        }
 
         function renderGlobalPermanentStars() {
             favoritesLayerGroup.clearLayers();
@@ -623,22 +516,6 @@
             poiClusterGroup.addLayer(marker);
         }
 
-        async function runDataExecutionLayer(masterCat) {
-            // CRITICAL FIX: Auto recovery intercept reads coordinate points out of native cache boundaries
-            if ((!routeLineCoordinates || routeLineCoordinates.length === 0) && routingControl._routes && routingControl._routes[0]) {
-                routeLineCoordinates = routingControl._routes[0].coordinates;
-            }
-            
-            if (!routeLineCoordinates || routeLineCoordinates.length === 0) { 
-                alert("Please calculate a route first. If you already generated a route, click the Calculate Route button again to refresh cache layers."); 
-                return; 
-            }
-            dispatchOffThreadAnalysis();
-        }
-
-        // ==========================================
-        // --- PHASE 5: AUTOCOMPLETE METHODS --------
-        // ==========================================
         function runCachedAutocompleteSearch(inputElement, dropdownElement) {
             const query = inputElement.value.trim();
             const clearBtn = document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn');
@@ -710,103 +587,6 @@
             subBar.classList.remove('hidden');
         }
 
-        // ==========================================
-        // --- PHASE 6: INTERACTIVE INPUT EVENT LISTERS
-        // ==========================================
-        document.getElementById('start-clear-btn').addEventListener('click', (e) => {
-            const input = document.getElementById('start-input'); input.value = ''; delete input.dataset.lat; delete input.dataset.lon; e.target.classList.add('hidden');
-        });
-        document.getElementById('end-clear-btn').addEventListener('click', (e) => {
-            const input = document.getElementById('end-input'); input.value = ''; delete input.dataset.lat; delete input.dataset.lon; e.target.classList.add('hidden');
-        });
-
-        document.getElementById('swap-locations-btn').addEventListener('click', () => {
-            const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input');
-            const startClear = document.getElementById('start-clear-btn'); const endClear = document.getElementById('end-clear-btn');
-            const tempVal = startInput.value; startInput.value = endInput.value; endInput.value = tempVal;
-            const tempLat = startInput.dataset.lat; startInput.dataset.lat = endInput.dataset.lat || ''; endInput.dataset.lat = tempLat || '';
-            const tempLon = startInput.dataset.lon; startInput.dataset.lon = endInput.dataset.lon || ''; endInput.dataset.lon = tempLon || '';
-            if (startInput.value.length > 0) startClear.classList.remove('hidden'); else startClear.classList.add('hidden');
-            if (endInput.value.length > 0) endClear.classList.remove('hidden'); else endClear.classList.add('hidden');
-            triggerToast("Swapped start & final parameters.");
-        });
-
-        document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
-        
-        document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
-            const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
-            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm transition-colors hover:bg-gray-50");
-            subPill.className = "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
-            currentSubFilter = subPill.getAttribute('data-sub'); dispatchOffThreadAnalysis();
-        });
-
-        document.getElementById('buffer-select').addEventListener('change', (e) => { 
-            activeBufferMeters = parseInt(e.target.value); updateBufferVisualizerWeight();
-            if (localJsonMemory && currentSubFilter !== 'none') dispatchOffThreadAnalysis(); 
-        });
-        
-        document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
-        document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
-
-        document.getElementById('route-btn').addEventListener('click', async () => {
-            const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input'); let startLatLng, endLatLng;
-            if (startInput.dataset.lat && startInput.dataset.lon) { startLatLng = L.latLng(parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon)); }
-            if (endInput.dataset.lat && endInput.dataset.lon) { endLatLng = L.latLng(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon)); }
-            if (!startLatLng || !endLatLng) { alert("Select suggested autocomplete options first."); return; }
-            routingControl.setWaypoints([startLatLng, endLatLng]);
-        });
-
-        routingControl.on('routingerror', function(e) {
-            console.error("OSRM Connection Error Blocked: ", e);
-            updateInlineStatus("OSRM Server Timeout. Re-calculating path corridor parameters...", false);
-            triggerToast("Routing server connection dropped. Automatically retrying calculation...");
-        });
-
-        const geoBtn = document.getElementById('geo-btn'); let isTracking = false, watchId = null;
-        geoBtn.addEventListener('click', () => {
-            if (isTracking) { 
-                if (watchId) navigator.geolocation.clearWatch(watchId); isTracking = false; allowAutoCenter = true; clearTimeout(autoCenterTimeoutId);
-                geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
-            } else {
-                if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
-                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
-                watchId = navigator.geolocation.watchPosition((pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    if (lastUserGpsCoord) {
-                        const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord); if (distanceMoved < 25) return; 
-                    }
-                    lastUserGpsCoord = [latitude, longitude];
-                    if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
-                    if (allowAutoCenter) map.panTo([latitude, longitude]);
-
-                    if (routeLineCoordinates.length > 0) {
-                        let minDistanceToRouteLine = Infinity; let closestCoordinateIndex = 0;
-                        for (let i = 0; i < routeLineCoordinates.length; i++) {
-                            const d = map.distance([latitude, longitude], [routeLineCoordinates[i].lat, routeLineCoordinates[i].lng]);
-                            if (d < minDistanceToRouteLine) { minDistanceToRouteLine = d; closestCoordinateIndex = i; }
-                        }
-                        let remainingDistanceMeters = 0;
-                        for (let i = closestCoordinateIndex; i < routeLineCoordinates.length - 1; i++) {
-                            remainingDistanceMeters += map.distance([routeLineCoordinates[i].lat, routeLineCoordinates[i].lng], [routeLineCoordinates[i+1].lat, routeLineCoordinates[i+1].lng]);
-                        }
-                        const remainingDistanceMiles = (remainingDistanceMeters * 0.000621371).toFixed(1);
-                        const stickyLabelValue = document.getElementById('sticky-total-dist');
-                        if (stickyLabelValue) stickyLabelValue.innerText = remainingDistanceMiles;
-
-                        if (minDistanceToRouteLine > 805) {
-                            triggerToast("Off-route deviation detected! Updating path variables...", 4000);
-                            const currentGpsLocationLatLng = L.latLng(latitude, longitude);
-                            const currentTargetDestinationLatLng = routingControl.getWaypoints()[1].latLng;
-                            routingControl.setWaypoints([currentGpsLocationLatLng, currentTargetDestinationLatLng]);
-                        }
-                    }
-                }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
-            }
-        });
-
-        // ==========================================
-        // --- PHASE 7: BOOTSTRAP RESYNC LAYERS -----
-        // ==========================================
         async function loadMasterRepoFavoritesOnBoot() {
             try {
                 const response = await fetch('favorites.json');
@@ -836,6 +616,61 @@
                 updateInlineStatus("Synchronization pipeline deferred to active submission tab.");
             }
         }
+
+        // ==============================================================
+        // --- PHASE 5: RUN OFF-THREAD WORKER ROUTING THREAD COMPILER ---
+        // ==============================================================
+        mathWorker.onmessage = function(e) {
+            const { sortedMatches } = e.data;
+            poiClusterGroup.clearLayers();
+            allPoiMarkersMemoryMap = [];
+
+            sortedMatches.forEach(el => {
+                let isCoordinateOccupiedByStar = globalFavoritesMarkers.some(m => roundCoords(m.lat) === roundCoords(el.lat) && roundCoords(m.lon) === roundCoords(el.lon));
+                if (isCoordinateOccupiedByStar) return;
+                buildAndRenderPoiMarker(el, false);
+            });
+
+            const hud = document.getElementById('next-stop-hud');
+            if (hud) {
+                if (sortedMatches.length > 0) {
+                    const nextStop = sortedMatches[0];
+                    const distanceInMiles = (nextStop.minD * 0.000621371).toFixed(1);
+                    document.getElementById('hud-poi-name').innerText = cleanBrandNames[nextStop.brand] || nextStop.name;
+                    document.getElementById('hud-poi-dist').innerText = `${distanceInMiles} miles away`;
+                    hud.classList.remove('hidden');
+                } else { hud.classList.add('hidden'); }
+            }
+            updateInlineStatus("Stops active.");
+        };
+
+        // ==========================================
+        // --- PHASE 6: INPUT EVENT EVENT ENGINE ----
+        // ==========================================
+        document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
+        
+        document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
+            const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
+            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm transition-colors hover:bg-gray-50");
+            subPill.className = "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
+            currentSubFilter = subPill.getAttribute('data-sub'); dispatchOffThreadAnalysis();
+        });
+
+        document.getElementById('buffer-select').addEventListener('change', (e) => { 
+            activeBufferMeters = parseInt(e.target.value); updateBufferVisualizerWeight();
+            if (localJsonMemory && currentSubFilter !== 'none') dispatchOffThreadAnalysis(); 
+        });
+        
+        document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
+        document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
+
+        document.getElementById('route-btn').addEventListener('click', async () => {
+            const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input'); let startLatLng, endLatLng;
+            if (startInput.dataset.lat && startInput.dataset.lon) { startLatLng = L.latLng(parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon)); }
+            if (endInput.dataset.lat && endInput.dataset.lon) { endLatLng = L.latLng(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon)); }
+            if (!startLatLng || !endLatLng) { alert("Select suggested autocomplete options first."); return; }
+            routingControl.setWaypoints([startLatLng, endLatLng]);
+        });
 
         window.addEventListener('DOMContentLoaded', () => {
             const inputFieldsToWire = ['start-input', 'end-input'];
