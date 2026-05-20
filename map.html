@@ -119,13 +119,13 @@
 
     <script>
         // =====================================================================
-        // --- PHASE 1: HOISTED ROOT-LEVEL CONSTANT DECLARATIONS & BOUNDS -----
+        // --- PHASE 1: COMPREHENSIVE VARIABLE ALLOCATION POOLS & MAP MODELS --
         // =====================================================================
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
         const autocompleteQueryMemoryCache = new Map(); 
         let mathWorker = null; 
         
-        // Comprehensive 50-State Geographic Bounding Box Alignment Dictionary Grid Framework Matrix
+        // Exact 50-State Geographic Coordinate Envelope Bounding Box Dictionary Frame Layer Grid
         const STATE_BOUNDS_LOOKUP = {
             "alabama":        { s: 30.1, n: 35.1, w: -88.6, e: -84.8 },
             "alaska":         { s: 51.0, n: 71.5, w: -179.9, e: -129.9 },
@@ -262,7 +262,7 @@
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
 
-        // Core Dynamic State Containers
+        // Variable Array Storage Matrix Management Allocation Tiers
         let allPoiMarkersMemoryMap = [];
         let globalFavoritesMarkers = []; 
         let repoFavoritesMemory = [];    
@@ -282,7 +282,7 @@
         let watchId = null;
 
         // =====================================================================
-        // --- PHASE 2: STANDARD EXPLICIT STRUCTURED HELPER FUNCTIONS ---------
+        // --- PHASE 2: STATIC BALANCED CORE HOISTED HELPER FUNCTIONS ---------
         // =====================================================================
         function triggerToast(text, duration = 3000) {
             const container = document.getElementById('toast-container');
@@ -360,6 +360,22 @@
             routeBufferPolyline.setStyle({ weight: Math.max(4, calculatedPixelWidthWidth) });
         }
 
+        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
+
+        function calculateIntersectedStates(routeCoords) {
+            const matchedStates = new Set();
+            const sampleRate = Math.max(1, Math.floor(routeCoords.length / 100));
+            for (let i = 0; i < routeCoords.length; i += sampleRate) {
+                const pt = routeCoords[i];
+                for (const [stateName, bbox] of Object.entries(STATE_BOUNDS_LOOKUP)) {
+                    if (pt.lat >= bbox.s && pt.lat <= bbox.n && pt.lng >= bbox.w && pt.lng <= bbox.e) {
+                        matchedStates.add(stateName);
+                    }
+                }
+            }
+            return Array.from(matchedStates);
+        }
+
         function dispatchOffThreadAnalysis() {
             if (!routeLineCoordinates || routeLineCoordinates.length === 0) return;
             const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
@@ -398,10 +414,84 @@
             return map.getCenter();
         }
 
-        function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
+        // =====================================================================
+        // --- PHASE 3: MAP TILES & GEOMETRIC CANVAS INSTANTIATION -------------
+        // =====================================================================
+        const map = L.map('map', { zoomControl: false, tap: true, preferCanvas: true }).setView(MAP_INITIAL_CENTER, 5);
+        
+        const mapLayersPool = {
+            light: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }),
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB' })
+        };
+        mapLayersPool[mapStyleMode].addTo(map);
+
+        // Core visual layer isolation tiers split layout layers groups
+        const poiClusterGroup = L.layerGroup().addTo(map);
+        const favoritesLayerGroup = L.layerGroup().addTo(map); // Pinned items stay continuously mounted here
+
+        // ==============================================================
+        // --- PHASE 4: HIGH-SPEED CORRIDOR BACKGROUND WEB WORKER -------
+        // ==============================================================
+        const workerBlobCode = `
+            function haversineDist(lat1, lon1, lat2, lon2) {
+                const R = 6371000;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+            }
+
+            self.onmessage = function(e) {
+                const { localElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
+                const finalMatches = [];
+                if (!localElements || currentSubFilter === 'none') {
+                    self.postMessage({ sortedMatches: [] });
+                    return;
+                }
+
+                let minTlat = 90, maxTlat = -90, minTlon = 180, maxTlon = -180;
+                for(let j=0; j<targetsSlice.length; j++) {
+                    if (targetsSlice[j].lat < minTlat) minTlat = targetsSlice[j].lat;
+                    if (targetsSlice[j].lat > maxTlat) maxTlat = targetsSlice[j].lat;
+                    if (targetsSlice[j].lng < minTlon) minTlon = targetsSlice[j].lng;
+                    if (targetsSlice[j].lng > maxTlon) maxTlon = targetsSlice[j].lng;
+                }
+                const degPad = (activeBufferMeters + 2000) / 111000;
+                const spatialEnvelope = { n: maxTlat + degPad, s: minTlat - degPad, e: minTlon + degPad, w: minTlon - degPad };
+
+                localElements.forEach(el => {
+                    let normBrand = el.b || '';
+                    if (el.c !== currentMasterCat) return;
+                    if (el.lat > spatialEnvelope.n || el.lat < spatialEnvelope.s || el.lon > spatialEnvelope.e || el.lon < spatialEnvelope.w) return;
+                    
+                    let isMatch = false;
+                    if (currentSubFilter === 'unl87' && el.g87 === 1) isMatch = true;
+                    else if (currentSubFilter === 'unl88' && el.g88 === 1) isMatch = true;
+                    else if (normBrand === currentSubFilter) isMatch = true;
+                    else if (el.c === currentSubFilter) isMatch = true;
+                    
+                    if (!isMatch) return;
+
+                    let minD = Infinity;
+                    for (let j = 0; j < targetsSlice.length; j++) {
+                        const d = haversineDist(el.lat, el.lon, targetsSlice[j].lat, targetsSlice[j].lng);
+                        if (d < minD) minD = d;
+                    }
+
+                    if (minD <= activeBufferMeters) {
+                        finalMatches.push({
+                            lat: el.lat, lon: el.lon, n: el.n, b: normBrand, c: el.c, h: el.h || "Hours not listed", d: el.d || "", minD: minD, g87: el.g87, g88: el.g88
+                        });
+                    }
+                });
+                self.postMessage({ sortedMatches: finalMatches.sort((a, b) => a.minD - b.minD) });
+            };
+        `;
+        const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
+        mathWorker = new Worker(URL.createObjectURL(blobObj));
 
         // =====================================================================
-        // --- PHASE 3: POI MARKER RENDERING LAYER ENGINE ----------------------
+        // --- PHASE 5: POI MARKER DESIGN LAYOUT CORES -------------------------
         // =====================================================================
         function renderGlobalPermanentStars() {
             favoritesLayerGroup.clearLayers();
@@ -545,7 +635,7 @@
         }
 
         // =====================================================================
-        // --- PHASE 4: NOMINATIM GEOLOCATION & AUTOCOMPLETE ENGINE -----------
+        // --- PHASE 6: NOMINATIM GEOLOCATION AUTOCOMPLETE LOGIC ---------------
         // =====================================================================
         function runCachedAutocompleteSearch(inputElement, dropdownElement) {
             const query = inputElement.value.trim();
@@ -599,7 +689,7 @@
         }
 
         // =====================================================================
-        // --- PHASE 5: USER MENU FILTERS & SIDE PANEL HUD LOGIC ---------------
+        // --- PHASE 7: HUD DRAWER MENU COMPILER FILTERS LAYER -----------------
         // =====================================================================
         function handleMasterCategorySelection(element) {
             document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
@@ -622,7 +712,7 @@
         }
 
         // =====================================================================
-        // --- PHASE 6: SYNCHRONOUS LOCAL & REMOTE GIT DATABASE CONNECTORS -----
+        // --- PHASE 8: LOCAL MEMORY & GITHUB ISSUES INTEGRATION PIPELINE ------
         // =====================================================================
         async function loadMasterRepoFavoritesOnBoot() {
             try {
@@ -654,74 +744,35 @@
             }
         }
 
-        window.toggleStarPoiState = function(lat, lon, name, category, brand, hours, desc) {
-            let starred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-            let uniqueId = `poi_${lat}_${lon}`;
-            let matchIndex = starred.findIndex(item => item.id === uniqueId);
-            
-            if (matchIndex > -1) {
-                starred.splice(matchIndex, 1);
-                triggerToast("Removed stop from local device stars configuration.");
-            } else {
-                starred.push({
-                    id: uniqueId, lat: parseFloat(lat), lon: parseFloat(lon),
-                    name: String(name), category: String(category), brand: String(brand), hours: String(hours), desc: String(desc), isLocal: true
-                });
-                triggerToast("Saved stop to local device memory! ⭐");
-            }
-            
-            localStorage.setItem('starred_pois', JSON.stringify(starred));
-            renderGlobalPermanentStars(); 
-            if (routeLineCoordinates.length > 0) dispatchOffThreadAnalysis();
-        };
+        // =====================================================================
+        // --- PHASE 9: OFF-THREAD WEB WORKER MATRIX LISTENER INTERCEPT -------
+        // =====================================================================
+        mathWorker.onmessage = function(e) {
+            const { sortedMatches } = e.data;
+            poiClusterGroup.clearLayers();
+            allPoiMarkersMemoryMap = [];
 
-        window.triggerCloudDeletionTicketPipeline = function(lat, lon) {
-            if (confirm("This favorite is stored permanently in the repository. Open request page to drop it?")) {
-                let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-                localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
-                localStorage.setItem('starred_pois', JSON.stringify(localStarred));
-                
-                const targetRepositoryPath = "kev11wolf/public";
-                const payloadString = JSON.stringify({ lat: parseFloat(lat), lon: parseFloat(lon) });
-                const issueUrl = `https://github.com/${targetRepositoryPath}/issues/new?title=DATA_DELETE_FAVORITE&body=${encodeURIComponent(payloadString)}`;
-                
-                window.open(issueUrl, '_blank');
-                map.closePopup();
-                triggerToast("Deletions package built! Click Submit on the next window tab.");
+            sortedMatches.forEach(el => {
+                let isCoordinateOccupiedByStar = globalFavoritesMarkers.some(m => roundCoords(m.lat) === roundCoords(el.lat) && roundCoords(m.lon) === roundCoords(el.lon));
+                if (isCoordinateOccupiedByStar) return;
+                buildAndRenderPoiMarker(el, false);
+            });
+
+            const hud = document.getElementById('next-stop-hud');
+            if (hud) {
+                if (sortedMatches.length > 0) {
+                    const nextStop = sortedMatches[0];
+                    const distanceInMiles = (nextStop.minD * 0.000621371).toFixed(1);
+                    document.getElementById('hud-poi-name').innerText = cleanBrandNames[nextStop.brand] || nextStop.name;
+                    document.getElementById('hud-poi-dist').innerText = `${distanceInMiles} miles away`;
+                    hud.classList.remove('hidden');
+                } else { hud.classList.add('hidden'); }
             }
+            updateInlineStatus("Stops active.");
         };
 
         // =====================================================================
-        // --- PHASE 7: WEB WORKER CALL HANDLERS & ASYNC CHANNELS --------------
-        // =====================================================================
-        if (mathWorker) {
-            mathWorker.onmessage = function(e) {
-                const { sortedMatches } = e.data;
-                poiClusterGroup.clearLayers();
-                allPoiMarkersMemoryMap = [];
-
-                sortedMatches.forEach(el => {
-                    let isCoordinateOccupiedByStar = globalFavoritesMarkers.some(m => roundCoords(m.lat) === roundCoords(el.lat) && roundCoords(m.lon) === roundCoords(el.lon));
-                    if (isCoordinateOccupiedByStar) return;
-                    buildAndRenderPoiMarker(el, false);
-                });
-
-                const hud = document.getElementById('next-stop-hud');
-                if (hud) {
-                    if (sortedMatches.length > 0) {
-                        const nextStop = sortedMatches[0];
-                        const distanceInMiles = (nextStop.minD * 0.000621371).toFixed(1);
-                        document.getElementById('hud-poi-name').innerText = cleanBrandNames[nextStop.brand] || nextStop.name;
-                        document.getElementById('hud-poi-dist').innerText = `${distanceInMiles} miles away`;
-                        hud.classList.remove('hidden');
-                    } else { hud.classList.add('hidden'); }
-                }
-                updateInlineStatus("Stops active.");
-            };
-        }
-
-        // =====================================================================
-        // --- PHASE 8: LEAFLET UI EVENT ACTIONS & GLOBAL SYSTEM BINDINGS ------
+        // --- PHASE 10: INTERACTIVE INTERFACE CONTROLLER BINDINGS -------------
         // =====================================================================
         map.on('popupopen', function(e) {
             const popupElement = e.popup.getElement();
@@ -744,6 +795,8 @@
             }
         });
 
+        map.on('movestart dragstart zoomstart', function() { triggerAutoCenterDelay(); });
+
         map.on('zoomend moveend', function() {
             updateBufferVisualizerWeight();
             const isLarge = map.getZoom() > 13;
@@ -759,9 +812,6 @@
             });
         });
 
-        // =====================================================================
-        // --- PHASE 9: INTERACTIVE DOM LISTENERS & AUTOMATION WIRING --------
-        // =====================================================================
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
@@ -785,6 +835,12 @@
             routingControl.setWaypoints([L.latLng(startInput.dataset.lat, startInput.dataset.lon), L.latLng(endInput.dataset.lat, endInput.dataset.lon)]);
         });
 
+        routingControl.on('routingerror', function(e) {
+            console.error("OSRM Connection Error Blocked: ", e);
+            updateInlineStatus("OSRM Server Timeout. Re-calculating path corridor parameters...", false);
+            triggerToast("Routing server connection dropped. Automatically retrying calculation...");
+        });
+
         document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
             map.removeLayer(mapLayersPool[mapStyleMode]);
             mapStyleMode = mapStyleMode === 'light' ? 'dark' : 'light';
@@ -797,7 +853,7 @@
         document.getElementById('zoom-out-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() - 1); });
 
         // =====================================================================
-        // --- PHASE 10: GEOLOCATION HARDWARE WATCH TELEMETRY PIPELINE ---------
+        // --- PHASE 11: GEOLOCATION HARDWARE WATCH TELEMETRY ENGINE -----------
         // =====================================================================
         const geoBtn = document.getElementById('geo-btn');
         geoBtn.addEventListener('click', () => {
@@ -843,7 +899,7 @@
         });
 
         // =====================================================================
-        // --- PHASE 11: INITIAL APPLICATION DOMContentLoaded BOOTSTRAPPER -----
+        // --- PHASE 12: INITIAL SYSTEM LAUNCH LIFE-CYCLE EVENT INITIALIZER ---
         // =====================================================================
         window.addEventListener('DOMContentLoaded', () => {
             ['start-input', 'end-input'].forEach(id => {
