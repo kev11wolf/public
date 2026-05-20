@@ -150,11 +150,14 @@ class NationalPOIExtractor(osmium.SimpleHandler):
             except osmium.InvalidLocationError: pass
 
     def area(self, a):
-        """CRITICAL FIX: Listens for structural boundary Relations and multipolygons."""
+        """FIX: Extracts coordinate points from the outer boundary ring of multi-polygon park structures."""
         if a.tags:
             try:
-                # Use osmium's representative point calculation for shape boundaries
-                self.process_node_tags(dict(a.tags), a.orig_id(), a.orig_id())
+                for ring in a.outer_rings():
+                    for node in ring:
+                        # Extract the first valid latitude and longitude coordinate pair found inside the boundary shape
+                        self.process_node_tags(dict(a.tags), node.lat, node.lon)
+                        return 
             except:
                 pass
 
@@ -167,7 +170,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     extractor = NationalPOIExtractor()
-    # CRITICAL FIX: Pass the active target JSON file directly to seed existing data entries
     extractor.load_existing_dataset(output_filename)
     
     print("Executing hyper-fast streaming parsing pass over binary layers...")
