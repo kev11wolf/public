@@ -1,16 +1,8 @@
 import json
 import os
-import requests
-import time
 import sys
+import osmium
 
-OVERPASS_ENDPOINTS = [
-    "https://overpass-api.de/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
-    "https://overpass.osm.ch/api/interpreter"
-]
-
-# Shared filter profiles for checking both live data and existing JSON datasets
 RELIGIOUS_BLACKLIST = [
     'church', 'ministries', 'baptist', 'methodist', 'catholic', 'lutheran', 
     'presbyterian', 'episcopal', 'synagogue', 'mosque', 'temple', 'parish', 
@@ -21,232 +13,197 @@ SCHOOL_PRIVATE_BLACKLIST = [
     'school', 'academy', 'elementary', 'middle', 'high', 'charter', 
     'daycare', 'childcare', 'preschool', 'kindergarten', 'learning center',
     'private', 'subdivision', 'hoa', 'apartment', 'condo', 'townhome', 
-    'club', 'resort', 'golf', 'fitness', 'ymca', 'campground', 'hotel', 'motel',
-    'studio', 'therapy', 'clinic', 'hospital', 'community center'
+    'club', 'resort', 'golf', 'fitness', 'ymca', 'campground', 'hotel', 'motel'
 ]
 
 COMBINED_PLAYGROUND_BLACKLIST = RELIGIOUS_BLACKLIST + SCHOOL_PRIVATE_BLACKLIST
+PUBLIC_PARK_KEYWORDS = ['park', 'public', 'community', 'recreation', 'civic', 'city', 'town', 'county', 'municipal']
 
-PUBLIC_PARK_KEYWORDS = [
-    'park', 'public', 'community', 'recreation', 'civic', 'city', 'town', 'county', 'municipal', 'village'
-]
+class NationalPOIExtractor(osmium.SimpleHandler):
+    def __init__(self):
+        super(NationalPOIExtractor, self).__init__()
+        self.output_records = []
+        self.seen_keys = set()
 
-def get_overpass_query(search_criteria):
-    """Generates an index-optimized Overpass QL query template."""
-    return f"""
-    [out:json][timeout:120][maxsize:268435456];
-    area["ISO3166-2"="US-NC"]->.searchArea;
-    (
-      {search_criteria}
-    );
-    out center;
-    """
-
-def fetch_category_with_fallback(criteria, category_name):
-    """Tries multiple Overpass endpoints with proper headers, backoffs, and tracking."""
-    query = get_overpass_query(criteria)
-    headers = {
-        "User-Agent": "NCBrandDataFetcher/1.3 (https://github.com/kev11wolf/public; automated data engine)",
-        "Accept-Encoding": "gzip, deflate"
-    }
-    
-    for endpoint in OVERPASS_ENDPOINTS:
-        print(f"[{category_name}] Attempting fetch from: {endpoint}")
-        for attempt in range(1, 4):
+    def load_existing_dataset(self, filename):
+        """Safely loads baseline database array using missing key protection templates."""
+        if os.path.exists(filename):
             try:
-                response = requests.post(endpoint, data={'data': query}, headers=headers, timeout=(15, 140))
-                if response.status_code == 200:
-                    try:
-                        data = response.json()
-                        elements = data.get('elements', [])
-                        if len(elements) == 0 and endpoint != "https://overpass-api.de/api/interpreter" and category_name not in ["bucees", "wawa"]:
-                            print(f"![WARN] Mirror server returned 0 items suspiciously for {category_name}. Shifting mirror...")
-                            break
-                        print(f"Successfully fetched {len(elements)} items for {category_name}.")
-                        return elements
-                    except json.JSONDecodeError as je:
-                        print(f"![ERROR] JSON Parse failure on {endpoint}. Error: {je}")
-                        break
-                elif response.status_code == 429:
-                    wait_time = attempt * 25
-                    print(f"![WARN] Rate limited (429). Waiting {wait_time}s...")
-                    time.sleep(wait_time)
-                elif response.status_code == 504:
-                    print(f"![WARN] Gateway Timeout (504) on {endpoint}. Shifting mirror...")
-                    break
-                else:
-                    print(f"![ERROR] HTTP Error {response.status_code} from {endpoint}")
-                    break
-            except requests.exceptions.Timeout as te:
-                print(f"![TIMEOUT] Network timeout reached on {endpoint}. Details: {te}")
-                time.sleep(5)
-            except requests.exceptions.ConnectionError as ce:
-                print(f"![CONNECTION ERROR] Failed to connect to {endpoint}. Details: {ce}")
-                time.sleep(5)
+                with open(filename, "r", encoding="utf-8") as file:
+                    data = json.load(file)
+                    if isinstance(data, list):
+                        for item in data:
+                            lat = item.get('lat')
+                            lon = item.get('lon')
+                            b_slug = item.get('b', 'unknown')
+                            if lat is not None and lon is not None:
+                                key = f"{round(float(lat), 4)}_{round(float(lon), 4)}_{b_slug}"
+                                if key not in self.seen_keys:
+                                    self.seen_keys.add(key)
+                                    self.output_records.append(item)
+                print(f"Successfully loaded {len(self.output_records)} existing state baseline points.")
             except Exception as e:
-                print(f"![UNEXPECTED ERROR] An unhandled exception occurred: {e}")
-                time.sleep(5)
-        print(f"Moving away from endpoint: {endpoint}\n")
-    print(f"!!! [CRITICAL FAILURE] All endpoints failed for category: {category_name} !!!")
-    return None
+                print(f"![WARN] Baseline parsing skipped safely: {e}")
 
-def generate_unique_key(item):
-    try:
-        return f"{round(float(item['lat']), 4)}_{round(float(item['lon']), 4)}_{item['b']}"
-    except KeyError:
-        return None
+    def process_node_tags(self, tags, lat, lon):
+        if not lat or not lon:
+            return
 
-def main():
-    output_filename = "us_brands.json"
-    existing_records = []
-    seen_keys = set()
-    purged_old_playgrounds = 0
+        name = tags.get('name', '')
+        brand = tags.get('brand', '').lower()
+        name_lower = name.lower()
+        leisure = tags.get('leisure', '').lower()
+        highway = tags.get('highway', '').lower()
+        amenity = tags.get('amenity', '').lower()
+        tourism = tags.get('tourism', '').lower()
+        shop = tags.get('shop', '').lower()
 
-    # Step 1: Load and clean current JSON of any old non-compliant playgrounds
-    if os.path.exists(output_filename):
-        try:
-            with open(output_filename, "r", encoding="utf-8") as file:
-                raw_records = json.load(file)
-                if isinstance(raw_records, list):
-                    for item in raw_records:
-                        # Clean previously saved school/private playgrounds out of the database array
-                        if item.get('b') == 'playground':
-                            meta = f"{item.get('n', '')} {item.get('d', '')}".lower()
-                            if any(kw in meta for kw in COMBINED_PLAYGROUND_BLACKLIST):
-                                purged_old_playgrounds += 1
-                                continue
-                            if not any(kw in meta for kw in PUBLIC_PARK_KEYWORDS):
-                                purged_old_playgrounds += 1
-                                continue
-                        
-                        key = generate_unique_key(item)
-                        if key:
-                            existing_records.append(item)
-                            seen_keys.add(key)
-            print(f"Loaded baseline data. Retroactively cleaned & purged {purged_old_playgrounds} old private/school playgrounds.")
-            print(f"Retained {len(existing_records)} valid unique records to build upon.")
-        except Exception as e:
-            print(f"![ERROR] Could not read existing file. Error: {e}")
+        b_slug, c_tag, desc = None, "food", "Official location."
 
-    # Step 2: Target Queries with Wendy's added and index optimization
-    targets = {
-        "chickfila": 'nwr["brand"~"Chick-[fF]il-[aA]"](area.searchArea); nwr["name"~"Chick-[fF]il-[aA]"](area.searchArea);',
-        "mcdonalds": 'nwr["brand"~"Mc[dD]onald"](area.searchArea); nwr["name"~"Mc[dD]onald"](area.searchArea);',
-        "chipotle": 'nwr["brand"~"Chipotle"](area.searchArea); nwr["name"~"Chipotle"](area.searchArea);',
-        "starbucks": 'nwr["brand"~"Starbucks"](area.searchArea); nwr["name"~"Starbucks"](area.searchArea);',
-        "wendys": 'nwr["brand"~"Wendy"](area.searchArea); nwr["name"~"Wendy"](area.searchArea);',
-        "raisingcanes": 'nwr["brand"~"Raising Cane"](area.searchArea); nwr["name"~"Raising Cane"](area.searchArea);',
-        "jerseymikes": 'nwr["brand"~"Jersey Mike"](area.searchArea); nwr["name"~"Jersey Mike"](area.searchArea);',
-        "sheetz": 'nwr["brand"~"Sheetz"](area.searchArea); nwr["name"~"Sheetz"](area.searchArea);',
-        "bucees": 'nwr["brand"~"Buc-ee"](area.searchArea); nwr["name"~"Buc-ee"](area.searchArea);',
-        "wawa": 'nwr["brand"~"Wawa"](area.searchArea); nwr["name"~"Wawa"](area.searchArea);',
-        "circlek": 'nwr["brand"~"Circle K"](area.searchArea); nwr["name"~"Circle K"](area.searchArea);',
-        "rest_stops": 'nwr["highway"="rest_area"](area.searchArea);',
-        "playgrounds": 'nwr["leisure"="playground"](area.searchArea);'
-    }
-
-    new_additions_count = 0
-    failed_categories = []
-
-    for key, criteria in targets.items():
-        elements = fetch_category_with_fallback(criteria, key)
-        if elements is None:
-            failed_categories.append(key)
-            continue
+        # Food & Restaurant Mappings
+        if "chick-fil-a" in brand or "chick-fil-a" in name_lower:
+            b_slug = "chickfila"
+        elif "mcdonald" in brand or "mcdonald" in name_lower:
+            b_slug = "mcdonalds"
+        elif "chipotle" in brand or "chipotle" in name_lower:
+            b_slug = "chipotle"
+        elif "starbucks" in brand or "starbucks" in name_lower:
+            b_slug = "starbucks"
+        elif "wendy" in brand or "wendy" in name_lower:
+            b_slug, desc = "wendys", "Official Wendy's fast food establishment."
+        elif "raising cane" in brand or "raising cane" in name_lower:
+            b_slug = "raisingcanes"
+        elif "jersey mike" in brand or "jersey mike" in name_lower:
+            b_slug = "jerseymikes"
+        elif "culver" in brand or "culver" in name_lower:
+            b_slug, desc = "culvers", "Official Culver's butterburgers & frozen custard facility."
+        elif "shake shack" in brand or "shake shack" in name_lower:
+            b_slug, desc = "shakeshack", "Official Shake Shack modern road-side burger stand."
+        elif "in-n-out" in brand or "in-n-out" in name_lower or "innout" in brand:
+            b_slug, desc = "innout", "Official In-N-Out Burger iconic fresh fast-food location."
+        elif "potbelly" in brand or "potbelly" in name_lower:
+            b_slug, desc = "potbelly", "Official Potbelly Sandwich Shop warm toasted sub shop."
             
-        for elem in elements:
-            tags = elem.get('tags', {})
-            lat = elem.get('lat') or elem.get('center', {}).get('lat')
-            lon = elem.get('lon') or elem.get('center', {}).get('lon')
-            if not lat or not lon:
-                continue
-
-            name = tags.get('name', f"Unbranded {key}" if key in ["rest_stops", "playgrounds"] else f"{key} Location")
-            brand_raw = tags.get('brand', '').lower()
-            name_raw = name.lower()
+        # Fuel Terminal Mappings
+        elif "sheetz" in brand or "sheetz" in name_lower:
+            b_slug, c_tag = "sheetz", "gas"
+        elif "buc-ee" in brand or "buc-ee" in name_lower:
+            b_slug, c_tag = "bucees", "gas"
+        elif "wawa" in brand or "wawa" in name_lower:
+            b_slug, c_tag = "wawa", "gas"
+        elif "circle k" in brand or "circle k" in name_lower:
+            b_slug, c_tag = "circlek", "gas"
             
-            b_slug, c_tag, desc = key, "food", f"Official {key} location."
+        # Retail & Shopping Supply Mappings (New Additions Layer)
+        elif "walmart" in brand or "walmart" in name_lower:
+            b_slug, c_tag, desc = "walmart", "shopping", "Walmart retail store location for travel supply re-provisioning."
+        elif "target" in brand or "target" in name_lower:
+            b_slug, c_tag, desc = "target", "shopping", "Target retail store location featuring snacks and essentials."
+        elif "dollar tree" in brand or "dollar tree" in name_lower:
+            b_slug, c_tag, desc = "dollartree", "shopping", "Dollar Tree discount convenience shopping hub."
+        elif "costco" in brand or "costco" in name_lower:
+            b_slug, c_tag, desc = "costco", "shopping", "Costco Wholesale bulk club supply center."
+        elif "staples" in brand or "staples" in name_lower:
+            b_slug, c_tag, desc = "staples", "shopping", "Staples office supplies, tech, and travel print services node."
+        elif "ups store" in brand or "ups store" in name_lower or "the ups store" in brand:
+            b_slug, c_tag, desc = "upsstore", "shopping", "The UPS Store commercial parcel shipping and pack service node."
 
-            # Dynamic classification matching
-            if "chick-fil-a" in brand_raw or "chick-fil-a" in name_raw:
-                b_slug = "chickfila"
-            elif "mcdonald" in brand_raw or "mcdonald" in name_raw:
-                b_slug = "mcdonalds"
-            elif "chipotle" in brand_raw or "chipotle" in name_raw:
-                b_slug = "chipotle"
-            elif "starbucks" in brand_raw or "starbucks" in name_raw:
-                b_slug = "starbucks"
-            elif "wendy" in brand_raw or "wendy" in name_raw:
-                b_slug, desc = "wendys", "Fast-food chain known for square beef burgers, sea-salt fries, and Frosty desserts."
-            elif "raising cane" in brand_raw or "raising cane" in name_raw:
-                b_slug = "raisingcanes"
-            elif "jersey mike" in brand_raw or "jersey mike" in name_raw:
-                b_slug = "jerseymikes"
+        # Infrastructure & Recreation Mappings
+        elif highway == "rest_area":
+            b_slug, c_tag, desc = "highway_rest", "highway", "State-maintained highway rest area."
+        elif amenity == "toilets":
+            b_slug, c_tag, desc = "highway_toilets", "highway", "Public corridor sanitation restroom facility."
+        elif amenity == "hospital":
+            b_slug, c_tag, desc = "hospital", "medical", "Major emergency medical care facility hospital."
+        elif amenity == "veterinary":
+            b_slug, c_tag, desc = "veterinary", "medical", "Professional veterinary medical clinic facility."
+        elif tags.get('boundary', '').lower() == 'national_park' or leisure == 'national_park':
+            b_slug, c_tag, desc = "national_park", "parks", "National park protected preserve boundary area."
+        elif leisure == "nature_reserve":
+            b_slug, c_tag, desc = "nature_reserve", "parks", "Protected environmental nature reserve area."
+        elif tourism == "attraction":
+            b_slug, c_tag, desc = "attraction", "parks", "Public tourist attraction point of interest."
+        elif tourism == "viewpoint":
+            b_slug, c_tag, desc = "tourism_viewpoint", "tourism", "Scenic overlook viewpoint vantage spot."
+        elif leisure == "dog_park" or tags.get('dog', '').lower() == 'leashed':
+            b_slug, c_tag, desc = "tourism_dogpark", "tourism", "Fenced public dog park community facility."
+        elif leisure == "playground":
+            if tags.get('access', '').lower() in ['private', 'no', 'customers', 'residents', 'hoa']:
+                return
+            if tags.get('amenity') == 'school' or tags.get('landuse') == 'education':
+                return
+            meta = f"{name} {tags.get('operator', '')} {tags.get('description', '')}".lower()
+            if any(kw in meta for kw in COMBINED_PLAYGROUND_BLACKLIST):
+                return
+            if not any(kw in meta for kw in PUBLIC_PARK_KEYWORDS):
+                return
+            b_slug, c_tag, desc = "playground", "playground", "Secular public playground asset in verified municipal park zones."
+            if not name: name = "Public Park Playground"
 
-            if key in ["sheetz", "bucees", "wawa", "circlek"]:
-                c_tag = "gas"
-                b_slug = key
-            elif key == "rest_stops":
-                b_slug, c_tag, desc = "rest_stop", "travel", "State-maintained highway rest area."
-            elif key == "playgrounds":
-                # Strict Playground Filtering Rules
-                access_val = tags.get('access', '').lower()
-                if access_val in ['private', 'no', 'customers', 'permissive', 'residents', 'delivery']:
-                    continue # Skip private infrastructure completely
-                if tags.get('amenity') == 'school' or tags.get('landuse') == 'education':
-                    continue # Skip explicit school boundaries
-                    
-                meta_text = f"{name} {tags.get('operator', '')} {tags.get('description', '')} {tags.get('site', '')}".lower()
-                
-                if any(keyword in meta_text for keyword in COMBINED_PLAYGROUND_BLACKLIST):
-                    continue # Filter school/private/church affiliations
-                    
-                if not any(kw in meta_text for kw in PUBLIC_PARK_KEYWORDS):
-                    continue # Ensure it resides in a secular, public park space
-                    
-                b_slug, c_tag, desc = "playground", "recreation", "Public community playground facility located in a public park space with free parking access."
+        if not b_slug:
+            return
 
-            temp_record = {"lat": round(lat, 4), "lon": round(lon, 4), "b": b_slug}
-            record_key = generate_unique_key(temp_record)
-            
-            if record_key in seen_keys:
-                continue
+        record_key = f"{round(lat, 4)}_{round(lon, 4)}_{b_slug}"
+        if record_key in self.seen_keys:
+            return
 
-            record = {
-                "lat": round(lat, 4),
-                "lon": round(lon, 4),
-                "n": name,
-                "b": b_slug,
-                "c": c_tag
-            }
+        record = {
+            "lat": round(lat, 4),
+            "lon": round(lon, 4),
+            "n": name or f"{b_slug.replace('_', ' ').title()} Spot",
+            "b": b_slug,
+            "c": c_tag,
+            "h": tags.get('opening_hours', '24/7' if c_tag in ['gas', 'highway'] else 'Varies'),
+            "d": desc
+        }
 
-            if c_tag == "gas":
-                record["g87"] = 1
-                record["g88"] = 1 if b_slug == "sheetz" else 0
+        if c_tag == "gas":
+            record["g87"] = 1
+            record["g88"] = 1 if b_slug == "sheetz" else 0
 
-            record["h"] = tags.get('opening_hours', '24/7' if c_tag in ['gas', 'travel'] else 'Varies')
-            record["d"] = desc
-            
-            existing_records.append(record)
-            seen_keys.add(record_key)
-            new_additions_count += 1
-        
-        time.sleep(5)
+        self.output_records.append(record)
+        self.seen_keys.add(record_key)
 
-    # Step 3: Commit structural output arrays
-    try:
-        with open(output_filename, "w", encoding="utf-8") as file:
-            json.dump(existing_records, file, indent=2)
-        print(f"\nProcessing Complete!")
-        print(f"-> Added {new_additions_count} new unique locations (including Wendy's).")
-        print(f"-> Total valid records now inside '{output_filename}': {len(existing_records)}")
-    except Exception as e:
-        print(f"![CRITICAL] Failed writing out data: {e}")
-        sys.exit(1)
+    def node(self, n):
+        if n.tags:
+            try: self.process_node_tags(dict(n.tags), n.location.lat, n.location.lon)
+            except osmium.InvalidLocationError: pass
 
-    if failed_categories:
-        print(f"\n![ALERT] Complete structural failures for: {failed_categories}")
-        sys.exit(1)
+    def way(self, w):
+        if w.tags and len(w.nodes) > 0:
+            try: self.process_node_tags(dict(w.tags), w.nodes[0].lat, w.nodes[0].lon)
+            except osmium.InvalidLocationError: pass
+
+    def area(self, a):
+        if a.tags:
+            try:
+                for ring in a.outer_rings():
+                    for node in ring:
+                        self.process_node_tags(dict(a.tags), node.lat, node.lon)
+                        return 
+            except:
+                pass
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) < 2:
+        print("![ERROR] Missing target state name configuration parameter.")
+        sys.exit(1)
+        
+    state_slug = sys.argv[1]
+    os.makedirs("data", exist_ok=True)
+    output_filename = f"data/{state_slug}_brands.json"
+    pbf_target = "region_map.osm.pbf"
+
+    if not os.path.exists(pbf_target):
+        print(f"![ERROR] Local file layers missing for state slug: {state_slug}")
+        sys.exit(1)
+
+    extractor = NationalPOIExtractor()
+    extractor.load_existing_dataset(output_filename)
+    
+    print(f"Running high-speed local stream extractor loop for state: {state_slug}...")
+    extractor.apply_file(pbf_target, locations=True)
+
+    with open(output_filename, "w", encoding="utf-8") as file:
+        json.dump(extractor.output_records, file, indent=2)
+    print(f"Success! {state_slug} data sync complete. Rows saved: {len(extractor.output_records)}")
