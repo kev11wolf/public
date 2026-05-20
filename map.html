@@ -1009,6 +1009,61 @@
                 }
             });
         });
+
+        // ====================================================================
+// --- PHASE 8: CLOUD REPOSITORY FAVORITES MANAGEMENT & SYNC PIPELINE --
+// ====================================================================
+async function loadMasterRepoFavoritesOnBoot() {
+    try {
+        // Reads from master file tracking arrays to isolate pinned location references
+        const response = await fetch('us_brands.json');
+        if (!response.ok) return;
+        const allLocations = await response.json();
+        
+        // Filter elements out that carry the explicit backend repository favorite parameter flag
+        repoFavoritesMemory = allLocations.filter(item => item.is_repo_fav === true);
+        console.log(`Successfully mapped ${repoFavoritesMemory.length} global favorites from repository.`);
+        
+        // Render favorites star visuals directly onto the base layers layout map
+        renderGlobalPermanentStars();
+    } catch (err) {
+        console.warn("Global repository sync baseline file deferred on boot initialization pass: ", err);
+    }
+}
+
+function launchAutomatedGitHubSyncPipeline() {
+    let localStarredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+    
+    if (localStarredList.length === 0) {
+        alert("Your local device favorites list is currently empty. Star markers first before committing data.");
+        return;
+    }
+    
+    if (confirm(`Export ${localStarredList.length} locally pinned favorites to your permanent global GitHub repository storage layers?`)) {
+        updateInlineStatus("Formatting cloud packaging container ticket payload variables...", true);
+        
+        // Sanitize coordinate decimal limits to clean tracking schema properties
+        const filteredPayload = localStarredList.map(item => ({
+            lat: roundCoords(item.lat),
+            lon: roundCoords(item.lon),
+            n: String(item.name),
+            b: String(item.brand),
+            c: String(item.category),
+            h: String(item.hours),
+            d: String(item.desc)
+        }));
+        
+        const targetRepositoryPath = "kev11wolf/public"; // Maps to your personal repo layout space
+        const formattedJSONString = JSON.stringify(filteredPayload, null, 2);
+        
+        // Build automated tracking ticket URL targeting the GitHub Native Issues ingestion array routing hook
+        const issueSubmissionUrl = `https://github.com/${targetRepositoryPath}/issues/new?title=DATA_SAVE_FAVORITES_BATCH&body=${encodeURIComponent("```json\n" + formattedJSONString + "\n```")}`;
+        
+        triggerToast("Cloud synchronizer package framed! Submit the opened issue tracking page.");
+        window.open(issueSubmissionUrl, '_blank');
+        updateInlineStatus("Synchronization pipeline deferred to active submission tab.");
+    }
+}
     </script>
 </body>
 </html>
