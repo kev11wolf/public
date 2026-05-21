@@ -17,7 +17,6 @@ SCHOOL_PRIVATE_BLACKLIST = [
 ]
 
 COMBINED_PLAYGROUND_BLACKLIST = RELIGIOUS_BLACKLIST + SCHOOL_PRIVATE_BLACKLIST
-PUBLIC_PARK_KEYWORDS = ['park', 'public', 'community', 'recreation', 'civic', 'city', 'town', 'county', 'municipal']
 
 class NationalPOIExtractor(osmium.SimpleHandler):
     def __init__(self):
@@ -45,6 +44,60 @@ class NationalPOIExtractor(osmium.SimpleHandler):
             except Exception as e:
                 print(f"![WARN] Baseline parsing skipped safely: {e}")
 
+    def assemble_dynamic_description(self, tags, b_slug, c_tag, base_desc):
+        """Assembles available sub-tags into a concise, high-density metadata pipeline string."""
+        pieces = []
+        if base_desc:
+            pieces.append(base_desc)
+        
+        # Pull core high-value operational parameters
+        operator = tags.get('operator')
+        if operator:
+            pieces.append(f"Operator: {operator}")
+            
+        fee = tags.get('fee', '').lower()
+        if fee == 'yes':
+            pieces.append("Paid Entry 💵")
+        elif fee == 'no':
+            pieces.append("Free Entry 🆓")
+
+        drive_through = tags.get('drive_through', '').lower()
+        if drive_through == 'yes':
+            pieces.append("Drive-Through Available 🚗")
+
+        # Context-dependent sub-tag extractions
+        if c_tag == "gas":
+            if tags.get('fuel:diesel') == 'yes' or tags.get('fuel:hgv_diesel') == 'yes':
+                pieces.append("⛽ Diesel")
+            if tags.get('convenience') == 'yes':
+                pieces.append("Convenience Market 🛒")
+
+        elif c_tag == "food":
+            cuisine = tags.get('cuisine')
+            if cuisine:
+                pieces.append(f"Cuisine: {cuisine.replace('_', ' ').title()}")
+            if tags.get('outdoor_seating') == 'yes':
+                pieces.append("Outdoor Seating 🪑")
+
+        elif c_tag in ["parks", "campground"]:
+            if tags.get('drinking_water') == 'yes':
+                pieces.append("Drinking Water 💧")
+            if tags.get('sanitary_dump_station') == 'yes':
+                pieces.append("RV Dump Station 🚾")
+            if tags.get('tents') == 'yes':
+                pieces.append("Tents Mapped ⛺")
+            if tags.get('caravans') == 'yes':
+                pieces.append("RVs/Caravans Allowed 🚐")
+
+        elif b_slug == "playground":
+            surface = tags.get('surface')
+            if surface:
+                pieces.append(f"Surface: {surface.replace('_', ' ').title()}")
+            if tags.get('lit') == 'yes':
+                pieces.append("Lighted Facilities 💡")
+
+        return " | ".join(pieces) if pieces else "Official verified corridor asset."
+
     def process_node_tags(self, tags, lat, lon):
         if not lat or not lon:
             return
@@ -58,130 +111,179 @@ class NationalPOIExtractor(osmium.SimpleHandler):
         tourism = tags.get('tourism', '').lower()
         shop = tags.get('shop', '').lower()
 
-        b_slug, c_tag, desc = None, "food", "Official location."
+        # DECOUPLED MATRIX: Separated conditional gates allow complex multi-use landmarks to resolve simultaneously
+        matches = []
 
-        # Food & Restaurant Mappings
+        # --- Sub-Block A: Food & Restaurant Profiles ---
         if "chick-fil-a" in brand or "chick-fil-a" in name_lower:
-            b_slug = "chickfila"
-        elif "mcdonald" in brand or "mcdonald" in name_lower:
-            b_slug = "mcdonalds"
-        elif "chipotle" in brand or "chipotle" in name_lower:
-            b_slug = "chipotle"
-        elif "starbucks" in brand or "starbucks" in name_lower:
-            b_slug = "starbucks"
-        elif "wendy" in brand or "wendy" in name_lower:
-            b_slug, desc = "wendys", "Official Wendy's fast food establishment."
-        elif "raising cane" in brand or "raising cane" in name_lower:
-            b_slug = "raisingcanes"
-        elif "jersey mike" in brand or "jersey mike" in name_lower:
-            b_slug = "jerseymikes"
-        elif "culver" in brand or "culver" in name_lower:
-            b_slug, desc = "culvers", "Official Culver's butterburgers & frozen custard facility."
-        elif "shake shack" in brand or "shake shack" in name_lower:
-            b_slug, desc = "shakeshack", "Official Shake Shack modern road-side burger stand."
-        elif "in-n-out" in brand or "in-n-out" in name_lower or "innout" in brand:
-            b_slug, desc = "innout", "Official In-N-Out Burger iconic fresh fast-food location."
-        elif "potbelly" in brand or "potbelly" in name_lower:
-            b_slug, desc = "potbelly", "Official Potbelly Sandwich Shop warm toasted sub shop."
+            matches.append(("chickfila", "food", "Official Chick-fil-A location."))
+        if "mcdonald" in brand or "mcdonald" in name_lower:
+            matches.append(("mcdonalds", "food", "Official McDonald's location."))
+        if "chipotle" in brand or "chipotle" in name_lower:
+            matches.append(("chipotle", "food", "Official Chipotle Mexican Grill."))
+        if "starbucks" in brand or "starbucks" in name_lower:
+            matches.append(("starbucks", "food", "Official Starbucks Coffee spot."))
+        if "wendy" in brand or "wendy" in name_lower:
+            matches.append(("wendys", "food", "Official Wendy's fast food facility."))
+        if "raising cane" in brand or "raising cane" in name_lower:
+            matches.append(("raisingcanes", "food", "Official Raising Cane's chicken fingers."))
+        if "jersey mike" in brand or "jersey mike" in name_lower:
+            matches.append(("jerseymikes", "food", "Official Jersey Mike's sub shop."))
+        if "culver" in brand or "culver" in name_lower:
+            matches.append(("culvers", "food", "Official Culver's fresh frozen custard location."))
+        if "shake shack" in brand or "shake shack" in name_lower:
+            matches.append(("shakeshack", "food", "Official Shake Shack roadside burger stand."))
+        if "in-n-out" in brand or "in-n-out" in name_lower or "innout" in brand:
+            matches.append(("innout", "food", "Official In-N-Out Burger location."))
+        if "potbelly" in brand or "potbelly" in name_lower:
+            matches.append(("potbelly", "food", "Official Potbelly Sandwich Shop."))
             
-        # Fuel Terminal Mappings
-        elif "sheetz" in brand or "sheetz" in name_lower:
-            b_slug, c_tag = "sheetz", "gas"
-        elif "buc-ee" in brand or "buc-ee" in name_lower:
-            b_slug, c_tag = "bucees", "gas"
-        elif "wawa" in brand or "wawa" in name_lower:
-            b_slug, c_tag = "wawa", "gas"
-        elif "circle k" in brand or "circle k" in name_lower:
-            b_slug, c_tag = "circlek", "gas"
+        # --- Sub-Block B: Fuel & Convenience Terminals ---
+        if "sheetz" in brand or "sheetz" in name_lower:
+            matches.append(("sheetz", "gas", "Official Sheetz travel center."))
+        if "buc-ee" in brand or "buc-ee" in name_lower:
+            matches.append(("bucees", "gas", "Official Buc-ee's mega travel center."))
+        if "wawa" in brand or "wawa" in name_lower:
+            matches.append(("wawa", "gas", "Official Wawa station."))
+        if "circle k" in brand or "circle k" in name_lower:
+            matches.append(("circlek", "gas", "Official Circle K storefront."))
             
-        # Retail & Shopping Supply Mappings (New Additions Layer)
-        elif "walmart" in brand or "walmart" in name_lower:
-            b_slug, c_tag, desc = "walmart", "shopping", "Walmart retail store location for travel supply re-provisioning."
-        elif "target" in brand or "target" in name_lower:
-            b_slug, c_tag, desc = "target", "shopping", "Target retail store location featuring snacks and essentials."
-        elif "dollar tree" in brand or "dollar tree" in name_lower:
-            b_slug, c_tag, desc = "dollartree", "shopping", "Dollar Tree discount convenience shopping hub."
-        elif "costco" in brand or "costco" in name_lower:
-            b_slug, c_tag, desc = "costco", "shopping", "Costco Wholesale bulk club supply center."
-        elif "staples" in brand or "staples" in name_lower:
-            b_slug, c_tag, desc = "staples", "shopping", "Staples office supplies, tech, and travel print services node."
-        elif "ups store" in brand or "ups store" in name_lower or "the ups store" in brand:
-            b_slug, c_tag, desc = "upsstore", "shopping", "The UPS Store commercial parcel shipping and pack service node."
+        # --- Sub-Block C: Retail Supply Logistics (Including Outdoor Hub Additions) ---
+        if "walmart" in brand or "walmart" in name_lower:
+            matches.append(("walmart", "shopping", "Walmart retail provision center."))
+        if "target" in brand or "target" in name_lower:
+            matches.append(("target", "shopping", "Target shopping hub."))
+        if "dollar tree" in brand or "dollar tree" in name_lower:
+            matches.append(("dollartree", "shopping", "Dollar Tree discount convenience location."))
+        if "costco" in brand or "costco" in name_lower:
+            matches.append(("costco", "shopping", "Costco Wholesale membership hub."))
+        if "staples" in brand or "staples" in name_lower:
+            matches.append(("staples", "shopping", "Staples business copy center."))
+        if "ups store" in brand or "ups store" in name_lower or "the ups store" in brand:
+            matches.append(("upsstore", "shopping", "The UPS Store processing terminal."))
+        if "bass pro" in brand or "bass pro" in name_lower or "cabela" in brand or "cabela" in name_lower:
+            matches.append(("basspro", "shopping", "Bass Pro Shops / Cabela's outfitters showroom."))
 
-        # Infrastructure & Recreation Mappings
-        elif highway == "rest_area":
-            b_slug, c_tag, desc = "highway_rest", "highway", "State-maintained highway rest area."
-        elif amenity == "toilets":
-            b_slug, c_tag, desc = "highway_toilets", "highway", "Public corridor sanitation restroom facility."
-        elif amenity == "hospital":
-            b_slug, c_tag, desc = "hospital", "medical", "Major emergency medical care facility hospital."
-        elif amenity == "veterinary":
-            b_slug, c_tag, desc = "veterinary", "medical", "Professional veterinary medical clinic facility."
-        elif tags.get('boundary', '').lower() == 'national_park' or leisure == 'national_park':
-            b_slug, c_tag, desc = "national_park", "parks", "National park protected preserve boundary area."
-        elif leisure == "nature_reserve":
-            b_slug, c_tag, desc = "nature_reserve", "parks", "Protected environmental nature reserve area."
-        elif tourism == "attraction":
-            b_slug, c_tag, desc = "attraction", "parks", "Public tourist attraction point of interest."
-        elif tourism == "viewpoint":
-            b_slug, c_tag, desc = "tourism_viewpoint", "tourism", "Scenic overlook viewpoint vantage spot."
-        elif leisure == "dog_park" or tags.get('dog', '').lower() == 'leashed':
-            b_slug, c_tag, desc = "tourism_dogpark", "tourism", "Fenced public dog park community facility."
-        elif leisure == "playground":
-            if tags.get('access', '').lower() in ['private', 'no', 'customers', 'residents', 'hoa']:
-                return
-            if tags.get('amenity') == 'school' or tags.get('landuse') == 'education':
-                return
-            meta = f"{name} {tags.get('operator', '')} {tags.get('description', '')}".lower()
-            if any(kw in meta for kw in COMBINED_PLAYGROUND_BLACKLIST):
-                return
-            if not any(kw in meta for kw in PUBLIC_PARK_KEYWORDS):
-                return
-            b_slug, c_tag, desc = "playground", "playground", "Secular public playground asset in verified municipal park zones."
-            if not name: name = "Public Park Playground"
+        # --- Sub-Block D: Infrastructure, Recreation, & Campgrounds ---
+        if highway == "rest_area":
+            matches.append(("highway_rest", "highway", "State-maintained highway rest area."))
+        if amenity == "toilets":
+            matches.append(("highway_toilets", "highway", "Public highway sanitation restroom facility."))
+        if amenity == "hospital":
+            matches.append(("hospital", "medical", "Major medical care emergency hospital."))
+        if amenity == "veterinary":
+            matches.append(("veterinary", "medical", "Professional veterinary medical clinic."))
+        if tags.get('boundary', '').lower() == 'national_park' or leisure == 'national_park' or tags.get('boundary', '').lower() == 'protected_area':
+            matches.append(("national_park", "parks", "National park protected preserve boundary."))
+        if leisure == "nature_reserve" or leisure == "park" or tags.get('landuse', '').lower() == 'recreation_ground':
+            matches.append(("nature_reserve", "parks", "Protected nature preserve or public green space."))
+        if tourism == "attraction":
+            matches.append(("attraction", "parks", "Public tourist attraction point."))
+        if tourism == "viewpoint":
+            matches.append(("tourism_viewpoint", "tourism", "Scenic overlook viewpoint vantage point."))
+        if leisure == "dog_park" or tags.get('dog', '').lower() == 'leashed':
+            matches.append(("tourism_dogpark", "tourism", "Fenced public dog park facility."))
+        
+        # INTEGRATED: Added comprehensive campsite capturing hooks matching public and private frameworks
+        if tourism in ["camp_site", "caravan_site"] or tags.get('landuse', '').lower() == 'camp_site':
+            matches.append(("campground", "campground", "Verified campground outdoor hospitality property."))
+        
+        # FIXED: Removed text keyword playground constraints. Relies on structured logical exclusions to block noise
+        if leisure == "playground":
+            access_val = tags.get('access', '').lower()
+            amenity_val = tags.get('amenity', '').lower()
+            landuse_val = tags.get('landuse', '').lower()
+            
+            if access_val not in ['private', 'no', 'customers', 'residents', 'hoa'] and amenity_val != 'school' and landuse_val != 'education':
+                meta = f"{name} {tags.get('operator', '')} {tags.get('description', '')}".lower()
+                if not any(kw in meta for kw in COMBINED_PLAYGROUND_BLACKLIST):
+                    matches.append(("playground", "playground", "Public recreation playground area asset."))
 
-        if not b_slug:
-            return
+        # --- Committing and Filtering Execution Layer ---
+        for b_slug, c_tag, base_desc in matches:
+            record_key = f"{round(lat, 4)}_{round(lon, 4)}_{b_slug}"
+            if record_key in self.seen_keys:
+                continue
 
-        record_key = f"{round(lat, 4)}_{round(lon, 4)}_{b_slug}"
-        if record_key in self.seen_keys:
-            return
+            # Context-driven auto-naming defaults
+            rec_name = name
+            if not rec_name:
+                if b_slug == "playground":
+                    rec_name = "Public Park Playground"
+                elif b_slug == "campground":
+                    rec_name = "Public/Private Campground Property"
+                elif b_slug in ["nature_reserve", "national_park"]:
+                    rec_name = "Public Nature Preserve Area"
+                else:
+                    rec_name = f"{b_slug.replace('_', ' ').title()} Spot"
 
-        record = {
-            "lat": round(lat, 4),
-            "lon": round(lon, 4),
-            "n": name or f"{b_slug.replace('_', ' ').title()} Spot",
-            "b": b_slug,
-            "c": c_tag,
-            "h": tags.get('opening_hours', '24/7' if c_tag in ['gas', 'highway'] else 'Varies'),
-            "d": desc
-        }
+            # INTEGRATED: Formats description strings dynamically by invoking the Metadata Assembly module
+            final_description = self.assemble_dynamic_description(tags, b_slug, c_tag, base_desc)
 
-        if c_tag == "gas":
-            record["g87"] = 1
-            record["g88"] = 1 if b_slug == "sheetz" else 0
+            record = {
+                "lat": round(lat, 4),
+                "lon": round(lon, 4),
+                "n": rec_name,
+                "b": b_slug,
+                "c": c_tag,
+                "h": tags.get('opening_hours', '24/7' if c_tag in ['gas', 'highway'] else 'Varies'),
+                "d": final_description
+            }
 
-        self.output_records.append(record)
-        self.seen_keys.add(record_key)
+            if c_tag == "gas":
+                record["g87"] = 1
+                record["g88"] = 1 if b_slug == "sheetz" else 0
 
+            self.output_records.append(record)
+            self.seen_keys.add(record_key)
+
+    # =====================================================================
+    # --- PHASE 2: TRUE RADIAL GEOMETRIC CENTROID PARSING OVERHAULS -------
+    # =====================================================================
     def node(self, n):
         if n.tags:
-            try: self.process_node_tags(dict(n.tags), n.location.lat, n.location.lon)
-            except osmium.InvalidLocationError: pass
+            try: 
+                self.process_node_tags(dict(n.tags), n.location.lat, n.location.lon)
+            except osmium.InvalidLocationError: 
+                pass
 
+    # FIXED: Replaced raw indexing fallback with linear center computations
     def way(self, w):
         if w.tags and len(w.nodes) > 0:
-            try: self.process_node_tags(dict(w.tags), w.nodes[0].lat, w.nodes[0].lon)
-            except osmium.InvalidLocationError: pass
+            try:
+                lats = []
+                lons = []
+                for node in w.nodes:
+                    try:
+                        lats.append(node.lat)
+                        lons.append(node.lon)
+                    except osmium.InvalidLocationError:
+                        continue
+                if lats and lons:
+                    centroid_lat = sum(lats) / len(lats)
+                    centroid_lon = sum(lons) / len(lons)
+                    self.process_node_tags(dict(w.tags), centroid_lat, centroid_lon)
+            except Exception:
+                pass
 
+    # FIXED: Resolved layout break loop scopes to compile polygonal areas accurately
     def area(self, a):
         if a.tags:
             try:
+                lats = []
+                lons = []
                 for ring in a.outer_rings():
                     for node in ring:
-                        self.process_node_tags(dict(a.tags), node.lat, node.lon)
-                        return 
-            except:
+                        try:
+                            lats.append(node.lat)
+                            lons.append(node.lon)
+                        except osmium.InvalidLocationError:
+                            continue
+                if lats and lons:
+                    centroid_lat = sum(lats) / len(lats)
+                    centroid_lon = sum(lons) / len(lons)
+                    self.process_node_tags(dict(a.tags), centroid_lat, centroid_lon)
+            except Exception:
                 pass
 
 if __name__ == "__main__":
