@@ -119,14 +119,13 @@
 
     <script>
         // =====================================================================
-        // --- PHASE 1: FIXED VARIABLE ENGINE CORE INITIALIZATIONS ------------
+        // --- PHASE 1: RE-HOISTED GLOBAL VARIABLE & ALLOCATION POOLS ---------
         // =====================================================================
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
         const autocompleteQueryMemoryCache = new Map(); 
         let mathWorker = null; 
         let routingControl = null;
         
-        // RE-ALLOCATION POOLS: Added mapping containers to eliminate ReferenceErrors
         let map = null;
         let mapLayersPool = {};
         let favoritesLayerGroup = null;
@@ -205,7 +204,7 @@
             jerseymikes: { label: '🐖', bg: 'bg-blue-800 border-blue-400 text-white', name: "Jersey Mike's", img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
             culvers: { label: '🍦', bg: 'bg-blue-600 border-blue-300 text-white', name: "Culver's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
             shakeshack: { label: '🍔', bg: 'bg-green-700 border-green-400 text-white', name: 'Shake Shack', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
-            innout: { label: '🌴', bg: 'bg-yellow-400 border-red-600 text-zinc-955', name: 'In-N-Out Burger', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
+            innout: { label: '🌴', bg: 'bg-yellow-400 border-red-600 text-zinc-950', name: 'In-N-Out Burger', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
             potbelly: { label: '🥪', bg: 'bg-orange-700 border-orange-400 text-white', name: 'Potbelly', img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
             parks: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Parks & Attractions', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
             attraction: { label: '🎡', bg: 'bg-purple-600 border-purple-300 text-white', name: 'Tourist Attraction', img: 'https://images.unsplash.com/photo-1473163928189-364b2c4e1135?auto=format&fit=crop&w=300&q=80' },
@@ -420,36 +419,61 @@
             return map.getCenter();
         }
 
-        // --- HOISTED Utilities: Added missing infrastructure runtime handlers ---
-        function loadMasterRepoFavoritesOnBoot() {
+        // --- UPDATED CONFIG IMPLEMENTATIONS: Pulling directly from live remote GitHub repository ---
+        async function loadMasterRepoFavoritesOnBoot() {
             try {
+                updateInlineStatus("Fetching dynamic favorites configuration from repository...", true);
+                const response = await fetch('https://raw.githubusercontent.com/kev11wolf/public/main/favorites.json', { cache: 'no-store' });
+                if (response.ok) {
+                    repoFavoritesMemory = await response.json();
+                    renderGlobalPermanentStars();
+                    updateInlineStatus("Loaded live favorites from GitHub repository.");
+                } else {
+                    throw new Error("Repository path inaccessible");
+                }
+            } catch (err) {
+                console.warn("GitHub fetch unavailable, reverting to local layout memory cache.", err);
                 const cached = localStorage.getItem('repo_favorites_memory');
                 repoFavoritesMemory = cached ? JSON.parse(cached) : [];
                 renderGlobalPermanentStars();
-                updateInlineStatus("Loaded local profile configuration structures.");
-            } catch (err) {
-                repoFavoritesMemory = [];
+                updateInlineStatus("Loaded local profile configuration fallbacks.");
             }
         }
 
+        // --- UPDATED SAVE FUNCTION: Preps and copies localized stars, then forks a new interactive browser tab ---
         function launchAutomatedGitHubSyncPipeline() {
-            triggerToast("GitHub Pipeline Synchronization initialized.");
-            localStorage.setItem('repo_favorites_memory', JSON.stringify(repoFavoritesMemory));
-            updateInlineStatus("Data configurations fully exported into cached master state layers.");
+            const currentPinnedStars = localStorage.getItem('starred_pois') || '[]';
+            let formattedDataPayload = "";
+            
+            try {
+                formattedDataPayload = JSON.stringify(JSON.parse(currentPinnedStars), null, 4);
+            } catch (e) {
+                formattedDataPayload = currentPinnedStars;
+            }
+
+            navigator.clipboard.writeText(formattedDataPayload).then(() => {
+                triggerToast("Favorites copied to clipboard! Opening GitHub staging area...", 4000);
+                setTimeout(() => {
+                    window.open("https://github.com/kev11wolf/public/edit/main/favorites.json", "_blank");
+                }, 400);
+                localStorage.setItem('repo_favorites_memory', currentPinnedStars);
+            }).catch(err => {
+                console.error("System clipboard write block detected: ", err);
+                alert("Failed to write to clipboard automatically. Please manually export your profile stars.");
+            });
         }
 
         // =====================================================================
-        // --- PHASE 3: MAP CANVAS MOUNT SETUP IMPLEMENTATIONS ----------------
+        // --- PHASE 3: MAP TILES CANVAS CORE SETUP DEFINITIONS ----------------
         // =====================================================================
-        // FIXED: Initialized the map instance and attached layer groups safely
         map = L.map('map', { zoomControl: false }).setView(MAP_INITIAL_CENTER, 5);
 
         mapLayersPool = {
             light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+                attribution: '© OpenStreetMap contributors © CARTO'
             }),
             dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+                attribution: '© OpenStreetMap contributors © CARTO'
             })
         };
 
@@ -519,7 +543,6 @@
         const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
         mathWorker = new Worker(URL.createObjectURL(blobObj));
 
-        // FIXED: Re-integrated the vital Web Worker parsing event cycle
         mathWorker.onmessage = function(e) {
             const { sortedMatches } = e.data;
             poiClusterGroup.clearLayers();
@@ -542,7 +565,6 @@
             updateInlineStatus(`Corridor calculations ready: [Mapped ${sortedMatches.length} Facilities]`);
         };
 
-        // Initialize Router Core Engine Configuration Layouts
         routingControl = L.Routing.control({
             show: false, 
             addWaypoints: true, 
@@ -606,9 +628,7 @@
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-                
-                // FIXED: Repaired malformed template literal syntax on string coordinates
-                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+                const streetViewUrl = `https://www.google.com/maps/?q=&layer=c&cbll=${lat},${lon}`;
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -673,13 +693,11 @@
 
             let fuelBadgeHtml = '';
             if (visualCatKey === 'gas' || el.category === 'gas') {
-                fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
+                fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-955 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
             }
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-            
-            // FIXED: Repaired broken index interpolation typo signature
-            const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+            const streetViewUrl = `https://www.google.com/maps/?q=&layer=c&cbll=${lat},${lon}`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
@@ -894,7 +912,6 @@
             }
         });
 
-        // FIXED: Attached an active dynamic delegation listener to process local pinning and repo drops inside active popups
         map.on('popupopen', function(e) {
             const containerNode = e.popup.getElement();
             const starToggle = containerNode.querySelector('.star-toggle-trigger');
@@ -907,7 +924,7 @@
                     
                     if (matchIndex > -1) {
                         localStarred.splice(matchIndex, 1);
-                        triggerToast("Removed from profile configurations.");
+                        triggerToast("Removed from profile stars.");
                     } else {
                         localStarred.push({
                             lat: lat, lon: lon,
@@ -931,8 +948,12 @@
                     const lat = parseFloat(this.dataset.lat);
                     const lon = parseFloat(this.dataset.lon);
                     repoFavoritesMemory = repoFavoritesMemory.filter(r => !(roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon)));
-                    localStorage.setItem('repo_favorites_memory', JSON.stringify(repoFavoritesMemory));
-                    triggerToast("Dropped location item from runtime scopes.");
+                    
+                    let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+                    localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
+                    localStorage.setItem('starred_pois', JSON.stringify(localStarred));
+                    
+                    triggerToast("Dropped location item from repository matrix.");
                     renderGlobalPermanentStars();
                     map.closePopup();
                 });
@@ -1014,8 +1035,7 @@
                     L.DomEvent.disableClickPropagation(element); L.DomEvent.disableScrollPropagation(element);
                 }
             });
-            
-            // Map movement handling loop hooks
+
             map.on('movestart zoomstart dragstart', triggerAutoCenterDelay);
             map.on('zoomend moveend', updateBufferVisualizerWeight);
         });
