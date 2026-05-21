@@ -50,7 +50,6 @@ class NationalPOIExtractor(osmium.SimpleHandler):
         if base_desc:
             pieces.append(base_desc)
         
-        # Pull core high-value operational parameters
         operator = tags.get('operator')
         if operator:
             pieces.append(f"Operator: {operator}")
@@ -65,7 +64,6 @@ class NationalPOIExtractor(osmium.SimpleHandler):
         if drive_through == 'yes':
             pieces.append("Drive-Through Available 🚗")
 
-        # Context-dependent sub-tag extractions
         if c_tag == "gas":
             if tags.get('fuel:diesel') == 'yes' or tags.get('fuel:hgv_diesel') == 'yes':
                 pieces.append("⛽ Diesel")
@@ -103,65 +101,69 @@ class NationalPOIExtractor(osmium.SimpleHandler):
             return
 
         name = tags.get('name', '')
-        brand = tags.get('brand', '').lower()
         name_lower = name.lower()
         leisure = tags.get('leisure', '').lower()
         highway = tags.get('highway', '').lower()
         amenity = tags.get('amenity', '').lower()
         tourism = tags.get('tourism', '').lower()
-        shop = tags.get('shop', '').lower()
 
-        # DECOUPLED MATRIX: Separated conditional gates allow complex multi-use landmarks to resolve simultaneously
+        # FIXED: Generates an ultra-aggressive serialized string across all keys and values to stop naming tag omissions
+        all_tags_serialized = " ".join([f"{k}={v}" for k, v in tags.items()]).lower()
+
         matches = []
 
         # --- Sub-Block A: Food & Restaurant Profiles ---
-        if "chick-fil-a" in brand or "chick-fil-a" in name_lower:
+        if "chick-fil-a" in all_tags_serialized or "chickfila" in all_tags_serialized:
             matches.append(("chickfila", "food", "Official Chick-fil-A location."))
-        if "mcdonald" in brand or "mcdonald" in name_lower:
+        if "mcdonald" in all_tags_serialized:
             matches.append(("mcdonalds", "food", "Official McDonald's location."))
-        if "chipotle" in brand or "chipotle" in name_lower:
+        if "chipotle" in all_tags_serialized:
             matches.append(("chipotle", "food", "Official Chipotle Mexican Grill."))
-        if "starbucks" in brand or "starbucks" in name_lower:
+        if "starbucks" in all_tags_serialized:
             matches.append(("starbucks", "food", "Official Starbucks Coffee spot."))
-        if "wendy" in brand or "wendy" in name_lower:
+        if "wendy" in all_tags_serialized:
             matches.append(("wendys", "food", "Official Wendy's fast food facility."))
-        if "raising cane" in brand or "raising cane" in name_lower:
+        if "raising cane" in all_tags_serialized or "raisingcane" in all_tags_serialized:
             matches.append(("raisingcanes", "food", "Official Raising Cane's chicken fingers."))
-        if "jersey mike" in brand or "jersey mike" in name_lower:
+        if "jersey mike" in all_tags_serialized or "jerseymikes" in all_tags_serialized:
             matches.append(("jerseymikes", "food", "Official Jersey Mike's sub shop."))
-        if "culver" in brand or "culver" in name_lower:
+        if "culver" in all_tags_serialized:
             matches.append(("culvers", "food", "Official Culver's fresh frozen custard location."))
-        if "shake shack" in brand or "shake shack" in name_lower:
+        if "shake shack" in all_tags_serialized or "shakeshack" in all_tags_serialized:
             matches.append(("shakeshack", "food", "Official Shake Shack roadside burger stand."))
-        if "in-n-out" in brand or "in-n-out" in name_lower or "innout" in brand:
+        if "in-n-out" in all_tags_serialized or "innout" in all_tags_serialized:
             matches.append(("innout", "food", "Official In-N-Out Burger location."))
-        if "potbelly" in brand or "potbelly" in name_lower:
+        if "potbelly" in all_tags_serialized:
             matches.append(("potbelly", "food", "Official Potbelly Sandwich Shop."))
             
-        # --- Sub-Block B: Fuel & Convenience Terminals ---
-        if "sheetz" in brand or "sheetz" in name_lower:
+        # --- Sub-Block B: Fuel & Travel Terminals ---
+        if "sheetz" in all_tags_serialized:
             matches.append(("sheetz", "gas", "Official Sheetz travel center."))
-        if "buc-ee" in brand or "buc-ee" in name_lower:
+        if "buc-ee" in all_tags_serialized or "bucees" in all_tags_serialized:
             matches.append(("bucees", "gas", "Official Buc-ee's mega travel center."))
-        if "wawa" in brand or "wawa" in name_lower:
+        if "wawa" in all_tags_serialized:
             matches.append(("wawa", "gas", "Official Wawa station."))
-        if "circle k" in brand or "circle k" in name_lower:
+        if "circle k" in all_tags_serialized or "circlek" in all_tags_serialized:
             matches.append(("circlek", "gas", "Official Circle K storefront."))
             
-        # --- Sub-Block C: Retail Supply Logistics (Including Outdoor Hub Additions) ---
-        if "walmart" in brand or "walmart" in name_lower:
+        # --- Sub-Block C: Retail Supply Logistics (Fixed Target Omission Gates) ---
+        if "walmart" in all_tags_serialized:
             matches.append(("walmart", "shopping", "Walmart retail provision center."))
-        if "target" in brand or "target" in name_lower:
-            matches.append(("target", "shopping", "Target shopping hub."))
-        if "dollar tree" in brand or "dollar tree" in name_lower:
+        
+        # FIXED: Aggressive extraction check ensures Target retail assets pass while blocking archery/shooting ranges
+        if "target" in all_tags_serialized:
+            if not any(sport_kw in all_tags_serialized for sport_kw in ["shooting", "archery", "range", "club"]):
+                matches.append(("target", "shopping", "Target shopping hub."))
+                
+        if "dollar tree" in all_tags_serialized or "dollartree" in all_tags_serialized:
             matches.append(("dollartree", "shopping", "Dollar Tree discount convenience location."))
-        if "costco" in brand or "costco" in name_lower:
+        if "costco" in all_tags_serialized:
             matches.append(("costco", "shopping", "Costco Wholesale membership hub."))
-        if "staples" in brand or "staples" in name_lower:
+        if "staples" in all_tags_serialized:
             matches.append(("staples", "shopping", "Staples business copy center."))
-        if "ups store" in brand or "ups store" in name_lower or "the ups store" in brand:
+        if "ups store" in all_tags_serialized or "ups_store" in all_tags_serialized:
             matches.append(("upsstore", "shopping", "The UPS Store processing terminal."))
-        if "bass pro" in brand or "bass pro" in name_lower or "cabela" in brand or "cabela" in name_lower:
+        if "bass pro" in all_tags_serialized or "cabela" in all_tags_serialized:
             matches.append(("basspro", "shopping", "Bass Pro Shops / Cabela's outfitters showroom."))
 
         # --- Sub-Block D: Infrastructure, Recreation, & Campgrounds ---
@@ -183,12 +185,9 @@ class NationalPOIExtractor(osmium.SimpleHandler):
             matches.append(("tourism_viewpoint", "tourism", "Scenic overlook viewpoint vantage point."))
         if leisure == "dog_park" or tags.get('dog', '').lower() == 'leashed':
             matches.append(("tourism_dogpark", "tourism", "Fenced public dog park facility."))
-        
-        # INTEGRATED: Added comprehensive campsite capturing hooks matching public and private frameworks
         if tourism in ["camp_site", "caravan_site"] or tags.get('landuse', '').lower() == 'camp_site':
             matches.append(("campground", "campground", "Verified campground outdoor hospitality property."))
         
-        # FIXED: Removed text keyword playground constraints. Relies on structured logical exclusions to block noise
         if leisure == "playground":
             access_val = tags.get('access', '').lower()
             amenity_val = tags.get('amenity', '').lower()
@@ -199,13 +198,12 @@ class NationalPOIExtractor(osmium.SimpleHandler):
                 if not any(kw in meta for kw in COMBINED_PLAYGROUND_BLACKLIST):
                     matches.append(("playground", "playground", "Public recreation playground area asset."))
 
-        # --- Committing and Filtering Execution Layer ---
+        # --- Committing and Filtering Execution Loop ---
         for b_slug, c_tag, base_desc in matches:
             record_key = f"{round(lat, 4)}_{round(lon, 4)}_{b_slug}"
             if record_key in self.seen_keys:
                 continue
 
-            # Context-driven auto-naming defaults
             rec_name = name
             if not rec_name:
                 if b_slug == "playground":
@@ -217,7 +215,6 @@ class NationalPOIExtractor(osmium.SimpleHandler):
                 else:
                     rec_name = f"{b_slug.replace('_', ' ').title()} Spot"
 
-            # INTEGRATED: Formats description strings dynamically by invoking the Metadata Assembly module
             final_description = self.assemble_dynamic_description(tags, b_slug, c_tag, base_desc)
 
             record = {
@@ -247,7 +244,6 @@ class NationalPOIExtractor(osmium.SimpleHandler):
             except osmium.InvalidLocationError: 
                 pass
 
-    # FIXED: Replaced raw indexing fallback with linear center computations
     def way(self, w):
         if w.tags and len(w.nodes) > 0:
             try:
@@ -266,7 +262,6 @@ class NationalPOIExtractor(osmium.SimpleHandler):
             except Exception:
                 pass
 
-    # FIXED: Resolved layout break loop scopes to compile polygonal areas accurately
     def area(self, a):
         if a.tags:
             try:
@@ -304,7 +299,18 @@ if __name__ == "__main__":
     extractor.load_existing_dataset(output_filename)
     
     print(f"Running high-speed local stream extractor loop for state: {state_slug}...")
-    extractor.apply_file(pbf_target, locations=True)
+    
+    # FIXED: Re-architected standard executor blocks to bind an active Location Cache and AreaManager 
+    # to synthesize and extract multipolygon corporate structures from relation elements cleanly
+    src_reader = osmium.io.Reader(pbf_target)
+    location_index = osmium.index.create_index("flex_mem")
+    location_handler = osmium.NodeLocationsHandler(location_index)
+    location_handler.pre_node_ways = True
+    
+    area_assembler = osmium.area.AreaManager()
+    
+    osmium.apply(src_reader, location_handler, area_assembler, extractor)
+    src_reader.close()
 
     with open(output_filename, "w", encoding="utf-8") as file:
         json.dump(extractor.output_records, file, indent=2)
