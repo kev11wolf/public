@@ -89,6 +89,7 @@
             <button data-cat="food" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
             <button data-cat="shopping" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛒 Shopping & Services</button>
             <button data-cat="parks" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Parks & Attractions</button>
+            <button data-cat="campground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛺ Campgrounds</button>
             <button data-cat="medical" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏥 Emergency & Med</button>
             <button data-cat="highway" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏢 Highway Amenities</button>
             <button data-cat="tourism" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
@@ -104,7 +105,7 @@
     </div>
 
     <div class="absolute bottom-24 right-4 z-10 flex flex-col gap-2 items-center">
-        <button id="theme-toggle-btn" class="bg-white/95 backdrop-blur-md border border-gray-200 text-zinc-900 font-bold rounded-xl shadow-xl text-xs px-2.5 h-11 flex items-center justify-center active:scale-95 transition-all select-none cursor-pointer whitespace-nowrap">🌙 Dark</button>
+        <button id="theme-toggle-btn" class="bg-white/95 backdrop-blur-md border border-gray-200 text-zinc-900 font-bold rounded-xl shadow-xl text-xs px-2.5 h-11 flex items-center justify-center active:scale-95 transition-all select-none cursor-pointer whitespace-nowrap">🌙 Mode</button>
         <button id="zoom-in-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">＋</button>
         <button id="zoom-out-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">－</button>
     </div>
@@ -195,6 +196,7 @@
             costco: { label: '📦', bg: 'bg-blue-800 border-blue-400 text-white', name: 'Costco Wholesale', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
             staples: { label: '📎', bg: 'bg-red-700 border-red-400 text-white', name: 'Staples', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
             upsstore: { label: '📦', bg: 'bg-amber-800 border-amber-600 text-white', name: 'The UPS Store', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            basspro: { label: '🏹', bg: 'bg-green-700 border-green-500 text-white', name: "Bass Pro / Cabela's", img: 'https://images.unsplash.com/photo-1496062031456-07b8f1620322?auto=format&fit=crop&w=300&q=80' },
             chipotle: { label: '🌯', bg: 'bg-amber-800 border-amber-500 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a0847685?auto=format&fit=crop&w=300&q=80' },
             starbucks: { label: '☕', bg: 'bg-emerald-800 border-emerald-500 text-white', name: 'Starbucks Coffee', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80' },
             mcdonalds: { label: '🍔', bg: 'bg-yellow-500 border-yellow-300 text-zinc-900', name: "McDonald's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
@@ -207,6 +209,7 @@
             innout: { label: '🌴', bg: 'bg-yellow-400 border-red-600 text-zinc-950', name: 'In-N-Out Burger', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
             potbelly: { label: '🥪', bg: 'bg-orange-700 border-orange-400 text-white', name: 'Potbelly', img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
             parks: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Parks & Attractions', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
+            campground: { label: '⛺', bg: 'bg-stone-700 border-stone-500 text-white', name: 'Campground / RV Park', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
             attraction: { label: '🎡', bg: 'bg-purple-600 border-purple-300 text-white', name: 'Tourist Attraction', img: 'https://images.unsplash.com/photo-1473163928189-364b2c4e1135?auto=format&fit=crop&w=300&q=80' },
             national_park: { label: '🏞️', bg: 'bg-emerald-800 border-emerald-600 text-white', name: 'National Park', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
             nature_reserve: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Nature Reserve', img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=300&q=80' },
@@ -226,6 +229,7 @@
             "culvers": "Culver's", "shakeshack": "Shake Shack", "innout": "In-N-Out", "potbelly": "Potbelly",
             "walmart": "Walmart Supercenter", "target": "Target Store Hub", "costco": "Costco Wholesale", 
             "dollartree": "Dollar Tree Discount", "staples": "Staples Office Business", "upsstore": "UPS Shipping Center",
+            "basspro": "Bass Pro Shops / Cabela's", "campground": "Campground / RV Park",
             "starbucks": "Starbucks", "hospital": "Major Hospital", "veterinary": "Veterinary Clinic",
             "national_park": "National Park", "nature_reserve": "Nature Reserve", "attraction": "Tourist Attraction"
         };
@@ -259,9 +263,11 @@
                 { id: 'costco', label: 'Costco Warehouse' },
                 { id: 'dollartree', label: 'Dollar Tree Discounts' },
                 { id: 'staples', label: 'Staples Office' },
-                { id: 'upsstore', label: 'UPS Store Shipping' }
+                { id: 'upsstore', label: 'UPS Store Shipping' },
+                { id: 'basspro', label: "Bass Pro / Cabela's" }
             ],
             parks: [{ id: 'national_park', label: '🏞️ National Parks' }, { id: 'nature_reserve', label: '🌲 Nature Reserves' }, { id: 'attraction', label: '🎡 Attractions' }],
+            campground: [{ id: 'campground', label: '⛺ Campgrounds & RV Parks' }],
             medical: [{ id: 'hospital', label: '🏥 Major Hospitals' }, { id: 'veterinary', label: '🐕 Vet Clinics' }],
             highway: [{ id: 'highway_rest', label: '🪑 Highway Rest Areas' }, { id: 'highway_toilets', label: '🚻 Standalone Restrooms' }],
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
@@ -356,6 +362,7 @@
             autoCenterTimeoutId = setTimeout(() => { allowAutoCenter = true; }, 20000); 
         }
 
+        // Optimized bounding box configuration logic mapping
         function updateBufferVisualizerWeight() {
             if (!routeBufferPolyline || routeLineCoordinates.length === 0) return;
             const currentMapCenterLatitude = map.getCenter().lat;
@@ -419,7 +426,6 @@
             return map.getCenter();
         }
 
-        // --- UPDATED CONFIG IMPLEMENTATIONS: Pulling directly from live remote GitHub repository ---
         async function loadMasterRepoFavoritesOnBoot() {
             try {
                 updateInlineStatus("Fetching dynamic favorites configuration from repository...", true);
@@ -440,7 +446,6 @@
             }
         }
 
-        // --- UPDATED SAVE FUNCTION: Preps and copies localized stars, then forks a new interactive browser tab ---
         function launchAutomatedGitHubSyncPipeline() {
             const currentPinnedStars = localStorage.getItem('starred_pois') || '[]';
             let formattedDataPayload = "";
@@ -628,7 +633,7 @@
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-                const streetViewUrl = `https://www.google.com/maps/?q=&layer=c&cbll=${lat},${lon}`;
+                const streetViewUrl = `https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lon}`;
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -697,7 +702,7 @@
             }
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-            const streetViewUrl = `https://www.google.com/maps/?q=&layer=c&cbll=${lat},${lon}`;
+            const streetViewUrl = `https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lon}`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
