@@ -142,60 +142,62 @@ class NationalPOIExtractor:
         amenity = tags.get('amenity', '').lower()
         tourism = tags.get('tourism', '').lower()
 
-        # Generates an aggressive serialized text query string across all sub-keys to stop tag mismatching
+        # FIXED: Separates strict core identity tags to isolate commercial brand naming verification checks
+        brand_identity = " ".join([tags.get(k, '') for k in ['name', 'brand', 'operator', 'brand:wikidata', 'official_name']]).lower()
+        
+        # General background tags serialization reserved exclusively for unstructured recreational POIs
         all_tags_serialized = " ".join([f"{k}={v}" for k, v in tags.items()]).lower()
 
         matches = []
 
         # --- Sub-Block 1: Food & Restaurant Profiles ---
-        if "chick-fil-a" in all_tags_serialized or "chickfila" in all_tags_serialized:
+        if "chick-fil-a" in brand_identity or "chickfila" in brand_identity:
             matches.append(("chickfila", "food", "Official Chick-fil-A location."))
-        if "mcdonald" in all_tags_serialized:
+        if "mcdonald" in brand_identity:
             matches.append(("mcdonalds", "food", "Official McDonald's location."))
-        if "chipotle" in all_tags_serialized:
+        if "chipotle" in brand_identity:
             matches.append(("chipotle", "food", "Official Chipotle Mexican Grill."))
-        if "starbucks" in all_tags_serialized:
+        if "starbucks" in brand_identity:
             matches.append(("starbucks", "food", "Official Starbucks Coffee spot."))
-        if "wendy" in all_tags_serialized:
+        if "wendy" in brand_identity:
             matches.append(("wendys", "food", "Official Wendy's fast food facility."))
-        if "raising cane" in all_tags_serialized or "raisingcane" in all_tags_serialized:
+        if "raising cane" in brand_identity or "raisingcane" in brand_identity:
             matches.append(("raisingcanes", "food", "Official Raising Cane's chicken fingers."))
-        if "jersey mike" in all_tags_serialized or "jerseymikes" in all_tags_serialized:
+        if "jersey mike" in brand_identity or "jerseymikes" in brand_identity:
             matches.append(("jerseymikes", "food", "Official Jersey Mike's sub shop."))
-        if "culver" in all_tags_serialized:
+        if "culver" in brand_identity:
             matches.append(("culvers", "food", "Official Culver's fresh frozen custard location."))
-        if "shake shack" in all_tags_serialized or "shakeshack" in all_tags_serialized:
+        if "shake shack" in brand_identity or "shakeshack" in brand_identity:
             matches.append(("shakeshack", "food", "Official Shake Shack roadside burger stand."))
-        if "in-n-out" in all_tags_serialized or "innout" in all_tags_serialized:
+        if "in-n-out" in brand_identity or "innout" in brand_identity:
             matches.append(("innout", "food", "Official In-N-Out Burger location."))
-        if "potbelly" in all_tags_serialized:
+        if "potbelly" in brand_identity:
             matches.append(("potbelly", "food", "Official Potbelly Sandwich Shop."))
             
         # --- Sub-Block 2: Fuel & Travel Terminals ---
-        if "sheetz" in all_tags_serialized:
+        if "sheetz" in brand_identity:
             matches.append(("sheetz", "gas", "Official Sheetz travel center."))
-        if "buc-ee" in all_tags_serialized or "bucees" in all_tags_serialized:
+        if "buc-ee" in brand_identity or "bucees" in brand_identity:
             matches.append(("bucees", "gas", "Official Buc-ee's mega travel center."))
-        if "wawa" in all_tags_serialized:
+        if "wawa" in brand_identity:
             matches.append(("wawa", "gas", "Official Wawa station."))
-        if "circle k" in all_tags_serialized or "circlek" in all_tags_serialized:
+        if "circle k" in brand_identity or "circlek" in brand_identity:
             matches.append(("circlek", "gas", "Official Circle K storefront."))
             
-        # --- Sub-Block 3: Retail Supply Logistics (Fixed Multipolygon Relation Capturing) ---
-        if "walmart" in all_tags_serialized:
+        # --- Sub-Block 3: Retail Supply Logistics (Fixed Identity Isolation) ---
+        if "walmart" in brand_identity:
             matches.append(("walmart", "shopping", "Walmart retail provision center."))
-        if "target" in all_tags_serialized:
-            if not any(sport_kw in all_tags_serialized for sport_kw in ["shooting", "archery", "range", "club", "gun"]):
-                matches.append(("target", "shopping", "Target shopping hub."))
-        if "dollar tree" in all_tags_serialized or "dollartree" in all_tags_serialized:
+        if "target" in brand_identity:
+            matches.append(("target", "shopping", "Target shopping hub."))
+        if "dollar tree" in brand_identity or "dollartree" in brand_identity:
             matches.append(("dollartree", "shopping", "Dollar Tree discount convenience location."))
-        if "costco" in all_tags_serialized:
+        if "costco" in brand_identity:
             matches.append(("costco", "shopping", "Costco Wholesale membership hub."))
-        if "staples" in all_tags_serialized:
+        if "staples" in brand_identity:
             matches.append(("staples", "shopping", "Staples business copy center."))
-        if "ups store" in all_tags_serialized or "ups_store" in all_tags_serialized:
+        if "ups store" in brand_identity or "ups_store" in brand_identity:
             matches.append(("upsstore", "shopping", "The UPS Store processing terminal."))
-        if "bass pro" in all_tags_serialized or "cabela" in all_tags_serialized:
+        if "bass pro" in brand_identity or "cabela" in brand_identity:
             matches.append(("basspro", "shopping", "Bass Pro Shops / Cabela's outfitters showroom."))
 
         # --- Sub-Block 4: Infrastructure, Recreation, & Campgrounds ---
@@ -285,8 +287,8 @@ if __name__ == "__main__":
     
     print(f"Running high-speed two-pass area processing stream extractor for state: {state_slug}...")
     
-    # Utilizing FileProcessor with .with_areas() handles the dual-pass cache completely behind the scenes
-    fp = osmium.FileProcessor(pbf_target).with_areas()
+    # FIXED: Chained both location indexing and area compilation passes to stabilize structural indexing
+    fp = osmium.FileProcessor(pbf_target).with_locations().with_areas()
     
     for obj in fp:
         extractor.process_element(obj)
