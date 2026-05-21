@@ -39,9 +39,11 @@
 </head>
 <body class="flex flex-col justify-end text-zinc-950 selection:bg-blue-500 selection:text-white">
 
-    <div class="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col transition-all duration-300">
+    <div id="control-wrapper" class="fixed md:absolute top-auto bottom-0 md:top-0 md:bottom-auto left-0 right-0 z-10 bg-white/95 backdrop-blur-md border-t border-b-0 md:border-b md:border-t-0 rounded-t-3xl md:rounded-none shadow-2xl md:shadow-md flex flex-col transition-all duration-300 pb-env(safe-area-inset-bottom) md:pb-0">
         
-        <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
+        <div id="mobile-drag-handle" class="w-12 h-1.5 bg-gray-300 hover:bg-gray-400 rounded-full mx-auto my-2.5 md:hidden cursor-pointer shrink-0"></div>
+        
+        <div id="search-container" class="px-4 pt-1 md:pt-3 pb-2 flex flex-col gap-2">
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <div class="relative flex-1">
                     <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
@@ -71,15 +73,21 @@
                 <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent hidden"></div>
                 <p id="status" class="text-xs font-bold text-gray-700 truncate">System ready. Enter route parameters above.</p>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[70%] sm:max-w-none">
+            <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[75%] sm:max-w-none">
                 <select id="buffer-select" class="bg-white text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
                     <option value="4000" selected>⏱️ 5 Min Buffer</option>
                     <option value="12000">⏱️ 15 Min Buffer</option>
                     <option value="24000">⏱️ 30 Min Buffer</option>
                 </select>
-                <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
+                
+                <label class="flex items-center gap-1 bg-white border border-gray-200 text-gray-700 text-xs font-bold px-2.5 rounded-xl min-h-[44px] cursor-pointer select-none shadow-sm">
+                    <input type="checkbox" id="saver-mode-toggle" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500">
+                    <span class="whitespace-nowrap">📉 Saver</span>
+                </label>
+
+                <button id="push-master-btn" class="hidden md:inline-block bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
                 <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">🔍 Inputs</button>
-                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">🚗 Track</button>
+                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">🚗 Track</button>
             </div>
         </div>
 
@@ -97,19 +105,19 @@
         <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden"></div>
     </div>
 
-    <div id="next-stop-hud" class="absolute top-44 right-4 z-10 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl max-w-[200px] hidden pointer-events-none transition-all duration-300">
+    <div id="next-stop-hud" class="absolute top-16 md:top-44 right-4 z-10 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl max-w-[200px] hidden pointer-events-none transition-all duration-300">
         <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest leading-none mb-1">⏱️ Next Target Stop</p>
         <h4 id="hud-poi-name" class="text-xs font-black truncate text-white">---</h4>
         <p id="hud-poi-dist" class="text-sm font-black text-amber-400 mt-0.5">0.0 mi away</p>
     </div>
 
-    <div class="absolute bottom-24 right-4 z-10 flex flex-col gap-2 items-center">
-        <button id="theme-toggle-btn" class="bg-white/95 backdrop-blur-md border border-gray-200 text-zinc-900 font-bold rounded-xl shadow-xl text-xs px-2.5 h-11 flex items-center justify-center active:scale-95 transition-all select-none cursor-pointer whitespace-nowrap">🌙 Dark</button>
-        <button id="zoom-in-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">＋</button>
-        <button id="zoom-out-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">－</button>
+    <div class="absolute bottom-52 md:bottom-6 right-4 z-10 flex flex-col gap-2.5 items-center">
+        <button id="theme-toggle-btn" class="bg-white/95 backdrop-blur-md border border-gray-200 text-zinc-900 font-bold rounded-2xl md:rounded-xl shadow-xl text-xs px-3 h-14 md:h-11 flex items-center justify-center active:scale-95 transition-all select-none cursor-pointer whitespace-nowrap">🌙 Dark</button>
+        <button id="zoom-in-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-2xl w-14 h-14 md:w-11 md:h-11 flex items-center justify-center active:scale-95 text-2xl md:text-xl transition-all select-none cursor-pointer">＋</button>
+        <button id="zoom-out-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-2xl w-14 h-14 md:w-11 md:h-11 flex items-center justify-center active:scale-95 text-2xl md:text-xl transition-all select-none cursor-pointer">－</button>
     </div>
 
-    <div id="route-mileage-sticky" class="absolute bottom-6 left-4 z-10 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 px-4 py-2.5 rounded-xl shadow-xl hidden font-black text-xs transition-all duration-300 pointer-events-auto">
+    <div id="route-mileage-sticky" class="absolute bottom-72 md:bottom-6 left-4 z-10 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 px-4 py-2.5 rounded-xl shadow-xl hidden font-black text-xs transition-all duration-300 pointer-events-auto">
         🏁 Route Remaining: <span id="sticky-total-dist" class="text-emerald-400 font-black">0.0</span> mi
     </div>
 
@@ -130,6 +138,7 @@
         let mapLayersPool = {};
         let favoritesLayerGroup = null;
         let poiClusterGroup = null;
+        let isSaverModeActive = false;
         
         const STATE_BOUNDS_LOOKUP = {
             "alabama":        { s: 30.1, n: 35.1, w: -88.6, e: -84.8 },
@@ -267,7 +276,6 @@
             tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
         };
 
-        // Standard Storage Array Scopes
         let allPoiMarkersMemoryMap = [];
         let globalFavoritesMarkers = []; 
         let repoFavoritesMemory = [];    
@@ -391,7 +399,8 @@
             if (mathWorker) {
                 mathWorker.postMessage({
                     localElements: localJsonMemory, targetsSlice: activeTargetsSliceMemory, activeBufferMeters: activeBufferMeters,
-                    currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter
+                    currentMasterCat: currentMasterCat, currentSubFilter: currentSubFilter,
+                    isSaverModeActive: isSaverModeActive
                 });
             }
         }
@@ -419,7 +428,6 @@
             return map.getCenter();
         }
 
-        // --- UPDATED CONFIG IMPLEMENTATIONS: Pulling directly from live remote GitHub repository ---
         async function loadMasterRepoFavoritesOnBoot() {
             try {
                 updateInlineStatus("Fetching dynamic favorites configuration from repository...", true);
@@ -440,7 +448,6 @@
             }
         }
 
-        // --- UPDATED SAVE FUNCTION: Preps and copies localized stars, then forks a new interactive browser tab ---
         function launchAutomatedGitHubSyncPipeline() {
             const currentPinnedStars = localStorage.getItem('starred_pois') || '[]';
             let formattedDataPayload = "";
@@ -463,8 +470,58 @@
             });
         }
 
+        // HIGHWAY RESILIENCY FILTER: Shared downstream executor processing pass
+        async function processParsedRouteData(coordinates, summary) {
+            routeLineCoordinates = coordinates;
+            const searchContainer = document.getElementById('search-container');
+            if (searchContainer) searchContainer.classList.add('hidden');
+            
+            const totalDistanceMeters = summary.totalDistance;
+            const totalDistanceMiles = (totalDistanceMeters * 0.000621371).toFixed(1);
+            const stickyPanel = document.getElementById('route-mileage-sticky');
+            if (stickyPanel) {
+                document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
+                stickyPanel.classList.remove('hidden');
+            }
+
+            poiClusterGroup.clearLayers();
+            allPoiMarkersMemoryMap = [];
+            
+            if (routeBufferPolyline) { map.removeLayer(routeBufferPolyline); }
+            routeBufferPolyline = L.polyline(routeLineCoordinates, {
+                color: '#3b82f6', opacity: 0.15, lineCap: 'round', lineJoin: 'round', interactive: false
+            }).addTo(map);
+            routeBufferPolyline.bringToBack();
+            updateBufferVisualizerWeight();
+
+            const activeCrossedStates = calculateIntersectedStates(routeLineCoordinates);
+            updateInlineStatus(`Crossed state borders mapped: [${activeCrossedStates.length} States identified]`, true);
+            
+            localJsonMemory = [];
+            
+            await Promise.all(activeCrossedStates.map(async (stateName) => {
+                try {
+                    const response = await fetch(`data/${stateName}_brands.json`);
+                    if (response.ok) {
+                        const stateData = await response.json();
+                        localJsonMemory = localJsonMemory.concat(stateData);
+                    }
+                } catch(err) {
+                    console.warn(`Shard loop pass error for state variable: ${stateName}`, err);
+                }
+            }));
+
+            renderGlobalPermanentStars(); 
+            
+            if (currentMasterCat && currentSubFilter !== 'none') {
+                runDataExecutionLayer(currentMasterCat);
+            } else {
+                updateInlineStatus("Route calculations complete. Apply filters.");
+            }
+        }
+
         // =====================================================================
-        // --- PHASE 3: MAP TILES CANVAS CORE SETUP DEFINITIONS ----------------
+        // --- PHASE 3: MAP CANVAS MOUNT SETUP IMPLEMENTATIONS ----------------
         // =====================================================================
         map = L.map('map', { zoomControl: false }).setView(MAP_INITIAL_CENTER, 5);
 
@@ -495,7 +552,7 @@
             }
 
             self.onmessage = function(e) {
-                const { localElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter } = e.data;
+                const { localElements, targetsSlice, activeBufferMeters, currentMasterCat, currentSubFilter, isSaverModeActive } = e.data;
                 const finalMatches = [];
                 if (!localElements || currentSubFilter === 'none') {
                     self.postMessage({ sortedMatches: [] });
@@ -537,7 +594,13 @@
                         });
                     }
                 });
-                self.postMessage({ sortedMatches: finalMatches.sort((a, b) => a.minD - b.minD) });
+                
+                let matchesToReturn = finalMatches.sort((a, b) => a.minD - b.minD);
+                // SMART SLIDER LIMITATION CAP: Trims downstream loop array generation sizes to maintain connection efficiency
+                if (isSaverModeActive) {
+                    matchesToReturn = matchesToReturn.slice(0, 20);
+                }
+                self.postMessage({ sortedMatches: matchesToReturn });
             };
         `;
         const blobObj = new Blob([workerBlobCode], { type: 'application/javascript' });
@@ -628,7 +691,7 @@
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-                const streetViewUrl = `https://www.google.com/maps/?q=&layer=c&cbll=${lat},${lon}`;
+                const streetViewUrl = `https://www.google.com/maps/?q=loc:${lat},${lon}&layer=c`;
                 const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -693,11 +756,11 @@
 
             let fuelBadgeHtml = '';
             if (visualCatKey === 'gas' || el.category === 'gas') {
-                fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-955 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
+                fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
             }
 
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
-            const streetViewUrl = `https://www.google.com/maps/?q=&layer=c&cbll=${lat},${lon}`;
+            const streetViewUrl = `https://www.google.com/maps/?q=loc:${lat},${lon}&layer=c`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
@@ -835,8 +898,20 @@
             activeBufferMeters = parseInt(e.target.value); updateBufferVisualizerWeight();
             if (localJsonMemory && currentSubFilter !== 'none') dispatchOffThreadAnalysis(); 
         });
+
+        document.getElementById('saver-mode-toggle').addEventListener('change', (e) => {
+            isSaverModeActive = e.target.checked;
+            if (localJsonMemory && currentSubFilter !== 'none') dispatchOffThreadAnalysis();
+        });
         
         document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
+        
+        // Mobile layout expansion sheet interaction
+        document.getElementById('mobile-drag-handle').addEventListener('click', () => {
+            const s = document.getElementById('search-container');
+            if (s) s.classList.toggle('hidden');
+        });
+
         document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
 
         document.getElementById('route-btn').addEventListener('click', async () => {
@@ -845,10 +920,20 @@
             routingControl.setWaypoints([L.latLng(startInput.dataset.lat, startInput.dataset.lon), L.latLng(endInput.dataset.lat, endInput.dataset.lon)]);
         });
 
-        routingControl.on('routingerror', function(e) {
+        // HIGHWAY RESILIENCY FILTER: Restores navigation line fallbacks when cellular signals drop out
+        routingControl.on('routingerror', async function(e) {
             console.error("OSRM Connection Error Blocked: ", e);
-            updateInlineStatus("OSRM Server Timeout. Re-calculating path corridor parameters...", false);
-            triggerToast("Routing server connection dropped. Automatically retrying calculation...");
+            const cachedCoordsRaw = localStorage.getItem('cached_route_coords');
+            const cachedSummaryRaw = localStorage.getItem('cached_route_summary');
+            
+            if (cachedCoordsRaw && cachedSummaryRaw) {
+                updateInlineStatus("Cellular dead zone hit. Restoring stale-route line fallback...", false);
+                triggerToast("Offline dead zone hit. Recovering last known journey path...");
+                await processParsedRouteData(JSON.parse(cachedCoordsRaw), JSON.parse(cachedSummaryRaw));
+            } else {
+                updateInlineStatus("OSRM Server Timeout. Re-calculating path corridor parameters...", false);
+                triggerToast("Routing server connection dropped. Automatically retrying calculation...");
+            }
         });
 
         document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
@@ -863,53 +948,13 @@
         document.getElementById('zoom-out-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() - 1); });
 
         routingControl.on('routesfound', async function(e) {
-            routeLineCoordinates = e.routes[0].coordinates;
-            const searchContainer = document.getElementById('search-container');
-            if (searchContainer) searchContainer.classList.add('hidden');
-            
-            const totalDistanceMeters = e.routes[0].summary.totalDistance;
-            const totalDistanceMiles = (totalDistanceMeters * 0.000621371).toFixed(1);
-            const stickyPanel = document.getElementById('route-mileage-sticky');
-            if (stickyPanel) {
-                document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
-                stickyPanel.classList.remove('hidden');
-            }
-
-            poiClusterGroup.clearLayers();
-            allPoiMarkersMemoryMap = [];
-            
-            if (routeBufferPolyline) { map.removeLayer(routeBufferPolyline); }
-            routeBufferPolyline = L.polyline(routeLineCoordinates, {
-                color: '#3b82f6', opacity: 0.15, lineCap: 'round', lineJoin: 'round', interactive: false
-            }).addTo(map);
-            routeBufferPolyline.bringToBack();
-            updateBufferVisualizerWeight();
-
-            const activeCrossedStates = calculateIntersectedStates(routeLineCoordinates);
-            updateInlineStatus(`Crossed state borders mapped: [${activeCrossedStates.length} States identified]`, true);
-            
-            localJsonMemory = [];
-            
-            await Promise.all(activeCrossedStates.map(async (stateName) => {
-                try {
-                    const response = await fetch(`data/${stateName}_brands.json`);
-                    if (response.ok) {
-                        const stateData = await response.json();
-                        localJsonMemory = localJsonMemory.concat(stateData);
-                    }
-                } catch(err) {
-                    console.warn(`Shard loop pass error for state variable: ${stateName}`, err);
-                }
-            }));
-
-            triggerToast("Loaded multi-state configuration data parameters.");
-            renderGlobalPermanentStars(); 
-            
-            if (currentMasterCat && currentSubFilter !== 'none') {
-                runDataExecutionLayer(currentMasterCat);
-            } else {
-                updateInlineStatus("Route calculations complete. Apply filters.");
-            }
+            const coords = e.routes[0].coordinates;
+            const summary = e.routes[0].summary;
+            try {
+                localStorage.setItem('cached_route_coords', JSON.stringify(coords));
+                localStorage.setItem('cached_route_summary', JSON.stringify(summary));
+            } catch(err) {}
+            await processParsedRouteData(coords, summary);
         });
 
         map.on('popupopen', function(e) {
@@ -968,10 +1013,10 @@
             if (isTracking) { 
                 if (watchId) navigator.geolocation.clearWatch(watchId); 
                 isTracking = false; allowAutoCenter = true; clearTimeout(autoCenterTimeoutId);
-                geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
+                geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm min-h-[44px]"; 
             } else {
                 if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
-                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
+                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
                 watchId = navigator.geolocation.watchPosition((pos) => {
                     const { latitude, longitude } = pos.coords;
                     if (lastUserGpsCoord) {
@@ -1027,7 +1072,7 @@
 
             loadMasterRepoFavoritesOnBoot();
 
-            const interactiveControlBars = ['master-filter-bar', 'sub-filter-bar', 'search-container'];
+            const interactiveControlBars = ['master-filter-bar', 'sub-filter-bar', 'search-container', 'mobile-drag-handle'];
             interactiveControlBars.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
