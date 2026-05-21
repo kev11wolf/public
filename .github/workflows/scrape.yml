@@ -14,15 +14,7 @@ jobs:
       matrix:
         # State identifiers mapped precisely to Geofabrik sub-directories
         state: [
-    north-carolina, south-carolina, virginia, georgia, florida,
-          maryland, delaware, pennsylvania, new-jersey, new-york,
-          texas, california, ohio, illinois, michigan, tennessee,
-          alabama, alaska, arizona, arkansas, colorado, connecticut,
-          hawaii, idaho, indiana, iowa, kansas, kentucky, louisiana,
-          maine, massachusetts, minnesota, mississippi, missouri, montana,
-          nebraska, nevada, new-hampshire, new-mexico, north-dakota,
-          oklahoma, oregon, rhode-island, south-dakota, utah, vermont,
-          washington, west-virginia, wisconsin, wyoming
+    north-carolina
         ]
 
     permissions:
