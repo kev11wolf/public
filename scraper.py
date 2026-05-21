@@ -18,9 +18,8 @@ SCHOOL_PRIVATE_BLACKLIST = [
 
 COMBINED_PLAYGROUND_BLACKLIST = RELIGIOUS_BLACKLIST + SCHOOL_PRIVATE_BLACKLIST
 
-class NationalPOIExtractor(osmium.SimpleHandler):
+class NationalPOIExtractor:
     def __init__(self):
-        super(NationalPOIExtractor, self).__init__()
         self.output_records = []
         self.seen_keys = set()
 
@@ -96,23 +95,59 @@ class NationalPOIExtractor(osmium.SimpleHandler):
 
         return " | ".join(pieces) if pieces else "Official verified corridor asset."
 
-    def process_node_tags(self, tags, lat, lon):
-        if not lat or not lon:
+    def process_element(self, o):
+        """Processes an OSM streaming view object, extracts spatial centroids, and tracks attributes."""
+        tags = dict(o.tags)
+        if not tags:
+            return
+
+        lat, lon = None, None
+
+        # --- GEOMETRIC CENTROID PARSING ENGINE ---
+        if o.is_node():
+            try:
+                lat, lon = o.location.lat, o.location.lon
+            except osmium.InvalidLocationError:
+                return
+        elif o.is_way():
+            lats, lons = [], []
+            for n in o.nodes:
+                try:
+                    lats.append(n.lat)
+                    lons.append(n.lon)
+                except osmium.InvalidLocationError:
+                    continue
+            if lats and lons:
+                lat = sum(lats) / len(lats)
+                lon = sum(lons) / len(lons)
+        elif o.is_area():
+            lats, lons = [], []
+            for ring in o.outer_rings():
+                for n in ring:
+                    try:
+                        lats.append(n.lat)
+                        lons.append(n.lon)
+                    except osmium.InvalidLocationError:
+                        continue
+            if lats and lons:
+                lat = sum(lats) / len(lats)
+                lon = sum(lons) / len(lons)
+
+        if lat is None or lon is None:
             return
 
         name = tags.get('name', '')
-        name_lower = name.lower()
         leisure = tags.get('leisure', '').lower()
         highway = tags.get('highway', '').lower()
         amenity = tags.get('amenity', '').lower()
         tourism = tags.get('tourism', '').lower()
 
-        # FIXED: Generates an ultra-aggressive serialized string across all keys and values to stop naming tag omissions
+        # Generates an aggressive serialized text query string across all sub-keys to stop tag mismatching
         all_tags_serialized = " ".join([f"{k}={v}" for k, v in tags.items()]).lower()
 
         matches = []
 
-        # --- Sub-Block A: Food & Restaurant Profiles ---
+        # --- Sub-Block 1: Food & Restaurant Profiles ---
         if "chick-fil-a" in all_tags_serialized or "chickfila" in all_tags_serialized:
             matches.append(("chickfila", "food", "Official Chick-fil-A location."))
         if "mcdonald" in all_tags_serialized:
@@ -136,7 +171,7 @@ class NationalPOIExtractor(osmium.SimpleHandler):
         if "potbelly" in all_tags_serialized:
             matches.append(("potbelly", "food", "Official Potbelly Sandwich Shop."))
             
-        # --- Sub-Block B: Fuel & Travel Terminals ---
+        # --- Sub-Block 2: Fuel & Travel Terminals ---
         if "sheetz" in all_tags_serialized:
             matches.append(("sheetz", "gas", "Official Sheetz travel center."))
         if "buc-ee" in all_tags_serialized or "bucees" in all_tags_serialized:
@@ -146,15 +181,12 @@ class NationalPOIExtractor(osmium.SimpleHandler):
         if "circle k" in all_tags_serialized or "circlek" in all_tags_serialized:
             matches.append(("circlek", "gas", "Official Circle K storefront."))
             
-        # --- Sub-Block C: Retail Supply Logistics (Fixed Target Omission Gates) ---
+        # --- Sub-Block 3: Retail Supply Logistics (Fixed Multipolygon Relation Capturing) ---
         if "walmart" in all_tags_serialized:
             matches.append(("walmart", "shopping", "Walmart retail provision center."))
-        
-        # FIXED: Aggressive extraction check ensures Target retail assets pass while blocking archery/shooting ranges
         if "target" in all_tags_serialized:
-            if not any(sport_kw in all_tags_serialized for sport_kw in ["shooting", "archery", "range", "club"]):
+            if not any(sport_kw in all_tags_serialized for sport_kw in ["shooting", "archery", "range", "club", "gun"]):
                 matches.append(("target", "shopping", "Target shopping hub."))
-                
         if "dollar tree" in all_tags_serialized or "dollartree" in all_tags_serialized:
             matches.append(("dollartree", "shopping", "Dollar Tree discount convenience location."))
         if "costco" in all_tags_serialized:
@@ -166,7 +198,7 @@ class NationalPOIExtractor(osmium.SimpleHandler):
         if "bass pro" in all_tags_serialized or "cabela" in all_tags_serialized:
             matches.append(("basspro", "shopping", "Bass Pro Shops / Cabela's outfitters showroom."))
 
-        # --- Sub-Block D: Infrastructure, Recreation, & Campgrounds ---
+        # --- Sub-Block 4: Infrastructure, Recreation, & Campgrounds ---
         if highway == "rest_area":
             matches.append(("highway_rest", "highway", "State-maintained highway rest area."))
         if amenity == "toilets":
@@ -198,7 +230,7 @@ class NationalPOIExtractor(osmium.SimpleHandler):
                 if not any(kw in meta for kw in COMBINED_PLAYGROUND_BLACKLIST):
                     matches.append(("playground", "playground", "Public recreation playground area asset."))
 
-        # --- Committing and Filtering Execution Loop ---
+        # --- Committing and Filtering Output Array ---
         for b_slug, c_tag, base_desc in matches:
             record_key = f"{round(lat, 4)}_{round(lon, 4)}_{b_slug}"
             if record_key in self.seen_keys:
@@ -234,53 +266,6 @@ class NationalPOIExtractor(osmium.SimpleHandler):
             self.output_records.append(record)
             self.seen_keys.add(record_key)
 
-    # =====================================================================
-    # --- PHASE 2: TRUE RADIAL GEOMETRIC CENTROID PARSING OVERHAULS -------
-    # =====================================================================
-    def node(self, n):
-        if n.tags:
-            try: 
-                self.process_node_tags(dict(n.tags), n.location.lat, n.location.lon)
-            except osmium.InvalidLocationError: 
-                pass
-
-    def way(self, w):
-        if w.tags and len(w.nodes) > 0:
-            try:
-                lats = []
-                lons = []
-                for node in w.nodes:
-                    try:
-                        lats.append(node.lat)
-                        lons.append(node.lon)
-                    except osmium.InvalidLocationError:
-                        continue
-                if lats and lons:
-                    centroid_lat = sum(lats) / len(lats)
-                    centroid_lon = sum(lons) / len(lons)
-                    self.process_node_tags(dict(w.tags), centroid_lat, centroid_lon)
-            except Exception:
-                pass
-
-    def area(self, a):
-        if a.tags:
-            try:
-                lats = []
-                lons = []
-                for ring in a.outer_rings():
-                    for node in ring:
-                        try:
-                            lats.append(node.lat)
-                            lons.append(node.lon)
-                        except osmium.InvalidLocationError:
-                            continue
-                if lats and lons:
-                    centroid_lat = sum(lats) / len(lats)
-                    centroid_lon = sum(lons) / len(lons)
-                    self.process_node_tags(dict(a.tags), centroid_lat, centroid_lon)
-            except Exception:
-                pass
-
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("![ERROR] Missing target state name configuration parameter.")
@@ -298,19 +283,13 @@ if __name__ == "__main__":
     extractor = NationalPOIExtractor()
     extractor.load_existing_dataset(output_filename)
     
-    print(f"Running high-speed local stream extractor loop for state: {state_slug}...")
+    print(f"Running high-speed two-pass area processing stream extractor for state: {state_slug}...")
     
-    # FIXED: Re-architected standard executor blocks to bind an active Location Cache and AreaManager 
-    # to synthesize and extract multipolygon corporate structures from relation elements cleanly
-    src_reader = osmium.io.Reader(pbf_target)
-    location_index = osmium.index.create_index("flex_mem")
-    location_handler = osmium.NodeLocationsHandler(location_index)
-    location_handler.pre_node_ways = True
+    # Utilizing FileProcessor with .with_areas() handles the dual-pass cache completely behind the scenes
+    fp = osmium.FileProcessor(pbf_target).with_areas()
     
-    area_assembler = osmium.area.AreaManager()
-    
-    osmium.apply(src_reader, location_handler, area_assembler, extractor)
-    src_reader.close()
+    for obj in fp:
+        extractor.process_element(obj)
 
     with open(output_filename, "w", encoding="utf-8") as file:
         json.dump(extractor.output_records, file, indent=2)
