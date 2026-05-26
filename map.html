@@ -119,6 +119,7 @@
         <button id="theme-toggle-btn" class="bg-white/95 backdrop-blur-md border border-gray-200 text-zinc-900 font-bold rounded-xl shadow-xl text-xs px-2.5 h-11 flex items-center justify-center active:scale-95 transition-all select-none cursor-pointer whitespace-nowrap">🌙 Mode</button>
         <button id="zoom-in-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">＋</button>
         <button id="zoom-out-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">－</button>
+        <button id="center-loc-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-lg transition-all select-none cursor-pointer" title="Center Location">🎯</button>
     </div>
 
     <div id="route-mileage-sticky" class="absolute bottom-6 left-4 z-10 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 px-4 py-2.5 rounded-xl shadow-xl hidden font-black text-xs transition-all duration-300 pointer-events-auto">
@@ -374,6 +375,7 @@
             autoCenterTimeoutId = setTimeout(() => { allowAutoCenter = true; }, 20000); 
         }
 
+        // Standard dynamic calculation logic for active scale widths
         function updateBufferVisualizerWeight() {
             if (!routeBufferPolyline || routeLineCoordinates.length === 0) return;
             const currentMapCenterLatitude = map.getCenter().lat;
@@ -738,7 +740,7 @@
                 } else {
                     let starBtnText = isCurrentlyStarredLocally ? "❌ Remove Local Star" : "⭐ Persistently Star";
                     let starBtnColor = isCurrentlyStarredLocally ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
-                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
+                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
                 }
 
                 let fuelBadgeHtml = '';
@@ -746,7 +748,7 @@
                     fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
                 }
 
-                let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}">📍 Set Stop</button>`;
+                let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}">📍 Set Stop</button>`;
 
                 const popupContent = `
                     <div class="w-full font-sans p-0.5 text-zinc-955">
@@ -809,7 +811,7 @@
             const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
             let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
 
-            let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}">📍 Set Stop</button>`;
+            let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}">📍 Set Stop</button>`;
 
             const popupContent = `
                 <div class="w-full font-sans p-0.5 text-zinc-955">
@@ -823,7 +825,7 @@
                         <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
                     </div>
                     <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
-                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
+                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
                         ${stopQueueBtnHtml}
                         <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
                         <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
@@ -1020,6 +1022,38 @@
         document.getElementById('zoom-in-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() + 1); });
         document.getElementById('zoom-out-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() - 1); });
 
+        // REFINED CONTROLS: Center location click listener maps precision coordinate state vectors
+        document.getElementById('center-loc-btn').addEventListener('click', () => {
+            if (lastUserGpsCoord) {
+                map.setView(lastUserGpsCoord, Math.max(map.getZoom(), 14));
+                triggerToast("Centered on last known location.");
+            } else {
+                if (!navigator.geolocation) {
+                    triggerToast("GPS Hardware is unavailable.");
+                    return;
+                }
+                updateInlineStatus("Locating user position...", true);
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        lastUserGpsCoord = [pos.coords.latitude, pos.coords.longitude];
+                        if (!userMarker) { 
+                            userMarker = L.marker(lastUserGpsCoord, { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); 
+                        } else { 
+                            userMarker.setLatLng(lastUserGpsCoord); 
+                        }
+                        map.setView(lastUserGpsCoord, 14);
+                        updateInlineStatus("Centered on current location.");
+                        triggerToast("Centered on current location.");
+                    },
+                    (err) => {
+                        updateInlineStatus("Failed to get current location.");
+                        triggerToast("Location access denied or timed out.");
+                    },
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            }
+        });
+
         routingControl.on('routesfound', async function(e) {
             routeLineCoordinates = e.routes[0].coordinates;
             const searchContainer = document.getElementById('search-container');
@@ -1033,7 +1067,7 @@
                 stickyPanel.classList.remove('hidden');
             }
 
-            // REFINED PARSER: Hydrates turn-by-turn list layouts dynamically from OSRM engine
+            // REFINED PARSER: Slices and renders only the current active maneuver and immediate next step
             const navHud = document.getElementById('navigation-hud');
             const directionsList = document.getElementById('directions-list');
             if (navHud && directionsList && e.routes && e.routes[0]) {
@@ -1042,9 +1076,10 @@
                 
                 if (instructions.length > 0) {
                     navHud.classList.remove('hidden');
-                    instructions.forEach((step) => {
+                    const activeSteps = instructions.slice(0, 2);
+                    activeSteps.forEach((step, index) => {
                         const item = document.createElement('div');
-                        item.className = "border-b border-slate-800/60 last:border-0 pb-1 mt-1 leading-tight text-slate-300 flex items-start gap-1.5";
+                        item.className = "border-b border-slate-800/60 last:border-0 pb-1.5 mt-1 leading-tight text-slate-300 flex items-start gap-1.5 text-[11px]";
                         
                         let distanceStr = '';
                         if (step.distance > 0) {
@@ -1056,7 +1091,9 @@
                             }
                         }
                         const stepText = step.text || "Continue onward";
-                        item.innerHTML = `<span class="text-blue-400 font-black shrink-0">➔</span><span>${stepText}${distanceStr}</span>`;
+                        const icon = index === 0 ? "➔" : "⮞";
+                        const iconColor = index === 0 ? "text-emerald-400 font-black" : "text-slate-400 font-bold";
+                        item.innerHTML = `<span class="${iconColor} shrink-0 mt-0.5">${icon}</span><span>${stepText}${distanceStr}</span>`;
                         directionsList.appendChild(item);
                     });
                 } else {
