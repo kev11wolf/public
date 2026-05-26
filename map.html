@@ -98,6 +98,17 @@
         <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden"></div>
     </div>
 
+    <div id="navigation-hud" class="absolute top-44 left-4 z-10 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl w-64 hidden flex flex-col gap-3 transition-all duration-300 max-h-72 select-none">
+        <div id="queue-hud-section" class="hidden flex flex-col gap-1.5 border-b border-slate-700/60 pb-2">
+            <p class="text-[9px] font-black uppercase text-indigo-400 tracking-widest leading-none">📍 Stop Queue Order</p>
+            <div id="queue-items-list" class="flex flex-col gap-1 max-h-20 overflow-y-auto no-scrollbar"></div>
+        </div>
+        <div class="flex flex-col flex-1 min-h-0">
+            <p class="text-[9px] font-black uppercase text-emerald-400 tracking-widest leading-none mb-1">🗺️ Live Instructions</p>
+            <div id="directions-list" class="flex flex-col gap-1.5 overflow-y-auto text-xs font-semibold text-slate-300 pr-0.5 max-h-40 no-scrollbar"></div>
+        </div>
+    </div>
+
     <div id="next-stop-hud" class="absolute top-44 right-4 z-10 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl max-w-[200px] hidden pointer-events-none transition-all duration-300">
         <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest leading-none mb-1">⏱️ Next Target Stop</p>
         <h4 id="hud-poi-name" class="text-xs font-black truncate text-white">---</h4>
@@ -291,6 +302,7 @@
         let autoCenterTimeoutId = null;
         let isTracking = false;
         let watchId = null;
+        let stopQueue = [];
 
         // =====================================================================
         // --- PHASE 2: STATIC STANDARD BALANCED HOISTED UTILITIES -------------
@@ -492,6 +504,63 @@
             });
         }
 
+        // REFINED PIPELINE: Unified route master logic inserting stop queue array targets natively
+        function triggerRouteCalculation() {
+            const startInput = document.getElementById('start-input');
+            const endInput = document.getElementById('end-input');
+            if (!startInput.dataset.lat || !endInput.dataset.lat) return;
+
+            let finalWaypoints = [L.latLng(startInput.dataset.lat, startInput.dataset.lon)];
+            stopQueue.forEach(stop => {
+                finalWaypoints.push(L.latLng(stop.lat, stop.lon));
+            });
+            finalWaypoints.push(L.latLng(endInput.dataset.lat, endInput.dataset.lon));
+
+            routingControl.setWaypoints(finalWaypoints);
+        }
+
+        function updateQueueHUD() {
+            const section = document.getElementById('queue-hud-section');
+            const list = document.getElementById('queue-items-list');
+            const navHud = document.getElementById('navigation-hud');
+            if (!list || !section || !navHud) return;
+
+            list.innerHTML = '';
+            if (stopQueue.length === 0) {
+                section.classList.add('hidden');
+                if (document.getElementById('directions-list').children.length === 0) {
+                    navHud.classList.add('hidden');
+                }
+                return;
+            }
+
+            section.classList.remove('hidden');
+            navHud.classList.remove('hidden');
+
+            stopQueue.forEach((stop, index) => {
+                const container = document.createElement('div');
+                container.className = "flex items-center justify-between gap-1 text-[11px] bg-slate-800 px-2 py-1 rounded-lg border border-slate-700 font-bold";
+                
+                const label = document.createElement('span');
+                label.className = "truncate flex-1 text-slate-200";
+                label.innerText = `${index + 1}. ${stop.name}`;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = "text-red-400 hover:text-red-500 font-black text-xs px-1 cursor-pointer transition-colors select-none";
+                deleteBtn.innerText = "✕";
+                deleteBtn.addEventListener('click', () => {
+                    stopQueue.splice(index, 1);
+                    triggerToast("Removed stop from queue.");
+                    updateQueueHUD();
+                    triggerRouteCalculation();
+                });
+
+                container.appendChild(label);
+                container.appendChild(deleteBtn);
+                list.appendChild(container);
+            });
+        }
+
         // =====================================================================
         // --- PHASE 3: MAP TILES CANVAS CORE SETUP DEFINITIONS ----------------
         // =====================================================================
@@ -669,13 +738,15 @@
                 } else {
                     let starBtnText = isCurrentlyStarredLocally ? "❌ Remove Local Star" : "⭐ Persistently Star";
                     let starBtnColor = isCurrentlyStarredLocally ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
-                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
+                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
                 }
 
                 let fuelBadgeHtml = '';
                 if (el.category === 'gas' || visualCatKey === 'gas') {
                     fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
                 }
+
+                let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}">📍 Set Stop</button>`;
 
                 const popupContent = `
                     <div class="w-full font-sans p-0.5 text-zinc-955">
@@ -689,6 +760,7 @@
                         </div>
                         <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
                             ${actionBtnHtml}
+                            ${stopQueueBtnHtml}
                             <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
                             <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
                             <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
@@ -737,6 +809,8 @@
             const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
             let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
 
+            let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}">📍 Set Stop</button>`;
+
             const popupContent = `
                 <div class="w-full font-sans p-0.5 text-zinc-955">
                     <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
@@ -749,7 +823,8 @@
                         <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
                     </div>
                     <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
-                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
+                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
+                        ${stopQueueBtnHtml}
                         <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-blue-700 hover:bg-blue-800 text-[10px] py-1.5 rounded-xl border border-blue-900 shadow-sm text-white font-black flex items-center justify-center">🗺️ Route in Apple Maps</a>
                         <a href="${streetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
                         <a href="${googleSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Web & Reviews</a>
@@ -925,7 +1000,7 @@
         document.getElementById('route-btn').addEventListener('click', async () => {
             const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input');
             if (!startInput.dataset.lat || !endInput.dataset.lat) { alert("Select suggested autocomplete options first."); return; }
-            routingControl.setWaypoints([L.latLng(startInput.dataset.lat, startInput.dataset.lon), L.latLng(endInput.dataset.lat, endInput.dataset.lon)]);
+            triggerRouteCalculation();
         });
 
         routingControl.on('routingerror', function(e) {
@@ -956,6 +1031,37 @@
             if (stickyPanel) {
                 document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
                 stickyPanel.classList.remove('hidden');
+            }
+
+            // REFINED PARSER: Hydrates turn-by-turn list layouts dynamically from OSRM engine
+            const navHud = document.getElementById('navigation-hud');
+            const directionsList = document.getElementById('directions-list');
+            if (navHud && directionsList && e.routes && e.routes[0]) {
+                directionsList.innerHTML = '';
+                const instructions = e.routes[0].instructions || [];
+                
+                if (instructions.length > 0) {
+                    navHud.classList.remove('hidden');
+                    instructions.forEach((step) => {
+                        const item = document.createElement('div');
+                        item.className = "border-b border-slate-800/60 last:border-0 pb-1 mt-1 leading-tight text-slate-300 flex items-start gap-1.5";
+                        
+                        let distanceStr = '';
+                        if (step.distance > 0) {
+                            const distanceMiles = step.distance * 0.000621371;
+                            if (distanceMiles < 0.1) {
+                                distanceStr = ` (${Math.round(step.distance * 3.28084)} ft)`;
+                            } else {
+                                distanceStr = ` (${distanceMiles.toFixed(1)} mi)`;
+                            }
+                        }
+                        const stepText = step.text || "Continue onward";
+                        item.innerHTML = `<span class="text-blue-400 font-black shrink-0">➔</span><span>${stepText}${distanceStr}</span>`;
+                        directionsList.appendChild(item);
+                    });
+                } else {
+                    if (stopQueue.length === 0) navHud.classList.add('hidden');
+                }
             }
 
             poiClusterGroup.clearLayers();
@@ -997,6 +1103,27 @@
 
         map.on('popupopen', function(e) {
             const containerNode = e.popup.getElement();
+
+            // REFINED EVENT HOOK: Custom intermediate stop insertion logic configuration
+            const queueBtn = containerNode.querySelector('.queue-stop-trigger');
+            if (queueBtn) {
+                queueBtn.addEventListener('click', function() {
+                    const lat = parseFloat(this.dataset.lat);
+                    const lon = parseFloat(this.dataset.lon);
+                    const name = this.dataset.name;
+
+                    if (!stopQueue.some(s => roundCoords(s.lat) === roundCoords(lat) && roundCoords(s.lon) === roundCoords(lon))) {
+                        stopQueue.push({ lat, lon, name });
+                        triggerToast(`Added stop: "${name}"`);
+                        updateQueueHUD();
+                        triggerRouteCalculation();
+                    } else {
+                        triggerToast("This location is already inside your target stop queue.");
+                    }
+                    map.closePopup();
+                });
+            }
+
             const starToggle = containerNode.querySelector('.star-toggle-trigger');
             if (starToggle) {
                 starToggle.addEventListener('click', function() {
@@ -1088,9 +1215,7 @@
 
                         if (minDistanceToRouteLine > 805) {
                             triggerToast("Off-route deviation detected! Updating path variables...", 4000);
-                            const currentGpsLocationLatLng = L.latLng(latitude, longitude);
-                            const currentTargetDestinationLatLng = routingControl.getWaypoints()[1].latLng;
-                            routingControl.setWaypoints([currentGpsLocationLatLng, currentTargetDestinationLatLng]);
+                            triggerRouteCalculation();
                         }
                     }
                 }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
@@ -1118,7 +1243,7 @@
 
             loadMasterRepoFavoritesOnBoot();
 
-            const interactiveControlBars = ['master-filter-bar', 'sub-filter-bar', 'search-container'];
+            const interactiveControlBars = ['master-filter-bar', 'sub-filter-bar', 'search-container', 'navigation-hud'];
             interactiveControlBars.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
