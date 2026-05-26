@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
     <title>High-Performance Hybrid Route Explorer</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -25,6 +30,12 @@
         .leaflet-routing-container, .leaflet-routing-error, .leaflet-right { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Hardware Acceleration Optimization layer for Map Interactivity */
+        .leaflet-map-pane {
+            transform: translate3d(0, 0, 0);
+            will-change: transform;
+        }
 
         .custom-popup .leaflet-popup-content-wrapper {
             border-radius: 14px; padding: 1px; max-width: 210px !important;
@@ -309,6 +320,7 @@
         let activeInstructionIndex = 0;
         let currentRouteInstructions = [];
         let lastMileageUpdateGps = null;
+        let wakeLock = null;
 
         // =====================================================================
         // --- PHASE 2: STATIC STANDARD BALANCED HOISTED UTILITIES -------------
@@ -429,6 +441,17 @@
                 return; 
             }
             dispatchOffThreadAnalysis();
+        }
+
+        function buildCleanAddressString(addr, displayNameFallback) {
+            if (!addr) return displayNameFallback.split(',').slice(0, 3).join(',');
+            let tokens = [];
+            const roadLine = addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : (addr.road || '');
+            if (roadLine) tokens.push(roadLine);
+            if (addr.city || addr.town || addr.village || addr.suburb) tokens.push(addr.city || addr.town || addr.village || addr.suburb);
+            if (addr.state) tokens.push(addr.state);
+            if (addr.postcode) tokens.push(addr.postcode);
+            return tokens.length > 0 ? tokens.join(', ') : displayNameFallback.split(',').slice(0, 3).join(',');
         }
 
         function performInlineFieldLocate(inputId, clearBtnId) {
@@ -565,7 +588,6 @@
             });
         }
 
-        // REFINED PARSER: Builds streamlined client-side text instructions without sub-step distances
         function updateDirectionsHUD() {
             const navHud = document.getElementById('navigation-hud');
             const directionsList = document.getElementById('directions-list');
@@ -589,6 +611,23 @@
                 });
             } else {
                 if (stopQueue.length === 0) navHud.classList.add('hidden');
+            }
+        }
+
+        // Screen Wake Lock API Optimization Framework Cores
+        async function requestScreenWakeLockBlock() {
+            if (!('wakeLock' in navigator)) return;
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {
+                console.warn("System baseline power management blocks Wake Lock API: ", err);
+            }
+        }
+
+        function releaseScreenWakeLockBlock() {
+            if (wakeLock !== null) {
+                wakeLock.release();
+                wakeLock = null;
             }
         }
 
@@ -1048,7 +1087,6 @@
         document.getElementById('zoom-in-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() + 1); });
         document.getElementById('zoom-out-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() - 1); });
 
-        // REFINED CONTROLS: Precision focal locator node centering target vector sets
         document.getElementById('center-loc-btn').addEventListener('click', () => {
             if (lastUserGpsCoord) {
                 map.setView(lastUserGpsCoord, Math.max(map.getZoom(), 15));
@@ -1083,7 +1121,7 @@
         routingControl.on('routesfound', async function(e) {
             routeLineCoordinates = e.routes[0].coordinates;
             
-            // Hydrate state engine parameters on every fresh routing loop calculations
+            // Rehydrate state machine structural arrays
             currentRouteInstructions = e.routes[0].instructions || [];
             activeInstructionIndex = 0;
             lastMileageUpdateGps = null;
@@ -1213,10 +1251,12 @@
         geoBtn.addEventListener('click', () => {
             if (isTracking) { 
                 if (watchId) navigator.geolocation.clearWatch(watchId); 
+                releaseScreenWakeLockBlock();
                 isTracking = false; allowAutoCenter = true; clearTimeout(autoCenterTimeoutId);
                 geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
             } else {
                 if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
+                requestScreenWakeLockBlock();
                 geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
                 watchId = navigator.geolocation.watchPosition((pos) => {
                     const { latitude, longitude } = pos.coords;
@@ -1241,15 +1281,15 @@
                     }
                     if (allowAutoCenter) map.panTo([latitude, longitude]);
 
-                    // Active Stop Queue Proximity Arrival Check
+                    // Queue priority arrival check loop logic triggers 50 meter thresholds
                     if (stopQueue.length > 0) {
                         const distToActiveStop = map.distance(currentLatLng, L.latLng(stopQueue[0].lat, stopQueue[0].lon));
-                        if (distToActiveStop < 50) { // 50 meter radius
+                        if (distToActiveStop < 50) { 
                             triggerToast(`Arrived at stop: "${stopQueue[0].name}"`);
                             stopQueue.shift();
                             updateQueueHUD();
                             triggerRouteCalculation();
-                            return; //Recalculate route and exit step calculation context safely
+                            return; 
                         }
                     }
 
@@ -1260,7 +1300,7 @@
                             if (d < minDistanceToRouteLine) { minDistanceToRouteLine = d; closestCoordinateIndex = i; }
                         }
 
-                        // Client-Side Maneuver Advancement Check Logic
+                        // Client-Side Instruction Progression Check Logic
                         if (currentRouteInstructions.length > 0 && activeInstructionIndex < currentRouteInstructions.length - 1) {
                             const nextInstruction = currentRouteInstructions[activeInstructionIndex + 1];
                             if (nextInstruction && nextInstruction.index !== undefined) {
@@ -1268,7 +1308,7 @@
                                 if (nextTurnPoint) {
                                     const distanceToNextTurn = map.distance(currentLatLng, [nextTurnPoint.lat, nextTurnPoint.lng]);
                                     
-                                    // Step forward if user enters the turning radius zone or passes segment indices
+                                    // Slices turn out smoothly when within a 40 meter threshold radius or crossed indices
                                     if (distanceToNextTurn < 40 || closestCoordinateIndex >= nextInstruction.index) {
                                         activeInstructionIndex++;
                                         updateDirectionsHUD();
@@ -1277,7 +1317,7 @@
                             }
                         }
 
-                        // Throttled Distance Remaining Calculation Loop: Fires exclusively every 0.5 miles (805 meters)
+                        // Throttled Remaining Distance Countdown: Executes strictly every 0.5 miles (805 meters)
                         if (!lastMileageUpdateGps || map.distance(currentLatLng, lastMileageUpdateGps) >= 805) {
                             let remainingDistanceMeters = 0;
                             for (let i = closestCoordinateIndex; i < routeLineCoordinates.length - 1; i++) {
