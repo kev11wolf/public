@@ -119,7 +119,7 @@
         <button id="theme-toggle-btn" class="bg-white/95 backdrop-blur-md border border-gray-200 text-zinc-900 font-bold rounded-xl shadow-xl text-xs px-2.5 h-11 flex items-center justify-center active:scale-95 transition-all select-none cursor-pointer whitespace-nowrap">🌙 Mode</button>
         <button id="zoom-in-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">＋</button>
         <button id="zoom-out-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">－</button>
-        <button id="center-loc-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-lg transition-all select-none cursor-pointer" title="Center Location">🎯</button>
+        <button id="center-loc-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-lg transition-all select-none cursor-pointer" title="Center Current Position">🎯</button>
     </div>
 
     <div id="route-mileage-sticky" class="absolute bottom-6 left-4 z-10 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 px-4 py-2.5 rounded-xl shadow-xl hidden font-black text-xs transition-all duration-300 pointer-events-auto">
@@ -305,6 +305,11 @@
         let watchId = null;
         let stopQueue = [];
 
+        // Autonomous State Machine Variables
+        let activeInstructionIndex = 0;
+        let currentRouteInstructions = [];
+        let lastMileageUpdateGps = null;
+
         // =====================================================================
         // --- PHASE 2: STATIC STANDARD BALANCED HOISTED UTILITIES -------------
         // =====================================================================
@@ -375,7 +380,6 @@
             autoCenterTimeoutId = setTimeout(() => { allowAutoCenter = true; }, 20000); 
         }
 
-        // Standard dynamic calculation logic for active scale widths
         function updateBufferVisualizerWeight() {
             if (!routeBufferPolyline || routeLineCoordinates.length === 0) return;
             const currentMapCenterLatitude = map.getCenter().lat;
@@ -427,7 +431,6 @@
             dispatchOffThreadAnalysis();
         }
 
-        // REFINED UTILITY: Universal single-shot geolocation lookup logic for input buttons
         function performInlineFieldLocate(inputId, clearBtnId) {
             if (!navigator.geolocation) {
                 triggerToast("GPS Hardware is unavailable on this browser framework.");
@@ -506,7 +509,6 @@
             });
         }
 
-        // REFINED PIPELINE: Unified route master logic inserting stop queue array targets natively
         function triggerRouteCalculation() {
             const startInput = document.getElementById('start-input');
             const endInput = document.getElementById('end-input');
@@ -530,7 +532,7 @@
             list.innerHTML = '';
             if (stopQueue.length === 0) {
                 section.classList.add('hidden');
-                if (document.getElementById('directions-list').children.length === 0) {
+                if (currentRouteInstructions.length === 0 || activeInstructionIndex >= currentRouteInstructions.length) {
                     navHud.classList.add('hidden');
                 }
                 return;
@@ -561,6 +563,33 @@
                 container.appendChild(deleteBtn);
                 list.appendChild(container);
             });
+        }
+
+        // REFINED PARSER: Builds streamlined client-side text instructions without sub-step distances
+        function updateDirectionsHUD() {
+            const navHud = document.getElementById('navigation-hud');
+            const directionsList = document.getElementById('directions-list');
+            if (!navHud || !directionsList) return;
+            
+            directionsList.innerHTML = '';
+            
+            if (currentRouteInstructions.length > 0 && activeInstructionIndex < currentRouteInstructions.length) {
+                navHud.classList.remove('hidden');
+                const stepsToShow = currentRouteInstructions.slice(activeInstructionIndex, activeInstructionIndex + 2);
+                
+                stepsToShow.forEach((step, index) => {
+                    const item = document.createElement('div');
+                    item.className = "border-b border-slate-800/60 last:border-0 pb-1.5 mt-1 leading-tight text-slate-300 flex items-start gap-1.5 text-[11px]";
+                    const stepText = step.text || "Continue onward";
+                    const icon = index === 0 ? "➔" : "⮞";
+                    const iconColor = index === 0 ? "text-emerald-400 font-black" : "text-slate-400 font-bold";
+                    
+                    item.innerHTML = `<span class="${iconColor} shrink-0 mt-0.5">${icon}</span><span>${stepText}</span>`;
+                    directionsList.appendChild(item);
+                });
+            } else {
+                if (stopQueue.length === 0) navHud.classList.add('hidden');
+            }
         }
 
         // =====================================================================
@@ -945,7 +974,6 @@
         document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
         document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
 
-        // REFINED REPO HOOKS: Fixed explicit cross-field element swapping functionality
         document.getElementById('swap-locations-btn').addEventListener('click', () => {
             const startIn = document.getElementById('start-input');
             const endIn = document.getElementById('end-input');
@@ -978,7 +1006,6 @@
             triggerToast("Swapped start and destination fields.");
         });
 
-        // REFINED REPO HOOKS: Fixed active native functional clear button behaviors
         document.getElementById('start-clear-btn').addEventListener('click', () => {
             const startIn = document.getElementById('start-input');
             startIn.value = '';
@@ -995,7 +1022,6 @@
             document.getElementById('end-clear-btn').classList.add('hidden');
         });
 
-        // REFINED REPO HOOKS: Activated the inline field precision hardware positioning buttons
         document.getElementById('start-locate-btn').addEventListener('click', () => performInlineFieldLocate('start-input', 'start-clear-btn'));
         document.getElementById('end-locate-btn').addEventListener('click', () => performInlineFieldLocate('end-input', 'end-clear-btn'));
 
@@ -1022,17 +1048,17 @@
         document.getElementById('zoom-in-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() + 1); });
         document.getElementById('zoom-out-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() - 1); });
 
-        // REFINED CONTROLS: Center location click listener maps precision coordinate state vectors
+        // REFINED CONTROLS: Precision focal locator node centering target vector sets
         document.getElementById('center-loc-btn').addEventListener('click', () => {
             if (lastUserGpsCoord) {
-                map.setView(lastUserGpsCoord, Math.max(map.getZoom(), 14));
-                triggerToast("Centered on last known location.");
+                map.setView(lastUserGpsCoord, Math.max(map.getZoom(), 15));
+                triggerToast("Centered map onto asset tracking telemetry position.");
             } else {
                 if (!navigator.geolocation) {
                     triggerToast("GPS Hardware is unavailable.");
                     return;
                 }
-                updateInlineStatus("Locating user position...", true);
+                updateInlineStatus("Resolving standalone sensor positioning...", true);
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         lastUserGpsCoord = [pos.coords.latitude, pos.coords.longitude];
@@ -1041,13 +1067,13 @@
                         } else { 
                             userMarker.setLatLng(lastUserGpsCoord); 
                         }
-                        map.setView(lastUserGpsCoord, 14);
-                        updateInlineStatus("Centered on current location.");
-                        triggerToast("Centered on current location.");
+                        map.setView(lastUserGpsCoord, 15);
+                        updateInlineStatus("System realigned.");
+                        triggerToast("Position aligned successfully.");
                     },
-                    (err) => {
-                        updateInlineStatus("Failed to get current location.");
-                        triggerToast("Location access denied or timed out.");
+                    () => {
+                        updateInlineStatus("Positioning failure.");
+                        triggerToast("Telemetry context access timed out.");
                     },
                     { enableHighAccuracy: true, timeout: 5000 }
                 );
@@ -1056,6 +1082,12 @@
 
         routingControl.on('routesfound', async function(e) {
             routeLineCoordinates = e.routes[0].coordinates;
+            
+            // Hydrate state engine parameters on every fresh routing loop calculations
+            currentRouteInstructions = e.routes[0].instructions || [];
+            activeInstructionIndex = 0;
+            lastMileageUpdateGps = null;
+
             const searchContainer = document.getElementById('search-container');
             if (searchContainer) searchContainer.classList.add('hidden');
             
@@ -1067,39 +1099,7 @@
                 stickyPanel.classList.remove('hidden');
             }
 
-            // REFINED PARSER: Slices and renders only the current active maneuver and immediate next step
-            const navHud = document.getElementById('navigation-hud');
-            const directionsList = document.getElementById('directions-list');
-            if (navHud && directionsList && e.routes && e.routes[0]) {
-                directionsList.innerHTML = '';
-                const instructions = e.routes[0].instructions || [];
-                
-                if (instructions.length > 0) {
-                    navHud.classList.remove('hidden');
-                    const activeSteps = instructions.slice(0, 2);
-                    activeSteps.forEach((step, index) => {
-                        const item = document.createElement('div');
-                        item.className = "border-b border-slate-800/60 last:border-0 pb-1.5 mt-1 leading-tight text-slate-300 flex items-start gap-1.5 text-[11px]";
-                        
-                        let distanceStr = '';
-                        if (step.distance > 0) {
-                            const distanceMiles = step.distance * 0.000621371;
-                            if (distanceMiles < 0.1) {
-                                distanceStr = ` (${Math.round(step.distance * 3.28084)} ft)`;
-                            } else {
-                                distanceStr = ` (${distanceMiles.toFixed(1)} mi)`;
-                            }
-                        }
-                        const stepText = step.text || "Continue onward";
-                        const icon = index === 0 ? "➔" : "⮞";
-                        const iconColor = index === 0 ? "text-emerald-400 font-black" : "text-slate-400 font-bold";
-                        item.innerHTML = `<span class="${iconColor} shrink-0 mt-0.5">${icon}</span><span>${stepText}${distanceStr}</span>`;
-                        directionsList.appendChild(item);
-                    });
-                } else {
-                    if (stopQueue.length === 0) navHud.classList.add('hidden');
-                }
-            }
+            updateDirectionsHUD();
 
             poiClusterGroup.clearLayers();
             allPoiMarkersMemoryMap = [];
@@ -1141,7 +1141,6 @@
         map.on('popupopen', function(e) {
             const containerNode = e.popup.getElement();
 
-            // REFINED EVENT HOOK: Custom intermediate stop insertion logic configuration
             const queueBtn = containerNode.querySelector('.queue-stop-trigger');
             if (queueBtn) {
                 queueBtn.addEventListener('click', function() {
@@ -1222,7 +1221,6 @@
                 watchId = navigator.geolocation.watchPosition((pos) => {
                     const { latitude, longitude } = pos.coords;
                     
-                    // REFINED EXECUTION HOOK: Forces start-input sync vectors when live asset tracking layer initializes
                     const startInField = document.getElementById('start-input');
                     startInField.value = "Current Location";
                     startInField.dataset.lat = latitude;
@@ -1232,9 +1230,28 @@
                     if (lastUserGpsCoord) {
                         const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord); if (distanceMoved < 25) return; 
                     }
+                    
+                    const currentLatLng = L.latLng(latitude, longitude);
                     lastUserGpsCoord = [latitude, longitude];
-                    if (!userMarker) { userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); } else { userMarker.setLatLng([latitude, longitude]); }
+                    
+                    if (!userMarker) { 
+                        userMarker = L.marker([latitude, longitude], { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); 
+                    } else { 
+                        userMarker.setLatLng([latitude, longitude]); 
+                    }
                     if (allowAutoCenter) map.panTo([latitude, longitude]);
+
+                    // Active Stop Queue Proximity Arrival Check
+                    if (stopQueue.length > 0) {
+                        const distToActiveStop = map.distance(currentLatLng, L.latLng(stopQueue[0].lat, stopQueue[0].lon));
+                        if (distToActiveStop < 50) { // 50 meter radius
+                            triggerToast(`Arrived at stop: "${stopQueue[0].name}"`);
+                            stopQueue.shift();
+                            updateQueueHUD();
+                            triggerRouteCalculation();
+                            return; //Recalculate route and exit step calculation context safely
+                        }
+                    }
 
                     if (routeLineCoordinates.length > 0) {
                         let minDistanceToRouteLine = Infinity; let closestCoordinateIndex = 0;
@@ -1242,13 +1259,36 @@
                             const d = map.distance([latitude, longitude], [routeLineCoordinates[i].lat, routeLineCoordinates[i].lng]);
                             if (d < minDistanceToRouteLine) { minDistanceToRouteLine = d; closestCoordinateIndex = i; }
                         }
-                        let remainingDistanceMeters = 0;
-                        for (let i = closestCoordinateIndex; i < routeLineCoordinates.length - 1; i++) {
-                            remainingDistanceMeters += map.distance([routeLineCoordinates[i].lat, routeLineCoordinates[i].lng], [routeLineCoordinates[i+1].lat, routeLineCoordinates[i+1].lng]);
+
+                        // Client-Side Maneuver Advancement Check Logic
+                        if (currentRouteInstructions.length > 0 && activeInstructionIndex < currentRouteInstructions.length - 1) {
+                            const nextInstruction = currentRouteInstructions[activeInstructionIndex + 1];
+                            if (nextInstruction && nextInstruction.index !== undefined) {
+                                const nextTurnPoint = routeLineCoordinates[nextInstruction.index];
+                                if (nextTurnPoint) {
+                                    const distanceToNextTurn = map.distance(currentLatLng, [nextTurnPoint.lat, nextTurnPoint.lng]);
+                                    
+                                    // Step forward if user enters the turning radius zone or passes segment indices
+                                    if (distanceToNextTurn < 40 || closestCoordinateIndex >= nextInstruction.index) {
+                                        activeInstructionIndex++;
+                                        updateDirectionsHUD();
+                                    }
+                                }
+                            }
                         }
-                        const remainingDistanceMiles = (remainingDistanceMeters * 0.000621371).toFixed(1);
-                        const stickyLabelValue = document.getElementById('sticky-total-dist');
-                        if (stickyLabelValue) stickyLabelValue.innerText = remainingDistanceMiles;
+
+                        // Throttled Distance Remaining Calculation Loop: Fires exclusively every 0.5 miles (805 meters)
+                        if (!lastMileageUpdateGps || map.distance(currentLatLng, lastMileageUpdateGps) >= 805) {
+                            let remainingDistanceMeters = 0;
+                            for (let i = closestCoordinateIndex; i < routeLineCoordinates.length - 1; i++) {
+                                remainingDistanceMeters += map.distance([routeLineCoordinates[i].lat, routeLineCoordinates[i].lng], [routeLineCoordinates[i+1].lat, routeLineCoordinates[i+1].lng]);
+                            }
+                            const remainingDistanceMiles = (remainingDistanceMeters * 0.000621371).toFixed(1);
+                            const stickyLabelValue = document.getElementById('sticky-total-dist');
+                            if (stickyLabelValue) stickyLabelValue.innerText = remainingDistanceMiles;
+                            
+                            lastMileageUpdateGps = currentLatLng;
+                        }
 
                         if (minDistanceToRouteLine > 805) {
                             triggerToast("Off-route deviation detected! Updating path variables...", 4000);
@@ -1280,7 +1320,7 @@
 
             loadMasterRepoFavoritesOnBoot();
 
-            const interactiveControlBars = ['master-filter-bar', 'sub-filter-bar', 'search-container', 'navigation-hud'];
+            const interactiveControlBars = ['master-filter-bar', 'sub-filter-bar', 'search-container', 'navigation-hud', 'center-loc-btn'];
             interactiveControlBars.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
