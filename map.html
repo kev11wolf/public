@@ -137,12 +137,6 @@
         </div>
     </div>
 
-    <div id="next-stop-hud" class="absolute top-72 right-4 z-30 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl max-w-[200px] hidden pointer-events-none transition-all duration-300">
-        <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest leading-none mb-1">⏱️ Next Target Stop</p>
-        <h4 id="hud-poi-name" class="text-xs font-black truncate text-white">---</h4>
-        <p id="hud-poi-dist" class="text-sm font-black text-amber-400 mt-0.5">0.0 mi away</p>
-    </div>
-
     <div class="absolute bottom-24 right-4 z-30 flex flex-col gap-2 items-center">
         <button id="theme-toggle-btn" class="bg-white/95 backdrop-blur-md border border-gray-200 text-zinc-900 font-bold rounded-xl shadow-xl text-xs px-2.5 h-11 flex items-center justify-center active:scale-95 transition-all select-none cursor-pointer whitespace-nowrap">🌙 Mode</button>
         <button id="zoom-in-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">＋</button>
@@ -704,6 +698,16 @@
             primaryRoutePolyline = L.polyline(routeLineCoordinates, {
                 color: '#2563eb', opacity: 0.9, weight: 8, lineCap: 'round', lineJoin: 'round'
             }).addTo(map);
+
+            // Path Click Listener: Drops a midpoint Waypoint anchor onto the engine grid array
+            primaryRoutePolyline.on('click', function(e) {
+                let currentWaypoints = routingControl.getWaypoints();
+                // Inject waypoints directly between start and end termini slots safely
+                currentWaypoints.splice(currentWaypoints.length - 1, 0, L.Routing.waypoint(e.latlng));
+                isAlternateMatrixModeActive = false; 
+                routingControl.setWaypoints(currentWaypoints);
+                triggerToast("Dropped custom waypoint anchor point onto road grid.");
+            });
             
             const totalDistanceMiles = (selectedRoute.summary.totalDistance * 0.000621371).toFixed(1);
             document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
@@ -919,21 +923,13 @@
             }
             
             sortedMatches.forEach(el => { buildAndRenderPoiMarker(el); });
-            
-            const hud = document.getElementById('next-stop-hud');
-            if (hud && sortedMatches.length > 0) {
-                document.getElementById('hud-poi-name').innerText = sortedMatches[0].n || "POI Destination Element";
-                const distMiles = (sortedMatches[0].minD * 0.000621371).toFixed(2);
-                document.getElementById('hud-poi-dist').innerText = `${distMiles} mi away`;
-                hud.classList.remove('hidden');
-            }
             updateInlineStatus(`Corridor calculations ready: [Mapped ${sortedMatches.length} Facilities]`);
         };
 
         routingControl = L.Routing.control({
             show: false, 
-            addWaypoints: false, 
-            draggableWaypoints: false,
+            addWaypoints: true, // Native waypoint drops enabled
+            draggableWaypoints: true, // Dynamic road dragging tracking anchors enabled
             serviceUrl: 'https://router.project-osrm.org/route/v1',
             router: L.Routing.osrmv1({ 
                 serviceUrl: 'https://router.project-osrm.org/route/v1',
@@ -948,7 +944,24 @@
                 let bgClass = 'bg-blue-600 border-white text-white';
                 if (i === 0) { iconLabel = '🏁'; bgClass = 'bg-emerald-600 border-white text-white'; }
                 else if (i === n - 1) { iconLabel = '🛑'; bgClass = 'bg-red-600 border-white text-white'; }
-                return L.marker(wp.latLng, { icon: createRouteMarkerIcon(iconLabel, bgClass) });
+                
+                let marker = L.marker(wp.latLng, { draggable: true, icon: createRouteMarkerIcon(iconLabel, bgClass) });
+                
+                // Prompt-To-Delete click mechanism on secondary layout anchors
+                if (i > 0 && i < n - 1) {
+                    marker.on('click', function() {
+                        if (confirm("Would you like to delete this waypoint anchor?")) {
+                            let currentWaypoints = routingControl.getWaypoints();
+                            currentWaypoints.splice(i, 1);
+                            isAlternateMatrixModeActive = false; 
+                            routingControl.setWaypoints(currentWaypoints);
+                        }
+                    });
+                    marker.on('dragend', function() {
+                        isAlternateMatrixModeActive = false; 
+                    });
+                }
+                return marker;
             }
         }).addTo(map);
 
@@ -984,6 +997,8 @@
                 
                 const safeQueryString = encodeURIComponent(`${popupHeadingName} near ${parseFloat(lat).toFixed(5)},${parseFloat(lon).toFixed(5)}`);
                 const googleMapsUniversalDeepLinkUrl = `https://www.google.com/maps/search/?api=1&query=${safeQueryString}`;
+                
+                // EXACT COORD DIRECT LOOKUP DEEP-LINK
                 const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
 
@@ -1167,7 +1182,6 @@
             element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
             currentMasterCat = element.getAttribute('data-cat'); currentSubFilter = 'none';
             poiClusterGroup.clearLayers(); allPoiMarkersMemoryMap = [];
-            const hud = document.getElementById('next-stop-hud'); if (hud) hud.classList.add('hidden');
             generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
         }
 
@@ -1333,9 +1347,21 @@
         });
 
         routingControl.on('routesfound', async function(e) {
-            rawRoutesMemoryArray = e.routes || []; 
-            routeLineCoordinates = e.routes[0].coordinates;
-            currentRouteInstructions = e.routes[0].instructions || [];
+            // Deduplicate alternative tracks matching identical layout distance shapes
+            let uniqueRoutes = [];
+            let seenDistances = new Set();
+            
+            (e.routes || []).forEach(r => {
+                let distMiles = (r.summary.totalDistance * 0.000621371).toFixed(1);
+                if (!seenDistances.has(distMiles)) {
+                    seenDistances.add(distMiles);
+                    uniqueRoutes.push(r);
+                }
+            });
+
+            rawRoutesMemoryArray = uniqueRoutes; 
+            routeLineCoordinates = uniqueRoutes[0] ? uniqueRoutes[0].coordinates : [];
+            currentRouteInstructions = uniqueRoutes[0] ? (uniqueRoutes[0].instructions || []) : [];
             activeInstructionIndex = 0;
             lastMileageUpdateGps = null;
             continuousOffRouteDriftTicks = 0; 
@@ -1343,10 +1369,10 @@
             const searchContainer = document.getElementById('search-container');
             if (searchContainer) searchContainer.classList.add('hidden');
             
-            if (isAlternateMatrixModeActive) {
+            if (isAlternateMatrixModeActive && rawRoutesMemoryArray.length > 1) {
                 document.getElementById('route-mileage-sticky').classList.add('hidden');
                 renderAlternateRoutePathsMatrix(rawRoutesMemoryArray);
-                updateInlineStatus("Alternate choices plotted. Select an option to engage navigation.");
+                updateInlineStatus("Alternate choices mapped. Tap any card pointer to select.");
             } else {
                 selectAndLockPrimaryTrackPath(0);
             }
