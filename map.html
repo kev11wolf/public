@@ -158,7 +158,7 @@
 
     <script>
         // =====================================================================
-        // --- PHASE 1: RE-HOISTED GLOBAL VARIABLE & ALLOCATION POOLS ---------
+        // --- PHASE 1: GLOBAL CONSTANTS, VARIABLE SCHEMAS & DICTIONARIES ------
         // =====================================================================
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
         const autocompleteQueryMemoryCache = new Map(); 
@@ -170,7 +170,147 @@
         let favoritesLayerGroup = null;
         let poiClusterGroup = null;
 
-        // ALL SYSTEM STANDARD POOL VALUES AND SCOPES RE-HOISTED CORRECTLY BELOW
+        const STATE_BOUNDS_LOOKUP = {
+            "alabama":        { s: 30.1, n: 35.1, w: -88.6, e: -84.8 },
+            "alaska":         { s: 51.0, n: 71.5, w: -179.9, e: -129.9 },
+            "arizona":        { s: 31.3, n: 37.1, w: -114.9, e: -109.0 },
+            "arkansas":       { s: 33.0, n: 36.6, w: -94.7, e: -89.6 },
+            "california":     { s: 32.5, n: 42.1, w: -124.5, e: -114.1 },
+            "colorado":       { s: 36.9, n: 41.1, w: -109.1, e: -102.0 },
+            "connecticut":    { s: 40.9, n: 42.1, w: -73.8, e: -71.7 },
+            "delaware":       { s: 38.4, n: 39.9, w: -75.8, e: -74.9 },
+            "florida":        { s: 24.3, n: 31.0, w: -87.7, e: -79.9 },
+            "georgia":        { s: 30.3, n: 35.1, w: -85.7, e: -80.7 },
+            "hawaii":         { s: 18.9, n: 22.3, w: -160.3, e: -154.7 },
+            "idaho":          { s: 41.9, n: 49.1, w: -117.3, e: -111.0 },
+            "illinois":       { s: 36.9, n: 42.6, w: -91.6, e: -87.4 },
+            "indiana":        { s: 37.7, n: 41.8, w: -88.1, e: -84.7 },
+            "iowa":           { s: 40.3, n: 43.6, w: -96.7, e: -90.1 },
+            "kansas":         { s: 36.9, n: 40.1, w: -102.1, e: -94.5 },
+            "kentucky":       { s: 36.4, n: 39.2, w: -89.6, e: -81.9 },
+            "louisiana":      { s: 28.9, n: 33.1, w: -94.1, e: -88.7 },
+            "maine":          { s: 43.0, n: 47.5, w: -71.2, e: -66.8 },
+            "maryland":       { s: 37.8, n: 39.8, w: -79.5, e: -74.9 },
+            "massachusetts":  { s: 41.2, n: 42.9, w: -73.6, e: -69.9 },
+            "michigan":       { s: 41.7, n: 47.5, w: -90.5, e: -82.1 },
+            "minnesota":      { s: 43.4, n: 49.4, w: -97.3, e: -89.4 },
+            "mississippi":    { s: 30.1, n: 35.1, w: -91.7, e: -88.0 },
+            "missouri":       { s: 35.9, n: 40.7, w: -95.8, e: -89.0 },
+            "montana":        { s: 44.3, n: 49.1, w: -116.1, e: -104.0 },
+            "nebraska":       { s: 39.9, n: 43.1, w: -104.1, e: -95.3 },
+            "nevada":         { s: 35.0, n: 42.1, w: -120.1, e: -114.0 },
+            "new-hampshire":  { s: 42.6, n: 45.4, w: -72.6, e: -70.5 },
+            "new-jersey":     { s: 38.9, n: 41.4, w: -75.6, e: -73.8 },
+            "new-mexico":     { s: 31.3, n: 37.1, w: -109.1, e: -103.0 },
+            "new-york":       { s: 40.4, n: 45.1, w: -79.8, e: -71.7 },
+            "north-carolina": { s: 33.7, n: 36.6, w: -84.4, e: -75.4 },
+            "north-dakota":   { s: 45.9, n: 49.1, w: -104.1, e: -96.5 },
+            "ohio":           { s: 38.3, n: 42.0, w: -84.9, e: -80.5 },
+            "oklahoma":       { s: 33.6, n: 37.1, w: -103.1, e: -94.4 },
+            "oregon":         { s: 41.9, n: 46.3, w: -124.6, e: -116.4 },
+            "pennsylvania":   { s: 39.7, n: 42.3, w: -80.6, e: -74.6 },
+            "rhode-island":   { s: 41.1, n: 42.1, w: -71.9, e: -71.1 },
+            "south-carolina": { s: 32.0, n: 35.3, w: -83.4, e: -78.4 },
+            "south-dakota":   { s: 42.4, n: 46.0, w: -104.2, e: -96.4 },
+            "tennessee":      { s: 34.9, n: 36.7, w: -90.4, e: -81.6 },
+            "texas":          { s: 25.8, n: 36.5, w: -106.7, e: -93.5 },
+            "utah":           { s: 36.9, n: 42.1, w: -114.1, e: -109.0 },
+            "vermont":        { s: 42.7, n: 45.1, w: -73.5, e: -71.4 },
+            "virginia":       { s: 36.5, n: 39.5, w: -83.7, e: -75.0 },
+            "washington":     { s: 45.5, n: 49.1, w: -124.8, e: -116.9 },
+            "west-virginia":  { s: 37.1, n: 40.7, w: -82.7, e: -77.7 },
+            "wisconsin":      { s: 42.4, n: 47.1, w: -92.9, e: -86.7 },
+            "wyoming":        { s: 40.9, n: 45.1, w: -111.1, e: -104.0 }
+        };
+
+        const categoryConfigs = {
+            playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
+            gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
+            food: { label: '🍟', bg: 'bg-red-600 border-red-200 text-white', name: 'Fast Food', img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
+            shopping: { label: '🛒', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Shopping & Services', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            walmart: { label: '🔵', bg: 'bg-blue-600 border-blue-300 text-white', name: 'Walmart', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            target: { label: '🎯', bg: 'bg-red-600 border-red-300 text-white', name: 'Target', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            dollartree: { label: '🌳', bg: 'bg-green-600 border-green-300 text-white', name: 'Dollar Tree', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            costco: { label: '📦', bg: 'bg-blue-800 border-blue-400 text-white', name: 'Costco Wholesale', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            staples: { label: '📎', bg: 'bg-red-700 border-red-400 text-white', name: 'Staples', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            upsstore: { label: '📦', bg: 'bg-amber-800 border-amber-600 text-white', name: 'The UPS Store', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
+            basspro: { label: '🏹', bg: 'bg-green-700 border-green-500 text-white', name: "Bass Pro / Cabela's", img: 'https://images.unsplash.com/photo-1496062031456-07b8f1620322?auto=format&fit=crop&w=300&q=80' },
+            chipotle: { label: '🌯', bg: 'bg-amber-800 border-amber-500 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a0847685?auto=format&fit=crop&w=300&q=80' },
+            starbucks: { label: '☕', bg: 'bg-emerald-800 border-emerald-500 text-white', name: 'Starbucks Coffee', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80' },
+            mcdonalds: { label: '🍔', bg: 'bg-yellow-500 border-yellow-300 text-zinc-900', name: "McDonald's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
+            chickfila: { label: '🐄', bg: 'bg-red-700 border-red-400 text-white', name: 'Chick-fil-A', img: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?auto=format&fit=crop&w=300&q=80' },
+            wendys: { label: '🍔', bg: 'bg-red-500 border-red-300 text-white', name: "Wendy's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
+            raisingcanes: { label: '🍗', bg: 'bg-orange-500 border-orange-300 text-white', name: "Raising Cane's", img: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=300&q=80' },
+            jerseymikes: { label: '🐖', bg: 'bg-blue-800 border-blue-400 text-white', name: "Jersey Mike's", img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
+            culvers: { label: '🍦', bg: 'bg-blue-600 border-blue-300 text-white', name: "Culver's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
+            shakeshack: { label: '🍔', bg: 'bg-green-700 border-green-400 text-white', name: 'Shake Shack', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
+            innout: { label: '🌴', bg: 'bg-yellow-400 border-red-600 text-zinc-955', name: 'In-N-Out Burger', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
+            potbelly: { label: '🥪', bg: 'bg-orange-700 border-orange-400 text-white', name: 'Potbelly', img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
+            parks: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Parks & Attractions', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
+            campground: { label: '⛺', bg: 'bg-stone-700 border-stone-500 text-white', name: 'Campground / RV Park', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
+            attraction: { label: '🎡', bg: 'bg-purple-600 border-purple-300 text-white', name: 'Tourist Attraction', img: 'https://images.unsplash.com/photo-1473163928189-364b2c4e1135?auto=format&fit=crop&w=300&q=80' },
+            national_park: { label: '🏞️', bg: 'bg-emerald-800 border-emerald-600 text-white', name: 'National Park', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
+            nature_reserve: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Nature Reserve', img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=300&q=80' },
+            medical: { label: '🏥', bg: 'bg-rose-600 border-rose-400 text-white', name: 'Emergency Medical', img: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=300&q=80' },
+            hospital: { label: '🏥', bg: 'bg-rose-600 border-rose-400 text-white', name: 'Major Hospital', img: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=300&q=80' },
+            veterinary: { label: '🐕', bg: 'bg-indigo-500 border-indigo-300 text-white', name: 'Veterinary Clinic', img: 'https://images.unsplash.com/photo-1581888227599-779811939961?auto=format&fit=crop&w=300&q=80' },
+            highway_rest: { label: '🪑', bg: 'bg-blue-600 border-blue-200 text-white', name: 'Rest Area', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80' },
+            highway_toilets: { label: '🚻', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Public Restroom', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
+            tourism_viewpoint: { label: '📷', bg: 'bg-sky-500 border-sky-200 text-white', name: 'Scenic Viewpoint', img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=300&q=80' },
+            tourism_dogpark: { label: '🐕', bg: 'bg-violet-600 border-violet-200 text-white', name: 'Dog Park', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=300&q=80' }
+        };
+
+        const cleanBrandNames = {
+            "sheetz": "Sheetz", "bucees": "Buc-ee's", "wawa": "Wawa", "circlek": "Circle K",
+            "mcdonalds": "McDonald's", "wendys": "Wendy's", "chickfila": "Chick-fil-A",
+            "chipotle": "Chipotle", "jerseymikes": "Jersey Mike's", "raisingcanes": "Raising Cane's",
+            "culvers": "Culver's", "shakeshack": "Shake Shack", "innout": "In-N-Out", "potbelly": "Potbelly",
+            "walmart": "Walmart Supercenter", "target": "Target Store Hub", "costco": "Costco Wholesale", 
+            "dollartree": "Dollar Tree Discount", "staples": "Staples Office Business", "upsstore": "UPS Shipping Center",
+            "basspro": "Bass Pro Shops / Cabela's", "campground": "Campground / RV Park",
+            "starbucks": "Starbucks", "hospital": "Major Hospital", "veterinary": "Veterinary Clinic",
+            "national_park": "National Park", "nature_reserve": "Nature Reserve", "attraction": "Tourist Attraction"
+        };
+
+        const subMenuDefinitions = {
+            playground: [{ id: 'playground', label: '🛝 Public Playgrounds' }],
+            gas: [
+                { id: 'sheetz', label: 'Sheetz' },
+                { id: 'wawa', label: 'Wawa' },
+                { id: 'bucees', label: "Buc-ee's" },
+                { id: 'circlek', label: 'Circle K' },
+                { id: 'unl87', label: '⛽ UNL 87' }, 
+                { id: 'unl88', label: '⚡ UNL 88 / E15' }
+            ],
+            food: [
+                { id: 'starbucks', label: '☕ Starbucks' },
+                { id: 'chipotle', label: 'Chipotle' }, 
+                { id: 'raisingcanes', label: "Raising Cane's" }, 
+                { id: 'chickfila', label: 'Chick-fil-A' }, 
+                { id: 'mcdonalds', label: "McDonald's" }, 
+                { id: 'wendys', label: "Wendy's" },
+                { id: 'jerseymikes', label: "Jersey Mike's" },
+                { id: 'culvers', label: "Culver's" },
+                { id: 'shakeshack', label: "Shake Shack" },
+                { id: 'innout', label: "In-N-Out" },
+                { id: 'potbelly', label: "Potbelly" }
+            ],
+            shopping: [
+                { id: 'walmart', label: 'Walmart Supercenters' },
+                { id: 'target', label: 'Target Hubs' },
+                { id: 'costco', label: 'Costco Warehouse' },
+                { id: 'dollartree', label: 'Dollar Tree Discounts' },
+                { id: 'staples', label: 'Staples Office' },
+                { id: 'upsstore', label: 'UPS Store Shipping' },
+                { id: 'basspro', label: "Bass Pro / Cabela's" }
+            ],
+            parks: [{ id: 'national_park', label: '🏞️ National Parks' }, { id: 'nature_reserve', label: '🌲 Nature Reserves' }, { id: 'attraction', label: '🎡 Attractions' }],
+            campground: [{ id: 'campground', label: '⛺ Campgrounds & RV Parks' }],
+            medical: [{ id: 'hospital', label: '🏥 Major Hospitals' }, { id: 'veterinary', label: '🐕 Vet Clinics' }],
+            highway: [{ id: 'highway_rest', label: '🪑 Highway Rest Areas' }, { id: 'highway_toilets', label: '🚻 Standalone Restrooms' }],
+            tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
+        };
+
         let allPoiMarkersMemoryMap = [];
         let globalFavoritesMarkers = []; 
         let repoFavoritesMemory = [];    
@@ -181,7 +321,7 @@
         let currentMasterCat = null;
         let currentSubFilter = 'none'; 
         let activeBufferMeters = 4000; 
-        let mapStyleMode = 'light'; // <--- RESTORED POOL TERM LAYERS
+        let mapStyleMode = 'light';
         let activeTargetsSliceMemory = [];
         let routeBufferPolyline = null;
         let allowAutoCenter = true;
@@ -190,13 +330,11 @@
         let watchId = null;
         let stopQueue = [];
         
-        // Advanced Custom Multi-Route Management Subsystems
         let alternateRoutesGroupLayer = null; 
         let alternateCalloutsGroupLayer = null; 
         let rawRoutesMemoryArray = []; 
         let isAlternateMatrixModeActive = true; 
         
-        // Dynamic Turn Machine Global Registry
         let activeInstructionIndex = 0;
         let currentRouteInstructions = [];
         let lastMileageUpdateGps = null;
@@ -1047,370 +1185,4 @@
             if (localJsonMemory) dispatchOffThreadAnalysis(); 
         });
         
-        document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
-        document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
-
-        document.getElementById('swap-locations-btn').addEventListener('click', () => {
-            const startIn = document.getElementById('start-input');
-            const endIn = document.getElementById('end-input');
-            const startClear = document.getElementById('start-clear-btn');
-            const endClear = document.getElementById('end-clear-btn');
-
-            const tmpText = startIn.value;
-            const tmpLat = startIn.dataset.lat;
-            const tmpLon = startIn.dataset.lon;
-
-            startIn.value = endIn.value;
-            startIn.dataset.lat = endIn.dataset.lat || '';
-            startIn.dataset.lon = endIn.dataset.lon || '';
-
-            endIn.value = tmpText;
-            endIn.dataset.lat = tmpLat || '';
-            endIn.dataset.lon = tmpLon || '';
-
-            if (!startIn.dataset.lat || startIn.dataset.lat === '') {
-                delete startIn.dataset.lat; delete startIn.dataset.lon; startClear.classList.add('hidden');
-            } else {
-                startClear.classList.remove('hidden');
-            }
-
-            if (!endIn.dataset.lat || endIn.dataset.lat === '') {
-                delete endIn.dataset.lat; delete endIn.dataset.lon; endClear.classList.add('hidden');
-            } else {
-                endClear.classList.remove('hidden');
-            }
-            triggerToast("Swapped start and destination fields.");
-        });
-
-        document.getElementById('start-clear-btn').addEventListener('click', () => {
-            const startIn = document.getElementById('start-input');
-            startIn.value = '';
-            delete startIn.dataset.lat;
-            delete startIn.dataset.lon;
-            document.getElementById('start-clear-btn').classList.add('hidden');
-        });
-
-        document.getElementById('end-clear-btn').addEventListener('click', () => {
-            const endIn = document.getElementById('end-input');
-            endIn.value = '';
-            delete endIn.dataset.lat;
-            delete endIn.dataset.lon;
-            document.getElementById('end-clear-btn').classList.add('hidden');
-        });
-
-        document.getElementById('start-locate-btn').addEventListener('click', () => performInlineFieldLocate('start-input', 'start-clear-btn'));
-        document.getElementById('end-locate-btn').addEventListener('click', () => performInlineFieldLocate('end-input', 'end-clear-btn'));
-
-        document.getElementById('route-btn').addEventListener('click', async () => {
-            const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input');
-            if (!startInput.dataset.lat || !endInput.dataset.lat) { alert("Select suggested autocomplete options first."); return; }
-            triggerRouteCalculation();
-        });
-
-        routingControl.on('routingerror', function(e) {
-            console.error("OSRM Connection Error Blocked: ", e);
-            updateInlineStatus("OSRM Server Timeout. Re-calculating path corridor parameters...", false);
-            triggerToast("Routing server connection dropped. Automatically retrying calculation...");
-        });
-
-        document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
-            map.removeLayer(mapLayersPool[mapStyleMode]);
-            mapStyleMode = mapStyleMode === 'light' ? 'dark' : 'light';
-            mapLayersPool[mapStyleMode].addTo(map);
-            e.target.innerText = mapStyleMode === 'light' ? "🌙 Mode" : "☀️ Mode";
-            triggerToast(`Map skin changed to ${mapStyleMode} mode layouts.`);
-        });
-
-        document.getElementById('zoom-in-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() + 1); });
-        document.getElementById('zoom-out-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() - 1); });
-
-        document.getElementById('center-loc-btn').addEventListener('click', () => {
-            if (lastUserGpsCoord) {
-                map.setView(lastUserGpsCoord, Math.max(map.getZoom(), 15));
-                triggerToast("Centered map onto asset tracking telemetry position.");
-            } else {
-                if (!navigator.geolocation) {
-                    triggerToast("GPS Hardware is unavailable.");
-                    return;
-                }
-                updateInlineStatus("Resolving standalone sensor positioning...", true);
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        lastUserGpsCoord = [pos.coords.latitude, pos.coords.longitude];
-                        if (!userMarker) { 
-                            userMarker = L.marker(lastUserGpsCoord, { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); 
-                        } else { 
-                            userMarker.setLatLng(lastUserGpsCoord); 
-                        }
-                        map.setView(lastUserGpsCoord, 15);
-                        updateInlineStatus("System realigned.");
-                        triggerToast("Position aligned successfully.");
-                    },
-                    () => {
-                        updateInlineStatus("Positioning failure.");
-                        triggerToast("Telemetry context access timed out.");
-                    },
-                    { enableHighAccuracy: true, timeout: 5000 }
-                );
-            }
-        });
-
-        routingControl.on('routesfound', async function(e) {
-            rawRoutesMemoryArray = e.routes || []; 
-            routeLineCoordinates = e.routes[0].coordinates;
-            currentRouteInstructions = e.routes[0].instructions || [];
-            activeInstructionIndex = 0;
-            lastMileageUpdateGps = null;
-            continuousOffRouteDriftTicks = 0; 
-
-            const searchContainer = document.getElementById('search-container');
-            if (searchContainer) searchContainer.classList.add('hidden');
-            
-            if (isAlternateMatrixModeActive) {
-                document.getElementById('route-mileage-sticky').classList.add('hidden');
-                renderAlternateRoutePathsMatrix(rawRoutesMemoryArray);
-                updateInlineStatus("Alternate choices plotted. Select an option to engage navigation.");
-            } else {
-                selectAndLockPrimaryTrackPath(0);
-            }
-
-            poiClusterGroup.clearLayers();
-            allPoiMarkersMemoryMap = [];
-            
-            const activeCrossedStates = calculateIntersectedStates(routeLineCoordinates);
-            updateInlineStatus(`Crossed state borders mapped: [${activeCrossedStates.length} States identified]`, true);
-            
-            localJsonMemory = [];
-            
-            await Promise.all(activeCrossedStates.map(async (stateName) => {
-                try {
-                    const response = await fetch(`data/${stateName}_brands.json`);
-                    if (response.ok) {
-                        const stateData = await response.json();
-                        localJsonMemory = localJsonMemory.concat(stateData);
-                    } else {
-                        const generatedMocks = await requestAlternateStateJsonShardFallback(stateName);
-                        localJsonMemory = localJsonMemory.concat(generatedMocks);
-                    }
-                } catch(err) {
-                    console.warn(`Shard loop pass error for state variable: ${stateName}`, err);
-                }
-            }));
-
-            if (localJsonMemory.length === 0) {
-                const generatedMocks = await requestAlternateStateJsonShardFallback("national");
-                localJsonMemory = localJsonMemory.concat(generatedMocks);
-            }
-
-            renderGlobalPermanentStars(); 
-            if (currentMasterCat) runDataExecutionLayer(currentMasterCat);
-        });
-
-        map.on('popupopen', function(e) {
-            const containerNode = e.popup.getElement();
-
-            const queueBtn = containerNode.querySelector('.queue-stop-trigger');
-            if (queueBtn) {
-                queueBtn.addEventListener('click', function() {
-                    const lat = parseFloat(this.dataset.lat);
-                    const lon = parseFloat(this.dataset.lon);
-                    const name = this.dataset.name;
-
-                    if (!stopQueue.some(s => roundCoords(s.lat) === roundCoords(lat) && roundCoords(s.lon) === roundCoords(lon))) {
-                        stopQueue.push({ lat, lon, name });
-                        triggerToast(`Added stop: "${name}"`);
-                        updateQueueHUD();
-                        triggerRouteCalculation();
-                    } else {
-                        triggerToast("This location is already inside your target stop queue.");
-                    }
-                    map.closePopup();
-                });
-            }
-
-            const starToggle = containerNode.querySelector('.star-toggle-trigger');
-            if (starToggle) {
-                starToggle.addEventListener('click', function() {
-                    const lat = parseFloat(this.dataset.lat);
-                    const lon = parseFloat(this.dataset.lon);
-                    let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-                    const matchIndex = localStarred.findIndex(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
-                    
-                    if (matchIndex > -1) {
-                        localStarred.splice(matchIndex, 1);
-                        triggerToast("Removed from profile stars.");
-                    } else {
-                        localStarred.push({
-                            lat: lat, lon: lon,
-                            name: this.dataset.name,
-                            category: this.dataset.cat,
-                            brand: this.dataset.brand,
-                            hours: this.dataset.hours,
-                            desc: this.dataset.desc
-                        });
-                        triggerToast("Location pinned persistently to profile map layer!");
-                    }
-                    localStorage.setItem('starred_pois', JSON.stringify(localStarred));
-                    renderGlobalPermanentStars();
-                    map.closePopup();
-                });
-            }
-
-            const repoDelete = containerNode.querySelector('.global-delete-trigger');
-            if (repoDelete) {
-                repoDelete.addEventListener('click', function() {
-                    const lat = parseFloat(this.dataset.lat);
-                    const lon = parseFloat(this.dataset.lon);
-                    repoFavoritesMemory = repoFavoritesMemory.filter(r => !(roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon)));
-                    
-                    let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-                    localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
-                    localStorage.setItem('starred_pois', JSON.stringify(localStarred));
-                    
-                    triggerToast("Dropped location item from repository matrix.");
-                    renderGlobalPermanentStars();
-                    map.closePopup();
-                });
-            }
-        });
-
-        // =====================================================================
-        // --- PHASE 9: GEOLOCATION HARDWARE WATCH TELEMETRY ENGINE -----------
-        // =====================================================================
-        const geoBtn = document.getElementById('geo-btn');
-        geoBtn.addEventListener('click', () => {
-            if (isTracking) { 
-                if (watchId) navigator.geolocation.clearWatch(watchId); 
-                releaseScreenWakeLockBlock();
-                isTracking = false; allowAutoCenter = true; clearTimeout(autoCenterTimeoutId);
-                geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
-                const banner = document.getElementById('apple-navigation-hud');
-                if (banner) banner.classList.add('-translate-y-48', 'hidden');
-            } else {
-                if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
-                requestScreenWakeLockBlock();
-                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
-                watchId = navigator.geolocation.watchPosition((pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    
-                    const startInField = document.getElementById('start-input');
-                    startInField.value = "Current Location";
-                    startInField.dataset.lat = latitude;
-                    startInField.dataset.lon = longitude;
-                    document.getElementById('start-clear-btn').classList.remove('hidden');
-
-                    if (lastUserGpsCoord) {
-                        const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord); if (distanceMoved < 6) return; 
-                    }
-                    
-                    const currentLatLngRaw = L.latLng(latitude, longitude);
-                    lastUserGpsCoord = [latitude, longitude];
-
-                    const snappedPoint = computeSnapToRouteVector(currentLatLngRaw);
-                    
-                    if (!userMarker) { 
-                        userMarker = L.marker(snappedPoint, { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); 
-                    } else { 
-                        userMarker.setLatLng(snappedPoint); 
-                    }
-                    if (allowAutoCenter) map.panTo(snappedPoint);
-
-                    if (stopQueue.length > 0) {
-                        const distToActiveStop = map.distance(snappedPoint, L.latLng(stopQueue[0].lat, stopQueue[0].lon));
-                        if (distToActiveStop < 45) { 
-                            triggerToast(`Arrived at stop: "${stopQueue[0].name}"`);
-                            stopQueue.shift();
-                            updateQueueHUD();
-                            triggerRouteCalculation();
-                            return; 
-                        }
-                    }
-
-                    if (routeLineCoordinates.length > 0 && !isAlternateMatrixModeActive) {
-                        updateAppleNavigationHUD(snappedPoint);
-
-                        let absoluteDistanceToRouteLine = Infinity;
-                        for (let i = 0; i < routeLineCoordinates.length; i++) {
-                            const d = map.distance(currentLatLngRaw, routeLineCoordinates[i]);
-                            if (d < absoluteDistanceToRouteLine) absoluteDistanceToRouteLine = d;
-                        }
-
-                        if (absoluteDistanceToRouteLine > 75) { 
-                            continuousOffRouteDriftTicks++;
-                            if (continuousOffRouteDriftTicks >= 3) { 
-                                triggerToast("Off-route deviation confirmed. Recalculating path corridor...", 4000);
-                                triggerRouteCalculation();
-                                continuousOffRouteDriftTicks = 0;
-                            }
-                        } else {
-                            continuousOffRouteDriftTicks = 0; 
-                        }
-
-                        if (!lastMileageUpdateGps || map.distance(snappedPoint, lastMileageUpdateGps) >= 400) {
-                            let remainingDistanceMeters = 0;
-                            for (let i = activeInstructionIndex; i < routeLineCoordinates.length - 1; i++) {
-                                remainingDistanceMeters += map.distance(routeLineCoordinates[i], routeLineCoordinates[i+1]);
-                            }
-                            const remainingDistanceMiles = (remainingDistanceMeters * 0.000621371).toFixed(1);
-                            const stickyLabelValue = document.getElementById('sticky-total-dist');
-                            if (stickyLabelValue) stickyLabelValue.innerText = remainingDistanceMiles;
-                            
-                            lastMileageUpdateGps = snappedPoint;
-                        }
-                    }
-                }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
-            }
-        });
-
-        // =====================================================================
-        // --- PHASE 10: AUTOMATED BACKGROUND INTEGRATION LIFECYCLES -----------
-        // =====================================================================
-        async function requestScreenWakeLockBlock() {
-            if (!('wakeLock' in navigator)) return;
-            try {
-                wakeLock = await navigator.wakeLock.request('screen');
-            } catch (err) {
-                console.warn("System baseline power management blocks Wake Lock API: ", err);
-            }
-        }
-
-        function releaseScreenWakeLockBlock() {
-            if (wakeLock !== null) {
-                wakeLock.release();
-                wakeLock = null;
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            ['start-input', 'end-input'].forEach(id => {
-                const el = document.getElementById(id); let debounceTimer;
-                el.addEventListener('input', () => {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(() => {
-                        runCachedAutocompleteSearch(el, document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete'));
-                    }, 400);
-                });
-                el.addEventListener('blur', () => {
-                    setTimeout(() => {
-                        document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete').classList.add('hidden');
-                    }, 200);
-                });
-            });
-
-            loadMasterRepoFavoritesOnBoot();
-
-            const interactiveControlBars = ['master-header-panel', 'navigation-hud', 'center-loc-btn', 'apple-navigation-hud'];
-            interactiveControlBars.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    L.DomEvent.on(element, 'touchstart touchmove touchend mousedown dblclick contextmenu', L.DomEvent.stopPropagation);
-                    L.DomEvent.disableClickPropagation(element); L.DomEvent.disableScrollPropagation(element);
-                }
-            });
-
-            map.on('movestart zoomstart dragstart', triggerAutoCenterDelay);
-            map.on('zoomend moveend', updateBufferVisualizerWeight);
-        });
-    </script>
-</body>
-</html>
+        document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s)
