@@ -57,85 +57,87 @@
 </head>
 <body class="flex flex-col justify-end text-zinc-950 selection:bg-blue-500 selection:text-white">
 
-    <div id="apple-navigation-hud" class="absolute top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-lg bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-4 border border-slate-700/50 flex items-center gap-4 transition-all duration-500 transform -translate-y-48 hidden select-none">
-        <div id="hud-turn-icon" class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-3xl font-black shrink-0 shadow-md">⬆️</div>
-        <div class="flex-1 min-w-0">
-            <h2 id="hud-turn-instruction" class="text-sm font-black tracking-tight leading-tight uppercase truncate text-slate-100">Proceed onto route Corridor</h2>
-            <p id="hud-turn-distance" class="text-xs text-emerald-400 font-bold mt-0.5">Calculating segment threshold...</p>
-        </div>
-        <div class="text-right shrink-0 border-l border-slate-700 pl-3">
-            <span class="text-[9px] uppercase font-black tracking-widest text-slate-400 block">Next Step</span>
-            <p id="hud-next-step-preview" class="text-[11px] font-bold text-amber-400 max-w-[90px] truncate mt-0.5">---</p>
-        </div>
-    </div>
-
-    <div id="master-header-panel" class="absolute top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col transition-all duration-300">
+    <div class="absolute top-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none">
         
-        <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <div class="relative flex-1">
-                    <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
-                    <button id="start-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
-                    <button id="start-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
-                    <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+        <div id="master-header-panel" class="w-full bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col transition-all duration-300 pointer-events-auto">
+            <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div class="relative flex-1">
+                        <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
+                        <button id="start-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
+                        <button id="start-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
+                        <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+                    </div>
+                    
+                    <button id="swap-locations-btn" type="button" class="self-center p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 active:scale-95 rounded-xl text-sm font-bold transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shadow-sm">⇆</button>
+                    
+                    <div class="relative flex-1">
+                        <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
+                        <button id="end-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
+                        <button id="end-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
+                        <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+                    </div>
                 </div>
-                
-                <button id="swap-locations-btn" type="button" class="self-center p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 active:scale-95 rounded-xl text-sm font-bold transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shadow-sm">⇆</button>
-                
-                <div class="relative flex-1">
-                    <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
-                    <button id="end-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
-                    <button id="end-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
-                    <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+                <div class="flex gap-2">
+                    <button id="route-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-xl min-h-[44px] shadow-sm transition-all flex items-center justify-center gap-1">
+                        🗺️ Calculate Dynamic Alternate Routes
+                    </button>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <button id="route-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-xl min-h-[44px] shadow-sm transition-all flex items-center justify-center gap-1">
-                    🗺️ Calculate Dynamic Alternate Routes
-                </button>
+
+            <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-gray-100 bg-gray-50/50">
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent hidden"></div>
+                    <p id="status" class="text-xs font-bold text-gray-700 truncate">System ready. Enter parameters to map alternatives.</p>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[70%] sm:max-w-none">
+                    <select id="buffer-select" class="bg-white text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                        <option value="4000" selected>⏱️ 5 Min Buffer</option>
+                        <option value="12000">⏱️ 15 Min Buffer</option>
+                        <option value="24000">⏱️ 30 Min Buffer</option>
+                    </select>
+                    <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
+                    <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">🔍 Inputs</button>
+                    <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">🚗 Track</button>
+                </div>
             </div>
+
+            <div id="master-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-1.5 border-t border-gray-100">
+                <button data-cat="playground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
+                <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
+                <button data-cat="food" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
+                <button data-cat="shopping" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛒 Shopping & Services</button>
+                <button data-cat="parks" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Parks & Attractions</button>
+                <button data-cat="campground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛺ Campgrounds</button>
+                <button data-cat="medical" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏥 Emergency & Med</button>
+                <button data-cat="highway" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏢 Highway Amenities</button>
+                <button data-cat="tourism" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
+            </div>
+
+            <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden"></div>
         </div>
 
-        <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-gray-100 bg-gray-50/50">
-            <div class="flex items-center gap-2 flex-1 min-w-0">
-                <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent hidden"></div>
-                <p id="status" class="text-xs font-bold text-gray-700 truncate">System ready. Enter parameters to map alternatives.</p>
+        <div id="apple-navigation-hud" class="w-[92%] max-w-lg bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-4 mt-3 border border-slate-700/50 flex items-center gap-4 transition-all duration-500 transform -translate-y-64 opacity-0 hidden select-none pointer-events-auto">
+            <div id="hud-turn-icon" class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-3xl font-black shrink-0 shadow-md">⬆️</div>
+            <div class="flex-1 min-w-0">
+                <h2 id="hud-turn-instruction" class="text-sm font-black tracking-tight leading-tight uppercase truncate text-slate-100">Proceed onto route Corridor</h2>
+                <p id="hud-turn-distance" class="text-xs text-emerald-400 font-bold mt-0.5">Calculating segment threshold...</p>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[70%] sm:max-w-none">
-                <select id="buffer-select" class="bg-white text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
-                    <option value="4000" selected>⏱️ 5 Min Buffer</option>
-                    <option value="12000">⏱️ 15 Min Buffer</option>
-                    <option value="24000">⏱️ 30 Min Buffer</option>
-                </select>
-                <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
-                <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">🔍 Inputs</button>
-                <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">🚗 Track</button>
+            <div class="text-right shrink-0 border-l border-slate-700 pl-3">
+                <span class="text-[9px] uppercase font-black tracking-widest text-slate-400 block">Next Step</span>
+                <p id="hud-next-step-preview" class="text-[11px] font-bold text-amber-400 max-w-[90px] truncate mt-0.5">---</p>
             </div>
         </div>
-
-        <div id="master-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-1.5 border-t border-gray-100">
-            <button data-cat="playground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
-            <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
-            <button data-cat="food" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
-            <button data-cat="shopping" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛒 Shopping & Services</button>
-            <button data-cat="parks" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Parks & Attractions</button>
-            <button data-cat="campground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛺ Campgrounds</button>
-            <button data-cat="medical" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏥 Emergency & Med</button>
-            <button data-cat="highway" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏢 Highway Amenities</button>
-            <button data-cat="tourism" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
-        </div>
-
-        <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden"></div>
     </div>
 
-    <div id="navigation-hud" class="absolute top-52 left-4 z-30 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl w-64 hidden flex flex-col gap-3 transition-all duration-300 max-h-72 select-none">
+    <div id="navigation-hud" class="absolute top-72 left-4 z-30 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl w-64 hidden flex flex-col gap-3 transition-all duration-300 max-h-72 select-none">
         <div id="queue-hud-section" class="hidden flex flex-col gap-1.5 border-b border-slate-700/60 pb-2">
             <p class="text-[9px] font-black uppercase text-indigo-400 tracking-widest leading-none">📍 Stop Queue Order</p>
             <div id="queue-items-list" class="flex flex-col gap-1 max-h-24 overflow-y-auto no-scrollbar"></div>
         </div>
     </div>
 
-    <div id="next-stop-hud" class="absolute top-52 right-4 z-30 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl max-w-[200px] hidden pointer-events-none transition-all duration-300">
+    <div id="next-stop-hud" class="absolute top-72 right-4 z-30 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl max-w-[200px] hidden pointer-events-none transition-all duration-300">
         <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest leading-none mb-1">⏱️ Next Target Stop</p>
         <h4 id="hud-poi-name" class="text-xs font-black truncate text-white">---</h4>
         <p id="hud-poi-dist" class="text-sm font-black text-amber-400 mt-0.5">0.0 mi away</p>
@@ -632,12 +634,15 @@
         function updateAppleNavigationHUD(currentSnappedLatLng) {
             const banner = document.getElementById('apple-navigation-hud');
             if (currentRouteInstructions.length === 0 || routeLineCoordinates.length === 0 || isAlternateMatrixModeActive) {
-                if (banner) banner.classList.add('-translate-y-48', 'hidden');
+                if (banner) {
+                    banner.classList.add('-translate-y-64', 'opacity-0');
+                    setTimeout(() => banner.classList.add('hidden'), 500);
+                }
                 return;
             }
 
             banner.classList.remove('hidden');
-            setTimeout(() => banner.classList.remove('-translate-y-48'), 50);
+            setTimeout(() => banner.classList.remove('-translate-y-64', 'opacity-0'), 50);
 
             let minimumDistanceToRouteLine = Infinity;
             let currentClosestSegmentIndex = 0;
@@ -695,7 +700,6 @@
             currentRouteInstructions = selectedRoute.instructions || [];
             activeInstructionIndex = 0;
 
-            // Draw primary route path safely on independent custom vectors
             if (primaryRoutePolyline) { map.removeLayer(primaryRoutePolyline); }
             primaryRoutePolyline = L.polyline(routeLineCoordinates, {
                 color: '#2563eb', opacity: 0.9, weight: 8, lineCap: 'round', lineJoin: 'round'
@@ -936,7 +940,6 @@
                 profile: 'driving',
                 routingOptions: { alternatives: true, steps: true } 
             }),
-            // De-activate native lines styles to completely pass drawing tasks onto our manual canvas layers
             lineOptions: { styles: [{ opacity: 0, weight: 0 }] },
             routeWhileDragging: false,
             fitSelectedRoutes: false,
@@ -981,7 +984,7 @@
                 
                 const safeQueryString = encodeURIComponent(`${popupHeadingName} near ${parseFloat(lat).toFixed(5)},${parseFloat(lon).toFixed(5)}`);
                 const googleMapsUniversalDeepLinkUrl = `https://www.google.com/maps/search/?api=1&query=${safeQueryString}`;
-                const robustGoogleReviewSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
+                const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -1017,8 +1020,8 @@
                             ${actionBtnHtml}
                             ${stopQueueBtnHtml}
                             <a href="${googleMapsUniversalDeepLinkUrl}" target="_blank" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-[10px] py-1.5 rounded-xl border border-blue-800 shadow-sm text-white font-black flex items-center justify-center">🗺️ View on Google Maps</a>
-                            <a href="${robustGoogleReviewSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Reviews & Info</a>
-                            <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">🍎 Route in Apple Maps</a>
+                            <a href="${googleStreetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
+                            <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🍎 Route in Apple Maps</a>
                         </div>
                     </div>
                 `;
@@ -1054,7 +1057,7 @@
 
             const safeQueryString = encodeURIComponent(`${popupHeadingName} near ${parseFloat(lat).toFixed(5)},${parseFloat(lon).toFixed(5)}`);
             const googleMapsUniversalDeepLinkUrl = `https://www.google.com/maps/search/?api=1&query=${safeQueryString}`;
-            const robustGoogleReviewSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
+            const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
@@ -1082,8 +1085,8 @@
                         <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
                         ${stopQueueBtnHtml}
                         <a href="${googleMapsUniversalDeepLinkUrl}" target="_blank" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-[10px] py-1.5 rounded-xl border border-blue-800 shadow-sm text-white font-black flex items-center justify-center">🗺️ View on Google Maps</a>
-                        <a href="${robustGoogleReviewSearchUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🌐 Search Reviews & Info</a>
-                        <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">🍎 Route in Apple Maps</a>
+                        <a href="${googleStreetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
+                        <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🍎 Route in Apple Maps</a>
                     </div>
                 </div>
             `;
@@ -1298,6 +1301,37 @@
             }
         });
 
+        window.addEventListener('DOMContentLoaded', () => {
+            ['start-input', 'end-input'].forEach(id => {
+                const el = document.getElementById(id); let debounceTimer;
+                el.addEventListener('input', () => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        runCachedAutocompleteSearch(el, document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete'));
+                    }, 400);
+                });
+                el.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete').classList.add('hidden');
+                    }, 200);
+                });
+            });
+
+            loadMasterRepoFavoritesOnBoot();
+
+            const interactiveControlBars = ['master-header-panel', 'navigation-hud', 'center-loc-btn', 'apple-navigation-hud'];
+            interactiveControlBars.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    L.DomEvent.on(element, 'touchstart touchmove touchend mousedown dblclick contextmenu', L.DomEvent.stopPropagation);
+                    L.DomEvent.disableClickPropagation(element); L.DomEvent.disableScrollPropagation(element);
+                }
+            });
+
+            map.on('movestart zoomstart dragstart', triggerAutoCenterDelay);
+            map.on('zoomend moveend', updateBufferVisualizerWeight);
+        });
+
         routingControl.on('routesfound', async function(e) {
             rawRoutesMemoryArray = e.routes || []; 
             routeLineCoordinates = e.routes[0].coordinates;
@@ -1417,9 +1451,6 @@
             }
         });
 
-        // =====================================================================
-        // --- PHASE 9: GEOLOCATION HARDWARE WATCH TELEMETRY ENGINE -----------
-        // =====================================================================
         const geoBtn = document.getElementById('geo-btn');
         geoBtn.addEventListener('click', () => {
             if (isTracking) { 
@@ -1428,7 +1459,10 @@
                 isTracking = false; allowAutoCenter = true; clearTimeout(autoCenterTimeoutId);
                 geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
                 const banner = document.getElementById('apple-navigation-hud');
-                if (banner) banner.classList.add('-translate-y-48', 'hidden');
+                if (banner) {
+                    banner.classList.add('-translate-y-64', 'opacity-0');
+                    setTimeout(() => banner.classList.add('hidden'), 500);
+                }
             } else {
                 if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
                 requestScreenWakeLockBlock();
@@ -1503,56 +1537,6 @@
                     }
                 }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
             }
-        });
-
-        // =====================================================================
-        // --- PHASE 10: AUTOMATED BACKGROUND INTEGRATION LIFECYCLES -----------
-        // =====================================================================
-        async function requestScreenWakeLockBlock() {
-            if (!('wakeLock' in navigator)) return;
-            try {
-                wakeLock = await navigator.wakeLock.request('screen');
-            } catch (err) {
-                console.warn("System baseline power management blocks Wake Lock API: ", err);
-            }
-        }
-
-        function releaseScreenWakeLockBlock() {
-            if (wakeLock !== null) {
-                wakeLock.release();
-                wakeLock = null;
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            ['start-input', 'end-input'].forEach(id => {
-                const el = document.getElementById(id); let debounceTimer;
-                el.addEventListener('input', () => {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(() => {
-                        runCachedAutocompleteSearch(el, document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete'));
-                    }, 400);
-                });
-                el.addEventListener('blur', () => {
-                    setTimeout(() => {
-                        document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete').classList.add('hidden');
-                    }, 200);
-                });
-            });
-
-            loadMasterRepoFavoritesOnBoot();
-
-            const interactiveControlBars = ['master-header-panel', 'navigation-hud', 'center-loc-btn', 'apple-navigation-hud'];
-            interactiveControlBars.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    L.DomEvent.on(element, 'touchstart touchmove touchend mousedown dblclick contextmenu', L.DomEvent.stopPropagation);
-                    L.DomEvent.disableClickPropagation(element); L.DomEvent.disableScrollPropagation(element);
-                }
-            });
-
-            map.on('movestart zoomstart dragstart', triggerAutoCenterDelay);
-            map.on('zoomend moveend', updateBufferVisualizerWeight);
         });
     </script>
 </body>
