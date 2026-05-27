@@ -1185,4 +1185,370 @@
             if (localJsonMemory) dispatchOffThreadAnalysis(); 
         });
         
-        document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s)
+        document.getElementById('toggle-search-btn').addEventListener('click', () => { const s = document.getElementById('search-container'); if (s) s.classList.toggle('hidden'); });
+        document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
+
+        document.getElementById('swap-locations-btn').addEventListener('click', () => {
+            const startIn = document.getElementById('start-input');
+            const endIn = document.getElementById('end-input');
+            const startClear = document.getElementById('start-clear-btn');
+            const endClear = document.getElementById('end-clear-btn');
+
+            const tmpText = startIn.value;
+            const tmpLat = startIn.dataset.lat;
+            const tmpLon = startIn.dataset.lon;
+
+            startIn.value = endIn.value;
+            startIn.dataset.lat = endIn.dataset.lat || '';
+            startIn.dataset.lon = endIn.dataset.lon || '';
+
+            endIn.value = tmpText;
+            endIn.dataset.lat = tmpLat || '';
+            endIn.dataset.lon = tmpLon || '';
+
+            if (!startIn.dataset.lat || startIn.dataset.lat === '') {
+                delete startIn.dataset.lat; delete startIn.dataset.lon; startClear.classList.add('hidden');
+            } else {
+                startClear.classList.remove('hidden');
+            }
+
+            if (!endIn.dataset.lat || endIn.dataset.lat === '') {
+                delete endIn.dataset.lat; delete endIn.dataset.lon; endClear.classList.add('hidden');
+            } else {
+                endClear.classList.remove('hidden');
+            }
+            triggerToast("Swapped start and destination fields.");
+        });
+
+        document.getElementById('start-clear-btn').addEventListener('click', () => {
+            const startIn = document.getElementById('start-input');
+            startIn.value = '';
+            delete startIn.dataset.lat;
+            delete startIn.dataset.lon;
+            document.getElementById('start-clear-btn').classList.add('hidden');
+        });
+
+        document.getElementById('end-clear-btn').addEventListener('click', () => {
+            const endIn = document.getElementById('end-input');
+            endIn.value = '';
+            delete endIn.dataset.lat;
+            delete endIn.dataset.lon;
+            document.getElementById('end-clear-btn').classList.add('hidden');
+        });
+
+        document.getElementById('start-locate-btn').addEventListener('click', () => performInlineFieldLocate('start-input', 'start-clear-btn'));
+        document.getElementById('end-locate-btn').addEventListener('click', () => performInlineFieldLocate('end-input', 'end-clear-btn'));
+
+        document.getElementById('route-btn').addEventListener('click', async () => {
+            const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input');
+            if (!startInput.dataset.lat || !endInput.dataset.lat) { alert("Select suggested autocomplete options first."); return; }
+            triggerRouteCalculation();
+        });
+
+        routingControl.on('routingerror', function(e) {
+            console.error("OSRM Connection Error Blocked: ", e);
+            updateInlineStatus("OSRM Server Timeout. Re-calculating path corridor parameters...", false);
+            triggerToast("Routing server connection dropped. Automatically retrying calculation...");
+        });
+
+        document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
+            map.removeLayer(mapLayersPool[mapStyleMode]);
+            mapStyleMode = mapStyleMode === 'light' ? 'dark' : 'light';
+            mapLayersPool[mapStyleMode].addTo(map);
+            e.target.innerText = mapStyleMode === 'light' ? "🌙 Mode" : "☀️ Mode";
+            triggerToast(`Map skin changed to ${mapStyleMode} mode layouts.`);
+        });
+
+        document.getElementById('zoom-in-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() + 1); });
+        document.getElementById('zoom-out-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() - 1); });
+
+        document.getElementById('center-loc-btn').addEventListener('click', () => {
+            if (lastUserGpsCoord) {
+                map.setView(lastUserGpsCoord, Math.max(map.getZoom(), 15));
+                triggerToast("Centered map onto asset tracking telemetry position.");
+            } else {
+                if (!navigator.geolocation) {
+                    triggerToast("GPS Hardware is unavailable.");
+                    return;
+                }
+                updateInlineStatus("Resolving standalone sensor positioning...", true);
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        lastUserGpsCoord = [pos.coords.latitude, pos.coords.longitude];
+                        if (!userMarker) { 
+                            userMarker = L.marker(lastUserGpsCoord, { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); 
+                        } else { 
+                            userMarker.setLatLng(lastUserGpsCoord); 
+                        }
+                        map.setView(lastUserGpsCoord, 15);
+                        updateInlineStatus("System realigned.");
+                        triggerToast("Position aligned successfully.");
+                    },
+                    () => {
+                        updateInlineStatus("Positioning failure.");
+                        triggerToast("Telemetry context access timed out.");
+                    },
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            }
+        });
+
+        routingControl.on('routesfound', async function(e) {
+            rawRoutesMemoryArray = e.routes || []; 
+            routeLineCoordinates = e.routes[0].coordinates;
+            currentRouteInstructions = e.routes[0].instructions || [];
+            activeInstructionIndex = 0;
+            lastMileageUpdateGps = null;
+            continuousOffRouteDriftTicks = 0; 
+
+            const searchContainer = document.getElementById('search-container');
+            if (searchContainer) searchContainer.classList.add('hidden');
+            
+            if (isAlternateMatrixModeActive) {
+                document.getElementById('route-mileage-sticky').classList.add('hidden');
+                renderAlternateRoutePathsMatrix(rawRoutesMemoryArray);
+                updateInlineStatus("Alternate choices plotted. Select an option to engage navigation.");
+            } else {
+                selectAndLockPrimaryTrackPath(0);
+            }
+
+            poiClusterGroup.clearLayers();
+            allPoiMarkersMemoryMap = [];
+            
+            const activeCrossedStates = calculateIntersectedStates(routeLineCoordinates);
+            updateInlineStatus(`Crossed state borders mapped: [${activeCrossedStates.length} States identified]`, true);
+            
+            localJsonMemory = [];
+            
+            await Promise.all(activeCrossedStates.map(async (stateName) => {
+                try {
+                    const response = await fetch(`data/${stateName}_brands.json`);
+                    if (response.ok) {
+                        const stateData = await response.json();
+                        localJsonMemory = localJsonMemory.concat(stateData);
+                    } else {
+                        const generatedMocks = await requestAlternateStateJsonShardFallback(stateName);
+                        localJsonMemory = localJsonMemory.concat(generatedMocks);
+                    }
+                } catch(err) {
+                    console.warn(`Shard loop pass error for state variable: ${stateName}`, err);
+                }
+            }));
+
+            if (localJsonMemory.length === 0) {
+                const generatedMocks = await requestAlternateStateJsonShardFallback("national");
+                localJsonMemory = localJsonMemory.concat(generatedMocks);
+            }
+
+            renderGlobalPermanentStars(); 
+            if (currentMasterCat) runDataExecutionLayer(currentMasterCat);
+        });
+
+        map.on('popupopen', function(e) {
+            const containerNode = e.popup.getElement();
+
+            const queueBtn = containerNode.querySelector('.queue-stop-trigger');
+            if (queueBtn) {
+                queueBtn.addEventListener('click', function() {
+                    const lat = parseFloat(this.dataset.lat);
+                    const lon = parseFloat(this.dataset.lon);
+                    const name = this.dataset.name;
+
+                    if (!stopQueue.some(s => roundCoords(s.lat) === roundCoords(lat) && roundCoords(s.lon) === roundCoords(lon))) {
+                        stopQueue.push({ lat, lon, name });
+                        triggerToast(`Added stop: "${name}"`);
+                        updateQueueHUD();
+                        triggerRouteCalculation();
+                    } else {
+                        triggerToast("This location is already inside your target stop queue.");
+                    }
+                    map.closePopup();
+                });
+            }
+
+            const starToggle = containerNode.querySelector('.star-toggle-trigger');
+            if (starToggle) {
+                starToggle.addEventListener('click', function() {
+                    const lat = parseFloat(this.dataset.lat);
+                    const lon = parseFloat(this.dataset.lon);
+                    let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+                    const matchIndex = localStarred.findIndex(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
+                    
+                    if (matchIndex > -1) {
+                        localStarred.splice(matchIndex, 1);
+                        triggerToast("Removed from profile stars.");
+                    } else {
+                        localStarred.push({
+                            lat: lat, lon: lon,
+                            name: this.dataset.name,
+                            category: this.dataset.cat,
+                            brand: this.dataset.brand,
+                            hours: this.dataset.hours,
+                            desc: this.dataset.desc
+                        });
+                        triggerToast("Location pinned persistently to profile map layer!");
+                    }
+                    localStorage.setItem('starred_pois', JSON.stringify(localStarred));
+                    renderGlobalPermanentStars();
+                    map.closePopup();
+                });
+            }
+
+            const repoDelete = containerNode.querySelector('.global-delete-trigger');
+            if (repoDelete) {
+                repoDelete.addEventListener('click', function() {
+                    const lat = parseFloat(this.dataset.lat);
+                    const lon = parseFloat(this.dataset.lon);
+                    repoFavoritesMemory = repoFavoritesMemory.filter(r => !(roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon)));
+                    
+                    let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+                    localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
+                    localStorage.setItem('starred_pois', JSON.stringify(localStarred));
+                    
+                    triggerToast("Dropped location item from repository matrix.");
+                    renderGlobalPermanentStars();
+                    map.closePopup();
+                });
+            }
+        });
+
+        // =====================================================================
+        // --- PHASE 9: GEOLOCATION HARDWARE WATCH TELEMETRY ENGINE -----------
+        // =====================================================================
+        const geoBtn = document.getElementById('geo-btn');
+        geoBtn.addEventListener('click', () => {
+            if (isTracking) { 
+                if (watchId) navigator.geolocation.clearWatch(watchId); 
+                releaseScreenWakeLockBlock();
+                isTracking = false; allowAutoCenter = true; clearTimeout(autoCenterTimeoutId);
+                geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
+                const banner = document.getElementById('apple-navigation-hud');
+                if (banner) banner.classList.add('-translate-y-48', 'hidden');
+            } else {
+                if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
+                requestScreenWakeLockBlock();
+                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
+                watchId = navigator.geolocation.watchPosition((pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    
+                    const startInField = document.getElementById('start-input');
+                    startInField.value = "Current Location";
+                    startInField.dataset.lat = latitude;
+                    startInField.dataset.lon = longitude;
+                    document.getElementById('start-clear-btn').classList.remove('hidden');
+
+                    if (lastUserGpsCoord) {
+                        const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord); if (distanceMoved < 6) return; 
+                    }
+                    
+                    const currentLatLngRaw = L.latLng(latitude, longitude);
+                    lastUserGpsCoord = [latitude, longitude];
+
+                    const snappedPoint = computeSnapToRouteVector(currentLatLngRaw);
+                    
+                    if (!userMarker) { 
+                        userMarker = L.marker(snappedPoint, { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); 
+                    } else { 
+                        userMarker.setLatLng(snappedPoint); 
+                    }
+                    if (allowAutoCenter) map.panTo(snappedPoint);
+
+                    if (stopQueue.length > 0) {
+                        const distToActiveStop = map.distance(snappedPoint, L.latLng(stopQueue[0].lat, stopQueue[0].lon));
+                        if (distToActiveStop < 45) { 
+                            triggerToast(`Arrived at stop: "${stopQueue[0].name}"`);
+                            stopQueue.shift();
+                            updateQueueHUD();
+                            triggerRouteCalculation();
+                            return; 
+                        }
+                    }
+
+                    if (routeLineCoordinates.length > 0 && !isAlternateMatrixModeActive) {
+                        updateAppleNavigationHUD(snappedPoint);
+
+                        let absoluteDistanceToRouteLine = Infinity;
+                        for (let i = 0; i < routeLineCoordinates.length; i++) {
+                            const d = map.distance(currentLatLngRaw, routeLineCoordinates[i]);
+                            if (d < absoluteDistanceToRouteLine) absoluteDistanceToRouteLine = d;
+                        }
+
+                        if (absoluteDistanceToRouteLine > 75) { 
+                            continuousOffRouteDriftTicks++;
+                            if (continuousOffRouteDriftTicks >= 3) { 
+                                triggerToast("Off-route deviation confirmed. Recalculating path corridor...", 4000);
+                                triggerRouteCalculation();
+                                continuousOffRouteDriftTicks = 0;
+                            }
+                        } else {
+                            continuousOffRouteDriftTicks = 0; 
+                        }
+
+                        if (!lastMileageUpdateGps || map.distance(snappedPoint, lastMileageUpdateGps) >= 400) {
+                            let remainingDistanceMeters = 0;
+                            for (let i = activeInstructionIndex; i < routeLineCoordinates.length - 1; i++) {
+                                remainingDistanceMeters += map.distance(routeLineCoordinates[i], routeLineCoordinates[i+1]);
+                            }
+                            const remainingDistanceMiles = (remainingDistanceMeters * 0.000621371).toFixed(1);
+                            const stickyLabelValue = document.getElementById('sticky-total-dist');
+                            if (stickyLabelValue) stickyLabelValue.innerText = remainingDistanceMiles;
+                            
+                            lastMileageUpdateGps = snappedPoint;
+                        }
+                    }
+                }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
+            }
+        });
+
+        // =====================================================================
+        // --- PHASE 10: AUTOMATED BACKGROUND INTEGRATION LIFECYCLES -----------
+        // =====================================================================
+        async function requestScreenWakeLockBlock() {
+            if (!('wakeLock' in navigator)) return;
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {
+                console.warn("System baseline power management blocks Wake Lock API: ", err);
+            }
+        }
+
+        function releaseScreenWakeLockBlock() {
+            if (wakeLock !== null) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            ['start-input', 'end-input'].forEach(id => {
+                const el = document.getElementById(id); let debounceTimer;
+                el.addEventListener('input', () => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        runCachedAutocompleteSearch(el, document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete'));
+                    }, 400);
+                });
+                el.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete').classList.add('hidden');
+                    }, 200);
+                });
+            });
+
+            loadMasterRepoFavoritesOnBoot();
+
+            const interactiveControlBars = ['master-header-panel', 'navigation-hud', 'center-loc-btn', 'apple-navigation-hud'];
+            interactiveControlBars.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    L.DomEvent.on(element, 'touchstart touchmove touchend mousedown dblclick contextmenu', L.DomEvent.stopPropagation);
+                    L.DomEvent.disableClickPropagation(element); L.DomEvent.disableScrollPropagation(element);
+                }
+            });
+
+            map.on('movestart zoomstart dragstart', triggerAutoCenterDelay);
+            map.on('zoomend moveend', updateBufferVisualizerWeight);
+        });
+    </script>
+</body>
+</html>
