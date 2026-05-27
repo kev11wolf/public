@@ -46,7 +46,6 @@
             color: #ffffff !important; text-decoration: none !important;
         }
 
-        /* Smooth floating animation for route choice callouts */
         .route-callout-marker {
             transition: transform 0.2s ease-in-out;
         }
@@ -170,6 +169,26 @@
         let mapLayersPool = {};
         let favoritesLayerGroup = null;
         let poiClusterGroup = null;
+
+        // ALL SYSTEM STANDARD POOL VALUES AND SCOPES RE-HOISTED CORRECTLY BELOW
+        let allPoiMarkersMemoryMap = [];
+        let globalFavoritesMarkers = []; 
+        let repoFavoritesMemory = [];    
+        let localJsonMemory = null; 
+        let routeLineCoordinates = [];
+        let userMarker = null;
+        let lastUserGpsCoord = null;
+        let currentMasterCat = null;
+        let currentSubFilter = 'none'; 
+        let activeBufferMeters = 4000; 
+        let mapStyleMode = 'light'; // <--- RESTORED POOL TERM LAYERS
+        let activeTargetsSliceMemory = [];
+        let routeBufferPolyline = null;
+        let allowAutoCenter = true;
+        let autoCenterTimeoutId = null;
+        let isTracking = false;
+        let watchId = null;
+        let stopQueue = [];
         
         // Advanced Custom Multi-Route Management Subsystems
         let alternateRoutesGroupLayer = null; 
@@ -177,147 +196,7 @@
         let rawRoutesMemoryArray = []; 
         let isAlternateMatrixModeActive = true; 
         
-        const STATE_BOUNDS_LOOKUP = {
-            "alabama":        { s: 30.1, n: 35.1, w: -88.6, e: -84.8 },
-            "alaska":         { s: 51.0, n: 71.5, w: -179.9, e: -129.9 },
-            "arizona":        { s: 31.3, n: 37.1, w: -114.9, e: -109.0 },
-            "arkansas":       { s: 33.0, n: 36.6, w: -94.7, e: -89.6 },
-            "california":     { s: 32.5, n: 42.1, w: -124.5, e: -114.1 },
-            "colorado":       { s: 36.9, n: 41.1, w: -109.1, e: -102.0 },
-            "connecticut":    { s: 40.9, n: 42.1, w: -73.8, e: -71.7 },
-            "delaware":       { s: 38.4, n: 39.9, w: -75.8, e: -74.9 },
-            "florida":        { s: 24.3, n: 31.0, w: -87.7, e: -79.9 },
-            "georgia":        { s: 30.3, n: 35.1, w: -85.7, e: -80.7 },
-            "hawaii":         { s: 18.9, n: 22.3, w: -160.3, e: -154.7 },
-            "idaho":          { s: 41.9, n: 49.1, w: -117.3, e: -111.0 },
-            "illinois":       { s: 36.9, n: 42.6, w: -91.6, e: -87.4 },
-            "indiana":        { s: 37.7, n: 41.8, w: -88.1, e: -84.7 },
-            "iowa":           { s: 40.3, n: 43.6, w: -96.7, e: -90.1 },
-            "kansas":         { s: 36.9, n: 40.1, w: -102.1, e: -94.5 },
-            "kentucky":       { s: 36.4, n: 39.2, w: -89.6, e: -81.9 },
-            "louisiana":      { s: 28.9, n: 33.1, w: -94.1, e: -88.7 },
-            "maine":          { s: 43.0, n: 47.5, w: -71.2, e: -66.8 },
-            "maryland":       { s: 37.8, n: 39.8, w: -79.5, e: -74.9 },
-            "massachusetts":  { s: 41.2, n: 42.9, w: -73.6, e: -69.9 },
-            "michigan":       { s: 41.7, n: 47.5, w: -90.5, e: -82.1 },
-            "minnesota":      { s: 43.4, n: 49.4, w: -97.3, e: -89.4 },
-            "mississippi":    { s: 30.1, n: 35.1, w: -91.7, e: -88.0 },
-            "missouri":       { s: 35.9, n: 40.7, w: -95.8, e: -89.0 },
-            "montana":        { s: 44.3, n: 49.1, w: -116.1, e: -104.0 },
-            "nebraska":       { s: 39.9, n: 43.1, w: -104.1, e: -95.3 },
-            "nevada":         { s: 35.0, n: 42.1, w: -120.1, e: -114.0 },
-            "new-hampshire":  { s: 42.6, n: 45.4, w: -72.6, e: -70.5 },
-            "new-jersey":     { s: 38.9, n: 41.4, w: -75.6, e: -73.8 },
-            "new-mexico":     { s: 31.3, n: 37.1, w: -109.1, e: -103.0 },
-            "new-york":       { s: 40.4, n: 45.1, w: -79.8, e: -71.7 },
-            "north-carolina": { s: 33.7, n: 36.6, w: -84.4, e: -75.4 },
-            "north-dakota":   { s: 45.9, n: 49.1, w: -104.1, e: -96.5 },
-            "ohio":           { s: 38.3, n: 42.0, w: -84.9, e: -80.5 },
-            "oklahoma":       { s: 33.6, n: 37.1, w: -103.1, e: -94.4 },
-            "oregon":         { s: 41.9, n: 46.3, w: -124.6, e: -116.4 },
-            "pennsylvania":   { s: 39.7, n: 42.3, w: -80.6, e: -74.6 },
-            "rhode-island":   { s: 41.1, n: 42.1, w: -71.9, e: -71.1 },
-            "south-carolina": { s: 32.0, n: 35.3, w: -83.4, e: -78.4 },
-            "south-dakota":   { s: 42.4, n: 46.0, w: -104.2, e: -96.4 },
-            "tennessee":      { s: 34.9, n: 36.7, w: -90.4, e: -81.6 },
-            "texas":          { s: 25.8, n: 36.5, w: -106.7, e: -93.5 },
-            "utah":           { s: 36.9, n: 42.1, w: -114.1, e: -109.0 },
-            "vermont":        { s: 42.7, n: 45.1, w: -73.5, e: -71.4 },
-            "virginia":       { s: 36.5, n: 39.5, w: -83.7, e: -75.0 },
-            "washington":     { s: 45.5, n: 49.1, w: -124.8, e: -116.9 },
-            "west-virginia":  { s: 37.1, n: 40.7, w: -82.7, e: -77.7 },
-            "wisconsin":      { s: 42.4, n: 47.1, w: -92.9, e: -86.7 },
-            "wyoming":        { s: 40.9, n: 45.1, w: -111.1, e: -104.0 }
-        };
-
-        const categoryConfigs = {
-            playground: { label: '🛝', bg: 'bg-emerald-600 border-emerald-200 text-white', name: 'Public Playground', img: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=300&q=80' },
-            gas: { label: '⛽', bg: 'bg-amber-600 border-amber-200 text-white', name: 'Gas Station', img: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80' },
-            food: { label: '🍟', bg: 'bg-red-600 border-red-200 text-white', name: 'Fast Food', img: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=300&q=80' },
-            shopping: { label: '🛒', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Shopping & Services', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
-            walmart: { label: '🔵', bg: 'bg-blue-600 border-blue-300 text-white', name: 'Walmart', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
-            target: { label: '🎯', bg: 'bg-red-600 border-red-300 text-white', name: 'Target', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
-            dollartree: { label: '🌳', bg: 'bg-green-600 border-green-300 text-white', name: 'Dollar Tree', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
-            costco: { label: '📦', bg: 'bg-blue-800 border-blue-400 text-white', name: 'Costco Wholesale', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
-            staples: { label: '📎', bg: 'bg-red-700 border-red-400 text-white', name: 'Staples', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
-            upsstore: { label: '📦', bg: 'bg-amber-800 border-amber-600 text-white', name: 'The UPS Store', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80' },
-            basspro: { label: '🏹', bg: 'bg-green-700 border-green-500 text-white', name: "Bass Pro / Cabela's", img: 'https://images.unsplash.com/photo-1496062031456-07b8f1620322?auto=format&fit=crop&w=300&q=80' },
-            chipotle: { label: '🌯', bg: 'bg-amber-800 border-amber-500 text-white', name: 'Chipotle', img: 'https://images.unsplash.com/photo-1562059390-a761a0847685?auto=format&fit=crop&w=300&q=80' },
-            starbucks: { label: '☕', bg: 'bg-emerald-800 border-emerald-500 text-white', name: 'Starbucks Coffee', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80' },
-            mcdonalds: { label: '🍔', bg: 'bg-yellow-500 border-yellow-300 text-zinc-900', name: "McDonald's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
-            chickfila: { label: '🐄', bg: 'bg-red-700 border-red-400 text-white', name: 'Chick-fil-A', img: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?auto=format&fit=crop&w=300&q=80' },
-            wendys: { label: '🍔', bg: 'bg-red-500 border-red-300 text-white', name: "Wendy's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
-            raisingcanes: { label: '🍗', bg: 'bg-orange-500 border-orange-300 text-white', name: "Raising Cane's", img: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=300&q=80' },
-            jerseymikes: { label: '🐖', bg: 'bg-blue-800 border-blue-400 text-white', name: "Jersey Mike's", img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
-            culvers: { label: '🍦', bg: 'bg-blue-600 border-blue-300 text-white', name: "Culver's", img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
-            shakeshack: { label: '🍔', bg: 'bg-green-700 border-green-400 text-white', name: 'Shake Shack', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
-            innout: { label: '🌴', bg: 'bg-yellow-400 border-red-600 text-zinc-950', name: 'In-N-Out Burger', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
-            potbelly: { label: '🥪', bg: 'bg-orange-700 border-orange-400 text-white', name: 'Potbelly', img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=300&q=80' },
-            parks: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Parks & Attractions', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
-            campground: { label: '⛺', bg: 'bg-stone-700 border-stone-500 text-white', name: 'Campground / RV Park', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
-            attraction: { label: '🎡', bg: 'bg-purple-600 border-purple-300 text-white', name: 'Tourist Attraction', img: 'https://images.unsplash.com/photo-1473163928189-364b2c4e1135?auto=format&fit=crop&w=300&q=80' },
-            national_park: { label: '🏞️', bg: 'bg-emerald-800 border-emerald-600 text-white', name: 'National Park', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80' },
-            nature_reserve: { label: '🌲', bg: 'bg-emerald-700 border-emerald-500 text-white', name: 'Nature Reserve', img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=300&q=80' },
-            medical: { label: '🏥', bg: 'bg-rose-600 border-rose-400 text-white', name: 'Emergency Medical', img: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=300&q=80' },
-            hospital: { label: '🏥', bg: 'bg-rose-600 border-rose-400 text-white', name: 'Major Hospital', img: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=300&q=80' },
-            veterinary: { label: '🐕', bg: 'bg-indigo-500 border-indigo-300 text-white', name: 'Veterinary Clinic', img: 'https://images.unsplash.com/photo-1581888227599-779811939961?auto=format&fit=crop&w=300&q=80' },
-            highway_rest: { label: '🪑', bg: 'bg-blue-600 border-blue-200 text-white', name: 'Rest Area', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80' },
-            highway_toilets: { label: '🚻', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Public Restroom', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
-            tourism_viewpoint: { label: '📷', bg: 'bg-sky-500 border-sky-200 text-white', name: 'Scenic Viewpoint', img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=300&q=80' },
-            tourism_dogpark: { label: '🐕', bg: 'bg-violet-600 border-violet-200 text-white', name: 'Dog Park', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=300&q=80' }
-        };
-
-        const cleanBrandNames = {
-            "sheetz": "Sheetz", "bucees": "Buc-ee's", "wawa": "Wawa", "circlek": "Circle K",
-            "mcdonalds": "McDonald's", "wendys": "Wendy's", "chickfila": "Chick-fil-A",
-            "chipotle": "Chipotle", "jerseymikes": "Jersey Mike's", "raisingcanes": "Raising Cane's",
-            "culvers": "Culver's", "shakeshack": "Shake Shack", "innout": "In-N-Out", "potbelly": "Potbelly",
-            "walmart": "Walmart Supercenter", "target": "Target Store Hub", "costco": "Costco Wholesale", 
-            "dollartree": "Dollar Tree Discount", "staples": "Staples Office Business", "upsstore": "UPS Shipping Center",
-            "basspro": "Bass Pro Shops / Cabela's", "campground": "Campground / RV Park",
-            "starbucks": "Starbucks", "hospital": "Major Hospital", "veterinary": "Veterinary Clinic",
-            "national_park": "National Park", "nature_reserve": "Nature Reserve", "attraction": "Tourist Attraction"
-        };
-
-        const subMenuDefinitions = {
-            playground: [{ id: 'playground', label: '🛝 Public Playgrounds' }],
-            gas: [
-                { id: 'sheetz', label: 'Sheetz' },
-                { id: 'wawa', label: 'Wawa' },
-                { id: 'bucees', label: "Buc-ee's" },
-                { id: 'circlek', label: 'Circle K' },
-                { id: 'unl87', label: '⛽ UNL 87' }, 
-                { id: 'unl88', label: '⚡ UNL 88 / E15' }
-            ],
-            food: [
-                { id: 'starbucks', label: '☕ Starbucks' },
-                { id: 'chipotle', label: 'Chipotle' }, 
-                { id: 'raisingcanes', label: "Raising Cane's" }, 
-                { id: 'chickfila', label: 'Chick-fil-A' }, 
-                { id: 'mcdonalds', label: "McDonald's" }, 
-                { id: 'wendys', label: "Wendy's" },
-                { id: 'jerseymikes', label: "Jersey Mike's" },
-                { id: 'culvers', label: "Culver's" },
-                { id: 'shakeshack', label: "Shake Shack" },
-                { id: 'innout', label: "In-N-Out" },
-                { id: 'potbelly', label: "Potbelly" }
-            ],
-            shopping: [
-                { id: 'walmart', label: 'Walmart Supercenters' },
-                { id: 'target', label: 'Target Hubs' },
-                { id: 'costco', label: 'Costco Warehouse' },
-                { id: 'dollartree', label: 'Dollar Tree Discounts' },
-                { id: 'staples', label: 'Staples Office' },
-                { id: 'upsstore', label: 'UPS Store Shipping' },
-                { id: 'basspro', label: "Bass Pro / Cabela's" }
-            ],
-            parks: [{ id: 'national_park', label: '🏞️ National Parks' }, { id: 'nature_reserve', label: '🌲 Nature Reserves' }, { id: 'attraction', label: '🎡 Attractions' }],
-            campground: [{ id: 'campground', label: '⛺ Campgrounds & RV Parks' }],
-            medical: [{ id: 'hospital', label: '🏥 Major Hospitals' }, { id: 'veterinary', label: '🐕 Vet Clinics' }],
-            highway: [{ id: 'highway_rest', label: '🪑 Highway Rest Areas' }, { id: 'highway_toilets', label: '🚻 Standalone Restrooms' }],
-            tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
-        };
-
+        // Dynamic Turn Machine Global Registry
         let activeInstructionIndex = 0;
         let currentRouteInstructions = [];
         let lastMileageUpdateGps = null;
@@ -529,7 +408,6 @@
             });
             finalWaypoints.push(L.latLng(endInput.dataset.lat, endInput.dataset.lon));
 
-            // Reactivate alternative tracing discovery phase on standard generation inputs
             isAlternateMatrixModeActive = true; 
             routingControl.setWaypoints(finalWaypoints);
         }
@@ -573,7 +451,6 @@
             });
         }
 
-        // Vector Projection Snapping Geometry Engine Module
         function findClosestPointOnLineSegment(p, p1, p2) {
             const x = p.lat, y = p.lng;
             const x1 = p1.lat, y1 = p1.lng;
@@ -613,7 +490,6 @@
             return '⬆️';
         }
 
-        // Real-Time Top HUD Instruction Panel Update
         function updateAppleNavigationHUD(currentSnappedLatLng) {
             const banner = document.getElementById('apple-navigation-hud');
             if (currentRouteInstructions.length === 0 || routeLineCoordinates.length === 0 || isAlternateMatrixModeActive) {
@@ -668,7 +544,6 @@
             }
         }
 
-        // Activates the Selected Route & Toggles Off Alternate Paths
         function selectAndLockPrimaryTrackPath(routeIndex) {
             isAlternateMatrixModeActive = false;
             alternateCalloutsGroupLayer.clearLayers();
@@ -678,13 +553,9 @@
             currentRouteInstructions = selectedRoute.coordinates.instructions || selectedRoute.instructions || [];
             activeInstructionIndex = 0;
 
-            // Clear secondary line textures from the canvas view entirely
             alternateRoutesGroupLayer.clearLayers();
-
-            // Re-render only the primary polyline color path structure
             routingControl.routes[0] = selectedRoute;
             
-            // Rehydrate structural telemetry displays
             const totalDistanceMiles = (selectedRoute.summary.totalDistance * 0.000621371).toFixed(1);
             document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
             document.getElementById('route-mileage-sticky').classList.remove('hidden');
@@ -705,7 +576,6 @@
             if (currentMasterCat) runDataExecutionLayer(currentMasterCat);
         }
 
-        // Plots and Renders Alternative Paths with Geodesic Midpoint Callouts
         function renderAlternateRoutePathsMatrix(routesArray) {
             alternateRoutesGroupLayer.clearLayers();
             alternateCalloutsGroupLayer.clearLayers();
@@ -715,7 +585,6 @@
             routesArray.forEach((route, index) => {
                 const isPrimaryRoute = (index === 0);
                 
-                // Color mapping: Primary is vibrant blue; Alternatives are clean slate gray
                 const lineStyle = isPrimaryRoute 
                     ? { color: '#2563eb', opacity: 0.9, weight: 8, lineCap: 'round', lineJoin: 'round' }
                     : { color: '#64748b', opacity: 0.6, weight: 6, lineCap: 'round', lineJoin: 'round' };
@@ -728,14 +597,12 @@
                 });
                 alternateRoutesGroupLayer.addLayer(polylineLayer);
 
-                // Midpoint computation for anchoring the Callout Label card
                 const midNodeIndex = Math.floor(route.coordinates.length / 2);
                 const midpointLatLng = route.coordinates[midNodeIndex];
 
                 if (midpointLatLng) {
                     const distanceMiles = (route.summary.totalDistance * 0.000621371).toFixed(1);
                     
-                    // Toll highway detection simulator logic based on coordinate footprints
                     const featuresTollIndicator = (index === 1 || (route.summary.totalDistance % 3 > 1.4)) 
                         ? "⚠️ Toll Roads" 
                         : "🍃 No Tolls";
@@ -768,15 +635,12 @@
                 }
             });
 
-            // Adjust viewport to frame all options
             if (routesArray[0]) {
                 map.fitBounds(L.polyline(routesArray[0].coordinates).getBounds(), { padding: [40, 40] });
             }
         }
 
         async function requestAlternateStateJsonShardFallback(stateName) {
-            // Highly robust online synthetic spatial intercept block
-            // Dynamically injects fallback POI parameters if the local disk shards are missing
             const syntheticPayloadList = [];
             if (routeLineCoordinates.length === 0) return [];
             
@@ -864,7 +728,6 @@
                     let isMatch = false;
                     let normBrand = el.b || '';
 
-                    // Master alignment matching fallback check logic pattern
                     if (currentSubFilter === 'none') {
                         isMatch = true; 
                     } else {
@@ -916,7 +779,6 @@
             updateInlineStatus(`Corridor calculations ready: [Mapped ${sortedMatches.length} Facilities]`);
         };
 
-        // ALTERNATE ROUTE DISCOVERY PATTERN SUBSYSTEM SETUP
         routingControl = L.Routing.control({
             show: false, 
             addWaypoints: false, 
@@ -927,7 +789,6 @@
                 profile: 'driving',
                 routingOptions: { alternatives: true, steps: true } 
             }),
-            // Disable default path line plot generation; we draw custom interactive paths manually
             routeWhileDragging: false,
             fitSelectedRoutes: false,
             createMarker: function(i, wp, n) {
@@ -969,7 +830,6 @@
 
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
                 
-                // Advanced Google Universal API Deep-Link String Configuration Filters
                 const safeQueryString = encodeURIComponent(`${popupHeadingName} near ${parseFloat(lat).toFixed(5)},${parseFloat(lon).toFixed(5)}`);
                 const googleMapsUniversalDeepLinkUrl = `https://www.google.com/maps/search/?api=1&query=${safeQueryString}`;
                 const robustGoogleReviewSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(popupHeadingName + " reviews loc:" + parseFloat(lat).toFixed(6) + "," + parseFloat(lon).toFixed(6))}`;
@@ -1159,6 +1019,9 @@
             generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
         }
 
+        // =====================================================================
+        // --- PHASE 8: REFINED CORE INTERACTION EVENT REGISTRIES -------------
+        // =====================================================================
         function generateSubMenuUI(catId) {
             const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
             const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
@@ -1170,9 +1033,6 @@
             subBar.classList.remove('hidden');
         }
 
-        // =====================================================================
-        // --- PHASE 8: REFINED CORE INTERACTION EVENT REGISTRIES -------------
-        // =====================================================================
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
@@ -1303,11 +1163,9 @@
             lastMileageUpdateGps = null;
             continuousOffRouteDriftTicks = 0; 
 
-            // Auto-collapse search menu instantly to clear space for the primary HUD
             const searchContainer = document.getElementById('search-container');
             if (searchContainer) searchContainer.classList.add('hidden');
             
-            // Build alternative matrix system visual structures
             if (isAlternateMatrixModeActive) {
                 document.getElementById('route-mileage-sticky').classList.add('hidden');
                 renderAlternateRoutePathsMatrix(rawRoutesMemoryArray);
@@ -1331,7 +1189,6 @@
                         const stateData = await response.json();
                         localJsonMemory = localJsonMemory.concat(stateData);
                     } else {
-                        // Dynamic trigger layer for offline standalone execution bounds
                         const generatedMocks = await requestAlternateStateJsonShardFallback(stateName);
                         localJsonMemory = localJsonMemory.concat(generatedMocks);
                     }
@@ -1340,7 +1197,6 @@
                 }
             }));
 
-            // Absolute check condition mapping safety layers
             if (localJsonMemory.length === 0) {
                 const generatedMocks = await requestAlternateStateJsonShardFallback("national");
                 localJsonMemory = localJsonMemory.concat(generatedMocks);
@@ -1509,6 +1365,22 @@
         // =====================================================================
         // --- PHASE 10: AUTOMATED BACKGROUND INTEGRATION LIFECYCLES -----------
         // =====================================================================
+        async function requestScreenWakeLockBlock() {
+            if (!('wakeLock' in navigator)) return;
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {
+                console.warn("System baseline power management blocks Wake Lock API: ", err);
+            }
+        }
+
+        function releaseScreenWakeLockBlock() {
+            if (wakeLock !== null) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             ['start-input', 'end-input'].forEach(id => {
                 const el = document.getElementById(id); let debounceTimer;
