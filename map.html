@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
     <style>
         body, html {
             margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden;
@@ -120,20 +122,20 @@
         <div id="apple-navigation-hud" class="w-[92%] max-w-lg bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-4 mt-3 border border-slate-700/50 flex items-center gap-4 transition-all duration-500 transform -translate-y-64 opacity-0 hidden select-none pointer-events-auto">
             <div id="hud-turn-icon" class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-3xl font-black shrink-0 shadow-md">⬆️</div>
             <div class="flex-1 min-w-0">
-                <h2 id="hud-turn-instruction" class="text-sm font-black tracking-tight leading-tight uppercase truncate text-slate-100">Proceed onto route Corridor</h2>
-                <p id="hud-turn-distance" class="text-xs text-emerald-400 font-bold mt-0.5">Calculating segment threshold...</p>
+                <h2 id="hud-turn-instruction" class="text-sm font-black tracking-tight leading-tight uppercase truncate text-slate-100">Calculating next turn...</h2>
+                <p id="hud-turn-distance" class="text-xs text-emerald-400 font-bold mt-0.5">0.0 mi until turn</p>
             </div>
             <div class="text-right shrink-0 border-l border-slate-700 pl-3">
-                <span class="text-[9px] uppercase font-black tracking-widest text-slate-400 block">Next Step</span>
+                <span class="text-[9px] uppercase font-black tracking-widest text-slate-400 block">Then</span>
                 <p id="hud-next-step-preview" class="text-[11px] font-bold text-amber-400 max-w-[90px] truncate mt-0.5">---</p>
             </div>
         </div>
     </div>
 
     <div id="navigation-hud" class="absolute top-72 left-4 z-30 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl w-64 hidden flex flex-col gap-3 transition-all duration-300 max-h-72 select-none">
-        <div id="queue-hud-section" class="hidden flex flex-col gap-1.5 border-b border-slate-700/60 pb-2">
-            <p class="text-[9px] font-black uppercase text-indigo-400 tracking-widest leading-none">📍 Stop Queue Order</p>
-            <div id="queue-items-list" class="flex flex-col gap-1 max-h-24 overflow-y-auto no-scrollbar"></div>
+        <div id="queue-hud-section" class="w-full flex flex-col gap-1.5">
+            <p class="text-[9px] font-black uppercase text-indigo-400 tracking-widest leading-none">📍 Stop Queue Order (Drag to Reorder)</p>
+            <div id="queue-items-list" class="flex flex-col max-h-56 overflow-y-auto no-scrollbar"></div>
         </div>
     </div>
 
@@ -154,7 +156,7 @@
 
     <script>
         // =====================================================================
-        // --- PHASE 1: RE-HOISTED GLOBAL VARIABLE & DICTIONARY SCHEMAS -------
+        // --- PHASE 1: GLOBAL CONSTANTS, VARIABLE SCHEMAS & DICTIONARIES ------
         // =====================================================================
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
         const autocompleteQueryMemoryCache = new Map(); 
@@ -547,6 +549,7 @@
             routingControl.setWaypoints(finalWaypoints);
         }
 
+        // UPGRADED PIPELINE LIST RENDERING FEATURING NESTED DRAG-TO-REORDER GESTURES
         function updateQueueHUD() {
             const section = document.getElementById('queue-hud-section');
             const list = document.getElementById('queue-items-list');
@@ -554,7 +557,9 @@
             if (!list || !section || !navHud) return;
 
             list.innerHTML = '';
-            if (stopQueue.length === 0) {
+            
+            const endInputVal = document.getElementById('end-input').value;
+            if (stopQueue.length === 0 && !endInputVal) {
                 section.classList.add('hidden');
                 return;
             }
@@ -562,9 +567,15 @@
             section.classList.remove('hidden');
             navHud.classList.remove('hidden');
 
+            // Render rearrangeable user-selected checkpoints
             stopQueue.forEach((stop, index) => {
                 const container = document.createElement('div');
-                container.className = "flex items-center justify-between gap-1 text-[11px] bg-slate-800 px-2 py-1 rounded-lg border border-slate-700 font-bold";
+                container.className = "drag-item flex items-center justify-between gap-1 text-[11px] bg-slate-800 px-2 py-1.5 rounded-lg border border-slate-700 font-bold cursor-grab active:cursor-grabbing mb-1 select-none";
+                container.setAttribute('data-index', index);
+                
+                const dragHandle = document.createElement('span');
+                dragHandle.className = "text-slate-500 mr-1 text-xs shrink-0";
+                dragHandle.innerText = "☰";
                 
                 const label = document.createElement('span');
                 label.className = "truncate flex-1 text-slate-200";
@@ -573,17 +584,52 @@
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = "text-red-400 hover:text-red-500 font-black text-xs px-1 cursor-pointer transition-colors select-none";
                 deleteBtn.innerText = "✕";
-                deleteBtn.addEventListener('click', () => {
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     stopQueue.splice(index, 1);
                     triggerToast("Removed stop from queue.");
                     updateQueueHUD();
                     triggerRouteCalculation();
                 });
 
+                container.appendChild(dragHandle);
                 container.appendChild(label);
                 container.appendChild(deleteBtn);
                 list.appendChild(container);
             });
+
+            // ALWAYS RENDER TERMINAL GATEWAY STACK AT BASE OF THE TREE
+            if (endInputVal) {
+                const destContainer = document.createElement('div');
+                destContainer.className = "non-draggable flex items-center gap-2 text-[11px] bg-slate-800/40 px-2 py-1.5 rounded-lg border border-slate-700/50 font-bold opacity-75 mt-1 select-none pointer-events-none";
+                destContainer.innerHTML = `<span class="text-emerald-400 shrink-0 text-xs">🏁</span><span class="truncate text-slate-300 flex-1">Dest: ${endInputVal}</span>`;
+                list.appendChild(destContainer);
+            }
+
+            // Bind SortableJS tracking frames dynamically to avoid infinite loop locks
+            if (window.Sortable && stopQueue.length > 1) {
+                if (list.sortableInstance) {
+                    list.sortableInstance.destroy();
+                }
+                list.sortableInstance = Sortable.create(list, {
+                    animation: 150,
+                    draggable: ".drag-item",
+                    onEnd: function (evt) {
+                        const oldIdx = evt.oldIndex;
+                        const newIdx = evt.newIndex;
+                        
+                        if (oldIdx !== undefined && newIdx !== undefined && oldIdx !== newIdx && newIdx < stopQueue.length) {
+                            const movedItem = stopQueue.splice(oldIdx, 1)[0];
+                            stopQueue.splice(newIdx, 0, movedItem);
+                            triggerToast("Recalculating layout queue priorities...");
+                            updateQueueHUD();
+                            triggerRouteCalculation();
+                        } else {
+                            updateQueueHUD();
+                        }
+                    }
+                });
+            }
         }
 
         function findClosestPointOnLineSegment(p, p1, p2) {
@@ -625,6 +671,7 @@
             return '⬆️';
         }
 
+        // REAL-TIME MANEUVER PROXIMITY ENGINE TWEAKS
         function updateAppleNavigationHUD(currentSnappedLatLng) {
             const banner = document.getElementById('apple-navigation-hud');
             if (currentRouteInstructions.length === 0 || routeLineCoordinates.length === 0 || isAlternateMatrixModeActive) {
@@ -648,36 +695,42 @@
                 }
             }
 
+            // Meticulously evaluate the strictly next upcoming turn index signature ahead of vehicle pointer
             let targetInstruction = null;
             let activeIdx = 0;
             for (let i = 0; i < currentRouteInstructions.length; i++) {
-                if (currentRouteInstructions[i].index >= currentClosestSegmentIndex) {
+                if (currentRouteInstructions[i].index > currentClosestSegmentIndex) {
                     targetInstruction = currentRouteInstructions[i];
                     activeIdx = i;
                     break;
                 }
             }
-            if (!targetInstruction) {
+            
+            // Loop bounding fallback if track runs onto final terminal leg segment entries
+            if (!targetInstruction && currentRouteInstructions.length > 0) {
                 targetInstruction = currentRouteInstructions[currentRouteInstructions.length - 1];
                 activeIdx = currentRouteInstructions.length - 1;
             }
 
-            activeInstructionIndex = activeIdx;
+            if (!targetInstruction) return;
 
-            const text = targetInstruction.text || "Continue on path";
+            activeInstructionIndex = activeIdx;
+            
+            // Render upcoming action instructions instead of matching current status parameters
+            const text = targetInstruction.text || "Continue straight";
             document.getElementById('hud-turn-instruction').innerText = text;
             document.getElementById('hud-turn-icon').innerText = resolveDirectionalManeuverSymbol(text);
 
             const nextStepObj = currentRouteInstructions[activeIdx + 1];
-            document.getElementById('hud-next-step-preview').innerText = nextStepObj ? (nextStepObj.text || "Destination") : "Destination";
+            document.getElementById('hud-next-step-preview').innerText = nextStepObj ? (nextStepObj.text || "Arrive") : "Arrive";
 
             const turnCoordinate = routeLineCoordinates[targetInstruction.index];
             if (turnCoordinate) {
                 const distanceToManeuverMeters = map.distance(currentSnappedLatLng, turnCoordinate);
                 if (distanceToManeuverMeters >= 1609.34) {
-                    document.getElementById('hud-turn-distance').innerText = `In ${(distanceToManeuverMeters * 0.000621371).toFixed(1)} miles`;
+                    document.getElementById('hud-turn-distance').innerText = `${(distanceToManeuverMeters * 0.000621371).toFixed(1)} miles until turn`;
                 } else {
-                    document.getElementById('hud-turn-distance').innerText = `In ${Math.round(distanceToManeuverMeters * 3.28084)} feet`;
+                    document.getElementById('hud-turn-distance').innerText = `${Math.round(distanceToManeuverMeters * 3.28084)} feet until turn`;
                 }
             }
         }
@@ -699,14 +752,12 @@
                 color: '#2563eb', opacity: 0.9, weight: 8, lineCap: 'round', lineJoin: 'round'
             }).addTo(map);
 
-            // Path Click Listener: Drops a midpoint Waypoint anchor onto the engine grid array
             primaryRoutePolyline.on('click', function(e) {
                 let currentWaypoints = routingControl.getWaypoints();
-                // Inject waypoints directly between start and end termini slots safely
                 currentWaypoints.splice(currentWaypoints.length - 1, 0, L.Routing.waypoint(e.latlng));
                 isAlternateMatrixModeActive = false; 
                 routingControl.setWaypoints(currentWaypoints);
-                triggerToast("Dropped custom waypoint anchor point onto road grid.");
+                triggerToast("Dropped custom manual anchor point.");
             });
             
             const totalDistanceMiles = (selectedRoute.summary.totalDistance * 0.000621371).toFixed(1);
@@ -726,7 +777,7 @@
                 updateAppleNavigationHUD(routeLineCoordinates[0]);
             }
 
-            triggerToast("Route locked successfully! Navigation HUD activated.");
+            triggerToast("Route engaged! Turn prompt profiles re-mapped.");
             if (currentMasterCat) runDataExecutionLayer(currentMasterCat);
         }
 
@@ -757,7 +808,6 @@
 
                 if (midpointLatLng) {
                     const distanceMiles = (route.summary.totalDistance * 0.000621371).toFixed(1);
-                    
                     const featuresTollIndicator = (index === 1 || (route.summary.totalDistance % 3 > 1.4)) 
                         ? "⚠️ Toll Roads" 
                         : "🍃 No Tolls";
@@ -928,8 +978,8 @@
 
         routingControl = L.Routing.control({
             show: false, 
-            addWaypoints: true, // Native waypoint drops enabled
-            draggableWaypoints: true, // Dynamic road dragging tracking anchors enabled
+            addWaypoints: true, 
+            draggableWaypoints: true, 
             serviceUrl: 'https://router.project-osrm.org/route/v1',
             router: L.Routing.osrmv1({ 
                 serviceUrl: 'https://router.project-osrm.org/route/v1',
@@ -947,7 +997,6 @@
                 
                 let marker = L.marker(wp.latLng, { draggable: true, icon: createRouteMarkerIcon(iconLabel, bgClass) });
                 
-                // Prompt-To-Delete click mechanism on secondary layout anchors
                 if (i > 0 && i < n - 1) {
                     marker.on('click', function() {
                         if (confirm("Would you like to delete this waypoint anchor?")) {
@@ -997,8 +1046,6 @@
                 
                 const safeQueryString = encodeURIComponent(`${popupHeadingName} near ${parseFloat(lat).toFixed(5)},${parseFloat(lon).toFixed(5)}`);
                 const googleMapsUniversalDeepLinkUrl = `https://www.google.com/maps/search/?api=1&query=${safeQueryString}`;
-                
-                // EXACT COORD DIRECT LOOKUP DEEP-LINK
                 const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
 
@@ -1347,7 +1394,7 @@
         });
 
         routingControl.on('routesfound', async function(e) {
-            // Deduplicate alternative tracks matching identical layout distance shapes
+            // Meticulously scrub redundant alternate route footprints containing identical layouts
             let uniqueRoutes = [];
             let seenDistances = new Set();
             
@@ -1369,6 +1416,9 @@
             const searchContainer = document.getElementById('search-container');
             if (searchContainer) searchContainer.classList.add('hidden');
             
+            // Re-render intermediate stops priority numbers list tracking frames
+            updateQueueHUD();
+
             if (isAlternateMatrixModeActive && rawRoutesMemoryArray.length > 1) {
                 document.getElementById('route-mileage-sticky').classList.add('hidden');
                 renderAlternateRoutePathsMatrix(rawRoutesMemoryArray);
