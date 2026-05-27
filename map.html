@@ -122,8 +122,8 @@
         <div id="apple-navigation-hud" class="w-[92%] max-w-lg bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-4 mt-3 border border-slate-700/50 flex items-center gap-4 transition-all duration-500 transform -translate-y-64 opacity-0 hidden select-none pointer-events-auto">
             <div id="hud-turn-icon" class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-3xl font-black shrink-0 shadow-md">⬆️</div>
             <div class="flex-1 min-w-0">
-                <h2 id="hud-turn-instruction" class="text-sm font-black tracking-tight leading-normal uppercase text-slate-100 flex-wrap">Calculating next turn...</h2>
-                <p id="hud-turn-distance" class="text-xs text-emerald-400 font-bold mt-0.5">0.00 mi until turn</p>
+                <h2 id="hud-turn-instruction" class="text-sm font-black tracking-tight leading-tight uppercase truncate text-slate-100">Calculating next turn...</h2>
+                <p id="hud-turn-distance" class="text-xs text-emerald-400 font-bold mt-0.5">0.0 mi until turn</p>
             </div>
             <div class="text-right shrink-0 border-l border-slate-700 pl-3">
                 <span class="text-[9px] uppercase font-black tracking-widest text-slate-400 block">Then</span>
@@ -156,7 +156,7 @@
 
     <script>
         // =====================================================================
-        // --- PHASE 1: GLOBAL CONSTANTS & MEMORY ALLOCATION SCHEMAS ----------
+        // --- PHASE 1: GLOBAL CONSTANTS, VARIABLE SCHEMAS & DICTIONARIES ------
         // =====================================================================
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
         const autocompleteQueryMemoryCache = new Map(); 
@@ -331,7 +331,6 @@
         
         let alternateRoutesGroupLayer = null; 
         let alternateCalloutsGroupLayer = null; 
-        let routeArrowsGroupLayer = null; 
         let rawRoutesMemoryArray = []; 
         let isAlternateMatrixModeActive = true; 
         
@@ -568,6 +567,7 @@
             section.classList.remove('hidden');
             navHud.classList.remove('hidden');
 
+            // Render rearrangeable user-selected checkpoints
             stopQueue.forEach((stop, index) => {
                 const container = document.createElement('div');
                 container.className = "drag-item flex items-center justify-between gap-1 text-[11px] bg-slate-800 px-2 py-1.5 rounded-lg border border-slate-700 font-bold cursor-grab active:cursor-grabbing mb-1 select-none";
@@ -598,6 +598,7 @@
                 list.appendChild(container);
             });
 
+            // ALWAYS RENDER TERMINAL GATEWAY STACK AT BASE OF THE TREE
             if (endInputVal) {
                 const destContainer = document.createElement('div');
                 destContainer.className = "non-draggable flex items-center gap-2 text-[11px] bg-slate-800/40 px-2 py-1.5 rounded-lg border border-slate-700/50 font-bold opacity-75 mt-1 select-none pointer-events-none";
@@ -605,6 +606,7 @@
                 list.appendChild(destContainer);
             }
 
+            // Bind SortableJS tracking frames dynamically to avoid infinite loop locks
             if (window.Sortable && stopQueue.length > 1) {
                 if (list.sortableInstance) {
                     list.sortableInstance.destroy();
@@ -669,7 +671,7 @@
             return '⬆️';
         }
 
-        // REAL-TIME MANEUVER PROXIMITY ENGINE (ALL MILES ENFORCED)
+        // REAL-TIME MANEUVER PROXIMITY ENGINE TWEAKS
         function updateAppleNavigationHUD(currentSnappedLatLng) {
             const banner = document.getElementById('apple-navigation-hud');
             if (currentRouteInstructions.length === 0 || routeLineCoordinates.length === 0 || isAlternateMatrixModeActive) {
@@ -693,6 +695,7 @@
                 }
             }
 
+            // Meticulously evaluate the strictly next upcoming turn index signature ahead of vehicle pointer
             let targetInstruction = null;
             let activeIdx = 0;
             for (let i = 0; i < currentRouteInstructions.length; i++) {
@@ -703,6 +706,7 @@
                 }
             }
             
+            // Loop bounding fallback if track runs onto final terminal leg segment entries
             if (!targetInstruction && currentRouteInstructions.length > 0) {
                 targetInstruction = currentRouteInstructions[currentRouteInstructions.length - 1];
                 activeIdx = currentRouteInstructions.length - 1;
@@ -712,6 +716,7 @@
 
             activeInstructionIndex = activeIdx;
             
+            // Render upcoming action instructions instead of matching current status parameters
             const text = targetInstruction.text || "Continue straight";
             document.getElementById('hud-turn-instruction').innerText = text;
             document.getElementById('hud-turn-icon').innerText = resolveDirectionalManeuverSymbol(text);
@@ -722,37 +727,11 @@
             const turnCoordinate = routeLineCoordinates[targetInstruction.index];
             if (turnCoordinate) {
                 const distanceToManeuverMeters = map.distance(currentSnappedLatLng, turnCoordinate);
-                const distanceInMiles = (distanceToManeuverMeters * 0.000621371).toFixed(2);
-                document.getElementById('hud-turn-distance').innerText = `${distanceInMiles} mi until turn`;
-            }
-        }
-
-        // VECTOR INTERPOLATOR DIRECTIONAL PATH MARKER ENGINE
-        function renderDirectionalPathArrows(coordinates) {
-            routeArrowsGroupLayer.clearLayers();
-            if (coordinates.length < 2) return;
-
-            const samplingIntervalStride = 40; 
-            for (let i = 0; i < coordinates.length - 5; i += samplingIntervalStride) {
-                const p1 = coordinates[i];
-                const p2 = coordinates[i + 5]; 
-                
-                const angleDegrees = Math.atan2(p2.lng - p1.lng, p2.lat - p1.lat) * 180 / Math.PI;
-
-                const arrowHtml = `
-                    <div style="transform: rotate(${angleDegrees}deg); color: #ffffff; font-size: 11px; font-weight: 900; text-shadow: 0 1px 2px rgba(0,0,0,0.6); pointer-events: none; select: none;">▲</div>
-                `;
-
-                const arrowMarker = L.marker([p1.lat, p1.lng], {
-                    icon: L.divIcon({
-                        html: arrowHtml,
-                        className: '',
-                        iconSize: [16, 16],
-                        iconAnchor: [8, 8]
-                    }),
-                    interactive: false
-                });
-                routeArrowsGroupLayer.addLayer(arrowMarker);
+                if (distanceToManeuverMeters >= 1609.34) {
+                    document.getElementById('hud-turn-distance').innerText = `${(distanceToManeuverMeters * 0.000621371).toFixed(1)} miles until turn`;
+                } else {
+                    document.getElementById('hud-turn-distance').innerText = `${Math.round(distanceToManeuverMeters * 3.28084)} feet until turn`;
+                }
             }
         }
 
@@ -780,8 +759,6 @@
                 routingControl.setWaypoints(currentWaypoints);
                 triggerToast("Dropped custom manual anchor point.");
             });
-
-            renderDirectionalPathArrows(routeLineCoordinates);
             
             const totalDistanceMiles = (selectedRoute.summary.totalDistance * 0.000621371).toFixed(1);
             document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
@@ -807,7 +784,6 @@
         function renderAlternateRoutePathsMatrix(routesArray) {
             alternateRoutesGroupLayer.clearLayers();
             alternateCalloutsGroupLayer.clearLayers();
-            routeArrowsGroupLayer.clearLayers();
             if (primaryRoutePolyline) { map.removeLayer(primaryRoutePolyline); }
             
             if (routesArray.length === 0) return;
@@ -832,7 +808,6 @@
 
                 if (midpointLatLng) {
                     const distanceMiles = (route.summary.totalDistance * 0.000621371).toFixed(1);
-                    
                     const featuresTollIndicator = (index === 1 || (route.summary.totalDistance % 3 > 1.4)) 
                         ? "⚠️ Toll Roads" 
                         : "🍃 No Tolls";
@@ -889,7 +864,7 @@
                 syntheticPayloadList.push({
                     lat: randomAnchorSampleNode.lat + varianceLat,
                     lon: randomAnchorSampleNode.lng + varianceLon,
-                    n: `${cleanBrandNames[evaluatedBrand] || evaluatedCategory.toUpperCase()} Hub #${100 + i}`,
+                    n: `Synthetic ${cleanBrandNames[evaluatedBrand] || evaluatedCategory} Loc ${i+1}`,
                     b: evaluatedBrand,
                     c: evaluatedCategory,
                     h: "Open 24 Hours Seamlessly",
@@ -920,7 +895,6 @@
         poiClusterGroup = L.layerGroup().addTo(map);
         alternateRoutesGroupLayer = L.layerGroup().addTo(map);
         alternateCalloutsGroupLayer = L.layerGroup().addTo(map);
-        routeArrowsGroupLayer = L.layerGroup().addTo(map); 
 
         // =====================================================================
         // --- PHASE 4: HIGH-SPEED CORRIDOR BACKGROUND WEB WORKER ENGINE -------
@@ -1060,8 +1034,8 @@
 
             combinedFavoritesList.forEach(el => {
                 const lat = el.lat; const lon = el.lon;
-                
-                let popupHeadingName = el.n || el.name || cleanBrandNames[el.brand] || (el.category ? el.category.toUpperCase() : "Verified POI Asset");
+                const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
+                let popupHeadingName = el.name || cleanLabelBrand; 
                 let popupHours = el.hours || "Hours not listed";
                 let popupDesc = el.desc || "Verified favorite location pinned to map globally.";
                 
@@ -1125,24 +1099,151 @@
             });
         }
 
-        // =====================================================================
-        // --- PHASE 6: AUTOMATED REGISTRY INTERACTION AND ACTION INTERCEPTORS -
-        // =====================================================================
-        function handleAutocompleteRegistryBindings() {
-            ['start-input', 'end-input'].forEach(id => {
-                const el = document.getElementById(id); let debounceTimer;
-                el.addEventListener('input', () => {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(() => {
-                        runCachedAutocompleteSearch(el, document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete'));
-                    }, 400);
+        function buildAndRenderPoiMarker(el, forceStarredStyleProfile = false) {
+            const lat = el.lat; const lon = el.lon;
+            const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
+            let popupHeadingName = el.name || cleanLabelBrand; 
+            let popupHours = el.hours || "Hours not listed";
+            let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
+            
+            let visualCatKey = el.brand;
+            if (!categoryConfigs[visualCatKey]) { visualCatKey = el.category; }
+
+            const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
+            const isLarge = map.getZoom() > 13;
+
+            let fuelBadgeHtml = '';
+            if (visualCatKey === 'gas' || el.category === 'gas') {
+                fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-955 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
+            }
+
+            const safeQueryString = encodeURIComponent(`${popupHeadingName} near ${parseFloat(lat).toFixed(5)},${parseFloat(lon).toFixed(5)}`);
+            const googleMapsUniversalDeepLinkUrl = `https://www.google.com/maps/search/?api=1&query=${safeQueryString}`;
+            const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+            const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
+
+            let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+            let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
+            let starBtnText = isStarredCurrently ? "❌ Remove Local Star" : "⭐ Persistently Star";
+            let starBtnColor = isStarredCurrently ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
+
+            const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
+            let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
+
+            let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}">📍 Set Stop</button>`;
+
+            const popupContent = `
+                <div class="w-full font-sans p-0.5 text-zinc-955">
+                    <img src="${uiConfig.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm" onerror="this.style.display='none'">
+                    <h3 class="text-xs font-black text-black leading-tight truncate">${popupHeadingName}</h3>
+                    <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">${popupDesc}</div>
+                    ${mileagePredictorBadgeHtml}
+                    ${fuelBadgeHtml}
+                    <div class="border-t border-zinc-200 pt-1 mt-1">
+                        <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">Hours</span>
+                        <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
+                    </div>
+                    <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
+                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
+                        ${stopQueueBtnHtml}
+                        <a href="${googleMapsUniversalDeepLinkUrl}" target="_blank" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-[10px] py-1.5 rounded-xl border border-blue-800 shadow-sm text-white font-black flex items-center justify-center">🗺️ View on Google Maps</a>
+                        <a href="${googleStreetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
+                        <a href="${appleMapsUrl}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center">🍎 Route in Apple Maps</a>
+                    </div>
+                </div>
+            `;
+
+            const finalIconChoice = (forceStarredStyleProfile || isStarredCurrently) 
+                ? createStarredIcon(uiConfig.label, isLarge)
+                : createCustomIcon(uiConfig.label, uiConfig.bg, isLarge);
+
+            const marker = L.marker([lat, lon], { icon: finalIconChoice })
+                .bindPopup(popupContent, { 
+                    className: 'custom-popup', autoPan: true,
+                    autoPanPaddingTopLeft: L.point(15, 230), autoPanPaddingBottomRight: L.point(15, 25), maxWidth: 210
                 });
-                el.addEventListener('blur', () => {
-                    setTimeout(() => {
-                        document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete').classList.add('hidden');
-                    }, 200);
+
+            allPoiMarkersMemoryMap.push({ marker: marker, visualKey: visualCatKey });
+            poiClusterGroup.addLayer(marker);
+        }
+
+        // =====================================================================
+        // --- PHASE 6: NOMINATIM GEOLOCATION AUTOCOMPLETE ENGINE -----------
+        // =====================================================================
+        function runCachedAutocompleteSearch(inputElement, dropdownElement) {
+            const query = inputElement.value.trim();
+            const clearBtn = document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn');
+            
+            if (query.length > 0) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
+
+            if (query.length < 3) {
+                dropdownElement.innerHTML = ''; dropdownElement.classList.add('hidden'); return;
+            }
+
+            if (autocompleteQueryMemoryCache.has(query)) {
+                renderAutocompleteDropdownDOM(autocompleteQueryMemoryCache.get(query), inputElement, dropdownElement); return;
+            }
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&countrycodes=us&q=${encodeURIComponent(query)}`)
+            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+            .then(data => {
+                autocompleteQueryMemoryCache.set(query, data);
+                renderAutocompleteDropdownDOM(data, inputElement, dropdownElement);
+            }).catch(() => {});
+        }
+
+        function renderAutocompleteDropdownDOM(data, inputElement, dropdownElement) {
+            dropdownElement.innerHTML = '';
+            if (!data || data.length === 0) {
+                const noResult = document.createElement('div');
+                noResult.className = "px-3 py-2.5 bg-gray-50 text-gray-500 italic text-xs select-none rounded-xl";
+                noResult.innerText = "No locations found in the US";
+                dropdownElement.appendChild(noResult); dropdownElement.classList.remove('hidden'); return;
+            }
+            dropdownElement.classList.remove('hidden');
+
+            data.forEach(item => {
+                const cleanOutputString = buildCleanAddressString(item.address, item.display_name);
+                const option = document.createElement('div');
+                option.className = "px-3 py-2.5 bg-white hover:bg-blue-50 border-b border-gray-100 last:border-0 cursor-pointer truncate text-zinc-900 font-semibold text-xs transition-colors";
+                option.innerText = cleanOutputString;
+
+                option.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    inputElement.value = cleanOutputString;
+                    inputElement.dataset.lat = item.lat;
+                    inputElement.dataset.lon = item.lon;
+                    dropdownElement.innerHTML = ''; dropdownElement.classList.add('hidden');
+                    document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn').classList.remove('hidden');
                 });
+                dropdownElement.appendChild(option);
             });
+        }
+
+        // =====================================================================
+        // --- PHASE 7: HUD DRAWER MENU COMPILER FILTERS LAYER -----------------
+        // =====================================================================
+        function handleMasterCategorySelection(element) {
+            document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
+            element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
+            currentMasterCat = element.getAttribute('data-cat'); currentSubFilter = 'none';
+            poiClusterGroup.clearLayers(); allPoiMarkersMemoryMap = [];
+            generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
+        }
+
+        // =====================================================================
+        // --- PHASE 8: REFINED CORE INTERACTION EVENT REGISTRIES -------------
+        // =====================================================================
+        function generateSubMenuUI(catId) {
+            const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
+            const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
+            definition.forEach((sub) => {
+                const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
+                subButton.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm text-zinc-700 transition-colors hover:bg-gray-50";
+                subButton.innerText = sub.label; subBar.appendChild(subButton);
+            });
+            subBar.classList.remove('hidden');
         }
 
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
@@ -1191,8 +1292,7 @@
             } else {
                 endClear.classList.remove('hidden');
             }
-            triggerToast("Swapped fields.");
-            updateQueueHUD(); 
+            triggerToast("Swapped start and destination fields.");
         });
 
         document.getElementById('start-clear-btn').addEventListener('click', () => {
@@ -1201,7 +1301,6 @@
             delete startIn.dataset.lat;
             delete startIn.dataset.lon;
             document.getElementById('start-clear-btn').classList.add('hidden');
-            updateQueueHUD(); 
         });
 
         document.getElementById('end-clear-btn').addEventListener('click', () => {
@@ -1210,7 +1309,6 @@
             delete endIn.dataset.lat;
             delete endIn.dataset.lon;
             document.getElementById('end-clear-btn').classList.add('hidden');
-            updateQueueHUD(); 
         });
 
         document.getElementById('start-locate-btn').addEventListener('click', () => performInlineFieldLocate('start-input', 'start-clear-btn'));
@@ -1264,11 +1362,22 @@
             }
         });
 
-        // =====================================================================
-        // --- PHASE 7: ASYNC SHARD LOADING & DYNAMIC ROUTE MAP LAYERS ---------
-        // =====================================================================
         window.addEventListener('DOMContentLoaded', () => {
-            handleAutocompleteRegistryBindings();
+            ['start-input', 'end-input'].forEach(id => {
+                const el = document.getElementById(id); let debounceTimer;
+                el.addEventListener('input', () => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        runCachedAutocompleteSearch(el, document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete'));
+                    }, 400);
+                });
+                el.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete').classList.add('hidden');
+                    }, 200);
+                });
+            });
+
             loadMasterRepoFavoritesOnBoot();
 
             const interactiveControlBars = ['master-header-panel', 'navigation-hud', 'center-loc-btn', 'apple-navigation-hud'];
@@ -1285,6 +1394,7 @@
         });
 
         routingControl.on('routesfound', async function(e) {
+            // Meticulously scrub redundant alternate route footprints containing identical layouts
             let uniqueRoutes = [];
             let seenDistances = new Set();
             
@@ -1306,6 +1416,7 @@
             const searchContainer = document.getElementById('search-container');
             if (searchContainer) searchContainer.classList.add('hidden');
             
+            // Re-render intermediate stops priority numbers list tracking frames
             updateQueueHUD();
 
             if (isAlternateMatrixModeActive && rawRoutesMemoryArray.length > 1) {
@@ -1348,14 +1459,79 @@
             if (currentMasterCat) runDataExecutionLayer(currentMasterCat);
         });
 
-        // =====================================================================
-        // --- PHASE 8: GEOLOCATION LIVE SENSOR WATCH SERVICE ENGINE ----------
-        // =====================================================================
+        map.on('popupopen', function(e) {
+            const containerNode = e.popup.getElement();
+
+            const queueBtn = containerNode.querySelector('.queue-stop-trigger');
+            if (queueBtn) {
+                queueBtn.addEventListener('click', function() {
+                    const lat = parseFloat(this.dataset.lat);
+                    const lon = parseFloat(this.dataset.lon);
+                    const name = this.dataset.name;
+
+                    if (!stopQueue.some(s => roundCoords(s.lat) === roundCoords(lat) && roundCoords(s.lon) === roundCoords(lon))) {
+                        stopQueue.push({ lat, lon, name });
+                        triggerToast(`Added stop: "${name}"`);
+                        updateQueueHUD();
+                        triggerRouteCalculation();
+                    } else {
+                        triggerToast("This location is already inside your target stop queue.");
+                    }
+                    map.closePopup();
+                });
+            }
+
+            const starToggle = containerNode.querySelector('.star-toggle-trigger');
+            if (starToggle) {
+                starToggle.addEventListener('click', function() {
+                    const lat = parseFloat(this.dataset.lat);
+                    const lon = parseFloat(this.dataset.lon);
+                    let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+                    const matchIndex = localStarred.findIndex(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
+                    
+                    if (matchIndex > -1) {
+                        localStarred.splice(matchIndex, 1);
+                        triggerToast("Removed from profile stars.");
+                    } else {
+                        localStarred.push({
+                            lat: lat, lon: lon,
+                            name: this.dataset.name,
+                            category: this.dataset.cat,
+                            brand: this.dataset.brand,
+                            hours: this.dataset.hours,
+                            desc: this.dataset.desc
+                        });
+                        triggerToast("Location pinned persistently to profile map layer!");
+                    }
+                    localStorage.setItem('starred_pois', JSON.stringify(localStarred));
+                    renderGlobalPermanentStars();
+                    map.closePopup();
+                });
+            }
+
+            const repoDelete = containerNode.querySelector('.global-delete-trigger');
+            if (repoDelete) {
+                repoDelete.addEventListener('click', function() {
+                    const lat = parseFloat(this.dataset.lat);
+                    const lon = parseFloat(this.dataset.lon);
+                    repoFavoritesMemory = repoFavoritesMemory.filter(r => !(roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon)));
+                    
+                    let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
+                    localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
+                    localStorage.setItem('starred_pois', JSON.stringify(localStarred));
+                    
+                    triggerToast("Dropped location item from repository matrix.");
+                    renderGlobalPermanentStars();
+                    map.closePopup();
+                });
+            }
+        });
+
         const geoBtn = document.getElementById('geo-btn');
         geoBtn.addEventListener('click', () => {
             if (isTracking) { 
                 if (watchId) navigator.geolocation.clearWatch(watchId); 
-                if (wakeLock !== null) { wakeLock.release(); wakeLock = null; }
+                releaseScreenWakeLockBlock();
                 isTracking = false; allowAutoCenter = true; clearTimeout(autoCenterTimeoutId);
                 geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
                 const banner = document.getElementById('apple-navigation-hud');
@@ -1365,8 +1541,7 @@
                 }
             } else {
                 if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
-                if ('wakeLock' in navigator) { navigator.wakeLock.request('screen').then(w => wakeLock = w).catch(()=>{}); }
-                
+                requestScreenWakeLockBlock();
                 geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
                 watchId = navigator.geolocation.watchPosition((pos) => {
                     const { latitude, longitude } = pos.coords;
