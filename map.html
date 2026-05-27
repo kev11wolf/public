@@ -158,7 +158,7 @@
 
     <script>
         // =====================================================================
-        // --- PHASE 1: GLOBAL CONSTANTS, VARIABLE SCHEMAS & DICTIONARIES ------
+        // --- PHASE 1: RE-HOISTED GLOBAL VARIABLE & DICTIONARY SCHEMAS -------
         // =====================================================================
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
         const autocompleteQueryMemoryCache = new Map(); 
@@ -324,6 +324,7 @@
         let mapStyleMode = 'light';
         let activeTargetsSliceMemory = [];
         let routeBufferPolyline = null;
+        let primaryRoutePolyline = null; 
         let allowAutoCenter = true;
         let autoCenterTimeoutId = null;
         let isTracking = false;
@@ -685,14 +686,20 @@
         function selectAndLockPrimaryTrackPath(routeIndex) {
             isAlternateMatrixModeActive = false;
             alternateCalloutsGroupLayer.clearLayers();
+            alternateRoutesGroupLayer.clearLayers();
             
             const selectedRoute = rawRoutesMemoryArray[routeIndex];
+            if (!selectedRoute) return;
+
             routeLineCoordinates = selectedRoute.coordinates;
-            currentRouteInstructions = selectedRoute.coordinates.instructions || selectedRoute.instructions || [];
+            currentRouteInstructions = selectedRoute.instructions || [];
             activeInstructionIndex = 0;
 
-            alternateRoutesGroupLayer.clearLayers();
-            routingControl.routes[0] = selectedRoute;
+            // Draw primary route path safely on independent custom vectors
+            if (primaryRoutePolyline) { map.removeLayer(primaryRoutePolyline); }
+            primaryRoutePolyline = L.polyline(routeLineCoordinates, {
+                color: '#2563eb', opacity: 0.9, weight: 8, lineCap: 'round', lineJoin: 'round'
+            }).addTo(map);
             
             const totalDistanceMiles = (selectedRoute.summary.totalDistance * 0.000621371).toFixed(1);
             document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
@@ -700,8 +707,9 @@
 
             if (routeBufferPolyline) { map.removeLayer(routeBufferPolyline); }
             routeBufferPolyline = L.polyline(routeLineCoordinates, {
-                color: '#2563eb', opacity: 0.2, lineCap: 'round', lineJoin: 'round', interactive: false
+                color: '#3b82f6', opacity: 0.15, lineCap: 'round', lineJoin: 'round', interactive: false
             }).addTo(map);
+            routeBufferPolyline.bringToBack();
 
             if (lastUserGpsCoord) {
                 const snappedNode = computeSnapToRouteVector(L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]));
@@ -717,6 +725,7 @@
         function renderAlternateRoutePathsMatrix(routesArray) {
             alternateRoutesGroupLayer.clearLayers();
             alternateCalloutsGroupLayer.clearLayers();
+            if (primaryRoutePolyline) { map.removeLayer(primaryRoutePolyline); }
             
             if (routesArray.length === 0) return;
 
@@ -927,6 +936,8 @@
                 profile: 'driving',
                 routingOptions: { alternatives: true, steps: true } 
             }),
+            // De-activate native lines styles to completely pass drawing tasks onto our manual canvas layers
+            lineOptions: { styles: [{ opacity: 0, weight: 0 }] },
             routeWhileDragging: false,
             fitSelectedRoutes: false,
             createMarker: function(i, wp, n) {
@@ -1243,12 +1254,6 @@
             const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input');
             if (!startInput.dataset.lat || !endInput.dataset.lat) { alert("Select suggested autocomplete options first."); return; }
             triggerRouteCalculation();
-        });
-
-        routingControl.on('routingerror', function(e) {
-            console.error("OSRM Connection Error Blocked: ", e);
-            updateInlineStatus("OSRM Server Timeout. Re-calculating path corridor parameters...", false);
-            triggerToast("Routing server connection dropped. Automatically retrying calculation...");
         });
 
         document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
