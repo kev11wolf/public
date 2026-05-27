@@ -122,8 +122,8 @@
         <div id="apple-navigation-hud" class="w-[92%] max-w-lg bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-4 mt-3 border border-slate-700/50 flex items-center gap-4 transition-all duration-500 transform -translate-y-64 opacity-0 hidden select-none pointer-events-auto">
             <div id="hud-turn-icon" class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-3xl font-black shrink-0 shadow-md">⬆️</div>
             <div class="flex-1 min-w-0">
-                <h2 id="hud-turn-instruction" class="text-sm font-black tracking-tight leading-tight uppercase truncate text-slate-100">Calculating next turn...</h2>
-                <p id="hud-turn-distance" class="text-xs text-emerald-400 font-bold mt-0.5">0.0 mi until turn</p>
+                <h2 id="hud-turn-instruction" class="text-sm font-black tracking-tight leading-normal uppercase text-slate-100 flex-wrap">Calculating next turn...</h2>
+                <p id="hud-turn-distance" class="text-xs text-emerald-400 font-bold mt-0.5">0.00 mi until turn</p>
             </div>
             <div class="text-right shrink-0 border-l border-slate-700 pl-3">
                 <span class="text-[9px] uppercase font-black tracking-widest text-slate-400 block">Then</span>
@@ -156,7 +156,7 @@
 
     <script>
         // =====================================================================
-        // --- PHASE 1: GLOBAL CONSTANTS, VARIABLE SCHEMAS & DICTIONARIES ------
+        // --- PHASE 1: RE-HOISTED GLOBAL VARIABLE & DICTIONARY SCHEMAS -------
         // =====================================================================
         const MAP_INITIAL_CENTER = [37.0902, -95.7129]; 
         const autocompleteQueryMemoryCache = new Map(); 
@@ -296,7 +296,7 @@
             shopping: [
                 { id: 'walmart', label: 'Walmart Supercenters' },
                 { id: 'target', label: 'Target Hubs' },
-                { id: 'costco', label: 'Costco Warehouse' },
+                { id: 'costco', label: 'Costco Wholesale' },
                 { id: 'dollartree', label: 'Dollar Tree Discounts' },
                 { id: 'staples', label: 'Staples Office' },
                 { id: 'upsstore', label: 'UPS Store Shipping' },
@@ -331,6 +331,7 @@
         
         let alternateRoutesGroupLayer = null; 
         let alternateCalloutsGroupLayer = null; 
+        let routeArrowsGroupLayer = null; 
         let rawRoutesMemoryArray = []; 
         let isAlternateMatrixModeActive = true; 
         
@@ -549,7 +550,6 @@
             routingControl.setWaypoints(finalWaypoints);
         }
 
-        // UPGRADED PIPELINE LIST RENDERING FEATURING NESTED DRAG-TO-REORDER GESTURES
         function updateQueueHUD() {
             const section = document.getElementById('queue-hud-section');
             const list = document.getElementById('queue-items-list');
@@ -567,7 +567,6 @@
             section.classList.remove('hidden');
             navHud.classList.remove('hidden');
 
-            // Render rearrangeable user-selected checkpoints
             stopQueue.forEach((stop, index) => {
                 const container = document.createElement('div');
                 container.className = "drag-item flex items-center justify-between gap-1 text-[11px] bg-slate-800 px-2 py-1.5 rounded-lg border border-slate-700 font-bold cursor-grab active:cursor-grabbing mb-1 select-none";
@@ -598,7 +597,6 @@
                 list.appendChild(container);
             });
 
-            // ALWAYS RENDER TERMINAL GATEWAY STACK AT BASE OF THE TREE
             if (endInputVal) {
                 const destContainer = document.createElement('div');
                 destContainer.className = "non-draggable flex items-center gap-2 text-[11px] bg-slate-800/40 px-2 py-1.5 rounded-lg border border-slate-700/50 font-bold opacity-75 mt-1 select-none pointer-events-none";
@@ -606,7 +604,6 @@
                 list.appendChild(destContainer);
             }
 
-            // Bind SortableJS tracking frames dynamically to avoid infinite loop locks
             if (window.Sortable && stopQueue.length > 1) {
                 if (list.sortableInstance) {
                     list.sortableInstance.destroy();
@@ -671,7 +668,7 @@
             return '⬆️';
         }
 
-        // REAL-TIME MANEUVER PROXIMITY ENGINE TWEAKS
+        // REAL-TIME MANEUVER PROXIMITY ENGINE (ALL MILES ENFORCED)
         function updateAppleNavigationHUD(currentSnappedLatLng) {
             const banner = document.getElementById('apple-navigation-hud');
             if (currentRouteInstructions.length === 0 || routeLineCoordinates.length === 0 || isAlternateMatrixModeActive) {
@@ -695,7 +692,6 @@
                 }
             }
 
-            // Meticulously evaluate the strictly next upcoming turn index signature ahead of vehicle pointer
             let targetInstruction = null;
             let activeIdx = 0;
             for (let i = 0; i < currentRouteInstructions.length; i++) {
@@ -706,7 +702,6 @@
                 }
             }
             
-            // Loop bounding fallback if track runs onto final terminal leg segment entries
             if (!targetInstruction && currentRouteInstructions.length > 0) {
                 targetInstruction = currentRouteInstructions[currentRouteInstructions.length - 1];
                 activeIdx = currentRouteInstructions.length - 1;
@@ -716,7 +711,6 @@
 
             activeInstructionIndex = activeIdx;
             
-            // Render upcoming action instructions instead of matching current status parameters
             const text = targetInstruction.text || "Continue straight";
             document.getElementById('hud-turn-instruction').innerText = text;
             document.getElementById('hud-turn-icon').innerText = resolveDirectionalManeuverSymbol(text);
@@ -727,11 +721,40 @@
             const turnCoordinate = routeLineCoordinates[targetInstruction.index];
             if (turnCoordinate) {
                 const distanceToManeuverMeters = map.distance(currentSnappedLatLng, turnCoordinate);
-                if (distanceToManeuverMeters >= 1609.34) {
-                    document.getElementById('hud-turn-distance').innerText = `${(distanceToManeuverMeters * 0.000621371).toFixed(1)} miles until turn`;
-                } else {
-                    document.getElementById('hud-turn-distance').innerText = `${Math.round(distanceToManeuverMeters * 3.28084)} feet until turn`;
-                }
+                // Hard measurement enforce pass up to strictly fractional decimal miles
+                const distanceInMiles = (distanceToManeuverMeters * 0.000621371).toFixed(2);
+                document.getElementById('hud-turn-distance').innerText = `${distanceInMiles} mi until turn`;
+            }
+        }
+
+        // VECTOR INTERPOLATOR DIRECTIONAL PATH MARKER ENGINE
+        function renderDirectionalPathArrows(coordinates) {
+            routeArrowsGroupLayer.clearLayers();
+            if (coordinates.length < 2) return;
+
+            // Paint direction arrows every 40 coordinates elements along line
+            const samplingIntervalStride = 40; 
+            for (let i = 0; i < coordinates.length - 5; i += samplingIntervalStride) {
+                const p1 = coordinates[i];
+                const p2 = coordinates[i + 5]; 
+                
+                // Absolute trigonometric radian projection translation loop
+                const angleDegrees = Math.atan2(p2.lng - p1.lng, p2.lat - p1.lat) * 180 / Math.PI;
+
+                const arrowHtml = `
+                    <div style="transform: rotate(${angleDegrees}deg); color: #ffffff; font-size: 11px; font-weight: 900; text-shadow: 0 1px 2px rgba(0,0,0,0.6); pointer-events: none; select: none;">▲</div>
+                `;
+
+                const arrowMarker = L.marker([p1.lat, p1.lng], {
+                    icon: L.divIcon({
+                        html: arrowHtml,
+                        className: '',
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    }),
+                    interactive: false
+                });
+                routeArrowsGroupLayer.addLayer(arrowMarker);
             }
         }
 
@@ -759,6 +782,9 @@
                 routingControl.setWaypoints(currentWaypoints);
                 triggerToast("Dropped custom manual anchor point.");
             });
+
+            // Fire directional route track marker plot layers
+            renderDirectionalPathArrows(routeLineCoordinates);
             
             const totalDistanceMiles = (selectedRoute.summary.totalDistance * 0.000621371).toFixed(1);
             document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
@@ -784,6 +810,7 @@
         function renderAlternateRoutePathsMatrix(routesArray) {
             alternateRoutesGroupLayer.clearLayers();
             alternateCalloutsGroupLayer.clearLayers();
+            routeArrowsGroupLayer.clearLayers();
             if (primaryRoutePolyline) { map.removeLayer(primaryRoutePolyline); }
             
             if (routesArray.length === 0) return;
@@ -808,6 +835,7 @@
 
                 if (midpointLatLng) {
                     const distanceMiles = (route.summary.totalDistance * 0.000621371).toFixed(1);
+                    
                     const featuresTollIndicator = (index === 1 || (route.summary.totalDistance % 3 > 1.4)) 
                         ? "⚠️ Toll Roads" 
                         : "🍃 No Tolls";
@@ -861,10 +889,11 @@
                 const evaluatedCategory = categoryValidationKeys[i % categoryValidationKeys.length];
                 const evaluatedBrand = mockupBrands[i % mockupBrands.length];
 
+                // Re-aligned precedence lookup variables using el.n explicitly for exact name extraction passes
                 syntheticPayloadList.push({
                     lat: randomAnchorSampleNode.lat + varianceLat,
                     lon: randomAnchorSampleNode.lng + varianceLon,
-                    n: `Synthetic ${cleanBrandNames[evaluatedBrand] || evaluatedCategory} Loc ${i+1}`,
+                    n: `${cleanBrandNames[evaluatedBrand] || evaluatedCategory.toUpperCase()} Hub #${100 + i}`,
                     b: evaluatedBrand,
                     c: evaluatedCategory,
                     h: "Open 24 Hours Seamlessly",
@@ -895,6 +924,7 @@
         poiClusterGroup = L.layerGroup().addTo(map);
         alternateRoutesGroupLayer = L.layerGroup().addTo(map);
         alternateCalloutsGroupLayer = L.layerGroup().addTo(map);
+        routeArrowsGroupLayer = L.layerGroup().addTo(map); 
 
         // =====================================================================
         // --- PHASE 4: HIGH-SPEED CORRIDOR BACKGROUND WEB WORKER ENGINE -------
@@ -1034,8 +1064,10 @@
 
             combinedFavoritesList.forEach(el => {
                 const lat = el.lat; const lon = el.lon;
-                const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
-                let popupHeadingName = el.name || cleanLabelBrand; 
+                
+                // UNIFIED LOGIC: Always enforce the actual database label string signature
+                let popupHeadingName = el.n || el.name || cleanBrandNames[el.brand] || (el.category ? el.category.toUpperCase() : "Verified POI Asset");
+                
                 let popupHours = el.hours || "Hours not listed";
                 let popupDesc = el.desc || "Verified favorite location pinned to map globally.";
                 
@@ -1101,8 +1133,10 @@
 
         function buildAndRenderPoiMarker(el, forceStarredStyleProfile = false) {
             const lat = el.lat; const lon = el.lon;
-            const cleanLabelBrand = cleanBrandNames[el.brand] || el.name || "Public Facility";
-            let popupHeadingName = el.name || cleanLabelBrand; 
+            
+            // UNIFIED LOGIC: Prioritize specific JSON shard names above generic placeholders
+            let popupHeadingName = el.n || el.name || cleanBrandNames[el.brand] || (el.brand ? el.brand.toUpperCase() : "") || (el.category ? el.category.toUpperCase() : "Location Asset");
+            
             let popupHours = el.hours || "Hours not listed";
             let popupDesc = el.desc || "Verified location mapped along route corridor bounds.";
             
@@ -1216,6 +1250,7 @@
                     inputElement.dataset.lon = item.lon;
                     dropdownElement.innerHTML = ''; dropdownElement.classList.add('hidden');
                     document.getElementById(inputElement.id === 'start-input' ? 'start-clear-btn' : 'end-clear-btn').classList.remove('hidden');
+                    updateQueueHUD(); 
                 });
                 dropdownElement.appendChild(option);
             });
@@ -1292,7 +1327,8 @@
             } else {
                 endClear.classList.remove('hidden');
             }
-            triggerToast("Swapped start and destination fields.");
+            triggerToast("Swapped fields.");
+            updateQueueHUD(); 
         });
 
         document.getElementById('start-clear-btn').addEventListener('click', () => {
@@ -1301,6 +1337,7 @@
             delete startIn.dataset.lat;
             delete startIn.dataset.lon;
             document.getElementById('start-clear-btn').classList.add('hidden');
+            updateQueueHUD(); 
         });
 
         document.getElementById('end-clear-btn').addEventListener('click', () => {
@@ -1309,6 +1346,7 @@
             delete endIn.dataset.lat;
             delete endIn.dataset.lon;
             document.getElementById('end-clear-btn').classList.add('hidden');
+            updateQueueHUD(); 
         });
 
         document.getElementById('start-locate-btn').addEventListener('click', () => performInlineFieldLocate('start-input', 'start-clear-btn'));
@@ -1359,259 +1397,6 @@
                     },
                     { enableHighAccuracy: true, timeout: 5000 }
                 );
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', () => {
-            ['start-input', 'end-input'].forEach(id => {
-                const el = document.getElementById(id); let debounceTimer;
-                el.addEventListener('input', () => {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(() => {
-                        runCachedAutocompleteSearch(el, document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete'));
-                    }, 400);
-                });
-                el.addEventListener('blur', () => {
-                    setTimeout(() => {
-                        document.getElementById(id === 'start-input' ? 'start-autocomplete' : 'end-autocomplete').classList.add('hidden');
-                    }, 200);
-                });
-            });
-
-            loadMasterRepoFavoritesOnBoot();
-
-            const interactiveControlBars = ['master-header-panel', 'navigation-hud', 'center-loc-btn', 'apple-navigation-hud'];
-            interactiveControlBars.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    L.DomEvent.on(element, 'touchstart touchmove touchend mousedown dblclick contextmenu', L.DomEvent.stopPropagation);
-                    L.DomEvent.disableClickPropagation(element); L.DomEvent.disableScrollPropagation(element);
-                }
-            });
-
-            map.on('movestart zoomstart dragstart', triggerAutoCenterDelay);
-            map.on('zoomend moveend', updateBufferVisualizerWeight);
-        });
-
-        routingControl.on('routesfound', async function(e) {
-            // Meticulously scrub redundant alternate route footprints containing identical layouts
-            let uniqueRoutes = [];
-            let seenDistances = new Set();
-            
-            (e.routes || []).forEach(r => {
-                let distMiles = (r.summary.totalDistance * 0.000621371).toFixed(1);
-                if (!seenDistances.has(distMiles)) {
-                    seenDistances.add(distMiles);
-                    uniqueRoutes.push(r);
-                }
-            });
-
-            rawRoutesMemoryArray = uniqueRoutes; 
-            routeLineCoordinates = uniqueRoutes[0] ? uniqueRoutes[0].coordinates : [];
-            currentRouteInstructions = uniqueRoutes[0] ? (uniqueRoutes[0].instructions || []) : [];
-            activeInstructionIndex = 0;
-            lastMileageUpdateGps = null;
-            continuousOffRouteDriftTicks = 0; 
-
-            const searchContainer = document.getElementById('search-container');
-            if (searchContainer) searchContainer.classList.add('hidden');
-            
-            // Re-render intermediate stops priority numbers list tracking frames
-            updateQueueHUD();
-
-            if (isAlternateMatrixModeActive && rawRoutesMemoryArray.length > 1) {
-                document.getElementById('route-mileage-sticky').classList.add('hidden');
-                renderAlternateRoutePathsMatrix(rawRoutesMemoryArray);
-                updateInlineStatus("Alternate choices mapped. Tap any card pointer to select.");
-            } else {
-                selectAndLockPrimaryTrackPath(0);
-            }
-
-            poiClusterGroup.clearLayers();
-            allPoiMarkersMemoryMap = [];
-            
-            const activeCrossedStates = calculateIntersectedStates(routeLineCoordinates);
-            updateInlineStatus(`Crossed state borders mapped: [${activeCrossedStates.length} States identified]`, true);
-            
-            localJsonMemory = [];
-            
-            await Promise.all(activeCrossedStates.map(async (stateName) => {
-                try {
-                    const response = await fetch(`data/${stateName}_brands.json`);
-                    if (response.ok) {
-                        const stateData = await response.json();
-                        localJsonMemory = localJsonMemory.concat(stateData);
-                    } else {
-                        const generatedMocks = await requestAlternateStateJsonShardFallback(stateName);
-                        localJsonMemory = localJsonMemory.concat(generatedMocks);
-                    }
-                } catch(err) {
-                    console.warn(`Shard loop pass error for state variable: ${stateName}`, err);
-                }
-            }));
-
-            if (localJsonMemory.length === 0) {
-                const generatedMocks = await requestAlternateStateJsonShardFallback("national");
-                localJsonMemory = localJsonMemory.concat(generatedMocks);
-            }
-
-            renderGlobalPermanentStars(); 
-            if (currentMasterCat) runDataExecutionLayer(currentMasterCat);
-        });
-
-        map.on('popupopen', function(e) {
-            const containerNode = e.popup.getElement();
-
-            const queueBtn = containerNode.querySelector('.queue-stop-trigger');
-            if (queueBtn) {
-                queueBtn.addEventListener('click', function() {
-                    const lat = parseFloat(this.dataset.lat);
-                    const lon = parseFloat(this.dataset.lon);
-                    const name = this.dataset.name;
-
-                    if (!stopQueue.some(s => roundCoords(s.lat) === roundCoords(lat) && roundCoords(s.lon) === roundCoords(lon))) {
-                        stopQueue.push({ lat, lon, name });
-                        triggerToast(`Added stop: "${name}"`);
-                        updateQueueHUD();
-                        triggerRouteCalculation();
-                    } else {
-                        triggerToast("This location is already inside your target stop queue.");
-                    }
-                    map.closePopup();
-                });
-            }
-
-            const starToggle = containerNode.querySelector('.star-toggle-trigger');
-            if (starToggle) {
-                starToggle.addEventListener('click', function() {
-                    const lat = parseFloat(this.dataset.lat);
-                    const lon = parseFloat(this.dataset.lon);
-                    let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-                    const matchIndex = localStarred.findIndex(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
-                    
-                    if (matchIndex > -1) {
-                        localStarred.splice(matchIndex, 1);
-                        triggerToast("Removed from profile stars.");
-                    } else {
-                        localStarred.push({
-                            lat: lat, lon: lon,
-                            name: this.dataset.name,
-                            category: this.dataset.cat,
-                            brand: this.dataset.brand,
-                            hours: this.dataset.hours,
-                            desc: this.dataset.desc
-                        });
-                        triggerToast("Location pinned persistently to profile map layer!");
-                    }
-                    localStorage.setItem('starred_pois', JSON.stringify(localStarred));
-                    renderGlobalPermanentStars();
-                    map.closePopup();
-                });
-            }
-
-            const repoDelete = containerNode.querySelector('.global-delete-trigger');
-            if (repoDelete) {
-                repoDelete.addEventListener('click', function() {
-                    const lat = parseFloat(this.dataset.lat);
-                    const lon = parseFloat(this.dataset.lon);
-                    repoFavoritesMemory = repoFavoritesMemory.filter(r => !(roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon)));
-                    
-                    let localStarred = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-                    localStarred = localStarred.filter(item => !(roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon)));
-                    localStorage.setItem('starred_pois', JSON.stringify(localStarred));
-                    
-                    triggerToast("Dropped location item from repository matrix.");
-                    renderGlobalPermanentStars();
-                    map.closePopup();
-                });
-            }
-        });
-
-        const geoBtn = document.getElementById('geo-btn');
-        geoBtn.addEventListener('click', () => {
-            if (isTracking) { 
-                if (watchId) navigator.geolocation.clearWatch(watchId); 
-                releaseScreenWakeLockBlock();
-                isTracking = false; allowAutoCenter = true; clearTimeout(autoCenterTimeoutId);
-                geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
-                const banner = document.getElementById('apple-navigation-hud');
-                if (banner) {
-                    banner.classList.add('-translate-y-64', 'opacity-0');
-                    setTimeout(() => banner.classList.add('hidden'), 500);
-                }
-            } else {
-                if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
-                requestScreenWakeLockBlock();
-                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
-                watchId = navigator.geolocation.watchPosition((pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    
-                    const startInField = document.getElementById('start-input');
-                    startInField.value = "Current Location";
-                    startInField.dataset.lat = latitude;
-                    startInField.dataset.lon = longitude;
-                    document.getElementById('start-clear-btn').classList.remove('hidden');
-
-                    if (lastUserGpsCoord) {
-                        const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord); if (distanceMoved < 6) return; 
-                    }
-                    
-                    const currentLatLngRaw = L.latLng(latitude, longitude);
-                    lastUserGpsCoord = [latitude, longitude];
-
-                    const snappedPoint = computeSnapToRouteVector(currentLatLngRaw);
-                    
-                    if (!userMarker) { 
-                        userMarker = L.marker(snappedPoint, { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); 
-                    } else { 
-                        userMarker.setLatLng(snappedPoint); 
-                    }
-                    if (allowAutoCenter) map.panTo(snappedPoint);
-
-                    if (stopQueue.length > 0) {
-                        const distToActiveStop = map.distance(snappedPoint, L.latLng(stopQueue[0].lat, stopQueue[0].lon));
-                        if (distToActiveStop < 45) { 
-                            triggerToast(`Arrived at stop: "${stopQueue[0].name}"`);
-                            stopQueue.shift();
-                            updateQueueHUD();
-                            triggerRouteCalculation();
-                            return; 
-                        }
-                    }
-
-                    if (routeLineCoordinates.length > 0 && !isAlternateMatrixModeActive) {
-                        updateAppleNavigationHUD(snappedPoint);
-
-                        let absoluteDistanceToRouteLine = Infinity;
-                        for (let i = 0; i < routeLineCoordinates.length; i++) {
-                            const d = map.distance(currentLatLngRaw, routeLineCoordinates[i]);
-                            if (d < absoluteDistanceToRouteLine) absoluteDistanceToRouteLine = d;
-                        }
-
-                        if (absoluteDistanceToRouteLine > 75) { 
-                            continuousOffRouteDriftTicks++;
-                            if (continuousOffRouteDriftTicks >= 3) { 
-                                triggerToast("Off-route deviation confirmed. Recalculating path corridor...", 4000);
-                                triggerRouteCalculation();
-                                continuousOffRouteDriftTicks = 0;
-                            }
-                        } else {
-                            continuousOffRouteDriftTicks = 0; 
-                        }
-
-                        if (!lastMileageUpdateGps || map.distance(snappedPoint, lastMileageUpdateGps) >= 400) {
-                            let remainingDistanceMeters = 0;
-                            for (let i = activeInstructionIndex; i < routeLineCoordinates.length - 1; i++) {
-                                remainingDistanceMeters += map.distance(routeLineCoordinates[i], routeLineCoordinates[i+1]);
-                            }
-                            const remainingDistanceMiles = (remainingDistanceMeters * 0.000621371).toFixed(1);
-                            const stickyLabelValue = document.getElementById('sticky-total-dist');
-                            if (stickyLabelValue) stickyLabelValue.innerText = remainingDistanceMiles;
-                            
-                            lastMileageUpdateGps = snappedPoint;
-                        }
-                    }
-                }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
             }
         });
     </script>
