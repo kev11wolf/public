@@ -132,13 +132,13 @@
         .floating-date-dialog {
             position: fixed; background: #ffffff; border: 1px solid #94a3b8; border-radius: 8px;
             box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-            padding: 15px; z-index: 10000; font-family: system-ui, sans-serif; width: 320px;
+            padding: 15px; z-index: 10000; font-family: system-ui, sans-serif; width: 330px;
         }
         .floating-date-dialog h4 { margin: 0 0 10px 0; font-size: 13px; color: #1e3a8a; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;}
         .floating-date-dialog .modal-row { display: flex; gap: 10px; margin-bottom: 12px; }
         .floating-date-dialog .modal-field { display: flex; flex-direction: column; flex: 1; font-size: 11px; font-weight: 600; color: #4a5568;}
         .floating-date-dialog .modal-field label { margin-bottom: 4px; }
-        .floating-date-dialog .modal-field input { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; width:100%; box-sizing:border-box; }
+        .floating-date-dialog .modal-field input, .floating-date-dialog .modal-field select { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; width:100%; box-sizing:border-box; }
         .floating-date-dialog .modal-actions { display: flex; justify-content: flex-end; gap: 6px; }
         .floating-date-dialog button { padding: 5px 12px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; }
     </style>
@@ -181,7 +181,7 @@
 
     <div class="main-preview">
         <div class="sticky-chart-container">
-            <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Double-click labels inside canvas to rename)</span></h2>
+            <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Double-click shapes inside canvas to edit custom colors/styles)</span></h2>
             
             <div class="canvas-holder" id="svgContainer" 
                  onmousemove="handleGlobalDragMove(event)" 
@@ -241,7 +241,7 @@
             </div>
 
             <div class="bottom-card" style="grid-column: span 2;">
-                <h3>3. Formatting, Metrics, & Element Colors</h3>
+                <h3>3. Formatting, Metrics, & Global Base Colors</h3>
                 <div class="control-grid" style="grid-template-columns: repeat(5, 1fr);">
                     <div class="control-item">
                         <label>Font Typography</label>
@@ -275,19 +275,19 @@
                 </div>
                 <div class="control-grid" style="grid-template-columns: repeat(7, 1fr); margin-top: 10px;">
                     <div class="control-item">
-                        <label>Unfilled Bar</label>
+                        <label>Global Unfilled Bar</label>
                         <input type="color" id="barBgColor" value="#5c95be" onchange="recordStateChange(); updateChart();">
                     </div>
                     <div class="control-item">
-                        <label>Progress Fill</label>
+                        <label>Global Progress Fill</label>
                         <input type="color" id="barColor" value="#2563eb" onchange="recordStateChange(); updateChart();">
                     </div>
                     <div class="control-item">
-                        <label>Summary Bar</label>
+                        <label>Global Summary Bar</label>
                         <input type="color" id="summaryColor" value="#475569" onchange="recordStateChange(); updateChart();">
                     </div>
                     <div class="control-item">
-                        <label>Milestone</label>
+                        <label>Global Milestone</label>
                         <input type="color" id="msColor" value="#000000" onchange="recordStateChange(); updateChart();">
                     </div>
                     <div class="control-item">
@@ -822,7 +822,9 @@
                         ms.labelOffsetY || 0,
                         ms.manualDateLabel ? "TRUE" : "FALSE",
                         ms.dateOffsetX || 0,
-                        ms.dateOffsetY || 0
+                        ms.dateOffsetY || 0,
+                        ms.color || "",
+                        ms.symbol || "diamond"
                     ].join('|'));
                 });
                 let nestedMilestonesField = `"${milestoneTokens.join(';')}"`;
@@ -927,7 +929,9 @@
                                 labelOffsetY: parseFloat(pieces[5]) || 0,
                                 manualDateLabel: pieces[6] === "TRUE",
                                 dateOffsetX: parseFloat(pieces[7]) || 0,
-                                dateOffsetY: parseFloat(pieces[8]) || 0
+                                dateOffsetY: parseFloat(pieces[8]) || 0,
+                                color: pieces[9] || "",
+                                symbol: pieces[10] || "diamond"
                             });
                         }
                     });
@@ -960,26 +964,26 @@
             projectData = [
                 { id: 0, title: "Building 11 Swimlane", color: "#eff6ff", showSummary: true, rows: [
                     { id: 0, label: "Production Labs - 2nd & 3rd Floor (Bldg 11)", start: "01Mar2026", end: "30Sep2027", progress: 0, predecessor: "", milestones: [
-                        { id: 1000, label: "Construction Complete", date: "01Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0 },
-                        { id: 1001, label: "Interiors Start", date: "19Aug2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 }
+                        { id: 1000, label: "Construction Complete", date: "01Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond" },
+                        { id: 1001, label: "Interiors Start", date: "19Aug2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond" }
                     ]}
                 ]},
                 { id: 1, title: "Building 21 Swimlane", color: "#f0fdf4", showSummary: true, rows: [
                     { id: 1, label: "Warehouse Admin 1st Floor (Bldg 21)", start: "01Mar2026", end: "04Nov2027", progress: 0, predecessor: "", milestones: [
-                        { id: 1002, label: "Construction Complete", date: "31Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0 },
-                        { id: 1003, label: "Interiors Start", date: "05Feb2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 }
+                        { id: 1002, label: "Construction Complete", date: "31Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond" },
+                        { id: 1003, label: "Interiors Start", date: "05Feb2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond" }
                     ]}
                 ]},
                 { id: 2, title: "Building 31 Swimlane", color: "#fdf2f8", showSummary: true, rows: [
                     { id: 2, label: "Lab/Admin (Bldg 31)", start: "01Mar2026", end: "14Dec2027", progress: 0, predecessor: "", milestones: [
-                        { id: 1004, label: "Construction Complete", date: "14Dec2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 },
-                        { id: 1005, label: "Interiors Start", date: "23Mar2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 }
+                        { id: 1004, label: "Construction Complete", date: "14Dec2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond" },
+                        { id: 1005, label: "Interiors Start", date: "23Mar2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond" }
                     ]}
                 ]},
                 { id: 3, title: "Building 41 Swimlane", color: "#fff7ed", showSummary: true, rows: [
                     { id: 3, label: "CUB/Annex (Bldg 41)", start: "01Mar2026", end: "13Aug2027", progress: 0, predecessor: "", milestones: [
-                        { id: 1006, label: "Construction Complete", date: "13Aug2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0 },
-                        { id: 1007, label: "Interiors Start", date: "18May2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, dateOffsetX: -13, dateOffsetY: 1, manualDateLabel: true }
+                        { id: 1006, label: "Construction Complete", date: "13Aug2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond" },
+                        { id: 1007, label: "Interiors Start", date: "18May2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, dateOffsetX: -13, dateOffsetY: 1, manualDateLabel: true, color: "", symbol: "diamond" }
                     ]}
                 ]}
             ];
@@ -1033,14 +1037,105 @@
         }
     }
 
+    // ==========================================
+    // FLOATING POPUP DIALOG INTEGRATION HOOKS
+    // ==========================================
+    function editLaneSummaryDirectlyGlobal(e, laneIdx) {
+        e.stopPropagation();
+        let lane = projectData[laneIdx]; if (!lane) return;
+
+        let existingDialog = document.getElementById('floatingLaneSummaryDialog');
+        if (existingDialog) existingDialog.remove();
+
+        let dialog = document.createElement('div');
+        dialog.id = 'floatingLaneSummaryDialog';
+        dialog.className = 'floating-date-dialog';
+        dialog.style.left = `${e.clientX}px`;
+        dialog.style.top = `${e.clientY}px`;
+        dialog.style.width = '260px';
+
+        let globalSummaryColor = document.getElementById('summaryColor').value;
+        let currentSummaryColor = lane.summaryColor || globalSummaryColor;
+
+        dialog.innerHTML = `
+            <h4>Modify Summary Bar Style</h4>
+            <div class="modal-row">
+                <div class="modal-field">
+                    <label>Individual Summary Color</label>
+                    <input type="color" id="modalSummaryColor" value="${currentSummaryColor}">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="modalSummaryCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
+                <button id="modalSummarySaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply</button>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+        document.getElementById('modalSummaryCancelBtn').addEventListener('click', () => dialog.remove());
+        document.getElementById('modalSummarySaveBtn').addEventListener('click', function() {
+            lane.summaryColor = document.getElementById('modalSummaryColor').value;
+            recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
+        });
+    }
+
     function editMilestoneDateDirectlyGlobal(e, rowId, msId) {
         e.stopPropagation();
         let row = findRowGlobally(rowId); if (!row) return;
         let ms = row.milestones.find(m => m.id === msId); if (!ms) return;
-        
-        openCalendarPopup(e, ms.date, function(newYYYYMMDD) {
-            ms.date = formatDateToDDMMMYYYY(new Date(newYYYYMMDD + "T00:00:00"));
-            recordStateChange(); renderInputRows(); updateChart();
+
+        let existingDialog = document.getElementById('floatingMilestoneDialog');
+        if (existingDialog) existingDialog.remove();
+
+        let dialog = document.createElement('div');
+        dialog.id = 'floatingMilestoneDialog';
+        dialog.className = 'floating-date-dialog';
+        dialog.style.left = `${e.clientX}px`;
+        dialog.style.top = `${e.clientY}px`;
+        dialog.style.width = '320px';
+
+        let globalMsColor = document.getElementById('msColor').value;
+        let currentMsColor = ms.color || globalMsColor;
+        let currentSymbol = ms.symbol || 'diamond';
+
+        dialog.innerHTML = `
+            <h4>Modify Milestone Style & Date</h4>
+            <div class="modal-row">
+                <div class="modal-field">
+                    <label>Select Date</label>
+                    <input type="date" id="modalMsDatePicker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}">
+                </div>
+            </div>
+            <div class="modal-row">
+                <div class="modal-field">
+                    <label>Symbol Color</label>
+                    <input type="color" id="modalMsColor" value="${currentMsColor}">
+                </div>
+                <div class="modal-field">
+                    <label>Symbol Shape</label>
+                    <select id="modalMsSymbol">
+                        <option value="diamond" ${currentSymbol === 'diamond' ? 'selected' : ''}>Diamond</option>
+                        <option value="circle" ${currentSymbol === 'circle' ? 'selected' : ''}>Circle</option>
+                        <option value="triangle" ${currentSymbol === 'triangle' ? 'selected' : ''}>Triangle</option>
+                        <option value="vertical-bar" ${currentSymbol === 'vertical-bar' ? 'selected' : ''}>Vertical Bar</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="modalMsCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
+                <button id="modalMsSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply</button>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+        document.getElementById('modalMsCancelBtn').addEventListener('click', () => dialog.remove());
+        document.getElementById('modalMsSaveBtn').addEventListener('click', function() {
+            let dateVal = document.getElementById('modalMsDatePicker').value;
+            if (!dateVal) { alert("Milestone date requires a valid metrics entry."); return; }
+            ms.date = formatDateToDDMMMYYYY(new Date(dateVal + "T00:00:00"));
+            ms.color = document.getElementById('modalMsColor').value;
+            ms.symbol = document.getElementById('modalMsSymbol').value;
+            recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
         });
     }
 
@@ -1056,9 +1151,14 @@
         dialog.className = 'floating-date-dialog';
         dialog.style.left = `${e.clientX}px`;
         dialog.style.top = `${e.clientY}px`;
+        dialog.style.width = '340px';
+
+        let currentBgColor = row.bgColor || document.getElementById('barBgColor').value;
+        let currentColor = row.color || document.getElementById('barColor').value;
+        let currentPattern = row.pattern || 'solid';
 
         dialog.innerHTML = `
-            <h4>Modify Activity Bounds</h4>
+            <h4>Modify Activity Bounds & Patterns</h4>
             <div class="modal-row">
                 <div class="modal-field">
                     <label>Select Start Date</label>
@@ -1067,6 +1167,28 @@
                 <div class="modal-field">
                     <label>Select Finish Date</label>
                     <input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(row.end)}">
+                </div>
+            </div>
+            <div class="modal-row">
+                <div class="modal-field">
+                    <label>Unfilled Bar Color</label>
+                    <input type="color" id="modalBarBgColor" value="${currentBgColor}">
+                </div>
+                <div class="modal-field">
+                    <label>Progress Fill Color</label>
+                    <input type="color" id="modalBarColor" value="${currentColor}">
+                </div>
+            </div>
+            <div class="modal-row">
+                <div class="modal-field">
+                    <label>Fill Core Texture Pattern</label>
+                    <select id="modalBarPattern">
+                        <option value="solid" ${currentPattern === 'solid' ? 'selected' : ''}>Solid</option>
+                        <option value="crosshatch" ${currentPattern === 'crosshatch' ? 'selected' : ''}>Cross Hatch</option>
+                        <option value="grid" ${currentPattern === 'grid' ? 'selected' : ''}>Grid</option>
+                        <option value="dashed" ${currentPattern === 'dashed' ? 'selected' : ''}>Dashed</option>
+                        <option value="gingham" ${currentPattern === 'gingham' ? 'selected' : ''}>Gingham</option>
+                    </select>
                 </div>
             </div>
             <div class="modal-actions">
@@ -1089,6 +1211,9 @@
             if (startTimestamp <= endTimestamp) {
                 row.start = formatDateToDDMMMYYYY(new Date(startTimestamp));
                 row.end = formatDateToDDMMMYYYY(new Date(endTimestamp));
+                row.bgColor = document.getElementById('modalBarBgColor').value;
+                row.color = document.getElementById('modalBarColor').value;
+                row.pattern = document.getElementById('modalBarPattern').value;
                 recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
             } else {
                 alert("Chronological Paradox: Start boundary cannot stretch past the target finish date line.");
@@ -1097,9 +1222,33 @@
     }
 
     document.addEventListener('mousedown', function(e) {
-        let box = document.getElementById('floatingBarDateDialog');
-        if (box && !box.contains(e.target) && !e.target.classList.contains('drag-hotspot')) { box.remove(); }
+        ['floatingBarDateDialog', 'floatingMilestoneDialog', 'floatingLaneSummaryDialog'].forEach(id => {
+            let box = document.getElementById(id);
+            if (box && !box.contains(e.target) && !e.target.classList.contains('drag-hotspot')) { box.remove(); }
+        });
     });
+
+    // ==========================================
+    // SIDEBAR BACKEND FORM PROCESSORS 
+    // ==========================================
+    function updateRowFieldDirect(laneIdx, rowIdx, key, val) {
+        projectData[laneIdx].rows[rowIdx][key] = (key === 'progress') ? parseInt(val, 10) || 0 : val;
+        recordStateChange(); updateChart();
+    }
+    function addMilestoneNew(laneIdx, rowIdx) {
+        projectData[laneIdx].rows[rowIdx].milestones.push({
+            id: nextMsId++, label: "Custom Milestone", date: "01Jun2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond"
+        });
+        recordStateChange(); renderInputRows(); updateChart();
+    }
+    function updateMilestoneFieldNew(laneIdx, rowIdx, msIdx, key, val) {
+        projectData[laneIdx].rows[rowIdx].milestones[msIdx][key] = val;
+        recordStateChange(); updateChart();
+    }
+    function deleteMilestoneNew(laneIdx, rowIdx, msIdx) {
+        projectData[laneIdx].rows[rowIdx].milestones.splice(msIdx, 1);
+        recordStateChange(); renderInputRows(); updateChart();
+    }
 
     // =========================================================
     // SIDEBAR DATA ELEMENT FORM GENERATOR (NESTED SWIMLANES)
@@ -1115,7 +1264,6 @@
             laneWrapper.addEventListener('dragover', (e) => e.preventDefault());
             laneWrapper.addEventListener('drop', (e) => handleRowDropOnLane(e, laneIdx));
 
-            // FIXED: Integrated side-by-side radio option layout toggle buttons next to the master fill swatches
             laneWrapper.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:2px solid #cbd5e1; padding-bottom:6px;">
                     <div style="display:flex; align-items:center; gap:8px; width:75%;">
@@ -1298,6 +1446,26 @@
 
         let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="font-family:${fontFamily}; background-color:#ffffff; user-select:none;">`;
         
+        // Define Pattern Overlay Vector Architecture
+        svg += `<defs>
+            <pattern id="pat-crosshatch" width="8" height="8" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="0" x2="8" y2="8" stroke="#ffffff" stroke-width="1.2" opacity="0.45"/>
+                <line x1="8" y1="0" x2="0" y2="8" stroke="#ffffff" stroke-width="1.2" opacity="0.45"/>
+            </pattern>
+            <pattern id="pat-grid" width="7" height="7" patternUnits="userSpaceOnUse">
+                <rect width="7" height="7" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.45"/>
+            </pattern>
+            <pattern id="pat-dashed" width="10" height="10" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="0" x2="10" y2="10" stroke="#ffffff" stroke-width="2" stroke-dasharray="3 3" opacity="0.5"/>
+            </pattern>
+            <pattern id="pat-gingham" width="12" height="12" patternUnits="userSpaceOnUse">
+                <rect width="6" height="6" fill="#ffffff" opacity="0.3"/>
+                <rect x="6" y="6" width="6" height="6" fill="#ffffff" opacity="0.3"/>
+                <rect x="6" y="0" width="6" height="6" fill="#000000" opacity="0.08"/>
+                <rect x="0" y="6" width="6" height="6" fill="#000000" opacity="0.08"/>
+            </pattern>
+        </defs>`;
+
         if (rangeMode === 'manual') {
             svg += `<rect x="${scaleMarginLeft}" y="0" width="${chartWidth}" height="${axisLineY}" fill="#f8fafc" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'timeline-pan', null)"/>`;
         }
@@ -1424,14 +1592,14 @@
             svg += `<rect x="10" y="${currentDrawY}" width="${endBoundaryXCoordinate - 10}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
             svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central" style="cursor:pointer;" ondblclick="editLaneLabelDirectly(${laneIdx})">${lane.title}</text>`;
             
-            // FIXED: Renders bracket lines without arrow end caps based on the layout state toggle configuration settings
             if (lane.showSummary !== false && rollupMinTime !== Infinity && rollupMaxTime !== -Infinity && rollupMaxTime >= rollupMinTime) {
                 let rollupXStart = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(new Date(rollupMinTime))));
                 let rollupXEnd = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(new Date(rollupMaxTime))));
                 let rollupWidth = rollupXEnd - rollupXStart;
                 if (rollupWidth > 0) {
                     let rY = currentDrawY + (swimlaneHeight / 2);
-                    svg += `<path d="M ${rollupXStart} ${rY - 5} L ${rollupXStart} ${rY + 5} M ${rollupXStart} ${rY} L ${rollupXEnd} ${rY} M ${rollupXEnd} ${rY - 5} L ${rollupXEnd} ${rY + 5}" fill="none" stroke="${summaryColor}" stroke-width="3"/>`;
+                    let activeSummaryColor = lane.summaryColor || summaryColor;
+                    svg += `<path d="M ${rollupXStart} ${rY - 5} L ${rollupXStart} ${rY + 5} M ${rollupXStart} ${rY} L ${rollupXEnd} ${rY} M ${rollupXEnd} ${rY - 5} L ${rollupXEnd} ${rY + 5}" fill="none" stroke="${activeSummaryColor}" stroke-width="3" style="cursor:pointer;" ondblclick="editLaneSummaryDirectlyGlobal(event, ${laneIdx})"/>`;
                 }
             }
 
@@ -1455,9 +1623,20 @@
                     let visibleBarWidth = xEnd - xStart;
 
                     if (visibleBarWidth > 0) {
-                        svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${barBgColor}" ${isBarConflicted ? `stroke="var(--danger)" stroke-width="1.5"` : ''} ondblclick="editBarDatesDirectlyGlobal(event, ${item.id})"/>`;
+                        let activeBarBgColor = item.bgColor || barBgColor;
+                        let activeBarColor = item.color || barColor;
+                        let activePattern = item.pattern || 'solid';
+
+                        // Base Base Core Tracks
+                        svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${activeBarBgColor}" ${isBarConflicted ? `stroke="var(--danger)" stroke-width="1.5"` : ''} ondblclick="editBarDatesDirectlyGlobal(event, ${item.id})"/>`;
+                        
                         let filledWidth = Math.max(xStart, Math.min(xEnd, getX(new Date(sObj.getTime() + ((item.progress || 0)/100) * (eObj.getTime() - sObj.getTime()))))) - xStart;
-                        if (filledWidth > 0) svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${barColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id})"/>`;
+                        if (filledWidth > 0) svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${activeBarColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id})"/>`;
+
+                        // Vector Structural Texture Injections
+                        if (activePattern !== 'solid') {
+                            svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="url(#pat-${activePattern})" style="pointer-events:none;"/>`;
+                        }
 
                         svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:w-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-start', ${item.id})"/>`;
                         if (visibleBarWidth > 12) svg += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id})" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id})"/>`;
@@ -1507,9 +1686,24 @@
                         finalComputedTextY = defaultTextYBaseline + (targetedCascadeStaggerOffsetLevel * 12);
                     }
 
-                    let dPoints = `${msX},${msYCenterLocked - msSize} ${msX + msSize},${msYCenterLocked} ${msX},${msYCenterLocked + msSize} ${msX - msSize},${msYCenterLocked}`;
-                    svg += `<polygon points="${dPoints}" fill="${msColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})"/>`;
-                    svg += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="9" font-weight="600" fill="${msColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneLabelDirectlyGlobal(${item.id}, ${ms.id})">${ms.label}</text>`;
+                    // Shape Form Engine Injections
+                    let activeMsColor = ms.color || msColor;
+                    let activeSymbol = ms.symbol || 'diamond';
+                    let msCommonAttr = `fill="${activeMsColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})"`;
+
+                    if (activeSymbol === 'circle') {
+                        svg += `<circle cx="${msX}" cy="${msYCenterLocked}" r="${msSize + 1}" ${msCommonAttr} />`;
+                    } else if (activeSymbol === 'triangle') {
+                        let tPoints = `${msX},${msYCenterLocked - msSize - 1} ${msX + msSize + 1},${msYCenterLocked + msSize + 1} ${msX - msSize - 1},${msYCenterLocked + msSize + 1}`;
+                        svg += `<polygon points="${tPoints}" ${msCommonAttr} />`;
+                    } else if (activeSymbol === 'vertical-bar') {
+                        svg += `<rect x="${msX - 2}" y="${msYCenterLocked - msSize - 3}" width="4" height="${(msSize * 2) + 6}" rx="1" ${msCommonAttr} />`;
+                    } else {
+                        let dPoints = `${msX},${msYCenterLocked - msSize - 1} ${msX + msSize + 1},${msYCenterLocked} ${msX},${msYCenterLocked + msSize + 1} ${msX - msSize - 1},${msYCenterLocked}`;
+                        svg += `<polygon points="${dPoints}" ${msCommonAttr} />`;
+                    }
+
+                    svg += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="9" font-weight="600" fill="${activeMsColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneLabelDirectlyGlobal(${item.id}, ${ms.id})">${ms.label}</text>`;
 
                     if (ms && ms.showDate) {
                         let presentationDateLabel = ms.date; let finalComputedDateX = msX; let finalComputedDateY = msYCenterLocked - msSize - 11;
