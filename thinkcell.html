@@ -61,7 +61,7 @@
         .row-drag-handle:active { cursor: grabbing; }
 
         .delete-btn { background: none; border: 1px solid #fca5a5; color: var(--danger); padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; }
-        .horizontal-input-row { display: grid; grid-template-columns: 1.8fr 1.4fr 1.4fr 0.7fr 1.2fr; gap: 10px; align-items: flex-end; }
+        .horizontal-input-row { display: grid; grid-template-columns: 1.8fr 1.4fr 1.4fr 0.7fr auto; gap: 10px; align-items: flex-end; margin-bottom: 8px; }
         
         /* Custom Textless Calendar Icon Configuration Wrapper */
         .date-input-wrapper { display: flex; gap: 6px; align-items: center; width: 100%; }
@@ -100,16 +100,15 @@
             display: block;
         }
 
-        /* Dynamic Milestones Form Blocks */
-        .milestones-section { margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
-        .milestones-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+        /* Dynamic Form Blocks */
+        .bars-section, .milestones-section { margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
+        .bars-list, .milestones-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
         .milestone-input-row { display: grid; grid-template-columns: 2fr 1.7fr 1fr auto; gap: 8px; align-items: center; }
         .ms-checkbox-wrap { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer;}
         .ms-checkbox-wrap input { width: 14px; height: 14px; cursor: pointer; margin: 0; }
         
         .inner-action-btn { background: #f1f5f9; color: var(--primary); border: 1px solid #cbd5e1; padding: 5px 10px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: 600; }
-        .mini-delete-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; font-weight: bold; }
-        .add-row-btn { background: #f1f5f9; color: var(--primary); border: 1px dashed #cbd5e1; padding: 12px; width: 100%; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .mini-delete-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; font-weight: bold; padding: 0 4px; }
 
         .archive-tools { background: #f0fdf4; border: 1px dashed #bbf7d0; padding: 12px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;}
 
@@ -141,6 +140,17 @@
         .floating-date-dialog .modal-field input, .floating-date-dialog .modal-field select { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; width:100%; box-sizing:border-box; }
         .floating-date-dialog .modal-actions { display: flex; justify-content: flex-end; gap: 6px; }
         .floating-date-dialog button { padding: 5px 12px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; }
+
+        /* Right Click Workspace Context Menu */
+        .workspace-context-menu {
+            position: fixed; display: none; background: #ffffff; border: 1px solid #94a3b8; border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px 0; z-index: 20000; width: 180px;
+        }
+        .workspace-context-menu button {
+            width: 100%; border: none; background: none; text-align: left; padding: 8px 14px;
+            font-size: 12px; font-weight: 600; color: #1e293b; cursor: pointer; display: block;
+        }
+        .workspace-context-menu button:hover { background: #f1f5f9; color: #1e40af; }
     </style>
 </head>
 <body>
@@ -159,7 +169,7 @@
         
         <div class="sidebar-content">
             <div class="archive-tools">
-                <div style="font-size: 12px; font-weight: 700; color: #166534;">File Backup & Excel Layout Matrix Controls</div>
+                <div style="font-size: 12px; font-weight: 700; color: #166534;">File Backup & Configuration Matrix Matrix Controls</div>
                 <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px;">
                     <button class="inner-action-btn" style="background:#ffffff; border-color:#cbd5e1;" onclick="exportConfigurationArchive()">↓ Save Workspace (.json)</button>
                     <button class="inner-action-btn" style="background:#ffffff; border-color:#cbd5e1;" onclick="document.getElementById('archiveFileInput').click()">↑ Load Workspace</button>
@@ -181,7 +191,7 @@
 
     <div class="main-preview">
         <div class="sticky-chart-container">
-            <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Double-click shapes inside canvas to edit custom colors/styles)</span></h2>
+            <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Right-click row track inside canvas to insert shapes; double-click to customize colors/styles)</span></h2>
             
             <div class="canvas-holder" id="svgContainer" 
                  onmousemove="handleGlobalDragMove(event)" 
@@ -318,10 +328,16 @@
     </div>
 </div>
 
+<div id="rowWorkspaceContextMenu" class="workspace-context-menu">
+    <button onclick="executeContextInsertion('milestone')">✦ Insert Milestone Here</button>
+    <button onclick="executeContextInsertion('bar')">█ Insert Activity Bar Here</button>
+</div>
+
 <script>
     let projectData = [];
     let nextRowId = 4;
     let nextMsId = 1008;
+    let nextBarId = 5001;
 
     let actionUndoStack = [];
     let actionRedoStack = [];
@@ -335,6 +351,8 @@
 
     let manualBoundaryMin = "01May2026";
     let manualBoundaryMax = "09Aug2028";
+    
+    let activeContextState = null;
 
     // =========================================================
     // PARSING VECTOR ENGINE: DDMMMYYYY INTELLIGENT NORMALIZER
@@ -392,7 +410,7 @@
     // =========================================================
     // CALENDAR SELECTION SYNC INTERCEPTOR CHANNELS
     // =========================================================
-    function handleNativeDatePickerDirectNew(picker, laneIdx, rowIdx, key, msIdx = null) {
+    function handleNativeDatePickerDirectNew(picker, laneIdx, rowIdx, key, msIdx = null, barIdx = null) {
         if (!picker.value) return;
         let parts = picker.value.split('-'); 
         let d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
@@ -400,6 +418,8 @@
         
         if (msIdx !== null) {
             projectData[laneIdx].rows[rowIdx].milestones[msIdx][key] = formatted;
+        } else if (barIdx !== null) {
+            projectData[laneIdx].rows[rowIdx].bars[barIdx][key] = formatted;
         } else {
             projectData[laneIdx].rows[rowIdx][key] = formatted;
         }
@@ -480,8 +500,9 @@
     // =========================================================
     // GRAPHIC WORKSPACE CANVAS DRAG ENGINE & DIALOG CORE HOOKS
     // =========================================================
-    function initiateDragInteraction(e, mode, rowId, msId = null) {
+    function initiateDragInteraction(e, mode, rowId, subId = null) {
         e.preventDefault();
+        e.stopPropagation();
         
         if (mode === 'timeline-pan') {
             const rangeMode = document.querySelector('input[name="rangeMode"]:checked').value;
@@ -499,18 +520,23 @@
         if (!row) return;
 
         let milestone = null;
-        if (msId !== null) {
-            milestone = row.milestones.find(m => m.id === msId);
+        let targetBar = null;
+
+        if (mode === 'ms' || mode === 'label-drag' || mode === 'date-label-drag') {
+            milestone = row.milestones.find(m => m.id === subId);
+        } else if (mode.startsWith('bar-')) {
+            targetBar = row.bars.find(b => b.id === subId);
         }
 
         activeDragState = {
             mode: mode,
             row: row,
             milestone: milestone,
+            bar: targetBar,
             startX: e.clientX,
             startY: e.clientY,
-            origStart: parseAnyDateToTimestamp(row.start),
-            origEnd: parseAnyDateToTimestamp(row.end),
+            origStart: targetBar ? parseAnyDateToTimestamp(targetBar.start) : null,
+            origEnd: targetBar ? parseAnyDateToTimestamp(targetBar.end) : null,
             origMsDate: milestone ? parseAnyDateToTimestamp(milestone.date) : null,
             origLabelOffsetX: milestone ? (milestone.labelOffsetX || 0) : 0,
             origLabelOffsetY: milestone ? (milestone.labelOffsetY || 0) : 0,
@@ -546,25 +572,25 @@
             
             needsUpdate = true;
         }
-        else if (activeDragState.mode === 'bar-resize-start') {
+        else if (activeDragState.mode === 'bar-resize-start' && activeDragState.bar) {
             let newStart = activeDragState.origStart + timeDelta;
             if (newStart < activeDragState.origEnd) {
-                activeDragState.row.start = formatDateToDDMMMYYYY(new Date(newStart));
+                activeDragState.bar.start = formatDateToDDMMMYYYY(new Date(newStart));
                 needsUpdate = true;
             }
         } 
-        else if (activeDragState.mode === 'bar-resize-end') {
+        else if (activeDragState.mode === 'bar-resize-end' && activeDragState.bar) {
             let newEnd = activeDragState.origEnd + timeDelta;
             if (newEnd > activeDragState.origStart) {
-                activeDragState.row.end = formatDateToDDMMMYYYY(new Date(newEnd));
+                activeDragState.bar.end = formatDateToDDMMMYYYY(new Date(newEnd));
                 needsUpdate = true;
             }
         } 
-        else if (activeDragState.mode === 'bar-move') {
+        else if (activeDragState.mode === 'bar-move' && activeDragState.bar) {
             let newStart = activeDragState.origStart + timeDelta;
             let newEnd = activeDragState.origEnd + timeDelta;
-            activeDragState.row.start = formatDateToDDMMMYYYY(new Date(newStart));
-            activeDragState.row.end = formatDateToDDMMMYYYY(new Date(newEnd));
+            activeDragState.bar.start = formatDateToDDMMMYYYY(new Date(newStart));
+            activeDragState.bar.end = formatDateToDDMMMYYYY(new Date(newEnd));
             needsUpdate = true;
         } 
         else if (activeDragState.mode === 'ms') {
@@ -603,37 +629,6 @@
         activeDragState = null;
     }
 
-    function openCalendarPopup(e, initialDateDDMMMYYYY, onChangeCallback) {
-        let initialYYYYMMDD = convertDDMMMYYYYToYYYYMMDD(initialDateDDMMMYYYY);
-        let dateInput = document.createElement('input');
-        dateInput.type = 'date';
-        dateInput.value = initialYYYYMMDD;
-        dateInput.style.cssText = `position: absolute; left: ${e.pageX}px; top: ${e.pageY}px; width: 0px; height: 0px; opacity: 0; border: none; padding: 0; margin: 0; pointer-events: none;`;
-        document.body.appendChild(dateInput);
-        
-        dateInput.addEventListener('change', function() {
-            if (dateInput.value) onChangeCallback(dateInput.value);
-            dateInput.remove();
-        });
-        
-        dateInput.addEventListener('blur', function() {
-            setTimeout(() => dateInput.remove(), 100);
-        });
-
-        try {
-            dateInput.focus();
-            if (typeof dateInput.showPicker === 'function') dateInput.showPicker();
-            else dateInput.click();
-        } catch (err) {
-            let manualInput = prompt("Enter date (DDMMMYYYY):", initialDateDDMMMYYYY);
-            if (manualInput) {
-                let parsedTS = parseAnyDateToTimestamp(manualInput);
-                if (!isNaN(parsedTS)) onChangeCallback(convertDDMMMYYYYToYYYYMMDD(formatDateToDDMMMYYYY(new Date(parsedTS))));
-            }
-            dateInput.remove();
-        }
-    }
-
     // ==========================================
     // TRANSACTIONS CONTROL HISTORY (UNDO / REDO)
     // ==========================================
@@ -642,6 +637,7 @@
             data: JSON.parse(JSON.stringify(projectData)),
             nextRowId: nextRowId,
             nextMsId: nextMsId,
+            nextBarId: nextBarId,
             rangeMode: document.querySelector('input[name="rangeMode"]:checked').value,
             customBoundaryMin: manualBoundaryMin,
             customBoundaryMax: manualBoundaryMax,
@@ -684,30 +680,34 @@
     }
 
     function restoreStateFromSnapshot(state) {
-        if (Array.isArray(state.data) && state.data.length > 0 && !state.data[0].hasOwnProperty('rows')) {
-            let convertedData = [];
-            state.data.forEach(row => {
-                let title = "General Phase Workstream";
-                if (row.label.includes("Bldg 11")) title = "Building 11 Swimlane";
-                else if (row.label.includes("Bldg 21")) title = "Building 21 Swimlane";
-                else if (row.label.includes("Bldg 31")) title = "Building 31 Swimlane";
-                else if (row.label.includes("Bldg 41")) title = "Building 41 Swimlane";
-                
-                let lane = convertedData.find(l => l.title === title);
-                if (!lane) {
-                    lane = { id: convertedData.length, title: title, color: "#f8fafc", showSummary: true, rows: [] };
-                    convertedData.push(lane);
-                }
-                lane.rows.push(row);
-            });
-            projectData = convertedData;
-        } else {
-            projectData = state.data || [];
-        }
+        projectData = state.data || [];
+        
+        // Safety Fallback Wrapper: Ensure all structural entries map cleanly into multi-bar structures
+        projectData.forEach(lane => {
+            if (lane.rows) {
+                lane.rows.forEach(row => {
+                    if (!row.bars || !Array.isArray(row.bars)) {
+                        row.bars = [];
+                        if (row.start && row.end) {
+                            row.bars.push({
+                                id: nextBarId++,
+                                start: row.start,
+                                end: row.end,
+                                progress: row.progress || 0,
+                                bgColor: row.bgColor || "",
+                                color: row.color || "",
+                                pattern: row.pattern || "solid"
+                            });
+                        }
+                    }
+                });
+            }
+        });
 
         nextRowId = state.nextRowId; nextMsId = state.nextMsId;
-        document.querySelector(`input[name="rangeMode"][value="${state.rangeMode}"]`).checked = true;
+        if(state.nextBarId) nextBarId = state.nextBarId;
         
+        document.querySelector(`input[name="rangeMode"][value="${state.rangeMode}"]`).checked = true;
         manualBoundaryMin = state.customBoundaryMin || "01May2026";
         manualBoundaryMax = state.customBoundaryMax || "09Aug2028";
         
@@ -762,10 +762,10 @@
     function toggleRangeScopeFieldsVisibility(mode) { document.getElementById('manualDateFieldsRow').style.display = (mode === 'manual') ? 'grid' : 'none'; }
 
     // ==========================================
-    // BACKUP IMPORT / EXPORT SYSTEMS (CSV RIGOR)
+    // BACKUP IMPORT / EXPORT SYSTEMS (JSON/CSV)
     // ==========================================
     function exportConfigurationArchive() {
-        const archivePayload = { version: "2026.FullPresentationState", workspace: JSON.parse(actionUndoStack[actionUndoStack.length - 1]) };
+        const archivePayload = { version: "2026.MultiBarPresentationState", workspace: JSON.parse(actionUndoStack[actionUndoStack.length - 1]) };
         const blob = new Blob([JSON.stringify(archivePayload, null, 2)], {type: 'application/json'});
         const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_workspace_archive.json`; link.click();
     }
@@ -807,44 +807,36 @@
         csvContent += `#rangeMode,${document.querySelector('input[name="rangeMode"]:checked').value}\n`;
         csvContent += `#customBoundaryMin,${manualBoundaryMin}\n`;
         csvContent += `#customBoundaryMax,${manualBoundaryMax}\n`;
-        csvContent += "Swimlane Title,Swimlane Color,Swimlane Summary,Row ID,Row Title,Bar Start,Bar End,Progress Percent,Predecessor ID,Milestone Arrays Mapping Matrix\n";
+        csvContent += "Swimlane Title,Swimlane Color,Swimlane Summary,Row ID,Row Title,Predecessor ID,Serialized Activity Bars,Serialized Milestones\n";
         
         projectData.forEach(lane => {
             lane.rows.forEach(row => {
                 let milestoneTokens = [];
                 row.milestones.forEach(ms => {
                     milestoneTokens.push([
-                        ms.label.replace(/"/g, '""'),
-                        ms.date,
-                        ms.showDate ? "TRUE" : "FALSE",
-                        ms.manualLabel ? "TRUE" : "FALSE",
-                        ms.labelOffsetX || 0,
-                        ms.labelOffsetY || 0,
-                        ms.manualDateLabel ? "TRUE" : "FALSE",
-                        ms.dateOffsetX || 0,
-                        ms.dateOffsetY || 0,
-                        ms.color || "",
-                        ms.symbol || "diamond"
+                        ms.label.replace(/"/g, '""'), ms.date, ms.showDate ? "TRUE" : "FALSE", ms.manualLabel ? "TRUE" : "FALSE",
+                        ms.labelOffsetX || 0, ms.labelOffsetY || 0, ms.manualDateLabel ? "TRUE" : "FALSE", ms.dateOffsetX || 0, ms.dateOffsetY || 0,
+                        ms.color || "", ms.symbol || "diamond"
                     ].join('|'));
                 });
-                let nestedMilestonesField = `"${milestoneTokens.join(';')}"`;
+
+                let barTokens = [];
+                row.bars.forEach(b => {
+                    barTokens.push([
+                        b.start, b.end, b.progress || 0, b.bgColor || "", b.color || "", b.pattern || "solid"
+                    ].join('|'));
+                });
+
                 let lineElements = [
-                    `"${lane.title.replace(/"/g, '""')}"`,
-                    `"${lane.color || '#f8fafc'}"`,
-                    lane.showSummary !== false ? "TRUE" : "FALSE",
-                    row.id,
-                    `"${row.label.replace(/"/g, '""')}"`,
-                    row.start,
-                    row.end,
-                    row.progress || 0,
-                    row.predecessor !== "" ? row.predecessor : "NONE",
-                    nestedMilestonesField
+                    `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || '#f8fafc'}"`, lane.showSummary !== false ? "TRUE" : "FALSE",
+                    row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor !== "" ? row.predecessor : "NONE",
+                    `"${barTokens.join(';')}"`, `"${milestoneTokens.join(';')}"`
                 ];
                 csvContent += lineElements.join(",") + "\n";
             });
         });
         const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
-        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_excel_backup_matrix.csv`; link.click();
+        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_workspace_matrix.csv`; link.click();
     }
 
     function parseRobustCSVLine(text) {
@@ -866,7 +858,7 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             const lines = e.target.result.split(/\r?\n/); if(lines.length <= 1) return;
-            let newImportData = []; let rIdCounter = 0; let mIdCounter = 1000;
+            let newImportData = []; let rIdCounter = 0; let mIdCounter = 1000; let bIdCounter = 5000;
 
             for(let i = 0; i < lines.length; i++) {
                 let line = lines[i].trim(); if(line === "") continue;
@@ -891,16 +883,13 @@
                 }
                 if (line.toLowerCase().startsWith("swimlane title") || line.toLowerCase().startsWith("swimlane color")) continue;
 
-                let columns = parseRobustCSVLine(line); if(columns.length < 9) continue;
+                let columns = parseRobustCSVLine(line); if(columns.length < 6) continue;
                 let laneTitle = columns[0].trim();
                 let laneColor = columns[1].trim();
                 let laneSummary = columns[2].trim() === "TRUE";
                 let explicitRowId = parseInt(columns[3].trim(), 10);
                 let rowLabel = columns[4].trim();
-                let rowStart = columns[5].trim();
-                let rowEnd = columns[6].trim();
-                let rowProgress = parseInt(columns[7].trim(), 10) || 0;
-                let rowPred = columns[8].trim();
+                let rowPred = columns[5].trim();
                 if (rowPred.toUpperCase() === "NONE") rowPred = "";
 
                 if (explicitRowId >= rIdCounter) rIdCounter = explicitRowId + 1;
@@ -911,27 +900,33 @@
                     newImportData.push(lane);
                 }
 
-                let rowObject = { id: explicitRowId, label: rowLabel, start: rowStart, end: rowEnd, progress: rowProgress, predecessor: rowPred, milestones: [] };
+                let rowObject = { id: explicitRowId, label: rowLabel, predecessor: rowPred, bars: [], milestones: [] };
 
-                let milestonesDataChunk = columns[9] ? columns[9].trim() : "";
-                if (milestonesDataChunk !== "") {
-                    let tokenStrings = milestonesDataChunk.split(';');
-                    tokenStrings.forEach(tokenStr => {
+                // Process Activity Bars
+                let barsDataChunk = columns[6] ? columns[6].trim() : "";
+                if (barsDataChunk !== "") {
+                    barsDataChunk.split(';').forEach(tokenStr => {
                         let pieces = tokenStr.split('|');
-                        if (pieces.length >= 3) {
+                        if (pieces.length >= 2) {
+                            rowObject.bars.push({
+                                id: bIdCounter++, start: pieces[0], end: pieces[1], progress: parseInt(pieces[2],10)||0,
+                                bgColor: pieces[3]||"", color: pieces[4]||"", pattern: pieces[5]||"solid"
+                            });
+                        }
+                    });
+                }
+
+                // Process Milestones
+                let milestonesDataChunk = columns[7] ? columns[7].trim() : "";
+                if (milestonesDataChunk !== "") {
+                    milestonesDataChunk.split(';').forEach(tokenStr => {
+                        let pieces = tokenStr.split('|');
+                        if (pieces.length >= 2) {
                             rowObject.milestones.push({
-                                id: mIdCounter++, 
-                                label: pieces[0], 
-                                date: pieces[1],
-                                showDate: pieces[2] === "TRUE",
-                                manualLabel: pieces[3] === "TRUE",
-                                labelOffsetX: parseFloat(pieces[4]) || 0,
-                                labelOffsetY: parseFloat(pieces[5]) || 0,
-                                manualDateLabel: pieces[6] === "TRUE",
-                                dateOffsetX: parseFloat(pieces[7]) || 0,
-                                dateOffsetY: parseFloat(pieces[8]) || 0,
-                                color: pieces[9] || "",
-                                symbol: pieces[10] || "diamond"
+                                id: mIdCounter++, label: pieces[0], date: pieces[1], showDate: pieces[2] === "TRUE",
+                                manualLabel: pieces[3] === "TRUE", labelOffsetX: parseFloat(pieces[4]) || 0, labelOffsetY: parseFloat(pieces[5]) || 0,
+                                manualDateLabel: pieces[6] === "TRUE", dateOffsetX: parseFloat(pieces[7]) || 0, dateOffsetY: parseFloat(pieces[8]) || 0,
+                                color: pieces[9] || "", symbol: pieces[10] || "diamond"
                             });
                         }
                     });
@@ -939,7 +934,7 @@
                 lane.rows.push(rowObject);
             }
             if(newImportData.length > 0) {
-                projectData = newImportData; nextRowId = rIdCounter; nextMsId = mIdCounter;
+                projectData = newImportData; nextRowId = rIdCounter; nextMsId = mIdCounter; nextBarId = bIdCounter;
                 toggleRangeScopeFieldsVisibility(document.querySelector('input[name="rangeMode"]:checked').value);
                 recordStateChange(); renderInputRows(); updateChart();
             }
@@ -963,33 +958,27 @@
         } else {
             projectData = [
                 { id: 0, title: "Building 11 Swimlane", color: "#eff6ff", showSummary: true, rows: [
-                    { id: 0, label: "Production Labs - 2nd & 3rd Floor (Bldg 11)", start: "01Mar2026", end: "30Sep2027", progress: 0, predecessor: "", milestones: [
+                    { id: 0, label: "Production Labs - Phase A & B (Bldg 11)", predecessor: "", 
+                      bars: [
+                        { id: 5001, start: "01Mar2026", end: "15Jan2027", progress: 35, bgColor: "", color: "", pattern: "solid" },
+                        { id: 5002, start: "10Feb2027", end: "30Sep2027", progress: 0, bgColor: "", color: "", pattern: "crosshatch" }
+                      ],
+                      milestones: [
                         { id: 1000, label: "Construction Complete", date: "01Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond" },
-                        { id: 1001, label: "Interiors Start", date: "19Aug2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond" }
+                        { id: 1001, label: "Interiors Start", date: "19Aug2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle" }
                     ]}
                 ]},
                 { id: 1, title: "Building 21 Swimlane", color: "#f0fdf4", showSummary: true, rows: [
-                    { id: 1, label: "Warehouse Admin 1st Floor (Bldg 21)", start: "01Mar2026", end: "04Nov2027", progress: 0, predecessor: "", milestones: [
-                        { id: 1002, label: "Construction Complete", date: "31Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond" },
-                        { id: 1003, label: "Interiors Start", date: "05Feb2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond" }
-                    ]}
-                ]},
-                { id: 2, title: "Building 31 Swimlane", color: "#fdf2f8", showSummary: true, rows: [
-                    { id: 2, label: "Lab/Admin (Bldg 31)", start: "01Mar2026", end: "14Dec2027", progress: 0, predecessor: "", milestones: [
-                        { id: 1004, label: "Construction Complete", date: "14Dec2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond" },
-                        { id: 1005, label: "Interiors Start", date: "23Mar2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond" }
-                    ]}
-                ]},
-                { id: 3, title: "Building 41 Swimlane", color: "#fff7ed", showSummary: true, rows: [
-                    { id: 3, label: "CUB/Annex (Bldg 41)", start: "01Mar2026", end: "13Aug2027", progress: 0, predecessor: "", milestones: [
-                        { id: 1006, label: "Construction Complete", date: "13Aug2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond" },
-                        { id: 1007, label: "Interiors Start", date: "18May2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, dateOffsetX: -13, dateOffsetY: 1, manualDateLabel: true, color: "", symbol: "diamond" }
+                    { id: 1, label: "Warehouse Admin 1st Floor (Bldg 21)", predecessor: "", 
+                      bars: [{ id: 5003, start: "01Mar2026", end: "04Nov2027", progress: 15, bgColor: "", color: "", pattern: "solid" }],
+                      milestones: [
+                        { id: 1002, label: "Construction Complete", date: "31Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond" }
                     ]}
                 ]}
             ];
-            nextRowId = 4; nextMsId = 1008;
+            nextRowId = 2; nextMsId = 1003; nextBarId = 5004;
             const seedSnapshot = {
-                data: projectData, nextRowId: nextRowId, nextMsId: nextMsId, rangeMode: 'manual',
+                data: projectData, nextRowId: nextRowId, nextMsId: nextMsId, nextBarId: nextBarId, rangeMode: 'manual',
                 customBoundaryMin: '01May2026', customBoundaryMax: '09Aug2028', fontFamily: "Tahoma, sans-serif",
                 fontSize: 10, swimlaneHeight: 30, canvasWidth: 806, rowHeight: 50, barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#000000', todayColor: '#b71010', headerColor: '#000000',
                 showVGrid: true, todayLineToggle: 'show', showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: false, showHeaderDay: false
@@ -1035,6 +1024,65 @@
         if (newLabel !== null && newLabel.trim() !== "") {
             ms.label = newLabel.trim(); recordStateChange(); renderInputRows(); updateChart();
         }
+    }
+
+    // ==========================================
+    // INTERACTIVE WORKSPACE CONTEXT MENU HANDLERS
+    // ==========================================
+    function handleWorkspaceRowContextMenu(e, rowId) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        let container = document.getElementById('svgContainer');
+        let rect = container.getBoundingClientRect();
+        let mouseX = e.clientX - rect.left;
+        
+        // Translate viewport clientX coordinate back into dynamic date strings
+        let totalDuration = scaleMaxTime - scaleMinTime;
+        let evaluatedTime = scaleMinTime + ((mouseX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
+        evaluatedTime = Math.max(scaleMinTime, Math.min(scaleMaxTime, evaluatedTime));
+        let computedTargetDateStr = formatDateToDDMMMYYYY(new Date(evaluatedTime));
+        
+        activeContextState = { rowId: rowId, targetDate: computedTargetDateStr };
+        
+        let menu = document.getElementById('rowWorkspaceContextMenu');
+        menu.style.display = 'block';
+        menu.style.left = `${e.clientX}px`;
+        menu.style.top = `${e.clientY}px`;
+    }
+
+    function executeContextInsertion(type) {
+        if (!activeContextState) return;
+        let row = findRowGlobally(activeContextState.rowId);
+        if (!row) return;
+
+        if (type === 'milestone') {
+            row.milestones.push({
+                id: nextMsId++, label: "Inserted Milestone", date: activeContextState.targetDate,
+                showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond"
+            });
+        } else if (type === 'bar') {
+            // Project a standard 60-day default bounding length from execution coordinates
+            let startTime = parseAnyDateToTimestamp(activeContextState.targetDate);
+            let endTime = startTime + (60 * 24 * 60 * 60 * 1000);
+            let calculatedEndStr = formatDateToDDMMMYYYY(new Date(endTime));
+
+            row.bars.push({
+                id: nextBarId++, start: activeContextState.targetDate, end: calculatedEndStr,
+                progress: 0, bgColor: "", color: "", pattern: "solid"
+            });
+        }
+
+        recordStateChange();
+        renderInputRows();
+        updateChart();
+        dismissContextMenus();
+    }
+
+    function dismissContextMenus() {
+        let menu = document.getElementById('rowWorkspaceContextMenu');
+        if (menu) menu.style.display = 'none';
+        activeContextState = null;
     }
 
     // ==========================================
@@ -1131,7 +1179,7 @@
         document.getElementById('modalMsCancelBtn').addEventListener('click', () => dialog.remove());
         document.getElementById('modalMsSaveBtn').addEventListener('click', function() {
             let dateVal = document.getElementById('modalMsDatePicker').value;
-            if (!dateVal) { alert("Milestone date requires a valid metrics entry."); return; }
+            if (!dateVal) { alert("Milestone date fields require input criteria."); return; }
             ms.date = formatDateToDDMMMYYYY(new Date(dateVal + "T00:00:00"));
             ms.color = document.getElementById('modalMsColor').value;
             ms.symbol = document.getElementById('modalMsSymbol').value;
@@ -1139,9 +1187,10 @@
         });
     }
 
-    function editBarDatesDirectlyGlobal(e, rowId) {
+    function editBarDatesDirectlyGlobal(e, rowId, barId) {
         e.stopPropagation();
         let row = findRowGlobally(rowId); if (!row) return;
+        let bar = row.bars.find(b => b.id === barId); if (!bar) return;
 
         let existingDialog = document.getElementById('floatingBarDateDialog');
         if (existingDialog) existingDialog.remove();
@@ -1153,20 +1202,20 @@
         dialog.style.top = `${e.clientY}px`;
         dialog.style.width = '340px';
 
-        let currentBgColor = row.bgColor || document.getElementById('barBgColor').value;
-        let currentColor = row.color || document.getElementById('barColor').value;
-        let currentPattern = row.pattern || 'solid';
+        let currentBgColor = bar.bgColor || document.getElementById('barBgColor').value;
+        let currentColor = bar.color || document.getElementById('barColor').value;
+        let currentPattern = bar.pattern || 'solid';
 
         dialog.innerHTML = `
             <h4>Modify Activity Bounds & Patterns</h4>
             <div class="modal-row">
                 <div class="modal-field">
                     <label>Select Start Date</label>
-                    <input type="date" id="modalStartPicker" value="${convertDDMMMYYYYToYYYYMMDD(row.start)}">
+                    <input type="date" id="modalStartPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}">
                 </div>
                 <div class="modal-field">
                     <label>Select Finish Date</label>
-                    <input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(row.end)}">
+                    <input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}">
                 </div>
             </div>
             <div class="modal-row">
@@ -1209,11 +1258,11 @@
             let endTimestamp = new Date(endVal + "T00:00:00").getTime();
 
             if (startTimestamp <= endTimestamp) {
-                row.start = formatDateToDDMMMYYYY(new Date(startTimestamp));
-                row.end = formatDateToDDMMMYYYY(new Date(endTimestamp));
-                row.bgColor = document.getElementById('modalBarBgColor').value;
-                row.color = document.getElementById('modalBarColor').value;
-                row.pattern = document.getElementById('modalBarPattern').value;
+                bar.start = formatDateToDDMMMYYYY(new Date(startTimestamp));
+                bar.end = formatDateToDDMMMYYYY(new Date(endTimestamp));
+                bar.bgColor = document.getElementById('modalBarBgColor').value;
+                bar.color = document.getElementById('modalBarColor').value;
+                bar.pattern = document.getElementById('modalBarPattern').value;
                 recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
             } else {
                 alert("Chronological Paradox: Start boundary cannot stretch past the target finish date line.");
@@ -1226,14 +1275,31 @@
             let box = document.getElementById(id);
             if (box && !box.contains(e.target) && !e.target.classList.contains('drag-hotspot')) { box.remove(); }
         });
+        
+        let menu = document.getElementById('rowWorkspaceContextMenu');
+        if(menu && !menu.contains(e.target)) dismissContextMenus();
     });
 
     // ==========================================
     // SIDEBAR BACKEND FORM PROCESSORS 
     // ==========================================
     function updateRowFieldDirect(laneIdx, rowIdx, key, val) {
-        projectData[laneIdx].rows[rowIdx][key] = (key === 'progress') ? parseInt(val, 10) || 0 : val;
+        projectData[laneIdx].rows[rowIdx][key] = val;
         recordStateChange(); updateChart();
+    }
+    function updateBarFieldDirect(laneIdx, rowIdx, barIdx, key, val) {
+        projectData[laneIdx].rows[rowIdx].bars[barIdx][key] = (key === 'progress') ? parseInt(val, 10) || 0 : val;
+        recordStateChange(); updateChart();
+    }
+    function addBarNew(laneIdx, rowIdx) {
+        projectData[laneIdx].rows[rowIdx].bars.push({
+            id: nextBarId++, start: "01Mar2026", end: "01Jun2026", progress: 0, bgColor: "", color: "", pattern: "solid"
+        });
+        recordStateChange(); renderInputRows(); updateChart();
+    }
+    function deleteBarNew(laneIdx, rowIdx, barIdx) {
+        projectData[laneIdx].rows[rowIdx].bars.splice(barIdx, 1);
+        recordStateChange(); renderInputRows(); updateChart();
     }
     function addMilestoneNew(laneIdx, rowIdx) {
         projectData[laneIdx].rows[rowIdx].milestones.push({
@@ -1298,7 +1364,12 @@
                 let isConflicted = false;
                 if (row.predecessor) {
                     let parentRow = findRowGlobally(parseInt(row.predecessor));
-                    if (parentRow && parseAnyDateToTimestamp(row.start) < parseAnyDateToTimestamp(parentRow.end)) { isConflicted = true; card.className += ' conflict-warning'; }
+                    // Cross-row predecessor verification logic mapping validation check
+                    if (parentRow && row.bars.length > 0 && parentRow.bars.length > 0) {
+                        let currentMinStart = Math.min(...row.bars.map(b => parseAnyDateToTimestamp(b.start)));
+                        let parentMaxEnd = Math.max(...parentRow.bars.map(b => parseAnyDateToTimestamp(b.end)));
+                        if (currentMinStart < parentMaxEnd) { isConflicted = true; card.className += ' conflict-warning'; }
+                    }
                 }
 
                 let predecessorOptions = `<option value="" ${(row.predecessor === "" || row.predecessor === undefined || row.predecessor === null) ? 'selected' : ''}>None</option>`;
@@ -1315,32 +1386,44 @@
                     <div class="row-card-header">
                         <div class="row-card-title">
                             <span class="row-drag-handle">☰</span>
-                            Task Profile Lane Element
-                            ${isConflicted ? `<span class="conflict-badge">PREDECESSOR OVERLAP DETECTED</span>` : ''}
+                            Track Row Configuration Panel
+                            ${isConflicted ? `<span class="conflict-badge">CROSS-ROW PREDECESSOR OVERLAP</span>` : ''}
                         </div>
                         <button class="delete-btn" onclick="deleteRowFromLane(${laneIdx}, ${rowIdx})">Delete Row</button>
                     </div>
                     <div class="card-input-group">
-                        <div class="horizontal-input-row">
-                            <div class="control-item"><label>Task Track Title</label><input type="text" value="${row.label}" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'label', this.value)"></div>
-                            
-                            <div class="control-item"><label>Start Date</label>
-                                <div class="date-input-wrapper">
-                                    <span class="date-display-badge">${row.start}</span>
-                                    <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(row.start)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'start')">
-                                </div>
-                            </div>
-                            <div class="control-item"><label>End Date</label>
-                                <div class="date-input-wrapper">
-                                    <span class="date-display-badge">${row.end}</span>
-                                    <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(row.end)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'end')">
-                                </div>
-                            </div>
-                            
-                            <div class="control-item"><label>Progress %</label><input type="number" min="0" max="100" value="${row.progress || 0}" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'progress', this.value)"></div>
-                            <div class="control-item"><label>Predecessor Link</label><select onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'predecessor', this.value)">${predecessorOptions}</select></div>
+                        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-bottom:10px;">
+                            <div class="control-item"><label>Row Display Label Name</label><input type="text" value="${row.label}" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'label', this.value)"></div>
+                            <div class="control-item"><label>Predecessor Dependency Link</label><select onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'predecessor', this.value)">${predecessorOptions}</select></div>
                         </div>
+
+                        <div class="bars-section">
+                            <div style="font-size:11px; font-weight:bold; color:#1e40af; margin-bottom:6px;">Activity Bars Array</div>
+                            <div class="bars-list">
+                                ${row.bars.map((bar, barIdx) => `
+                                    <div class="horizontal-input-row">
+                                        <div class="control-item"><label>Start Date</label>
+                                            <div class="date-input-wrapper">
+                                                <span class="date-display-badge">${bar.start}</span>
+                                                <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'start', null, ${barIdx})">
+                                            </div>
+                                        </div>
+                                        <div class="control-item"><label>End Date</label>
+                                            <div class="date-input-wrapper">
+                                                <span class="date-display-badge">${bar.end}</span>
+                                                <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'end', null, ${barIdx})">
+                                            </div>
+                                        </div>
+                                        <div class="control-item" style="width:70px;"><label>Progress %</label><input type="number" min="0" max="100" value="${bar.progress || 0}" onchange="updateBarFieldDirect(${laneIdx}, ${rowIdx}, ${barIdx}, 'progress', this.value)"></div>
+                                        <button class="mini-delete-btn" style="margin-bottom:6px;" onclick="deleteBarNew(${laneIdx}, ${rowIdx}, ${barIdx})">&times;</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <button class="inner-action-btn" onclick="addBarNew(${laneIdx}, ${rowIdx})" style="margin-bottom:8px;">+ Add Custom Activity Bar</button>
+                        </div>
+
                         <div class="milestones-section">
+                            <div style="font-size:11px; font-weight:bold; color:#1e40af; margin-bottom:6px;">Row Target Milestones</div>
                             <div class="milestones-list">
                                 ${row.milestones.map((ms, msIdx) => `
                                     <div class="milestone-input-row">
@@ -1372,7 +1455,7 @@
     function addNewSwimlane() { projectData.push({ id: projectData.length, title: "New Building Workstream", color: "#f8fafc", showSummary: true, rows: [] }); recordStateChange(); renderInputRows(); updateChart(); }
     function deleteSwimlane(laneIdx) { projectData.splice(laneIdx, 1); recordStateChange(); renderInputRows(); updateChart(); }
 
-    function addNewRowToLane(laneIdx) { projectData[laneIdx].rows.push({ id: nextRowId++, label: "New Task Activity", start: "01Mar2026", end: "01Jun2026", progress: 0, predecessor: "", milestones: [] }); recordStateChange(); renderInputRows(); updateChart(); }
+    function addNewRowToLane(laneIdx) { projectData[laneIdx].rows.push({ id: nextRowId++, label: "New Task Activity Track", predecessor: "", bars: [{ id: nextBarId++, start: "01Mar2026", end: "01Jun2026", progress: 0, bgColor: "", color: "", pattern: "solid" }], milestones: [] }); recordStateChange(); renderInputRows(); updateChart(); }
     function deleteRowFromLane(laneIdx, rowIdx) { projectData[laneIdx].rows.splice(rowIdx, 1); recordStateChange(); renderInputRows(); updateChart(); }
 
     // ==========================================
@@ -1431,8 +1514,10 @@
             let allDates = [];
             projectData.forEach(lane => {
                 lane.rows.forEach(row => {
-                    let sT = parseAnyDateToTimestamp(row.start); let eT = parseAnyDateToTimestamp(row.end);
-                    if(!isNaN(sT)) allDates.push(new Date(sT)); if(!isNaN(eT)) allDates.push(new Date(eT));
+                    row.bars.forEach(b => {
+                        let sT = parseAnyDateToTimestamp(b.start); let eT = parseAnyDateToTimestamp(b.end);
+                        if(!isNaN(sT)) allDates.push(new Date(sT)); if(!isNaN(eT)) allDates.push(new Date(eT));
+                    });
                     row.milestones.forEach(m => { let mT = parseAnyDateToTimestamp(m.date); if(!isNaN(mT)) allDates.push(new Date(mT)); });
                 });
             });
@@ -1446,7 +1531,7 @@
 
         let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="font-family:${fontFamily}; background-color:#ffffff; user-select:none;">`;
         
-        // Define Pattern Overlay Vector Architecture
+        // Define Pattern Overlay Vector Architecture Templates
         svg += `<defs>
             <pattern id="pat-crosshatch" width="8" height="8" patternUnits="userSpaceOnUse">
                 <line x1="0" y1="0" x2="8" y2="8" stroke="#ffffff" stroke-width="1.2" opacity="0.45"/>
@@ -1566,30 +1651,24 @@
             }
         }
 
-        let currentCanvasY = axisLineY; let rowPositionsMap = {}; 
-        projectData.forEach(lane => {
-            if (lane.rows.length === 0) return;
-            currentCanvasY += swimlaneHeight; 
-            lane.rows.forEach(r => { rowPositionsMap[r.id] = currentCanvasY; currentCanvasY += rowHeight; });
-        });
-
-        // Draw Swimlanes and Rows
         let currentDrawY = axisLineY;
         projectData.forEach((lane, laneIdx) => {
             if (lane.rows.length === 0) return;
 
-            // PARENT ROLLUP COMPUTATION
+            // PARENT SWIMLANE ROLLUP COMPUTATION ENGINE
             let rollupMinTime = Infinity;
             let rollupMaxTime = -Infinity;
             lane.rows.forEach(r => {
-                let sTS = parseAnyDateToTimestamp(r.start);
-                let eTS = parseAnyDateToTimestamp(r.end);
-                if(!isNaN(sTS) && sTS < rollupMinTime) rollupMinTime = sTS;
-                if(!isNaN(eTS) && eTS > rollupMaxTime) rollupMaxTime = eTS;
+                r.bars.forEach(b => {
+                    let sTS = parseAnyDateToTimestamp(b.start);
+                    let eTS = parseAnyDateToTimestamp(b.end);
+                    if(!isNaN(sTS) && sTS < rollupMinTime) rollupMinTime = sTS;
+                    if(!isNaN(eTS) && eTS > rollupMaxTime) rollupMaxTime = eTS;
+                });
             });
 
             let laneBgColor = lane.color || "#f8fafc";
-            svg += `<rect x="10" y="${currentDrawY}" width="${endBoundaryXCoordinate - 10}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
+            svg += `<rect x="10" y="${currentDrawY}" width="${width - 20}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
             svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central" style="cursor:pointer;" ondblclick="editLaneLabelDirectly(${laneIdx})">${lane.title}</text>`;
             
             if (lane.showSummary !== false && rollupMinTime !== Infinity && rollupMaxTime !== -Infinity && rollupMaxTime >= rollupMinTime) {
@@ -1607,44 +1686,48 @@
 
             lane.rows.forEach((item, rowIdx) => {
                 let y = currentDrawY;
-                svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1"/>`;
+                
+                // Interaction Hotspot Track: Intercept Right Click Actions cleanly inside the Canvas bounds
+                svg += `<rect x="10" y="${y}" width="${width - 20}" height="${rowHeight}" fill="transparent" style="cursor:context-menu;" oncontextmenu="handleWorkspaceRowContextMenu(event, ${item.id})"/>`;
+                svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1" style="pointer-events:none;"/>`;
                 svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(${laneIdx}, ${rowIdx})">${item.label}</text>`;
                 
-                let sObj = new Date(parseAnyDateToTimestamp(item.start)); let eObj = new Date(parseAnyDateToTimestamp(item.end));
-                let isBarConflicted = false;
-                if (item.predecessor) {
-                    let parentRow = findRowGlobally(parseInt(item.predecessor));
-                    if (parentRow && new Date(parseAnyDateToTimestamp(item.start)) < new Date(parseAnyDateToTimestamp(parentRow.end))) isBarConflicted = true;
-                }
+                // Draw Multi Bars Track Layout Logic Engine
+                item.bars.forEach((bar) => {
+                    let sObj = new Date(parseAnyDateToTimestamp(bar.start)); 
+                    let eObj = new Date(parseAnyDateToTimestamp(bar.end));
 
-                if(!isNaN(sObj.getTime()) && !isNaN(eObj.getTime())) {
-                    let xStart = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(sObj)));
-                    let xEnd = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(eObj)));
-                    let visibleBarWidth = xEnd - xStart;
+                    if(!isNaN(sObj.getTime()) && !isNaN(eObj.getTime())) {
+                        let xStart = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(sObj)));
+                        let xEnd = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(eObj)));
+                        let visibleBarWidth = xEnd - xStart;
 
-                    if (visibleBarWidth > 0) {
-                        let activeBarBgColor = item.bgColor || barBgColor;
-                        let activeBarColor = item.color || barColor;
-                        let activePattern = item.pattern || 'solid';
+                        if (visibleBarWidth > 0) {
+                            let activeBarBgColor = bar.bgColor || barBgColor;
+                            let activeBarColor = bar.color || barColor;
+                            let activePattern = bar.pattern || 'solid';
 
-                        // Base Base Core Tracks
-                        svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${activeBarBgColor}" ${isBarConflicted ? `stroke="var(--danger)" stroke-width="1.5"` : ''} ondblclick="editBarDatesDirectlyGlobal(event, ${item.id})"/>`;
-                        
-                        let filledWidth = Math.max(xStart, Math.min(xEnd, getX(new Date(sObj.getTime() + ((item.progress || 0)/100) * (eObj.getTime() - sObj.getTime()))))) - xStart;
-                        if (filledWidth > 0) svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${activeBarColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id})"/>`;
+                            // Base Unfilled Bounding Background
+                            svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${activeBarBgColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
+                            
+                            // Filled Progress Core Tracks
+                            let filledWidth = Math.max(xStart, Math.min(xEnd, getX(new Date(sObj.getTime() + ((bar.progress || 0)/100) * (eObj.getTime() - sObj.getTime()))))) - xStart;
+                            if (filledWidth > 0) svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${activeBarColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
 
-                        // Vector Structural Texture Injections
-                        if (activePattern !== 'solid') {
-                            svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="url(#pat-${activePattern})" style="pointer-events:none;"/>`;
+                            // Dynamic SVG Mask Architecture Pattern Injections
+                            if (activePattern !== 'solid') {
+                                svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="url(#pat-${activePattern})" style="pointer-events:none;"/>`;
+                            }
+
+                            // Interactive Bounds Resizing Drag Vectors Hooks
+                            svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:w-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-start', ${item.id}, ${bar.id})"/>`;
+                            if (visibleBarWidth > 12) svg += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id}, ${bar.id})" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
+                            svg += `<rect x="${xEnd - 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:e-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-end', ${item.id}, ${bar.id})"/>`;
                         }
-
-                        svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:w-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-start', ${item.id})"/>`;
-                        if (visibleBarWidth > 12) svg += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id})" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id})"/>`;
-                        svg += `<rect x="${xEnd - 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:e-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-end', ${item.id})"/>`;
                     }
-                }
+                });
 
-                // Milestone Mapping Track Channels
+                // Milestone Geometric Shape Mapping Layout Logic Engine
                 let validMilestones = item.milestones.filter(m => !isNaN(parseAnyDateToTimestamp(m.date)));
                 validMilestones.sort((a, b) => parseAnyDateToTimestamp(a.date) - parseAnyDateToTimestamp(b.date));
                 let trackPlacedTextFootprints = [];
@@ -1655,12 +1738,9 @@
                     if (msX < scaleMarginLeft || msX > endBoundaryXCoordinate) continue;
 
                     let msYCenterLocked = y + (rowHeight / 2); let msSize = 5;
-                    let isInsideBarBounds = (!isNaN(sObj.getTime()) && !isNaN(eObj.getTime()) && mObj >= sObj && mObj <= eObj);
-                    let isNearRightEdge = (isInsideBarBounds && (getX(eObj) - msX < 15));
-
+                    
+                    // Evaluate positions relative to the overall track center baseline bounds
                     let textAnchorStyle = "start"; let textXPositionCoordinate = msX + msSize + 4; let defaultTextYBaseline = msYCenterLocked + 3;
-                    if (isInsideBarBounds && !isNearRightEdge) { textAnchorStyle = "middle"; textXPositionCoordinate = msX; defaultTextYBaseline = y + (rowHeight / 2) + (barThickness / 2) + 11; }
-
                     let finalComputedTextX = textXPositionCoordinate; let finalComputedTextY = defaultTextYBaseline;
 
                     if (ms.manualLabel) {
@@ -1686,7 +1766,7 @@
                         finalComputedTextY = defaultTextYBaseline + (targetedCascadeStaggerOffsetLevel * 12);
                     }
 
-                    // Shape Form Engine Injections
+                    // Geometry Selection Processor
                     let activeMsColor = ms.color || msColor;
                     let activeSymbol = ms.symbol || 'diamond';
                     let msCommonAttr = `fill="${activeMsColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})"`;
@@ -1720,8 +1800,8 @@
             let today = new Date();
             if (today.getTime() >= scaleMinTime && today.getTime() <= scaleMaxTime) {
                 let xToday = getX(today);
-                svg += `<line x1="${xToday}" y1="${axisLineY}" x2="${xToday}" y2="${bottomOfLastRow}" stroke="${todayColor}" stroke-width="1.5" stroke-dasharray="4 4"/>`;
-                svg += `<text x="${xToday}" y="${bottomOfLastRow + 14}" font-size="8" font-weight="bold" fill="${todayColor}" text-anchor="middle">TODAY</text>`;
+                svg += `<line x1="${xToday}" y1="${axisLineY}" x2="${xToday}" y2="${bottomOfLastRow}" stroke="${todayColor}" stroke-width="1.5" stroke-dasharray="4 4" style="pointer-events:none;"/>`;
+                svg += `<text x="${xToday}" y="${bottomOfLastRow + 14}" font-size="8" font-weight="bold" fill="${todayColor}" text-anchor="middle" style="pointer-events:none;">TODAY</text>`;
             }
         }
         svg += `</svg>`; container.innerHTML = svg;
