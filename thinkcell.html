@@ -127,6 +127,20 @@
         .bottom-config-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; margin-top: 20px; }
         .bottom-card { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
         .radio-group { display: flex; gap: 10px; margin-top: 5px; background: #ffffff; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; flex-wrap: wrap; }
+
+        /* Floating Inline Dialogue Modals */
+        .floating-date-dialog {
+            position: fixed; background: #ffffff; border: 1px solid #94a3b8; border-radius: 8px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+            padding: 15px; z-index: 10000; font-family: system-ui, sans-serif; width: 320px;
+        }
+        .floating-date-dialog h4 { margin: 0 0 10px 0; font-size: 13px; color: #1e3a8a; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;}
+        .floating-date-dialog .modal-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .floating-date-dialog .modal-field { display: flex; flex-direction: column; flex: 1; font-size: 11px; font-weight: 600; color: #4a5568;}
+        .floating-date-dialog .modal-field label { margin-bottom: 4px; }
+        .floating-date-dialog .modal-field input { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; width:100%; box-sizing:border-box; }
+        .floating-date-dialog .modal-actions { display: flex; justify-content: flex-end; gap: 6px; }
+        .floating-date-dialog button { padding: 5px 12px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; }
     </style>
 </head>
 <body>
@@ -259,7 +273,7 @@
                         <input type="hidden" id="canvasWidth" value="806">
                     </div>
                 </div>
-                <div class="control-grid" style="grid-template-columns: repeat(6, 1fr); margin-top: 10px;">
+                <div class="control-grid" style="grid-template-columns: repeat(7, 1fr); margin-top: 10px;">
                     <div class="control-item">
                         <label>Unfilled Bar</label>
                         <input type="color" id="barBgColor" value="#5c95be" onchange="recordStateChange(); updateChart();">
@@ -267,6 +281,10 @@
                     <div class="control-item">
                         <label>Progress Fill</label>
                         <input type="color" id="barColor" value="#2563eb" onchange="recordStateChange(); updateChart();">
+                    </div>
+                    <div class="control-item">
+                        <label>Summary Bar</label>
+                        <input type="color" id="summaryColor" value="#475569" onchange="recordStateChange(); updateChart();">
                     </div>
                     <div class="control-item">
                         <label>Milestone</label>
@@ -460,7 +478,7 @@
     }
 
     // =========================================================
-    // GRAPHIC WORKSPACE CANVAS DRAG ENGINE (RESOLVED CORES)
+    // GRAPHIC WORKSPACE CANVAS DRAG ENGINE & DIALOG CORE HOOKS
     // =========================================================
     function initiateDragInteraction(e, mode, rowId, msId = null) {
         e.preventDefault();
@@ -585,6 +603,37 @@
         activeDragState = null;
     }
 
+    function openCalendarPopup(e, initialDateDDMMMYYYY, onChangeCallback) {
+        let initialYYYYMMDD = convertDDMMMYYYYToYYYYMMDD(initialDateDDMMMYYYY);
+        let dateInput = document.createElement('input');
+        dateInput.type = 'date';
+        dateInput.value = initialYYYYMMDD;
+        dateInput.style.cssText = `position: absolute; left: ${e.pageX}px; top: ${e.pageY}px; width: 0px; height: 0px; opacity: 0; border: none; padding: 0; margin: 0; pointer-events: none;`;
+        document.body.appendChild(dateInput);
+        
+        dateInput.addEventListener('change', function() {
+            if (dateInput.value) onChangeCallback(dateInput.value);
+            dateInput.remove();
+        });
+        
+        dateInput.addEventListener('blur', function() {
+            setTimeout(() => dateInput.remove(), 100);
+        });
+
+        try {
+            dateInput.focus();
+            if (typeof dateInput.showPicker === 'function') dateInput.showPicker();
+            else dateInput.click();
+        } catch (err) {
+            let manualInput = prompt("Enter date (DDMMMYYYY):", initialDateDDMMMYYYY);
+            if (manualInput) {
+                let parsedTS = parseAnyDateToTimestamp(manualInput);
+                if (!isNaN(parsedTS)) onChangeCallback(convertDDMMMYYYYToYYYYMMDD(formatDateToDDMMMYYYY(new Date(parsedTS))));
+            }
+            dateInput.remove();
+        }
+    }
+
     // ==========================================
     // TRANSACTIONS CONTROL HISTORY (UNDO / REDO)
     // ==========================================
@@ -603,6 +652,7 @@
             rowHeight: document.getElementById('rowHeight').value,
             barBgColor: document.getElementById('barBgColor').value,
             barColor: document.getElementById('barColor').value,
+            summaryColor: document.getElementById('summaryColor').value,
             msColor: document.getElementById('msColor').value,
             todayColor: document.getElementById('todayColor').value,
             headerColor: document.getElementById('headerColor').value,
@@ -645,7 +695,7 @@
                 
                 let lane = convertedData.find(l => l.title === title);
                 if (!lane) {
-                    lane = { id: convertedData.length, title: title, color: "#f8fafc", rows: [] };
+                    lane = { id: convertedData.length, title: title, color: "#f8fafc", showSummary: true, rows: [] };
                     convertedData.push(lane);
                 }
                 lane.rows.push(row);
@@ -673,6 +723,7 @@
         document.getElementById('rowHeight').value = state.rowHeight;
         document.getElementById('barBgColor').value = state.barBgColor;
         document.getElementById('barColor').value = state.barColor;
+        if(document.getElementById('summaryColor')) document.getElementById('summaryColor').value = state.summaryColor || '#475569';
         document.getElementById('msColor').value = state.msColor;
         document.getElementById('todayColor').value = state.todayColor || '#b71010';
         document.getElementById('headerColor').value = state.headerColor || '#000000';
@@ -711,7 +762,7 @@
     function toggleRangeScopeFieldsVisibility(mode) { document.getElementById('manualDateFieldsRow').style.display = (mode === 'manual') ? 'grid' : 'none'; }
 
     // ==========================================
-    // BACKUP IMPORT / EXPORT SYSTEMS
+    // BACKUP IMPORT / EXPORT SYSTEMS (CSV RIGOR)
     // ==========================================
     function exportConfigurationArchive() {
         const archivePayload = { version: "2026.FullPresentationState", workspace: JSON.parse(actionUndoStack[actionUndoStack.length - 1]) };
@@ -743,6 +794,7 @@
         csvContent += `#rowHeight,${document.getElementById('rowHeight').value}\n`;
         csvContent += `#barBgColor,${document.getElementById('barBgColor').value}\n`;
         csvContent += `#barColor,${document.getElementById('barColor').value}\n`;
+        csvContent += `#summaryColor,${document.getElementById('summaryColor').value}\n`;
         csvContent += `#msColor,${document.getElementById('msColor').value}\n`;
         csvContent += `#todayColor,${document.getElementById('todayColor').value}\n`;
         csvContent += `#headerColor,${document.getElementById('headerColor').value}\n`;
@@ -755,21 +807,56 @@
         csvContent += `#rangeMode,${document.querySelector('input[name="rangeMode"]:checked').value}\n`;
         csvContent += `#customBoundaryMin,${manualBoundaryMin}\n`;
         csvContent += `#customBoundaryMax,${manualBoundaryMax}\n`;
-        csvContent += "Swimlane Title,Row Title,Bar Start,Bar End,Milestone 1 Title,Milestone 1 Date,Milestone 1 ShowDate\n";
+        csvContent += "Swimlane Title,Swimlane Color,Swimlane Summary,Row ID,Row Title,Bar Start,Bar End,Progress Percent,Predecessor ID,Milestone Arrays Mapping Matrix\n";
         
         projectData.forEach(lane => {
             lane.rows.forEach(row => {
-                let lineElements = [ `"${lane.title.replace(/"/g, '""')}"`, `"${row.label.replace(/"/g, '""')}"`, row.start, row.end ];
+                let milestoneTokens = [];
                 row.milestones.forEach(ms => {
-                    lineElements.push(`"${ms.label.replace(/"/g, '""')}"`);
-                    lineElements.push(ms.date);
-                    lineElements.push(ms.showDate ? "TRUE" : "FALSE");
+                    milestoneTokens.push([
+                        ms.label.replace(/"/g, '""'),
+                        ms.date,
+                        ms.showDate ? "TRUE" : "FALSE",
+                        ms.manualLabel ? "TRUE" : "FALSE",
+                        ms.labelOffsetX || 0,
+                        ms.labelOffsetY || 0,
+                        ms.manualDateLabel ? "TRUE" : "FALSE",
+                        ms.dateOffsetX || 0,
+                        ms.dateOffsetY || 0
+                    ].join('|'));
                 });
+                let nestedMilestonesField = `"${milestoneTokens.join(';')}"`;
+                let lineElements = [
+                    `"${lane.title.replace(/"/g, '""')}"`,
+                    `"${lane.color || '#f8fafc'}"`,
+                    lane.showSummary !== false ? "TRUE" : "FALSE",
+                    row.id,
+                    `"${row.label.replace(/"/g, '""')}"`,
+                    row.start,
+                    row.end,
+                    row.progress || 0,
+                    row.predecessor !== "" ? row.predecessor : "NONE",
+                    nestedMilestonesField
+                ];
                 csvContent += lineElements.join(",") + "\n";
             });
         });
         const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
         const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_excel_backup_matrix.csv`; link.click();
+    }
+
+    function parseRobustCSVLine(text) {
+        let fields = []; let current = ''; let inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+            let char = text[i];
+            if (char === '"') {
+                if (inQuotes && text[i+1] === '"') { current += '"'; i++; } 
+                else { inQuotes = !inQuotes; }
+            } else if (char === ',' && !inQuotes) {
+                fields.push(current); current = '';
+            } else { current += char; }
+        }
+        fields.push(current); return fields;
     }
 
     function importCSVFile(event) {
@@ -800,31 +887,50 @@
                     }
                     continue; 
                 }
-                if (line.toLowerCase().startsWith("swimlane title") || line.toLowerCase().startsWith("row title")) continue;
+                if (line.toLowerCase().startsWith("swimlane title") || line.toLowerCase().startsWith("swimlane color")) continue;
 
-                let columns = line.split(','); if(columns.length < 4) continue;
-                let laneTitle = columns[0].replace(/^"|"$/g, '').trim();
-                let rowLabel = columns[1].replace(/^"|"$/g, '').trim();
+                let columns = parseRobustCSVLine(line); if(columns.length < 9) continue;
+                let laneTitle = columns[0].trim();
+                let laneColor = columns[1].trim();
+                let laneSummary = columns[2].trim() === "TRUE";
+                let explicitRowId = parseInt(columns[3].trim(), 10);
+                let rowLabel = columns[4].trim();
+                let rowStart = columns[5].trim();
+                let rowEnd = columns[6].trim();
+                let rowProgress = parseInt(columns[7].trim(), 10) || 0;
+                let rowPred = columns[8].trim();
+                if (rowPred.toUpperCase() === "NONE") rowPred = "";
+
+                if (explicitRowId >= rIdCounter) rIdCounter = explicitRowId + 1;
                 
                 let lane = newImportData.find(l => l.title === laneTitle);
                 if(!lane) {
-                    lane = { id: newImportData.length, title: laneTitle, color: "#f8fafc", rows: [] };
+                    lane = { id: newImportData.length, title: laneTitle, color: laneColor, showSummary: laneSummary, rows: [] };
                     newImportData.push(lane);
                 }
 
-                let rowObject = { id: rIdCounter++, label: rowLabel, start: columns[2].trim(), end: columns[3].trim(), progress: 0, predecessor: "", milestones: [] };
+                let rowObject = { id: explicitRowId, label: rowLabel, start: rowStart, end: rowEnd, progress: rowProgress, predecessor: rowPred, milestones: [] };
 
-                for(let j = 4; j < columns.length; j += 3) {
-                    if(!columns[j]) continue;
-                    let msLabel = columns[j].replace(/^"|"$/g, '').trim();
-                    let sDateToggle = columns[j+2] ? (columns[j+2].toUpperCase().trim() === "TRUE") : false;
-                    if(msLabel !== "") {
-                        rowObject.milestones.push({ 
-                            id: mIdCounter++, label: msLabel, date: columns[j+1] ? columns[j+1].trim() : columns[3].trim(), 
-                            showDate: sDateToggle, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0,
-                            manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0
-                        });
-                    }
+                let milestonesDataChunk = columns[9] ? columns[9].trim() : "";
+                if (milestonesDataChunk !== "") {
+                    let tokenStrings = milestonesDataChunk.split(';');
+                    tokenStrings.forEach(tokenStr => {
+                        let pieces = tokenStr.split('|');
+                        if (pieces.length >= 3) {
+                            rowObject.milestones.push({
+                                id: mIdCounter++, 
+                                label: pieces[0], 
+                                date: pieces[1],
+                                showDate: pieces[2] === "TRUE",
+                                manualLabel: pieces[3] === "TRUE",
+                                labelOffsetX: parseFloat(pieces[4]) || 0,
+                                labelOffsetY: parseFloat(pieces[5]) || 0,
+                                manualDateLabel: pieces[6] === "TRUE",
+                                dateOffsetX: parseFloat(pieces[7]) || 0,
+                                dateOffsetY: parseFloat(pieces[8]) || 0
+                            });
+                        }
+                    });
                 }
                 lane.rows.push(rowObject);
             }
@@ -840,9 +946,7 @@
     function clearAllStoredData() {
         if (confirm("Are you sure you want to completely wipe all current tracks, layouts, and data?")) {
             localStorage.removeItem('gantt_v8_master_snapshot');
-            actionUndoStack = [];
-            actionRedoStack = [];
-            loadApplicationState();
+            actionUndoStack = []; actionRedoStack = []; loadApplicationState();
         }
     }
 
@@ -851,29 +955,28 @@
     function loadApplicationState() {
         const structuralBackupCache = localStorage.getItem('gantt_v8_master_snapshot');
         if (structuralBackupCache) {
-            actionUndoStack.push(structuralBackupCache);
-            restoreStateFromSnapshot(JSON.parse(structuralBackupCache));
+            actionUndoStack.push(structuralBackupCache); restoreStateFromSnapshot(JSON.parse(structuralBackupCache));
         } else {
             projectData = [
-                { id: 0, title: "Building 11 Swimlane", color: "#eff6ff", rows: [
+                { id: 0, title: "Building 11 Swimlane", color: "#eff6ff", showSummary: true, rows: [
                     { id: 0, label: "Production Labs - 2nd & 3rd Floor (Bldg 11)", start: "01Mar2026", end: "30Sep2027", progress: 0, predecessor: "", milestones: [
                         { id: 1000, label: "Construction Complete", date: "01Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0 },
                         { id: 1001, label: "Interiors Start", date: "19Aug2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 }
                     ]}
                 ]},
-                { id: 1, title: "Building 21 Swimlane", color: "#f0fdf4", rows: [
+                { id: 1, title: "Building 21 Swimlane", color: "#f0fdf4", showSummary: true, rows: [
                     { id: 1, label: "Warehouse Admin 1st Floor (Bldg 21)", start: "01Mar2026", end: "04Nov2027", progress: 0, predecessor: "", milestones: [
                         { id: 1002, label: "Construction Complete", date: "31Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0 },
                         { id: 1003, label: "Interiors Start", date: "05Feb2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 }
                     ]}
                 ]},
-                { id: 2, title: "Building 31 Swimlane", color: "#fdf2f8", rows: [
+                { id: 2, title: "Building 31 Swimlane", color: "#fdf2f8", showSummary: true, rows: [
                     { id: 2, label: "Lab/Admin (Bldg 31)", start: "01Mar2026", end: "14Dec2027", progress: 0, predecessor: "", milestones: [
                         { id: 1004, label: "Construction Complete", date: "14Dec2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 },
                         { id: 1005, label: "Interiors Start", date: "23Mar2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 }
                     ]}
                 ]},
-                { id: 3, title: "Building 41 Swimlane", color: "#fff7ed", rows: [
+                { id: 3, title: "Building 41 Swimlane", color: "#fff7ed", showSummary: true, rows: [
                     { id: 3, label: "CUB/Annex (Bldg 41)", start: "01Mar2026", end: "13Aug2027", progress: 0, predecessor: "", milestones: [
                         { id: 1006, label: "Construction Complete", date: "13Aug2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0 },
                         { id: 1007, label: "Interiors Start", date: "18May2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, dateOffsetX: -13, dateOffsetY: 1, manualDateLabel: true }
@@ -884,22 +987,28 @@
             const seedSnapshot = {
                 data: projectData, nextRowId: nextRowId, nextMsId: nextMsId, rangeMode: 'manual',
                 customBoundaryMin: '01May2026', customBoundaryMax: '09Aug2028', fontFamily: "Tahoma, sans-serif",
-                fontSize: 10, swimlaneHeight: 30, canvasWidth: 806, rowHeight: 50, barBgColor: '#5c95be', barColor: '#2563eb', msColor: '#000000', todayColor: '#b71010', headerColor: '#000000',
+                fontSize: 10, swimlaneHeight: 30, canvasWidth: 806, rowHeight: 50, barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#000000', todayColor: '#b71010', headerColor: '#000000',
                 showVGrid: true, todayLineToggle: 'show', showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: false, showHeaderDay: false
             };
             actionUndoStack.push(JSON.stringify(seedSnapshot)); restoreStateFromSnapshot(seedSnapshot);
         }
     }
 
+    function updateLaneSummary(laneIdx, val) { 
+        projectData[laneIdx].showSummary = val; 
+        recordStateChange(); 
+        updateChart(); 
+    }
+
+    // ==========================================
+    // GRAPHIC TEXT EDITOR DIRECT INTERCEPTORS
+    // ==========================================
     function editRowLabelDirectly(laneIdx, rowIdx) {
         const row = projectData[laneIdx].rows[rowIdx];
         if(row) {
             let newLabel = prompt("Edit Task Track Title Name Directly:", row.label);
             if (newLabel !== null && newLabel.trim() !== "") {
-                row.label = newLabel.trim();
-                recordStateChange();
-                renderInputRows();
-                updateChart();
+                row.label = newLabel.trim(); recordStateChange(); renderInputRows(); updateChart();
             }
         }
     }
@@ -909,13 +1018,88 @@
         if(lane) {
             let newTitle = prompt("Edit Swimlane Group Title Name Directly:", lane.title);
             if (newTitle !== null && newTitle.trim() !== "") {
-                lane.title = newTitle.trim();
-                recordStateChange();
-                renderInputRows();
-                updateChart();
+                lane.title = newTitle.trim(); recordStateChange(); renderInputRows(); updateChart();
             }
         }
     }
+
+    function editMilestoneLabelDirectlyGlobal(rowId, msId) {
+        let row = findRowGlobally(rowId); if (!row) return;
+        let ms = row.milestones.find(m => m.id === msId); if (!ms) return;
+        
+        let newLabel = prompt("Edit Milestone Title Name Directly:", ms.label);
+        if (newLabel !== null && newLabel.trim() !== "") {
+            ms.label = newLabel.trim(); recordStateChange(); renderInputRows(); updateChart();
+        }
+    }
+
+    function editMilestoneDateDirectlyGlobal(e, rowId, msId) {
+        e.stopPropagation();
+        let row = findRowGlobally(rowId); if (!row) return;
+        let ms = row.milestones.find(m => m.id === msId); if (!ms) return;
+        
+        openCalendarPopup(e, ms.date, function(newYYYYMMDD) {
+            ms.date = formatDateToDDMMMYYYY(new Date(newYYYYMMDD + "T00:00:00"));
+            recordStateChange(); renderInputRows(); updateChart();
+        });
+    }
+
+    function editBarDatesDirectlyGlobal(e, rowId) {
+        e.stopPropagation();
+        let row = findRowGlobally(rowId); if (!row) return;
+
+        let existingDialog = document.getElementById('floatingBarDateDialog');
+        if (existingDialog) existingDialog.remove();
+
+        let dialog = document.createElement('div');
+        dialog.id = 'floatingBarDateDialog';
+        dialog.className = 'floating-date-dialog';
+        dialog.style.left = `${e.clientX}px`;
+        dialog.style.top = `${e.clientY}px`;
+
+        dialog.innerHTML = `
+            <h4>Modify Activity Bounds</h4>
+            <div class="modal-row">
+                <div class="modal-field">
+                    <label>Select Start Date</label>
+                    <input type="date" id="modalStartPicker" value="${convertDDMMMYYYYToYYYYMMDD(row.start)}">
+                </div>
+                <div class="modal-field">
+                    <label>Select Finish Date</label>
+                    <input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(row.end)}">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="modalCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
+                <button id="modalSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply</button>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+
+        document.getElementById('modalCancelBtn').addEventListener('click', () => dialog.remove());
+        document.getElementById('modalSaveBtn').addEventListener('click', function() {
+            let startVal = document.getElementById('modalStartPicker').value;
+            let endVal = document.getElementById('modalEndPicker').value;
+            if (!startVal || !endVal) { alert("Both bounds fields require valid metrics."); return; }
+
+            let startTimestamp = new Date(startVal + "T00:00:00").getTime();
+            let endTimestamp = new Date(endVal + "T00:00:00").getTime();
+
+            if (startTimestamp <= endTimestamp) {
+                row.start = formatDateToDDMMMYYYY(new Date(startTimestamp));
+                row.end = formatDateToDDMMMYYYY(new Date(endTimestamp));
+                recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
+            } else {
+                alert("Chronological Paradox: Start boundary cannot stretch past the target finish date line.");
+            }
+        });
+    }
+
+    document.addEventListener('mousedown', function(e) {
+        let box = document.getElementById('floatingBarDateDialog');
+        if (box && !box.contains(e.target) && !e.target.classList.contains('drag-hotspot')) { box.remove(); }
+    });
 
     // =========================================================
     // SIDEBAR DATA ELEMENT FORM GENERATOR (NESTED SWIMLANES)
@@ -931,12 +1115,18 @@
             laneWrapper.addEventListener('dragover', (e) => e.preventDefault());
             laneWrapper.addEventListener('drop', (e) => handleRowDropOnLane(e, laneIdx));
 
+            // FIXED: Integrated side-by-side radio option layout toggle buttons next to the master fill swatches
             laneWrapper.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:2px solid #cbd5e1; padding-bottom:6px;">
                     <div style="display:flex; align-items:center; gap:8px; width:75%;">
                         <label style="font-size:11px; font-weight:bold; color:#1e3a8a; text-transform:uppercase; flex-shrink:0;">Swimlane Group:</label>
                         <input type="text" value="${lane.title}" style="font-weight:bold; color:#1e3a8a; font-size:13px; padding:4px;" onchange="updateLaneTitle(${laneIdx}, this.value)">
                         <input type="color" value="${lane.color || '#f8fafc'}" style="width:34px; height:28px; padding:0; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer; flex-shrink:0;" onchange="updateLaneColor(${laneIdx}, this.value)">
+                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; margin-left:10px; background:#ffffff; padding:2px 6px; border:1px solid #cbd5e1; border-radius:4px; white-space:nowrap;">
+                            <span style="font-weight:bold; color:var(--text-muted);">Summary:</span>
+                            <label style="display:flex; align-items:center; gap:2px; cursor:pointer;"><input type="radio" name="summaryToggle-${laneIdx}" value="on" ${lane.showSummary !== false ? 'checked' : ''} onchange="updateLaneSummary(${laneIdx}, true)">On</label>
+                            <label style="display:flex; align-items:center; gap:2px; cursor:pointer;"><input type="radio" name="summaryToggle-${laneIdx}" value="off" ${lane.showSummary === false ? 'checked' : ''} onchange="updateLaneSummary(${laneIdx}, false)">Off</label>
+                        </div>
                     </div>
                     <button class="delete-btn" style="padding:2px 6px;" onclick="deleteSwimlane(${laneIdx})">Delete Lane</button>
                 </div>
@@ -949,9 +1139,7 @@
 
             lane.rows.forEach((row, rowIdx) => {
                 const card = document.createElement('div'); 
-                card.className = 'row-card'; 
-                card.id = `card-${row.id}`; 
-                
+                card.className = 'row-card'; card.id = `card-${row.id}`; 
                 card.setAttribute('draggable', 'true');
                 card.addEventListener('dragstart', (e) => handleRowDragStart(e, laneIdx, rowIdx));
                 card.addEventListener('dragover', (e) => handleRowDragOver(e, card));
@@ -965,11 +1153,12 @@
                     if (parentRow && parseAnyDateToTimestamp(row.start) < parseAnyDateToTimestamp(parentRow.end)) { isConflicted = true; card.className += ' conflict-warning'; }
                 }
 
-                let predecessorOptions = `<option value="">None</option>`;
+                let predecessorOptions = `<option value="" ${(row.predecessor === "" || row.predecessor === undefined || row.predecessor === null) ? 'selected' : ''}>None</option>`;
                 projectData.forEach(l => {
                     l.rows.forEach(r => {
                         if (r.id !== row.id) {
-                            predecessorOptions += `<option value="${r.id}" ${(row.predecessor == r.id) ? 'selected' : ''}>${l.title} &gt; ${r.label || 'Untitled'}</option>`;
+                            let isSelected = (row.predecessor !== "" && row.predecessor != null && row.predecessor == r.id) ? 'selected' : '';
+                            predecessorOptions += `<option value="${r.id}" ${isSelected}>${l.title} &gt; ${r.label || 'Untitled'}</option>`;
                         }
                     });
                 });
@@ -1025,38 +1214,18 @@
                             <button class="inner-action-btn" onclick="addMilestoneNew(${laneIdx}, ${rowIdx})">+ Add Custom Milestone</button>
                         </div>
                     </div>
-                `;
-                rowsContainerBox.appendChild(card);
+                `; rowsContainerBox.appendChild(card);
             });
         });
     }
 
     function updateLaneColor(laneIdx, val) { projectData[laneIdx].color = val; recordStateChange(); updateChart(); }
     function updateLaneTitle(laneIdx, val) { projectData[laneIdx].title = val; recordStateChange(); updateChart(); }
-    function addNewSwimlane() { projectData.push({ id: projectData.length, title: "New Building Workstream", color: "#f8fafc", rows: [] }); recordStateChange(); renderInputRows(); updateChart(); }
+    function addNewSwimlane() { projectData.push({ id: projectData.length, title: "New Building Workstream", color: "#f8fafc", showSummary: true, rows: [] }); recordStateChange(); renderInputRows(); updateChart(); }
     function deleteSwimlane(laneIdx) { projectData.splice(laneIdx, 1); recordStateChange(); renderInputRows(); updateChart(); }
 
     function addNewRowToLane(laneIdx) { projectData[laneIdx].rows.push({ id: nextRowId++, label: "New Task Activity", start: "01Mar2026", end: "01Jun2026", progress: 0, predecessor: "", milestones: [] }); recordStateChange(); renderInputRows(); updateChart(); }
     function deleteRowFromLane(laneIdx, rowIdx) { projectData[laneIdx].rows.splice(rowIdx, 1); recordStateChange(); renderInputRows(); updateChart(); }
-
-    function updateRowFieldDirect(laneIdx, rowIdx, key, value) {
-        if(key === 'progress') value = Math.max(0, Math.min(100, parseInt(value) || 0));
-        projectData[laneIdx].rows[rowIdx][key] = value;
-        recordStateChange(); if(key=='predecessor') renderInputRows(); updateChart();
-    }
-    function updateMilestoneFieldNew(laneIdx, rowIdx, msIdx, key, value) {
-        projectData[laneIdx].rows[rowIdx].milestones[msIdx][key] = value;
-        recordStateChange(); updateChart();
-    }
-    function addMilestoneNew(laneIdx, rowIdx) {
-        let r = projectData[laneIdx].rows[rowIdx];
-        r.milestones.push({ id: nextMsId++, label: "Milestone Event", date: r.end, showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0 });
-        recordStateChange(); renderInputRows(); updateChart();
-    }
-    function deleteMilestoneNew(laneIdx, rowIdx, msIdx) {
-        projectData[laneIdx].rows[rowIdx].milestones.splice(msIdx, 1);
-        recordStateChange(); renderInputRows(); updateChart();
-    }
 
     // ==========================================
     // GRAPHIC VECTOR GENERATION PIPELINE ENGINE (SVG DRAW LOOP)
@@ -1072,6 +1241,7 @@
         const fontSize = parseInt(document.getElementById('fontSize').value) || 12;
         const barBgColor = document.getElementById('barBgColor').value;
         const barColor = document.getElementById('barColor').value;
+        const summaryColor = document.getElementById('summaryColor').value;
         const msColor = document.getElementById('msColor').value;
         const todayColor = document.getElementById('todayColor').value;
         const headerColor = document.getElementById('headerColor').value;
@@ -1094,24 +1264,20 @@
         const marginXRight = 130; const chartWidth = width - scaleMarginLeft - marginXRight;
         const barThickness = 18;
 
-        let axisLineY = startY - 15;
-        let endBoundaryXCoordinate = width - marginXRight;
+        let axisLineY = startY - 15; let endBoundaryXCoordinate = width - marginXRight;
 
         let dynamicTotalRowsHeight = 0;
         projectData.forEach(l => {
             if (l.rows.length > 0) {
-                dynamicTotalRowsHeight += swimlaneHeight;
-                dynamicTotalRowsHeight += l.rows.length * rowHeight;
+                dynamicTotalRowsHeight += swimlaneHeight; dynamicTotalRowsHeight += l.rows.length * rowHeight;
             }
         });
 
-        const height = axisLineY + dynamicTotalRowsHeight + 30; 
-        const bottomOfLastRow = axisLineY + dynamicTotalRowsHeight;
+        const height = axisLineY + dynamicTotalRowsHeight + 30; const bottomOfLastRow = axisLineY + dynamicTotalRowsHeight;
 
         let minDate, maxDate;
         if (rangeMode === 'manual') {
-            minDate = new Date(parseAnyDateToTimestamp(manualBoundaryMin)); 
-            maxDate = new Date(parseAnyDateToTimestamp(manualBoundaryMax));
+            minDate = new Date(parseAnyDateToTimestamp(manualBoundaryMin)); maxDate = new Date(parseAnyDateToTimestamp(manualBoundaryMax));
             if(isNaN(minDate.getTime())) minDate = new Date("2026-05-01"); if(isNaN(maxDate.getTime())) maxDate = new Date("2028-08-09");
         } else {
             let allDates = [];
@@ -1132,7 +1298,6 @@
 
         let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="font-family:${fontFamily}; background-color:#ffffff; user-select:none;">`;
         
-        // INTERACTIVE TIMELINE REGION DRAG HOOK OVERLAY
         if (rangeMode === 'manual') {
             svg += `<rect x="${scaleMarginLeft}" y="0" width="${chartWidth}" height="${axisLineY}" fill="#f8fafc" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'timeline-pan', null)"/>`;
         }
@@ -1141,8 +1306,7 @@
 
         let scanTime = new Date(minDate); let timelineDaySteps = [];
         while(scanTime <= maxDate) {
-            timelineDaySteps.push({ date: new Date(scanTime), x: getX(scanTime) });
-            scanTime.setDate(scanTime.getDate() + 1);
+            timelineDaySteps.push({ date: new Date(scanTime), x: getX(scanTime) }); scanTime.setDate(scanTime.getDate() + 1);
         }
 
         let lowestActiveTier = "";
@@ -1222,7 +1386,7 @@
 
         // Tier 4: Days
         if (showHeaderDay) {
-            for(let i=0; i<timelineDaySteps.length - 1; i++) {
+            for(let i=0; i<timelineDaySteps.length; i++) {
                 let step = timelineDaySteps[i]; let nextStep = timelineDaySteps[i+1];
                 let cx = step.x + (nextStep.x - step.x) / 2;
                 if (showVGrid && step.x >= scaleMarginLeft && step.x <= endBoundaryXCoordinate) {
@@ -1234,45 +1398,11 @@
             }
         }
 
-        let currentCanvasY = axisLineY;
-        let rowPositionsMap = {}; 
-
+        let currentCanvasY = axisLineY; let rowPositionsMap = {}; 
         projectData.forEach(lane => {
             if (lane.rows.length === 0) return;
             currentCanvasY += swimlaneHeight; 
-            lane.rows.forEach(r => {
-                rowPositionsMap[r.id] = currentCanvasY;
-                currentCanvasY += rowHeight;
-            });
-        });
-
-        // Dependencies Connectors Loop
-        projectData.forEach(lane => {
-            lane.rows.forEach(row => {
-                if (row.predecessor) {
-                    const parent = findRowGlobally(parseInt(row.predecessor));
-                    if (parent) {
-                        const pDate = new Date(parseAnyDateToTimestamp(parent.end));
-                        const cDate = new Date(parseAnyDateToTimestamp(row.start));
-                        
-                        if (!isNaN(pDate.getTime()) && !isNaN(cDate.getTime())) {
-                            let pY = rowPositionsMap[parent.id] + (rowHeight / 2);
-                            let cY = rowPositionsMap[row.id] + (rowHeight / 2);
-                            
-                            let pX = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(pDate)));
-                            let cX = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(cDate)));
-
-                            let strokeColor = "#94a3b8"; if (cDate < pDate) strokeColor = "var(--danger)";
-
-                            if(pX >= scaleMarginLeft && cX >= scaleMarginLeft) {
-                                let midX = pX + (cX - pX) / 2;
-                                svg += `<path d="M ${pX} ${pY} L ${midX} ${pY} L ${midX} ${cY} L ${cX} ${cY}" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-dasharray="2 2"/>`;
-                                svg += `<polygon points="${cX},${cY} ${cX-5},${cY-3} ${cX-5},${cY+3}" fill="${strokeColor}"/>`;
-                            }
-                        }
-                    }
-                }
-            });
+            lane.rows.forEach(r => { rowPositionsMap[r.id] = currentCanvasY; currentCanvasY += rowHeight; });
         });
 
         // Draw Swimlanes and Rows
@@ -1280,9 +1410,31 @@
         projectData.forEach((lane, laneIdx) => {
             if (lane.rows.length === 0) return;
 
+            // PARENT ROLLUP COMPUTATION
+            let rollupMinTime = Infinity;
+            let rollupMaxTime = -Infinity;
+            lane.rows.forEach(r => {
+                let sTS = parseAnyDateToTimestamp(r.start);
+                let eTS = parseAnyDateToTimestamp(r.end);
+                if(!isNaN(sTS) && sTS < rollupMinTime) rollupMinTime = sTS;
+                if(!isNaN(eTS) && eTS > rollupMaxTime) rollupMaxTime = eTS;
+            });
+
             let laneBgColor = lane.color || "#f8fafc";
             svg += `<rect x="10" y="${currentDrawY}" width="${endBoundaryXCoordinate - 10}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
             svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central" style="cursor:pointer;" ondblclick="editLaneLabelDirectly(${laneIdx})">${lane.title}</text>`;
+            
+            // FIXED: Renders bracket lines without arrow end caps based on the layout state toggle configuration settings
+            if (lane.showSummary !== false && rollupMinTime !== Infinity && rollupMaxTime !== -Infinity && rollupMaxTime >= rollupMinTime) {
+                let rollupXStart = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(new Date(rollupMinTime))));
+                let rollupXEnd = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(new Date(rollupMaxTime))));
+                let rollupWidth = rollupXEnd - rollupXStart;
+                if (rollupWidth > 0) {
+                    let rY = currentDrawY + (swimlaneHeight / 2);
+                    svg += `<path d="M ${rollupXStart} ${rY - 5} L ${rollupXStart} ${rY + 5} M ${rollupXStart} ${rY} L ${rollupXEnd} ${rY} M ${rollupXEnd} ${rY - 5} L ${rollupXEnd} ${rY + 5}" fill="none" stroke="${summaryColor}" stroke-width="3"/>`;
+                }
+            }
+
             currentDrawY += swimlaneHeight;
 
             lane.rows.forEach((item, rowIdx) => {
@@ -1290,8 +1442,7 @@
                 svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1"/>`;
                 svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(${laneIdx}, ${rowIdx})">${item.label}</text>`;
                 
-                let sObj = new Date(parseAnyDateToTimestamp(item.start)); 
-                let eObj = new Date(parseAnyDateToTimestamp(item.end));
+                let sObj = new Date(parseAnyDateToTimestamp(item.start)); let eObj = new Date(parseAnyDateToTimestamp(item.end));
                 let isBarConflicted = false;
                 if (item.predecessor) {
                     let parentRow = findRowGlobally(parseInt(item.predecessor));
@@ -1304,12 +1455,12 @@
                     let visibleBarWidth = xEnd - xStart;
 
                     if (visibleBarWidth > 0) {
-                        svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${barBgColor}" ${isBarConflicted ? `stroke="var(--danger)" stroke-width="1.5"` : ''}/>`;
+                        svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${barBgColor}" ${isBarConflicted ? `stroke="var(--danger)" stroke-width="1.5"` : ''} ondblclick="editBarDatesDirectlyGlobal(event, ${item.id})"/>`;
                         let filledWidth = Math.max(xStart, Math.min(xEnd, getX(new Date(sObj.getTime() + ((item.progress || 0)/100) * (eObj.getTime() - sObj.getTime()))))) - xStart;
-                        if (filledWidth > 0) svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${barColor}"/>`;
+                        if (filledWidth > 0) svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${barColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id})"/>`;
 
                         svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:w-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-start', ${item.id})"/>`;
-                        if (visibleBarWidth > 12) svg += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id})"/>`;
+                        if (visibleBarWidth > 12) svg += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id})" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id})"/>`;
                         svg += `<rect x="${xEnd - 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:e-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-end', ${item.id})"/>`;
                     }
                 }
@@ -1357,22 +1508,15 @@
                     }
 
                     let dPoints = `${msX},${msYCenterLocked - msSize} ${msX + msSize},${msYCenterLocked} ${msX},${msYCenterLocked + msSize} ${msX - msSize},${msYCenterLocked}`;
-                    svg += `<polygon points="${dPoints}" fill="${msColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})"/>`;
-                    svg += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="9" font-weight="600" fill="${msColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})">${ms.label}</text>`;
+                    svg += `<polygon points="${dPoints}" fill="${msColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})"/>`;
+                    svg += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="9" font-weight="600" fill="${msColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneLabelDirectlyGlobal(${item.id}, ${ms.id})">${ms.label}</text>`;
 
                     if (ms && ms.showDate) {
-                        let presentationDateLabel = ms.date; 
-                        let finalComputedDateX = msX;
-                        let finalComputedDateY = msYCenterLocked - msSize - 11;
-                        
-                        if (ms.manualDateLabel) {
-                            finalComputedDateX += (ms.dateOffsetX || 0);
-                            finalComputedDateY += (ms.dateOffsetY || 0);
-                        }
+                        let presentationDateLabel = ms.date; let finalComputedDateX = msX; let finalComputedDateY = msYCenterLocked - msSize - 11;
+                        if (ms.manualDateLabel) { finalComputedDateX += (ms.dateOffsetX || 0); finalComputedDateY += (ms.dateOffsetY || 0); }
                         svg += `<text x="${finalComputedDateX}" y="${finalComputedDateY}" font-size="8" font-weight="bold" fill="#64748b" text-anchor="middle" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})">${presentationDateLabel}</text>`;
                     }
                 }
-
                 currentDrawY += rowHeight;
             });
         });
@@ -1386,59 +1530,43 @@
                 svg += `<text x="${xToday}" y="${bottomOfLastRow + 14}" font-size="8" font-weight="bold" fill="${todayColor}" text-anchor="middle">TODAY</text>`;
             }
         }
-
         svg += `</svg>`; container.innerHTML = svg;
     }
 
     function downloadSVG() {
-        const svgElement = document.querySelector('#svgContainer svg');
-        if (!svgElement) return;
-        
+        const svgElement = document.querySelector('#svgContainer svg'); if (!svgElement) return;
         const clone = svgElement.cloneNode(true);
-        const hotspots = clone.querySelectorAll('.drag-hotspot');
-        hotspots.forEach(hotspot => hotspot.remove());
-        
+        const hotspots = clone.querySelectorAll('.drag-hotspot'); hotspots.forEach(hotspot => hotspot.remove());
         const interactiveNodes = clone.querySelectorAll('[onmousedown], [style*="cursor"]');
         interactiveNodes.forEach(node => {
             node.removeAttribute('onmousedown');
             if (node.hasAttribute('style')) {
                 let cleanedStyle = node.getAttribute('style').replace(/cursor\s*:\s*[^;]+;?/g, '').trim();
-                if (cleanedStyle) node.setAttribute('style', cleanedStyle);
-                else node.removeAttribute('style');
+                if (cleanedStyle) node.setAttribute('style', cleanedStyle); else node.removeAttribute('style');
             }
         });
-        
         const blob = new Blob([clone.outerHTML], {type: 'image/svg+xml;charset=utf-8'});
         const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'presentation_gantt.svg'; link.click();
     }
 
     function downloadPNG() {
-        const svgElement = document.querySelector('#svgContainer svg');
-        if (!svgElement) return;
-
+        const svgElement = document.querySelector('#svgContainer svg'); if (!svgElement) return;
         const clone = svgElement.cloneNode(true);
-        const hotspots = clone.querySelectorAll('.drag-hotspot');
-        hotspots.forEach(hotspot => hotspot.remove());
-
+        const hotspots = clone.querySelectorAll('.drag-hotspot'); hotspots.forEach(hotspot => hotspot.remove());
         const interactiveNodes = clone.querySelectorAll('[onmousedown], [style*="cursor"]');
         interactiveNodes.forEach(node => {
             node.removeAttribute('onmousedown');
             if (node.hasAttribute('style')) {
                 let cleanedStyle = node.getAttribute('style').replace(/cursor\s*:\s*[^;]+;?/g, '').trim();
-                if (cleanedStyle) node.setAttribute('style', cleanedStyle);
-                else node.removeAttribute('style');
+                if (cleanedStyle) node.setAttribute('style', cleanedStyle); else node.removeAttribute('style');
             }
         });
 
-        const width = parseInt(clone.getAttribute('width')) || 800;
-        const height = parseInt(clone.getAttribute('height')) || 600;
+        const width = parseInt(clone.getAttribute('width')) || 800; const height = parseInt(clone.getAttribute('height')) || 600;
         const scaleMultiplier = 2; 
 
-        const canvas = document.createElement('canvas');
-        canvas.width = width * scaleMultiplier;
-        canvas.height = height * scaleMultiplier;
-        const ctx = canvas.getContext('2d');
-        ctx.scale(scaleMultiplier, scaleMultiplier);
+        const canvas = document.createElement('canvas'); canvas.width = width * scaleMultiplier; canvas.height = height * scaleMultiplier;
+        const ctx = canvas.getContext('2d'); ctx.scale(scaleMultiplier, scaleMultiplier);
 
         const svgString = new XMLSerializer().serializeToString(clone);
         const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
@@ -1446,18 +1574,11 @@
 
         const img = new Image();
         img.onload = function() {
-            ctx.drawImage(img, 0, 0);
-            URL.revokeObjectURL(blobUrl);
-
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
-            link.download = 'presentation_gantt.png';
-            link.click();
-        };
-        img.src = blobUrl;
+            ctx.drawImage(img, 0, 0); URL.revokeObjectURL(blobUrl);
+            const link = document.createElement('a'); link.href = canvas.toDataURL('image/png'); link.download = 'presentation_gantt.png'; link.click();
+        }; img.src = blobUrl;
     }
 
-    // Lifecycle bootstrap initialization placement at end of script execution block
     loadApplicationState(); 
 </script>
 </body>
