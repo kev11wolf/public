@@ -32,10 +32,12 @@
         .sidebar-header h1 { margin: 0; font-size: 18px; color: #1e3a8a; }
         
         /* History Controls */
-        .action-bar { display: flex; gap: 8px; }
+        .action-bar { display: flex; gap: 8px; align-items: center; }
         .utility-btn { background: #ffffff; border: 1px solid #cbd5e1; padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: var(--text-dark); display: flex; align-items: center; gap: 4px;}
         .utility-btn:hover:not(:disabled) { background: #f8fafc; border-color: #94a3b8; }
         .utility-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .reset-btn { background: #fff1f2; border: 1px solid #fca5a5; padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: var(--danger); }
+        .reset-btn:hover { background: #ffe4e6; }
 
         .sidebar-content { padding: 20px; overflow-y: auto; flex-grow: 1; padding-bottom: 100px;}
         
@@ -419,7 +421,6 @@
         cardEl.classList.add('dragover-active');
     }
 
-    // Dynamic Swimlane drag handling methods
     function handleRowDragLeave(cardEl) {
         cardEl.classList.remove('dragover-active');
     }
@@ -456,6 +457,132 @@
         recordStateChange();
         renderInputRows();
         updateChart();
+    }
+
+    // =========================================================
+    // GRAPHIC WORKSPACE CANVAS DRAG ENGINE (RESOLVED CORES)
+    // =========================================================
+    function initiateDragInteraction(e, mode, rowId, msId = null) {
+        e.preventDefault();
+        
+        if (mode === 'timeline-pan') {
+            const rangeMode = document.querySelector('input[name="rangeMode"]:checked').value;
+            if (rangeMode !== 'manual') return; 
+            activeDragState = {
+                mode: mode,
+                startX: e.clientX,
+                origMinTime: scaleMinTime,
+                origMaxTime: scaleMaxTime
+            };
+            return;
+        }
+
+        const row = findRowGlobally(rowId);
+        if (!row) return;
+
+        let milestone = null;
+        if (msId !== null) {
+            milestone = row.milestones.find(m => m.id === msId);
+        }
+
+        activeDragState = {
+            mode: mode,
+            row: row,
+            milestone: milestone,
+            startX: e.clientX,
+            startY: e.clientY,
+            origStart: parseAnyDateToTimestamp(row.start),
+            origEnd: parseAnyDateToTimestamp(row.end),
+            origMsDate: milestone ? parseAnyDateToTimestamp(milestone.date) : null,
+            origLabelOffsetX: milestone ? (milestone.labelOffsetX || 0) : 0,
+            origLabelOffsetY: milestone ? (milestone.labelOffsetY || 0) : 0,
+            origDateOffsetX: milestone ? (milestone.dateOffsetX || 0) : 0,
+            origDateOffsetY: milestone ? (milestone.dateOffsetY || 0) : 0
+        };
+    }
+
+    function handleGlobalDragMove(e) {
+        if (!activeDragState) return;
+
+        const deltaX = e.clientX - activeDragState.startX;
+        const deltaY = e.clientY - activeDragState.startY;
+        const totalDuration = scaleMaxTime - scaleMinTime;
+        const timeDelta = (deltaX / scaleChartWidth) * totalDuration;
+
+        let needsUpdate = false;
+
+        if (activeDragState.mode === 'timeline-pan') {
+            const panDuration = activeDragState.origMaxTime - activeDragState.origMinTime;
+            const panDeltaTime = (deltaX / scaleChartWidth) * panDuration;
+            
+            let newMin = activeDragState.origMinTime - panDeltaTime;
+            let newMax = activeDragState.origMaxTime - panDeltaTime;
+            
+            manualBoundaryMin = formatDateToDDMMMYYYY(new Date(newMin));
+            manualBoundaryMax = formatDateToDDMMMYYYY(new Date(newMax));
+            
+            if(document.getElementById('customBoundaryMinDisplay')) document.getElementById('customBoundaryMinDisplay').innerText = manualBoundaryMin;
+            if(document.getElementById('customBoundaryMaxDisplay')) document.getElementById('customBoundaryMaxDisplay').innerText = manualBoundaryMax;
+            if(document.getElementById('customBoundaryMinPicker')) document.getElementById('customBoundaryMinPicker').value = convertDDMMMYYYYToYYYYMMDD(manualBoundaryMin);
+            if(document.getElementById('customBoundaryMaxPicker')) document.getElementById('customBoundaryMaxPicker').value = convertDDMMMYYYYToYYYYMMDD(manualBoundaryMax);
+            
+            needsUpdate = true;
+        }
+        else if (activeDragState.mode === 'bar-resize-start') {
+            let newStart = activeDragState.origStart + timeDelta;
+            if (newStart < activeDragState.origEnd) {
+                activeDragState.row.start = formatDateToDDMMMYYYY(new Date(newStart));
+                needsUpdate = true;
+            }
+        } 
+        else if (activeDragState.mode === 'bar-resize-end') {
+            let newEnd = activeDragState.origEnd + timeDelta;
+            if (newEnd > activeDragState.origStart) {
+                activeDragState.row.end = formatDateToDDMMMYYYY(new Date(newEnd));
+                needsUpdate = true;
+            }
+        } 
+        else if (activeDragState.mode === 'bar-move') {
+            let newStart = activeDragState.origStart + timeDelta;
+            let newEnd = activeDragState.origEnd + timeDelta;
+            activeDragState.row.start = formatDateToDDMMMYYYY(new Date(newStart));
+            activeDragState.row.end = formatDateToDDMMMYYYY(new Date(newEnd));
+            needsUpdate = true;
+        } 
+        else if (activeDragState.mode === 'ms') {
+            if (activeDragState.milestone) {
+                let newMsDate = activeDragState.origMsDate + timeDelta;
+                activeDragState.milestone.date = formatDateToDDMMMYYYY(new Date(newMsDate));
+                needsUpdate = true;
+            }
+        } 
+        else if (activeDragState.mode === 'label-drag') {
+            if (activeDragState.milestone) {
+                activeDragState.milestone.manualLabel = true;
+                activeDragState.milestone.labelOffsetX = activeDragState.origLabelOffsetX + deltaX;
+                activeDragState.milestone.labelOffsetY = activeDragState.origLabelOffsetY + deltaY;
+                needsUpdate = true;
+            }
+        } 
+        else if (activeDragState.mode === 'date-label-drag') {
+            if (activeDragState.milestone) {
+                activeDragState.milestone.manualDateLabel = true;
+                activeDragState.milestone.dateOffsetX = activeDragState.origDateOffsetX + deltaX;
+                activeDragState.milestone.dateOffsetY = activeDragState.origDateOffsetY + deltaY;
+                needsUpdate = true;
+            }
+        }
+
+        if (needsUpdate) {
+            updateChart();
+        }
+    }
+
+    function stopGlobalDragAction(e) {
+        if (!activeDragState) return;
+        recordStateChange();
+        renderInputRows(); 
+        activeDragState = null;
     }
 
     // ==========================================
@@ -710,6 +837,15 @@
         reader.readAsText(file);
     }
 
+    function clearAllStoredData() {
+        if (confirm("Are you sure you want to completely wipe all current tracks, layouts, and data?")) {
+            localStorage.removeItem('gantt_v8_master_snapshot');
+            actionUndoStack = [];
+            actionRedoStack = [];
+            loadApplicationState();
+        }
+    }
+
     function saveApplicationState() { if(actionUndoStack.length > 0) localStorage.setItem('gantt_v8_master_snapshot', actionUndoStack[actionUndoStack.length - 1]); }
     
     function loadApplicationState() {
@@ -768,6 +904,19 @@
         }
     }
 
+    function editLaneLabelDirectly(laneIdx) {
+        const lane = projectData[laneIdx];
+        if(lane) {
+            let newTitle = prompt("Edit Swimlane Group Title Name Directly:", lane.title);
+            if (newTitle !== null && newTitle.trim() !== "") {
+                lane.title = newTitle.trim();
+                recordStateChange();
+                renderInputRows();
+                updateChart();
+            }
+        }
+    }
+
     // =========================================================
     // SIDEBAR DATA ELEMENT FORM GENERATOR (NESTED SWIMLANES)
     // =========================================================
@@ -782,7 +931,6 @@
             laneWrapper.addEventListener('dragover', (e) => e.preventDefault());
             laneWrapper.addEventListener('drop', (e) => handleRowDropOnLane(e, laneIdx));
 
-            // Integrated individual Swimlane Color Pickers next to titles
             laneWrapper.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:2px solid #cbd5e1; padding-bottom:6px;">
                     <div style="display:flex; align-items:center; gap:8px; width:75%;">
@@ -946,7 +1094,6 @@
         const marginXRight = 130; const chartWidth = width - scaleMarginLeft - marginXRight;
         const barThickness = 18;
 
-        // FIXED: Shifted structural baseline tracks directly flush with axisLineY layout boundaries
         let axisLineY = startY - 15;
         let endBoundaryXCoordinate = width - marginXRight;
 
@@ -984,6 +1131,12 @@
         const getX = (dObj) => scaleMarginLeft + ((dObj.getTime() - scaleMinTime) / totalDuration) * chartWidth;
 
         let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="font-family:${fontFamily}; background-color:#ffffff; user-select:none;">`;
+        
+        // INTERACTIVE TIMELINE REGION DRAG HOOK OVERLAY
+        if (rangeMode === 'manual') {
+            svg += `<rect x="${scaleMarginLeft}" y="0" width="${chartWidth}" height="${axisLineY}" fill="#f8fafc" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'timeline-pan', null)"/>`;
+        }
+
         svg += `<line x1="${scaleMarginLeft}" y1="${axisLineY}" x2="${endBoundaryXCoordinate}" y2="${axisLineY}" stroke="${headerColor}" stroke-width="2"/>`;
 
         let scanTime = new Date(minDate); let timelineDaySteps = [];
@@ -1006,9 +1159,9 @@
                 if(currY === null) { currY = yVal; xStart = timelineDaySteps[i].x; continue; }
                 if(yVal !== currY || i === timelineDaySteps.length - 1) {
                     let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
-                    if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" text-anchor="middle">${currY}</text>`;
+                    if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" text-anchor="middle" style="pointer-events:none;">${currY}</text>`;
                     if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
-                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hYearDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hYearDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
                         if (showVGrid && lowestActiveTier === "year") {
                             svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
                         }
@@ -1016,7 +1169,7 @@
                     currY = yVal; xStart = timelineDaySteps[i].x;
                 }
             }
-            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hYearDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hYearDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hYearDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hYearDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
             headerTrackingYPointer += hYearDelta;
         }
 
@@ -1028,9 +1181,9 @@
                 if(currQ === null) { currQ = qVal; xStart = timelineDaySteps[i].x; continue; }
                 if(qVal !== currQ || i === timelineDaySteps.length - 1) {
                     let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
-                    if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" text-anchor="middle">Q${currQ}</text>`;
+                    if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" text-anchor="middle" style="pointer-events:none;">Q${currQ}</text>`;
                     if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
-                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hQuarterDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hQuarterDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
                         if (showVGrid && lowestActiveTier === "quarter") {
                             svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
                         }
@@ -1038,7 +1191,7 @@
                     currQ = qVal; xStart = timelineDaySteps[i].x;
                 }
             }
-            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hQuarterDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hQuarterDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hQuarterDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hQuarterDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
             headerTrackingYPointer += hQuarterDelta;
         }
 
@@ -1052,10 +1205,10 @@
                     let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
                     if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) {
                         let mLabel = new Date(2026, currM, 1).toLocaleString('default', { month: 'short' });
-                        svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" opacity="0.8" text-anchor="middle">${mLabel}</text>`;
+                        svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" opacity="0.8" text-anchor="middle" style="pointer-events:none;">${mLabel}</text>`;
                     }
                     if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
-                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hMonthDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hMonthDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
                         if (showVGrid && lowestActiveTier === "month") {
                             svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
                         }
@@ -1063,7 +1216,7 @@
                     currM = mVal; xStart = timelineDaySteps[i].x;
                 }
             }
-            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hMonthDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hMonthDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hMonthDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hMonthDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
             headerTrackingYPointer += hMonthDelta;
         }
 
@@ -1076,12 +1229,11 @@
                     svg += `<line x1="${step.x}" y1="${axisLineY}" x2="${step.x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2 2"/>`;
                 }
                 if (cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) {
-                    svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="9" font-weight="bold" fill="${headerColor}" opacity="0.6" text-anchor="middle">${step.date.getDate()}</text>`;
+                    svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="9" font-weight="bold" fill="${headerColor}" opacity="0.6" text-anchor="middle" style="pointer-events:none;">${step.date.getDate()}</text>`;
                 }
             }
         }
 
-        // Coordinate track generation framework pre-pass mapping layout
         let currentCanvasY = axisLineY;
         let rowPositionsMap = {}; 
 
@@ -1094,7 +1246,7 @@
             });
         });
 
-        // Dependencies Connectors Loop (Cross-lane links mapping enabled)
+        // Dependencies Connectors Loop
         projectData.forEach(lane => {
             lane.rows.forEach(row => {
                 if (row.predecessor) {
@@ -1128,10 +1280,9 @@
         projectData.forEach((lane, laneIdx) => {
             if (lane.rows.length === 0) return;
 
-            // FIXED: Render the swimlane banner box immediately below header tiers with zero pixel gap
             let laneBgColor = lane.color || "#f8fafc";
             svg += `<rect x="10" y="${currentDrawY}" width="${endBoundaryXCoordinate - 10}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
-            svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central">${lane.title}</text>`;
+            svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central" style="cursor:pointer;" ondblclick="editLaneLabelDirectly(${laneIdx})">${lane.title}</text>`;
             currentDrawY += swimlaneHeight;
 
             lane.rows.forEach((item, rowIdx) => {
