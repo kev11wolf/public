@@ -107,7 +107,8 @@
         .ms-checkbox-wrap { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer;}
         .ms-checkbox-wrap input { width: 14px; height: 14px; cursor: pointer; margin: 0; }
         
-        .inner-action-btn { background: #f1f5f9; color: var(--primary); border: 1px solid #cbd5e1; padding: 5px 10px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .inner-action-btn { background: #ffffff; color: var(--primary); border: 1px solid #cbd5e1; padding: 5px 10px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .inner-action-btn:hover { background: #f8fafc; border-color: #94a3b8; }
         .mini-delete-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; font-weight: bold; padding: 0 4px; }
 
         .archive-tools { background: #f0fdf4; border: 1px dashed #bbf7d0; padding: 12px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;}
@@ -117,7 +118,7 @@
            ============================== */
         .main-preview { flex: 1; padding: 25px; display: flex; flex-direction: column; overflow-y: auto; }
         .sticky-chart-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;}
-        .canvas-holder { background: #ffffff; padding: 0px; border-radius: 4px; width: 100%; display: flex; justify-content: center; overflow-x: auto; margin-bottom: 15px; position: relative;}
+        .canvas-holder { background: #ffffff; padding: 0px; border-radius: 4px; width: 100%; display: flex; justify-content: flex-start; overflow-x: auto; margin-bottom: 15px; position: relative;}
         
         .export-button-group { display: flex; gap: 10px; width: 100%; }
         .download-btn { flex: 1; color: white; border: none; padding: 12px 24px; font-size: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
@@ -126,6 +127,7 @@
         .bottom-config-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; margin-top: 20px; }
         .bottom-card { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
         .radio-group { display: flex; gap: 10px; margin-top: 5px; background: #ffffff; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; flex-wrap: wrap; }
+        .radio-option { display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 12px; font-weight: 500; }
 
         /* Floating Inline Dialogue Modals */
         .floating-date-dialog {
@@ -169,12 +171,12 @@
         
         <div class="sidebar-content">
             <div class="archive-tools">
-                <div style="font-size: 12px; font-weight: 700; color: #166534;">File Backup & Configuration Matrix Matrix Controls</div>
+                <div style="font-size: 12px; font-weight: 700; color: #166534;">File Backup & Configuration Matrix Controls</div>
                 <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px;">
-                    <button class="inner-action-btn" style="background:#ffffff; border-color:#cbd5e1;" onclick="exportConfigurationArchive()">↓ Save Workspace (.json)</button>
-                    <button class="inner-action-btn" style="background:#ffffff; border-color:#cbd5e1;" onclick="document.getElementById('archiveFileInput').click()">↑ Load Workspace</button>
-                    <button class="inner-action-btn" style="background:#ffffff; color:#166534; border-color:#bbf7d0;" onclick="exportExcelCSV()">↓ Export Excel CSV</button>
-                    <button class="inner-action-btn" style="background:#ffffff; color:#166534; border-color:#bbf7d0;" onclick="document.getElementById('csvFileInput').click()">↑ Import Excel CSV</button>
+                    <button class="inner-action-btn" onclick="exportConfigurationArchive()">↓ Save Workspace (.json)</button>
+                    <button class="inner-action-btn" onclick="document.getElementById('archiveFileInput').click()">↑ Load Workspace</button>
+                    <button class="inner-action-btn" style="color:#166534; border-color:#bbf7d0;" onclick="exportExcelCSV()">↓ Export Excel CSV</button>
+                    <button class="inner-action-btn" style="color:#166534; border-color:#bbf7d0;" onclick="document.getElementById('csvFileInput').click()">↑ Import Excel CSV</button>
                     
                     <input type="file" id="archiveFileInput" accept=".json" style="display:none;" onchange="importConfigurationArchive(event)">
                     <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSVFile(event)">
@@ -191,7 +193,7 @@
 
     <div class="main-preview">
         <div class="sticky-chart-container">
-            <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Right-click row track inside canvas to insert shapes; double-click to customize colors/styles)</span></h2>
+            <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Right-click row track inside canvas to insert shapes; double-click elements to customize style)</span></h2>
             
             <div class="canvas-holder" id="svgContainer" 
                  onmousemove="handleGlobalDragMove(event)" 
@@ -208,13 +210,20 @@
         <div class="bottom-config-panel">
             
             <div class="bottom-card">
-                <h3>1. Timeline Bounds Scaling</h3>
-                <div class="control-grid" style="grid-template-columns: 1fr;">
+                <h3>1. Timeline Scaling & Horizon Focus</h3>
+                <div class="control-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="control-item">
-                        <label>Date Boundary Scope Engine</label>
+                        <label>Scope Calculation Engine</label>
                         <div class="radio-group">
                             <label class="radio-option"><input type="radio" name="rangeMode" value="auto" onchange="handleRangeModeChange(this.value)"> Automatic</label>
                             <label class="radio-option"><input type="radio" name="rangeMode" value="manual" checked onchange="handleRangeModeChange(this.value)"> Manual Custom</label>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label>Sizing Model Strategy</label>
+                        <div class="radio-group">
+                            <label class="radio-option"><input type="radio" name="sizingMode" value="fixed" checked onchange="recordStateChange(); updateChart();"> Fixed Pixel Width</label>
+                            <label class="radio-option"><input type="radio" name="sizingMode" value="ticker-tape" onchange="recordStateChange(); updateChart();"> Ticker-Tape Screen Fit</label>
                         </div>
                     </div>
                 </div>
@@ -235,6 +244,15 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="control-item" style="margin-top: 10px;">
+                    <label>Ticker-Tape Quick-Focus Macro Horizons (Auto-Stretches Window)</label>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                        <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3m')">Show Next 3 Months</button>
+                        <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('1y')">Show Full Year</button>
+                        <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3y')">Show 3-Year Roadmap</button>
+                    </div>
+                </div>
             </div>
 
             <div class="bottom-card">
@@ -252,7 +270,7 @@
 
             <div class="bottom-card" style="grid-column: span 2;">
                 <h3>3. Formatting, Metrics, & Global Base Colors</h3>
-                <div class="control-grid" style="grid-template-columns: repeat(5, 1fr);">
+                <div class="control-grid" style="grid-template-columns: repeat(5, 1fr); gap: 10px;">
                     <div class="control-item">
                         <label>Font Typography</label>
                         <select id="fontFamily" onchange="recordStateChange(); updateChart();">
@@ -275,7 +293,7 @@
                         <input type="number" id="rowHeight" value="50" min="40" max="155" onchange="recordStateChange(); updateChart();">
                     </div>
                     <div class="control-item">
-                        <label>Canvas Width</label>
+                        <label>Canvas Manual Width Control</label>
                         <div style="display:flex; gap:4px;">
                             <button type="button" class="inner-action-btn" style="flex:1; padding:6px;" onclick="adjustCanvasZoomMultiplier(0.85)">🔍 -</button>
                             <button type="button" class="inner-action-btn" style="flex:1; padding:6px;" onclick="adjustCanvasZoomMultiplier(1.15)">🔍 +</button>
@@ -407,6 +425,13 @@
         return null;
     }
 
+    function syncBoundaryFields() {
+        if(document.getElementById('customBoundaryMinDisplay')) document.getElementById('customBoundaryMinDisplay').innerText = manualBoundaryMin;
+        if(document.getElementById('customBoundaryMaxDisplay')) document.getElementById('customBoundaryMaxDisplay').innerText = manualBoundaryMax;
+        if(document.getElementById('customBoundaryMinPicker')) document.getElementById('customBoundaryMinPicker').value = convertDDMMMYYYYToYYYYMMDD(manualBoundaryMin);
+        if(document.getElementById('customBoundaryMaxPicker')) document.getElementById('customBoundaryMaxPicker').value = convertDDMMMYYYYToYYYYMMDD(manualBoundaryMax);
+    }
+
     // =========================================================
     // CALENDAR SELECTION SYNC INTERCEPTOR CHANNELS
     // =========================================================
@@ -439,6 +464,45 @@
         else manualBoundaryMax = formatted;
         
         document.getElementById(`customBoundary${boundType === 'min' ? 'Min' : 'Max'}Display`).innerText = formatted;
+        
+        recordStateChange();
+        updateChart();
+    }
+
+    // =========================================================
+    // TICKER-TAPE MACRO TIME HORIZON SELECTION CONFIGURATIONS
+    // =========================================================
+    function applyDateHorizonMacro(horizon) {
+        document.querySelector('input[name="rangeMode"][value="manual"]').checked = true;
+        toggleRangeScopeFieldsVisibility('manual');
+        
+        let startD = new Date(2026, 2, 1); // 01Mar2026 Baseline Operational Focus Anchor
+        let endD = new Date(2026, 2, 1);
+        
+        if (horizon === '3m') {
+            endD.setMonth(endD.getMonth() + 3);
+            document.getElementById('showHeaderYear').checked = false;
+            document.getElementById('showHeaderQuarter').checked = false;
+            document.getElementById('showHeaderMonth').checked = true;
+            document.getElementById('showHeaderDay').checked = true;
+        } else if (horizon === '1y') {
+            endD.setFullYear(endD.getFullYear() + 1);
+            document.getElementById('showHeaderYear').checked = true;
+            document.getElementById('showHeaderQuarter').checked = true;
+            document.getElementById('showHeaderMonth').checked = true;
+            document.getElementById('showHeaderDay').checked = false;
+        } else if (horizon === '3y') {
+            endD.setFullYear(endD.getFullYear() + 3);
+            document.getElementById('showHeaderYear').checked = true;
+            document.getElementById('showHeaderQuarter').checked = true;
+            document.getElementById('showHeaderMonth').checked = false;
+            document.getElementById('showHeaderDay').checked = false;
+        }
+        
+        manualBoundaryMin = formatDateToDDMMMYYYY(startD);
+        manualBoundaryMax = formatDateToDDMMMYYYY(endD);
+        
+        syncBoundaryFields();
         
         recordStateChange();
         updateChart();
@@ -504,9 +568,12 @@
         e.preventDefault();
         e.stopPropagation();
         
-        if (mode === 'timeline-pan') {
-            const rangeMode = document.querySelector('input[name="rangeMode"]:checked').value;
-            if (rangeMode !== 'manual') return; 
+        if (mode === 'timeline-pan' || mode === 'timeline-resize-start' || mode === 'timeline-resize-end') {
+            const manualRadio = document.querySelector('input[name="rangeMode"][value="manual"]');
+            if (manualRadio && !manualRadio.checked) {
+                manualRadio.checked = true;
+                toggleRangeScopeFieldsVisibility('manual');
+            }
             activeDragState = {
                 mode: mode,
                 startX: e.clientX,
@@ -565,12 +632,30 @@
             manualBoundaryMin = formatDateToDDMMMYYYY(new Date(newMin));
             manualBoundaryMax = formatDateToDDMMMYYYY(new Date(newMax));
             
-            if(document.getElementById('customBoundaryMinDisplay')) document.getElementById('customBoundaryMinDisplay').innerText = manualBoundaryMin;
-            if(document.getElementById('customBoundaryMaxDisplay')) document.getElementById('customBoundaryMaxDisplay').innerText = manualBoundaryMax;
-            if(document.getElementById('customBoundaryMinPicker')) document.getElementById('customBoundaryMinPicker').value = convertDDMMMYYYYToYYYYMMDD(manualBoundaryMin);
-            if(document.getElementById('customBoundaryMaxPicker')) document.getElementById('customBoundaryMaxPicker').value = convertDDMMMYYYYToYYYYMMDD(manualBoundaryMax);
-            
+            syncBoundaryFields();
             needsUpdate = true;
+        }
+        else if (activeDragState.mode === 'timeline-resize-start') {
+            const origDuration = activeDragState.origMaxTime - activeDragState.origMinTime;
+            const stepDelta = (deltaX / scaleChartWidth) * origDuration;
+            let newMin = activeDragState.origMinTime + stepDelta;
+            
+            if (newMin < activeDragState.origMaxTime - 86400000) { // Keep at least 1 day distance
+                manualBoundaryMin = formatDateToDDMMMYYYY(new Date(newMin));
+                syncBoundaryFields();
+                needsUpdate = true;
+            }
+        }
+        else if (activeDragState.mode === 'timeline-resize-end') {
+            const origDuration = activeDragState.origMaxTime - activeDragState.origMinTime;
+            const stepDelta = (deltaX / scaleChartWidth) * origDuration;
+            let newMax = activeDragState.origMaxTime + stepDelta;
+            
+            if (newMax > activeDragState.origMinTime + 86400000) { // Keep at least 1 day distance
+                manualBoundaryMax = formatDateToDDMMMYYYY(new Date(newMax));
+                syncBoundaryFields();
+                needsUpdate = true;
+            }
         }
         else if (activeDragState.mode === 'bar-resize-start' && activeDragState.bar) {
             let newStart = activeDragState.origStart + timeDelta;
@@ -639,6 +724,7 @@
             nextMsId: nextMsId,
             nextBarId: nextBarId,
             rangeMode: document.querySelector('input[name="rangeMode"]:checked').value,
+            sizingMode: document.querySelector('input[name="sizingMode"]:checked')?.value || 'fixed',
             customBoundaryMin: manualBoundaryMin,
             customBoundaryMax: manualBoundaryMax,
             fontFamily: document.getElementById('fontFamily').value,
@@ -682,7 +768,6 @@
     function restoreStateFromSnapshot(state) {
         projectData = state.data || [];
         
-        // Safety Fallback Wrapper: Ensure all structural entries map cleanly into multi-bar structures
         projectData.forEach(lane => {
             if (lane.rows) {
                 lane.rows.forEach(row => {
@@ -708,13 +793,16 @@
         if(state.nextBarId) nextBarId = state.nextBarId;
         
         document.querySelector(`input[name="rangeMode"][value="${state.rangeMode}"]`).checked = true;
+        
+        if (state.sizingMode) {
+            let sRadio = document.querySelector(`input[name="sizingMode"][value="${state.sizingMode}"]`);
+            if (sRadio) sRadio.checked = true;
+        }
+
         manualBoundaryMin = state.customBoundaryMin || "01May2026";
         manualBoundaryMax = state.customBoundaryMax || "09Aug2028";
         
-        if(document.getElementById('customBoundaryMinDisplay')) document.getElementById('customBoundaryMinDisplay').innerText = manualBoundaryMin;
-        if(document.getElementById('customBoundaryMaxDisplay')) document.getElementById('customBoundaryMaxDisplay').innerText = manualBoundaryMax;
-        if(document.getElementById('customBoundaryMinPicker')) document.getElementById('customBoundaryMinPicker').value = convertDDMMMYYYYToYYYYMMDD(manualBoundaryMin);
-        if(document.getElementById('customBoundaryMaxPicker')) document.getElementById('customBoundaryMaxPicker').value = convertDDMMMYYYYToYYYYMMDD(manualBoundaryMax);
+        syncBoundaryFields();
 
         document.getElementById('fontFamily').value = state.fontFamily;
         document.getElementById('fontSize').value = state.fontSize;
@@ -749,6 +837,13 @@
     window.addEventListener('keydown', (e) => {
         if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); executeUndoAction(); }
         if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); executeRedoAction(); }
+    });
+
+    window.addEventListener('resize', () => {
+        const sizingMode = document.querySelector('input[name="sizingMode"]:checked')?.value;
+        if (sizingMode === 'ticker-tape') {
+            updateChart();
+        }
     });
 
     function adjustCanvasZoomMultiplier(factor) {
@@ -790,6 +885,7 @@
         let csvContent = `#fontFamily,${document.getElementById('fontFamily').value}\n`;
         csvContent += `#fontSize,${document.getElementById('fontSize').value}\n`;
         csvContent += `#canvasWidth,${document.getElementById('canvasWidth').value}\n`;
+        csvContent += `#sizingMode,${document.querySelector('input[name="sizingMode"]:checked')?.value || "fixed"}\n`;
         csvContent += `#swimlaneHeight,${document.getElementById('swimlaneHeight').value}\n`;
         csvContent += `#rowHeight,${document.getElementById('rowHeight').value}\n`;
         csvContent += `#barBgColor,${document.getElementById('barBgColor').value}\n`;
@@ -978,7 +1074,7 @@
             ];
             nextRowId = 2; nextMsId = 1003; nextBarId = 5004;
             const seedSnapshot = {
-                data: projectData, nextRowId: nextRowId, nextMsId: nextMsId, nextBarId: nextBarId, rangeMode: 'manual',
+                data: projectData, nextRowId: nextRowId, nextMsId: nextMsId, nextBarId: nextBarId, rangeMode: 'manual', sizingMode: 'fixed',
                 customBoundaryMin: '01May2026', customBoundaryMax: '09Aug2028', fontFamily: "Tahoma, sans-serif",
                 fontSize: 10, swimlaneHeight: 30, canvasWidth: 806, rowHeight: 50, barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#000000', todayColor: '#b71010', headerColor: '#000000',
                 showVGrid: true, todayLineToggle: 'show', showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: false, showHeaderDay: false
@@ -1037,7 +1133,6 @@
         let rect = container.getBoundingClientRect();
         let mouseX = e.clientX - rect.left;
         
-        // Translate viewport clientX coordinate back into dynamic date strings
         let totalDuration = scaleMaxTime - scaleMinTime;
         let evaluatedTime = scaleMinTime + ((mouseX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
         evaluatedTime = Math.max(scaleMinTime, Math.min(scaleMaxTime, evaluatedTime));
@@ -1062,7 +1157,6 @@
                 showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond"
             });
         } else if (type === 'bar') {
-            // Project a standard 60-day default bounding length from execution coordinates
             let startTime = parseAnyDateToTimestamp(activeContextState.targetDate);
             let endTime = startTime + (60 * 24 * 60 * 60 * 1000);
             let calculatedEndStr = formatDateToDDMMMYYYY(new Date(endTime));
@@ -1345,7 +1439,7 @@
                     <button class="delete-btn" style="padding:2px 6px;" onclick="deleteSwimlane(${laneIdx})">Delete Lane</button>
                 </div>
                 <div class="lane-rows-slots" id="lane-rows-box-${laneIdx}"></div>
-                <button class="inner-action-btn" style="width:100%; padding:6px; background:#ffffff; border-style:dashed; margin-top:8px;" onclick="addNewRowToLane(${laneIdx})">+ Add Row Item to lane</button>
+                <button class="inner-action-btn" style="width:100%; padding:6px; border-style:dashed; margin-top:8px;" onclick="addNewRowToLane(${laneIdx})">+ Add Row Item to lane</button>
             `;
 
             container.appendChild(laneWrapper);
@@ -1364,7 +1458,6 @@
                 let isConflicted = false;
                 if (row.predecessor) {
                     let parentRow = findRowGlobally(parseInt(row.predecessor));
-                    // Cross-row predecessor verification logic mapping validation check
                     if (parentRow && row.bars.length > 0 && parentRow.bars.length > 0) {
                         let currentMinStart = Math.min(...row.bars.map(b => parseAnyDateToTimestamp(b.start)));
                         let parentMaxEnd = Math.max(...parentRow.bars.map(b => parseAnyDateToTimestamp(b.end)));
@@ -1458,14 +1551,24 @@
     function addNewRowToLane(laneIdx) { projectData[laneIdx].rows.push({ id: nextRowId++, label: "New Task Activity Track", predecessor: "", bars: [{ id: nextBarId++, start: "01Mar2026", end: "01Jun2026", progress: 0, bgColor: "", color: "", pattern: "solid" }], milestones: [] }); recordStateChange(); renderInputRows(); updateChart(); }
     function deleteRowFromLane(laneIdx, rowIdx) { projectData[laneIdx].rows.splice(rowIdx, 1); recordStateChange(); renderInputRows(); updateChart(); }
 
-    // ==========================================
+    // =========================================================
     // GRAPHIC VECTOR GENERATION PIPELINE ENGINE (SVG DRAW LOOP)
-    // ==========================================
+    // =========================================================
     function updateChart() {
         const container = document.getElementById('svgContainer');
         if (projectData.length === 0) { container.innerHTML = ''; return; }
 
-        const width = parseInt(document.getElementById('canvasWidth').value) || 580;
+        const sizingMode = document.querySelector('input[name="sizingMode"]:checked')?.value || 'fixed';
+        
+        let width = 806;
+        if (sizingMode === 'ticker-tape') {
+            if (container && container.clientWidth > 100) {
+                width = container.clientWidth;
+            }
+        } else {
+            width = parseInt(document.getElementById('canvasWidth').value) || 806;
+        }
+
         const rowHeight = parseInt(document.getElementById('rowHeight').value) || 95;
         const swimlaneHeight = parseInt(document.getElementById('swimlaneHeight').value) || 30;
         const fontFamily = document.getElementById('fontFamily').value;
@@ -1531,7 +1634,6 @@
 
         let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="font-family:${fontFamily}; background-color:#ffffff; user-select:none;">`;
         
-        // Define Pattern Overlay Vector Architecture Templates
         svg += `<defs>
             <pattern id="pat-crosshatch" width="8" height="8" patternUnits="userSpaceOnUse">
                 <line x1="0" y1="0" x2="8" y2="8" stroke="#ffffff" stroke-width="1.2" opacity="0.45"/>
@@ -1551,9 +1653,10 @@
             </pattern>
         </defs>`;
 
-        if (rangeMode === 'manual') {
-            svg += `<rect x="${scaleMarginLeft}" y="0" width="${chartWidth}" height="${axisLineY}" fill="#f8fafc" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'timeline-pan', null)"/>`;
-        }
+        // Split interactive header background into separate left-boundary and right-boundary scrub zones
+        const halfWidth = chartWidth / 2;
+        svg += `<rect x="${scaleMarginLeft}" y="0" width="${halfWidth}" height="${axisLineY}" fill="#f8fafc" fill-opacity="0.9" style="cursor:w-resize;" onmousedown="initiateDragInteraction(event, 'timeline-resize-start', null)"/>`;
+        svg += `<rect x="${scaleMarginLeft + halfWidth}" y="0" width="${halfWidth}" height="${axisLineY}" fill="#f8fafc" fill-opacity="0.9" style="cursor:e-resize;" onmousedown="initiateDragInteraction(event, 'timeline-resize-end', null)"/>`;
 
         svg += `<line x1="${scaleMarginLeft}" y1="${axisLineY}" x2="${endBoundaryXCoordinate}" y2="${axisLineY}" stroke="${headerColor}" stroke-width="2"/>`;
 
@@ -1641,9 +1744,9 @@
         if (showHeaderDay) {
             for(let i=0; i<timelineDaySteps.length; i++) {
                 let step = timelineDaySteps[i]; let nextStep = timelineDaySteps[i+1];
-                let cx = step.x + (nextStep.x - step.x) / 2;
+                let cx = step.x + ((nextStep ? nextStep.x : endBoundaryXCoordinate) - step.x) / 2;
                 if (showVGrid && step.x >= scaleMarginLeft && step.x <= endBoundaryXCoordinate) {
-                    svg += `<line x1="${step.x}" y1="${axisLineY}" x2="${step.x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2 2"/>`;
+                    svg += `<line x1="${step.x}" y1="${axisLineY}" x2="${step.x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>`;
                 }
                 if (cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) {
                     svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="9" font-weight="bold" fill="${headerColor}" opacity="0.6" text-anchor="middle" style="pointer-events:none;">${step.date.getDate()}</text>`;
@@ -1655,7 +1758,6 @@
         projectData.forEach((lane, laneIdx) => {
             if (lane.rows.length === 0) return;
 
-            // PARENT SWIMLANE ROLLUP COMPUTATION ENGINE
             let rollupMinTime = Infinity;
             let rollupMaxTime = -Infinity;
             lane.rows.forEach(r => {
@@ -1687,12 +1789,10 @@
             lane.rows.forEach((item, rowIdx) => {
                 let y = currentDrawY;
                 
-                // Interaction Hotspot Track: Intercept Right Click Actions cleanly inside the Canvas bounds
                 svg += `<rect x="10" y="${y}" width="${width - 20}" height="${rowHeight}" fill="transparent" style="cursor:context-menu;" oncontextmenu="handleWorkspaceRowContextMenu(event, ${item.id})"/>`;
                 svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1" style="pointer-events:none;"/>`;
                 svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(${laneIdx}, ${rowIdx})">${item.label}</text>`;
                 
-                // Draw Multi Bars Track Layout Logic Engine
                 item.bars.forEach((bar) => {
                     let sObj = new Date(parseAnyDateToTimestamp(bar.start)); 
                     let eObj = new Date(parseAnyDateToTimestamp(bar.end));
@@ -1707,19 +1807,15 @@
                             let activeBarColor = bar.color || barColor;
                             let activePattern = bar.pattern || 'solid';
 
-                            // Base Unfilled Bounding Background
                             svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${activeBarBgColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
                             
-                            // Filled Progress Core Tracks
                             let filledWidth = Math.max(xStart, Math.min(xEnd, getX(new Date(sObj.getTime() + ((bar.progress || 0)/100) * (eObj.getTime() - sObj.getTime()))))) - xStart;
                             if (filledWidth > 0) svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${activeBarColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
 
-                            // Dynamic SVG Mask Architecture Pattern Injections
                             if (activePattern !== 'solid') {
                                 svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="url(#pat-${activePattern})" style="pointer-events:none;"/>`;
                             }
 
-                            // Interactive Bounds Resizing Drag Vectors Hooks
                             svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:w-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-start', ${item.id}, ${bar.id})"/>`;
                             if (visibleBarWidth > 12) svg += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id}, ${bar.id})" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
                             svg += `<rect x="${xEnd - 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:e-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-end', ${item.id}, ${bar.id})"/>`;
@@ -1727,7 +1823,6 @@
                     }
                 });
 
-                // Milestone Geometric Shape Mapping Layout Logic Engine
                 let validMilestones = item.milestones.filter(m => !isNaN(parseAnyDateToTimestamp(m.date)));
                 validMilestones.sort((a, b) => parseAnyDateToTimestamp(a.date) - parseAnyDateToTimestamp(b.date));
                 let trackPlacedTextFootprints = [];
@@ -1739,7 +1834,6 @@
 
                     let msYCenterLocked = y + (rowHeight / 2); let msSize = 5;
                     
-                    // Evaluate positions relative to the overall track center baseline bounds
                     let textAnchorStyle = "start"; let textXPositionCoordinate = msX + msSize + 4; let defaultTextYBaseline = msYCenterLocked + 3;
                     let finalComputedTextX = textXPositionCoordinate; let finalComputedTextY = defaultTextYBaseline;
 
@@ -1766,7 +1860,6 @@
                         finalComputedTextY = defaultTextYBaseline + (targetedCascadeStaggerOffsetLevel * 12);
                     }
 
-                    // Geometry Selection Processor
                     let activeMsColor = ms.color || msColor;
                     let activeSymbol = ms.symbol || 'diamond';
                     let msCommonAttr = `fill="${activeMsColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})"`;
