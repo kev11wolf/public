@@ -640,7 +640,7 @@
             const stepDelta = (deltaX / scaleChartWidth) * origDuration;
             let newMin = activeDragState.origMinTime + stepDelta;
             
-            if (newMin < activeDragState.origMaxTime - 86400000) { // Keep at least 1 day distance
+            if (newMin < activeDragState.origMaxTime - 86400000) { 
                 manualBoundaryMin = formatDateToDDMMMYYYY(new Date(newMin));
                 syncBoundaryFields();
                 needsUpdate = true;
@@ -651,7 +651,7 @@
             const stepDelta = (deltaX / scaleChartWidth) * origDuration;
             let newMax = activeDragState.origMaxTime + stepDelta;
             
-            if (newMax > activeDragState.origMinTime + 86400000) { // Keep at least 1 day distance
+            if (newMax > activeDragState.origMinTime + 86400000) { 
                 manualBoundaryMax = formatDateToDDMMMYYYY(new Date(newMax));
                 syncBoundaryFields();
                 needsUpdate = true;
@@ -1770,7 +1770,8 @@
             });
 
             let laneBgColor = lane.color || "#f8fafc";
-            svg += `<rect x="10" y="${currentDrawY}" width="${width - 20}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
+            // Updated: Stretch the swimlane fill background perfectly to the right end of the date header
+            svg += `<rect x="10" y="${currentDrawY}" width="${endBoundaryXCoordinate - 10}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
             svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central" style="cursor:pointer;" ondblclick="editLaneLabelDirectly(${laneIdx})">${lane.title}</text>`;
             
             if (lane.showSummary !== false && rollupMinTime !== Infinity && rollupMaxTime !== -Infinity && rollupMaxTime >= rollupMinTime) {
@@ -1789,7 +1790,8 @@
             lane.rows.forEach((item, rowIdx) => {
                 let y = currentDrawY;
                 
-                svg += `<rect x="10" y="${y}" width="${width - 20}" height="${rowHeight}" fill="transparent" style="cursor:context-menu;" oncontextmenu="handleWorkspaceRowContextMenu(event, ${item.id})"/>`;
+                // Updated: Align invisible context track to the right boundary edge as well
+                svg += `<rect x="10" y="${y}" width="${endBoundaryXCoordinate - 10}" height="${rowHeight}" fill="transparent" style="cursor:context-menu;" oncontextmenu="handleWorkspaceRowContextMenu(event, ${item.id})"/>`;
                 svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1" style="pointer-events:none;"/>`;
                 svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(${laneIdx}, ${rowIdx})">${item.label}</text>`;
                 
