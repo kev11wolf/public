@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Enterprise Presentation Gantt Workspace Suite</title>
+    <style>
+        :root {
+            --bg-main: #f1f5f9;
+            --bg-panel: #ffffff;
+            --border-color: #e2e8f0;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning-bg: #fff7ed;
+            --warning-border: #f97316;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: var(--bg-main); color: var(--text-dark); height: 100vh; overflow: hidden;}
+        .app-wrapper { display: flex; height: 100vh; width: 100vw; }
+        
+        /* Sidebar Configuration Deck (750px Wide) */
+        .sidebar { 
+            flex: 0 0 750px; 
+            background: var(--bg-panel); 
+            border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        .sidebar-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: #f8fafc; display: flex; justify-content: space-between; align-items: center;}
+        .sidebar-header h1 { margin: 0; font-size: 18px; color: #1e3a8a; }
+        
+        /* History Controls */
+        .action-bar { display: flex; gap: 8px; }
+        .utility-btn { background: #ffffff; border: 1px solid #cbd5e1; padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: var(--text-dark); display: flex; align-items: center; gap: 4px;}
+        .utility-btn:hover:not(:disabled) { background: #f8fafc; border-color: #94a3b8; }
+        .utility-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .sidebar-content { padding: 20px; overflow-y: auto; flex-grow: 1; padding-bottom: 100px;}
+        
+        h3 { margin: 15px 0 8px 0; color: #1e40af; border-bottom: 1px solid var(--border-color); padding-bottom: 3px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .control-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
+        .control-item { display: flex; flex-direction: column; font-size: 11px; font-weight: 600; color: #4a5568; }
+        .control-item label { margin-bottom: 3px; }
+        
+        input[type="text"], select, input[type="number"] { padding: 7px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; width: 100%; box-sizing: border-box; }
+        input[type="color"] { border: none; width: 100%; height: 34px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
+        
+        /* Timeline Data Cards & Drag and Drop Styling */
+        .row-card { background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); position: relative; transition: transform 0.15s ease, background 0.15s ease; }
+        .row-card.dragover-active { border-top: 3px solid var(--primary); background: #f0f6ff; }
+        .row-card.conflict-warning { border-color: var(--danger); background-color: var(--warning-bg); }
+        .row-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;}
+        .row-card-title { font-size: 12px; font-weight: bold; color: #475569; display: flex; align-items: center; }
+        .conflict-badge { background: var(--danger); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 8px; }
+        
+        .row-drag-handle { cursor: grab; font-size: 16px; margin-right: 8px; color: var(--text-muted); user-select: none; }
+        .row-drag-handle:active { cursor: grabbing; }
+
+        .delete-btn { background: none; border: 1px solid #fca5a5; color: var(--danger); padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; }
+        .horizontal-input-row { display: grid; grid-template-columns: 1.8fr 1.4fr 1.4fr 0.7fr 1.2fr; gap: 10px; align-items: flex-end; }
+        
+        /* Custom Textless Calendar Icon Configuration Wrapper */
+        .date-input-wrapper { display: flex; gap: 6px; align-items: center; width: 100%; }
+        .date-display-badge { font-size: 12px; font-weight: 700; background: #f1f5f9; padding: 7px 4px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%; box-sizing: border-box; display: inline-block; text-align: center; color: #334155; }
+        
+        .native-date-picker { 
+            position: relative;
+            width: 34px; 
+            height: 32px; 
+            padding: 0; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            flex-shrink: 0; 
+            background: #ffffff;
+            overflow: hidden;
+            display: inline-block;
+            box-sizing: border-box;
+        }
+        .native-date-picker::-webkit-datetime-edit,
+        .native-date-picker::-webkit-inner-spin-button,
+        .native-date-picker::-webkit-clear-button {
+            display: none !important;
+            -webkit-appearance: none;
+        }
+        .native-date-picker::-webkit-calendar-picker-indicator {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            cursor: pointer;
+            opacity: 1;
+            display: block;
+        }
+
+        /* Dynamic Milestones Form Blocks */
+        .milestones-section { margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
+        .milestones-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+        .milestone-input-row { display: grid; grid-template-columns: 2fr 1.7fr 1fr auto; gap: 8px; align-items: center; }
+        .ms-checkbox-wrap { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer;}
+        .ms-checkbox-wrap input { width: 14px; height: 14px; cursor: pointer; margin: 0; }
+        
+        .inner-action-btn { background: #f1f5f9; color: var(--primary); border: 1px solid #cbd5e1; padding: 5px 10px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .mini-delete-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; font-weight: bold; }
+        .add-row-btn { background: #f1f5f9; color: var(--primary); border: 1px dashed #cbd5e1; padding: 12px; width: 100%; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        .archive-tools { background: #f0fdf4; border: 1px dashed #bbf7d0; padding: 12px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;}
+
+        /* ==============================
+           RIGHT PANEL: LIVE WORKSPACE
+           ============================== */
+        .main-preview { flex: 1; padding: 25px; display: flex; flex-direction: column; overflow-y: auto; }
+        .sticky-chart-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;}
+        .canvas-holder { background: #ffffff; padding: 0px; border-radius: 4px; width: 100%; display: flex; justify-content: center; overflow-x: auto; margin-bottom: 15px; position: relative;}
+        
+        .export-button-group { display: flex; gap: 10px; width: 100%; }
+        .download-btn { flex: 1; color: white; border: none; padding: 12px 24px; font-size: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+        
+        /* Bottom Controls Subgrid Panel Area */
+        .bottom-config-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; margin-top: 20px; }
+        .bottom-card { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .radio-group { display: flex; gap: 10px; margin-top: 5px; background: #ffffff; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>Gantt Presentation Suite</h1>
+            <div class="action-bar">
+                <button class="utility-btn" id="undoBtn" onclick="executeUndoAction()" title="Undo Step (Ctrl+Z)">↶ Undo</button>
+                <button class="utility-btn" id="redoBtn" onclick="executeRedoAction()" title="Redo Step (Ctrl+Y)">↷ Redo</button>
+                <button class="reset-btn" onclick="clearAllStoredData()">Reset</button>
+            </div>
+        </div>
+        
+        <div class="sidebar-content">
+            <div class="archive-tools">
+                <div style="font-size: 12px; font-weight: 700; color: #166534;">File Backup & Excel Layout Matrix Controls</div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px;">
+                    <button class="inner-action-btn" style="background:#ffffff; border-color:#cbd5e1;" onclick="exportConfigurationArchive()">↓ Save Workspace (.json)</button>
+                    <button class="inner-action-btn" style="background:#ffffff; border-color:#cbd5e1;" onclick="document.getElementById('archiveFileInput').click()">↑ Load Workspace</button>
+                    <button class="inner-action-btn" style="background:#ffffff; color:#166534; border-color:#bbf7d0;" onclick="exportExcelCSV()">↓ Export Excel CSV</button>
+                    <button class="inner-action-btn" style="background:#ffffff; color:#166534; border-color:#bbf7d0;" onclick="document.getElementById('csvFileInput').click()">↑ Import Excel CSV</button>
+                    
+                    <input type="file" id="archiveFileInput" accept=".json" style="display:none;" onchange="importConfigurationArchive(event)">
+                    <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSVFile(event)">
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="margin:0; border:none; padding:0;">Project Workstream Swimlanes</h3>
+                <button class="inner-action-btn" onclick="addNewSwimlane()">+ Add New Swimlane Block</button>
+            </div>
+            <div class="data-rows-container" id="dataRowsContainer"></div>
+        </div>
+    </div>
+
+    <div class="main-preview">
+        <div class="sticky-chart-container">
+            <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Double-click labels inside canvas to rename)</span></h2>
+            
+            <div class="canvas-holder" id="svgContainer" 
+                 onmousemove="handleGlobalDragMove(event)" 
+                 onmouseup="stopGlobalDragAction(event)" 
+                 onmouseleave="stopGlobalDragAction(event)">
+            </div>
+            
+            <div class="export-button-group">
+                <button class="download-btn" style="background: var(--primary);" onclick="downloadSVG()">Download Smart SVG Vector Layout</button>
+                <button class="download-btn" style="background: var(--success);" onclick="downloadPNG()">Download High-Res Presentation PNG (2x)</button>
+            </div>
+        </div>
+
+        <div class="bottom-config-panel">
+            
+            <div class="bottom-card">
+                <h3>1. Timeline Bounds Scaling</h3>
+                <div class="control-grid" style="grid-template-columns: 1fr;">
+                    <div class="control-item">
+                        <label>Date Boundary Scope Engine</label>
+                        <div class="radio-group">
+                            <label class="radio-option"><input type="radio" name="rangeMode" value="auto" onchange="handleRangeModeChange(this.value)"> Automatic</label>
+                            <label class="radio-option"><input type="radio" name="rangeMode" value="manual" checked onchange="handleRangeModeChange(this.value)"> Manual Custom</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-grid" id="manualDateFieldsRow" style="grid-template-columns: 1fr 1fr; margin-top:10px;">
+                    <div class="control-item">
+                        <label>Start Boundary (DDMMMYYYY)</label>
+                        <div class="date-input-wrapper">
+                            <span id="customBoundaryMinDisplay" class="date-display-badge">01May2026</span>
+                            <input type="date" id="customBoundaryMinPicker" class="native-date-picker" onchange="handleManualBoundaryChangeDirect('min', this.value)">
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label>End Boundary (DDMMMYYYY)</label>
+                        <div class="date-input-wrapper">
+                            <span id="customBoundaryMaxDisplay" class="date-display-badge">09Aug2028</span>
+                            <input type="date" id="customBoundaryMaxPicker" class="native-date-picker" onchange="handleManualBoundaryChangeDirect('max', this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-card">
+                <h3>2. Multi-Tier Timescale Header Customizer</h3>
+                <div class="control-item">
+                    <label>Active Stacking Timescale Headers (Top to Bottom Hierarchy)</label>
+                    <div class="radio-group">
+                        <label class="radio-option"><input type="checkbox" id="showHeaderYear" checked onchange="recordStateChange(); updateChart();"> Years</label>
+                        <label class="radio-option"><input type="checkbox" id="showHeaderQuarter" checked onchange="recordStateChange(); updateChart();"> Quarters</label>
+                        <label class="radio-option"><input type="checkbox" id="showHeaderMonth" onchange="recordStateChange(); updateChart();"> Months</label>
+                        <label class="radio-option"><input type="checkbox" id="showHeaderDay" onchange="recordStateChange(); updateChart();"> Days</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-card" style="grid-column: span 2;">
+                <h3>3. Formatting, Metrics, & Element Colors</h3>
+                <div class="control-grid" style="grid-template-columns: repeat(5, 1fr);">
+                    <div class="control-item">
+                        <label>Font Typography</label>
+                        <select id="fontFamily" onchange="recordStateChange(); updateChart();">
+                            <option value="Tahoma, sans-serif">Tahoma</option>
+                            <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                            <option value="Arial, sans-serif">Arial</option>
+                            <option value="Calibri, sans-serif">Calibri</option>
+                        </select>
+                    </div>
+                    <div class="control-item">
+                        <label>Font Size (px)</label>
+                        <input type="number" id="fontSize" value="10" min="8" max="20" onchange="recordStateChange(); updateChart();">
+                    </div>
+                    <div class="control-item">
+                        <label>Swimlane Height (px)</label>
+                        <input type="number" id="swimlaneHeight" value="30" min="20" max="100" onchange="recordStateChange(); updateChart();">
+                    </div>
+                    <div class="control-item">
+                        <label>Row Height (px)</label>
+                        <input type="number" id="rowHeight" value="50" min="40" max="155" onchange="recordStateChange(); updateChart();">
+                    </div>
+                    <div class="control-item">
+                        <label>Canvas Width</label>
+                        <div style="display:flex; gap:4px;">
+                            <button type="button" class="inner-action-btn" style="flex:1; padding:6px;" onclick="adjustCanvasZoomMultiplier(0.85)">🔍 -</button>
+                            <button type="button" class="inner-action-btn" style="flex:1; padding:6px;" onclick="adjustCanvasZoomMultiplier(1.15)">🔍 +</button>
+                        </div>
+                        <input type="hidden" id="canvasWidth" value="806">
+                    </div>
+                </div>
+                <div class="control-grid" style="grid-template-columns: repeat(6, 1fr); margin-top: 10px;">
+                    <div class="control-item">
+                        <label>Unfilled Bar</label>
+                        <input type="color" id="barBgColor" value="#5c95be" onchange="recordStateChange(); updateChart();">
+                    </div>
+                    <div class="control-item">
+                        <label>Progress Fill</label>
+                        <input type="color" id="barColor" value="#2563eb" onchange="recordStateChange(); updateChart();">
+                    </div>
+                    <div class="control-item">
+                        <label>Milestone</label>
+                        <input type="color" id="msColor" value="#000000" onchange="recordStateChange(); updateChart();">
+                    </div>
+                    <div class="control-item">
+                        <label>Today Line</label>
+                        <input type="color" id="todayColor" value="#b71010" onchange="recordStateChange(); updateChart();">
+                    </div>
+                    <div class="control-item">
+                        <label>Date Headers</label>
+                        <input type="color" id="headerColor" value="#000000" onchange="recordStateChange(); updateChart();">
+                    </div>
+                    <div class="control-item" style="justify-content: center; align-items: center;">
+                        <label>Gridlines</label>
+                        <input type="checkbox" id="showVGrid" checked style="width:18px; height:18px; margin-top:4px;" onchange="recordStateChange(); updateChart();">
+                    </div>
+                </div>
+                <div class="control-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 5px;">
+                    <div class="control-item">
+                        <label>Vertical Today Tracker Line</label>
+                        <div class="radio-group">
+                            <label class="radio-option"><input type="radio" name="todayLineToggle" value="show" checked onchange="recordStateChange(); updateChart();"> Visible</label>
+                            <label class="radio-option"><input type="radio" name="todayLineToggle" value="hide" onchange="recordStateChange(); updateChart();"> Hidden</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    let projectData = [];
+    let nextRowId = 4;
+    let nextMsId = 1008;
+
+    let actionUndoStack = [];
+    let actionRedoStack = [];
+
+    let activeDragState = null;
+    let scaleMinTime = null;
+    let scaleMaxTime = null;
+    let scaleChartWidth = null;
+    let scaleMarginLeft = 240; 
+    let draggedRowIndex = null; 
+
+    let manualBoundaryMin = "01May2026";
+    let manualBoundaryMax = "09Aug2028";
+
+    // =========================================================
+    // PARSING VECTOR ENGINE: DDMMMYYYY INTELLIGENT NORMALIZER
+    // =========================================================
+    function parseAnyDateToTimestamp(str) {
+        if(!str || typeof str !== 'string') return NaN;
+        let cleaned = str.trim();
+        let timestamp = Date.parse(cleaned);
+        
+        if (isNaN(timestamp)) {
+            let match = cleaned.match(/^(\d{1,2})\s*([A-Za-z]{3})\s*(\d{4})$/);
+            if (match) {
+                let day = parseInt(match[1], 10);
+                let monthStr = match[2].toLowerCase();
+                let year = parseInt(match[3], 10);
+                let months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
+                let idx = months.indexOf(monthStr);
+                if (idx !== -1) {
+                    timestamp = new Date(year, idx, day).getTime();
+                }
+            }
+        }
+        return timestamp;
+    }
+
+    function convertDDMMMYYYYToYYYYMMDD(str) {
+        if(!str) return "";
+        let match = str.trim().match(/^(\d{1,2})\s*([A-Za-z]{3})\s*(\d{4})$/);
+        if (!match) return "";
+        let day = match[1].padStart(2, '0');
+        let monthStr = match[2].toLowerCase();
+        let year = match[3];
+        let months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
+        let idx = months.indexOf(monthStr);
+        if (idx === -1) return "";
+        let month = String(idx + 1).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatDateToDDMMMYYYY(d) {
+        if (isNaN(d.getTime())) return "";
+        let day = String(d.getDate()).padStart(2, '0');
+        let monthsShortMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return `${day}${monthsShortMap[d.getMonth()]}${d.getFullYear()}`;
+    }
+
+    function findRowGlobally(rowId) {
+        for (let l = 0; l < projectData.length; l++) {
+            let r = projectData[l].rows.find(row => row.id === rowId);
+            if (r) return r;
+        }
+        return null;
+    }
+
+    // =========================================================
+    // CALENDAR SELECTION SYNC INTERCEPTOR CHANNELS
+    // =========================================================
+    function handleNativeDatePickerDirectNew(picker, laneIdx, rowIdx, key, msIdx = null) {
+        if (!picker.value) return;
+        let parts = picker.value.split('-'); 
+        let d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        let formatted = formatDateToDDMMMYYYY(d);
+        
+        if (msIdx !== null) {
+            projectData[laneIdx].rows[rowIdx].milestones[msIdx][key] = formatted;
+        } else {
+            projectData[laneIdx].rows[rowIdx][key] = formatted;
+        }
+        
+        recordStateChange();
+        renderInputRows();
+        updateChart();
+    }
+
+    function handleManualBoundaryChangeDirect(boundType, value) {
+        if (!value) return;
+        let parts = value.split('-');
+        let d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        let formatted = formatDateToDDMMMYYYY(d);
+        
+        if (boundType === 'min') manualBoundaryMin = formatted;
+        else manualBoundaryMax = formatted;
+        
+        document.getElementById(`customBoundary${boundType === 'min' ? 'Min' : 'Max'}Display`).innerText = formatted;
+        
+        recordStateChange();
+        updateChart();
+    }
+
+    // =========================================================
+    // SIDEBAR CARD LANE DRAG AND DROP HANDLERS
+    // =========================================================
+    function handleRowDragStart(e, laneIdx, rowIdx) {
+        draggedRowIndex = { laneIdx, rowIdx };
+        e.dataTransfer.effectAllowed = 'move';
+        e.target.style.opacity = "0.5";
+    }
+
+    function handleRowDragOver(e, cardEl) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        cardEl.classList.add('dragover-active');
+    }
+
+    // Dynamic Swimlane drag handling methods
+    function handleRowDragLeave(cardEl) {
+        cardEl.classList.remove('dragover-active');
+    }
+
+    function handleRowDropOnCard(e, targetLaneIdx, targetRowIdx, cardEl) {
+        e.preventDefault();
+        cardEl.classList.remove('dragover-active');
+        if (!draggedRowIndex) return;
+        
+        const sourceLane = projectData[draggedRowIndex.laneIdx];
+        const targetLane = projectData[targetLaneIdx];
+        
+        const rowToMove = sourceLane.rows.splice(draggedRowIndex.rowIdx, 1)[0];
+        targetLane.rows.splice(targetRowIdx, 0, rowToMove);
+        
+        draggedRowIndex = null;
+        recordStateChange();
+        renderInputRows();
+        updateChart();
+    }
+
+    function handleRowDropOnLane(e, targetLaneIdx) {
+        e.preventDefault();
+        if (!draggedRowIndex) return;
+        if (draggedRowIndex.laneIdx === targetLaneIdx) return; 
+        
+        const sourceLane = projectData[draggedRowIndex.laneIdx];
+        const targetLane = projectData[targetLaneIdx];
+        
+        const rowToMove = sourceLane.rows.splice(draggedRowIndex.rowIdx, 1)[0];
+        targetLane.rows.push(rowToMove);
+        
+        draggedRowIndex = null;
+        recordStateChange();
+        renderInputRows();
+        updateChart();
+    }
+
+    // ==========================================
+    // TRANSACTIONS CONTROL HISTORY (UNDO / REDO)
+    // ==========================================
+    function recordStateChange() {
+        const stateSnapshot = {
+            data: JSON.parse(JSON.stringify(projectData)),
+            nextRowId: nextRowId,
+            nextMsId: nextMsId,
+            rangeMode: document.querySelector('input[name="rangeMode"]:checked').value,
+            customBoundaryMin: manualBoundaryMin,
+            customBoundaryMax: manualBoundaryMax,
+            fontFamily: document.getElementById('fontFamily').value,
+            fontSize: document.getElementById('fontSize').value,
+            swimlaneHeight: document.getElementById('swimlaneHeight').value,
+            canvasWidth: document.getElementById('canvasWidth').value,
+            rowHeight: document.getElementById('rowHeight').value,
+            barBgColor: document.getElementById('barBgColor').value,
+            barColor: document.getElementById('barColor').value,
+            msColor: document.getElementById('msColor').value,
+            todayColor: document.getElementById('todayColor').value,
+            headerColor: document.getElementById('headerColor').value,
+            showVGrid: document.getElementById('showVGrid').checked,
+            todayLineToggle: document.querySelector('input[name="todayLineToggle"]:checked').value,
+            showHeaderYear: document.getElementById('showHeaderYear').checked,
+            showHeaderQuarter: document.getElementById('showHeaderQuarter').checked,
+            showHeaderMonth: document.getElementById('showHeaderMonth').checked,
+            showHeaderDay: document.getElementById('showHeaderDay').checked
+        };
+        actionUndoStack.push(JSON.stringify(stateSnapshot));
+        actionRedoStack = []; 
+        syncUndoRedoButtonsState();
+        saveApplicationState();
+    }
+
+    function executeUndoAction() {
+        if (actionUndoStack.length <= 1) return;
+        const current = actionUndoStack.pop();
+        actionRedoStack.push(current);
+        restoreStateFromSnapshot(JSON.parse(actionUndoStack[actionUndoStack.length - 1]));
+    }
+
+    function executeRedoAction() {
+        if (actionRedoStack.length === 0) return;
+        const target = actionRedoStack.pop();
+        actionUndoStack.push(target);
+        restoreStateFromSnapshot(JSON.parse(target));
+    }
+
+    function restoreStateFromSnapshot(state) {
+        if (Array.isArray(state.data) && state.data.length > 0 && !state.data[0].hasOwnProperty('rows')) {
+            let convertedData = [];
+            state.data.forEach(row => {
+                let title = "General Phase Workstream";
+                if (row.label.includes("Bldg 11")) title = "Building 11 Swimlane";
+                else if (row.label.includes("Bldg 21")) title = "Building 21 Swimlane";
+                else if (row.label.includes("Bldg 31")) title = "Building 31 Swimlane";
+                else if (row.label.includes("Bldg 41")) title = "Building 41 Swimlane";
+                
+                let lane = convertedData.find(l => l.title === title);
+                if (!lane) {
+                    lane = { id: convertedData.length, title: title, color: "#f8fafc", rows: [] };
+                    convertedData.push(lane);
+                }
+                lane.rows.push(row);
+            });
+            projectData = convertedData;
+        } else {
+            projectData = state.data || [];
+        }
+
+        nextRowId = state.nextRowId; nextMsId = state.nextMsId;
+        document.querySelector(`input[name="rangeMode"][value="${state.rangeMode}"]`).checked = true;
+        
+        manualBoundaryMin = state.customBoundaryMin || "01May2026";
+        manualBoundaryMax = state.customBoundaryMax || "09Aug2028";
+        
+        if(document.getElementById('customBoundaryMinDisplay')) document.getElementById('customBoundaryMinDisplay').innerText = manualBoundaryMin;
+        if(document.getElementById('customBoundaryMaxDisplay')) document.getElementById('customBoundaryMaxDisplay').innerText = manualBoundaryMax;
+        if(document.getElementById('customBoundaryMinPicker')) document.getElementById('customBoundaryMinPicker').value = convertDDMMMYYYYToYYYYMMDD(manualBoundaryMin);
+        if(document.getElementById('customBoundaryMaxPicker')) document.getElementById('customBoundaryMaxPicker').value = convertDDMMMYYYYToYYYYMMDD(manualBoundaryMax);
+
+        document.getElementById('fontFamily').value = state.fontFamily;
+        document.getElementById('fontSize').value = state.fontSize;
+        document.getElementById('swimlaneHeight').value = state.swimlaneHeight || 30;
+        document.getElementById('canvasWidth').value = state.canvasWidth;
+        document.getElementById('rowHeight').value = state.rowHeight;
+        document.getElementById('barBgColor').value = state.barBgColor;
+        document.getElementById('barColor').value = state.barColor;
+        document.getElementById('msColor').value = state.msColor;
+        document.getElementById('todayColor').value = state.todayColor || '#b71010';
+        document.getElementById('headerColor').value = state.headerColor || '#000000';
+        document.getElementById('showVGrid').checked = state.showVGrid;
+        document.querySelector(`input[name="todayLineToggle"][value="${state.todayLineToggle}"]`).checked = true;
+        
+        document.getElementById('showHeaderYear').checked = (state.showHeaderYear !== undefined) ? state.showHeaderYear : true;
+        document.getElementById('showHeaderQuarter').checked = (state.showHeaderQuarter !== undefined) ? state.showHeaderQuarter : true;
+        document.getElementById('showHeaderMonth').checked = (state.showHeaderMonth !== undefined) ? state.showHeaderMonth : false;
+        document.getElementById('showHeaderDay').checked = (state.showHeaderDay !== undefined) ? state.showHeaderDay : false;
+
+        toggleRangeScopeFieldsVisibility(state.rangeMode);
+        syncUndoRedoButtonsState();
+        renderInputRows();
+        updateChart();
+    }
+
+    function syncUndoRedoButtonsState() {
+        document.getElementById('undoBtn').disabled = (actionUndoStack.length <= 1);
+        document.getElementById('redoBtn').disabled = (actionRedoStack.length === 0);
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); executeUndoAction(); }
+        if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); executeRedoAction(); }
+    });
+
+    function adjustCanvasZoomMultiplier(factor) {
+        const widthInput = document.getElementById('canvasWidth');
+        let currentWidth = parseInt(widthInput.value) || 580;
+        widthInput.value = Math.max(400, Math.min(2500, Math.round(currentWidth * factor)));
+        recordStateChange(); updateChart();
+    }
+
+    function handleRangeModeChange(value) { toggleRangeScopeFieldsVisibility(value); recordStateChange(); updateChart(); }
+    function toggleRangeScopeFieldsVisibility(mode) { document.getElementById('manualDateFieldsRow').style.display = (mode === 'manual') ? 'grid' : 'none'; }
+
+    // ==========================================
+    // BACKUP IMPORT / EXPORT SYSTEMS
+    // ==========================================
+    function exportConfigurationArchive() {
+        const archivePayload = { version: "2026.FullPresentationState", workspace: JSON.parse(actionUndoStack[actionUndoStack.length - 1]) };
+        const blob = new Blob([JSON.stringify(archivePayload, null, 2)], {type: 'application/json'});
+        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_workspace_archive.json`; link.click();
+    }
+
+    function importConfigurationArchive(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsedArchive = JSON.parse(e.target.result);
+                if (parsedArchive.workspace) {
+                    actionUndoStack = []; actionRedoStack = [];
+                    actionUndoStack.push(JSON.stringify(parsedArchive.workspace));
+                    restoreStateFromSnapshot(parsedArchive.workspace);
+                }
+            } catch (err) { alert("Corrupted backup snapshot file validation state wrapper."); }
+        };
+        reader.readAsText(file);
+    }
+
+    function exportExcelCSV() {
+        let csvContent = `#fontFamily,${document.getElementById('fontFamily').value}\n`;
+        csvContent += `#fontSize,${document.getElementById('fontSize').value}\n`;
+        csvContent += `#canvasWidth,${document.getElementById('canvasWidth').value}\n`;
+        csvContent += `#swimlaneHeight,${document.getElementById('swimlaneHeight').value}\n`;
+        csvContent += `#rowHeight,${document.getElementById('rowHeight').value}\n`;
+        csvContent += `#barBgColor,${document.getElementById('barBgColor').value}\n`;
+        csvContent += `#barColor,${document.getElementById('barColor').value}\n`;
+        csvContent += `#msColor,${document.getElementById('msColor').value}\n`;
+        csvContent += `#todayColor,${document.getElementById('todayColor').value}\n`;
+        csvContent += `#headerColor,${document.getElementById('headerColor').value}\n`;
+        csvContent += `#showVGrid,${document.getElementById('showVGrid').checked ? "TRUE" : "FALSE"}\n`;
+        csvContent += `#todayLineToggle,${document.querySelector('input[name="todayLineToggle"]:checked').value}\n`;
+        csvContent += `#showHeaderYear,${document.getElementById('showHeaderYear').checked ? "TRUE" : "FALSE"}\n`;
+        csvContent += `#showHeaderQuarter,${document.getElementById('showHeaderQuarter').checked ? "TRUE" : "FALSE"}\n`;
+        csvContent += `#showHeaderMonth,${document.getElementById('showHeaderMonth').checked ? "TRUE" : "FALSE"}\n`;
+        csvContent += `#showHeaderDay,${document.getElementById('showHeaderDay').checked ? "TRUE" : "FALSE"}\n`;
+        csvContent += `#rangeMode,${document.querySelector('input[name="rangeMode"]:checked').value}\n`;
+        csvContent += `#customBoundaryMin,${manualBoundaryMin}\n`;
+        csvContent += `#customBoundaryMax,${manualBoundaryMax}\n`;
+        csvContent += "Swimlane Title,Row Title,Bar Start,Bar End,Milestone 1 Title,Milestone 1 Date,Milestone 1 ShowDate\n";
+        
+        projectData.forEach(lane => {
+            lane.rows.forEach(row => {
+                let lineElements = [ `"${lane.title.replace(/"/g, '""')}"`, `"${row.label.replace(/"/g, '""')}"`, row.start, row.end ];
+                row.milestones.forEach(ms => {
+                    lineElements.push(`"${ms.label.replace(/"/g, '""')}"`);
+                    lineElements.push(ms.date);
+                    lineElements.push(ms.showDate ? "TRUE" : "FALSE");
+                });
+                csvContent += lineElements.join(",") + "\n";
+            });
+        });
+        const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_excel_backup_matrix.csv`; link.click();
+    }
+
+    function importCSVFile(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const lines = e.target.result.split(/\r?\n/); if(lines.length <= 1) return;
+            let newImportData = []; let rIdCounter = 0; let mIdCounter = 1000;
+
+            for(let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim(); if(line === "") continue;
+                if (line.startsWith('#')) {
+                    let configToken = line.substring(1).split(',');
+                    if (configToken.length === 2) {
+                        let k = configToken[0].trim(); let v = configToken[1].trim();
+                        if (k === 'customBoundaryMin') manualBoundaryMin = v;
+                        else if (k === 'customBoundaryMax') manualBoundaryMax = v;
+                        else {
+                            let element = document.getElementById(k);
+                            if (element) {
+                                if (element.type === 'checkbox') element.checked = (v === "TRUE");
+                                else element.value = v;
+                            } else {
+                                let radio = document.querySelector(`input[name="${k}"][value="${v}"]`);
+                                if (radio) radio.checked = true;
+                            }
+                        }
+                    }
+                    continue; 
+                }
+                if (line.toLowerCase().startsWith("swimlane title") || line.toLowerCase().startsWith("row title")) continue;
+
+                let columns = line.split(','); if(columns.length < 4) continue;
+                let laneTitle = columns[0].replace(/^"|"$/g, '').trim();
+                let rowLabel = columns[1].replace(/^"|"$/g, '').trim();
+                
+                let lane = newImportData.find(l => l.title === laneTitle);
+                if(!lane) {
+                    lane = { id: newImportData.length, title: laneTitle, color: "#f8fafc", rows: [] };
+                    newImportData.push(lane);
+                }
+
+                let rowObject = { id: rIdCounter++, label: rowLabel, start: columns[2].trim(), end: columns[3].trim(), progress: 0, predecessor: "", milestones: [] };
+
+                for(let j = 4; j < columns.length; j += 3) {
+                    if(!columns[j]) continue;
+                    let msLabel = columns[j].replace(/^"|"$/g, '').trim();
+                    let sDateToggle = columns[j+2] ? (columns[j+2].toUpperCase().trim() === "TRUE") : false;
+                    if(msLabel !== "") {
+                        rowObject.milestones.push({ 
+                            id: mIdCounter++, label: msLabel, date: columns[j+1] ? columns[j+1].trim() : columns[3].trim(), 
+                            showDate: sDateToggle, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0,
+                            manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0
+                        });
+                    }
+                }
+                lane.rows.push(rowObject);
+            }
+            if(newImportData.length > 0) {
+                projectData = newImportData; nextRowId = rIdCounter; nextMsId = mIdCounter;
+                toggleRangeScopeFieldsVisibility(document.querySelector('input[name="rangeMode"]:checked').value);
+                recordStateChange(); renderInputRows(); updateChart();
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function saveApplicationState() { if(actionUndoStack.length > 0) localStorage.setItem('gantt_v8_master_snapshot', actionUndoStack[actionUndoStack.length - 1]); }
+    
+    function loadApplicationState() {
+        const structuralBackupCache = localStorage.getItem('gantt_v8_master_snapshot');
+        if (structuralBackupCache) {
+            actionUndoStack.push(structuralBackupCache);
+            restoreStateFromSnapshot(JSON.parse(structuralBackupCache));
+        } else {
+            projectData = [
+                { id: 0, title: "Building 11 Swimlane", color: "#eff6ff", rows: [
+                    { id: 0, label: "Production Labs - 2nd & 3rd Floor (Bldg 11)", start: "01Mar2026", end: "30Sep2027", progress: 0, predecessor: "", milestones: [
+                        { id: 1000, label: "Construction Complete", date: "01Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0 },
+                        { id: 1001, label: "Interiors Start", date: "19Aug2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 }
+                    ]}
+                ]},
+                { id: 1, title: "Building 21 Swimlane", color: "#f0fdf4", rows: [
+                    { id: 1, label: "Warehouse Admin 1st Floor (Bldg 21)", start: "01Mar2026", end: "04Nov2027", progress: 0, predecessor: "", milestones: [
+                        { id: 1002, label: "Construction Complete", date: "31Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0 },
+                        { id: 1003, label: "Interiors Start", date: "05Feb2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 }
+                    ]}
+                ]},
+                { id: 2, title: "Building 31 Swimlane", color: "#fdf2f8", rows: [
+                    { id: 2, label: "Lab/Admin (Bldg 31)", start: "01Mar2026", end: "14Dec2027", progress: 0, predecessor: "", milestones: [
+                        { id: 1004, label: "Construction Complete", date: "14Dec2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 },
+                        { id: 1005, label: "Interiors Start", date: "23Mar2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0 }
+                    ]}
+                ]},
+                { id: 3, title: "Building 41 Swimlane", color: "#fff7ed", rows: [
+                    { id: 3, label: "CUB/Annex (Bldg 41)", start: "01Mar2026", end: "13Aug2027", progress: 0, predecessor: "", milestones: [
+                        { id: 1006, label: "Construction Complete", date: "13Aug2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0 },
+                        { id: 1007, label: "Interiors Start", date: "18May2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, dateOffsetX: -13, dateOffsetY: 1, manualDateLabel: true }
+                    ]}
+                ]}
+            ];
+            nextRowId = 4; nextMsId = 1008;
+            const seedSnapshot = {
+                data: projectData, nextRowId: nextRowId, nextMsId: nextMsId, rangeMode: 'manual',
+                customBoundaryMin: '01May2026', customBoundaryMax: '09Aug2028', fontFamily: "Tahoma, sans-serif",
+                fontSize: 10, swimlaneHeight: 30, canvasWidth: 806, rowHeight: 50, barBgColor: '#5c95be', barColor: '#2563eb', msColor: '#000000', todayColor: '#b71010', headerColor: '#000000',
+                showVGrid: true, todayLineToggle: 'show', showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: false, showHeaderDay: false
+            };
+            actionUndoStack.push(JSON.stringify(seedSnapshot)); restoreStateFromSnapshot(seedSnapshot);
+        }
+    }
+
+    function editRowLabelDirectly(laneIdx, rowIdx) {
+        const row = projectData[laneIdx].rows[rowIdx];
+        if(row) {
+            let newLabel = prompt("Edit Task Track Title Name Directly:", row.label);
+            if (newLabel !== null && newLabel.trim() !== "") {
+                row.label = newLabel.trim();
+                recordStateChange();
+                renderInputRows();
+                updateChart();
+            }
+        }
+    }
+
+    // =========================================================
+    // SIDEBAR DATA ELEMENT FORM GENERATOR (NESTED SWIMLANES)
+    // =========================================================
+    function renderInputRows() {
+        const container = document.getElementById('dataRowsContainer'); container.innerHTML = ''; 
+
+        projectData.forEach((lane, laneIdx) => {
+            const laneWrapper = document.createElement('div');
+            laneWrapper.className = 'swimlane-container';
+            laneWrapper.style.cssText = "border:1px solid #cbd5e1; padding:15px; border-radius:8px; margin-bottom:20px; background:#f8fafc;";
+            
+            laneWrapper.addEventListener('dragover', (e) => e.preventDefault());
+            laneWrapper.addEventListener('drop', (e) => handleRowDropOnLane(e, laneIdx));
+
+            // Integrated individual Swimlane Color Pickers next to titles
+            laneWrapper.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:2px solid #cbd5e1; padding-bottom:6px;">
+                    <div style="display:flex; align-items:center; gap:8px; width:75%;">
+                        <label style="font-size:11px; font-weight:bold; color:#1e3a8a; text-transform:uppercase; flex-shrink:0;">Swimlane Group:</label>
+                        <input type="text" value="${lane.title}" style="font-weight:bold; color:#1e3a8a; font-size:13px; padding:4px;" onchange="updateLaneTitle(${laneIdx}, this.value)">
+                        <input type="color" value="${lane.color || '#f8fafc'}" style="width:34px; height:28px; padding:0; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer; flex-shrink:0;" onchange="updateLaneColor(${laneIdx}, this.value)">
+                    </div>
+                    <button class="delete-btn" style="padding:2px 6px;" onclick="deleteSwimlane(${laneIdx})">Delete Lane</button>
+                </div>
+                <div class="lane-rows-slots" id="lane-rows-box-${laneIdx}"></div>
+                <button class="inner-action-btn" style="width:100%; padding:6px; background:#ffffff; border-style:dashed; margin-top:8px;" onclick="addNewRowToLane(${laneIdx})">+ Add Row Item to lane</button>
+            `;
+
+            container.appendChild(laneWrapper);
+            const rowsContainerBox = laneWrapper.querySelector(`#lane-rows-box-${laneIdx}`);
+
+            lane.rows.forEach((row, rowIdx) => {
+                const card = document.createElement('div'); 
+                card.className = 'row-card'; 
+                card.id = `card-${row.id}`; 
+                
+                card.setAttribute('draggable', 'true');
+                card.addEventListener('dragstart', (e) => handleRowDragStart(e, laneIdx, rowIdx));
+                card.addEventListener('dragover', (e) => handleRowDragOver(e, card));
+                card.addEventListener('dragleave', () => handleRowDragLeave(card));
+                card.addEventListener('drop', (e) => handleRowDropOnCard(e, laneIdx, rowIdx, card));
+                card.addEventListener('dragend', () => card.style.opacity = "1");
+                
+                let isConflicted = false;
+                if (row.predecessor) {
+                    let parentRow = findRowGlobally(parseInt(row.predecessor));
+                    if (parentRow && parseAnyDateToTimestamp(row.start) < parseAnyDateToTimestamp(parentRow.end)) { isConflicted = true; card.className += ' conflict-warning'; }
+                }
+
+                let predecessorOptions = `<option value="">None</option>`;
+                projectData.forEach(l => {
+                    l.rows.forEach(r => {
+                        if (r.id !== row.id) {
+                            predecessorOptions += `<option value="${r.id}" ${(row.predecessor == r.id) ? 'selected' : ''}>${l.title} &gt; ${r.label || 'Untitled'}</option>`;
+                        }
+                    });
+                });
+                
+                card.innerHTML = `
+                    <div class="row-card-header">
+                        <div class="row-card-title">
+                            <span class="row-drag-handle">☰</span>
+                            Task Profile Lane Element
+                            ${isConflicted ? `<span class="conflict-badge">PREDECESSOR OVERLAP DETECTED</span>` : ''}
+                        </div>
+                        <button class="delete-btn" onclick="deleteRowFromLane(${laneIdx}, ${rowIdx})">Delete Row</button>
+                    </div>
+                    <div class="card-input-group">
+                        <div class="horizontal-input-row">
+                            <div class="control-item"><label>Task Track Title</label><input type="text" value="${row.label}" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'label', this.value)"></div>
+                            
+                            <div class="control-item"><label>Start Date</label>
+                                <div class="date-input-wrapper">
+                                    <span class="date-display-badge">${row.start}</span>
+                                    <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(row.start)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'start')">
+                                </div>
+                            </div>
+                            <div class="control-item"><label>End Date</label>
+                                <div class="date-input-wrapper">
+                                    <span class="date-display-badge">${row.end}</span>
+                                    <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(row.end)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'end')">
+                                </div>
+                            </div>
+                            
+                            <div class="control-item"><label>Progress %</label><input type="number" min="0" max="100" value="${row.progress || 0}" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'progress', this.value)"></div>
+                            <div class="control-item"><label>Predecessor Link</label><select onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'predecessor', this.value)">${predecessorOptions}</select></div>
+                        </div>
+                        <div class="milestones-section">
+                            <div class="milestones-list">
+                                ${row.milestones.map((ms, msIdx) => `
+                                    <div class="milestone-input-row">
+                                        <input type="text" value="${ms.label}" onchange="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'label', this.value)">
+                                        
+                                        <div class="date-input-wrapper">
+                                            <span class="date-display-badge">${ms.date}</span>
+                                            <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'date', ${msIdx})">
+                                        </div>
+                                        
+                                        <label class="ms-checkbox-wrap">
+                                            <input type="checkbox" ${(ms.showDate) ? 'checked' : ''} onchange="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'showDate', this.checked)">
+                                            Pin Date
+                                        </label>
+                                        <button class="mini-delete-btn" onclick="deleteMilestoneNew(${laneIdx}, ${rowIdx}, ${msIdx})">&times;</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <button class="inner-action-btn" onclick="addMilestoneNew(${laneIdx}, ${rowIdx})">+ Add Custom Milestone</button>
+                        </div>
+                    </div>
+                `;
+                rowsContainerBox.appendChild(card);
+            });
+        });
+    }
+
+    function updateLaneColor(laneIdx, val) { projectData[laneIdx].color = val; recordStateChange(); updateChart(); }
+    function updateLaneTitle(laneIdx, val) { projectData[laneIdx].title = val; recordStateChange(); updateChart(); }
+    function addNewSwimlane() { projectData.push({ id: projectData.length, title: "New Building Workstream", color: "#f8fafc", rows: [] }); recordStateChange(); renderInputRows(); updateChart(); }
+    function deleteSwimlane(laneIdx) { projectData.splice(laneIdx, 1); recordStateChange(); renderInputRows(); updateChart(); }
+
+    function addNewRowToLane(laneIdx) { projectData[laneIdx].rows.push({ id: nextRowId++, label: "New Task Activity", start: "01Mar2026", end: "01Jun2026", progress: 0, predecessor: "", milestones: [] }); recordStateChange(); renderInputRows(); updateChart(); }
+    function deleteRowFromLane(laneIdx, rowIdx) { projectData[laneIdx].rows.splice(rowIdx, 1); recordStateChange(); renderInputRows(); updateChart(); }
+
+    function updateRowFieldDirect(laneIdx, rowIdx, key, value) {
+        if(key === 'progress') value = Math.max(0, Math.min(100, parseInt(value) || 0));
+        projectData[laneIdx].rows[rowIdx][key] = value;
+        recordStateChange(); if(key=='predecessor') renderInputRows(); updateChart();
+    }
+    function updateMilestoneFieldNew(laneIdx, rowIdx, msIdx, key, value) {
+        projectData[laneIdx].rows[rowIdx].milestones[msIdx][key] = value;
+        recordStateChange(); updateChart();
+    }
+    function addMilestoneNew(laneIdx, rowIdx) {
+        let r = projectData[laneIdx].rows[rowIdx];
+        r.milestones.push({ id: nextMsId++, label: "Milestone Event", date: r.end, showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0 });
+        recordStateChange(); renderInputRows(); updateChart();
+    }
+    function deleteMilestoneNew(laneIdx, rowIdx, msIdx) {
+        projectData[laneIdx].rows[rowIdx].milestones.splice(msIdx, 1);
+        recordStateChange(); renderInputRows(); updateChart();
+    }
+
+    // ==========================================
+    // GRAPHIC VECTOR GENERATION PIPELINE ENGINE (SVG DRAW LOOP)
+    // ==========================================
+    function updateChart() {
+        const container = document.getElementById('svgContainer');
+        if (projectData.length === 0) { container.innerHTML = ''; return; }
+
+        const width = parseInt(document.getElementById('canvasWidth').value) || 580;
+        const rowHeight = parseInt(document.getElementById('rowHeight').value) || 95;
+        const swimlaneHeight = parseInt(document.getElementById('swimlaneHeight').value) || 30;
+        const fontFamily = document.getElementById('fontFamily').value;
+        const fontSize = parseInt(document.getElementById('fontSize').value) || 12;
+        const barBgColor = document.getElementById('barBgColor').value;
+        const barColor = document.getElementById('barColor').value;
+        const msColor = document.getElementById('msColor').value;
+        const todayColor = document.getElementById('todayColor').value;
+        const headerColor = document.getElementById('headerColor').value;
+        const showVGrid = document.getElementById('showVGrid').checked;
+        const todayLineMode = document.querySelector('input[name="todayLineToggle"]:checked').value;
+        const rangeMode = document.querySelector('input[name="rangeMode"]:checked').value;
+        
+        const showHeaderYear = document.getElementById('showHeaderYear').checked;
+        const showHeaderQuarter = document.getElementById('showHeaderQuarter').checked;
+        const showHeaderMonth = document.getElementById('showHeaderMonth').checked;
+        const showHeaderDay = document.getElementById('showHeaderDay').checked;
+
+        let headerTrackingYPointer = 15;
+        let hYearDelta = showHeaderYear ? 22 : 0;
+        let hQuarterDelta = showHeaderQuarter ? 22 : 0;
+        let hMonthDelta = showHeaderMonth ? 22 : 0;
+        let hDayDelta = showHeaderDay ? 22 : 0;
+        const startY = headerTrackingYPointer + hYearDelta + hQuarterDelta + hMonthDelta + hDayDelta + 15;
+
+        const marginXRight = 130; const chartWidth = width - scaleMarginLeft - marginXRight;
+        const barThickness = 18;
+
+        // FIXED: Shifted structural baseline tracks directly flush with axisLineY layout boundaries
+        let axisLineY = startY - 15;
+        let endBoundaryXCoordinate = width - marginXRight;
+
+        let dynamicTotalRowsHeight = 0;
+        projectData.forEach(l => {
+            if (l.rows.length > 0) {
+                dynamicTotalRowsHeight += swimlaneHeight;
+                dynamicTotalRowsHeight += l.rows.length * rowHeight;
+            }
+        });
+
+        const height = axisLineY + dynamicTotalRowsHeight + 30; 
+        const bottomOfLastRow = axisLineY + dynamicTotalRowsHeight;
+
+        let minDate, maxDate;
+        if (rangeMode === 'manual') {
+            minDate = new Date(parseAnyDateToTimestamp(manualBoundaryMin)); 
+            maxDate = new Date(parseAnyDateToTimestamp(manualBoundaryMax));
+            if(isNaN(minDate.getTime())) minDate = new Date("2026-05-01"); if(isNaN(maxDate.getTime())) maxDate = new Date("2028-08-09");
+        } else {
+            let allDates = [];
+            projectData.forEach(lane => {
+                lane.rows.forEach(row => {
+                    let sT = parseAnyDateToTimestamp(row.start); let eT = parseAnyDateToTimestamp(row.end);
+                    if(!isNaN(sT)) allDates.push(new Date(sT)); if(!isNaN(eT)) allDates.push(new Date(eT));
+                    row.milestones.forEach(m => { let mT = parseAnyDateToTimestamp(m.date); if(!isNaN(mT)) allDates.push(new Date(mT)); });
+                });
+            });
+            if(allDates.length < 2) { minDate = new Date("2026-01-01"); maxDate = new Date("2026-06-30"); }
+            else { minDate = new Date(Math.min(...allDates)); minDate.setDate(1); maxDate = new Date(Math.max(...allDates)); maxDate.setMonth(maxDate.getMonth()+1); maxDate.setDate(1); }
+        }
+
+        scaleMinTime = minDate.getTime(); scaleMaxTime = maxDate.getTime(); scaleChartWidth = chartWidth;
+        const totalDuration = scaleMaxTime - scaleMinTime;
+        const getX = (dObj) => scaleMarginLeft + ((dObj.getTime() - scaleMinTime) / totalDuration) * chartWidth;
+
+        let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="font-family:${fontFamily}; background-color:#ffffff; user-select:none;">`;
+        svg += `<line x1="${scaleMarginLeft}" y1="${axisLineY}" x2="${endBoundaryXCoordinate}" y2="${axisLineY}" stroke="${headerColor}" stroke-width="2"/>`;
+
+        let scanTime = new Date(minDate); let timelineDaySteps = [];
+        while(scanTime <= maxDate) {
+            timelineDaySteps.push({ date: new Date(scanTime), x: getX(scanTime) });
+            scanTime.setDate(scanTime.getDate() + 1);
+        }
+
+        let lowestActiveTier = "";
+        if (showHeaderDay) lowestActiveTier = "day";
+        else if (showHeaderMonth) lowestActiveTier = "month";
+        else if (showHeaderQuarter) lowestActiveTier = "quarter";
+        else if (showHeaderYear) lowestActiveTier = "year";
+
+        // Tier 1: Years
+        if (showHeaderYear) {
+            let currY = null; let xStart = scaleMarginLeft;
+            for(let i=0; i<timelineDaySteps.length; i++) {
+                let yVal = timelineDaySteps[i].date.getFullYear();
+                if(currY === null) { currY = yVal; xStart = timelineDaySteps[i].x; continue; }
+                if(yVal !== currY || i === timelineDaySteps.length - 1) {
+                    let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
+                    if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" text-anchor="middle">${currY}</text>`;
+                    if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
+                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hYearDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+                        if (showVGrid && lowestActiveTier === "year") {
+                            svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
+                        }
+                    }
+                    currY = yVal; xStart = timelineDaySteps[i].x;
+                }
+            }
+            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hYearDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hYearDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+            headerTrackingYPointer += hYearDelta;
+        }
+
+        // Tier 2: Quarters
+        if (showHeaderQuarter) {
+            let currQ = null; let xStart = scaleMarginLeft;
+            for(let i=0; i<timelineDaySteps.length; i++) {
+                let qVal = Math.floor(timelineDaySteps[i].date.getMonth() / 3) + 1;
+                if(currQ === null) { currQ = qVal; xStart = timelineDaySteps[i].x; continue; }
+                if(qVal !== currQ || i === timelineDaySteps.length - 1) {
+                    let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
+                    if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" text-anchor="middle">Q${currQ}</text>`;
+                    if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
+                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hQuarterDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+                        if (showVGrid && lowestActiveTier === "quarter") {
+                            svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
+                        }
+                    }
+                    currQ = qVal; xStart = timelineDaySteps[i].x;
+                }
+            }
+            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hQuarterDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hQuarterDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+            headerTrackingYPointer += hQuarterDelta;
+        }
+
+        // Tier 3: Months
+        if (showHeaderMonth) {
+            let currM = null; let xStart = scaleMarginLeft;
+            for(let i=0; i<timelineDaySteps.length; i++) {
+                let mVal = timelineDaySteps[i].date.getMonth();
+                if(currM === null) { currM = mVal; xStart = timelineDaySteps[i].x; continue; }
+                if(mVal !== currM || i === timelineDaySteps.length - 1) {
+                    let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
+                    if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) {
+                        let mLabel = new Date(2026, currM, 1).toLocaleString('default', { month: 'short' });
+                        svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" opacity="0.8" text-anchor="middle">${mLabel}</text>`;
+                    }
+                    if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
+                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hMonthDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+                        if (showVGrid && lowestActiveTier === "month") {
+                            svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
+                        }
+                    }
+                    currM = mVal; xStart = timelineDaySteps[i].x;
+                }
+            }
+            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hMonthDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hMonthDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3"/>`;
+            headerTrackingYPointer += hMonthDelta;
+        }
+
+        // Tier 4: Days
+        if (showHeaderDay) {
+            for(let i=0; i<timelineDaySteps.length - 1; i++) {
+                let step = timelineDaySteps[i]; let nextStep = timelineDaySteps[i+1];
+                let cx = step.x + (nextStep.x - step.x) / 2;
+                if (showVGrid && step.x >= scaleMarginLeft && step.x <= endBoundaryXCoordinate) {
+                    svg += `<line x1="${step.x}" y1="${axisLineY}" x2="${step.x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2 2"/>`;
+                }
+                if (cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) {
+                    svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="9" font-weight="bold" fill="${headerColor}" opacity="0.6" text-anchor="middle">${step.date.getDate()}</text>`;
+                }
+            }
+        }
+
+        // Coordinate track generation framework pre-pass mapping layout
+        let currentCanvasY = axisLineY;
+        let rowPositionsMap = {}; 
+
+        projectData.forEach(lane => {
+            if (lane.rows.length === 0) return;
+            currentCanvasY += swimlaneHeight; 
+            lane.rows.forEach(r => {
+                rowPositionsMap[r.id] = currentCanvasY;
+                currentCanvasY += rowHeight;
+            });
+        });
+
+        // Dependencies Connectors Loop (Cross-lane links mapping enabled)
+        projectData.forEach(lane => {
+            lane.rows.forEach(row => {
+                if (row.predecessor) {
+                    const parent = findRowGlobally(parseInt(row.predecessor));
+                    if (parent) {
+                        const pDate = new Date(parseAnyDateToTimestamp(parent.end));
+                        const cDate = new Date(parseAnyDateToTimestamp(row.start));
+                        
+                        if (!isNaN(pDate.getTime()) && !isNaN(cDate.getTime())) {
+                            let pY = rowPositionsMap[parent.id] + (rowHeight / 2);
+                            let cY = rowPositionsMap[row.id] + (rowHeight / 2);
+                            
+                            let pX = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(pDate)));
+                            let cX = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(cDate)));
+
+                            let strokeColor = "#94a3b8"; if (cDate < pDate) strokeColor = "var(--danger)";
+
+                            if(pX >= scaleMarginLeft && cX >= scaleMarginLeft) {
+                                let midX = pX + (cX - pX) / 2;
+                                svg += `<path d="M ${pX} ${pY} L ${midX} ${pY} L ${midX} ${cY} L ${cX} ${cY}" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-dasharray="2 2"/>`;
+                                svg += `<polygon points="${cX},${cY} ${cX-5},${cY-3} ${cX-5},${cY+3}" fill="${strokeColor}"/>`;
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        // Draw Swimlanes and Rows
+        let currentDrawY = axisLineY;
+        projectData.forEach((lane, laneIdx) => {
+            if (lane.rows.length === 0) return;
+
+            // FIXED: Render the swimlane banner box immediately below header tiers with zero pixel gap
+            let laneBgColor = lane.color || "#f8fafc";
+            svg += `<rect x="10" y="${currentDrawY}" width="${endBoundaryXCoordinate - 10}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
+            svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central">${lane.title}</text>`;
+            currentDrawY += swimlaneHeight;
+
+            lane.rows.forEach((item, rowIdx) => {
+                let y = currentDrawY;
+                svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1"/>`;
+                svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(${laneIdx}, ${rowIdx})">${item.label}</text>`;
+                
+                let sObj = new Date(parseAnyDateToTimestamp(item.start)); 
+                let eObj = new Date(parseAnyDateToTimestamp(item.end));
+                let isBarConflicted = false;
+                if (item.predecessor) {
+                    let parentRow = findRowGlobally(parseInt(item.predecessor));
+                    if (parentRow && new Date(parseAnyDateToTimestamp(item.start)) < new Date(parseAnyDateToTimestamp(parentRow.end))) isBarConflicted = true;
+                }
+
+                if(!isNaN(sObj.getTime()) && !isNaN(eObj.getTime())) {
+                    let xStart = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(sObj)));
+                    let xEnd = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(eObj)));
+                    let visibleBarWidth = xEnd - xStart;
+
+                    if (visibleBarWidth > 0) {
+                        svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${barBgColor}" ${isBarConflicted ? `stroke="var(--danger)" stroke-width="1.5"` : ''}/>`;
+                        let filledWidth = Math.max(xStart, Math.min(xEnd, getX(new Date(sObj.getTime() + ((item.progress || 0)/100) * (eObj.getTime() - sObj.getTime()))))) - xStart;
+                        if (filledWidth > 0) svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${barColor}"/>`;
+
+                        svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:w-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-start', ${item.id})"/>`;
+                        if (visibleBarWidth > 12) svg += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id})"/>`;
+                        svg += `<rect x="${xEnd - 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:e-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-end', ${item.id})"/>`;
+                    }
+                }
+
+                // Milestone Mapping Track Channels
+                let validMilestones = item.milestones.filter(m => !isNaN(parseAnyDateToTimestamp(m.date)));
+                validMilestones.sort((a, b) => parseAnyDateToTimestamp(a.date) - parseAnyDateToTimestamp(b.date));
+                let trackPlacedTextFootprints = [];
+
+                for (let idx = validMilestones.length - 1; idx >= 0; idx--) {
+                    let ms = validMilestones[idx];
+                    let mObj = new Date(parseAnyDateToTimestamp(ms.date)); let msX = getX(mObj);
+                    if (msX < scaleMarginLeft || msX > endBoundaryXCoordinate) continue;
+
+                    let msYCenterLocked = y + (rowHeight / 2); let msSize = 5;
+                    let isInsideBarBounds = (!isNaN(sObj.getTime()) && !isNaN(eObj.getTime()) && mObj >= sObj && mObj <= eObj);
+                    let isNearRightEdge = (isInsideBarBounds && (getX(eObj) - msX < 15));
+
+                    let textAnchorStyle = "start"; let textXPositionCoordinate = msX + msSize + 4; let defaultTextYBaseline = msYCenterLocked + 3;
+                    if (isInsideBarBounds && !isNearRightEdge) { textAnchorStyle = "middle"; textXPositionCoordinate = msX; defaultTextYBaseline = y + (rowHeight / 2) + (barThickness / 2) + 11; }
+
+                    let finalComputedTextX = textXPositionCoordinate; let finalComputedTextY = defaultTextYBaseline;
+
+                    if (ms.manualLabel) {
+                        finalComputedTextX += (ms.labelOffsetX || 0); finalComputedTextY += (ms.labelOffsetY || 0); textAnchorStyle = "start";
+                    } else {
+                        let estimatedTextWidthPixelSpan = 65; 
+                        let footprintLeftBound = textAnchorStyle === "middle" ? (textXPositionCoordinate - estimatedTextWidthPixelSpan/2) : textXPositionCoordinate;
+                        let footprintRightBound = textAnchorStyle === "middle" ? (textXPositionCoordinate + estimatedTextWidthPixelSpan/2) : (textXPositionCoordinate + estimatedTextWidthPixelSpan);
+
+                        let targetedCascadeStaggerOffsetLevel = 0; let collisionMatchFound = true;
+                        while (collisionMatchFound) {
+                            collisionMatchFound = false;
+                            for (let f = 0; f < trackPlacedTextFootprints.length; f++) {
+                                let existingZone = trackPlacedTextFootprints[f];
+                                if (existingZone.staggerLevel === targetedCascadeStaggerOffsetLevel) {
+                                    if (footprintLeftBound < existingZone.xMax && footprintRightBound > existingZone.xMin) {
+                                        targetedCascadeStaggerOffsetLevel++; collisionMatchFound = true; break;
+                                    }
+                                }
+                            }
+                        }
+                        trackPlacedTextFootprints.push({ xMin: footprintLeftBound, xMax: footprintRightBound, staggerLevel: targetedCascadeStaggerOffsetLevel });
+                        finalComputedTextY = defaultTextYBaseline + (targetedCascadeStaggerOffsetLevel * 12);
+                    }
+
+                    let dPoints = `${msX},${msYCenterLocked - msSize} ${msX + msSize},${msYCenterLocked} ${msX},${msYCenterLocked + msSize} ${msX - msSize},${msYCenterLocked}`;
+                    svg += `<polygon points="${dPoints}" fill="${msColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})"/>`;
+                    svg += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="9" font-weight="600" fill="${msColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})">${ms.label}</text>`;
+
+                    if (ms && ms.showDate) {
+                        let presentationDateLabel = ms.date; 
+                        let finalComputedDateX = msX;
+                        let finalComputedDateY = msYCenterLocked - msSize - 11;
+                        
+                        if (ms.manualDateLabel) {
+                            finalComputedDateX += (ms.dateOffsetX || 0);
+                            finalComputedDateY += (ms.dateOffsetY || 0);
+                        }
+                        svg += `<text x="${finalComputedDateX}" y="${finalComputedDateY}" font-size="8" font-weight="bold" fill="#64748b" text-anchor="middle" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})">${presentationDateLabel}</text>`;
+                    }
+                }
+
+                currentDrawY += rowHeight;
+            });
+        });
+
+        // Vertical Today Tracker Line
+        if (todayLineMode === 'show') {
+            let today = new Date();
+            if (today.getTime() >= scaleMinTime && today.getTime() <= scaleMaxTime) {
+                let xToday = getX(today);
+                svg += `<line x1="${xToday}" y1="${axisLineY}" x2="${xToday}" y2="${bottomOfLastRow}" stroke="${todayColor}" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+                svg += `<text x="${xToday}" y="${bottomOfLastRow + 14}" font-size="8" font-weight="bold" fill="${todayColor}" text-anchor="middle">TODAY</text>`;
+            }
+        }
+
+        svg += `</svg>`; container.innerHTML = svg;
+    }
+
+    function downloadSVG() {
+        const svgElement = document.querySelector('#svgContainer svg');
+        if (!svgElement) return;
+        
+        const clone = svgElement.cloneNode(true);
+        const hotspots = clone.querySelectorAll('.drag-hotspot');
+        hotspots.forEach(hotspot => hotspot.remove());
+        
+        const interactiveNodes = clone.querySelectorAll('[onmousedown], [style*="cursor"]');
+        interactiveNodes.forEach(node => {
+            node.removeAttribute('onmousedown');
+            if (node.hasAttribute('style')) {
+                let cleanedStyle = node.getAttribute('style').replace(/cursor\s*:\s*[^;]+;?/g, '').trim();
+                if (cleanedStyle) node.setAttribute('style', cleanedStyle);
+                else node.removeAttribute('style');
+            }
+        });
+        
+        const blob = new Blob([clone.outerHTML], {type: 'image/svg+xml;charset=utf-8'});
+        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'presentation_gantt.svg'; link.click();
+    }
+
+    function downloadPNG() {
+        const svgElement = document.querySelector('#svgContainer svg');
+        if (!svgElement) return;
+
+        const clone = svgElement.cloneNode(true);
+        const hotspots = clone.querySelectorAll('.drag-hotspot');
+        hotspots.forEach(hotspot => hotspot.remove());
+
+        const interactiveNodes = clone.querySelectorAll('[onmousedown], [style*="cursor"]');
+        interactiveNodes.forEach(node => {
+            node.removeAttribute('onmousedown');
+            if (node.hasAttribute('style')) {
+                let cleanedStyle = node.getAttribute('style').replace(/cursor\s*:\s*[^;]+;?/g, '').trim();
+                if (cleanedStyle) node.setAttribute('style', cleanedStyle);
+                else node.removeAttribute('style');
+            }
+        });
+
+        const width = parseInt(clone.getAttribute('width')) || 800;
+        const height = parseInt(clone.getAttribute('height')) || 600;
+        const scaleMultiplier = 2; 
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width * scaleMultiplier;
+        canvas.height = height * scaleMultiplier;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(scaleMultiplier, scaleMultiplier);
+
+        const svgString = new XMLSerializer().serializeToString(clone);
+        const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+        const blobUrl = URL.createObjectURL(svgBlob);
+
+        const img = new Image();
+        img.onload = function() {
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(blobUrl);
+
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = 'presentation_gantt.png';
+            link.click();
+        };
+        img.src = blobUrl;
+    }
+
+    // Lifecycle bootstrap initialization placement at end of script execution block
+    loadApplicationState(); 
+</script>
+</body>
+</html>
