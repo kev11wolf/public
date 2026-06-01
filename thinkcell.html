@@ -1134,7 +1134,7 @@
         let mouseX = e.clientX - rect.left;
         
         let totalDuration = scaleMaxTime - scaleMinTime;
-        let evaluatedTime = scaleMinTime + ((mouseX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
+        evaluatedTime = scaleMinTime + ((mouseX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
         evaluatedTime = Math.max(scaleMinTime, Math.min(scaleMaxTime, evaluatedTime));
         let computedTargetDateStr = formatDateToDDMMMYYYY(new Date(evaluatedTime));
         
@@ -1142,8 +1142,14 @@
         
         let menu = document.getElementById('rowWorkspaceContextMenu');
         menu.style.display = 'block';
-        menu.style.left = `${e.clientX}px`;
-        menu.style.top = `${e.clientY}px`;
+        
+        let menuWidth = 180;
+        let menuHeight = 80;
+        let left = Math.max(10, Math.min(e.clientX, window.innerWidth - menuWidth - 15));
+        let top = Math.max(10, Math.min(e.clientY, window.innerHeight - menuHeight - 15));
+        
+        menu.style.left = `${left}px`;
+        menu.style.top = `${top}px`;
     }
 
     function executeContextInsertion(type) {
@@ -1192,9 +1198,15 @@
         let dialog = document.createElement('div');
         dialog.id = 'floatingLaneSummaryDialog';
         dialog.className = 'floating-date-dialog';
-        dialog.style.left = `${e.clientX}px`;
-        dialog.style.top = `${e.clientY}px`;
-        dialog.style.width = '260px';
+        
+        let dialogWidth = 260;
+        let dialogHeight = 160;
+        let left = Math.max(10, Math.min(e.clientX, window.innerWidth - dialogWidth - 15));
+        let top = Math.max(10, Math.min(e.clientY, window.innerHeight - dialogHeight - 15));
+        
+        dialog.style.left = `${left}px`;
+        dialog.style.top = `${top}px`;
+        dialog.style.width = `${dialogWidth}px`;
 
         let globalSummaryColor = document.getElementById('summaryColor').value;
         let currentSummaryColor = lane.summaryColor || globalSummaryColor;
@@ -1232,9 +1244,15 @@
         let dialog = document.createElement('div');
         dialog.id = 'floatingMilestoneDialog';
         dialog.className = 'floating-date-dialog';
-        dialog.style.left = `${e.clientX}px`;
-        dialog.style.top = `${e.clientY}px`;
-        dialog.style.width = '320px';
+        
+        let dialogWidth = 320;
+        let dialogHeight = 220;
+        let left = Math.max(10, Math.min(e.clientX, window.innerWidth - dialogWidth - 15));
+        let top = Math.max(10, Math.min(e.clientY, window.innerHeight - dialogHeight - 15));
+        
+        dialog.style.left = `${left}px`;
+        dialog.style.top = `${top}px`;
+        dialog.style.width = `${dialogWidth}px`;
 
         let globalMsColor = document.getElementById('msColor').value;
         let currentMsColor = ms.color || globalMsColor;
@@ -1292,9 +1310,15 @@
         let dialog = document.createElement('div');
         dialog.id = 'floatingBarDateDialog';
         dialog.className = 'floating-date-dialog';
-        dialog.style.left = `${e.clientX}px`;
-        dialog.style.top = `${e.clientY}px`;
-        dialog.style.width = '340px';
+        
+        let dialogWidth = 340;
+        let dialogHeight = 260;
+        let left = Math.max(10, Math.min(e.clientX, window.innerWidth - dialogWidth - 15));
+        let top = Math.max(10, Math.min(e.clientY, window.innerHeight - dialogHeight - 15));
+        
+        dialog.style.left = `${left}px`;
+        dialog.style.top = `${top}px`;
+        dialog.style.width = `${dialogWidth}px`;
 
         let currentBgColor = bar.bgColor || document.getElementById('barBgColor').value;
         let currentColor = bar.color || document.getElementById('barColor').value;
@@ -1770,7 +1794,7 @@
             });
 
             let laneBgColor = lane.color || "#f8fafc";
-            // Updated: Stretch the swimlane fill background perfectly to the right end of the date header
+            // Stretch the swimlane fill background perfectly to the right end of the date header
             svg += `<rect x="10" y="${currentDrawY}" width="${endBoundaryXCoordinate - 10}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
             svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central" style="cursor:pointer;" ondblclick="editLaneLabelDirectly(${laneIdx})">${lane.title}</text>`;
             
@@ -1790,7 +1814,7 @@
             lane.rows.forEach((item, rowIdx) => {
                 let y = currentDrawY;
                 
-                // Updated: Align invisible context track to the right boundary edge as well
+                // Align invisible context track to the right boundary edge as well
                 svg += `<rect x="10" y="${y}" width="${endBoundaryXCoordinate - 10}" height="${rowHeight}" fill="transparent" style="cursor:context-menu;" oncontextmenu="handleWorkspaceRowContextMenu(event, ${item.id})"/>`;
                 svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1" style="pointer-events:none;"/>`;
                 svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(${laneIdx}, ${rowIdx})">${item.label}</text>`;
