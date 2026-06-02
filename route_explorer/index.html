@@ -443,8 +443,12 @@
             if (!routeLineCoordinates || routeLineCoordinates.length === 0) return;
             const sliceRate = Math.max(1, Math.ceil(routeLineCoordinates.length / 300));
             activeTargetsSliceMemory = [];
-            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
-            activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
+            
+            for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { 
+                activeTargetsSliceMemory.push({ lat: routeLineCoordinates[i].lat, lng: routeLineCoordinates[i].lng }); 
+            }
+            const lastNode = routeLineCoordinates[routeLineCoordinates.length - 1];
+            activeTargetsSliceMemory.push({ lat: lastNode.lat, lng: lastNode.lng });
 
             if (mathWorker) {
                 mathWorker.postMessage({
@@ -770,7 +774,7 @@
             activeInstructionIndex = 0;
             currentTrackedPolylineIndex = 0;
 
-            // FIXED: Collapses and forces hidden styling on search layout natively 
+            // Forces hidden styling on search layout natively 
             const searchContainer = document.getElementById('search-container');
             if (searchContainer) {
                 searchContainer.style.setProperty('display', 'none', 'important');
@@ -956,32 +960,40 @@
                 const spatialEnvelope = { n: maxTlat + degPad, s: minTlat - degPad, e: maxTlon + degPad, w: minTlon - degPad };
 
                 localElements.forEach(el => {
-                    if (el.c !== currentMasterCat) return;
-                    if (el.lat > spatialEnvelope.n || el.lat < spatialEnvelope.s || el.lon > spatialEnvelope.e || el.lon < spatialEnvelope.w) return;
+                    const category = el.c || el.category;
+                    const brand = el.b || el.brand || '';
+                    const name = el.n || el.name || 'Public Facility';
+                    const lat = el.lat;
+                    const lon = el.lon || el.lng || el.longitude;
+                    const hours = el.h || el.hours || 'Hours not listed';
+                    const desc = el.d || el.desc || '';
+                    const g87 = el.g87 !== undefined ? el.g87 : 1;
+                    const g88 = el.g88 !== undefined ? el.g88 : 0;
+
+                    if (category !== currentMasterCat) return;
+                    if (lat > spatialEnvelope.n || lat < spatialEnvelope.s || lon > spatialEnvelope.e || lon < spatialEnvelope.w) return;
                     
                     let isMatch = false;
-                    let normBrand = el.b || '';
-
                     if (currentSubFilter === 'none') {
                         isMatch = true; 
                     } else {
-                        if (currentSubFilter === 'unl87' && el.g87 === 1) isMatch = true;
-                        else if (currentSubFilter === 'unl88' && el.g88 === 1) isMatch = true;
-                        else if (normBrand === currentSubFilter) isMatch = true;
-                        else if (el.c === currentSubFilter) isMatch = true;
+                        if (currentSubFilter === 'unl87' && g87 === 1) isMatch = true;
+                        else if (currentSubFilter === 'unl88' && g88 === 1) isMatch = true;
+                        else if (brand === currentSubFilter) isMatch = true;
+                        else if (category === currentSubFilter) isMatch = true;
                     }
                     
                     if (!isMatch) return;
 
                     let minD = Infinity;
                     for (let j = 0; j < targetsSlice.length; j++) {
-                        const d = haversineDist(el.lat, el.lon, targetsSlice[j].lat, targetsSlice[j].lng);
+                        const d = haversineDist(lat, lon, targetsSlice[j].lat, targetsSlice[j].lng);
                         if (d < minD) minD = d;
                     }
 
                     if (minD <= activeBufferMeters) {
                         finalMatches.push({
-                            lat: el.lat, lon: el.lon, n: el.n, brand: normBrand, category: el.c, hours: el.h || "Hours not listed", desc: el.d || "", minD: minD, g87: el.g87, g88: el.g88
+                            lat, lon, name, brand, category, hours, desc, minD, g87, g88
                         });
                     }
                 });
@@ -1074,7 +1086,6 @@
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
                 
                 const safeQueryString = encodeURIComponent(`${popupHeadingName} near ${parseFloat(lat).toFixed(5)},${parseFloat(lon).toFixed(5)}`);
-                // FIXED: Repaired broken URL formatting templates
                 const googleMapsUniversalDeepLinkUrl = `https://www.google.com/maps/search/?api=1&query=${safeQueryString}`;
                 const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
@@ -1148,7 +1159,6 @@
             }
 
             const safeQueryString = encodeURIComponent(`${popupHeadingName} near ${parseFloat(lat).toFixed(5)},${parseFloat(lon).toFixed(5)}`);
-            // FIXED: Repaired broken URL formatting templates
             const googleMapsUniversalDeepLinkUrl = `https://www.google.com/maps/search/?api=1&query=${safeQueryString}`;
             const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
@@ -1307,7 +1317,6 @@
             if (localJsonMemory) dispatchOffThreadAnalysis(); 
         });
         
-        // FIXED: Allows the show toggle option to override style.display inline overrides seamlessly
         document.getElementById('toggle-search-btn').addEventListener('click', () => { 
             const s = document.getElementById('search-container'); 
             if (s) {
@@ -1489,7 +1498,6 @@
             
             localJsonMemory = [];
             
-            // FIXED: Rerouted relative fetch calls into your absolute GitHub Repository layout path
             await Promise.all(activeCrossedStates.map(async (stateName) => {
                 try {
                     const response = await fetch(`https://raw.githubusercontent.com/kev11wolf/public/main/data/${stateName}_brands.json`);
