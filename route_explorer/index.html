@@ -20,6 +20,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/854/854878.png">
+
     <style>
         body, html {
             margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden;
@@ -59,9 +62,9 @@
 </head>
 <body class="flex flex-col justify-end text-zinc-950 selection:bg-blue-500 selection:text-white">
 
-    <div class="absolute top-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none">
+    <div class="absolute top-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none gap-2 px-3">
         
-        <div id="master-header-panel" class="w-full bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top shadow-md flex flex-col transition-all duration-300 pointer-events-auto">
+        <div id="master-header-panel" class="w-full max-w-xl bg-white/95 backdrop-blur-md border border-gray-200 safe-top rounded-2xl shadow-xl flex flex-col transition-all duration-300 pointer-events-auto mt-2">
             <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <div class="relative flex-1">
@@ -87,7 +90,7 @@
                 </div>
             </div>
 
-            <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-gray-100 bg-gray-50/50">
+            <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl">
                 <div class="flex items-center gap-2 flex-1 min-w-0">
                     <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent hidden"></div>
                     <p id="status" class="text-xs font-bold text-gray-700 truncate">System ready. Enter parameters to map alternatives.</p>
@@ -116,10 +119,10 @@
                 <button data-cat="tourism" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
             </div>
 
-            <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden"></div>
+            <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden rounded-b-2xl"></div>
         </div>
 
-        <div id="apple-navigation-hud" class="w-[92%] max-w-lg bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-4 mt-3 border border-slate-700/50 flex items-center gap-4 transition-all duration-500 transform -translate-y-64 opacity-0 hidden select-none pointer-events-auto">
+        <div id="apple-navigation-hud" class="w-[96%] max-w-md bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-4 border border-slate-700/50 flex items-center gap-4 transition-all duration-500 transform -translate-y-64 opacity-0 hidden select-none pointer-events-auto">
             <div id="hud-turn-icon" class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-3xl font-black shrink-0 shadow-md">⬆️</div>
             <div class="flex-1 min-w-0">
                 <h2 id="hud-turn-instruction" class="text-sm font-black tracking-tight leading-tight uppercase truncate text-slate-100">Calculating next turn...</h2>
@@ -132,14 +135,14 @@
         </div>
     </div>
 
-    <div id="navigation-hud" class="absolute top-72 left-4 z-30 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl w-64 hidden flex flex-col gap-3 transition-all duration-300 max-h-72 select-none">
+    <div id="navigation-hud" class="absolute top-[340px] left-4 z-30 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl w-64 hidden flex flex-col gap-3 transition-all duration-300 max-h-60 select-none">
         <div id="queue-hud-section" class="w-full flex flex-col gap-1.5">
             <p class="text-[9px] font-black uppercase text-indigo-400 tracking-widest leading-none">📍 Stop Queue Order (Drag to Reorder)</p>
-            <div id="queue-items-list" class="flex flex-col max-h-56 overflow-y-auto no-scrollbar"></div>
+            <div id="queue-items-list" class="flex flex-col max-h-44 overflow-y-auto no-scrollbar"></div>
         </div>
     </div>
 
-    <div class="absolute bottom-24 right-4 z-30 flex flex-col gap-2 items-center">
+    <div class="absolute bottom-28 right-4 z-30 flex flex-col gap-2 items-center">
         <button id="theme-toggle-btn" class="bg-white/95 backdrop-blur-md border border-gray-200 text-zinc-900 font-bold rounded-xl shadow-xl text-xs px-2.5 h-11 flex items-center justify-center active:scale-95 transition-all select-none cursor-pointer whitespace-nowrap">🌙 Mode</button>
         <button id="zoom-in-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">＋</button>
         <button id="zoom-out-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">－</button>
@@ -167,6 +170,9 @@
         let mapLayersPool = {};
         let favoritesLayerGroup = null;
         let poiClusterGroup = null;
+
+        // ACCELERATION VARIABLE INDEX FOR FAST SPATIAL WINDOW SNAP Sweeps
+        let currentTrackedPolylineIndex = 0;
 
         const STATE_BOUNDS_LOOKUP = {
             "alabama":        { s: 30.1, n: 35.1, w: -88.6, e: -84.8 },
@@ -502,6 +508,7 @@
                     renderGlobalPermanentStars();
                     updateInlineStatus("Loaded live favorites from GitHub repository.");
                 } else {
+                    document.getElementById('push-master-btn').style.display = 'none';
                     throw new Error("Repository path inaccessible");
                 }
             } catch (err) {
@@ -549,7 +556,6 @@
             routingControl.setWaypoints(finalWaypoints);
         }
 
-        // UPGRADED PIPELINE LIST RENDERING FEATURING NESTED DRAG-TO-REORDER GESTURES
         function updateQueueHUD() {
             const section = document.getElementById('queue-hud-section');
             const list = document.getElementById('queue-items-list');
@@ -561,13 +567,13 @@
             const endInputVal = document.getElementById('end-input').value;
             if (stopQueue.length === 0 && !endInputVal) {
                 section.classList.add('hidden');
+                navHud.classList.add('hidden');
                 return;
             }
 
             section.classList.remove('hidden');
             navHud.classList.remove('hidden');
 
-            // Render rearrangeable user-selected checkpoints
             stopQueue.forEach((stop, index) => {
                 const container = document.createElement('div');
                 container.className = "drag-item flex items-center justify-between gap-1 text-[11px] bg-slate-800 px-2 py-1.5 rounded-lg border border-slate-700 font-bold cursor-grab active:cursor-grabbing mb-1 select-none";
@@ -598,7 +604,6 @@
                 list.appendChild(container);
             });
 
-            // ALWAYS RENDER TERMINAL GATEWAY STACK AT BASE OF THE TREE
             if (endInputVal) {
                 const destContainer = document.createElement('div');
                 destContainer.className = "non-draggable flex items-center gap-2 text-[11px] bg-slate-800/40 px-2 py-1.5 rounded-lg border border-slate-700/50 font-bold opacity-75 mt-1 select-none pointer-events-none";
@@ -606,7 +611,6 @@
                 list.appendChild(destContainer);
             }
 
-            // Bind SortableJS tracking frames dynamically to avoid infinite loop locks
             if (window.Sortable && stopQueue.length > 1) {
                 if (list.sortableInstance) {
                     list.sortableInstance.destroy();
@@ -643,19 +647,45 @@
             return L.latLng(x1 + t * dx, y1 + t * dy);
         }
 
+        // PRODUCTION-READY SPATIAL ACCELERATION SLIDING SLICE neighborhood MATRIX
         function computeSnapToRouteVector(actualLatLng) {
             if (routeLineCoordinates.length === 0) return actualLatLng;
             let minimumObservedDistance = Infinity;
             let optimalSnappedLocation = actualLatLng;
+            let optimalIndex = 0;
             
-            for (let i = 0; i < routeLineCoordinates.length - 1; i++) {
+            // Limit coordinate loop array range to immediate surrounding 30 vertices neighborhood index window
+            let startSearchIndex = 0;
+            let endSearchIndex = routeLineCoordinates.length - 1;
+            if (currentTrackedPolylineIndex > 0 && routeLineCoordinates.length > 100) {
+                startSearchIndex = Math.max(0, currentTrackedPolylineIndex - 30);
+                endSearchIndex = Math.min(routeLineCoordinates.length - 1, currentTrackedPolylineIndex + 30);
+            }
+            
+            for (let i = startSearchIndex; i < endSearchIndex; i++) {
                 const candidatePoint = findClosestPointOnLineSegment(actualLatLng, routeLineCoordinates[i], routeLineCoordinates[i + 1]);
                 const evaluationDistance = map.distance(actualLatLng, candidatePoint);
                 if (evaluationDistance < minimumObservedDistance) {
                     minimumObservedDistance = evaluationDistance;
                     optimalSnappedLocation = candidatePoint;
+                    optimalIndex = i;
                 }
             }
+            
+            // Neighborhood validation fallback if asset drifts wide or initiates route track
+            if (minimumObservedDistance > 45 && routeLineCoordinates.length > 100) {
+                for (let i = 0; i < routeLineCoordinates.length - 1; i++) {
+                    const candidatePoint = findClosestPointOnLineSegment(actualLatLng, routeLineCoordinates[i], routeLineCoordinates[i + 1]);
+                    const evaluationDistance = map.distance(actualLatLng, candidatePoint);
+                    if (evaluationDistance < minimumObservedDistance) {
+                        minimumObservedDistance = evaluationDistance;
+                        optimalSnappedLocation = candidatePoint;
+                        optimalIndex = i;
+                    }
+                }
+            }
+            
+            currentTrackedPolylineIndex = optimalIndex;
             return (minimumObservedDistance < 35) ? optimalSnappedLocation : actualLatLng;
         }
 
@@ -671,7 +701,6 @@
             return '⬆️';
         }
 
-        // REAL-TIME MANEUVER PROXIMITY ENGINE TWEAKS
         function updateAppleNavigationHUD(currentSnappedLatLng) {
             const banner = document.getElementById('apple-navigation-hud');
             if (currentRouteInstructions.length === 0 || routeLineCoordinates.length === 0 || isAlternateMatrixModeActive) {
@@ -695,7 +724,6 @@
                 }
             }
 
-            // Meticulously evaluate the strictly next upcoming turn index signature ahead of vehicle pointer
             let targetInstruction = null;
             let activeIdx = 0;
             for (let i = 0; i < currentRouteInstructions.length; i++) {
@@ -706,7 +734,6 @@
                 }
             }
             
-            // Loop bounding fallback if track runs onto final terminal leg segment entries
             if (!targetInstruction && currentRouteInstructions.length > 0) {
                 targetInstruction = currentRouteInstructions[currentRouteInstructions.length - 1];
                 activeIdx = currentRouteInstructions.length - 1;
@@ -716,7 +743,6 @@
 
             activeInstructionIndex = activeIdx;
             
-            // Render upcoming action instructions instead of matching current status parameters
             const text = targetInstruction.text || "Continue straight";
             document.getElementById('hud-turn-instruction').innerText = text;
             document.getElementById('hud-turn-icon').innerText = resolveDirectionalManeuverSymbol(text);
@@ -746,6 +772,7 @@
             routeLineCoordinates = selectedRoute.coordinates;
             currentRouteInstructions = selectedRoute.instructions || [];
             activeInstructionIndex = 0;
+            currentTrackedPolylineIndex = 0;
 
             if (primaryRoutePolyline) { map.removeLayer(primaryRoutePolyline); }
             primaryRoutePolyline = L.polyline(routeLineCoordinates, {
@@ -1063,7 +1090,7 @@
 
                 let fuelBadgeHtml = '';
                 if (el.category === 'gas' || visualCatKey === 'gas') {
-                    fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-950 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
+                    fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-955 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
                 }
 
                 let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}">📍 Set Stop</button>`;
@@ -1246,6 +1273,23 @@
             subBar.classList.remove('hidden');
         }
 
+        // SCREEN STAY-AWAKE WAKELOCK REQUEST MANAGEMENT HANDLERS
+        async function requestScreenWakeLockBlock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.warn("Wake lock failed profile binding context adjustments", err);
+            }
+        }
+
+        function releaseScreenWakeLockBlock() {
+            if (wakeLock) {
+                wakeLock.release().then(() => { wakeLock = null; });
+            }
+        }
+
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
@@ -1363,6 +1407,11 @@
         });
 
         window.addEventListener('DOMContentLoaded', () => {
+            // AUTOMATIC BACKGROUND SERVICE WORKER HOOK INJECTION FOR NATIVE INTERFACES
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            }
+
             ['start-input', 'end-input'].forEach(id => {
                 const el = document.getElementById(id); let debounceTimer;
                 el.addEventListener('input', () => {
@@ -1380,7 +1429,7 @@
 
             loadMasterRepoFavoritesOnBoot();
 
-            const interactiveControlBars = ['master-header-panel', 'navigation-hud', 'center-loc-btn', 'apple-navigation-hud'];
+            const interactiveControlBars = ['master-header-panel', 'navigation-hud', 'center-loc-btn', 'apple-navigation-hud', 'route-mileage-sticky'];
             interactiveControlBars.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
@@ -1394,7 +1443,6 @@
         });
 
         routingControl.on('routesfound', async function(e) {
-            // Meticulously scrub redundant alternate route footprints containing identical layouts
             let uniqueRoutes = [];
             let seenDistances = new Set();
             
@@ -1410,13 +1458,14 @@
             routeLineCoordinates = uniqueRoutes[0] ? uniqueRoutes[0].coordinates : [];
             currentRouteInstructions = uniqueRoutes[0] ? (uniqueRoutes[0].instructions || []) : [];
             activeInstructionIndex = 0;
+            currentTrackedPolylineIndex = 0;
             lastMileageUpdateGps = null;
             continuousOffRouteDriftTicks = 0; 
 
+            // COLLAPSE EXPANDED INPUT PANEL AUTOMATICALLY WHEN TRACK STARTS TO UNBLOCK VIEWPORTS
             const searchContainer = document.getElementById('search-container');
-            if (searchContainer) searchContainer.classList.add('hidden');
+            if (searchContainer && isTracking) searchContainer.classList.add('hidden');
             
-            // Re-render intermediate stops priority numbers list tracking frames
             updateQueueHUD();
 
             if (isAlternateMatrixModeActive && rawRoutesMemoryArray.length > 1) {
@@ -1534,6 +1583,10 @@
                 releaseScreenWakeLockBlock();
                 isTracking = false; allowAutoCenter = true; clearTimeout(autoCenterTimeoutId);
                 geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
+                
+                const searchInBox = document.getElementById('search-container');
+                if (searchInBox) searchInBox.classList.remove('hidden');
+
                 const banner = document.getElementById('apple-navigation-hud');
                 if (banner) {
                     banner.classList.add('-translate-y-64', 'opacity-0');
@@ -1543,6 +1596,10 @@
                 if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
                 requestScreenWakeLockBlock();
                 geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
+                
+                const searchInBox = document.getElementById('search-container');
+                if (searchInBox) searchInBox.classList.add('hidden');
+
                 watchId = navigator.geolocation.watchPosition((pos) => {
                     const { latitude, longitude } = pos.coords;
                     
@@ -1583,9 +1640,8 @@
                         updateAppleNavigationHUD(snappedPoint);
 
                         let absoluteDistanceToRouteLine = Infinity;
-                        for (let i = 0; i < routeLineCoordinates.length; i++) {
-                            const d = map.distance(currentLatLngRaw, routeLineCoordinates[i]);
-                            if (d < absoluteDistanceToRouteLine) absoluteDistanceToRouteLine = d;
+                        if (routeLineCoordinates[currentTrackedPolylineIndex]) {
+                            absoluteDistanceToRouteLine = map.distance(currentLatLngRaw, routeLineCoordinates[currentTrackedPolylineIndex]);
                         }
 
                         if (absoluteDistanceToRouteLine > 75) { 
@@ -1601,7 +1657,8 @@
 
                         if (!lastMileageUpdateGps || map.distance(snappedPoint, lastMileageUpdateGps) >= 400) {
                             let remainingDistanceMeters = 0;
-                            for (let i = activeInstructionIndex; i < routeLineCoordinates.length - 1; i++) {
+                            let startCalculationNode = Math.max(activeInstructionIndex, currentTrackedPolylineIndex);
+                            for (let i = startCalculationNode; i < routeLineCoordinates.length - 1; i++) {
                                 remainingDistanceMeters += map.distance(routeLineCoordinates[i], routeLineCoordinates[i+1]);
                             }
                             const remainingDistanceMiles = (remainingDistanceMeters * 0.000621371).toFixed(1);
