@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Noob's Backyard Construction Bible</title>
+    <style>
+        :root {
+            --primary: #1a365d;
+            --accent: #2f855a;
+            --warning: #c05621;
+            --bg-light: #f7fafc;
+            --text: #2d3748;
+            --border: #e2e8f0;
+            --highlight: #ebf8ff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            line-height: 1.7;
+            color: var(--text);
+            background-color: #edf2f7;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+            padding-bottom: 25px;
+            margin-bottom: 35px;
+        }
+
+        h1 { color: var(--primary); font-size: 2.5rem; margin-bottom: 5px; }
+        h2 { color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-top: 40px; font-size: 1.8rem; }
+        h3 { color: #2b6cb0; margin-top: 25px; font-size: 1.4rem; }
+        h4 { color: var(--warning); margin-top: 15px; font-size: 1.1rem; text-transform: uppercase; }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab-btn {
+            padding: 15px 25px;
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-bottom: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            color: var(--primary);
+            transition: all 0.2s ease-in-out;
+            margin-right: 5px;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+        }
+
+        .tab-btn:hover { background: #e2e8f0; }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #fff;
+            font-size: 14px;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 14px;
+            text-align: left;
+        }
+
+        th { background-color: var(--primary); color: white; }
+        tr:nth-child(even) { background-color: var(--bg-light); }
+        .total-row { font-weight: bold; background-color: #edf2f7 !important; color: var(--primary); }
+
+        .blueprint-container {
+            background: #0b2545;
+            color: #00d2fc;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 25px;
+            border-radius: 8px;
+            border: 2px dashed #134074;
+            margin: 20px 0;
+            line-height: 1.4;
+        }
+
+        .bp-frame {
+            border: 3px solid #fff;
+            position: relative;
+            margin: 20px auto;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 5px;
+        }
+
+        .bp-joist {
+            width: 3px;
+            background-color: #00d2fc;
+            height: 100%;
+        }
+
+        .noob-instruction-box {
+            background: var(--highlight);
+            border-left: 6px solid #3182ce;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+
+        .noob-instruction-box ol > li {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #bee3f8;
+        }
+        .noob-instruction-box ol > li:last-child { border-bottom: none; }
+
+        .spec-card {
+            background: #f0fff4;
+            border-left: 6px solid var(--accent);
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+
+        .alert-card {
+            background: #fffaf0;
+            border-left: 6px solid var(--warning);
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+
+        .addon-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .fastener-tag {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 10px; }
+        strong { color: #1a202c; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>The Noob's Backyard Construction Bible</h1>
+        <p>Step-by-Step Framing, Hardware, and Accessory Assembly Blueprint for Complete Beginners</p>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(event, 'low-platform')">12" Low Play Platform</button>
+        <button class="tab-btn" onclick="switchTab(event, 'high-platform')">4' Floating Play Platform</button>
+        <button class="tab-btn" onclick="switchTab(event, 'patio-deck')">8'x8' Floating Patio Deck</button>
+        <button class="tab-btn" onclick="switchTab(event, 'addons')">Playground Add-ons Guide</button>
+        <button class="tab-btn" onclick="switchTab(event, 'master-specs')">Beginner Foundations & Tool Settings</button>
+    </div>
+
+    <!-- ================= TAB 1: LOW PLATFORM ================= -->
+    <div id="low-platform" class="tab-content active">
+        <h2>12-Inch Low Play Platform (4' x 4' Box)</h2>
+        <div class="spec-card">
+            <strong>Target Weight Capacity:</strong> 1,200 lbs (Comfortably supports 3 adults plus active children).<br>
+            <strong>Core Concept:</strong> A simple square 2x6 wood outer box with two middle support beams (joists), topped with flat 2x4 floor boards, sitting on 4 concrete deck blocks nestled into the lawn.
+        </div>
+
+        <h3>Visual Layout Blueprint (Top-Down Joist View)</h3>
+        <div class="blueprint-container">
+            <div>FRAME DIMENSIONS: 48" x 48" | JOIST SPACING: 16" O.C.</div>
+            <div class="bp-frame" style="width: 180px; height: 180px;">
+                <div class="bp-joist" style="position:absolute; left:0;"></div>
+                <div class="bp-joist" style="position:absolute; left:33%;"></div>
+                <div class="bp-joist" style="position:absolute; left:66%;"></div>
+                <div class="bp-joist" style="position:absolute; right:0;"></div>
+            </div>
+            <div style="text-align: center; font-size:12px;">Outer Frame: 2x6 Rim Joists | Surface Face: 2x4 Decking</div>
+        </div>
+
+        <div class="grid">
+            <div>
+                <h3>Materials Shopping List</h3>
+                <table>
+                    <thead>
+                        <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Concrete Deck Blocks (with 2x6 slots)</td><td>4</td><td>$40.00</td></tr>
+                        <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>1 Bag</td><td>$6.50</td></tr>
+                        <tr><td>2x6 x 8' Pressure-Treated Wood (Framing)</td><td>3 Boards</td><td>$28.50</td></tr>
+                        <tr><td>2x4 x 8' Pressure-Treated Wood (Floor Slat Face)</td><td>7 Boards</td><td>$28.70</td></tr>
+                        <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>4 Hangers</td><td>$7.20</td></tr>
+                        <tr><td>1-1/2" Simpson SD9112 Structural Connector Screws</td><td>1 Box</td><td>$10.00</td></tr>
+                        <tr><td>3-1/2" Structural Wood Screws (Heavy Frame Screws)</td><td>1 Box</td><td>$12.00</td></tr>
+                        <tr><td>3" Premium Coated Exterior Deck Screws</td><td>1 Box</td><td>$9.00</td></tr>
+                        <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$141.90</td></tr>
+                    </tbody>
+                </table>
+                
+                <h3>The Exact Cut Sheet</h3>
+                <p>Measure twice, cut once with a hand saw or circular saw. Label each piece with a pencil!</p>
+                <ul>
+                    <li><strong>From 2x6 Board #1:</strong> Cut into two pieces exactly 48 inches long. (Label: <em>Outer Front Rim</em> and <em>Outer Back Rim</em>).</li>
+                    <li><strong>From 2x6 Board #2:</strong> Cut into two pieces exactly 45 inches long. (Label: <em>Outer Left Rim</em> and <em>Outer Right Rim</em>).</li>
+                    <li><strong>From 2x6 Board #3:</strong> Cut into two pieces exactly 45 inches long. (Label: <em>Inner Joist A</em> and <em>Inner Joist B</em>).</li>
+                    <li><strong>From the seven 2x4 Boards:</strong> Cut every single board exactly in half to create fourteen 48-inch long boards. (Label: <em>Floor Slats</em>. You will use 13, keep 1 as a spare).</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3>Noob-Proof Assembly Instructions</h3>
+                <div class="noob-instruction-box">
+                    <ol>
+                        <li>
+                            <strong>Prepare the Ground Corners:</strong> Place your 4 deck blocks roughly in a 4'x4' square on your lawn slope. Use a shovel to dig out a shallow, flat pocket in the grass *only under the uphill blocks* until all 4 blocks sit visually level with each other. Pour 2 inches of gravel into the dug-out pockets to stop the blocks from settling into wet clay soil.
+                        </li>
+                        <li>
+                            <strong>Build the Outer Box Frame:</strong> Lay out your 2x6 boards on a flat surface. Stand them up on edge. Place your two 45" <em>Outer Left/Right</em> boards inside the ends of your two 48" <em>Outer Front/Back</em> boards to make a perfect square.
+                            <h4>Fastening Step:</h4> 
+                            Pre-drilling is <strong>REQUIRED</strong>. Use a 1/8" drill bit to drill 3 holes through the face of the 48" board where it overlaps the end of the 45" board. Drive three <strong>3-1/2" Structural Wood Screws</strong> through those holes into the end of the 45" board. Repeat at all four corners.
+                        </li>
+                        <li>
+                            <strong>Drop Frame Into Blocks:</strong> Lift your completed 48"x48" square frame and drop its bottom edge into the slots on top of the 4 deck blocks. Place a 4-foot bubble level on top of the frame. If it's tilted, lift the frame out and adjust the gravel/dirt under the low blocks until the bubble sits perfectly in the center lines.
+                        </li>
+                        <li>
+                            <strong>Install Inner Support Joists:</strong> Inside your box frame, mark lines on the *Outer Front* and *Outer Back* boards at exactly 16 inches and 32 inches from the left corner. Hold your 2x6 metal joist hangers centered on these marks and flush with the bottom of the frame.
+                            <h4>Fastening Step:</h4>
+                            No pre-drilling needed for hangers. Use your drill to drive six <strong>1-1/2" Structural Connector Screws</strong> through the hanger holes directly into the frame box. Drop your two 45" <em>Inner Joists</em> into the hangers. Drive four more 1-1/2" screws through the side tabs of the hanger directly into the joist wood.
+                        </li>
+                        <li>
+                            <strong>Attach the Floor Slat Face:</strong> Lay your 48" long 2x4 floor boards flat across the top of the frame, starting from one edge. Place a carpenter's pencil between each board to maintain a uniform 1/4" drainage gap.
+                            <h4>Fastening Step:</h4>
+                            Pre-drilling is only required within 2 inches of the ends of the boards to prevent splitting. Use a 1/8" drill bit. Drive two <strong>3" Premium Exterior Deck Screws</strong> down through the flat face of the 2x4 directly into the 2x6 frame/joist underneath at every spot they cross.
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 2: HIGH PLATFORM ================= -->
+    <div id="high-platform" class="tab-content">
+        <h2>4-Foot Floating Elevated Play Platform (4' x 4')</h2>
+        <div class="alert-card">
+            <strong>⚠️ Mandatory Slope Safety Modifications:</strong> Because you are bypassing dug concrete footings on a sloped grade, you <strong>must</strong> use 24" steel rebar ground pins to lock the concrete deck blocks into the hillside so they cannot slide over time. You also must install diagonal lower cross-bracing to eliminate side-to-side wobble when children run and play.
+        </div>
+
+        <h3>Visual Structural Elevation Blueprint (Deck Block Method)</h3>
+        <div class="blueprint-container">
+            <pre style="color: #00d2fc;">
+            +-----------------------------------+  <-- Top Safety Rail (36" High)
+            |      [ 3 Sided Guardrail ]        |
+            +-----------------------------------+  <-- Mid Safety Rail
+            =====================================  <-- 2x6 Structural Deck Level (4' Off Ground)
+            |   \                           /   |
+            |     \  [2x4 Sway Bracing]   /     |
+            |       \               /           |
+            |         \           /             |
+            |           \       /               |
+            |   [4x4]     \   /     [4x4]       |
+         ===|==============\ /==================|=== <-- Slope Line (Terraced flat under blocks)
+           [■]             X                   [■]   <-- 4x4 Posts sit in Concrete Deck Blocks
+            ||                                  ||   <-- [||] 24" Rebar Pins driven into earth to lock blocks
+            </pre>
+        </div>
+
+        <div class="grid">
+            <div>
+                <h3>Materials Shopping List</h3>
+                <table>
+                    <thead>
+                        <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Concrete Deck Blocks (with 4x4 center post square pocket)</td><td>4</td><td>$40.00</td></tr>
+                        <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>2 Bags</td><td>$13.00</td></tr>
+                        <tr><td>4x4 x 8' Pressure-Treated Lumber (Vertical Corner Posts)</td><td>4 Posts</td><td>$44.00</td></tr>
+                        <tr><td>2x6 x 8' Pressure-Treated Wood (Main Deck Frame)</td><td>3 Boards</td><td>$28.50</td></tr>
+                        <tr><td>2x4 x 8' Pressure-Treated Wood (Floor, Bracing, Rails)</td><td>14 Boards</td><td>$57.40</td></tr>
+                        <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>4 Hangers</td><td>$7.20</td></tr>
+                        <tr><td>24" Heavy-Duty Steel Rebar Earth Stakes</td><td>4 Stakes</td><td>$20.00</td></tr>
+                        <tr><td>5/16" x 5" Heavy-Duty Structural Lag Screws (Post-to-Frame)</td><td>1 Box</td><td>$25.00</td></tr>
+                        <tr><td>5/16" x 3-1/2" Structural Lag Screws (Bracing Screws)</td><td>1 Box</td><td>$20.00</td></tr>
+                        <tr><td>3" Premium Coated Exterior Deck Screws</td><td>1 Large Box</td><td>$22.00</td></tr>
+                        <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$277.10</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>The Exact Cut Sheet</h3>
+                <ul>
+                    <li><strong>4x4 Support Posts:</strong> Cut all 4 posts to exactly 7 feet long. (4 feet provides the height from ground to floor, and the remaining 3 feet extends above the floor to form the safety guardrail posts).</li>
+                    <li><strong>2x6 Framing Lumber:</strong> Same cuts as the low platform (Two at 48" for front/back rims, four at 45" for side rims and inner joists).</li>
+                    <li><strong>2x4 Surface Floor Slats:</strong> Cut 7 boards in half to make fourteen 48" lengths (use 13).</li>
+                    <li><strong>2x4 Guardrails:</strong> Cut 3 boards in half to make six 48" planks (Label: <em>Safety Rails</em>).</li>
+                    <li><strong>2x4 Diagonal Braces:</strong> 4 remaining full 8' boards will be cut-to-fit on-site during installation.</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3>Noob-Proof Assembly Instructions</h3>
+                <div class="noob-instruction-box">
+                    <ol>
+                        <li>
+                            <strong>Level & Pin the Blocks:</strong> Dig flat shelves into your grass slope at each corner of a 4'x4' square. Add gravel, and place the 4 deck blocks. Drive a **24" Steel Rebar Stake** completely into the dirt directly down the downhill edge of each block with a sledgehammer. This blocks the concrete bases from sliding down the Raleigh slope under force.
+                        </li>
+                        <li>
+                            <strong>Stand Up the 4x4 Posts:</strong> Insert your 7-foot 4x4 posts vertically into the center square pockets of the deck blocks. Have a helper hold a level against the side of each post to make sure it stands perfectly straight up (plumb).
+                        </li>
+                        <li>
+                            <strong>Build & Mount the Frame:</strong> Assemble the outer 48"x48" 2x6 frame box on the ground exactly like Step 2 of the Low Platform. Slide the completed wood frame box *around* the outside of your four standing posts. Lift the frame up until its top edge is exactly 48 inches off the ground. Clamp it tightly to the posts.
+                            <h4>Fastening Step:</h4>
+                            Pre-drilling is **STRICTLY MANDATORY** here. Use a 3/16" drill bit to drill 2 diagonal pilot holes through the 2x6 frame and into the center of the 4x4 post at each corner. Drive two **5/16" x 5" Structural Lag Screws** using a drill with a socket adapter through the frame into each post.
+                        </li>
+                        <li>
+                            <strong>Joists & Floor Slats:</strong> Install your 2x6 inner joists and 2x4 floor slats onto the mounted frame box using the exact same methods, hangers, and **3" Deck Screws** outlined in the low platform instructions.
+                        </li>
+                        <li>
+                            <strong>Install Lower Diagonal X-Braces:</strong> Hold a full 2x4 board diagonally across two lower 4x4 posts (underneath the platform frame). Use a pencil to trace the angle where it meets the posts, cut along the lines, and place it back on the posts to form a diagonal brace. Repeat on three open sides.
+                            <h4>Fastening Step:</h4>
+                            Pre-drill through the 2x4 using a 3/16" drill bit. Secure each end of the brace to the 4x4 post by driving two **5/16" x 3-1/2" Structural Lag Screws** tightly into the posts.
+                        </li>
+                        <li>
+                            <strong>Install the Guardrails:</strong> Take your 48" long 2x4 safety rail planks. Mount them horizontally across the upper 3-foot section of the 4x4 posts. Mount one row at 18 inches above the floor, and the top row flush with the top of the posts at 36 inches.
+                            <h4>Fastening Step:</h4>
+                            Pre-drill the ends with a 1/8" bit. Secure each rail to the post face using two **3" Exterior Deck Screws** at each end connection.
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 3: PATIO DECK ================= -->
+    <div id="patio-deck" class="tab-content">
+        <h2>8' x 8' Floating Patio Deck (Table & Umbrella Base)</h2>
+        <div class="spec-card">
+            <strong>Target Weight Capacity:</strong> 3,200 lbs distributed load.<br>
+            <strong>Core Concept:</strong> A larger freestanding patio platform utilizing a 3x3 layout matrix of 9 concrete deck blocks. This ensures that the 2x6 framework never spans more than 4 feet without solid ground support, preventing any bounce or dip when loaded with heavy iron furniture.
+        </div>
+
+        <h3>Visual Foundation Blueprint (3x3 Block Grid Matrix)</h3>
+        <div class="blueprint-container">
+            <div>FRAME DIMENSIONS: 96" x 96" | 16" O.C. JOIST PATHS</div>
+            <div class="bp-frame" style="width: 220px; height: 220px;">
+                <!-- Blocks representation -->
+                <div style="position:absolute; top:0; left:0; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
+                <div style="position:absolute; top:0; left:48%; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
+                <div style="position:absolute; top:0; right:0; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
+                
+                <div style="position:absolute; top:48%; left:0; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
+                <div style="position:absolute; top:48%; left:48%; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
+                <div style="position:absolute; top:48%; right:0; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
+
+                <div style="position:absolute; bottom:0; left:0; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
+                <div style="position:absolute; bottom:0; left:48%; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
+                <div style="position:absolute; bottom:0; right:0; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
+                
+                <!-- Joist Lines -->
+                <div class="bp-joist" style="position:absolute; left:20%;"></div>
+                <div class="bp-joist" style="position:absolute; left:40%;"></div>
+                <div class="bp-joist" style="position:absolute; left:60%;"></div>
+                <div class="bp-joist" style="position:absolute; left:80%;"></div>
+            </div>
+            <div style="text-align: center; font-size:12px;">■ = Concrete Deck Block Placement Points</div>
+        </div>
+
+        <div class="grid">
+            <div>
+                <h3>Materials Shopping List</h3>
+                <table>
+                    <thead>
+                        <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Concrete Deck Blocks</td><td>9 Blocks</td><td>$90.00</td></tr>
+                        <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>3 Bags</td><td>$19.50</td></tr>
+                        <tr><td>2x6 x 8' Pressure-Treated Wood (Frame & Joists)</td><td>7 Boards</td><td>$66.50</td></tr>
+                        <tr><td>2x4 x 8' Pressure-Treated Wood (Deck Flooring Surface)</td><td>26 Boards</td><td>$106.60</td></tr>
+                        <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>10 Hangers</td><td>$18.00</td></tr>
+                        <tr><td>1-1/2" Simpson SD9112 Structural Connector Screws</td><td>1 Box</td><td>$10.00</td></tr>
+                        <tr><td>3-1/2" Structural Wood Screws (Outer Rim Frame)</td><td>1 Box</td><td>$12.00</td></tr>
+                        <tr><td>3" Premium Coated Exterior Deck Screws</td><td>1 Box (5lb)</td><td>$22.00</td></tr>
+                        <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$344.60</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>The Exact Cut Sheet</h3>
+                <ul>
+                    <li><strong>Outer Front & Back Rims (2x6):</strong> Leave 2 boards uncut at exactly 96 inches long.</li>
+                    <li><strong>Outer Left & Right Rims (2x6):</strong> Cut 2 boards down to exactly 93 inches long.</li>
+                    <li><strong>Inner Joists (2x6):</strong> Cut 3 boards down to exactly 93 inches long.</li>
+                    <li><strong>Floor Field Decking (2x4):</strong> Keep all 26 boards completely uncut at their factory-provided length of exactly 96 inches long.</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3>Noob-Proof Assembly Instructions</h3>
+                <div class="noob-instruction-box">
+                    <ol>
+                        <li>
+                            <strong>Assemble the Outer Ring:</strong> On a flat lawn area, lay out your outer frame box. Place the two 93" 2x6 boards *inside* the ends of the two uncut 96" 2x6 boards to form an exact 96"x96" square outer perimeter.
+                            <h4>Fastening Step:</h4>
+                            Pre-drill using a 1/8" drill bit. Secure the corners by driving three **3-1/2" Structural Wood Screws** through the exterior face of the 96" board directly into the end grain of the interior 93" board.
+                        </li>
+                        <li>
+                            <strong>Establish Squareness (The Golden Rule):</strong> Measure diagonally from the back-left corner to the front-right corner. Then measure from the back-right to front-left. Tap the corners with a hammer until both diagonal numbers match exactly. Your frame is now perfectly square.
+                        </li>
+                        <li>
+                            <strong>Lay Out the 3x3 Block Grid Matrix:</strong> Mark out a square grid on your ground where your 9 deck blocks will sit (4 corners, 4 midpoints, 1 center block). Dig out shallow pockets for each block, add gravel, place the blocks inside, and set your pre-assembled outer wood frame directly into the outer block slots. Use your level to confirm it is flat across all blocks.
+                        </li>
+                        <li>
+                            <strong>Install the Inner Floating Joists:</strong> Inside the box frame, measure along the front and back 96" rims. Place measurement marks at 16", 32", 48", 64", and 80" from the left wall. Secure your 10 metal joist hangers centered on these marks using **1-1/2" Connector Screws** (No pre-drilling required for hangers). Drop your 93" inner joist boards into the hangers.
+                            <h4>Fastening Step:</h4>
+                            Drive four **1-1/2" Connector Screws** through the side slots of each hanger directly into the joist wood to lock them down.
+                        </li>
+                        <li>
+                            <strong>Lay down the 2x4 Flooring Surface:</strong> Lay your 26 full-length 96" 2x4 decking boards across the top of the frame. Use a 1/4" gap spacer (like a carpenter's pencil) between the boards.
+                            <h4>Fastening Step:</h4>
+                            Pre-drilling is only needed on the extreme ends of the planks. Drive two **3" Premium Exterior Deck Screws** down through the face of the 2x4 into every single 2x6 joist it crosses over below. Repeat this down the line until the patio platform is covered.
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 4: PLAYGROUND ADD-ONS ================= -->
+    <div id="addons" class="tab-content">
+        <h2>Playground Accessories Installation Blueprint</h2>
+        <p>Safety Core Rule: All playground accessories must be fastened directly into the thick, load-bearing 2x6 structural frame or 4x4 posts. **Never** fasten playground accessories solely into the thin 2x4 floor boards, as they will pull loose and fail.</p>
+
+        <div class="addon-card">
+            <h3>1. Solid Rock Climbing Wall</h3>
+            <p>Best attached to an open side of your 4-foot high elevated platform.</p>
+            <strong>How to Build and Attach:</strong>
+            <ol>
+                <li>Take a sheet of 3/4" exterior-grade plywood or line up 2x6 boards side-by-side to form a 4-foot wide by 5-foot long panel.</li>
+                <li>Drill 1/2" holes randomly across the face of the wood. Hammer metal playground T-nuts tightly into those holes from the **backside** of the wood. Screw your climbing holds onto the front face into those T-nuts.</li>
+                <li>Lean the climbing wall against your platform frame at a comfortable angle. </li>
+                <h4>Fastening Step:</h4>
+                Pre-drill through the top plywood lip using a 1/8" bit. Drive five **3-1/2" Structural Wood Screws** through the top edge of the climbing wall panel directly into the platform's main 2x6 outer frame. For an advanced connection, use heavy-duty galvanized gate hinges.
+            </ol>
+        </div>
+
+        <div class="addon-card">
+            <h3>2. Heavy-Duty Climbing Rope Ladder</h3>
+            <p>Hangs vertically down from the edge of the 4-foot high platform frame.</p>
+            <strong>How to Build and Attach:</strong>
+            <ol>
+                <li>Purchase pre-assembled climbing ropes or thread 3/4" thick natural manila rope through holes drilled into the ends of 2x2 wood rungs spaced 12 inches apart. Tie large knots directly beneath each rung.</li>
+                <h4>Fastening Step:</h4>
+                Go underneath the 4-foot platform floor. Take two **1/2" Heavy-Duty Galvanized Screw Eye Bolts**. Pre-drill holes into the bottom edge of the platform's 2x6 structural frame with a 3/8" drill bit. Twist the eye bolts completely into the 2x6 frame until the threads disappear. Loop your ropes through these steel rings and secure them with climbing-grade triple knots or locking carabiners.
+            </ol>
+        </div>
+
+        <div class="addon-card">
+            <h3>3. Static Walkway Bridge vs. Tensioned Suspension Bridge</h3>
+            <p>How to construct a bridge link between your 12-inch low platform and your 4-foot high platform.</p>
+            
+            <h4>Option A: The Rigid Static Walkway (Easier & Unmoving)</h4>
+            <ol>
+                <li>Cut two 2x6 beams to the span distance between the two structures. Place them bridging the gap.</li>
+                <h4>Fastening Step:</h4>
+                Pre-drill with a 3/16" bit. Secure the ends of these bridge beams directly to the faces of the 4x4 posts or 2x6 platform rims using two **5/16" x 5" Structural Lag Screws** per joint. Screw 2x4 flat floor steps across the beams using **3" Deck Screws**.
+            </ol>
+
+            <h4>Option B: The Swinging Suspension Bridge (Advanced Challenge)</h4>
+            <ol>
+                <li>Purchase two lengths of 3/8" thick galvanized proof-coil steel chains to bridge the distance.</li>
+                <h4>Fastening Step:</h4>
+                Drill completely through the 4x4 posts on both platforms using a 1/2" long drill bit. Install threaded **1/2" Galvanized Thimble Eye Bolts** through the holes, securing them tightly with washers and nuts on the opposite side with a wrench. Hook the chains to these loops using heavy-duty locking threaded chain links. Secure 2x4 wooden foot-steps across the chains by clamping them from underneath using steel U-bolts wrapped around the links.
+            </ol>
+        </div>
+
+        <div class="addon-card">
+            <h3>4. Toy Pulley System with Cargo Bucket</h3>
+            <p>Mounts out from a 4x4 corner guardrail post on the elevated platform.</p>
+            <strong>How to Build and Attach:</strong>
+            <ol>
+                <li>Take a 2-foot long 2x4 scrap piece to act as a crane arm. Screw it horizontally to the top of a 4x4 post so it sticks out over the yard edge. Add a small diagonal 2x4 wedge underneath it to act as a supporting arm.</li>
+                <h4>Fastening Step:</h4>
+                Secure the wood bracket to the post using four **3-1/2" Structural Wood Screws**. Screw a heavy steel hook into the end of the overhanging arm. Hang a **4-inch Fixed Swivel Pulley Wheel** from the hook. Thread a 3/8" nylon rope through the wheel and tie one end to a steel canvas bucket handle using a reliable knot.
+            </ol>
+        </div>
+    </div>
+
+    <!-- ================= TAB 5: TECHNICAL SPECIFICATIONS = -->
+    <div id="master-specs" class="tab-content">
+        <h2>Beginner Foundations & Tool Settings Guide</h2>
+        <div class="grid">
+            <div>
+                <h3>Understanding Pre-Drilling and Screws</h3>
+                <ul>
+                    <li><strong>Why Pre-Drill?</strong> Driving large screws directly into thick pressure-treated wood forces the wood fibers apart, causing out-of-sight splitting that compromises the safety of your frame. Pre-drilling removes a small core of wood first, allowing the screw threads to cut smoothly and cleanly into the material.</li>
+                    <li><strong>Bit Sizes Rule of Thumb:</strong> Your drill bit should be the same size as the solid inner center shank of the screw, *not* the extended width of the outer threads. 
+                        <br>• For 3" deck screws: Use a 1/8" bit.
+                        <br>• For heavy structural wood/lag screws: Use a 3/16" bit.
+                    </li>
+                    <li><strong>The Crown Rule:</strong> Look down the narrow edge of every board before cutting or installing. It will bow slightly in one direction. Always install the board with that curve arching **upward** like a rainbow. Over time, physical weight and gravity will flatten the board out. If you install it upside down, it will permanently sag and pool rainwater.</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Raleigh, NC Longevity Shielding</h3>
+                <ul>
+                    <li><strong>Combating Wet Clay Soil:</strong> Central North Carolina clay dries out very slowly. Concrete deck blocks easily pull moisture out of the earth and transfer it directly into your wood frames. To prevent rotting at contact points, apply a layer of adhesive **butyl joist tape** or heavy waterproof flashing tape along the bottom edge of any wood framing that rests inside the block slots.</li>
+                    <li><strong>The Lumber Dry-Out Period:</strong> Brand new pressure-treated lumber from local big-box stores is injected with heavy liquid chemical preservatives and is often soaking wet. **Do not seal or paint the wood immediately.** Let your completed structures sit unsealed in the yard for 4 to 6 weeks until the wood feels bone dry to the touch. Once acclimated, apply a premium exterior water-repellent stain.</li>
+                    <li><strong>Annual Inspections:</strong> Active play causes vibrations that can gradually back screws out of their threads. Re-tighten all structural fasteners every spring to ensure your structure stays rigid and safe.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(evt, tabId) {
+        const contentSections = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < contentSections.length; i++) {
+            contentSections[i].classList.remove("active");
+        }
+
+        const tabButtons = document.getElementsByClassName("tab-btn");
+        for (let i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].classList.remove("active");
+        }
+
+        document.getElementById(tabId).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+</script>
+
+</body>
+</html>
