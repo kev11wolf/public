@@ -1,7 +1,7 @@
 const CACHE_NAME = 'route-explorer-v1';
 const ASSETS = [
   './',
-  './map.html',
+  './index.html',
   './manifest.json'
 ];
 
