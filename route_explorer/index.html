@@ -171,7 +171,6 @@
         let favoritesLayerGroup = null;
         let poiClusterGroup = null;
 
-        // ACCELERATION VARIABLE INDEX FOR FAST SPATIAL WINDOW SNAP Sweeps
         let currentTrackedPolylineIndex = 0;
 
         const STATE_BOUNDS_LOOKUP = {
@@ -443,7 +442,8 @@
 
         function dispatchOffThreadAnalysis() {
             if (!routeLineCoordinates || routeLineCoordinates.length === 0) return;
-            const sliceRate = Math.max(8, Math.ceil(routeLineCoordinates.length / 52));
+            // UPGRADED RESOLUTION INTERPOLATION ENGINE FROM 52 VERTS TO 300 CHECKPOINTS FOR DETAILED DETOUR COVERAGE
+            const sliceRate = Math.max(1, Math.ceil(routeLineCoordinates.length / 300));
             activeTargetsSliceMemory = [];
             for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
             activeTargetsSliceMemory.push(routeLineCoordinates[routeLineCoordinates.length - 1]);
@@ -647,14 +647,12 @@
             return L.latLng(x1 + t * dx, y1 + t * dy);
         }
 
-        // PRODUCTION-READY SPATIAL ACCELERATION SLIDING SLICE neighborhood MATRIX
         function computeSnapToRouteVector(actualLatLng) {
             if (routeLineCoordinates.length === 0) return actualLatLng;
             let minimumObservedDistance = Infinity;
             let optimalSnappedLocation = actualLatLng;
             let optimalIndex = 0;
             
-            // Limit coordinate loop array range to immediate surrounding 30 vertices neighborhood index window
             let startSearchIndex = 0;
             let endSearchIndex = routeLineCoordinates.length - 1;
             if (currentTrackedPolylineIndex > 0 && routeLineCoordinates.length > 100) {
@@ -672,7 +670,6 @@
                 }
             }
             
-            // Neighborhood validation fallback if asset drifts wide or initiates route track
             if (minimumObservedDistance > 45 && routeLineCoordinates.length > 100) {
                 for (let i = 0; i < routeLineCoordinates.length - 1; i++) {
                     const candidatePoint = findClosestPointOnLineSegment(actualLatLng, routeLineCoordinates[i], routeLineCoordinates[i + 1]);
@@ -773,6 +770,12 @@
             currentRouteInstructions = selectedRoute.instructions || [];
             activeInstructionIndex = 0;
             currentTrackedPolylineIndex = 0;
+
+            // INTEGRATED INPUT PANEL AUTO-COLLAPSE TRIGGER ONCE ROUTE HAS BEEN DECIDED
+            const searchContainer = document.getElementById('search-container');
+            if (searchContainer) {
+                searchContainer.classList.add('hidden');
+            }
 
             if (primaryRoutePolyline) { map.removeLayer(primaryRoutePolyline); }
             primaryRoutePolyline = L.polyline(routeLineCoordinates, {
@@ -1273,7 +1276,6 @@
             subBar.classList.remove('hidden');
         }
 
-        // SCREEN STAY-AWAKE WAKELOCK REQUEST MANAGEMENT HANDLERS
         async function requestScreenWakeLockBlock() {
             try {
                 if ('wakeLock' in navigator) {
@@ -1407,7 +1409,6 @@
         });
 
         window.addEventListener('DOMContentLoaded', () => {
-            // AUTOMATIC BACKGROUND SERVICE WORKER HOOK INJECTION FOR NATIVE INTERFACES
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js').catch(() => {});
             }
@@ -1461,10 +1462,6 @@
             currentTrackedPolylineIndex = 0;
             lastMileageUpdateGps = null;
             continuousOffRouteDriftTicks = 0; 
-
-            // COLLAPSE EXPANDED INPUT PANEL AUTOMATICALLY WHEN TRACK STARTS TO UNBLOCK VIEWPORTS
-            const searchContainer = document.getElementById('search-container');
-            if (searchContainer && isTracking) searchContainer.classList.add('hidden');
             
             updateQueueHUD();
 
