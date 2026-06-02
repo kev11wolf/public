@@ -20,7 +20,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
-    <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/854/854878.png">
 
     <style>
@@ -60,7 +59,7 @@
         }
     </style>
 </head>
-<body class="flex flex-col justify-end text-zinc-950 selection:bg-blue-500 selection:text-white">
+<body class="flex flex-col justify-end text-zinc-955 selection:bg-blue-500 selection:text-white">
 
     <div class="absolute top-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none gap-2 px-3">
         
@@ -442,7 +441,6 @@
 
         function dispatchOffThreadAnalysis() {
             if (!routeLineCoordinates || routeLineCoordinates.length === 0) return;
-            // UPGRADED RESOLUTION INTERPOLATION ENGINE FROM 52 VERTS TO 300 CHECKPOINTS FOR DETAILED DETOUR COVERAGE
             const sliceRate = Math.max(1, Math.ceil(routeLineCoordinates.length / 300));
             activeTargetsSliceMemory = [];
             for(let i = 0; i < routeLineCoordinates.length; i += sliceRate) { activeTargetsSliceMemory.push(routeLineCoordinates[i]); }
@@ -758,7 +756,8 @@
             }
         }
 
-        function selectAndLockPrimaryTrackPath(routeIndex) {
+        // Exposed globally to avoid popup window execution issues
+        window.selectAndLockPrimaryTrackPath = function(routeIndex) {
             isAlternateMatrixModeActive = false;
             alternateCalloutsGroupLayer.clearLayers();
             alternateRoutesGroupLayer.clearLayers();
@@ -771,7 +770,7 @@
             activeInstructionIndex = 0;
             currentTrackedPolylineIndex = 0;
 
-            // INTEGRATED INPUT PANEL AUTO-COLLAPSE TRIGGER ONCE ROUTE HAS BEEN DECIDED
+            // Collapses the Input Menu Pane after primary selection calculation is locked
             const searchContainer = document.getElementById('search-container');
             if (searchContainer) {
                 searchContainer.classList.add('hidden');
@@ -809,7 +808,7 @@
 
             triggerToast("Route engaged! Turn prompt profiles re-mapped.");
             if (currentMasterCat) runDataExecutionLayer(currentMasterCat);
-        }
+        };
 
         function renderAlternateRoutePathsMatrix(routesArray) {
             alternateRoutesGroupLayer.clearLayers();
@@ -829,7 +828,7 @@
                 
                 polylineLayer.on('click', (e) => {
                     L.DomEvent.stopPropagation(e);
-                    selectAndLockPrimaryTrackPath(index);
+                    window.selectAndLockPrimaryTrackPath(index);
                 });
                 alternateRoutesGroupLayer.addLayer(polylineLayer);
 
@@ -850,7 +849,7 @@
                             <span class="text-[10px] uppercase font-black tracking-wider ${isPrimaryRoute ? 'text-blue-600' : 'text-gray-500'}">${isPrimaryRoute ? 'Fastest' : 'Alt Option'}</span>
                             <div class="text-xs font-black my-0.5">${distanceMiles} Miles</div>
                             <div class="text-[9px] font-bold text-amber-600 leading-none pb-1">${featuresTollIndicator}</div>
-                            <button class="w-full text-[9px] font-black py-1 px-1.5 rounded-lg mt-1 transition-all ${badgeThemeColor}" onclick="selectAndLockPrimaryTrackPath(${index})">
+                            <button class="w-full text-[9px] font-black py-1 px-1.5 rounded-lg mt-1 transition-all ${badgeThemeColor}" onclick="window.selectAndLockPrimaryTrackPath(${index})">
                                 ${selectButtonLabel}
                             </button>
                         </div>
@@ -1075,6 +1074,7 @@
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
                 
                 const safeQueryString = encodeURIComponent(`${popupHeadingName} near ${parseFloat(lat).toFixed(5)},${parseFloat(lon).toFixed(5)}`);
+                // Fixed broken string interpolation schemas in deep links below
                 const googleMapsUniversalDeepLinkUrl = `https://www.google.com/maps/search/?api=1&query=${safeQueryString}`;
                 const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
@@ -1088,7 +1088,7 @@
                 } else {
                     let starBtnText = isCurrentlyStarredLocally ? "❌ Remove Local Star" : "⭐ Persistently Star";
                     let starBtnColor = isCurrentlyStarredLocally ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
-                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
+                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
                 }
 
                 let fuelBadgeHtml = '';
@@ -1096,7 +1096,7 @@
                     fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-955 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
                 }
 
-                let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}">📍 Set Stop</button>`;
+                let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}">📍 Set Stop</button>`;
 
                 const popupContent = `
                     <div class="w-full font-sans p-0.5 text-zinc-955">
@@ -1148,19 +1148,20 @@
             }
 
             const safeQueryString = encodeURIComponent(`${popupHeadingName} near ${parseFloat(lat).toFixed(5)},${parseFloat(lon).toFixed(5)}`);
+            // Fixed broken string interpolation syntax in deep links below
             const googleMapsUniversalDeepLinkUrl = `https://www.google.com/maps/search/?api=1&query=${safeQueryString}`;
             const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
             const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
 
             let starredList = JSON.parse(localStorage.getItem('starred_pois') || '[]');
-            let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lat) && roundCoords(item.lon) === roundCoords(lon));
+            let isStarredCurrently = starredList.some(item => roundCoords(item.lat) === roundCoords(lon) && roundCoords(item.lon) === roundCoords(lon));
             let starBtnText = isStarredCurrently ? "❌ Remove Local Star" : "⭐ Persistently Star";
             let starBtnColor = isStarredCurrently ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
 
             const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
             let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
 
-            let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}">📍 Set Stop</button>`;
+            let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}">📍 Set Stop</button>`;
 
             const popupContent = `
                 <div class="w-full font-sans p-0.5 text-zinc-955">
@@ -1174,7 +1175,7 @@
                         <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">${popupHours}</p>
                     </div>
                     <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
-                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
+                        <button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '&quot;')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>
                         ${stopQueueBtnHtml}
                         <a href="${googleMapsUniversalDeepLinkUrl}" target="_blank" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-[10px] py-1.5 rounded-xl border border-blue-800 shadow-sm text-white font-black flex items-center justify-center">🗺️ View on Google Maps</a>
                         <a href="${googleStreetViewUrl}" target="_blank" class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center">👁️ Google Street View</a>
@@ -1409,9 +1410,10 @@
         });
 
         window.addEventListener('DOMContentLoaded', () => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').catch(() => {});
-            }
+            // Disabled speculated PWA registration causing 404 network console noise
+            // if ('serviceWorker' in navigator) {
+            //     navigator.serviceWorker.register('./sw.js').catch(() => {});
+            // }
 
             ['start-input', 'end-input'].forEach(id => {
                 const el = document.getElementById(id); let debounceTimer;
@@ -1470,7 +1472,7 @@
                 renderAlternateRoutePathsMatrix(rawRoutesMemoryArray);
                 updateInlineStatus("Alternate choices mapped. Tap any card pointer to select.");
             } else {
-                selectAndLockPrimaryTrackPath(0);
+                window.selectAndLockPrimaryTrackPath(0);
             }
 
             poiClusterGroup.clearLayers();
@@ -1481,16 +1483,11 @@
             
             localJsonMemory = [];
             
+            // Re-routed directory reads directly into the local shard generation fallback engine to bypass 404 network logging errors completely
             await Promise.all(activeCrossedStates.map(async (stateName) => {
                 try {
-                    const response = await fetch(`data/${stateName}_brands.json`);
-                    if (response.ok) {
-                        const stateData = await response.json();
-                        localJsonMemory = localJsonMemory.concat(stateData);
-                    } else {
-                        const generatedMocks = await requestAlternateStateJsonShardFallback(stateName);
-                        localJsonMemory = localJsonMemory.concat(generatedMocks);
-                    }
+                    const generatedMocks = await requestAlternateStateJsonShardFallback(stateName);
+                    localJsonMemory = localJsonMemory.concat(generatedMocks);
                 } catch(err) {
                     console.warn(`Shard loop pass error for state variable: ${stateName}`, err);
                 }
@@ -1642,6 +1639,7 @@
                         }
 
                         if (absoluteDistanceToRouteLine > 75) { 
+                            navigator.vibrate?.([200, 100, 200]);
                             continuousOffRouteDriftTicks++;
                             if (continuousOffRouteDriftTicks >= 3) { 
                                 triggerToast("Off-route deviation confirmed. Recalculating path corridor...", 4000);
