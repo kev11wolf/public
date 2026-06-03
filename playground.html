@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Noob's Backyard Construction Bible</title>
+    <title>Construction Projects</title>
     <style>
         :root {
             --primary: #1a365d;
@@ -22,6 +22,7 @@
             background-color: #edf2f7;
             margin: 0;
             padding: 10px;
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
@@ -65,6 +66,7 @@
             margin-right: 5px;
             border-top-left-radius: 6px;
             border-top-right-radius: 6px;
+            -webkit-appearance: none; /* Reset iPhone native button rounding overrides */
         }
 
         .tab-btn:hover { background: #e2e8f0; }
@@ -83,14 +85,17 @@
             gap: 30px;
         }
 
-        @media (max-width: 900px) {
-            .grid { grid-template-columns: 1fr; }
+        /* Responsive Table Wrap Support */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 20px 0;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
             background: #fff;
             font-size: 14px;
         }
@@ -114,6 +119,12 @@
             border: 2px dashed #134074;
             margin: 20px 0;
             line-height: 1.4;
+            overflow-x: auto; /* Handles phone screen layout maps gracefully */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .blueprint-container pre {
+            margin: 0;
         }
 
         .bp-frame {
@@ -123,6 +134,7 @@
             display: flex;
             justify-content: space-between;
             padding: 0 5px;
+            box-sizing: border-box;
         }
 
         .bp-joist {
@@ -185,6 +197,64 @@
         ul, ol { padding-left: 25px; }
         li { margin-bottom: 10px; }
         strong { color: #1a202c; }
+
+        /* Media Query Optimization for Desktop Breakdown Views */
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; gap: 15px; }
+        }
+
+        /* Targeted iPhone and Small Screens Viewport Adaptations */
+        @media (max-width: 600px) {
+            body { padding: 5px; }
+            
+            .container { 
+                padding: 15px 12px; 
+                margin: 5px auto; 
+                border-radius: 8px; 
+            }
+            
+            header {
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+            }
+
+            h1 { font-size: 1.65rem; }
+            h2 { font-size: 1.35rem; margin-top: 25px; }
+            h3 { font-size: 1.15rem; }
+            
+            /* Transforms horizontal tabs to swipe-scroll layout on iPhone Safari */
+            .tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 8px;
+                margin-bottom: 20px;
+                scrollbar-width: none; /* Hide scrollbar for clean UI (Firefox) */
+            }
+            
+            .tabs::-webkit-scrollbar {
+                display: none; /* Hide scrollbar for clean UI (Safari/Chrome) */
+            }
+
+            .tab-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+                white-space: nowrap;
+                flex: 0 0 auto;
+                margin-right: 6px;
+            }
+            
+            .blueprint-container {
+                padding: 15px;
+            }
+            
+            .noob-instruction-box, .spec-card, .alert-card, .addon-card {
+                padding: 15px;
+                margin: 15px 0;
+            }
+            
+            ul, ol { padding-left: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -195,7 +265,6 @@
         <p>Step-by-Step Framing, Hardware, and Accessory Assembly Blueprint for Complete Beginners</p>
     </header>
 
-    <!-- Navigation Tabs -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab(event, 'low-platform')">12" Low Play Platform</button>
         <button class="tab-btn" onclick="switchTab(event, 'high-platform')">4' Floating Play Platform</button>
@@ -208,7 +277,6 @@
         <button class="tab-btn" onclick="switchTab(event, 'screen-porch')">Raleigh Front Screen Porch</button>
     </div>
 
-    <!-- ================= TAB 1: LOW PLATFORM ================= -->
     <div id="low-platform" class="tab-content active">
         <h2>12-Inch Low Play Platform (4' x 4' Box)</h2>
         <div class="spec-card">
@@ -231,22 +299,24 @@
         <div class="grid">
             <div>
                 <h3>Materials Shopping List</h3>
-                <table>
-                    <thead>
-                        <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Concrete Deck Blocks (with 2x6 slots)</td><td>4</td><td>$40.00</td></tr>
-                        <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>1 Bag</td><td>$6.50</td></tr>
-                        <tr><td>2x6 x 8' Pressure-Treated Wood (Framing)</td><td>3 Boards</td><td>$28.50</td></tr>
-                        <tr><td>2x4 x 8' Pressure-Treated Wood (Floor Slat Face)</td><td>7 Boards</td><td>$28.70</td></tr>
-                        <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>4 Hangers</td><td>$7.20</td></tr>
-                        <tr><td><strong>1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws</strong> (Mechanically Galvanized, Hex-Drive)</td><td>1 Box (100ct)</td><td>$11.50</td></tr>
-                        <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (Climatek Coated, T-25 Star Drive)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
-                        <tr><td><strong>3" Premium Coated Exterior Wood Deck Screws</strong> (e.g., DeckMate Premium polymer-coated, T-25 Star Drive)</td><td>1 Box (1lb)</td><td>$9.50</td></tr>
-                        <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$146.40</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Concrete Deck Blocks (with 2x6 slots)</td><td>4</td><td>$40.00</td></tr>
+                            <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>1 Bag</td><td>$6.50</td></tr>
+                            <tr><td>2x6 x 8' Pressure-Treated Wood (Framing)</td><td>3 Boards</td><td>$28.50</td></tr>
+                            <tr><td>2x4 x 8' Pressure-Treated Wood (Floor Slat Face)</td><td>7 Boards</td><td>$28.70</td></tr>
+                            <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>4 Hangers</td><td>$7.20</td></tr>
+                            <tr><td><strong>1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws</strong> (Mechanically Galvanized, Hex-Drive)</td><td>1 Box (100ct)</td><td>$11.50</td></tr>
+                            <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (Climatek Coated, T-25 Star Drive)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
+                            <tr><td><strong>3" Premium Coated Exterior Wood Deck Screws</strong> (e.g., DeckMate Premium polymer-coated, T-25 Star Drive)</td><td>1 Box (1lb)</td><td>$9.50</td></tr>
+                            <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$146.40</td></tr>
+                        </tbody>
+                    </table>
+                </div>
                 
                 <h3>The Exact Cut Sheet</h3>
                 <p>Measure twice, cut once with a hand saw or circular saw. Label each piece with a pencil!</p>
@@ -276,7 +346,7 @@
                         <li>
                             <strong>Install Inner Support Joists:</strong> Inside your box frame, mark lines on the *Outer Front* and *Outer Back* boards at exactly 16 inches and 32 inches from the left corner. Hold your 2x6 metal joist hangers centered on these marks and flush with the bottom of the frame.
                             <h4>Fastening Step:</h4>
-                            No pre-drilling needed for hangers. Use your drill to drive six <strong>1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws</strong> through the face holes of the metal hanger directly into the frame box. Drop your two 45" <em>Inner Joists</em> into the hangers. Drive four more 1-1/2" screws through the side tabs of the hanger directly into the joist wood. **Never** use drywall or deck screws in metal hangers.
+                            No pre-drilling needed for hangers. Use your drill to drive six 1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws through the face holes of the metal hanger directly into the frame box. Drop your two 45" <em>Inner Joists</em> into the hangers. Drive four more 1-1/2" screws through the side tabs of the hanger directly into the joist wood. **Never** use drywall or deck screws in metal hangers.
                         </li>
                         <li>
                             <strong>Attach the Floor Slat Face:</strong> Lay your 48" long 2x4 floor boards flat across the top of the frame, starting from one edge. Place a carpenter's pencil between each board to maintain a uniform 1/4" drainage gap.
@@ -289,7 +359,6 @@
         </div>
     </div>
 
-    <!-- ================= TAB 2: HIGH PLATFORM ================= -->
     <div id="high-platform" class="tab-content">
         <h2>4-Foot Floating Elevated Play Platform (4' x 4')</h2>
         <div class="alert-card">
@@ -299,45 +368,47 @@
         <h3>Visual Structural Elevation Blueprint (Deck Block Method)</h3>
         <div class="blueprint-container">
             <pre style="color: #00d2fc;">
-            +-----------------------------------+  &lt;-- Top Safety Rail (36" High)
-            |      [ 3 Sided Guardrail ]        |
-            +-----------------------------------+  &lt;-- Mid Safety Rail
-            =====================================  &lt;-- 2x6 Structural Deck Level (4' Off Ground)
-            |   \                           /   |
-            |     \  [2x4 Sway Bracing]   /     |
-            |       \               /           |
-            |         \           /             |
-            |           \       /               |
-            |   [4x4]     \   /     [4x4]       |
-         ===|==============\ /==================|=== &lt;-- Slope Line (Terraced flat under blocks)
-           [■]             X                   [■]   &lt;-- 4x4 Posts sit in Concrete Deck Blocks
-            ||                                  ||   &lt;-- [||] 24" Rebar Pins driven into earth to lock blocks
++-----------------------------------+  &lt;-- Top Safety Rail (36" High)
+|       [ 3 Sided Guardrail ]        |
++-----------------------------------+  &lt;-- Mid Safety Rail
+=====================================  &lt;-- 2x6 Structural Deck Level (4' Off Ground)
+|   \                           /   |
+|     \  [2x4 Sway Bracing]   /     |
+|       \               /           |
+|         \           /             |
+|           \       /               |
+|   [4x4]     \   /     [4x4]       |
+===|==============\ /==================|=== &lt;-- Slope Line (Terraced flat under blocks)
+   [■]             X                   [■]   &lt;-- 4x4 Posts sit in Concrete Deck Blocks
+    ||                                  ||   &lt;-- [||] 24" Rebar Pins driven into earth to lock blocks
             </pre>
         </div>
 
         <div class="grid">
             <div>
                 <h3>Materials Shopping List</h3>
-                <table>
-                    <thead>
-                        <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Concrete Deck Blocks (with 4x4 center post square pocket)</td><td>4</td><td>$40.00</td></tr>
-                        <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>2 Bags</td><td>$13.00</td></tr>
-                        <tr><td>4x4 x 8' Pressure-Treated Lumber (Vertical Corner Posts)</td><td>4 Posts</td><td>$44.00</td></tr>
-                        <tr><td>2x6 x 8' Pressure-Treated Wood (Main Deck Frame)</td><td>3 Boards</td><td>$28.50</td></tr>
-                        <tr><td>2x4 x 8' Pressure-Treated Wood (Floor, Bracing, Rails)</td><td>14 Boards</td><td>$57.40</td></tr>
-                        <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>4 Hangers</td><td>$7.20</td></tr>
-                        <tr><td>24" Heavy-Duty Steel Rebar Earth Stakes</td><td>4 Stakes</td><td>$20.00</td></tr>
-                        <tr><td><strong>1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws</strong> (Hex-Drive)</td><td>1 Box (100ct)</td><td>$11.50</td></tr>
-                        <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (T-25 Star Drive)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
-                        <tr><td><strong>5" Simpson Strong-Tie SDWS Framing Structural Wood Screws</strong> (Double-Barrier Coated, fatter shank, T-30 Star Drive)</td><td>1 Box (12ct)</td><td>$18.00</td></tr>
-                        <tr><td><strong>3-1/2" Simpson Strong-Tie SDWS Framing Structural Wood Screws</strong> (T-30 Star Drive)</td><td>1 Box (12ct)</td><td>$14.00</td></tr>
-                        <tr><td><strong>3" Premium Coated Exterior Wood Deck Screws</strong> (T-25 Star Drive)</td><td>1 Box (1lb)</td><td>$9.50</td></tr>
-                        <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$317.60</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Concrete Deck Blocks (with 4x4 center post square pocket)</td><td>4</td><td>$40.00</td></tr>
+                            <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>2 Bags</td><td>$13.00</td></tr>
+                            <tr><td>4x4 x 8' Pressure-Treated Lumber (Vertical Corner Posts)</td><td>4 Posts</td><td>$44.00</td></tr>
+                            <tr><td>2x6 x 8' Pressure-Treated Wood (Main Deck Frame)</td><td>3 Boards</td><td>$28.50</td></tr>
+                            <tr><td>2x4 x 8' Pressure-Treated Wood (Floor, Bracing, Rails)</td><td>14 Boards</td><td>$57.40</td></tr>
+                            <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>4 Hangers</td><td>$7.20</td></tr>
+                            <tr><td>24" Heavy-Duty Steel Rebar Earth Stakes</td><td>4 Stakes</td><td>$20.00</td></tr>
+                            <tr><td><strong>1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws</strong> (Hex-Drive)</td><td>1 Box (100ct)</td><td>$11.50</td></tr>
+                            <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (T-25 Star Drive)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
+                            <tr><td><strong>5" Simpson Strong-Tie SDWS Framing Structural Wood Screws</strong> (Double-Barrier Coated, fatter shank, T-30 Star Drive)</td><td>1 Box (12ct)</td><td>$18.00</td></tr>
+                            <tr><td><strong>3-1/2" Simpson Strong-Tie SDWS Framing Structural Wood Screws</strong> (T-30 Star Drive)</td><td>1 Box (12ct)</td><td>$14.00</td></tr>
+                            <tr><td><strong>3" Premium Coated Exterior Wood Deck Screws</strong> (T-25 Star Drive)</td><td>1 Box (1lb)</td><td>$9.50</td></tr>
+                            <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$317.60</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <h3>The Exact Cut Sheet</h3>
                 <ul>
@@ -383,7 +454,6 @@
         </div>
     </div>
 
-    <!-- ================= TAB 3: 8x8 PATIO DECK ================= -->
     <div id="patio-deck" class="tab-content">
         <h2>8' x 8' Floating Patio Deck (Table & Umbrella Base)</h2>
         <div class="spec-card">
@@ -395,7 +465,6 @@
         <div class="blueprint-container">
             <div>FRAME DIMENSIONS: 96" x 96" | 16" O.C. JOIST PATHS</div>
             <div class="bp-frame" style="width: 220px; height: 220px;">
-                <!-- Blocks representation -->
                 <div style="position:absolute; top:0; left:0; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
                 <div style="position:absolute; top:0; left:48%; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
                 <div style="position:absolute; top:0; right:0; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
@@ -408,7 +477,6 @@
                 <div style="position:absolute; bottom:0; left:48%; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
                 <div style="position:absolute; bottom:0; right:0; background:#fff; color:#0f3057; font-size:10px; padding:2px;">■</div>
                 
-                <!-- Joist Lines -->
                 <div class="bp-joist" style="position:absolute; left:20%;"></div>
                 <div class="bp-joist" style="position:absolute; left:40%;"></div>
                 <div class="bp-joist" style="position:absolute; left:60%;"></div>
@@ -420,22 +488,24 @@
         <div class="grid">
             <div>
                 <h3>Materials Shopping List</h3>
-                <table>
-                    <thead>
-                        <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Concrete Deck Blocks</td><td>9 Blocks</td><td>$90.00</td></tr>
-                        <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>3 Bags</td><td>$19.50</td></tr>
-                        <tr><td>2x6 x 8' Pressure-Treated Wood (Frame & Joists)</td><td>7 Boards</td><td>$66.50</td></tr>
-                        <tr><td>2x4 x 8' Pressure-Treated Wood (Deck Flooring Surface)</td><td>26 Boards</td><td>$106.60</td></tr>
-                        <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>10 Hangers</td><td>$18.00</td></tr>
-                        <tr><td><strong>1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws</strong> (Hex-Drive)</td><td>1 Box (100ct)</td><td>$11.50</td></tr>
-                        <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (T-25 Star Drive, Rim Corners)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
-                        <tr><td><strong>3" Premium Coated Exterior Wood Deck Screws</strong> (T-25 Star Drive, Face Decking)</td><td>1 Box (5lb bulk)</td><td>$32.00</td></tr>
-                        <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$358.60</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Concrete Deck Blocks</td><td>9 Blocks</td><td>$90.00</td></tr>
+                            <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>3 Bags</td><td>$19.50</td></tr>
+                            <tr><td>2x6 x 8' Pressure-Treated Wood (Frame & Joists)</td><td>7 Boards</td><td>$66.50</td></tr>
+                            <tr><td>2x4 x 8' Pressure-Treated Wood (Deck Flooring Surface)</td><td>26 Boards</td><td>$106.60</td></tr>
+                            <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>10 Hangers</td><td>$18.00</td></tr>
+                            <tr><td><strong>1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws</strong> (Hex-Drive)</td><td>1 Box (100ct)</td><td>$11.50</td></tr>
+                            <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (T-25 Star Drive, Rim Corners)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
+                            <tr><td><strong>3" Premium Coated Exterior Wood Deck Screws</strong> (T-25 Star Drive, Face Decking)</td><td>1 Box (5lb bulk)</td><td>$32.00</td></tr>
+                            <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$358.60</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <h3>The Exact Cut Sheet</h3>
                 <ul>
@@ -477,7 +547,6 @@
         </div>
     </div>
 
-    <!-- ================= TAB 4: 8x8 HOT TUB DECK ================= -->
     <div id="hottub-deck" class="tab-content">
         <h2>8' x 8' Heavy-Duty Hot Tub Platform (Coleman Inflatable Rated)</h2>
         <div class="alert-card">
@@ -488,7 +557,6 @@
         <div class="blueprint-container">
             <div>FRAME: 96" x 96" | JOIST SPACING: 12" O.C. (7 Inner Joists) | SOLID MID-SPAN BLOCKING ROW</div>
             <div class="bp-frame" style="width: 220px; height: 220px;">
-                <!-- 3x3 Block Grid Matrix -->
                 <div style="position:absolute; top:0; left:0; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; top:0; left:48%; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; top:0; right:0; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
@@ -501,7 +569,6 @@
                 <div style="position:absolute; bottom:0; left:48%; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; bottom:0; right:0; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 
-                <!-- Heavy Joist Layout Matrix -->
                 <div class="bp-joist" style="position:absolute; left:12.5%;"></div>
                 <div class="bp-joist" style="position:absolute; left:25%;"></div>
                 <div class="bp-joist" style="position:absolute; left:37.5%;"></div>
@@ -510,7 +577,6 @@
                 <div class="bp-joist" style="position:absolute; left:75%;"></div>
                 <div class="bp-joist" style="position:absolute; left:87.5%;"></div>
                 
-                <!-- Horizontal Solid Center Blocking Line -->
                 <div style="position:absolute; top:50%; left:0; width:100%; height:2px; background-color:#ff9f43; border-top:1px dashed #fff;"></div>
             </div>
             <div style="text-align: center; font-size:12px; margin-top:5px;">■ = Ground Blocks | <span style="color:#ff9f43;">---</span> = Solid 2x6 Anti-Twist Mid-Span Blocking Row</div>
@@ -519,24 +585,26 @@
         <div class="grid">
             <div>
                 <h3>Materials Shopping List</h3>
-                <table>
-                    <thead>
-                        <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Concrete Deck Blocks</td><td>9 Blocks</td><td>$90.00</td></tr>
-                        <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>3 Bags</td><td>$19.50</td></tr>
-                        <tr><td>2x6 x 8' PT Lumber (Heavy Rim Frame & 12" O.C Joists)</td><td>11 Boards</td><td>$104.50</td></tr>
-                        <tr><td>2x6 x 8' PT Lumber (Solid Mid-Span Internal Blocking)</td><td>1 Board</td><td>$9.50</td></tr>
-                        <tr><td>2x6 x 8' PT Lumber (Thick Puncture-Proof Floor Deck Face)</td><td>17 Boards</td><td>$161.50</td></tr>
-                        <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>14 Hangers</td><td>$25.20</td></tr>
-                        <tr><td><strong>1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws</strong> (Hex-Drive)</td><td>2 Boxes (100ct ea)</td><td>$23.00</td></tr>
-                        <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (T-25 Star Drive, Outer Box Corners)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
-                        <tr><td><strong>3" GRK R4 Multi-Purpose Structural Wood Screws</strong> (Climatek Coated, T-25 Star Drive, Used for Heavy Blocking Connections)</td><td>1 Box (100ct)</td><td>$19.50</td></tr>
-                        <tr><td><strong>3" Premium Coated Exterior Wood Deck Screws</strong> (T-25 Star Drive, Face Decking)</td><td>1 Box (5lb bulk)</td><td>$32.00</td></tr>
-                        <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$499.20</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Concrete Deck Blocks</td><td>9 Blocks</td><td>$90.00</td></tr>
+                            <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>3 Bags</td><td>$19.50</td></tr>
+                            <tr><td>2x6 x 8' PT Lumber (Heavy Rim Frame & 12" O.C Joists)</td><td>11 Boards</td><td>$104.50</td></tr>
+                            <tr><td>2x6 x 8' PT Lumber (Solid Mid-Span Internal Blocking)</td><td>1 Board</td><td>$9.50</td></tr>
+                            <tr><td>2x6 x 8' PT Lumber (Thick Puncture-Proof Floor Deck Face)</td><td>17 Boards</td><td>$161.50</td></tr>
+                            <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>14 Hangers</td><td>$25.20</td></tr>
+                            <tr><td><strong>1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws</strong> (Hex-Drive)</td><td>2 Boxes (100ct ea)</td><td>$23.00</td></tr>
+                            <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (T-25 Star Drive, Outer Box Corners)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
+                            <tr><td><strong>3" GRK R4 Multi-Purpose Structural Wood Screws</strong> (Climatek Coated, T-25 Star Drive, Used for Heavy Blocking Connections)</td><td>1 Box (100ct)</td><td>$19.50</td></tr>
+                            <tr><td><strong>3" Premium Coated Exterior Wood Deck Screws</strong> (T-25 Star Drive, Face Decking)</td><td>1 Box (5lb bulk)</td><td>$32.00</td></tr>
+                            <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$499.20</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <h3>The Exact Cut Sheet</h3>
                 <ul>
@@ -577,7 +645,6 @@
         </div>
     </div>
 
-    <!-- ================= TAB 5: 8x16 PLATIO DECK ================= -->
     <div id="large-patio-deck" class="tab-content">
         <h2>8' x 16' Floating Entertainment Deck (Large Ground-Level Footprint)</h2>
         <div class="spec-card">
@@ -589,28 +656,24 @@
         <div class="blueprint-container">
             <div>FRAME DIMENSIONS: 192" x 96" | 16" O.C. JOIST INTERVALS (11 Internal Joists)</div>
             <div class="bp-frame" style="width: 440px; height: 220px;">
-                <!-- Row 1: Front Rim Blocks (y=0) -->
                 <div style="position:absolute; top:0; left:0; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; top:0; left:25%; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; top:0; left:50%; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; top:0; left:75%; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; top:0; right:0; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 
-                <!-- Row 2: Midline Joist Blocks (y=48%) -->
                 <div style="position:absolute; top:45%; left:0; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; top:45%; left:25%; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; top:45%; left:50%; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; top:45%; left:75%; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; top:45%; right:0; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
 
-                <!-- Row 3: Back Rim Blocks (y=bottom) -->
                 <div style="position:absolute; bottom:0; left:0; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; bottom:0; left:25%; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; bottom:0; left:50%; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; bottom:0; left:75%; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 <div style="position:absolute; bottom:0; right:0; background:#fff; color:#0f3057; font-size:10px; padding:2px; font-weight:bold;">■</div>
                 
-                <!-- Sample Joist Traces -->
                 <div class="bp-joist" style="position:absolute; left:8.3%;"></div>
                 <div class="bp-joist" style="position:absolute; left:16.6%;"></div>
                 <div class="bp-joist" style="position:absolute; left:25%;"></div>
@@ -629,23 +692,25 @@
         <div class="grid">
             <div>
                 <h3>Materials Shopping List</h3>
-                <table>
-                    <thead>
-                        <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Concrete Deck Blocks</td><td>15 Blocks</td><td>$150.00</td></tr>
-                        <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>5 Bags</td><td>$32.50</td></tr>
-                        <tr><td>2x6 x 16' Pressure-Treated Wood (Front & Back Rims)</td><td>2 Boards</td><td>$38.00</td></tr>
-                        <tr><td>2x6 x 8' Pressure-Treated Wood (Side Rims & 11 Inner Joists)</td><td>13 Boards</td><td>$123.50</td></tr>
-                        <tr><td>2x4 x 16' Pressure-Treated Wood (Full Length Flooring Surface)</td><td>26 Boards</td><td>$299.00</td></tr>
-                        <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>22 Hangers</td><td>$39.60</td></tr>
-                        <tr><td><strong>1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws</strong> (Hex-Drive)</td><td>3 Boxes (100ct ea)</td><td>$34.50</td></tr>
-                        <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (T-25 Star Drive, Box Corners)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
-                        <tr><td><strong>3" Premium Coated Exterior Wood Deck Screws</strong> (T-25 Star Drive, Face Decking)</td><td>1 Box (10lb bulk)</td><td>$54.00</td></tr>
-                        <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$785.10</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Concrete Deck Blocks</td><td>15 Blocks</td><td>$150.00</td></tr>
+                            <tr><td>All-Purpose Leveling Gravel Bag (0.5 cu ft)</td><td>5 Bags</td><td>$32.50</td></tr>
+                            <tr><td>2x6 x 16' Pressure-Treated Wood (Front & Back Rims)</td><td>2 Boards</td><td>$38.00</td></tr>
+                            <tr><td>2x6 x 8' Pressure-Treated Wood (Side Rims & 11 Inner Joists)</td><td>13 Boards</td><td>$123.50</td></tr>
+                            <tr><td>2x4 x 16' Pressure-Treated Wood (Full Length Flooring Surface)</td><td>26 Boards</td><td>$299.00</td></tr>
+                            <tr><td>2x6 Metal Face-Mount Joist Hangers</td><td>22 Hangers</td><td>$39.60</td></tr>
+                            <tr><td><strong>1-1/2" Simpson Strong-Tie SD9112 Structural Connector Screws</strong> (Hex-Drive)</td><td>3 Boxes (100ct ea)</td><td>$34.50</td></tr>
+                            <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (T-25 Star Drive, Box Corners)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
+                            <tr><td><strong>3" Premium Coated Exterior Wood Deck Screws</strong> (T-25 Star Drive, Face Decking)</td><td>1 Box (10lb bulk)</td><td>$54.00</td></tr>
+                            <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$785.10</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <h3>The Exact Cut Sheet</h3>
                 <p>⚠️ <strong>Noob Alert:</strong> By buying 16-foot long floor decking planks, you have ZERO butt-joints to stagger, creating a beautiful seamless face without complex wood layout patterns!</p>
@@ -688,7 +753,6 @@
         </div>
     </div>
 
-    <!-- ================= TAB 6: NEW BAY WINDOW PLANT SHELF ================= -->
     <div id="window-shelf" class="tab-content">
         <h2>Bay Window Heavy-Duty Floating Plant Shelf (Cantilevered Wall-Lock System)</h2>
         <div class="spec-card">
@@ -717,23 +781,25 @@
         <div class="grid">
             <div>
                 <h3>No Stone Unturned Materials & Parts List</h3>
-                <table>
-                    <thead>
-                        <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>2x4 x 8' Premium Kiln-Dried Select Framing Lumber (Cleats & Internal Framing)</td><td>4 Boards</td><td>$22.00</td></tr>
-                        <tr><td>3/4" x 4' x 8' Cabinet-Grade Birch Plywood (Top & Bottom Smooth Finish Skins)</td><td>1 Sheet</td><td>$65.00</td></tr>
-                        <tr><td>1x6 x 8' Premium Clear Solid Wood Trim Board (Decorative Front Face/Apron Edge)</td><td>1 Board</td><td>$18.50</td></tr>
-                        <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (Climatek Coated, Wall Cleat to Studs)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
-                        <tr><td><strong>3" GRK R4 Multi-Purpose Structural Wood Screws</strong> (Internal Ladder Frame Assembly)</td><td>1 Box (50ct)</td><td>$12.00</td></tr>
-                        <tr><td><strong>1-5/8" Premium Trim-Head Star Drive Finishing Wood Screws</strong> (Plywood Top Skin Attachment)</td><td>1 Box (100ct)</td><td>$11.00</td></tr>
-                        <tr><td>Titebond III Ultimate Waterproof Wood Glue (8 oz)</td><td>1 Bottle</td><td>$7.00</td></tr>
-                        <tr><td>Minwax Helmsman Clear Gloss Marine Spar Urethane (1 Quart)</td><td>1 Quart</td><td>$21.50</td></tr>
-                        <tr><td>OSI QUAD MAX Advanced Clear Waterproof Caulk/Sealant</td><td>1 Tube</td><td>$9.50</td></tr>
-                        <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$181.00</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>What to Buy</th><th>Qty</th><th>Est. Total</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>2x4 x 8' Premium Kiln-Dried Select Framing Lumber (Cleats & Internal Framing)</td><td>4 Boards</td><td>$22.00</td></tr>
+                            <tr><td>3/4" x 4' x 8' Cabinet-Grade Birch Plywood (Top & Bottom Smooth Finish Skins)</td><td>1 Sheet</td><td>$65.00</td></tr>
+                            <tr><td>1x6 x 8' Premium Clear Solid Wood Trim Board (Decorative Front Face/Apron Edge)</td><td>1 Board</td><td>$18.50</td></tr>
+                            <tr><td><strong>3-1/2" GRK R4 Heavy-Duty Structural Wood Screws</strong> (Climatek Coated, Wall Cleat to Studs)</td><td>1 Box (50ct)</td><td>$14.50</td></tr>
+                            <tr><td><strong>3" GRK R4 Multi-Purpose Structural Wood Screws</strong> (Internal Ladder Frame Assembly)</td><td>1 Box (50ct)</td><td>$12.00</td></tr>
+                            <tr><td><strong>1-5/8" Premium Trim-Head Star Drive Finishing Wood Screws</strong> (Plywood Top Skin Attachment)</td><td>1 Box (100ct)</td><td>$11.00</td></tr>
+                            <tr><td>Titebond III Ultimate Waterproof Wood Glue (8 oz)</td><td>1 Bottle</td><td>$7.00</td></tr>
+                            <tr><td>Minwax Helmsman Clear Gloss Marine Spar Urethane (1 Quart)</td><td>1 Quart</td><td>$21.50</td></tr>
+                            <tr><td>OSI QUAD MAX Advanced Clear Waterproof Caulk/Sealant</td><td>1 Tube</td><td>$9.50</td></tr>
+                            <tr class="total-row"><td>Estimated Project Cost</td><td>—</td><td>$181.00</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <h3>The Architectural Cut Sheet</h3>
                 <p>💡 <em>Note: Calculations below are based on a standard bay window configuration (48" Center back wall with two 24" flanking side walls at 45° angles, with a 16" shelf depth). Pull exact field dimensions from your specific window sill layout before trimming!</em></p>
@@ -782,7 +848,6 @@
         </div>
     </div>
 
-    <!-- ================= TAB 7: PLAYGROUND ADD-ONS ================= -->
     <div id="addons" class="tab-content">
         <h2>Playground Accessories Installation Blueprint</h2>
         <p>Safety Core Rule: All playground accessories must be fastened directly into the thick, load-bearing 2x6 structural frame or 4x4 posts. **Never** fasten playground accessories solely into the thin 2x4 floor boards, as they will pull loose and fail.</p>
@@ -842,7 +907,6 @@
         </div>
     </div>
 
-    <!-- ================= TAB 8: TECHNICAL SPECIFICATIONS = -->
     <div id="master-specs" class="tab-content">
         <h2>Beginner Foundations & Tool Settings Guide</h2>
         <div class="grid">
@@ -869,7 +933,6 @@
         </div>
     </div>
 
-    <!-- ================= TAB 9: RALEIGH SCREEN PORCH ================= -->
     <div id="screen-porch" class="tab-content">
         <h2>Raleigh Front Screen Porch Project (Mini Track System)</h2>
         <div class="spec-card">
@@ -905,37 +968,39 @@ ____________________________________________________________________
 |       |                                                           |       |
 |_______|___________________________[No Base Plate Walkway]__________|_______|
         [    Painted Decorative Wood Crown Blocks On Brick   ]
-        [       ZERO Fasteners/Drilling Into Brick Pier      ]
+        [        ZERO Fasteners/Drilling Into Brick Pier      ]
             </pre>
         </div>
 
         <div class="grid">
             <div>
                 <h3>No Stone Unturned Parts & Shopping List</h3>
-                <table>
-                    <thead>
-                        <tr><th>Item Description</th><th>Qty</th><th>Est. Total</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Screen Tight Mini Track (3/4" x 3/4" x 8' Aluminum Pieces)</td><td>30</td><td>$779.70</td></tr>
-                        <tr><td>Mini Track Clip & Stainless Screw Combo (100-Pack Bags)</td><td>3 Bags</td><td>$112.50</td></tr>
-                        <tr><td>72" x 100' Heavy-Duty Charcoal Fiberglass Screen Roll</td><td>1 Roll</td><td>$115.00</td></tr>
-                        <tr><td>0.170" Round Screen Spline (250 ft Roll)</td><td>1 Roll</td><td>$22.00</td></tr>
-                        <tr><td>2x4x8' #2 Prime PT Appearance-Grade Lumber (Frames & Splits)</td><td>8</td><td>$44.00</td></tr>
-                        <tr><td>Screen Tight 5-Bar 36" x 80" Natural Wood Screen Door</td><td>1</td><td>$89.99</td></tr>
-                        <tr><td>Heavy-Duty Black Screen Door Hardware Kit (Hinges, Latch, Pull)</td><td>1 Kit</td><td>$37.97</td></tr>
-                        <tr><td>4x4x8' #2 Prime PT Ground-Contact Posts (Independent Rail Anchors)</td><td>6</td><td>$69.00</td></tr>
-                        <tr><td>2x4x10' Premium PT Boards (Horizontal Rails for 10' Spans)</td><td>4</td><td>$36.00</td></tr>
-                        <tr><td>2x4x12' Premium PT Boards (Horizontal Rails for 6' Spans)</td><td>2</td><td>$22.00</td></tr>
-                        <tr><td>2x4x8' Premium PT Boards (Horizontal Rails for Stair Span)</td><td>2</td><td>$11.00</td></tr>
-                        <tr><td>Black Aluminum Round Balusters (32" Length - 30-Pack)</td><td>4 Packs</td><td>$180.00</td></tr>
-                        <tr><td><strong>2-1/2" Kreg SML-C250B-50 Blue-Kote Outdoor Pocket Hole Screws</strong> (Weather-resistant polymer coated, Square Drive)</td><td>2 Packs (50ct ea)</td><td>$15.00</td></tr>
-                        <tr><td><strong>6-1/4" FastenMaster ThruLOK Heavy Structural Post-Mounting Screws</strong> (Includes specialized nuts and washers, lifetime coating)</td><td>2 Packs (12ct ea)</td><td>$56.00</td></tr>
-                        <tr><td>OSI QUAD MAX Advanced Exterior Window/Door Caulk</td><td>3 Tubes</td><td>$28.50</td></tr>
-                        <tr><td>Exterior Premium Primer + Paint Combo (1 Gallon, Color Matched)</td><td>1 Gal</td><td>$65.00</td></tr>
-                        <tr class="total-row"><td>Estimated Grand Total Cost</td><td>—</td><td>$1,691.16</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>Item Description</th><th>Qty</th><th>Est. Total</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Screen Tight Mini Track (3/4" x 3/4" x 8' Aluminum Pieces)</td><td>30</td><td>$779.70</td></tr>
+                            <tr><td>Mini Track Clip & Stainless Screw Combo (100-Pack Bags)</td><td>3 Bags</td><td>$112.50</td></tr>
+                            <tr><td>72" x 100' Heavy-Duty Charcoal Fiberglass Screen Roll</td><td>1 Roll</td><td>$115.00</td></tr>
+                            <tr><td>0.170" Round Screen Spline (250 ft Roll)</td><td>1 Roll</td><td>$22.00</td></tr>
+                            <tr><td>2x4x8' #2 Prime PT Appearance-Grade Lumber (Frames & Splits)</td><td>8</td><td>$44.00</td></tr>
+                            <tr><td>Screen Tight 5-Bar 36" x 80" Natural Wood Screen Door</td><td>1</td><td>$89.99</td></tr>
+                            <tr><td>Heavy-Duty Black Screen Door Hardware Kit (Hinges, Latch, Pull)</td><td>1 Kit</td><td>$37.97</td></tr>
+                            <tr><td>4x4x8' #2 Prime PT Ground-Contact Posts (Independent Rail Anchors)</td><td>6</td><td>$69.00</td></tr>
+                            <tr><td>2x4x10' Premium PT Boards (Horizontal Rails for 10' Spans)</td><td>4</td><td>$36.00</td></tr>
+                            <tr><td>2x4x12' Premium PT Boards (Horizontal Rails for 6' Spans)</td><td>2</td><td>$22.00</td></tr>
+                            <tr><td>2x4x8' Premium PT Boards (Horizontal Rails for Stair Span)</td><td>2</td><td>$11.00</td></tr>
+                            <tr><td>Black Aluminum Round Balusters (32" Length - 30-Pack)</td><td>4 Packs</td><td>$180.00</td></tr>
+                            <tr><td><strong>2-1/2" Kreg SML-C250B-50 Blue-Kote Outdoor Pocket Hole Screws</strong> (Weather-resistant polymer coated, Square Drive)</td><td>2 Packs (50ct ea)</td><td>$15.00</td></tr>
+                            <tr><td><strong>6-1/4" FastenMaster ThruLOK Heavy Structural Post-Mounting Screws</strong> (Includes specialized nuts and washers, lifetime coating)</td><td>2 Packs (12ct ea)</td><td>$56.00</td></tr>
+                            <tr><td>OSI QUAD MAX Advanced Exterior Window/Door Caulk</td><td>3 Tubes</td><td>$28.50</td></tr>
+                            <tr><td>Exterior Premium Primer + Paint Combo (1 Gallon, Color Matched)</td><td>1 Gal</td><td>$65.00</td></tr>
+                            <tr class="total-row"><td>Estimated Grand Total Cost</td><td>—</td><td>$1,691.16</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <h3>The Master Project Cut Sheet</h3>
                 <p>Note: Always measure individual openings before cutting. Older front porches naturally drop up to 1" across long spans for water drainage.</p>
