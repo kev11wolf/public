@@ -1508,7 +1508,7 @@
             
             await Promise.all(activeCrossedStates.map(async (stateName) => {
                 try {
-                    const response = await fetch('https://kev11wolf.github.io/public/data/${stateName}_brands.json');
+                    const response = await fetch(`https://kev11wolf.github.io/public/data/${stateName}_brands.json`);
                     if (response.ok) {
                         const stateData = await response.json();
                         localJsonMemory = localJsonMemory.concat(stateData);
