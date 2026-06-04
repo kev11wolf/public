@@ -728,7 +728,9 @@
 
         function updateAppleNavigationHUD(currentSnappedLatLng) {
             const banner = document.getElementById('apple-navigation-hud');
-            if (currentRouteInstructions.length === 0 || routeLineCoordinates.length === 0 || isAlternateMatrixModeActive) {
+            
+            // Allow directions to display immediately upon system generation passes
+            if (currentRouteInstructions.length === 0 || routeLineCoordinates.length === 0) {
                 if (banner) {
                     banner.classList.add('-translate-y-64', 'opacity-0');
                     setTimeout(() => banner.classList.add('hidden'), 500);
@@ -799,7 +801,6 @@
             activeInstructionIndex = 0;
             currentTrackedPolylineIndex = 0;
 
-            // Automatically collapse search inputs tray when route gets selected/locked
             const searchContainer = document.getElementById('search-container');
             if (searchContainer) {
                 searchContainer.style.setProperty('display', 'none', 'important');
@@ -827,6 +828,9 @@
                 color: '#3b82f6', opacity: 0.15, lineCap: 'round', lineJoin: 'round', interactive: false
             }).addTo(map);
             routeBufferPolyline.bringToBack();
+            
+            // Explicit weight calibration call resolves the hairline visibility bug
+            updateBufferVisualizerWeight();
 
             if (lastUserGpsCoord) {
                 const snappedNode = computeSnapToRouteVector(L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]));
@@ -848,6 +852,19 @@
             if (primaryRoutePolyline) { map.removeLayer(primaryRoutePolyline); }
             
             if (routesArray.length === 0) return;
+
+            const searchContainer = document.getElementById('search-container');
+            if (searchContainer) {
+                searchContainer.style.setProperty('display', 'none', 'important');
+            }
+
+            // Bind the initial primary route buffer directly to alternate state mapping loops
+            if (routeBufferPolyline) { map.removeLayer(routeBufferPolyline); }
+            routeBufferPolyline = L.polyline(routesArray[0].coordinates, {
+                color: '#3b82f6', opacity: 0.15, lineCap: 'round', lineJoin: 'round', interactive: false
+            }).addTo(map);
+            routeBufferPolyline.bringToBack();
+            updateBufferVisualizerWeight();
 
             routesArray.forEach((route, index) => {
                 const isPrimaryRoute = (index === 0);
@@ -1361,7 +1378,6 @@
             if (localJsonMemory) dispatchOffThreadAnalysis(); 
         });
         
-        // Toggles expansion of inputs tray smoothly when explicit control elements are tapped
         document.getElementById('toggle-search-btn').addEventListener('click', () => { 
             const s = document.getElementById('search-container'); 
             if (s) {
@@ -1443,7 +1459,6 @@
         document.getElementById('zoom-in-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() + 1); });
         document.getElementById('zoom-out-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() - 1); });
 
-        // Position alignment tracking button (🎯) now triggers street view magnification (15) directly
         document.getElementById('center-loc-btn').addEventListener('click', () => {
             if (lastUserGpsCoord) {
                 map.setView(L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]), 15);
@@ -1532,6 +1547,14 @@
                 document.getElementById('route-mileage-sticky').classList.add('hidden');
                 renderAlternateRoutePathsMatrix(uniqueRoutes);
                 updateInlineStatus("Alternate choices mapped. Tap any card pointer to select.");
+                
+                // Fire navigation update directly inside alternative generation states
+                if (lastUserGpsCoord) {
+                    const snappedNode = computeSnapToRouteVector(L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]));
+                    updateAppleNavigationHUD(snappedNode);
+                } else {
+                    updateAppleNavigationHUD(routeLineCoordinates[0]);
+                }
             } else {
                 window.selectAndLockPrimaryTrackPath(0, maintainMapViewportOnRouteFound);
             }
