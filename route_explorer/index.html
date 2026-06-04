@@ -100,7 +100,7 @@
                         <option value="12000">⏱️ 15 Min Buffer</option>
                         <option value="24000">⏱️ 30 Min Buffer</option>
                     </select>
-                    <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
+                    <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-955 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
                     <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">🔍 Inputs</button>
                     <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">🚗 Track</button>
                 </div>
@@ -171,6 +171,8 @@
         let poiClusterGroup = null;
 
         let currentTrackedPolylineIndex = 0;
+        let lastAutoRecalcTimestamp = 0;
+        let maintainMapViewportOnRouteFound = false;
 
         const STATE_BOUNDS_LOOKUP = {
             "alabama":        { s: 30.1, n: 35.1, w: -88.6, e: -84.8 },
@@ -350,6 +352,12 @@
         function triggerToast(text, duration = 3000) {
             const container = document.getElementById('toast-container');
             if (!container) return;
+            
+            const activeToasts = container.querySelectorAll('div');
+            for (let existingToast of activeToasts) {
+                if (existingToast.innerText === text) return;
+            }
+
             const toast = document.createElement('div');
             toast.className = "bg-gray-900/95 backdrop-blur-sm text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center transition-all duration-300 opacity-0 translate-y-2 pointer-events-auto";
             toast.innerText = text;
@@ -491,14 +499,31 @@
 
         function computeTargetCenteringNode() {
             if (routeLineCoordinates.length > 0 && lastUserGpsCoord) {
-                const routeBoundsCenter = L.polyline(routeLineCoordinates).getBounds().getCenter();
-                return L.latLng((routeBoundsCenter.lat + lastUserGpsCoord[0]) / 2, (routeBoundsCenter.lng + lastUserGpsCoord[1]) / 2);
+                return L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]);
             } else if (routeLineCoordinates.length > 0) {
                 return L.polyline(routeLineCoordinates).getBounds().getCenter();
             } else if (lastUserGpsCoord) {
                 return L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]);
             }
             return map.getCenter();
+        }
+
+        function applyCalculatedSmartZoom() {
+            if (routeLineCoordinates.length === 0) return;
+            const totalDistStr = document.getElementById('sticky-total-dist').innerText;
+            const totalDistanceMiles = parseFloat(totalDistStr) || 0;
+            const targetCenter = computeTargetCenteringNode();
+            
+            if (totalDistanceMiles > 0 && totalDistanceMiles < 50) {
+                const routeBounds = L.polyline(routeLineCoordinates).getBounds();
+                map.fitBounds(routeBounds, { padding: [40, 40] });
+            } else {
+                const radiusMeters = 50 * 1609.34;
+                const tempCircle = L.circle(targetCenter, { radius: radiusMeters }).addTo(map);
+                const circleBounds = tempCircle.getBounds();
+                tempCircle.remove();
+                map.fitBounds(circleBounds);
+            }
         }
 
         async function loadMasterRepoFavoritesOnBoot() {
@@ -543,7 +568,7 @@
             });
         }
 
-        function triggerRouteCalculation() {
+        function triggerRouteCalculation(maintainView = false) {
             const startInput = document.getElementById('start-input');
             const endInput = document.getElementById('end-input');
             if (!startInput.dataset.lat || !endInput.dataset.lat) return;
@@ -555,6 +580,7 @@
             finalWaypoints.push(L.latLng(endInput.dataset.lat, endInput.dataset.lon));
 
             isAlternateMatrixModeActive = true; 
+            maintainMapViewportOnRouteFound = maintainView;
             routingControl.setWaypoints(finalWaypoints);
         }
 
@@ -597,7 +623,7 @@
                     stopQueue.splice(index, 1);
                     triggerToast("Removed stop from queue.");
                     updateQueueHUD();
-                    triggerRouteCalculation();
+                    triggerRouteCalculation(true);
                 });
 
                 container.appendChild(dragHandle);
@@ -629,7 +655,7 @@
                             stopQueue.splice(newIdx, 0, movedItem);
                             triggerToast("Recalculating layout queue priorities...");
                             updateQueueHUD();
-                            triggerRouteCalculation();
+                            triggerRouteCalculation(true);
                         } else {
                             updateQueueHUD();
                         }
@@ -760,8 +786,7 @@
             }
         }
 
-        // Bound to window context cleanly to allow dynamic Leaflet Popup executions
-        window.selectAndLockPrimaryTrackPath = function(routeIndex) {
+        window.selectAndLockPrimaryTrackPath = function(routeIndex, maintainView = false) {
             isAlternateMatrixModeActive = false;
             alternateCalloutsGroupLayer.clearLayers();
             alternateRoutesGroupLayer.clearLayers();
@@ -774,9 +799,8 @@
             activeInstructionIndex = 0;
             currentTrackedPolylineIndex = 0;
 
-            // Forces hidden styling on search layout natively 
             const searchContainer = document.getElementById('search-container');
-            if (searchContainer) {
+            if (searchContainer && isTracking) {
                 searchContainer.style.setProperty('display', 'none', 'important');
             }
 
@@ -810,7 +834,10 @@
                 updateAppleNavigationHUD(routeLineCoordinates[0]);
             }
 
-            triggerToast("Route engaged! Turn prompt profiles re-mapped.");
+            if (!maintainView) {
+                applyCalculatedSmartZoom();
+            }
+            
             if (currentMasterCat) runDataExecutionLayer(currentMasterCat);
         };
 
@@ -832,7 +859,7 @@
                 
                 polylineLayer.on('click', (e) => {
                     L.DomEvent.stopPropagation(e);
-                    window.selectAndLockPrimaryTrackPath(index);
+                    window.selectAndLockPrimaryTrackPath(index, false);
                 });
                 alternateRoutesGroupLayer.addLayer(polylineLayer);
 
@@ -853,7 +880,7 @@
                             <span class="text-[10px] uppercase font-black tracking-wider ${isPrimaryRoute ? 'text-blue-600' : 'text-gray-500'}">${isPrimaryRoute ? 'Fastest' : 'Alt Option'}</span>
                             <div class="text-xs font-black my-0.5">${distanceMiles} Miles</div>
                             <div class="text-[9px] font-bold text-amber-600 leading-none pb-1">${featuresTollIndicator}</div>
-                            <button class="w-full text-[9px] font-black py-1 px-1.5 rounded-lg mt-1 transition-all ${badgeThemeColor}" onclick="window.selectAndLockPrimaryTrackPath(${index})">
+                            <button class="w-full text-[9px] font-black py-1 px-1.5 rounded-lg mt-1 transition-all ${badgeThemeColor}" onclick="window.selectAndLockPrimaryTrackPath(${index}, false)">
                                 ${selectButtonLabel}
                             </button>
                         </div>
@@ -873,8 +900,18 @@
                 }
             });
 
-            if (routesArray[0]) {
-                map.fitBounds(L.polyline(routesArray[0].coordinates).getBounds(), { padding: [40, 40] });
+            if (!maintainMapViewportOnRouteFound && routesArray[0]) {
+                const initialDistMiles = (routesArray[0].summary.totalDistance * 0.000621371);
+                const targetCenter = computeTargetCenteringNode();
+                if (initialDistMiles > 0 && initialDistMiles < 50) {
+                    map.fitBounds(L.polyline(routesArray[0].coordinates).getBounds(), { padding: [40, 40] });
+                } else {
+                    const radiusMeters = 50 * 1609.34;
+                    const tempCircle = L.circle(targetCenter, { radius: radiusMeters }).addTo(map);
+                    const circleBounds = tempCircle.getBounds();
+                    tempCircle.remove();
+                    map.fitBounds(circleBounds);
+                }
             }
         }
 
@@ -1017,7 +1054,6 @@
             updateInlineStatus(`Corridor calculations ready: [Mapped ${sortedMatches.length} Facilities]`);
         };
 
-        // Temporarily intercept console.warn to mute un-actionable generic OSRM warnings
         const originalConsoleWarn = console.warn;
         console.warn = function(...args) {
             if (args[0] && typeof args[0] === 'string' && args[0].includes("OSRM's demo server")) return;
@@ -1062,7 +1098,6 @@
             }
         }).addTo(map);
 
-        // Restore original console.warn logging immediately after control building passes
         console.warn = originalConsoleWarn;
 
         // =====================================================================
@@ -1108,7 +1143,7 @@
                 } else {
                     let starBtnText = isCurrentlyStarredLocally ? "❌ Remove Local Star" : "⭐ Persistently Star";
                     let starBtnColor = isCurrentlyStarredLocally ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
-                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
+                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}")" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
                 }
 
                 let fuelBadgeHtml = '';
@@ -1392,7 +1427,7 @@
         document.getElementById('route-btn').addEventListener('click', async () => {
             const startInput = document.getElementById('start-input'); const endInput = document.getElementById('end-input');
             if (!startInput.dataset.lat || !endInput.dataset.lat) { alert("Select suggested autocomplete options first."); return; }
-            triggerRouteCalculation();
+            triggerRouteCalculation(false);
         });
 
         document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
@@ -1408,8 +1443,12 @@
 
         document.getElementById('center-loc-btn').addEventListener('click', () => {
             if (lastUserGpsCoord) {
-                map.setView(lastUserGpsCoord, Math.max(map.getZoom(), 15));
-                triggerToast("Centered map onto asset tracking telemetry position.");
+                if (routeLineCoordinates.length > 0) {
+                    applyCalculatedSmartZoom();
+                } else {
+                    map.setView(L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]), 15);
+                }
+                triggerToast("Map centered exactly on track telemetry.");
             } else {
                 if (!navigator.geolocation) {
                     triggerToast("GPS Hardware is unavailable.");
@@ -1424,7 +1463,11 @@
                         } else { 
                             userMarker.setLatLng(lastUserGpsCoord); 
                         }
-                        map.setView(lastUserGpsCoord, 15);
+                        if (routeLineCoordinates.length > 0) {
+                            applyCalculatedSmartZoom();
+                        } else {
+                            map.setView(lastUserGpsCoord, 15);
+                        }
                         updateInlineStatus("System realigned.");
                         triggerToast("Position aligned successfully.");
                     },
@@ -1492,10 +1535,10 @@
 
             if (isAlternateMatrixModeActive && rawRoutesMemoryArray.length > 1) {
                 document.getElementById('route-mileage-sticky').classList.add('hidden');
-                renderAlternateRoutePathsMatrix(rawRoutesMemoryArray);
+                renderAlternateRoutePathsMatrix(uniqueRoutes);
                 updateInlineStatus("Alternate choices mapped. Tap any card pointer to select.");
             } else {
-                window.selectAndLockPrimaryTrackPath(0);
+                window.selectAndLockPrimaryTrackPath(0, maintainMapViewportOnRouteFound);
             }
 
             poiClusterGroup.clearLayers();
@@ -1530,6 +1573,8 @@
 
             renderGlobalPermanentStars(); 
             if (currentMasterCat) runDataExecutionLayer(currentMasterCat);
+            
+            maintainMapViewportOnRouteFound = false; 
         });
 
         map.on('popupopen', function(e) {
@@ -1546,7 +1591,7 @@
                         stopQueue.push({ lat, lon, name });
                         triggerToast(`Added stop: "${name}"`);
                         updateQueueHUD();
-                        triggerRouteCalculation();
+                        triggerRouteCalculation(true);
                     } else {
                         triggerToast("This location is already inside your target stop queue.");
                     }
@@ -1625,8 +1670,10 @@
                 if (searchInBox) searchInBox.style.setProperty('display', 'none', 'important');
 
                 watchId = navigator.geolocation.watchPosition((pos) => {
-                    const { latitude, longitude } = pos.coords;
+                    const { latitude, longitude, accuracy } = pos.coords;
                     
+                    if (accuracy && accuracy > 65) return;
+
                     const startInField = document.getElementById('start-input');
                     startInField.value = "Current Location";
                     startInField.dataset.lat = latitude;
@@ -1634,7 +1681,8 @@
                     document.getElementById('start-clear-btn').classList.remove('hidden');
 
                     if (lastUserGpsCoord) {
-                        const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord); if (distanceMoved < 6) return; 
+                        const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord); 
+                        if (distanceMoved < 12) return; 
                     }
                     
                     const currentLatLngRaw = L.latLng(latitude, longitude);
@@ -1655,7 +1703,7 @@
                             triggerToast(`Arrived at stop: "${stopQueue[0].name}"`);
                             stopQueue.shift();
                             updateQueueHUD();
-                            triggerRouteCalculation();
+                            triggerRouteCalculation(true);
                             return; 
                         }
                     }
@@ -1668,12 +1716,14 @@
                             absoluteDistanceToRouteLine = map.distance(currentLatLngRaw, routeLineCoordinates[currentTrackedPolylineIndex]);
                         }
 
-                        if (absoluteDistanceToRouteLine > 75) { 
+                        if (absoluteDistanceToRouteLine > 120) { 
                             continuousOffRouteDriftTicks++;
-                            if (continuousOffRouteDriftTicks >= 3) { 
+                            const currentTime = Date.now();
+                            if (continuousOffRouteDriftTicks >= 5 && (currentTime - lastAutoRecalcTimestamp > 30000)) { 
                                 triggerToast("Off-route deviation confirmed. Recalculating path corridor...", 4000);
-                                triggerRouteCalculation();
-                                continuousCrossedStatesTicks = 0;
+                                lastAutoRecalcTimestamp = currentTime;
+                                triggerRouteCalculation(true);
+                                continuousOffRouteDriftTicks = 0;
                             }
                         } else {
                             continuousOffRouteDriftTicks = 0; 
