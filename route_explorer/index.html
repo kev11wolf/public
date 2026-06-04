@@ -61,25 +61,31 @@
 </head>
 <body class="flex flex-col justify-end text-zinc-955 selection:bg-blue-500 selection:text-white">
 
-    <div class="absolute top-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none gap-2 px-3">
+    <div class="absolute top-3 right-4 z-50 pointer-events-auto">
+        <button id="ui-toggle-fab" class="bg-slate-900/95 backdrop-blur-md text-white border border-slate-700/60 shadow-xl font-bold rounded-xl text-xs px-3.5 h-11 flex items-center justify-center gap-1.5 active:scale-95 transition-all select-none cursor-pointer">
+            <span id="ui-fab-icon">⚡</span> <span id="ui-fab-text">Hide Panels</span>
+        </button>
+    </div>
+
+    <div id="controls-wrapper-deck" class="absolute top-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none gap-2 px-3 transition-all duration-300 transform translate-y-0 opacity-100">
         
-        <div id="master-header-panel" class="w-full max-w-xl bg-white/95 backdrop-blur-md border border-gray-200 safe-top rounded-2xl shadow-xl flex flex-col transition-all duration-300 pointer-events-auto mt-2">
+        <div id="master-header-panel" class="w-full max-w-xl bg-slate-900/90 backdrop-blur-md border border-slate-700/60 safe-top rounded-2xl shadow-2xl flex flex-col transition-all duration-300 pointer-events-auto mt-2">
             <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <div class="relative flex-1">
-                        <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
-                        <button id="start-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
-                        <button id="start-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
-                        <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+                        <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-slate-800/90 border border-slate-700/80 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-slate-100 font-medium placeholder-slate-400">
+                        <button id="start-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-400 transition-colors font-bold text-xs hidden">✕</button>
+                        <button id="start-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-400 transition-colors">📍</button>
+                        <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm text-slate-200"></div>
                     </div>
                     
-                    <button id="swap-locations-btn" type="button" class="self-center p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 active:scale-95 rounded-xl text-sm font-bold transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shadow-sm">⇆</button>
+                    <button id="swap-locations-btn" type="button" class="self-center p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 active:scale-95 rounded-xl text-sm font-bold transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shadow-md border border-slate-700/40">⇆</button>
                     
                     <div class="relative flex-1">
-                        <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-zinc-900 font-medium">
-                        <button id="end-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
-                        <button id="end-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors">📍</button>
-                        <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm"></div>
+                        <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-slate-800/90 border border-slate-700/80 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-slate-100 font-medium placeholder-slate-400">
+                        <button id="end-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-400 transition-colors font-bold text-xs hidden">✕</button>
+                        <button id="end-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-400 transition-colors">📍</button>
+                        <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm text-slate-200"></div>
                     </div>
                 </div>
                 <div class="flex gap-2">
@@ -89,47 +95,47 @@
                 </div>
             </div>
 
-            <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl">
+            <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-slate-800 bg-slate-900/40 rounded-b-2xl">
                 <div class="flex items-center gap-2 flex-1 min-w-0">
-                    <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent hidden"></div>
-                    <p id="status" class="text-xs font-bold text-gray-700 truncate">System ready. Enter parameters to map alternatives.</p>
+                    <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-500 border-t-transparent hidden"></div>
+                    <p id="status" class="text-xs font-bold text-slate-300 truncate">System ready. Enter parameters to map alternatives.</p>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[70%] sm:max-w-none">
-                    <select id="buffer-select" class="bg-white text-gray-700 text-xs font-bold py-2 px-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                    <select id="buffer-select" class="bg-slate-800 text-slate-200 text-xs font-bold py-2 px-2.5 rounded-xl border border-slate-700 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
                         <option value="4000" selected>⏱️ 5 Min Buffer</option>
                         <option value="12000">⏱️ 15 Min Buffer</option>
                         <option value="24000">⏱️ 30 Min Buffer</option>
                     </select>
                     <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-955 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
-                    <button id="toggle-search-btn" class="bg-white border border-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">🔍 Inputs</button>
+                    <button id="toggle-search-btn" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">🔍 Inputs</button>
                     <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">🚗 Track</button>
                 </div>
             </div>
 
-            <div id="master-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-1.5 border-t border-gray-100">
-                <button data-cat="playground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
-                <button data-cat="gas" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
-                <button data-cat="food" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
-                <button data-cat="shopping" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛒 Shopping & Services</button>
-                <button data-cat="parks" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Parks & Attractions</button>
-                <button data-cat="campground" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛺ Campgrounds</button>
-                <button data-cat="medical" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏥 Emergency & Med</button>
-                <button data-cat="highway" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏢 Highway Amenities</button>
-                <button data-cat="tourism" class="master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
+            <div id="master-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-1.5 border-t border-slate-800/80">
+                <button data-cat="playground" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
+                <button data-cat="gas" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
+                <button data-cat="food" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
+                <button data-cat="shopping" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛒 Shopping & Services</button>
+                <button data-cat="parks" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Parks & Attractions</button>
+                <button data-cat="campground" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛺ Campgrounds</button>
+                <button data-cat="medical" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏥 Emergency & Med</button>
+                <button data-cat="highway" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏢 Highway Amenities</button>
+                <button data-cat="tourism" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
             </div>
 
-            <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden rounded-b-2xl"></div>
+            <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-slate-800 bg-slate-900/60 hidden rounded-b-2xl"></div>
         </div>
 
-        <div id="apple-navigation-hud" class="self-start ml-1 sm:ml-2 w-[88%] max-w-xs bg-slate-900/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-2.5 border border-slate-700/50 flex items-center gap-2.5 transition-all duration-500 transform -translate-y-64 opacity-0 hidden select-none pointer-events-auto">
-            <div id="hud-turn-icon" class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-2xl font-black shrink-0 shadow-md">⬆️</div>
+        <div id="apple-navigation-hud" class="self-start ml-1 sm:ml-4 w-[85%] max-w-xs bg-slate-900/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-2.5 border border-slate-700/60 flex items-center gap-2.5 transition-all duration-500 transform translate-y-0 opacity-100 hidden select-none pointer-events-auto">
+            <div id="hud-turn-icon" class="w-9 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-xl font-black shrink-0 shadow-md">⬆️</div>
             <div class="flex-1 min-w-0">
-                <h2 id="hud-turn-instruction" class="text-xs font-black tracking-tight leading-tight uppercase truncate text-slate-100">Calculating next turn...</h2>
-                <p id="hud-turn-distance" class="text-[11px] text-emerald-400 font-bold mt-0.5">0.0 mi until turn</p>
+                <h2 id="hud-turn-instruction" class="text-[11px] font-black tracking-tight leading-tight uppercase truncate text-slate-100">Calculating next turn...</h2>
+                <p id="hud-turn-distance" class="text-[10px] text-emerald-400 font-bold mt-0.5">0.0 mi until turn</p>
             </div>
-            <div class="text-right shrink-0 border-l border-slate-700 pl-2.5">
-                <span class="text-[9px] uppercase font-black tracking-widest text-slate-400 block">Then</span>
-                <p id="hud-next-step-preview" class="text-[11px] font-bold text-amber-400 max-w-[70px] truncate mt-0.5">---</p>
+            <div class="text-right shrink-0 border-l border-slate-700 pl-2">
+                <span class="text-[8px] uppercase font-black tracking-widest text-slate-400 block">Then</span>
+                <p id="hud-next-step-preview" class="text-[10px] font-bold text-amber-400 max-w-[65px] truncate mt-0.5">---</p>
             </div>
         </div>
     </div>
@@ -173,6 +179,7 @@
         let currentTrackedPolylineIndex = 0;
         let lastAutoRecalcTimestamp = 0;
         let maintainMapViewportOnRouteFound = false;
+        let isUiExplicitlyHidden = false;
 
         const STATE_BOUNDS_LOOKUP = {
             "alabama":        { s: 30.1, n: 35.1, w: -88.6, e: -84.8 },
@@ -526,6 +533,39 @@
             }
         }
 
+        // Dedicated interface toggling matrix (Auto-Hiding Engine)
+        function toggleInterfaceVisibility(forceHide = null) {
+            const wrapperDeck = document.getElementById('controls-wrapper-deck');
+            const navHudSide = document.getElementById('navigation-hud');
+            const mileageSticky = document.getElementById('route-mileage-sticky');
+            const fabIcon = document.getElementById('ui-fab-icon');
+            const fabText = document.getElementById('ui-fab-text');
+            
+            if (forceHide !== null) {
+                isUiExplicitlyHidden = forceHide;
+            } else {
+                isUiExplicitlyHidden = !isUiExplicitlyHidden;
+            }
+
+            if (isUiExplicitlyHidden) {
+                wrapperDeck.className = "absolute top-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none gap-2 px-3 transition-all duration-300 transform -translate-y-full opacity-0";
+                if (navHudSide) navHudSide.classList.add('hidden');
+                if (mileageSticky) mileageSticky.classList.add('hidden');
+                if (fabIcon) fabIcon.innerText = "👁️";
+                if (fabText) fabText.innerText = "Show Panels";
+            } else {
+                wrapperDeck.className = "absolute top-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none gap-2 px-3 transition-all duration-300 transform translate-y-0 opacity-100";
+                if (stopQueue.length > 0) {
+                    if (navHudSide) navHudSide.classList.remove('hidden');
+                }
+                if (routeLineCoordinates.length > 0) {
+                    if (mileageSticky) mileageSticky.classList.remove('hidden');
+                }
+                if (fabIcon) fabIcon.innerText = "⚡";
+                if (fabText) fabText.innerText = "Hide Panels";
+            }
+        }
+
         async function loadMasterRepoFavoritesOnBoot() {
             try {
                 updateInlineStatus("Fetching dynamic favorites configuration from repository...", true);
@@ -600,7 +640,7 @@
             }
 
             section.classList.remove('hidden');
-            navHud.classList.remove('hidden');
+            if (!isUiExplicitlyHidden) navHud.classList.remove('hidden');
 
             stopQueue.forEach((stop, index) => {
                 const container = document.createElement('div');
@@ -729,7 +769,6 @@
         function updateAppleNavigationHUD(currentSnappedLatLng) {
             const banner = document.getElementById('apple-navigation-hud');
             
-            // Allow directions to display immediately upon system generation passes
             if (currentRouteInstructions.length === 0 || routeLineCoordinates.length === 0) {
                 if (banner) {
                     banner.classList.add('-translate-y-64', 'opacity-0');
@@ -801,6 +840,7 @@
             activeInstructionIndex = 0;
             currentTrackedPolylineIndex = 0;
 
+            // Automatically collapse address input fields cleanly upon path calculation completion
             const searchContainer = document.getElementById('search-container');
             if (searchContainer) {
                 searchContainer.style.setProperty('display', 'none', 'important');
@@ -821,15 +861,13 @@
             
             const totalDistanceMiles = (selectedRoute.summary.totalDistance * 0.000621371).toFixed(1);
             document.getElementById('sticky-total-dist').innerText = totalDistanceMiles;
-            document.getElementById('route-mileage-sticky').classList.remove('hidden');
+            if (!isUiExplicitlyHidden) document.getElementById('route-mileage-sticky').classList.remove('hidden');
 
             if (routeBufferPolyline) { map.removeLayer(routeBufferPolyline); }
             routeBufferPolyline = L.polyline(routeLineCoordinates, {
                 color: '#3b82f6', opacity: 0.15, lineCap: 'round', lineJoin: 'round', interactive: false
             }).addTo(map);
             routeBufferPolyline.bringToBack();
-            
-            // Explicit weight calibration call resolves the hairline visibility bug
             updateBufferVisualizerWeight();
 
             if (lastUserGpsCoord) {
@@ -858,7 +896,6 @@
                 searchContainer.style.setProperty('display', 'none', 'important');
             }
 
-            // Bind the initial primary route buffer directly to alternate state mapping loops
             if (routeBufferPolyline) { map.removeLayer(routeBufferPolyline); }
             routeBufferPolyline = L.polyline(routesArray[0].coordinates, {
                 color: '#3b82f6', opacity: 0.15, lineCap: 'round', lineJoin: 'round', interactive: false
@@ -1308,7 +1345,7 @@
             data.forEach(item => {
                 const cleanOutputString = buildCleanAddressString(item.address, item.display_name);
                 const option = document.createElement('div');
-                option.className = "px-3 py-2.5 bg-white hover:bg-blue-50 border-b border-gray-100 last:border-0 cursor-pointer truncate text-zinc-900 font-semibold text-xs transition-colors";
+                option.className = "px-3 py-2.5 bg-slate-800 hover:bg-slate-700 border-b border-slate-700 last:border-0 cursor-pointer truncate text-slate-100 font-semibold text-xs transition-colors";
                 option.innerText = cleanOutputString;
 
                 option.addEventListener('mousedown', (e) => {
@@ -1327,8 +1364,8 @@
         // --- PHASE 7: HUD DRAWER MENU COMPILER FILTERS LAYER -----------------
         // =====================================================================
         function handleMasterCategorySelection(element) {
-            document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
-            element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap min-h-[44px]";
+            document.querySelectorAll('.master-pill').forEach(btn => btn.className = "master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]");
+            element.className = "master-pill bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-md whitespace-nowrap min-h-[44px]";
             currentMasterCat = element.getAttribute('data-cat'); currentSubFilter = 'none';
             poiClusterGroup.clearLayers(); allPoiMarkersMemoryMap = [];
             generateSubMenuUI(currentMasterCat); runDataExecutionLayer(currentMasterCat);
@@ -1342,7 +1379,7 @@
             const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
             definition.forEach((sub) => {
                 const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
-                subButton.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm text-zinc-700 transition-colors hover:bg-gray-50";
+                subButton.className = "sub-pill bg-slate-800 border border-slate-700/60 text-slate-300 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm transition-colors hover:bg-slate-700";
                 subButton.innerText = sub.label; subBar.appendChild(subButton);
             });
             subBar.classList.remove('hidden');
@@ -1368,8 +1405,8 @@
         
         document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
             const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
-            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] transition-colors hover:bg-gray-50 text-zinc-700");
-            subPill.className = "sub-pill bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
+            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-slate-800 border border-slate-700/60 text-slate-300 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] transition-colors hover:bg-slate-700");
+            subPill.className = "sub-pill bg-gray-100 text-slate-900 text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
             currentSubFilter = subPill.getAttribute('data-sub'); dispatchOffThreadAnalysis();
         });
 
@@ -1387,6 +1424,11 @@
                     s.style.setProperty('display', 'none', 'important');
                 }
             } 
+        });
+
+        // Manual interface toggle registry wire-up
+        document.getElementById('ui-toggle-fab').addEventListener('click', () => {
+            toggleInterfaceVisibility(null);
         });
         
         document.getElementById('push-master-btn').addEventListener('click', launchAutomatedGitHubSyncPipeline);
@@ -1508,7 +1550,7 @@
 
             loadMasterRepoFavoritesOnBoot();
 
-            const interactiveControlBars = ['master-header-panel', 'navigation-hud', 'center-loc-btn', 'apple-navigation-hud', 'route-mileage-sticky'];
+            const interactiveControlBars = ['master-header-panel', 'navigation-hud', 'center-loc-btn', 'apple-navigation-hud', 'route-mileage-sticky', 'ui-toggle-fab'];
             interactiveControlBars.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
@@ -1517,8 +1559,16 @@
                 }
             });
 
-            map.on('movestart zoomstart dragstart', triggerAutoCenterDelay);
+            map.on('movestart zoomstart', triggerAutoCenterDelay);
             map.on('zoomend moveend', updateBufferVisualizerWeight);
+
+            // Gesture engine intercepts manual map manipulation to auto-collapse menus seamlessly
+            map.on('dragstart fontpanstart', () => {
+                if (!isUiExplicitlyHidden) {
+                    toggleInterfaceVisibility(true);
+                    triggerToast("Pan detected. Hiding panels to clear map view.");
+                }
+            });
         });
 
         routingControl.on('routesfound', async function(e) {
@@ -1548,7 +1598,6 @@
                 renderAlternateRoutePathsMatrix(uniqueRoutes);
                 updateInlineStatus("Alternate choices mapped. Tap any card pointer to select.");
                 
-                // Fire navigation update directly inside alternative generation states
                 if (lastUserGpsCoord) {
                     const snappedNode = computeSnapToRouteVector(L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]));
                     updateAppleNavigationHUD(snappedNode);
@@ -1744,7 +1793,7 @@
                                 continuousOffRouteDriftTicks = 0;
                             }
                         } else {
-                            continuousOffRouteDriftTicks = 0; 
+                            white_continuousOffRouteDriftTicks = 0; 
                         }
 
                         if (!lastMileageUpdateGps || map.distance(snappedPoint, lastMileageUpdateGps) >= 400) {
