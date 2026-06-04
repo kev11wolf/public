@@ -121,15 +121,15 @@
             <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-gray-100 bg-gray-50/70 hidden rounded-b-2xl"></div>
         </div>
 
-        <div id="apple-navigation-hud" class="w-[96%] max-w-md bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl p-4 border border-slate-700/50 flex items-center gap-4 transition-all duration-500 transform -translate-y-64 opacity-0 hidden select-none pointer-events-auto">
-            <div id="hud-turn-icon" class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-3xl font-black shrink-0 shadow-md">⬆️</div>
+        <div id="apple-navigation-hud" class="self-start ml-1 sm:ml-2 w-[88%] max-w-xs bg-slate-900/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-2.5 border border-slate-700/50 flex items-center gap-2.5 transition-all duration-500 transform -translate-y-64 opacity-0 hidden select-none pointer-events-auto">
+            <div id="hud-turn-icon" class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-2xl font-black shrink-0 shadow-md">⬆️</div>
             <div class="flex-1 min-w-0">
-                <h2 id="hud-turn-instruction" class="text-sm font-black tracking-tight leading-tight uppercase truncate text-slate-100">Calculating next turn...</h2>
-                <p id="hud-turn-distance" class="text-xs text-emerald-400 font-bold mt-0.5">0.0 mi until turn</p>
+                <h2 id="hud-turn-instruction" class="text-xs font-black tracking-tight leading-tight uppercase truncate text-slate-100">Calculating next turn...</h2>
+                <p id="hud-turn-distance" class="text-[11px] text-emerald-400 font-bold mt-0.5">0.0 mi until turn</p>
             </div>
-            <div class="text-right shrink-0 border-l border-slate-700 pl-3">
+            <div class="text-right shrink-0 border-l border-slate-700 pl-2.5">
                 <span class="text-[9px] uppercase font-black tracking-widest text-slate-400 block">Then</span>
-                <p id="hud-next-step-preview" class="text-[11px] font-bold text-amber-400 max-w-[90px] truncate mt-0.5">---</p>
+                <p id="hud-next-step-preview" class="text-[11px] font-bold text-amber-400 max-w-[70px] truncate mt-0.5">---</p>
             </div>
         </div>
     </div>
@@ -799,8 +799,9 @@
             activeInstructionIndex = 0;
             currentTrackedPolylineIndex = 0;
 
+            // Automatically collapse search inputs tray when route gets selected/locked
             const searchContainer = document.getElementById('search-container');
-            if (searchContainer && isTracking) {
+            if (searchContainer) {
                 searchContainer.style.setProperty('display', 'none', 'important');
             }
 
@@ -1143,7 +1144,7 @@
                 } else {
                     let starBtnText = isCurrentlyStarredLocally ? "❌ Remove Local Star" : "⭐ Persistently Star";
                     let starBtnColor = isCurrentlyStarredLocally ? "bg-zinc-600 hover:bg-zinc-700" : "bg-amber-600 hover:bg-amber-700";
-                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}")" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
+                    actionBtnHtml = `<button class="star-toggle-trigger block w-full text-center ${starBtnColor} text-[10px] py-1.5 rounded-xl border border-black/10 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}" data-cat="${el.category}" data-brand="${el.brand}" data-hours="${popupHours}" data-desc="${popupDesc}">${starBtnText}</button>`;
                 }
 
                 let fuelBadgeHtml = '';
@@ -1360,11 +1361,12 @@
             if (localJsonMemory) dispatchOffThreadAnalysis(); 
         });
         
+        // Toggles expansion of inputs tray smoothly when explicit control elements are tapped
         document.getElementById('toggle-search-btn').addEventListener('click', () => { 
             const s = document.getElementById('search-container'); 
             if (s) {
                 if (s.style.display === 'none') {
-                    s.style.display = 'flex';
+                    s.style.removeProperty('display');
                 } else {
                     s.style.setProperty('display', 'none', 'important');
                 }
@@ -1441,14 +1443,11 @@
         document.getElementById('zoom-in-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() + 1); });
         document.getElementById('zoom-out-btn').addEventListener('click', () => { map.setView(computeTargetCenteringNode(), map.getZoom() - 1); });
 
+        // Position alignment tracking button (🎯) now triggers street view magnification (15) directly
         document.getElementById('center-loc-btn').addEventListener('click', () => {
             if (lastUserGpsCoord) {
-                if (routeLineCoordinates.length > 0) {
-                    applyCalculatedSmartZoom();
-                } else {
-                    map.setView(L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]), 15);
-                }
-                triggerToast("Map centered exactly on track telemetry.");
+                map.setView(L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]), 15);
+                triggerToast("Map centered directly on location tracking point.");
             } else {
                 if (!navigator.geolocation) {
                     triggerToast("GPS Hardware is unavailable.");
@@ -1463,11 +1462,7 @@
                         } else { 
                             userMarker.setLatLng(lastUserGpsCoord); 
                         }
-                        if (routeLineCoordinates.length > 0) {
-                            applyCalculatedSmartZoom();
-                        } else {
-                            map.setView(lastUserGpsCoord, 15);
-                        }
+                        map.setView(lastUserGpsCoord, 15);
                         updateInlineStatus("System realigned.");
                         triggerToast("Position aligned successfully.");
                     },
