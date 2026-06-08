@@ -1458,101 +1458,117 @@ function importConfigurationArchive(event) {
         });
     }
 
-    function editMilestoneDateDirectlyGlobal(e, rowId, msId) {
-        e.stopPropagation();
-        let row = findRowGlobally(rowId); if (!row) return;
-        let ms = row.milestones.find(m => m.id === msId); if (!ms) return;
+function editMilestoneDateDirectlyGlobal(e, rowId, msId) {
+    e.stopPropagation();
+    let row = findRowGlobally(rowId); if (!row) return;
+    let ms = row.milestones.find(m => m.id === msId); if (!ms) return;
 
-        let existingDialog = document.getElementById('floatingMilestoneDialog');
-        if (existingDialog) existingDialog.remove();
+    let existingDialog = document.getElementById('floatingMilestoneDialog');
+    if (existingDialog) existingDialog.remove();
 
-        let dialog = document.createElement('div');
-        dialog.id = 'floatingMilestoneDialog'; dialog.className = 'floating-date-dialog';
-        dialog.style.width = "350px";
-        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 370)}px`;
-        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 420)}px`;
+    let dialog = document.createElement('div');
+    dialog.id = 'floatingMilestoneDialog'; 
+    dialog.className = 'floating-date-dialog';
+    dialog.style.width = "350px";
+    dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 370)}px`;
+    dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 420)}px`;
 
-        let currentMsColor = ms.color || document.getElementById('msColor').value;
-        let isOverridden = !!ms.color;
+    let currentMsColor = ms.color || document.getElementById('msColor').value;
+    let isOverridden = !!ms.color;
+    let currentSymbol = ms.symbol || 'diamond';
 
-        dialog.innerHTML = `
-            <h4>Modify Milestone Aesthetic Style</h4>
-            <div class="modal-row">
-                <div class="modal-field"><label>Select Target Date</label><input type="date" id="modalMsDatePicker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}"></div>
+    dialog.innerHTML = `
+        <h4>Modify Milestone Properties & Style</h4>
+        <div class="modal-row">
+            <div class="modal-field">
+                <label>Milestone Title / Name Label</label>
+                <input type="text" id="modalMsLabel" value="${ms.label}">
             </div>
-            <div class="modal-row">
-                <div class="modal-field"><label>Shape Symbol</label>
-                    <select id="modalMsSymbol">
-                        <option value="diamond" ${ms.symbol === 'diamond' ? 'selected' : ''}>Diamond</option>
-                        <option value="circle" ${ms.symbol === 'circle' ? 'selected' : ''}>Circle</option>
-                        <option value="triangle" ${ms.symbol === 'triangle' ? 'selected' : ''}>Triangle</option>
-                        <option value="vertical-bar" ${ms.symbol === 'vertical-bar' ? 'selected' : ''}>Vertical Bar</option>
-                    </select>
-                </div>
-                <div class="modal-field"><label>Override Check</label><label style="font-size:11px; margin-top:6px;"><input type="checkbox" id="modalMsOverrideColor" ${isOverridden?'checked':''}> Custom Color</label></div>
-                <div class="modal-field"><label>Color Picker</label><input type="color" id="modalMsColor" value="${currentMsColor}"></div>
+        </div>
+        <div class="modal-row">
+            <div class="modal-field">
+                <label>Select Target Date</label>
+                <input type="date" id="modalMsDatePicker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}">
             </div>
-            <h4 style="margin-top:10px; font-size:11px;">Milestone Traceable Leader Lines</h4>
-            <div class="modal-row">
-                <div class="modal-field"><label><input type="checkbox" id="modalMsLdrText" ${ms.leaderEnabledText?'checked':''}> Draw Title Leader</label></div>
-                <div class="modal-field"><label><input type="checkbox" id="modalMsLdrDate" ${ms.leaderEnabledDate?'checked':''}> Draw Date Leader</label></div>
+        </div>
+        <div class="modal-row">
+            <div class="modal-field"><label>Shape Symbol</label>
+                <select id="modalMsSymbol">
+                    <option value="diamond" ${currentSymbol === 'diamond' ? 'selected' : ''}>Diamond</option>
+                    <option value="circle" ${currentSymbol === 'circle' ? 'selected' : ''}>Circle</option>
+                    <option value="triangle" ${currentSymbol === 'triangle' ? 'selected' : ''}>Triangle</option>
+                    <option value="vertical-bar" ${currentSymbol === 'vertical-bar' ? 'selected' : ''}>Vertical Bar</option>
+                </select>
             </div>
-            <div class="modal-row">
-                <div class="modal-field"><label>Text Line Attachment</label>
-                    <select id="modalMsLdrAnchor">
-                        <option value="left" ${ms.leaderAnchorText==='left'?'selected':''}>Left Side of Label</option>
-                        <option value="center" ${(ms.leaderAnchorText === 'center' || !ms.leaderAnchorText) ? 'selected' : ''}>Center of Label</option>
-                        <option value="right" ${ms.leaderAnchorText==='right'?'selected':''}>Right Side of Label</option>
-                    </select>
-                </div>
-                <div class="modal-field"><label>Stroke Weight</label><input type="number" min="1" max="5" id="modalMsLdrWeight" value="${ms.leaderWeight || 1}"></div>
-                <div class="modal-field"><label>Stroke Pattern</label>
-                    <select id="modalMsLdrPattern">
-                        <option value="solid" ${ms.leaderPattern==='solid'?'selected':''}>Solid</option>
-                        <option value="dashed" ${ms.leaderPattern==='dashed'?'selected':''}>Dashed</option>
-                        <option value="dotted" ${ms.leaderPattern==='dotted'?'selected':''}>Dotted</option>
-                    </select>
-                </div>
+            <div class="modal-field"><label>Override Check</label><label style="font-size:11px; margin-top:6px;"><input type="checkbox" id="modalMsOverrideColor" ${isOverridden?'checked':''}> Custom Color</label></div>
+            <div class="modal-field"><label>Color Picker</label><input type="color" id="modalMsColor" value="${currentMsColor}"></div>
+        </div>
+        <h4 style="margin-top:10px; font-size:11px;">Milestone Traceable Leader Lines</h4>
+        <div class="modal-row">
+            <div class="modal-field"><label><input type="checkbox" id="modalMsLdrText" ${ms.leaderEnabledText?'checked':''}> Draw Title Leader</label></div>
+            <div class="modal-field"><label><input type="checkbox" id="modalMsLdrDate" ${ms.leaderEnabledDate?'checked':''}> Draw Date Leader</label></div>
+        </div>
+        <div class="modal-row">
+            <div class="modal-field"><label>Text Line Attachment</label>
+                <select id="modalMsLdrAnchor">
+                    <option value="left" ${ms.leaderAnchorText==='left'?'selected':''}>Left Side of Label</option>
+                    <option value="center" ${(ms.leaderAnchorText==='center' || !ms.leaderAnchorText)?'selected':''}>Center of Label</option>
+                    <option value="right" ${ms.leaderAnchorText==='right'?'selected':''}>Right Side of Label</option>
+                </select>
             </div>
-            <div class="modal-actions">
-                <button id="modalMsResetPosBtn" style="background:#fff1f2; color:var(--danger); border-color:#fca5a5;">Reset Label Positions</button>
-                <div style="display:flex; gap:6px;">
-                    <button id="modalMsCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
-                    <button id="modalMsSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply</button>
-                </div>
+            <div class="modal-field"><label>Stroke Weight</label><input type="number" min="1" max="5" id="modalMsLdrWeight" value="${ms.leaderWeight || 1}"></div>
+            <div class="modal-field"><label>Stroke Pattern</label>
+                <select id="modalMsLdrPattern">
+                    <option value="solid" ${ms.leaderPattern==='solid'?'selected':''}>Solid</option>
+                    <option value="dashed" ${ms.leaderPattern==='dashed'?'selected':''}>Dashed</option>
+                    <option value="dotted" ${ms.leaderPattern==='dotted'?'selected':''}>Dotted</option>
+                </select>
             </div>
-        `;
+        </div>
+        <div class="modal-actions">
+            <button id="modalMsResetPosBtn" style="background:#fff1f2; color:var(--danger); border-color:#fca5a5;">Reset Label Positions</button>
+            <div style="display:flex; gap:6px;">
+                <button id="modalMsCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
+                <button id="modalMsSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply</button>
+            </div>
+        </div>
+    `;
 
-        document.body.appendChild(dialog);
-        document.getElementById('modalMsCancelBtn').addEventListener('click', () => dialog.remove());
+    document.body.appendChild(dialog);
+    document.getElementById('modalMsCancelBtn').addEventListener('click', () => dialog.remove());
+    
+    document.getElementById('modalMsResetPosBtn').addEventListener('click', function() {
+        ms.labelOffsetX = 0; ms.labelOffsetY = 0; ms.dateOffsetX = 0; ms.dateOffsetY = 0;
+        ms.manualLabel = false; ms.manualDateLabel = false;
+        recordStateChange(); updateChart(); dialog.remove();
+    });
+
+    document.getElementById('modalMsSaveBtn').addEventListener('click', function() {
+        let nameVal = document.getElementById('modalMsLabel').value.trim();
+        let dateVal = document.getElementById('modalMsDatePicker').value;
         
-        document.getElementById('modalMsResetPosBtn').addEventListener('click', function() {
-            ms.labelOffsetX = 0; ms.labelOffsetY = 0; ms.dateOffsetX = 0; ms.dateOffsetY = 0;
-            ms.manualLabel = false; ms.manualDateLabel = false;
-            recordStateChange(); updateChart(); dialog.remove();
-        });
+        if (!nameVal) { alert("Milestone name fields require input criteria."); return; }
+        if (!dateVal) { alert("Milestone date fields require input criteria."); return; }
+        
+        ms.label = nameVal;
+        ms.date = formatDateToDDMMMYYYY(new Date(dateVal + "T00:00:00"));
+        ms.symbol = document.getElementById('modalMsSymbol').value;
+        
+        if (document.getElementById('modalMsOverrideColor').checked) {
+            ms.color = document.getElementById('modalMsColor').value;
+        } else {
+            ms.color = "";
+        }
+        
+        ms.leaderEnabledText = document.getElementById('modalMsLdrText').checked;
+        ms.leaderEnabledDate = document.getElementById('modalMsLdrDate').checked;
+        ms.leaderAnchorText = document.getElementById('modalMsLdrAnchor').value;
+        ms.leaderWeight = parseInt(document.getElementById('modalMsLdrWeight').value) || 1;
+        ms.leaderPattern = document.getElementById('modalMsLdrPattern').value;
 
-        document.getElementById('modalMsSaveBtn').addEventListener('click', function() {
-            let dateVal = document.getElementById('modalMsDatePicker').value;
-            if (!dateVal) { alert("Milestone date fields require input criteria."); return; }
-            ms.date = formatDateToDDMMMYYYY(new Date(dateVal + "T00:00:00"));
-            ms.symbol = document.getElementById('modalMsSymbol').value;
-            
-            if (document.getElementById('modalMsOverrideColor').checked) {
-                ms.color = document.getElementById('modalMsColor').value;
-            } else {
-                ms.color = "";
-            }
-            
-            ms.leaderEnabledText = document.getElementById('modalMsLdrText').checked;
-            ms.leaderEnabledDate = document.getElementById('modalMsLdrDate').checked;
-            ms.leaderAnchorText = document.getElementById('modalMsLdrAnchor').value;
-            ms.leaderWeight = parseInt(document.getElementById('modalMsLdrWeight').value) || 1;
-            ms.leaderPattern = document.getElementById('modalMsLdrPattern').value;
-
-            recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
-        });
-    }
+        recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
+    });
+}
 
     function editBarDatesDirectlyGlobal(e, rowId, barId) {
         e.stopPropagation();
@@ -1812,437 +1828,412 @@ function importConfigurationArchive(event) {
     // =========================================================
     // GRAPHIC VECTOR GENERATION PIPELINE ENGINE (SVG DRAW LOOP)
     // =========================================================
-    function updateChart() {
-        const container = document.getElementById('svgContainer');
-        if (projectData.length === 0) { container.innerHTML = ''; return; }
+ function updateChart() {
+    const container = document.getElementById('svgContainer');
+    if (projectData.length === 0) { container.innerHTML = ''; return; }
 
-        const sizingMode = document.querySelector('input[name="sizingMode"]:checked')?.value || 'fixed';
-        
-        let width = 806;
-        if (sizingMode === 'ticker-tape') {
-            let pBox = document.querySelector('.zoom-viewport-mask');
-            if (pBox && pBox.clientWidth > 100) { width = pBox.clientWidth - 5; }
-        } else {
-            width = parseInt(document.getElementById('canvasWidth').value) || 806;
+    const sizingMode = document.querySelector('input[name="sizingMode"]:checked')?.value || 'fixed';
+    
+    let width = 806;
+    if (sizingMode === 'ticker-tape') {
+        let pBox = document.querySelector('.zoom-viewport-mask');
+        if (pBox && pBox.clientWidth > 100) { width = pBox.clientWidth - 5; }
+    } else {
+        width = parseInt(document.getElementById('canvasWidth').value) || 806;
+    }
+
+    const rowHeight = parseInt(document.getElementById('rowHeight').value) || 95;
+    const swimlaneHeight = parseInt(document.getElementById('swimlaneHeight').value) || 30;
+    const fontFamily = document.getElementById('fontFamily').value;
+    const fontSize = parseInt(document.getElementById('fontSize').value) || 12;
+    const barBgColor = document.getElementById('barBgColor').value;
+    const barColor = document.getElementById('barColor').value;
+    const summaryColor = document.getElementById('summaryColor').value;
+    const msColor = document.getElementById('msColor').value;
+    const todayColor = document.getElementById('todayColor').value;
+    const masterLeaderColor = document.getElementById('masterLeaderColor').value;
+    const headerColor = document.getElementById('headerColor').value;
+    const showVGrid = document.getElementById('showVGrid').checked;
+    const todayLineMode = document.querySelector('input[name="todayLineToggle"]:checked').value;
+    const rangeMode = document.querySelector('input[name="rangeMode"]:checked').value;
+    
+    const showHeaderYear = document.getElementById('showHeaderYear').checked;
+    const showHeaderQuarter = document.getElementById('showHeaderQuarter').checked;
+    const showHeaderMonth = document.getElementById('showHeaderMonth').checked;
+    const showHeaderDay = document.getElementById('showHeaderDay').checked;
+
+    let headerTrackingYPointer = 15;
+    let hYearDelta = showHeaderYear ? 22 : 0;
+    let hQuarterDelta = showHeaderQuarter ? 22 : 0;
+    let hMonthDelta = showHeaderMonth ? 22 : 0;
+    let hDayDelta = showHeaderDay ? 22 : 0;
+    const startY = headerTrackingYPointer + hYearDelta + hQuarterDelta + hMonthDelta + hDayDelta + 15;
+
+    const marginXRight = 130; const chartWidth = width - scaleMarginLeft - marginXRight;
+    const barThickness = 18;
+
+    let axisLineY = startY - 15; 
+
+    let dynamicTotalRowsHeight = 0;
+    projectData.forEach(l => {
+        if (l.rows.length > 0) {
+            dynamicTotalRowsHeight += swimlaneHeight; dynamicTotalRowsHeight += l.rows.length * rowHeight;
         }
+    });
 
-        const rowHeight = parseInt(document.getElementById('rowHeight').value) || 95;
-        const swimlaneHeight = parseInt(document.getElementById('swimlaneHeight').value) || 30;
-        const fontFamily = document.getElementById('fontFamily').value;
-        const fontSize = parseInt(document.getElementById('fontSize').value) || 12;
-        const barBgColor = document.getElementById('barBgColor').value;
-        const barColor = document.getElementById('barColor').value;
-        const summaryColor = document.getElementById('summaryColor').value;
-        const msColor = document.getElementById('msColor').value;
-        const todayColor = document.getElementById('todayColor').value;
-        const masterLeaderColor = document.getElementById('masterLeaderColor').value;
-        const headerColor = document.getElementById('headerColor').value;
-        const showVGrid = document.getElementById('showVGrid').checked;
-        const todayLineMode = document.querySelector('input[name="todayLineToggle"]:checked').value;
-        const rangeMode = document.querySelector('input[name="rangeMode"]:checked').value;
-        
-        const showHeaderYear = document.getElementById('showHeaderYear').checked;
-        const showHeaderQuarter = document.getElementById('showHeaderQuarter').checked;
-        const showHeaderMonth = document.getElementById('showHeaderMonth').checked;
-        const showHeaderDay = document.getElementById('showHeaderDay').checked;
+    const height = axisLineY + dynamicTotalRowsHeight + 30; const bottomOfLastRow = axisLineY + dynamicTotalRowsHeight;
+    let endBoundaryXCoordinate = width - marginXRight;
 
-        let headerTrackingYPointer = 15;
-        let hYearDelta = showHeaderYear ? 22 : 0;
-        let hQuarterDelta = showHeaderQuarter ? 22 : 0;
-        let hMonthDelta = showHeaderMonth ? 22 : 0;
-        let hDayDelta = showHeaderDay ? 22 : 0;
-        const startY = headerTrackingYPointer + hYearDelta + hQuarterDelta + hMonthDelta + hDayDelta + 15;
+    let minDate, maxDate;
+    if (rangeMode === 'manual') {
+        minDate = new Date(parseAnyDateToTimestamp(manualBoundaryMin)); maxDate = new Date(parseAnyDateToTimestamp(manualBoundaryMax));
+        if(isNaN(minDate.getTime())) minDate = new Date("2026-05-01"); if(isNaN(maxDate.getTime())) maxDate = new Date("2028-08-09");
+    } else {
+        let allDates = [];
+        projectData.forEach(lane => {
+            lane.rows.forEach(row => {
+                row.bars.forEach(b => {
+                    let sT = parseAnyDateToTimestamp(b.start); let eT = parseAnyDateToTimestamp(b.end);
+                    if(!isNaN(sT)) allDates.push(new Date(sT)); if(!isNaN(eT)) allDates.push(new Date(eT));
+                });
+                row.milestones.forEach(m => { let mT = parseAnyDateToTimestamp(m.date); if(!isNaN(mT)) allDates.push(new Date(mT)); });
+            });
+        });
+        if(allDates.length < 2) { minDate = new Date("2026-01-01"); maxDate = new Date("2026-06-30"); }
+        else { minDate = new Date(Math.min(...allDates)); minDate.setDate(1); maxDate = new Date(Math.max(...allDates)); maxDate.setMonth(maxDate.getMonth()+1); maxDate.setDate(1); }
+    }
 
-        const marginXRight = 130; const chartWidth = width - scaleMarginLeft - marginXRight;
-        const barThickness = 18;
+    scaleMinTime = minDate.getTime(); scaleMaxTime = maxDate.getTime(); scaleChartWidth = chartWidth;
+    const totalDuration = scaleMaxTime - scaleMinTime;
+    const getX = (dObj) => scaleMarginLeft + ((dObj.getTime() - scaleMinTime) / totalDuration) * chartWidth;
 
-        let axisLineY = startY - 15; 
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="font-family:${fontFamily}; background-color:#ffffff; user-select:none;">`;
+    
+    svg += `<defs>
+        <pattern id="pat-crosshatch" width="8" height="8" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="8" y2="8" stroke="#ffffff" stroke-width="1.2" opacity="0.45"/>
+            <line x1="8" y1="0" x2="0" y2="8" stroke="#ffffff" stroke-width="1.2" opacity="0.45"/>
+        </pattern>
+        <pattern id="pat-grid" width="7" height="7" patternUnits="userSpaceOnUse">
+            <rect width="7" height="7" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.45"/>
+        </pattern>
+        <pattern id="pat-dashed" width="10" height="10" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="10" y2="10" stroke="#ffffff" stroke-width="2" stroke-dasharray="3 3" opacity="0.5"/>
+        </pattern>
+        <pattern id="pat-gingham" width="12" height="12" patternUnits="userSpaceOnUse">
+            <rect width="6" height="6" fill="#ffffff" opacity="0.3"/>
+            <rect x="6" y="6" width="6" height="6" fill="#ffffff" opacity="0.3"/>
+            <rect x="6" y="0" width="6" height="6" fill="#000000" opacity="0.08"/>
+            <rect x="0" y="6" width="6" height="6" fill="#000000" opacity="0.08"/>
+        </pattern>
+        <pattern id="pat-aligngrid" width="50" height="50" patternUnits="userSpaceOnUse">
+            <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.4"/>
+            <path d="M 10 0 L 10 50 M 20 0 L 20 50 M 30 0 L 30 50 M 40 0 L 40 50 M 0 10 L 50 10 M 0 20 L 50 20 M 0 30 L 50 30 M 0 40 L 50 40" fill="none" stroke="#e2e8f0" stroke-width="0.5" opacity="0.25"/>
+        </pattern>
+    </defs>`;
 
-        let dynamicTotalRowsHeight = 0;
-        projectData.forEach(l => {
-            if (l.rows.length > 0) {
-                dynamicTotalRowsHeight += swimlaneHeight; dynamicTotalRowsHeight += l.rows.length * rowHeight;
+    if (document.getElementById('showAlignGrid').checked) {
+        svg += `<rect x="10" y="${axisLineY}" width="${width - 20}" height="${dynamicTotalRowsHeight}" fill="url(#pat-aligngrid)" style="pointer-events:none;"/>`;
+    }
+
+    const halfWidth = chartWidth / 2;
+    svg += `<rect x="${scaleMarginLeft}" y="0" width="${halfWidth}" height="${axisLineY}" fill="#f8fafc" fill-opacity="0.9" style="cursor:w-resize;" onmousedown="initiateDragInteraction(event, 'timeline-resize-start', null)"/>`;
+    svg += `<rect x="${scaleMarginLeft + halfWidth}" y="0" width="${halfWidth}" height="${axisLineY}" fill="#f8fafc" fill-opacity="0.9" style="cursor:e-resize;" onmousedown="initiateDragInteraction(event, 'timeline-resize-end', null)"/>`;
+
+    svg += `<line x1="${scaleMarginLeft}" y1="${axisLineY}" x2="${endBoundaryXCoordinate}" y2="${axisLineY}" stroke="${headerColor}" stroke-width="2"/>`;
+
+    let scanTime = new Date(minDate); let timelineDaySteps = [];
+    while(scanTime <= maxDate) {
+        timelineDaySteps.push({ date: new Date(scanTime), x: getX(scanTime) }); scanTime.setDate(scanTime.getDate() + 1);
+    }
+
+    let lowestActiveTier = "";
+    if (showHeaderDay) lowestActiveTier = "day";
+    else if (showHeaderMonth) lowestActiveTier = "month";
+    else if (showHeaderQuarter) lowestActiveTier = "quarter";
+    else if (showHeaderYear) lowestActiveTier = "year";
+
+    if (showHeaderYear) {
+        let currY = null; let xStart = scaleMarginLeft;
+        for(let i=0; i<timelineDaySteps.length; i++) {
+            let yVal = timelineDaySteps[i].date.getFullYear();
+            if(currY === null) { currY = yVal; xStart = timelineDaySteps[i].x; continue; }
+            if(yVal !== currY || i === timelineDaySteps.length - 1) {
+                let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
+                if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" text-anchor="middle" style="pointer-events:none;">${currY}</text>`;
+                if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
+                    svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hYearDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
+                    if (showVGrid && lowestActiveTier === "year") {
+                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
+                    }
+                }
+                currY = yVal; xStart = timelineDaySteps[i].x;
             }
+        }
+        svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hYearDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hYearDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
+        headerTrackingYPointer += hYearDelta;
+    }
+
+    if (showHeaderQuarter) {
+        let currQ = null; let xStart = scaleMarginLeft;
+        for(let i=0; i<timelineDaySteps.length; i++) {
+            let qVal = Math.floor(timelineDaySteps[i].date.getMonth() / 3) + 1;
+            if(currQ === null) { currQ = qVal; xStart = timelineDaySteps[i].x; continue; }
+            if(qVal !== currQ || i === timelineDaySteps.length - 1) {
+                let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
+                if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" text-anchor="middle" style="pointer-events:none;">Q${currQ}</text>`;
+                if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
+                    svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hQuarterDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
+                    if (showVGrid && lowestActiveTier === "quarter") {
+                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
+                    }
+                }
+                currQ = qVal; xStart = timelineDaySteps[i].x;
+            }
+        }
+        svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hQuarterDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hQuarterDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
+        headerTrackingYPointer += hQuarterDelta;
+    }
+
+    if (showHeaderMonth) {
+        let currM = null; let xStart = scaleMarginLeft;
+        for(let i=0; i<timelineDaySteps.length; i++) {
+            let mVal = timelineDaySteps[i].date.getMonth();
+            if(currM === null) { currM = mVal; xStart = timelineDaySteps[i].x; continue; }
+            if(mVal !== currM || i === timelineDaySteps.length - 1) {
+                let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
+                if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) {
+                    let mLabel = new Date(2026, currM, 1).toLocaleString('default', { month: 'short' });
+                    svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" opacity="0.8" text-anchor="middle" style="pointer-events:none;">${mLabel}</text>`;
+                }
+                if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
+                    svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hMonthDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
+                    if (showVGrid && lowestActiveTier === "month") {
+                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
+                    }
+                }
+                currM = mVal; xStart = timelineDaySteps[i].x;
+            }
+        }
+        svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hMonthDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hMonthDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
+        headerTrackingYPointer += hMonthDelta;
+    }
+
+    if (showHeaderDay) {
+        for(let i=0; i<timelineDaySteps.length; i++) {
+            let step = timelineDaySteps[i]; let nextStep = timelineDaySteps[i+1];
+            let cx = step.x + ((nextStep ? nextStep.x : endBoundaryXCoordinate) - step.x) / 2;
+            if (showVGrid && step.x >= scaleMarginLeft && step.x <= endBoundaryXCoordinate) {
+                svg += `<line x1="${step.x}" y1="${axisLineY}" x2="${step.x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>`;
+            }
+            if (cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) {
+                svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="9" font-weight="bold" fill="${headerColor}" opacity="0.6" text-anchor="middle" style="pointer-events:none;">${step.date.getDate()}</text>`;
+            }
+        }
+    }
+
+    let currentDrawY = axisLineY;
+    projectData.forEach((lane, laneIdx) => {
+        if (lane.rows.length === 0) return;
+
+        let rollupMinTime = Infinity; let rollupMaxTime = -Infinity;
+        lane.rows.forEach(r => {
+            r.bars.forEach(b => {
+                let sTS = parseAnyDateToTimestamp(b.start); let eTS = parseAnyDateToTimestamp(b.end);
+                if(!isNaN(sTS) && sTS < rollupMinTime) rollupMinTime = sTS;
+                if(!isNaN(eTS) && eTS > rollupMaxTime) rollupMaxTime = eTS;
+            });
         });
 
-        const height = axisLineY + dynamicTotalRowsHeight + 30; const bottomOfLastRow = axisLineY + dynamicTotalRowsHeight;
-        let endBoundaryXCoordinate = width - marginXRight;
-
-        let minDate, maxDate;
-        if (rangeMode === 'manual') {
-            minDate = new Date(parseAnyDateToTimestamp(manualBoundaryMin)); maxDate = new Date(parseAnyDateToTimestamp(manualBoundaryMax));
-            if(isNaN(minDate.getTime())) minDate = new Date("2026-05-01"); if(isNaN(maxDate.getTime())) maxDate = new Date("2028-08-09");
-        } else {
-            let allDates = [];
-            projectData.forEach(lane => {
-                lane.rows.forEach(row => {
-                    row.bars.forEach(b => {
-                        let sT = parseAnyDateToTimestamp(b.start); let eT = parseAnyDateToTimestamp(b.end);
-                        if(!isNaN(sT)) allDates.push(new Date(sT)); if(!isNaN(eT)) allDates.push(new Date(eT));
-                    });
-                    row.milestones.forEach(m => { let mT = parseAnyDateToTimestamp(m.date); if(!isNaN(mT)) allDates.push(new Date(mT)); });
-                });
-            });
-            if(allDates.length < 2) { minDate = new Date("2026-01-01"); maxDate = new Date("2026-06-30"); }
-            else { minDate = new Date(Math.min(...allDates)); minDate.setDate(1); maxDate = new Date(Math.max(...allDates)); maxDate.setMonth(maxDate.getMonth()+1); maxDate.setDate(1); }
-        }
-
-        scaleMinTime = minDate.getTime(); scaleMaxTime = maxDate.getTime(); scaleChartWidth = chartWidth;
-        const totalDuration = scaleMaxTime - scaleMinTime;
-        const getX = (dObj) => scaleMarginLeft + ((dObj.getTime() - scaleMinTime) / totalDuration) * chartWidth;
-
-        let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="font-family:${fontFamily}; background-color:#ffffff; user-select:none;">`;
+        let laneBgColor = lane.color || "#f8fafc";
+        svg += `<rect x="10" y="${currentDrawY}" width="${endBoundaryXCoordinate - 10}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
+        svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central" style="cursor:pointer;" ondblclick="editLaneLabelDirectly(${laneIdx})">${lane.title}</text>`;
         
-        svg += `<defs>
-            <pattern id="pat-crosshatch" width="8" height="8" patternUnits="userSpaceOnUse">
-                <line x1="0" y1="0" x2="8" y2="8" stroke="#ffffff" stroke-width="1.2" opacity="0.45"/>
-                <line x1="8" y1="0" x2="0" y2="8" stroke="#ffffff" stroke-width="1.2" opacity="0.45"/>
-            </pattern>
-            <pattern id="pat-grid" width="7" height="7" patternUnits="userSpaceOnUse">
-                <rect width="7" height="7" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.45"/>
-            </pattern>
-            <pattern id="pat-dashed" width="10" height="10" patternUnits="userSpaceOnUse">
-                <line x1="0" y1="0" x2="10" y2="10" stroke="#ffffff" stroke-width="2" stroke-dasharray="3 3" opacity="0.5"/>
-            </pattern>
-            <pattern id="pat-gingham" width="12" height="12" patternUnits="userSpaceOnUse">
-                <rect width="6" height="6" fill="#ffffff" opacity="0.3"/>
-                <rect x="6" y="6" width="6" height="6" fill="#ffffff" opacity="0.3"/>
-                <rect x="6" y="0" width="6" height="6" fill="#000000" opacity="0.08"/>
-                <rect x="0" y="6" width="6" height="6" fill="#000000" opacity="0.08"/>
-            </pattern>
-            <pattern id="pat-aligngrid" width="50" height="50" patternUnits="userSpaceOnUse">
-                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.4"/>
-                <path d="M 10 0 L 10 50 M 20 0 L 20 50 M 30 0 L 30 50 M 40 0 L 40 50 M 0 10 L 50 10 M 0 20 L 50 20 M 0 30 L 50 30 M 0 40 L 50 40" fill="none" stroke="#e2e8f0" stroke-width="0.5" opacity="0.25"/>
-            </pattern>
-        </defs>`;
-
-        // Alignment Layout Backdrop Coordinate Mesh Layer
-        if (document.getElementById('showAlignGrid').checked) {
-            svg += `<rect x="10" y="${axisLineY}" width="${width - 20}" height="${dynamicTotalRowsHeight}" fill="url(#pat-aligngrid)" style="pointer-events:none;"/>`;
+        if (lane.showSummary !== false && rollupMinTime !== Infinity && rollupMaxTime !== -Infinity && rollupMaxTime >= rollupMinTime) {
+            let rollupXStart = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(new Date(rollupMinTime))));
+            let rollupXEnd = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(new Date(rollupMaxTime))));
+            let rollupWidth = rollupXEnd - rollupXStart;
+            if (rollupWidth > 0) {
+                let rY = currentDrawY + (swimlaneHeight / 2);
+                let activeSummaryColor = lane.summaryColor || summaryColor;
+                svg += `<path d="M ${rollupXStart} ${rY - 5} L ${rollupXStart} ${rY + 5} M ${rollupXStart} ${rY} L ${rollupXEnd} ${rY} M ${rollupXEnd} ${rY - 5} L ${rollupXEnd} ${rY + 5}" fill="none" stroke="${activeSummaryColor}" stroke-width="3" style="cursor:pointer;" ondblclick="editLaneSummaryDirectlyGlobal(event, ${laneIdx})"/>`;
+            }
         }
 
-        const halfWidth = chartWidth / 2;
-        svg += `<rect x="${scaleMarginLeft}" y="0" width="${halfWidth}" height="${axisLineY}" fill="#f8fafc" fill-opacity="0.9" style="cursor:w-resize;" onmousedown="initiateDragInteraction(event, 'timeline-resize-start', null)"/>`;
-        svg += `<rect x="${scaleMarginLeft + halfWidth}" y="0" width="${halfWidth}" height="${axisLineY}" fill="#f8fafc" fill-opacity="0.9" style="cursor:e-resize;" onmousedown="initiateDragInteraction(event, 'timeline-resize-end', null)"/>`;
+        currentDrawY += swimlaneHeight;
 
-        svg += `<line x1="${scaleMarginLeft}" y1="${axisLineY}" x2="${endBoundaryXCoordinate}" y2="${axisLineY}" stroke="${headerColor}" stroke-width="2"/>`;
+        lane.rows.forEach((item, rowIdx) => {
+            let y = currentDrawY;
+            
+            svg += `<rect x="10" y="${y}" width="${endBoundaryXCoordinate - 10}" height="${rowHeight}" fill="transparent" style="cursor:context-menu;" oncontextmenu="handleWorkspaceRowContextMenu(event, ${item.id})"/>`;
+            svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1" style="pointer-events:none;"/>`;
+            svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(${laneIdx}, ${rowIdx})">${item.label}</text>`;
+            
+            let layerBarsBuffer = "";
+            let layerLeadersBuffer = "";
+            let layerSymbolsBuffer = "";
+            let layerTextsBuffer = "";
 
-        let scanTime = new Date(minDate); let timelineDaySteps = [];
-        while(scanTime <= maxDate) {
-            timelineDaySteps.push({ date: new Date(scanTime), x: getX(scanTime) }); scanTime.setDate(scanTime.getDate() + 1);
-        }
+            item.bars.forEach((bar) => {
+                let sObj = new Date(parseAnyDateToTimestamp(bar.start)); 
+                let eObj = new Date(parseAnyDateToTimestamp(bar.end));
 
-        let lowestActiveTier = "";
-        if (showHeaderDay) lowestActiveTier = "day";
-        else if (showHeaderMonth) lowestActiveTier = "month";
-        else if (showHeaderQuarter) lowestActiveTier = "quarter";
-        else if (showHeaderYear) lowestActiveTier = "year";
+                if(!isNaN(sObj.getTime()) && !isNaN(eObj.getTime())) {
+                    let xStart = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(sObj)));
+                    let xEnd = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(eObj)));
+                    let visibleBarWidth = xEnd - xStart;
 
-        // Tier 1: Years
-        if (showHeaderYear) {
-            let currY = null; let xStart = scaleMarginLeft;
-            for(let i=0; i<timelineDaySteps.length; i++) {
-                let yVal = timelineDaySteps[i].date.getFullYear();
-                if(currY === null) { currY = yVal; xStart = timelineDaySteps[i].x; continue; }
-                if(yVal !== currY || i === timelineDaySteps.length - 1) {
-                    let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
-                    if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" text-anchor="middle" style="pointer-events:none;">${currY}</text>`;
-                    if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
-                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hYearDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
-                        if (showVGrid && lowestActiveTier === "year") {
-                            svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
+                    if (visibleBarWidth > 0) {
+                        let activeBarBgColor = bar.bgColor || barBgColor;
+                        let activeBarColor = bar.color || barColor;
+                        let activePattern = bar.pattern || 'solid';
+
+                        layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${activeBarBgColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
+                        
+                        let filledWidth = Math.max(xStart, Math.min(xEnd, getX(new Date(sObj.getTime() + ((bar.progress || 0)/100) * (eObj.getTime() - sObj.getTime()))))) - xStart;
+                        if (filledWidth > 0) layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${activeBarColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
+
+                        if (activePattern !== 'solid') {
+                            layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="url(#pat-${activePattern})" style="pointer-events:none;"/>`;
                         }
+
+                        layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:w-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-start', ${item.id}, ${bar.id})"/>`;
+                        if (visibleBarWidth > 12) layerBarsBuffer += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id}, ${bar.id})" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
+                        layerBarsBuffer += `<rect x="${xEnd - 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:e-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-end', ${item.id}, ${bar.id})"/>`;
                     }
-                    currY = yVal; xStart = timelineDaySteps[i].x;
                 }
-            }
-            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hYearDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hYearDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
-            headerTrackingYPointer += hYearDelta;
-        }
-
-        // Tier 2: Quarters (TIMESCALE DIVIDER FIX RESOLVED CHRONO PATH)
-        if (showHeaderQuarter) {
-            let currQ = null; let xStart = scaleMarginLeft;
-            for(let i=0; i<timelineDaySteps.length; i++) {
-                let qVal = Math.floor(timelineDaySteps[i].date.getMonth() / 3) + 1;
-                if(currQ === null) { currQ = qVal; xStart = timelineDaySteps[i].x; continue; }
-                if(qVal !== currQ || i === timelineDaySteps.length - 1) {
-                    let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
-                    if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" text-anchor="middle" style="pointer-events:none;">Q${currQ}</text>`;
-                    if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
-                        // Perpendicular straight ticks fix ($x_1$ matching $x_2$) bound cleanly inside $y_2$ displacement bounds
-                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hQuarterDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
-                        if (showVGrid && lowestActiveTier === "quarter") {
-                            svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
-                        }
-                    }
-                    currQ = qVal; xStart = timelineDaySteps[i].x;
-                }
-            }
-            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hQuarterDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hQuarterDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
-            headerTrackingYPointer += hQuarterDelta;
-        }
-
-        // Tier 3: Months
-        if (showHeaderMonth) {
-            let currM = null; let xStart = scaleMarginLeft;
-            for(let i=0; i<timelineDaySteps.length; i++) {
-                let mVal = timelineDaySteps[i].date.getMonth();
-                if(currM === null) { currM = mVal; xStart = timelineDaySteps[i].x; continue; }
-                if(mVal !== currM || i === timelineDaySteps.length - 1) {
-                    let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
-                    if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) {
-                        let mLabel = new Date(2026, currM, 1).toLocaleString('default', { month: 'short' });
-                        svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" opacity="0.8" text-anchor="middle" style="pointer-events:none;">${mLabel}</text>`;
-                    }
-                    if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
-                        svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hMonthDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
-                        if (showVGrid && lowestActiveTier === "month") {
-                            svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
-                        }
-                    }
-                    currM = mVal; xStart = timelineDaySteps[i].x;
-                }
-            }
-            svg += `<line x1="${scaleMarginLeft}" y1="${headerTrackingYPointer + hMonthDelta}" x2="${endBoundaryXCoordinate}" y2="${headerTrackingYPointer + hMonthDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
-            headerTrackingYPointer += hMonthDelta;
-        }
-
-        // Tier 4: Days
-        if (showHeaderDay) {
-            for(let i=0; i<timelineDaySteps.length; i++) {
-                let step = timelineDaySteps[i]; let nextStep = timelineDaySteps[i+1];
-                let cx = step.x + ((nextStep ? nextStep.x : endBoundaryXCoordinate) - step.x) / 2;
-                if (showVGrid && step.x >= scaleMarginLeft && step.x <= endBoundaryXCoordinate) {
-                    svg += `<line x1="${step.x}" y1="${axisLineY}" x2="${step.x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>`;
-                }
-                if (cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) {
-                    svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="9" font-weight="bold" fill="${headerColor}" opacity="0.6" text-anchor="middle" style="pointer-events:none;">${step.date.getDate()}</text>`;
-                }
-            }
-        }
-
-        let currentDrawY = axisLineY;
-        projectData.forEach((lane, laneIdx) => {
-            if (lane.rows.length === 0) return;
-
-            let rollupMinTime = Infinity; let rollupMaxTime = -Infinity;
-            lane.rows.forEach(r => {
-                r.bars.forEach(b => {
-                    let sTS = parseAnyDateToTimestamp(b.start); let eTS = parseAnyDateToTimestamp(b.end);
-                    if(!isNaN(sTS) && sTS < rollupMinTime) rollupMinTime = sTS;
-                    if(!isNaN(eTS) && eTS > rollupMaxTime) rollupMaxTime = eTS;
-                });
             });
 
-            let laneBgColor = lane.color || "#f8fafc";
-            svg += `<rect x="10" y="${currentDrawY}" width="${endBoundaryXCoordinate - 10}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
-            svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central" style="cursor:pointer;" ondblclick="editLaneLabelDirectly(${laneIdx})">${lane.title}</text>`;
-            
-            if (lane.showSummary !== false && rollupMinTime !== Infinity && rollupMaxTime !== -Infinity && rollupMaxTime >= rollupMinTime) {
-                let rollupXStart = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(new Date(rollupMinTime))));
-                let rollupXEnd = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(new Date(rollupMaxTime))));
-                let rollupWidth = rollupXEnd - rollupXStart;
-                if (rollupWidth > 0) {
-                    let rY = currentDrawY + (swimlaneHeight / 2);
-                    let activeSummaryColor = lane.summaryColor || summaryColor;
-                    svg += `<path d="M ${rollupXStart} ${rY - 5} L ${rollupXStart} ${rY + 5} M ${rollupXStart} ${rY} L ${rollupXEnd} ${rY} M ${rollupXEnd} ${rY - 5} L ${rollupXEnd} ${rY + 5}" fill="none" stroke="${activeSummaryColor}" stroke-width="3" style="cursor:pointer;" ondblclick="editLaneSummaryDirectlyGlobal(event, ${laneIdx})"/>`;
-                }
-            }
+            let validMilestones = item.milestones.filter(m => !isNaN(parseAnyDateToTimestamp(m.date)));
+            validMilestones.sort((a, b) => parseAnyDateToTimestamp(a.date) - parseAnyDateToTimestamp(b.date));
+            let trackPlacedTextFootprints = [];
 
-            currentDrawY += swimlaneHeight;
+            for (let idx = validMilestones.length - 1; idx >= 0; idx--) {
+                let ms = validMilestones[idx];
+                let mObj = new Date(parseAnyDateToTimestamp(ms.date)); let msX = getX(mObj);
+                if (msX < scaleMarginLeft || msX > endBoundaryXCoordinate) continue;
 
-            lane.rows.forEach((item, rowIdx) => {
-                let y = currentDrawY;
+                let msYCenterLocked = y + (rowHeight / 2); let msSize = 5;
                 
-                svg += `<rect x="10" y="${y}" width="${endBoundaryXCoordinate - 10}" height="${rowHeight}" fill="transparent" style="cursor:context-menu;" oncontextmenu="handleWorkspaceRowContextMenu(event, ${item.id})"/>`;
-                svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1" style="pointer-events:none;"/>`;
-                svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(${laneIdx}, ${rowIdx})">${item.label}</text>`;
-                
-                // Strict Depth Ordering Buffers Accumulation Blocks
-                let layerBarsBuffer = "";
-                let layerLeadersBuffer = "";
-                let layerSymbolsBuffer = "";
-                let layerTextsBuffer = "";
+                let textAnchorStyle = "start"; let textXPositionCoordinate = msX + msSize + 4; let defaultTextYBaseline = msYCenterLocked + 3;
+                let finalComputedTextX = textXPositionCoordinate; let finalComputedTextY = defaultTextYBaseline;
 
-                // 1. Process Activity Bars Layout Loop
-                item.bars.forEach((bar) => {
-                    let sObj = new Date(parseAnyDateToTimestamp(bar.start)); 
-                    let eObj = new Date(parseAnyDateToTimestamp(bar.end));
+                if (ms.manualLabel) {
+                    finalComputedTextX += (ms.labelOffsetX || 0); finalComputedTextY += (ms.labelOffsetY || 0); textAnchorStyle = "start";
+                } else {
+                    let estimatedTextWidthPixelSpan = Math.max(50, ms.label.length * 6); 
+                    let footprintLeftBound = textXPositionCoordinate;
+                    let footprintRightBound = textXPositionCoordinate + estimatedTextWidthPixelSpan;
 
-                    if(!isNaN(sObj.getTime()) && !isNaN(eObj.getTime())) {
-                        let xStart = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(sObj)));
-                        let xEnd = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(eObj)));
-                        let visibleBarWidth = xEnd - xStart;
-
-                        if (visibleBarWidth > 0) {
-                            let activeBarBgColor = bar.bgColor || barBgColor;
-                            let activeBarColor = bar.color || barColor;
-                            let activePattern = bar.pattern || 'solid';
-
-                            layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${activeBarBgColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
-                            
-                            let filledWidth = Math.max(xStart, Math.min(xEnd, getX(new Date(sObj.getTime() + ((bar.progress || 0)/100) * (eObj.getTime() - sObj.getTime()))))) - xStart;
-                            if (filledWidth > 0) layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${activeBarColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
-
-                            if (activePattern !== 'solid') {
-                                layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="url(#pat-${activePattern})" style="pointer-events:none;"/>`;
-                            }
-
-                            layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:w-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-start', ${item.id}, ${bar.id})"/>`;
-                            if (visibleBarWidth > 12) layerBarsBuffer += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id}, ${bar.id})" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
-                            layerBarsBuffer += `<rect x="${xEnd - 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:e-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-end', ${item.id}, ${bar.id})"/>`;
-                        }
-                    }
-                });
-
-                // 2. Process Milestones Engine Cascades & Leader Lines Stacking Loops
-                let validMilestones = item.milestones.filter(m => !isNaN(parseAnyDateToTimestamp(m.date)));
-                validMilestones.sort((a, b) => parseAnyDateToTimestamp(a.date) - parseAnyDateToTimestamp(b.date));
-                let trackPlacedTextFootprints = [];
-
-                for (let idx = validMilestones.length - 1; idx >= 0; idx--) {
-                    let ms = validMilestones[idx];
-                    let mObj = new Date(parseAnyDateToTimestamp(ms.date)); let msX = getX(mObj);
-                    if (msX < scaleMarginLeft || msX > endBoundaryXCoordinate) continue;
-
-                    let msYCenterLocked = y + (rowHeight / 2); let msSize = 5;
-                    
-                    let textAnchorStyle = "start"; let textXPositionCoordinate = msX + msSize + 4; let defaultTextYBaseline = msYCenterLocked + 3;
-                    let finalComputedTextX = textXPositionCoordinate; let finalComputedTextY = defaultTextYBaseline;
-
-                    // Automated Layout Cascading Collision Engine
-                    if (ms.manualLabel) {
-                        finalComputedTextX += (ms.labelOffsetX || 0); finalComputedTextY += (ms.labelOffsetY || 0); textAnchorStyle = "start";
-                    } else {
-                        let estimatedTextWidthPixelSpan = Math.max(50, ms.label.length * 6); 
-                        let footprintLeftBound = textXPositionCoordinate;
-                        let footprintRightBound = textXPositionCoordinate + estimatedTextWidthPixelSpan;
-
-                        let targetedCascadeStaggerOffsetLevel = 0; let collisionMatchFound = true;
-                        while (collisionMatchFound) {
-                            collisionMatchFound = false;
-                            for (let f = 0; f < trackPlacedTextFootprints.length; f++) {
-                                let existingZone = trackPlacedTextFootprints[f];
-                                if (existingZone.staggerLevel === targetedCascadeStaggerOffsetLevel) {
-                                    if (footprintLeftBound < existingZone.xMax && footprintRightBound > existingZone.xMin) {
-                                        targetedCascadeStaggerOffsetLevel++; collisionMatchFound = true; break;
-                                    }
+                    let targetedCascadeStaggerOffsetLevel = 0; let collisionMatchFound = true;
+                    while (collisionMatchFound) {
+                        collisionMatchFound = false;
+                        for (let f = 0; f < trackPlacedTextFootprints.length; f++) {
+                            let existingZone = trackPlacedTextFootprints[f];
+                            if (existingZone.staggerLevel === targetedCascadeStaggerOffsetLevel) {
+                                if (footprintLeftBound < existingZone.xMax && footprintRightBound > existingZone.xMin) {
+                                    targetedCascadeStaggerOffsetLevel++; collisionMatchFound = true; break;
                                 }
                             }
                         }
-                        trackPlacedTextFootprints.push({ xMin: footprintLeftBound, xMax: footprintRightBound, staggerLevel: targetedCascadeStaggerOffsetLevel });
-                        finalComputedTextY = defaultTextYBaseline + (targetedCascadeStaggerOffsetLevel * 12);
                     }
-
-                    let activeMsColor = ms.color || msColor;
-                    let activeSymbol = ms.symbol || 'diamond';
-                    let msCommonAttr = `fill="${activeMsColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})"`;
-
-                    // Leader Line Computations & Traceable Geometric Rendering Map
-let lineStrokeWeight = ms.leaderWeight || 1;
-let linePatternStyle = ms.leaderPattern || 'solid';
-let lineDashArray = (linePatternStyle === 'dashed') ? "3 3" : (linePatternStyle === 'dotted') ? "1 2" : "";
-let finalLeaderColor = ms.color || masterLeaderColor;
-
-// Force default fallback to centered alignment if value is missing
-let leaderAnchor = ms.leaderAnchorText || 'center'; 
-
-if (ms.leaderEnabledText && (ms.labelOffsetX !== 0 || ms.labelOffsetY !== 0 || !ms.manualLabel)) {
-    let targetTextLeaderX = finalComputedTextX;
-    let estTextLenWidth = ms.label.length * 5.5;
-    
-    if (leaderAnchor === 'center') targetTextLeaderX += (estTextLenWidth / 2);
-    else if (leaderAnchor === 'right') targetTextLeaderX += estTextLenWidth;
-    
-    // Dynamic boundary padding to prevent text overlapping/clipping
-    let targetTextLeaderY = finalComputedTextY - 3; 
-    if (finalComputedTextY < msYCenterLocked) {
-        // Label dragged above the milestone symbol -> line terminates cleanly at bottom baseline
-        targetTextLeaderY = finalComputedTextY + 2;
-    } else if (finalComputedTextY > msYCenterLocked + 5) {
-        // Label dragged below the milestone symbol -> line terminates cleanly right above capital letters
-        targetTextLeaderY = finalComputedTextY - 9;
-    } else {
-        // Label sits horizontally aligned -> trim sides slightly
-        if (leaderAnchor === 'left') targetTextLeaderX = finalComputedTextX - 4;
-        else if (leaderAnchor === 'right') targetTextLeaderX = finalComputedTextX + estTextLenWidth + 4;
-    }
-    
-    layerLeadersBuffer += `<line x1="${msX}" y1="${msYCenterLocked}" x2="${targetTextLeaderX}" y2="${targetTextLeaderY}" stroke="${finalLeaderColor}" stroke-width="${lineStrokeWeight}" stroke-dasharray="${lineDashArray}" opacity="0.85" style="pointer-events:none;"/>`;
-}
-
-                    // Shape Form Geometry Matrices Assembly
-                    if (activeSymbol === 'circle') {
-                        layerSymbolsBuffer += `<circle cx="${msX}" cy="${msYCenterLocked}" r="${msSize + 1}" ${msCommonAttr} />`;
-                    } else if (activeSymbol === 'triangle') {
-                        let tPoints = `${msX},${msYCenterLocked - msSize - 1} ${msX + msSize + 1},${msYCenterLocked + msSize + 1} ${msX - msSize - 1},${msYCenterLocked + msSize + 1}`;
-                        layerSymbolsBuffer += `<polygon points="${tPoints}" ${msCommonAttr} />`;
-                    } else if (activeSymbol === 'vertical-bar') {
-                        layerSymbolsBuffer += `<rect x="${msX - 2}" y="${msYCenterLocked - msSize - 3}" width="4" height="${(msSize * 2) + 6}" rx="1" ${msCommonAttr} />`;
-                    } else {
-                        let dPoints = `${msX},${msYCenterLocked - msSize - 1} ${msX + msSize + 1},${msYCenterLocked} ${msX},${msYCenterLocked + msSize + 1} ${msX - msSize - 1},${msYCenterLocked}`;
-                        layerSymbolsBuffer += `<polygon points="${dPoints}" ${msCommonAttr} />`;
-                    }
-
-                    layerTextsBuffer += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="9" font-weight="600" fill="${activeMsColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneLabelDirectlyGlobal(${item.id}, ${ms.id})">${ms.label}</text>`;
-
-                    if (ms.showDate) {
-                        let presentationDateLabel = ms.date; let finalComputedDateX = msX; let finalComputedDateY = msYCenterLocked - msSize - 11;
-                        if (ms.manualDateLabel) { finalComputedDateX += (ms.dateOffsetX || 0); finalComputedDateY += (ms.dateOffsetY || 0); }
-                        
-                        if (ms.leaderEnabledDate && (ms.dateOffsetX !== 0 || ms.dateOffsetY !== 0)) {
-    // Dynamic boundary padding for date string blocks (centered text-anchors)
-    let targetDateLeaderY = finalComputedDateY + 2; 
-    if (finalComputedDateY > msYCenterLocked) {
-        // Date label dragged below milestone -> terminate line right at the top of text bounds
-        targetDateLeaderY = finalComputedDateY - 9;
-    }
-    layerLeadersBuffer += `<line x1="${msX}" y1="${msYCenterLocked}" x2="${finalComputedDateX}" y2="${targetDateLeaderY}" stroke="${finalLeaderColor}" stroke-width="${lineStrokeWeight}" stroke-dasharray="${lineDashArray}" opacity="0.85" style="pointer-events:none;"/>`;
-}
-                        layerTextsBuffer += `<text x="${finalComputedDateX}" y="${finalComputedDateY}" font-size="8" font-weight="bold" fill="#64748b" text-anchor="middle" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})">${presentationDateLabel}</text>`;
-                    }
+                    trackPlacedTextFootprints.push({ xMin: footprintLeftBound, xMax: footprintRightBound, staggerLevel: targetedCascadeStaggerOffsetLevel });
+                    finalComputedTextY = defaultTextYBaseline + (targetedCascadeStaggerOffsetLevel * 12);
                 }
 
-                // Append Accumulated Strips into Canvas Layout in strict Z-Index order:
-                // Activity Bars < Leader Lines < Milestone Symbol Shapes < Text Labels / Dates
-                svg += layerBarsBuffer + layerLeadersBuffer + layerSymbolsBuffer + layerTextsBuffer;
-                
-                currentDrawY += rowHeight;
-            })
-        });
+                let activeMsColor = ms.color || msColor;
+                let activeSymbol = ms.symbol || 'diamond';
+                let msCommonAttr = `fill="${activeMsColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})"`;
 
-        // 3. Process Custom Draggable & Interactive Vertical Tracker Lines
-        customTrackers.forEach(tracker => {
-            let trkTime = parseAnyDateToTimestamp(tracker.date);
-            if (!isNaN(trkTime) && trkTime >= scaleMinTime && trkTime <= scaleMaxTime) {
-                let xTracker = getX(new Date(trkTime));
-                let stylePattern = tracker.pattern || "solid";
-                let strokeDash = (stylePattern === 'dashed') ? "4 4" : (stylePattern === 'dotted') ? "1 3" : "";
-                
-                svg += `<line x1="${xTracker}" y1="${axisLineY}" x2="${xTracker}" y2="${bottomOfLastRow}" stroke="${tracker.color}" stroke-width="${tracker.thickness || 2}" stroke-dasharray="${strokeDash}" style="cursor:ew-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'tracker-line-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})"/>`;
-                
-                let lblX = xTracker + (tracker.labelOffsetX || 0);
-                let lblY = bottomOfLastRow + 24 + (tracker.labelOffsetY || 0);
-                
-                svg += `<g fill="${tracker.color}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'tracker-label-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})">
-                    <rect x="${lblX - 50}" y="${lblY - 11}" width="100" height="15" rx="3" fill="#ffffff" stroke="${tracker.color}" stroke-width="1"/>
-                    <text x="${lblX}" y="${lblY}" font-size="8" font-weight="bold" fill="${tracker.color}" text-anchor="middle">${tracker.label.toUpperCase()}</text>
-                </g>`;
-            }
-        });
+                let lineStrokeWeight = ms.leaderWeight || 1;
+                let linePatternStyle = ms.leaderPattern || 'solid';
+                let lineDashArray = (linePatternStyle === 'dashed') ? "3 3" : (linePatternStyle === 'dotted') ? "1 2" : "";
+                let finalLeaderColor = ms.color || masterLeaderColor;
+                let leaderAnchor = ms.leaderAnchorText || 'center'; 
 
-        // Vertical Baseline Today Tracker Line Block
-        if (todayLineMode === 'show') {
-            let today = new Date();
-            if (today.getTime() >= scaleMinTime && today.getTime() <= scaleMaxTime) {
-                let xToday = getX(today);
-                svg += `<line x1="${xToday}" y1="${axisLineY}" x2="${xToday}" y2="${bottomOfLastRow}" stroke="${todayColor}" stroke-width="1.5" stroke-dasharray="4 4" style="pointer-events:none;"/>`;
-                svg += `<text x="${xToday}" y="${bottomOfLastRow + 11}" font-size="8" font-weight="bold" fill="${todayColor}" text-anchor="middle" style="pointer-events:none;">TODAY</text>`;
+                if (ms.leaderEnabledText && (ms.labelOffsetX !== 0 || ms.labelOffsetY !== 0 || !ms.manualLabel)) {
+                    let targetTextLeaderX = finalComputedTextX;
+                    let estTextLenWidth = ms.label.length * 5.5;
+                    
+                    if (leaderAnchor === 'center') targetTextLeaderX += (estTextLenWidth / 2);
+                    else if (leaderAnchor === 'right') targetTextLeaderX += estTextLenWidth;
+                    
+                    let targetTextLeaderY = finalComputedTextY - 3; 
+                    if (finalComputedTextY < msYCenterLocked) {
+                        targetTextLeaderY = finalComputedTextY + 2;
+                    } else if (finalComputedTextY > msYCenterLocked + 5) {
+                        targetTextLeaderY = finalComputedTextY - 9;
+                    } else {
+                        if (leaderAnchor === 'left') targetTextLeaderX = finalComputedTextX - 4;
+                        else if (leaderAnchor === 'right') targetTextLeaderX = finalComputedTextX + estTextLenWidth + 4;
+                    }
+                    
+                    layerLeadersBuffer += `<line x1="${msX}" y1="${msYCenterLocked}" x2="${targetTextLeaderX}" y2="${targetTextLeaderY}" stroke="${finalLeaderColor}" stroke-width="${lineStrokeWeight}" stroke-dasharray="${lineDashArray}" opacity="0.85" style="pointer-events:none;"/>`;
+                }
+
+                if (activeSymbol === 'circle') {
+                    layerSymbolsBuffer += `<circle cx="${msX}" cy="${msYCenterLocked}" r="${msSize + 1}" ${msCommonAttr} />`;
+                } else if (activeSymbol === 'triangle') {
+                    let tPoints = `${msX},${msYCenterLocked - msSize - 1} ${msX + msSize + 1},${msYCenterLocked + msSize + 1} ${msX - msSize - 1},${msYCenterLocked + msSize + 1}`;
+                    layerSymbolsBuffer += `<polygon points="${tPoints}" ${msCommonAttr} />`;
+                } else if (activeSymbol === 'vertical-bar') {
+                    layerSymbolsBuffer += `<rect x="${msX - 2}" y="${msYCenterLocked - msSize - 3}" width="4" height="${(msSize * 2) + 6}" rx="1" ${msCommonAttr} />`;
+                } else {
+                    let dPoints = `${msX},${msYCenterLocked - msSize - 1} ${msX + msSize + 1},${msYCenterLocked} ${msX},${msYCenterLocked + msSize + 1} ${msX - msSize - 1},${msYCenterLocked}`;
+                    layerSymbolsBuffer += `<polygon points="${dPoints}" ${msCommonAttr} />`;
+                }
+
+                layerTextsBuffer += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="9" font-weight="600" fill="${activeMsColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${ms.label}</text>`;
+
+                if (ms.showDate) {
+                    let presentationDateLabel = ms.date; let finalComputedDateX = msX; let finalComputedDateY = msYCenterLocked - msSize - 11;
+                    if (ms.manualDateLabel) { finalComputedDateX += (ms.dateOffsetX || 0); finalComputedDateY += (ms.dateOffsetY || 0); }
+                    
+                    if (ms.leaderEnabledDate && (ms.dateOffsetX !== 0 || ms.dateOffsetY !== 0)) {
+                        let targetDateLeaderY = finalComputedDateY + 2; 
+                        if (finalComputedDateY > msYCenterLocked) {
+                            targetDateLeaderY = finalComputedDateY - 9;
+                        }
+                        layerLeadersBuffer += `<line x1="${msX}" y1="${msYCenterLocked}" x2="${finalComputedDateX}" y2="${targetDateLeaderY}" stroke="${finalLeaderColor}" stroke-width="${lineStrokeWeight}" stroke-dasharray="${lineDashArray}" opacity="0.85" style="pointer-events:none;"/>`;
+                    }
+                    layerTextsBuffer += `<text x="${finalComputedDateX}" y="${finalComputedDateY}" font-size="8" font-weight="bold" fill="#64748b" text-anchor="middle" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${presentationDateLabel}</text>`;
+                }
             }
+
+            svg += layerBarsBuffer + layerLeadersBuffer + layerSymbolsBuffer + layerTextsBuffer;
+            currentDrawY += rowHeight;
+        });
+    });
+
+    customTrackers.forEach(tracker => {
+        let trkTime = parseAnyDateToTimestamp(tracker.date);
+        if (!isNaN(trkTime) && trkTime >= scaleMinTime && trkTime <= scaleMaxTime) {
+            let xTracker = getX(new Date(trkTime));
+            let stylePattern = tracker.pattern || "solid";
+            let strokeDash = (stylePattern === 'dashed') ? "4 4" : (stylePattern === 'dotted') ? "1 3" : "";
+            
+            svg += `<line x1="${xTracker}" y1="${axisLineY}" x2="${xTracker}" y2="${bottomOfLastRow}" stroke="${tracker.color}" stroke-width="${tracker.thickness || 2}" stroke-dasharray="${strokeDash}" style="cursor:ew-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'tracker-line-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})"/>`;
+            
+            let lblX = xTracker + (tracker.labelOffsetX || 0);
+            let lblY = bottomOfLastRow + 24 + (tracker.labelOffsetY || 0);
+            
+            svg += `<g fill="${tracker.color}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'tracker-label-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})">
+                <rect x="${lblX - 50}" y="${lblY - 11}" width="100" height="15" rx="3" fill="#ffffff" stroke="${tracker.color}" stroke-width="1"/>
+                <text x="${lblX}" y="${lblY}" font-size="8" font-weight="bold" fill="${tracker.color}" text-anchor="middle">${tracker.label.toUpperCase()}</text>
+            </g>`;
         }
-        svg += `</svg>`; container.innerHTML = svg;
+    });
+
+    if (todayLineMode === 'show') {
+        let today = new Date();
+        if (today.getTime() >= scaleMinTime && today.getTime() <= scaleMaxTime) {
+            let xToday = getX(today);
+            svg += `<line x1="${xToday}" y1="${axisLineY}" x2="${xToday}" y2="${bottomOfLastRow}" stroke="${todayColor}" stroke-width="1.5" stroke-dasharray="4 4" style="pointer-events:none;"/>`;
+            svg += `<text x="${xToday}" y="${bottomOfLastRow + 11}" font-size="8" font-weight="bold" fill="${todayColor}" text-anchor="middle" style="pointer-events:none;">TODAY</text>`;
+        }
     }
+    svg += `</svg>`; container.innerHTML = svg;
+}
 
     function downloadSVG() {
         const svgElement = document.querySelector('#svgContainer svg'); if (!svgElement) return;
