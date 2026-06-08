@@ -118,7 +118,10 @@
            ============================== */
         .main-preview { flex: 1; padding: 25px; display: flex; flex-direction: column; overflow-y: auto; }
         .sticky-chart-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;}
-        .canvas-holder { background: #ffffff; padding: 0px; border-radius: 4px; width: 100%; display: flex; justify-content: flex-start; overflow-x: auto; margin-bottom: 15px; position: relative;}
+        
+        /* Zoom Engine Viewport Mask */
+        .zoom-viewport-mask { width: 100%; overflow: auto; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 15px; background: #ffffff; }
+        .canvas-holder { background: #ffffff; padding: 0px; width: 100%; display: flex; justify-content: flex-start; position: relative; transform-origin: top left; }
         
         .export-button-group { display: flex; gap: 10px; width: 100%; }
         .download-btn { flex: 1; color: white; border: none; padding: 12px 24px; font-size: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
@@ -140,8 +143,8 @@
         .floating-date-dialog .modal-field { display: flex; flex-direction: column; flex: 1; font-size: 11px; font-weight: 600; color: #4a5568;}
         .floating-date-dialog .modal-field label { margin-bottom: 4px; }
         .floating-date-dialog .modal-field input, .floating-date-dialog .modal-field select { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; width:100%; box-sizing:border-box; }
-        .floating-date-dialog .modal-actions { display: flex; justify-content: flex-end; gap: 6px; }
-        .floating-date-dialog button { padding: 5px 12px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; }
+        .floating-date-dialog .modal-actions { display: flex; justify-content: space-between; gap: 6px; align-items: center; margin-top: 10px; }
+        .floating-date-dialog button { padding: 6px 12px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; }
 
         /* Right Click Workspace Context Menu */
         .workspace-context-menu {
@@ -153,6 +156,11 @@
             font-size: 12px; font-weight: 600; color: #1e293b; cursor: pointer; display: block;
         }
         .workspace-context-menu button:hover { background: #f1f5f9; color: #1e40af; }
+
+        /* Custom Tracker Dashboard Table Styling */
+        .tracker-dashboard-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; background: #ffffff; }
+        .tracker-dashboard-table th, .tracker-dashboard-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; }
+        .tracker-dashboard-table th { background: #f1f5f9; color: #334155; }
     </style>
 </head>
 <body>
@@ -195,10 +203,12 @@
         <div class="sticky-chart-container">
             <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Right-click row track inside canvas to insert shapes; double-click elements to customize style)</span></h2>
             
-            <div class="canvas-holder" id="svgContainer" 
-                 onmousemove="handleGlobalDragMove(event)" 
-                 onmouseup="stopGlobalDragAction(event)" 
-                 onmouseleave="stopGlobalDragAction(event)">
+            <div class="zoom-viewport-mask">
+                <div class="canvas-holder" id="svgContainer" 
+                     onmousemove="handleGlobalDragMove(event)" 
+                     onmouseup="stopGlobalDragAction(event)" 
+                     onmouseleave="stopGlobalDragAction(event)">
+                </div>
             </div>
             
             <div class="export-button-group">
@@ -266,10 +276,34 @@
                         <label class="radio-option"><input type="checkbox" id="showHeaderDay" onchange="recordStateChange(); updateChart();"> Days</label>
                     </div>
                 </div>
+                <div class="control-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
+                    <div class="control-item">
+                        <label>Live Workspace View Zoom</label>
+                        <select id="workspaceZoom" onchange="handleZoomFactorChange(this.value)">
+                            <option value="1.0" selected>100% Standard View</option>
+                            <option value="1.25">125% Magnified</option>
+                            <option value="1.5">150% Intermediate</option>
+                            <option value="2.0">200% High Detail</option>
+                            <option value="2.5">250% Ultra Zoom</option>
+                            <option value="3.0">300% Maximum Scale</option>
+                        </select>
+                    </div>
+                    <div class="control-item">
+                        <label>Layout Snapping Steps</label>
+                        <select id="snapResolution" onchange="recordStateChange(); updateChart();">
+                            <option value="0" selected>None (Free Drag)</option>
+                            <option value="1">1px Ultra-Fine Step</option>
+                            <option value="2">2px Micro Step</option>
+                            <option value="5">5px Precision Step</option>
+                            <option value="10">10px Medium Step</option>
+                            <option value="25">25px Coarse Step</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <div class="bottom-card" style="grid-column: span 2;">
-                <h3>3. Formatting, Metrics, & Global Base Colors</h3>
+                <h3>3. Formatting, Metrics, Grid mesh, & Global Base Colors</h3>
                 <div class="control-grid" style="grid-template-columns: repeat(5, 1fr); gap: 10px;">
                     <div class="control-item">
                         <label>Font Typography</label>
@@ -301,7 +335,7 @@
                         <input type="hidden" id="canvasWidth" value="806">
                     </div>
                 </div>
-                <div class="control-grid" style="grid-template-columns: repeat(7, 1fr); margin-top: 10px;">
+                <div class="control-grid" style="grid-template-columns: repeat(8, 1fr); margin-top: 10px;">
                     <div class="control-item">
                         <label>Global Unfilled Bar</label>
                         <input type="color" id="barBgColor" value="#5c95be" onchange="recordStateChange(); updateChart();">
@@ -323,15 +357,19 @@
                         <input type="color" id="todayColor" value="#b71010" onchange="recordStateChange(); updateChart();">
                     </div>
                     <div class="control-item">
+                        <label>Master Leader Color</label>
+                        <input type="color" id="masterLeaderColor" value="#94a3b8" onchange="recordStateChange(); updateChart();">
+                    </div>
+                    <div class="control-item">
                         <label>Date Headers</label>
                         <input type="color" id="headerColor" value="#000000" onchange="recordStateChange(); updateChart();">
                     </div>
                     <div class="control-item" style="justify-content: center; align-items: center;">
-                        <label>Gridlines</label>
-                        <input type="checkbox" id="showVGrid" checked style="width:18px; height:18px; margin-top:4px;" onchange="recordStateChange(); updateChart();">
+                        <label>Time Gridlines</label>
+                        <input type="checkbox" id="showVGrid" checked style="width:16px; height:16px; margin-top:2px;" onchange="recordStateChange(); updateChart();">
                     </div>
                 </div>
-                <div class="control-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 5px;">
+                <div class="control-grid" style="grid-template-columns: repeat(3, 1fr); margin-top: 5px;">
                     <div class="control-item">
                         <label>Vertical Today Tracker Line</label>
                         <div class="radio-group">
@@ -339,6 +377,35 @@
                             <label class="radio-option"><input type="radio" name="todayLineToggle" value="hide" onchange="recordStateChange(); updateChart();"> Hidden</label>
                         </div>
                     </div>
+                    <div class="control-item" style="justify-content: center; align-items: flex-start; padding-left: 10px;">
+                        <label>Alignment Snap Grid Pattern</label>
+                        <label class="radio-option" style="margin-top: 5px;"><input type="checkbox" id="showAlignGrid" onchange="recordStateChange(); updateChart();"> Backdrop Mesh Active</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-card" style="grid-column: span 2;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>4. Draggable Custom Vertical Tracker Lines Dashboard Matrix</h3>
+                    <button class="inner-action-btn" onclick="addNewCustomTrackerLine()">+ Deploy New Tracker Line</button>
+                </div>
+                <div style="max-height: 150px; overflow-y: auto; margin-top: 5px;">
+                    <table class="tracker-dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Line Entity ID</th>
+                                <th>Label Description Name</th>
+                                <th>Target Date Metric</th>
+                                <th>Stroke Design Pattern</th>
+                                <th>Thickness (px)</th>
+                                <th>Color Hex</th>
+                                <th>Action Tool</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trackerDashboardBody">
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No custom vertical tracker vectors initialized.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -353,9 +420,11 @@
 
 <script>
     let projectData = [];
+    let customTrackers = [];
     let nextRowId = 4;
     let nextMsId = 1008;
     let nextBarId = 5001;
+    let nextTrackerId = 7001;
 
     let actionUndoStack = [];
     let actionRedoStack = [];
@@ -583,6 +652,20 @@
             return;
         }
 
+        if (mode === 'tracker-line-move' || mode === 'tracker-label-move') {
+            let trk = customTrackers.find(t => t.id === rowId);
+            activeDragState = {
+                mode: mode,
+                tracker: trk,
+                startX: e.clientX,
+                startY: e.clientY,
+                origDateStr: trk ? trk.date : null,
+                origOffsetX: trk ? (trk.labelOffsetX || 0) : 0,
+                origOffsetY: trk ? (trk.labelOffsetY || 0) : 0
+            };
+            return;
+        }
+
         const row = findRowGlobally(rowId);
         if (!row) return;
 
@@ -615,10 +698,14 @@
     function handleGlobalDragMove(e) {
         if (!activeDragState) return;
 
-        const deltaX = e.clientX - activeDragState.startX;
-        const deltaY = e.clientY - activeDragState.startY;
+        // Proportional Velocity Tracking Resolution
+        const activeScaleFactor = parseFloat(document.getElementById('workspaceZoom').value) || 1.0;
+        const deltaX = (e.clientX - activeDragState.startX) / activeScaleFactor;
+        const deltaY = (e.clientY - activeDragState.startY) / activeScaleFactor;
+        
         const totalDuration = scaleMaxTime - scaleMinTime;
         const timeDelta = (deltaX / scaleChartWidth) * totalDuration;
+        const alignmentSnapResolution = parseInt(document.getElementById('snapResolution').value) || 0;
 
         let needsUpdate = false;
 
@@ -678,28 +765,59 @@
             activeDragState.bar.end = formatDateToDDMMMYYYY(new Date(newEnd));
             needsUpdate = true;
         } 
-        else if (activeDragState.mode === 'ms') {
-            if (activeDragState.milestone) {
-                let newMsDate = activeDragState.origMsDate + timeDelta;
-                activeDragState.milestone.date = formatDateToDDMMMYYYY(new Date(newMsDate));
-                needsUpdate = true;
-            }
+        else if (activeDragState.mode === 'ms' && activeDragState.milestone) {
+            let newMsDate = activeDragState.origMsDate + timeDelta;
+            activeDragState.milestone.date = formatDateToDDMMMYYYY(new Date(newMsDate));
+            needsUpdate = true;
         } 
-        else if (activeDragState.mode === 'label-drag') {
-            if (activeDragState.milestone) {
-                activeDragState.milestone.manualLabel = true;
-                activeDragState.milestone.labelOffsetX = activeDragState.origLabelOffsetX + deltaX;
-                activeDragState.milestone.labelOffsetY = activeDragState.origLabelOffsetY + deltaY;
-                needsUpdate = true;
+        else if (activeDragState.mode === 'label-drag' && activeDragState.milestone) {
+            activeDragState.milestone.manualLabel = true;
+            let targetRawX = activeDragState.origLabelOffsetX + deltaX;
+            let targetRawY = activeDragState.origLabelOffsetY + deltaY;
+            
+            if (alignmentSnapResolution > 0) {
+                targetRawX = Math.round(targetRawX / alignmentSnapResolution) * alignmentSnapResolution;
+                targetRawY = Math.round(targetRawY / alignmentSnapResolution) * alignmentSnapResolution;
             }
+            activeDragState.milestone.labelOffsetX = targetRawX;
+            activeDragState.milestone.labelOffsetY = targetRawY;
+            needsUpdate = true;
         } 
-        else if (activeDragState.mode === 'date-label-drag') {
-            if (activeDragState.milestone) {
-                activeDragState.milestone.manualDateLabel = true;
-                activeDragState.milestone.dateOffsetX = activeDragState.origDateOffsetX + deltaX;
-                activeDragState.milestone.dateOffsetY = activeDragState.origDateOffsetY + deltaY;
+        else if (activeDragState.mode === 'date-label-drag' && activeDragState.milestone) {
+            activeDragState.milestone.manualDateLabel = true;
+            let targetRawX = activeDragState.origDateOffsetX + deltaX;
+            let targetRawY = activeDragState.origDateOffsetY + deltaY;
+            
+            if (alignmentSnapResolution > 0) {
+                targetRawX = Math.round(targetRawX / alignmentSnapResolution) * alignmentSnapResolution;
+                targetRawY = Math.round(targetRawY / alignmentSnapResolution) * alignmentSnapResolution;
+            }
+            activeDragState.milestone.dateOffsetX = targetRawX;
+            activeDragState.milestone.dateOffsetY = targetRawY;
+            needsUpdate = true;
+        }
+        else if (activeDragState.mode === 'tracker-line-move' && activeDragState.tracker) {
+            let svgBox = document.querySelector('#svgContainer svg');
+            if (svgBox) {
+                let rect = svgBox.getBoundingClientRect();
+                let cursorCanvasX = (e.clientX - rect.left) / activeScaleFactor;
+                let evaluatedTime = scaleMinTime + ((cursorCanvasX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
+                evaluatedTime = Math.max(scaleMinTime, Math.min(scaleMaxTime, evaluatedTime));
+                activeDragState.tracker.date = formatDateToDDMMMYYYY(new Date(evaluatedTime));
                 needsUpdate = true;
             }
+        }
+        else if (activeDragState.mode === 'tracker-label-move' && activeDragState.tracker) {
+            let targetRawX = activeDragState.origOffsetX + deltaX;
+            let targetRawY = activeDragState.origOffsetY + deltaY;
+            
+            if (alignmentSnapResolution > 0) {
+                targetRawX = Math.round(targetRawX / alignmentSnapResolution) * alignmentSnapResolution;
+                targetRawY = Math.round(targetRawY / alignmentSnapResolution) * alignmentSnapResolution;
+            }
+            activeDragState.tracker.labelOffsetX = targetRawX;
+            activeDragState.tracker.labelOffsetY = targetRawY;
+            needsUpdate = true;
         }
 
         if (needsUpdate) {
@@ -711,6 +829,7 @@
         if (!activeDragState) return;
         recordStateChange();
         renderInputRows(); 
+        populateTrackerDashboardMatrix();
         activeDragState = null;
     }
 
@@ -720,9 +839,11 @@
     function recordStateChange() {
         const stateSnapshot = {
             data: JSON.parse(JSON.stringify(projectData)),
+            trackers: JSON.parse(JSON.stringify(customTrackers)),
             nextRowId: nextRowId,
             nextMsId: nextMsId,
             nextBarId: nextBarId,
+            nextTrackerId: nextTrackerId,
             rangeMode: document.querySelector('input[name="rangeMode"]:checked').value,
             sizingMode: document.querySelector('input[name="sizingMode"]:checked')?.value || 'fixed',
             customBoundaryMin: manualBoundaryMin,
@@ -737,8 +858,12 @@
             summaryColor: document.getElementById('summaryColor').value,
             msColor: document.getElementById('msColor').value,
             todayColor: document.getElementById('todayColor').value,
+            masterLeaderColor: document.getElementById('masterLeaderColor').value,
             headerColor: document.getElementById('headerColor').value,
             showVGrid: document.getElementById('showVGrid').checked,
+            showAlignGrid: document.getElementById('showAlignGrid').checked,
+            snapResolution: document.getElementById('snapResolution').value,
+            workspaceZoom: document.getElementById('workspaceZoom').value,
             todayLineToggle: document.querySelector('input[name="todayLineToggle"]:checked').value,
             showHeaderYear: document.getElementById('showHeaderYear').checked,
             showHeaderQuarter: document.getElementById('showHeaderQuarter').checked,
@@ -767,30 +892,12 @@
 
     function restoreStateFromSnapshot(state) {
         projectData = state.data || [];
+        customTrackers = state.trackers || [];
         
-        projectData.forEach(lane => {
-            if (lane.rows) {
-                lane.rows.forEach(row => {
-                    if (!row.bars || !Array.isArray(row.bars)) {
-                        row.bars = [];
-                        if (row.start && row.end) {
-                            row.bars.push({
-                                id: nextBarId++,
-                                start: row.start,
-                                end: row.end,
-                                progress: row.progress || 0,
-                                bgColor: row.bgColor || "",
-                                color: row.color || "",
-                                pattern: row.pattern || "solid"
-                            });
-                        }
-                    }
-                });
-            }
-        });
-
-        nextRowId = state.nextRowId; nextMsId = state.nextMsId;
-        if(state.nextBarId) nextBarId = state.nextBarId;
+        nextRowId = state.nextRowId; 
+        nextMsId = state.nextMsId;
+        nextBarId = state.nextBarId;
+        if(state.nextTrackerId) nextTrackerId = state.nextTrackerId;
         
         document.querySelector(`input[name="rangeMode"][value="${state.rangeMode}"]`).checked = true;
         
@@ -811,11 +918,15 @@
         document.getElementById('rowHeight').value = state.rowHeight;
         document.getElementById('barBgColor').value = state.barBgColor;
         document.getElementById('barColor').value = state.barColor;
-        if(document.getElementById('summaryColor')) document.getElementById('summaryColor').value = state.summaryColor || '#475569';
+        document.getElementById('summaryColor').value = state.summaryColor || '#475569';
         document.getElementById('msColor').value = state.msColor;
         document.getElementById('todayColor').value = state.todayColor || '#b71010';
+        document.getElementById('masterLeaderColor').value = state.masterLeaderColor || '#94a3b8';
         document.getElementById('headerColor').value = state.headerColor || '#000000';
         document.getElementById('showVGrid').checked = state.showVGrid;
+        document.getElementById('showAlignGrid').checked = state.showAlignGrid || false;
+        document.getElementById('snapResolution').value = state.snapResolution || "0";
+        document.getElementById('workspaceZoom').value = state.workspaceZoom || "1.0";
         document.querySelector(`input[name="todayLineToggle"][value="${state.todayLineToggle}"]`).checked = true;
         
         document.getElementById('showHeaderYear').checked = (state.showHeaderYear !== undefined) ? state.showHeaderYear : true;
@@ -823,9 +934,11 @@
         document.getElementById('showHeaderMonth').checked = (state.showHeaderMonth !== undefined) ? state.showHeaderMonth : false;
         document.getElementById('showHeaderDay').checked = (state.showHeaderDay !== undefined) ? state.showHeaderDay : false;
 
+        handleZoomFactorChange(state.workspaceZoom || "1.0", false);
         toggleRangeScopeFieldsVisibility(state.rangeMode);
         syncUndoRedoButtonsState();
         renderInputRows();
+        populateTrackerDashboardMatrix();
         updateChart();
     }
 
@@ -840,8 +953,7 @@
     });
 
     window.addEventListener('resize', () => {
-        const sizingMode = document.querySelector('input[name="sizingMode"]:checked')?.value;
-        if (sizingMode === 'ticker-tape') {
+        if (document.querySelector('input[name="sizingMode"]:checked')?.value === 'ticker-tape') {
             updateChart();
         }
     });
@@ -856,83 +968,91 @@
     function handleRangeModeChange(value) { toggleRangeScopeFieldsVisibility(value); recordStateChange(); updateChart(); }
     function toggleRangeScopeFieldsVisibility(mode) { document.getElementById('manualDateFieldsRow').style.display = (mode === 'manual') ? 'grid' : 'none'; }
 
-    // ==========================================
-    // BACKUP IMPORT / EXPORT SYSTEMS (JSON/CSV)
-    // ==========================================
-    function exportConfigurationArchive() {
-        const archivePayload = { version: "2026.MultiBarPresentationState", workspace: JSON.parse(actionUndoStack[actionUndoStack.length - 1]) };
-        const blob = new Blob([JSON.stringify(archivePayload, null, 2)], {type: 'application/json'});
-        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_workspace_archive.json`; link.click();
+    function handleZoomFactorChange(val, triggerRecord = true) {
+        document.getElementById('svgContainer').style.transform = `scale(${val})`;
+        if (triggerRecord) { recordStateChange(); }
     }
 
-    function importConfigurationArchive(event) {
-        const file = event.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const parsedArchive = JSON.parse(e.target.result);
-                if (parsedArchive.workspace) {
-                    actionUndoStack = []; actionRedoStack = [];
-                    actionUndoStack.push(JSON.stringify(parsedArchive.workspace));
-                    restoreStateFromSnapshot(parsedArchive.workspace);
-                }
-            } catch (err) { alert("Corrupted backup snapshot file validation state wrapper."); }
-        };
-        reader.readAsText(file);
-    }
+function importConfigurationArchive(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const parsedArchive = JSON.parse(e.target.result);
+            if (parsedArchive.workspace) {
+                actionUndoStack = []; actionRedoStack = [];
+                actionUndoStack.push(JSON.stringify(parsedArchive.workspace));
+                restoreStateFromSnapshot(parsedArchive.workspace);
+            }
+        } catch (err) { 
+            alert("Corrupted backup snapshot file validation state wrapper."); 
+        }
+    };
+    reader.readAsText(file);
+}
 
+    // =========================================================================
+    // OVERHAULED ARCHITECTURE: FLATTENED EXCEL CSV AUTOMATION ENGINE
+    // =========================================================================
     function exportExcelCSV() {
-        let csvContent = `#fontFamily,${document.getElementById('fontFamily').value}\n`;
-        csvContent += `#fontSize,${document.getElementById('fontSize').value}\n`;
-        csvContent += `#canvasWidth,${document.getElementById('canvasWidth').value}\n`;
-        csvContent += `#sizingMode,${document.querySelector('input[name="sizingMode"]:checked')?.value || "fixed"}\n`;
-        csvContent += `#swimlaneHeight,${document.getElementById('swimlaneHeight').value}\n`;
-        csvContent += `#rowHeight,${document.getElementById('rowHeight').value}\n`;
-        csvContent += `#barBgColor,${document.getElementById('barBgColor').value}\n`;
-        csvContent += `#barColor,${document.getElementById('barColor').value}\n`;
-        csvContent += `#summaryColor,${document.getElementById('summaryColor').value}\n`;
-        csvContent += `#msColor,${document.getElementById('msColor').value}\n`;
-        csvContent += `#todayColor,${document.getElementById('todayColor').value}\n`;
-        csvContent += `#headerColor,${document.getElementById('headerColor').value}\n`;
-        csvContent += `#showVGrid,${document.getElementById('showVGrid').checked ? "TRUE" : "FALSE"}\n`;
-        csvContent += `#todayLineToggle,${document.querySelector('input[name="todayLineToggle"]:checked').value}\n`;
-        csvContent += `#showHeaderYear,${document.getElementById('showHeaderYear').checked ? "TRUE" : "FALSE"}\n`;
-        csvContent += `#showHeaderQuarter,${document.getElementById('showHeaderQuarter').checked ? "TRUE" : "FALSE"}\n`;
-        csvContent += `#showHeaderMonth,${document.getElementById('showHeaderMonth').checked ? "TRUE" : "FALSE"}\n`;
-        csvContent += `#showHeaderDay,${document.getElementById('showHeaderDay').checked ? "TRUE" : "FALSE"}\n`;
-        csvContent += `#rangeMode,${document.querySelector('input[name="rangeMode"]:checked').value}\n`;
-        csvContent += `#customBoundaryMin,${manualBoundaryMin}\n`;
-        csvContent += `#customBoundaryMax,${manualBoundaryMax}\n`;
-        csvContent += "Swimlane Title,Swimlane Color,Swimlane Summary,Row ID,Row Title,Predecessor ID,Serialized Activity Bars,Serialized Milestones\n";
-        
+        let headers = [
+            "Record Type", "Swimlane Title", "Swimlane Color", "Swimlane Summary",
+            "Row ID", "Row Display Title", "Predecessor ID", "Element ID",
+            "Label Name", "Start Target Date", "Finish Date", "Progress Thickness",
+            "Pattern Shape", "Color Hex Code", "OffsetX1", "OffsetY1", "OffsetX2", "OffsetY2", "Rules Matrix"
+        ];
+        let csvRows = [headers.join(",")];
+
+        // Append Project Swimlanes, Bars, and Milestones Structural Grid Data Rows
         projectData.forEach(lane => {
-            lane.rows.forEach(row => {
-                let milestoneTokens = [];
-                row.milestones.forEach(ms => {
-                    milestoneTokens.push([
-                        ms.label.replace(/"/g, '""'), ms.date, ms.showDate ? "TRUE" : "FALSE", ms.manualLabel ? "TRUE" : "FALSE",
-                        ms.labelOffsetX || 0, ms.labelOffsetY || 0, ms.manualDateLabel ? "TRUE" : "FALSE", ms.dateOffsetX || 0, ms.dateOffsetY || 0,
-                        ms.color || "", ms.symbol || "diamond"
-                    ].join('|'));
-                });
+            if (lane.rows.length === 0) {
+                // ROW_EMPTY row placeholder data isolation boundary row mapping
+                let fFields = ["ROW_EMPTY", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
+                csvRows.push(fFields.join(","));
+            } else {
+                lane.rows.forEach(row => {
+                    if (row.bars.length === 0 && row.milestones.length === 0) {
+                        let fFields = ["ROW_EMPTY", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE", row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", "", "", "", "", "", "", "", "", "", "", "", ""];
+                        csvRows.push(fFields.join(","));
+                    }
+                    
+                    row.bars.forEach(b => {
+                        let fFields = [
+                            "BAR", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE",
+                            row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", b.id,
+                            "", b.start, b.end, b.progress || 0, b.pattern || "solid", `"${b.color || ''}"`,
+                            "", "", "", "", `"${b.bgColor || ''}"`
+                        ];
+                        csvRows.push(fFields.join(","));
+                    });
 
-                let barTokens = [];
-                row.bars.forEach(b => {
-                    barTokens.push([
-                        b.start, b.end, b.progress || 0, b.bgColor || "", b.color || "", b.pattern || "solid"
-                    ].join('|'));
+                    row.milestones.forEach(ms => {
+                        let ruleDetails = [ms.showDate ? "PinDate" : "HideDate", ms.leaderEnabledText ? "LdrTxt" : "NoLdrTxt", ms.leaderEnabledDate ? "LdrDt" : "NoLdrDt", ms.leaderAnchorText || "center"].join("|");
+                        let fFields = [
+                            "MILESTONE", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE",
+                            row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", ms.id,
+                            `"${ms.label.replace(/"/g, '""')}"`, ms.date, "", "",
+                            ms.symbol || "diamond", `"${ms.color || ''}"`, ms.labelOffsetX || 0, ms.labelOffsetY || 0,
+                            ms.dateOffsetX || 0, ms.dateOffsetY || 0, `"${ruleDetails}"`
+                        ];
+                        csvRows.push(fFields.join(","));
+                    });
                 });
-
-                let lineElements = [
-                    `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || '#f8fafc'}"`, lane.showSummary !== false ? "TRUE" : "FALSE",
-                    row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor !== "" ? row.predecessor : "NONE",
-                    `"${barTokens.join(';')}"`, `"${milestoneTokens.join(';')}"`
-                ];
-                csvContent += lineElements.join(",") + "\n";
-            });
+            }
         });
-        const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
-        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_workspace_matrix.csv`; link.click();
+
+        // Flattened Custom Vertical Tracker lines mapping sequence blocks
+        customTrackers.forEach(trk => {
+            let fFields = [
+                "TRACKER", "", "", "", "", "", "", trk.id,
+                `"${trk.label.replace(/"/g, '""')}"`, trk.date, "", trk.thickness || 2,
+                trk.pattern || "solid", `"${trk.color || ''}"`, trk.labelOffsetX || 0, trk.labelOffsetY || 0, "", "", ""
+            ];
+            csvRows.push(fFields.join(","));
+        });
+
+        const blob = new Blob([csvRows.join("\n")], {type: 'text/csv;charset=utf-8;'});
+        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_flattened_matrix.csv`; link.click();
     }
 
     function parseRobustCSVLine(text) {
@@ -954,85 +1074,81 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             const lines = e.target.result.split(/\r?\n/); if(lines.length <= 1) return;
-            let newImportData = []; let rIdCounter = 0; let mIdCounter = 1000; let bIdCounter = 5000;
+            let newImportData = []; let newTrackers = [];
+            let rIdCounter = 1; let mIdCounter = 1001; let bIdCounter = 5001; let tIdCounter = 7001;
 
-            for(let i = 0; i < lines.length; i++) {
+            for(let i = 1; i < lines.length; i++) {
                 let line = lines[i].trim(); if(line === "") continue;
-                if (line.startsWith('#')) {
-                    let configToken = line.substring(1).split(',');
-                    if (configToken.length === 2) {
-                        let k = configToken[0].trim(); let v = configToken[1].trim();
-                        if (k === 'customBoundaryMin') manualBoundaryMin = v;
-                        else if (k === 'customBoundaryMax') manualBoundaryMax = v;
-                        else {
-                            let element = document.getElementById(k);
-                            if (element) {
-                                if (element.type === 'checkbox') element.checked = (v === "TRUE");
-                                else element.value = v;
-                            } else {
-                                let radio = document.querySelector(`input[name="${k}"][value="${v}"]`);
-                                if (radio) radio.checked = true;
-                            }
-                        }
-                    }
-                    continue; 
-                }
-                if (line.toLowerCase().startsWith("swimlane title") || line.toLowerCase().startsWith("swimlane color")) continue;
+                let columns = parseRobustCSVLine(line); if(columns.length < 8) continue;
 
-                let columns = parseRobustCSVLine(line); if(columns.length < 6) continue;
-                let laneTitle = columns[0].trim();
-                let laneColor = columns[1].trim();
-                let laneSummary = columns[2].trim() === "TRUE";
-                let explicitRowId = parseInt(columns[3].trim(), 10);
-                let rowLabel = columns[4].trim();
-                let rowPred = columns[5].trim();
-                if (rowPred.toUpperCase() === "NONE") rowPred = "";
-
-                if (explicitRowId >= rIdCounter) rIdCounter = explicitRowId + 1;
+                let recordType = columns[0].trim();
+                let laneTitle = columns[1].trim();
+                let laneColor = columns[2].trim();
+                let laneSummary = columns[3].trim() === "TRUE";
                 
+                if (recordType === "TRACKER") {
+                    let tId = parseInt(columns[7].trim()) || tIdCounter++;
+                    if(tId >= tIdCounter) tIdCounter = tId + 1;
+                    newTrackers.push({
+                        id: tId, label: columns[8].trim(), date: columns[9].trim(),
+                        thickness: parseInt(columns[11].trim()) || 2, pattern: columns[12].trim() || "solid",
+                        color: columns[13].trim(), labelOffsetX: parseFloat(columns[14]) || 0, labelOffsetY: parseFloat(columns[15]) || 0
+                    });
+                    continue;
+                }
+
                 let lane = newImportData.find(l => l.title === laneTitle);
-                if(!lane) {
+                if(!lane && laneTitle !== "") {
                     lane = { id: newImportData.length, title: laneTitle, color: laneColor, showSummary: laneSummary, rows: [] };
                     newImportData.push(lane);
                 }
 
-                let rowObject = { id: explicitRowId, label: rowLabel, predecessor: rowPred, bars: [], milestones: [] };
+                let rowIdStr = columns[4].trim(); if(rowIdStr === "") continue;
+                let explicitRowId = parseInt(rowIdStr, 10);
+                if (explicitRowId >= rIdCounter) rIdCounter = explicitRowId + 1;
 
-                // Process Activity Bars
-                let barsDataChunk = columns[6] ? columns[6].trim() : "";
-                if (barsDataChunk !== "") {
-                    barsDataChunk.split(';').forEach(tokenStr => {
-                        let pieces = tokenStr.split('|');
-                        if (pieces.length >= 2) {
-                            rowObject.bars.push({
-                                id: bIdCounter++, start: pieces[0], end: pieces[1], progress: parseInt(pieces[2],10)||0,
-                                bgColor: pieces[3]||"", color: pieces[4]||"", pattern: pieces[5]||"solid"
-                            });
-                        }
-                    });
+                let rowLabel = columns[5].trim();
+                let rowPred = columns[6].trim(); if (rowPred.toUpperCase() === "NONE") rowPred = "";
+
+                let rowObject = lane.rows.find(r => r.id === explicitRowId);
+                if(!rowObject) {
+                    rowObject = { id: explicitRowId, label: rowLabel, predecessor: rowPred, bars: [], milestones: [] };
+                    lane.rows.push(rowObject);
                 }
 
-                // Process Milestones
-                let milestonesDataChunk = columns[7] ? columns[7].trim() : "";
-                if (milestonesDataChunk !== "") {
-                    milestonesDataChunk.split(';').forEach(tokenStr => {
-                        let pieces = tokenStr.split('|');
-                        if (pieces.length >= 2) {
-                            rowObject.milestones.push({
-                                id: mIdCounter++, label: pieces[0], date: pieces[1], showDate: pieces[2] === "TRUE",
-                                manualLabel: pieces[3] === "TRUE", labelOffsetX: parseFloat(pieces[4]) || 0, labelOffsetY: parseFloat(pieces[5]) || 0,
-                                manualDateLabel: pieces[6] === "TRUE", dateOffsetX: parseFloat(pieces[7]) || 0, dateOffsetY: parseFloat(pieces[8]) || 0,
-                                color: pieces[9] || "", symbol: pieces[10] || "diamond"
-                            });
-                        }
+                if (recordType === "BAR") {
+                    let bId = parseInt(columns[7].trim()) || bIdCounter++;
+                    if (bId >= bIdCounter) bIdCounter = bId + 1;
+                    rowObject.bars.push({
+                        id: bId, start: columns[9].trim(), end: columns[10].trim(), progress: parseInt(columns[11].trim()) || 0,
+                        pattern: columns[12].trim() || "solid", color: columns[13].trim(), bgColor: columns[18].trim()
+                    });
+                } else if (recordType === "MILESTONE") {
+                    let mId = parseInt(columns[7].trim()) || mIdCounter++;
+                    if (mId >= mIdCounter) mIdCounter = mId + 1;
+                    let ruleStr = columns[18].trim();
+                    let pinDt = true, ldrTxt = false, ldrDt = false, anchorText = "center";
+                    if (ruleStr) {
+                        let rPieces = ruleStr.split('|');
+                        pinDt = rPieces[0] === "PinDate";
+                        ldrTxt = rPieces[1] === "LdrTxt";
+                        ldrDt = rPieces[2] === "LdrDt";
+                        if(rPieces[3]) anchorText = rPieces[3];
+                    }
+                    rowObject.milestones.push({
+                        id: mId, label: columns[8].trim(), date: columns[9].trim(), showDate: pinDt,
+                        manualLabel: true, labelOffsetX: parseFloat(columns[14]) || 0, labelOffsetY: parseFloat(columns[15]) || 0,
+                        manualDateLabel: true, dateOffsetX: parseFloat(columns[16]) || 0, dateOffsetY: parseFloat(columns[17]) || 0,
+                        symbol: columns[12].trim() || "diamond", color: columns[13].trim(),
+                        leaderEnabledText: ldrTxt, leaderEnabledDate: ldrDt, leaderAnchorText: anchorText
                     });
                 }
-                lane.rows.push(rowObject);
             }
-            if(newImportData.length > 0) {
-                projectData = newImportData; nextRowId = rIdCounter; nextMsId = mIdCounter; nextBarId = bIdCounter;
-                toggleRangeScopeFieldsVisibility(document.querySelector('input[name="rangeMode"]:checked').value);
-                recordStateChange(); renderInputRows(); updateChart();
+
+            if(newImportData.length > 0 || newTrackers.length > 0) {
+                projectData = newImportData; customTrackers = newTrackers;
+                nextRowId = rIdCounter; nextMsId = mIdCounter; nextBarId = bIdCounter; nextTrackerId = tIdCounter;
+                recordStateChange(); renderInputRows(); populateTrackerDashboardMatrix(); updateChart();
             }
         };
         reader.readAsText(file);
@@ -1041,7 +1157,7 @@
     function clearAllStoredData() {
         if (confirm("Are you sure you want to completely wipe all current tracks, layouts, and data?")) {
             localStorage.removeItem('gantt_v8_master_snapshot');
-            actionUndoStack = []; actionRedoStack = []; loadApplicationState();
+            actionUndoStack = []; actionRedoStack = []; customTrackers = []; loadApplicationState();
         }
     }
 
@@ -1060,8 +1176,8 @@
                         { id: 5002, start: "10Feb2027", end: "30Sep2027", progress: 0, bgColor: "", color: "", pattern: "crosshatch" }
                       ],
                       milestones: [
-                        { id: 1000, label: "Construction Complete", date: "01Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond" },
-                        { id: 1001, label: "Interiors Start", date: "19Aug2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle" }
+                        { id: 1000, label: "Construction Complete", date: "01Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond", leaderEnabledText: true, leaderAnchorText: "center" },
+                        { id: 1001, label: "Interiors Start", date: "19Aug2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle", leaderEnabledText: false, leaderAnchorText: "center" }
                     ]}
                 ]},
                 { id: 1, title: "Building 21 Swimlane", color: "#f0fdf4", showSummary: true, rows: [
@@ -1072,12 +1188,15 @@
                     ]}
                 ]}
             ];
-            nextRowId = 2; nextMsId = 1003; nextBarId = 5004;
+            customTrackers = [
+                { id: 7001, label: "Procurement Deadline", date: "15Dec2026", thickness: 2, pattern: "dashed", color: "#e11d48", labelOffsetX: 0, labelOffsetY: 0 }
+            ];
+            nextRowId = 2; nextMsId = 1003; nextBarId = 5004; nextTrackerId = 7002;
             const seedSnapshot = {
-                data: projectData, nextRowId: nextRowId, nextMsId: nextMsId, nextBarId: nextBarId, rangeMode: 'manual', sizingMode: 'fixed',
+                data: projectData, trackers: customTrackers, nextRowId: nextRowId, nextMsId: nextMsId, nextBarId: nextBarId, nextTrackerId: nextTrackerId, rangeMode: 'manual', sizingMode: 'fixed',
                 customBoundaryMin: '01May2026', customBoundaryMax: '09Aug2028', fontFamily: "Tahoma, sans-serif",
-                fontSize: 10, swimlaneHeight: 30, canvasWidth: 806, rowHeight: 50, barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#000000', todayColor: '#b71010', headerColor: '#000000',
-                showVGrid: true, todayLineToggle: 'show', showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: false, showHeaderDay: false
+                fontSize: 10, swimlaneHeight: 30, canvasWidth: 806, rowHeight: 50, barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#000000', todayColor: '#b71010', masterLeaderColor: '#94a3b8', headerColor: '#000000',
+                showVGrid: true, showAlignGrid: false, snapResolution: "0", workspaceZoom: "1.0", todayLineToggle: 'show', showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: false, showHeaderDay: false
             };
             actionUndoStack.push(JSON.stringify(seedSnapshot)); restoreStateFromSnapshot(seedSnapshot);
         }
@@ -1122,6 +1241,123 @@
         }
     }
 
+    // ==========================================================
+    // INTERACTIVE DRILL DOWN MANAGEMENT: CUSTOM VERTICAL TRACKERS
+    // ==========================================================
+    function addNewCustomTrackerLine() {
+        let targetSeedDate = "01Jan2027";
+        customTrackers.push({
+            id: nextTrackerId++,
+            label: "Custom Project Line Track",
+            date: targetSeedDate,
+            thickness: 2,
+            pattern: "solid",
+            color: "#10b981",
+            labelOffsetX: 0,
+            labelOffsetY: 0
+        });
+        recordStateChange();
+        populateTrackerDashboardMatrix();
+        updateChart();
+    }
+
+    function updateTrackerFieldDirect(id, key, val) {
+        let trk = customTrackers.find(t => t.id === id);
+        if (trk) {
+            if (key === 'thickness') trk[key] = parseInt(val) || 2;
+            else if (key === 'date') trk[key] = formatDateToDDMMMYYYY(new Date(val + "T00:00:00"));
+            else trk[key] = val;
+            recordStateChange();
+            updateChart();
+        }
+    }
+
+    function removeTrackerLine(id) {
+        customTrackers = customTrackers.filter(t => t.id !== id);
+        recordStateChange();
+        populateTrackerDashboardMatrix();
+        updateChart();
+    }
+
+    function populateTrackerDashboardMatrix() {
+        let body = document.getElementById('trackerDashboardBody');
+        if (!body) return;
+        if (customTrackers.length === 0) {
+            body.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No custom vertical tracker vectors initialized.</td></tr>`;
+            return;
+        }
+        body.innerHTML = customTrackers.map(t => {
+            return `
+                <tr>
+                    <td><b>${t.id}</b></td>
+                    <td><input type="text" value="${t.label}" style="padding:4px; font-size:11px;" onchange="updateTrackerFieldDirect(${t.id}, 'label', this.value)"></td>
+                    <td><input type="date" value="${convertDDMMMYYYYToYYYYMMDD(t.date)}" style="padding:3px; font-size:11px; width:120px;" onchange="updateTrackerFieldDirect(${t.id}, 'date', this.value)"></td>
+                    <td>
+                        <select style="padding:3px; font-size:11px;" onchange="updateTrackerFieldDirect(${t.id}, 'pattern', this.value)">
+                            <option value="solid" ${t.pattern === 'solid' ? 'selected' : ''}>Solid</option>
+                            <option value="dashed" ${t.pattern === 'dashed' ? 'selected' : ''}>Dashed</option>
+                            <option value="dotted" ${t.pattern === 'dotted' ? 'selected' : ''}>Dotted</option>
+                        </select>
+                    </td>
+                    <td><input type="number" min="1" max="10" value="${t.thickness || 2}" style="padding:3px; font-size:11px; width:50px;" onchange="updateTrackerFieldDirect(${t.id}, 'thickness', this.value)"></td>
+                    <td><input type="color" value="${t.color || '#10b981'}" style="width:40px; height:22px; padding:0;" onchange="updateTrackerFieldDirect(${t.id}, 'color', this.value)"></td>
+                    <td><button class="delete-btn" style="padding:2px 6px;" onclick="removeTrackerLine(${t.id})">Wipe</button></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function editTrackerPropertiesModalDirect(e, id) {
+        e.stopPropagation();
+        let trk = customTrackers.find(t => t.id === id); if(!trk) return;
+
+        let existing = document.getElementById('floatingTrackerDialog'); if(existing) existing.remove();
+        let dialog = document.createElement('div');
+        dialog.id = 'floatingTrackerDialog'; dialog.className = 'floating-date-dialog';
+        
+        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 340)}px`;
+        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 260)}px`;
+
+        dialog.innerHTML = `
+            <h4>Customize Tracker Line Properties</h4>
+            <div class="modal-row">
+                <div class="modal-field"><label>Description Name</label><input type="text" id="modTrkLabel" value="${trk.label}"></div>
+            </div>
+            <div class="modal-row">
+                <div class="modal-field"><label>Target Date Vector</label><input type="date" id="modTrkDate" value="${convertDDMMMYYYYToYYYYMMDD(trk.date)}"></div>
+            </div>
+            <div class="modal-row">
+                <div class="modal-field"><label>Line Color</label><input type="color" id="modTrkColor" value="${trk.color || '#10b981'}"></div>
+                <div class="modal-field">
+                    <label>Stroke Pattern</label>
+                    <select id="modTrkPattern">
+                        <option value="solid" ${trk.pattern === 'solid' ? 'selected' : ''}>Solid</option>
+                        <option value="dashed" ${trk.pattern === 'dashed' ? 'selected' : ''}>Dashed</option>
+                        <option value="dotted" ${trk.pattern === 'dotted' ? 'selected' : ''}>Dotted</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-row">
+                <div class="modal-field"><label>Thickness Weight (px)</label><input type="number" min="1" max="10" id="modTrkThickness" value="${trk.thickness || 2}"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="modTrkCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
+                <button id="modTrkSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply Style</button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
+        document.getElementById('modTrkCancelBtn').addEventListener('click', () => dialog.remove());
+        document.getElementById('modTrkSaveBtn').addEventListener('click', function() {
+            trk.label = document.getElementById('modTrkLabel').value;
+            let dVal = document.getElementById('modTrkDate').value;
+            if(dVal) trk.date = formatDateToDDMMMYYYY(new Date(dVal + "T00:00:00"));
+            trk.color = document.getElementById('modTrkColor').value;
+            trk.pattern = document.getElementById('modTrkPattern').value;
+            trk.thickness = parseInt(document.getElementById('modTrkThickness').value) || 2;
+            recordStateChange(); populateTrackerDashboardMatrix(); updateChart(); dialog.remove();
+        });
+    }
+
     // ==========================================
     // INTERACTIVE WORKSPACE CONTEXT MENU HANDLERS
     // ==========================================
@@ -1131,10 +1367,11 @@
         
         let container = document.getElementById('svgContainer');
         let rect = container.getBoundingClientRect();
-        let mouseX = e.clientX - rect.left;
+        const activeScaleFactor = parseFloat(document.getElementById('workspaceZoom').value) || 1.0;
+        let mouseX = (e.clientX - rect.left) / activeScaleFactor;
         
         let totalDuration = scaleMaxTime - scaleMinTime;
-        evaluatedTime = scaleMinTime + ((mouseX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
+        let evaluatedTime = scaleMinTime + ((mouseX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
         evaluatedTime = Math.max(scaleMinTime, Math.min(scaleMaxTime, evaluatedTime));
         let computedTargetDateStr = formatDateToDDMMMYYYY(new Date(evaluatedTime));
         
@@ -1143,8 +1380,7 @@
         let menu = document.getElementById('rowWorkspaceContextMenu');
         menu.style.display = 'block';
         
-        let menuWidth = 180;
-        let menuHeight = 80;
+        let menuWidth = 180; let menuHeight = 80;
         let left = Math.max(10, Math.min(e.clientX, window.innerWidth - menuWidth - 15));
         let top = Math.max(10, Math.min(e.clientY, window.innerHeight - menuHeight - 15));
         
@@ -1160,7 +1396,8 @@
         if (type === 'milestone') {
             row.milestones.push({
                 id: nextMsId++, label: "Inserted Milestone", date: activeContextState.targetDate,
-                showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond"
+                showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond",
+                leaderEnabledText: true, leaderEnabledDate: false, leaderAnchorText: "center"
             });
         } else if (type === 'bar') {
             let startTime = parseAnyDateToTimestamp(activeContextState.targetDate);
@@ -1196,17 +1433,9 @@
         if (existingDialog) existingDialog.remove();
 
         let dialog = document.createElement('div');
-        dialog.id = 'floatingLaneSummaryDialog';
-        dialog.className = 'floating-date-dialog';
-        
-        let dialogWidth = 260;
-        let dialogHeight = 160;
-        let left = Math.max(10, Math.min(e.clientX, window.innerWidth - dialogWidth - 15));
-        let top = Math.max(10, Math.min(e.clientY, window.innerHeight - dialogHeight - 15));
-        
-        dialog.style.left = `${left}px`;
-        dialog.style.top = `${top}px`;
-        dialog.style.width = `${dialogWidth}px`;
+        dialog.id = 'floatingLaneSummaryDialog'; dialog.className = 'floating-date-dialog';
+        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 280)}px`;
+        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 180)}px`;
 
         let globalSummaryColor = document.getElementById('summaryColor').value;
         let currentSummaryColor = lane.summaryColor || globalSummaryColor;
@@ -1214,17 +1443,13 @@
         dialog.innerHTML = `
             <h4>Modify Summary Bar Style</h4>
             <div class="modal-row">
-                <div class="modal-field">
-                    <label>Individual Summary Color</label>
-                    <input type="color" id="modalSummaryColor" value="${currentSummaryColor}">
-                </div>
+                <div class="modal-field"><label>Individual Summary Color</label><input type="color" id="modalSummaryColor" value="${currentSummaryColor}"></div>
             </div>
             <div class="modal-actions">
                 <button id="modalSummaryCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
                 <button id="modalSummarySaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply</button>
             </div>
         `;
-
         document.body.appendChild(dialog);
         document.getElementById('modalSummaryCancelBtn').addEventListener('click', () => dialog.remove());
         document.getElementById('modalSummarySaveBtn').addEventListener('click', function() {
@@ -1242,59 +1467,89 @@
         if (existingDialog) existingDialog.remove();
 
         let dialog = document.createElement('div');
-        dialog.id = 'floatingMilestoneDialog';
-        dialog.className = 'floating-date-dialog';
-        
-        let dialogWidth = 320;
-        let dialogHeight = 220;
-        let left = Math.max(10, Math.min(e.clientX, window.innerWidth - dialogWidth - 15));
-        let top = Math.max(10, Math.min(e.clientY, window.innerHeight - dialogHeight - 15));
-        
-        dialog.style.left = `${left}px`;
-        dialog.style.top = `${top}px`;
-        dialog.style.width = `${dialogWidth}px`;
+        dialog.id = 'floatingMilestoneDialog'; dialog.className = 'floating-date-dialog';
+        dialog.style.width = "350px";
+        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 370)}px`;
+        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 420)}px`;
 
-        let globalMsColor = document.getElementById('msColor').value;
-        let currentMsColor = ms.color || globalMsColor;
-        let currentSymbol = ms.symbol || 'diamond';
+        let currentMsColor = ms.color || document.getElementById('msColor').value;
+        let isOverridden = !!ms.color;
 
         dialog.innerHTML = `
-            <h4>Modify Milestone Style & Date</h4>
+            <h4>Modify Milestone Aesthetic Style</h4>
             <div class="modal-row">
-                <div class="modal-field">
-                    <label>Select Date</label>
-                    <input type="date" id="modalMsDatePicker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}">
-                </div>
+                <div class="modal-field"><label>Select Target Date</label><input type="date" id="modalMsDatePicker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}"></div>
             </div>
             <div class="modal-row">
-                <div class="modal-field">
-                    <label>Symbol Color</label>
-                    <input type="color" id="modalMsColor" value="${currentMsColor}">
-                </div>
-                <div class="modal-field">
-                    <label>Symbol Shape</label>
+                <div class="modal-field"><label>Shape Symbol</label>
                     <select id="modalMsSymbol">
-                        <option value="diamond" ${currentSymbol === 'diamond' ? 'selected' : ''}>Diamond</option>
-                        <option value="circle" ${currentSymbol === 'circle' ? 'selected' : ''}>Circle</option>
-                        <option value="triangle" ${currentSymbol === 'triangle' ? 'selected' : ''}>Triangle</option>
-                        <option value="vertical-bar" ${currentSymbol === 'vertical-bar' ? 'selected' : ''}>Vertical Bar</option>
+                        <option value="diamond" ${ms.symbol === 'diamond' ? 'selected' : ''}>Diamond</option>
+                        <option value="circle" ${ms.symbol === 'circle' ? 'selected' : ''}>Circle</option>
+                        <option value="triangle" ${ms.symbol === 'triangle' ? 'selected' : ''}>Triangle</option>
+                        <option value="vertical-bar" ${ms.symbol === 'vertical-bar' ? 'selected' : ''}>Vertical Bar</option>
+                    </select>
+                </div>
+                <div class="modal-field"><label>Override Check</label><label style="font-size:11px; margin-top:6px;"><input type="checkbox" id="modalMsOverrideColor" ${isOverridden?'checked':''}> Custom Color</label></div>
+                <div class="modal-field"><label>Color Picker</label><input type="color" id="modalMsColor" value="${currentMsColor}"></div>
+            </div>
+            <h4 style="margin-top:10px; font-size:11px;">Milestone Traceable Leader Lines</h4>
+            <div class="modal-row">
+                <div class="modal-field"><label><input type="checkbox" id="modalMsLdrText" ${ms.leaderEnabledText?'checked':''}> Draw Title Leader</label></div>
+                <div class="modal-field"><label><input type="checkbox" id="modalMsLdrDate" ${ms.leaderEnabledDate?'checked':''}> Draw Date Leader</label></div>
+            </div>
+            <div class="modal-row">
+                <div class="modal-field"><label>Text Line Attachment</label>
+                    <select id="modalMsLdrAnchor">
+                        <option value="left" ${ms.leaderAnchorText==='left'?'selected':''}>Left Side of Label</option>
+                        <option value="center" ${(ms.leaderAnchorText === 'center' || !ms.leaderAnchorText) ? 'selected' : ''}>Center of Label</option>
+                        <option value="right" ${ms.leaderAnchorText==='right'?'selected':''}>Right Side of Label</option>
+                    </select>
+                </div>
+                <div class="modal-field"><label>Stroke Weight</label><input type="number" min="1" max="5" id="modalMsLdrWeight" value="${ms.leaderWeight || 1}"></div>
+                <div class="modal-field"><label>Stroke Pattern</label>
+                    <select id="modalMsLdrPattern">
+                        <option value="solid" ${ms.leaderPattern==='solid'?'selected':''}>Solid</option>
+                        <option value="dashed" ${ms.leaderPattern==='dashed'?'selected':''}>Dashed</option>
+                        <option value="dotted" ${ms.leaderPattern==='dotted'?'selected':''}>Dotted</option>
                     </select>
                 </div>
             </div>
             <div class="modal-actions">
-                <button id="modalMsCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
-                <button id="modalMsSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply</button>
+                <button id="modalMsResetPosBtn" style="background:#fff1f2; color:var(--danger); border-color:#fca5a5;">Reset Label Positions</button>
+                <div style="display:flex; gap:6px;">
+                    <button id="modalMsCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
+                    <button id="modalMsSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply</button>
+                </div>
             </div>
         `;
 
         document.body.appendChild(dialog);
         document.getElementById('modalMsCancelBtn').addEventListener('click', () => dialog.remove());
+        
+        document.getElementById('modalMsResetPosBtn').addEventListener('click', function() {
+            ms.labelOffsetX = 0; ms.labelOffsetY = 0; ms.dateOffsetX = 0; ms.dateOffsetY = 0;
+            ms.manualLabel = false; ms.manualDateLabel = false;
+            recordStateChange(); updateChart(); dialog.remove();
+        });
+
         document.getElementById('modalMsSaveBtn').addEventListener('click', function() {
             let dateVal = document.getElementById('modalMsDatePicker').value;
             if (!dateVal) { alert("Milestone date fields require input criteria."); return; }
             ms.date = formatDateToDDMMMYYYY(new Date(dateVal + "T00:00:00"));
-            ms.color = document.getElementById('modalMsColor').value;
             ms.symbol = document.getElementById('modalMsSymbol').value;
+            
+            if (document.getElementById('modalMsOverrideColor').checked) {
+                ms.color = document.getElementById('modalMsColor').value;
+            } else {
+                ms.color = "";
+            }
+            
+            ms.leaderEnabledText = document.getElementById('modalMsLdrText').checked;
+            ms.leaderEnabledDate = document.getElementById('modalMsLdrDate').checked;
+            ms.leaderAnchorText = document.getElementById('modalMsLdrAnchor').value;
+            ms.leaderWeight = parseInt(document.getElementById('modalMsLdrWeight').value) || 1;
+            ms.leaderPattern = document.getElementById('modalMsLdrPattern').value;
+
             recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
         });
     }
@@ -1308,17 +1563,9 @@
         if (existingDialog) existingDialog.remove();
 
         let dialog = document.createElement('div');
-        dialog.id = 'floatingBarDateDialog';
-        dialog.className = 'floating-date-dialog';
-        
-        let dialogWidth = 340;
-        let dialogHeight = 260;
-        let left = Math.max(10, Math.min(e.clientX, window.innerWidth - dialogWidth - 15));
-        let top = Math.max(10, Math.min(e.clientY, window.innerHeight - dialogHeight - 15));
-        
-        dialog.style.left = `${left}px`;
-        dialog.style.top = `${top}px`;
-        dialog.style.width = `${dialogWidth}px`;
+        dialog.id = 'floatingBarDateDialog'; dialog.className = 'floating-date-dialog';
+        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 360)}px`;
+        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 280)}px`;
 
         let currentBgColor = bar.bgColor || document.getElementById('barBgColor').value;
         let currentColor = bar.color || document.getElementById('barColor').value;
@@ -1327,28 +1574,15 @@
         dialog.innerHTML = `
             <h4>Modify Activity Bounds & Patterns</h4>
             <div class="modal-row">
-                <div class="modal-field">
-                    <label>Select Start Date</label>
-                    <input type="date" id="modalStartPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}">
-                </div>
-                <div class="modal-field">
-                    <label>Select Finish Date</label>
-                    <input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}">
-                </div>
+                <div class="modal-field"><label>Select Start Date</label><input type="date" id="modalStartPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}"></div>
+                <div class="modal-field"><label>Select Finish Date</label><input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}"></div>
             </div>
             <div class="modal-row">
-                <div class="modal-field">
-                    <label>Unfilled Bar Color</label>
-                    <input type="color" id="modalBarBgColor" value="${currentBgColor}">
-                </div>
-                <div class="modal-field">
-                    <label>Progress Fill Color</label>
-                    <input type="color" id="modalBarColor" value="${currentColor}">
-                </div>
+                <div class="modal-field"><label>Unfilled Bar Color</label><input type="color" id="modalBarBgColor" value="${currentBgColor}"></div>
+                <div class="modal-field"><label>Progress Fill Color</label><input type="color" id="modalBarColor" value="${currentColor}"></div>
             </div>
             <div class="modal-row">
-                <div class="modal-field">
-                    <label>Fill Core Texture Pattern</label>
+                <div class="modal-field"><label>Fill Core Texture Pattern</label>
                     <select id="modalBarPattern">
                         <option value="solid" ${currentPattern === 'solid' ? 'selected' : ''}>Solid</option>
                         <option value="crosshatch" ${currentPattern === 'crosshatch' ? 'selected' : ''}>Cross Hatch</option>
@@ -1365,7 +1599,6 @@
         `;
 
         document.body.appendChild(dialog);
-
         document.getElementById('modalCancelBtn').addEventListener('click', () => dialog.remove());
         document.getElementById('modalSaveBtn').addEventListener('click', function() {
             let startVal = document.getElementById('modalStartPicker').value;
@@ -1389,7 +1622,7 @@
     }
 
     document.addEventListener('mousedown', function(e) {
-        ['floatingBarDateDialog', 'floatingMilestoneDialog', 'floatingLaneSummaryDialog'].forEach(id => {
+        ['floatingBarDateDialog', 'floatingMilestoneDialog', 'floatingLaneSummaryDialog', 'floatingTrackerDialog'].forEach(id => {
             let box = document.getElementById(id);
             if (box && !box.contains(e.target) && !e.target.classList.contains('drag-hotspot')) { box.remove(); }
         });
@@ -1421,7 +1654,8 @@
     }
     function addMilestoneNew(laneIdx, rowIdx) {
         projectData[laneIdx].rows[rowIdx].milestones.push({
-            id: nextMsId++, label: "Custom Milestone", date: "01Jun2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond"
+            id: nextMsId++, label: "Custom Milestone", date: "01Jun2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond",
+            leaderEnabledText: true, leaderEnabledDate: false, leaderAnchorText: "center"
         });
         recordStateChange(); renderInputRows(); updateChart();
     }
@@ -1586,9 +1820,8 @@
         
         let width = 806;
         if (sizingMode === 'ticker-tape') {
-            if (container && container.clientWidth > 100) {
-                width = container.clientWidth;
-            }
+            let pBox = document.querySelector('.zoom-viewport-mask');
+            if (pBox && pBox.clientWidth > 100) { width = pBox.clientWidth - 5; }
         } else {
             width = parseInt(document.getElementById('canvasWidth').value) || 806;
         }
@@ -1602,6 +1835,7 @@
         const summaryColor = document.getElementById('summaryColor').value;
         const msColor = document.getElementById('msColor').value;
         const todayColor = document.getElementById('todayColor').value;
+        const masterLeaderColor = document.getElementById('masterLeaderColor').value;
         const headerColor = document.getElementById('headerColor').value;
         const showVGrid = document.getElementById('showVGrid').checked;
         const todayLineMode = document.querySelector('input[name="todayLineToggle"]:checked').value;
@@ -1622,7 +1856,7 @@
         const marginXRight = 130; const chartWidth = width - scaleMarginLeft - marginXRight;
         const barThickness = 18;
 
-        let axisLineY = startY - 15; let endBoundaryXCoordinate = width - marginXRight;
+        let axisLineY = startY - 15; 
 
         let dynamicTotalRowsHeight = 0;
         projectData.forEach(l => {
@@ -1632,6 +1866,7 @@
         });
 
         const height = axisLineY + dynamicTotalRowsHeight + 30; const bottomOfLastRow = axisLineY + dynamicTotalRowsHeight;
+        let endBoundaryXCoordinate = width - marginXRight;
 
         let minDate, maxDate;
         if (rangeMode === 'manual') {
@@ -1675,9 +1910,17 @@
                 <rect x="6" y="0" width="6" height="6" fill="#000000" opacity="0.08"/>
                 <rect x="0" y="6" width="6" height="6" fill="#000000" opacity="0.08"/>
             </pattern>
+            <pattern id="pat-aligngrid" width="50" height="50" patternUnits="userSpaceOnUse">
+                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.4"/>
+                <path d="M 10 0 L 10 50 M 20 0 L 20 50 M 30 0 L 30 50 M 40 0 L 40 50 M 0 10 L 50 10 M 0 20 L 50 20 M 0 30 L 50 30 M 0 40 L 50 40" fill="none" stroke="#e2e8f0" stroke-width="0.5" opacity="0.25"/>
+            </pattern>
         </defs>`;
 
-        // Split interactive header background into separate left-boundary and right-boundary scrub zones
+        // Alignment Layout Backdrop Coordinate Mesh Layer
+        if (document.getElementById('showAlignGrid').checked) {
+            svg += `<rect x="10" y="${axisLineY}" width="${width - 20}" height="${dynamicTotalRowsHeight}" fill="url(#pat-aligngrid)" style="pointer-events:none;"/>`;
+        }
+
         const halfWidth = chartWidth / 2;
         svg += `<rect x="${scaleMarginLeft}" y="0" width="${halfWidth}" height="${axisLineY}" fill="#f8fafc" fill-opacity="0.9" style="cursor:w-resize;" onmousedown="initiateDragInteraction(event, 'timeline-resize-start', null)"/>`;
         svg += `<rect x="${scaleMarginLeft + halfWidth}" y="0" width="${halfWidth}" height="${axisLineY}" fill="#f8fafc" fill-opacity="0.9" style="cursor:e-resize;" onmousedown="initiateDragInteraction(event, 'timeline-resize-end', null)"/>`;
@@ -1717,7 +1960,7 @@
             headerTrackingYPointer += hYearDelta;
         }
 
-        // Tier 2: Quarters
+        // Tier 2: Quarters (TIMESCALE DIVIDER FIX RESOLVED CHRONO PATH)
         if (showHeaderQuarter) {
             let currQ = null; let xStart = scaleMarginLeft;
             for(let i=0; i<timelineDaySteps.length; i++) {
@@ -1727,6 +1970,7 @@
                     let cx = xStart + (timelineDaySteps[i].x - xStart) / 2;
                     if(cx >= scaleMarginLeft && cx <= endBoundaryXCoordinate) svg += `<text x="${cx}" y="${headerTrackingYPointer + 14}" font-size="${fontSize}" font-weight="bold" fill="${headerColor}" text-anchor="middle" style="pointer-events:none;">Q${currQ}</text>`;
                     if(i < timelineDaySteps.length - 1 && timelineDaySteps[i].x >= scaleMarginLeft && timelineDaySteps[i].x <= endBoundaryXCoordinate) {
+                        // Perpendicular straight ticks fix ($x_1$ matching $x_2$) bound cleanly inside $y_2$ displacement bounds
                         svg += `<line x1="${timelineDaySteps[i].x}" y1="${headerTrackingYPointer}" x2="${timelineDaySteps[i].x}" y2="${headerTrackingYPointer + hQuarterDelta}" stroke="${headerColor}" stroke-width="1" opacity="0.3" style="pointer-events:none;"/>`;
                         if (showVGrid && lowestActiveTier === "quarter") {
                             svg += `<line x1="${timelineDaySteps[i].x}" y1="${axisLineY}" x2="${timelineDaySteps[i].x}" y2="${bottomOfLastRow}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>`;
@@ -1782,19 +2026,16 @@
         projectData.forEach((lane, laneIdx) => {
             if (lane.rows.length === 0) return;
 
-            let rollupMinTime = Infinity;
-            let rollupMaxTime = -Infinity;
+            let rollupMinTime = Infinity; let rollupMaxTime = -Infinity;
             lane.rows.forEach(r => {
                 r.bars.forEach(b => {
-                    let sTS = parseAnyDateToTimestamp(b.start);
-                    let eTS = parseAnyDateToTimestamp(b.end);
+                    let sTS = parseAnyDateToTimestamp(b.start); let eTS = parseAnyDateToTimestamp(b.end);
                     if(!isNaN(sTS) && sTS < rollupMinTime) rollupMinTime = sTS;
                     if(!isNaN(eTS) && eTS > rollupMaxTime) rollupMaxTime = eTS;
                 });
             });
 
             let laneBgColor = lane.color || "#f8fafc";
-            // Stretch the swimlane fill background perfectly to the right end of the date header
             svg += `<rect x="10" y="${currentDrawY}" width="${endBoundaryXCoordinate - 10}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
             svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central" style="cursor:pointer;" ondblclick="editLaneLabelDirectly(${laneIdx})">${lane.title}</text>`;
             
@@ -1814,11 +2055,17 @@
             lane.rows.forEach((item, rowIdx) => {
                 let y = currentDrawY;
                 
-                // Align invisible context track to the right boundary edge as well
                 svg += `<rect x="10" y="${y}" width="${endBoundaryXCoordinate - 10}" height="${rowHeight}" fill="transparent" style="cursor:context-menu;" oncontextmenu="handleWorkspaceRowContextMenu(event, ${item.id})"/>`;
                 svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1" style="pointer-events:none;"/>`;
                 svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(${laneIdx}, ${rowIdx})">${item.label}</text>`;
                 
+                // Strict Depth Ordering Buffers Accumulation Blocks
+                let layerBarsBuffer = "";
+                let layerLeadersBuffer = "";
+                let layerSymbolsBuffer = "";
+                let layerTextsBuffer = "";
+
+                // 1. Process Activity Bars Layout Loop
                 item.bars.forEach((bar) => {
                     let sObj = new Date(parseAnyDateToTimestamp(bar.start)); 
                     let eObj = new Date(parseAnyDateToTimestamp(bar.end));
@@ -1833,22 +2080,23 @@
                             let activeBarColor = bar.color || barColor;
                             let activePattern = bar.pattern || 'solid';
 
-                            svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${activeBarBgColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
+                            layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${activeBarBgColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
                             
                             let filledWidth = Math.max(xStart, Math.min(xEnd, getX(new Date(sObj.getTime() + ((bar.progress || 0)/100) * (eObj.getTime() - sObj.getTime()))))) - xStart;
-                            if (filledWidth > 0) svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${activeBarColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
+                            if (filledWidth > 0) layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${filledWidth}" height="${barThickness}" rx="4" fill="${activeBarColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
 
                             if (activePattern !== 'solid') {
-                                svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="url(#pat-${activePattern})" style="pointer-events:none;"/>`;
+                                layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="url(#pat-${activePattern})" style="pointer-events:none;"/>`;
                             }
 
-                            svg += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:w-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-start', ${item.id}, ${bar.id})"/>`;
-                            if (visibleBarWidth > 12) svg += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id}, ${bar.id})" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
-                            svg += `<rect x="${xEnd - 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:e-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-end', ${item.id}, ${bar.id})"/>`;
+                            layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:w-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-start', ${item.id}, ${bar.id})"/>`;
+                            if (visibleBarWidth > 12) layerBarsBuffer += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id}, ${bar.id})" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
+                            layerBarsBuffer += `<rect x="${xEnd - 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:e-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-end', ${item.id}, ${bar.id})"/>`;
                         }
                     }
                 });
 
+                // 2. Process Milestones Engine Cascades & Leader Lines Stacking Loops
                 let validMilestones = item.milestones.filter(m => !isNaN(parseAnyDateToTimestamp(m.date)));
                 validMilestones.sort((a, b) => parseAnyDateToTimestamp(a.date) - parseAnyDateToTimestamp(b.date));
                 let trackPlacedTextFootprints = [];
@@ -1863,12 +2111,13 @@
                     let textAnchorStyle = "start"; let textXPositionCoordinate = msX + msSize + 4; let defaultTextYBaseline = msYCenterLocked + 3;
                     let finalComputedTextX = textXPositionCoordinate; let finalComputedTextY = defaultTextYBaseline;
 
+                    // Automated Layout Cascading Collision Engine
                     if (ms.manualLabel) {
                         finalComputedTextX += (ms.labelOffsetX || 0); finalComputedTextY += (ms.labelOffsetY || 0); textAnchorStyle = "start";
                     } else {
-                        let estimatedTextWidthPixelSpan = 65; 
-                        let footprintLeftBound = textAnchorStyle === "middle" ? (textXPositionCoordinate - estimatedTextWidthPixelSpan/2) : textXPositionCoordinate;
-                        let footprintRightBound = textAnchorStyle === "middle" ? (textXPositionCoordinate + estimatedTextWidthPixelSpan/2) : (textXPositionCoordinate + estimatedTextWidthPixelSpan);
+                        let estimatedTextWidthPixelSpan = Math.max(50, ms.label.length * 6); 
+                        let footprintLeftBound = textXPositionCoordinate;
+                        let footprintRightBound = textXPositionCoordinate + estimatedTextWidthPixelSpan;
 
                         let targetedCascadeStaggerOffsetLevel = 0; let collisionMatchFound = true;
                         while (collisionMatchFound) {
@@ -1890,37 +2139,106 @@
                     let activeSymbol = ms.symbol || 'diamond';
                     let msCommonAttr = `fill="${activeMsColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})"`;
 
+                    // Leader Line Computations & Traceable Geometric Rendering Map
+let lineStrokeWeight = ms.leaderWeight || 1;
+let linePatternStyle = ms.leaderPattern || 'solid';
+let lineDashArray = (linePatternStyle === 'dashed') ? "3 3" : (linePatternStyle === 'dotted') ? "1 2" : "";
+let finalLeaderColor = ms.color || masterLeaderColor;
+
+// Force default fallback to centered alignment if value is missing
+let leaderAnchor = ms.leaderAnchorText || 'center'; 
+
+if (ms.leaderEnabledText && (ms.labelOffsetX !== 0 || ms.labelOffsetY !== 0 || !ms.manualLabel)) {
+    let targetTextLeaderX = finalComputedTextX;
+    let estTextLenWidth = ms.label.length * 5.5;
+    
+    if (leaderAnchor === 'center') targetTextLeaderX += (estTextLenWidth / 2);
+    else if (leaderAnchor === 'right') targetTextLeaderX += estTextLenWidth;
+    
+    // Dynamic boundary padding to prevent text overlapping/clipping
+    let targetTextLeaderY = finalComputedTextY - 3; 
+    if (finalComputedTextY < msYCenterLocked) {
+        // Label dragged above the milestone symbol -> line terminates cleanly at bottom baseline
+        targetTextLeaderY = finalComputedTextY + 2;
+    } else if (finalComputedTextY > msYCenterLocked + 5) {
+        // Label dragged below the milestone symbol -> line terminates cleanly right above capital letters
+        targetTextLeaderY = finalComputedTextY - 9;
+    } else {
+        // Label sits horizontally aligned -> trim sides slightly
+        if (leaderAnchor === 'left') targetTextLeaderX = finalComputedTextX - 4;
+        else if (leaderAnchor === 'right') targetTextLeaderX = finalComputedTextX + estTextLenWidth + 4;
+    }
+    
+    layerLeadersBuffer += `<line x1="${msX}" y1="${msYCenterLocked}" x2="${targetTextLeaderX}" y2="${targetTextLeaderY}" stroke="${finalLeaderColor}" stroke-width="${lineStrokeWeight}" stroke-dasharray="${lineDashArray}" opacity="0.85" style="pointer-events:none;"/>`;
+}
+
+                    // Shape Form Geometry Matrices Assembly
                     if (activeSymbol === 'circle') {
-                        svg += `<circle cx="${msX}" cy="${msYCenterLocked}" r="${msSize + 1}" ${msCommonAttr} />`;
+                        layerSymbolsBuffer += `<circle cx="${msX}" cy="${msYCenterLocked}" r="${msSize + 1}" ${msCommonAttr} />`;
                     } else if (activeSymbol === 'triangle') {
                         let tPoints = `${msX},${msYCenterLocked - msSize - 1} ${msX + msSize + 1},${msYCenterLocked + msSize + 1} ${msX - msSize - 1},${msYCenterLocked + msSize + 1}`;
-                        svg += `<polygon points="${tPoints}" ${msCommonAttr} />`;
+                        layerSymbolsBuffer += `<polygon points="${tPoints}" ${msCommonAttr} />`;
                     } else if (activeSymbol === 'vertical-bar') {
-                        svg += `<rect x="${msX - 2}" y="${msYCenterLocked - msSize - 3}" width="4" height="${(msSize * 2) + 6}" rx="1" ${msCommonAttr} />`;
+                        layerSymbolsBuffer += `<rect x="${msX - 2}" y="${msYCenterLocked - msSize - 3}" width="4" height="${(msSize * 2) + 6}" rx="1" ${msCommonAttr} />`;
                     } else {
                         let dPoints = `${msX},${msYCenterLocked - msSize - 1} ${msX + msSize + 1},${msYCenterLocked} ${msX},${msYCenterLocked + msSize + 1} ${msX - msSize - 1},${msYCenterLocked}`;
-                        svg += `<polygon points="${dPoints}" ${msCommonAttr} />`;
+                        layerSymbolsBuffer += `<polygon points="${dPoints}" ${msCommonAttr} />`;
                     }
 
-                    svg += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="9" font-weight="600" fill="${activeMsColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneLabelDirectlyGlobal(${item.id}, ${ms.id})">${ms.label}</text>`;
+                    layerTextsBuffer += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="9" font-weight="600" fill="${activeMsColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneLabelDirectlyGlobal(${item.id}, ${ms.id})">${ms.label}</text>`;
 
-                    if (ms && ms.showDate) {
+                    if (ms.showDate) {
                         let presentationDateLabel = ms.date; let finalComputedDateX = msX; let finalComputedDateY = msYCenterLocked - msSize - 11;
                         if (ms.manualDateLabel) { finalComputedDateX += (ms.dateOffsetX || 0); finalComputedDateY += (ms.dateOffsetY || 0); }
-                        svg += `<text x="${finalComputedDateX}" y="${finalComputedDateY}" font-size="8" font-weight="bold" fill="#64748b" text-anchor="middle" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})">${presentationDateLabel}</text>`;
+                        
+                        if (ms.leaderEnabledDate && (ms.dateOffsetX !== 0 || ms.dateOffsetY !== 0)) {
+    // Dynamic boundary padding for date string blocks (centered text-anchors)
+    let targetDateLeaderY = finalComputedDateY + 2; 
+    if (finalComputedDateY > msYCenterLocked) {
+        // Date label dragged below milestone -> terminate line right at the top of text bounds
+        targetDateLeaderY = finalComputedDateY - 9;
+    }
+    layerLeadersBuffer += `<line x1="${msX}" y1="${msYCenterLocked}" x2="${finalComputedDateX}" y2="${targetDateLeaderY}" stroke="${finalLeaderColor}" stroke-width="${lineStrokeWeight}" stroke-dasharray="${lineDashArray}" opacity="0.85" style="pointer-events:none;"/>`;
+}
+                        layerTextsBuffer += `<text x="${finalComputedDateX}" y="${finalComputedDateY}" font-size="8" font-weight="bold" fill="#64748b" text-anchor="middle" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})">${presentationDateLabel}</text>`;
                     }
                 }
+
+                // Append Accumulated Strips into Canvas Layout in strict Z-Index order:
+                // Activity Bars < Leader Lines < Milestone Symbol Shapes < Text Labels / Dates
+                svg += layerBarsBuffer + layerLeadersBuffer + layerSymbolsBuffer + layerTextsBuffer;
+                
                 currentDrawY += rowHeight;
-            });
+            })
         });
 
-        // Vertical Today Tracker Line
+        // 3. Process Custom Draggable & Interactive Vertical Tracker Lines
+        customTrackers.forEach(tracker => {
+            let trkTime = parseAnyDateToTimestamp(tracker.date);
+            if (!isNaN(trkTime) && trkTime >= scaleMinTime && trkTime <= scaleMaxTime) {
+                let xTracker = getX(new Date(trkTime));
+                let stylePattern = tracker.pattern || "solid";
+                let strokeDash = (stylePattern === 'dashed') ? "4 4" : (stylePattern === 'dotted') ? "1 3" : "";
+                
+                svg += `<line x1="${xTracker}" y1="${axisLineY}" x2="${xTracker}" y2="${bottomOfLastRow}" stroke="${tracker.color}" stroke-width="${tracker.thickness || 2}" stroke-dasharray="${strokeDash}" style="cursor:ew-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'tracker-line-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})"/>`;
+                
+                let lblX = xTracker + (tracker.labelOffsetX || 0);
+                let lblY = bottomOfLastRow + 24 + (tracker.labelOffsetY || 0);
+                
+                svg += `<g fill="${tracker.color}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'tracker-label-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})">
+                    <rect x="${lblX - 50}" y="${lblY - 11}" width="100" height="15" rx="3" fill="#ffffff" stroke="${tracker.color}" stroke-width="1"/>
+                    <text x="${lblX}" y="${lblY}" font-size="8" font-weight="bold" fill="${tracker.color}" text-anchor="middle">${tracker.label.toUpperCase()}</text>
+                </g>`;
+            }
+        });
+
+        // Vertical Baseline Today Tracker Line Block
         if (todayLineMode === 'show') {
             let today = new Date();
             if (today.getTime() >= scaleMinTime && today.getTime() <= scaleMaxTime) {
                 let xToday = getX(today);
                 svg += `<line x1="${xToday}" y1="${axisLineY}" x2="${xToday}" y2="${bottomOfLastRow}" stroke="${todayColor}" stroke-width="1.5" stroke-dasharray="4 4" style="pointer-events:none;"/>`;
-                svg += `<text x="${xToday}" y="${bottomOfLastRow + 14}" font-size="8" font-weight="bold" fill="${todayColor}" text-anchor="middle" style="pointer-events:none;">TODAY</text>`;
+                svg += `<text x="${xToday}" y="${bottomOfLastRow + 11}" font-size="8" font-weight="bold" fill="${todayColor}" text-anchor="middle" style="pointer-events:none;">TODAY</text>`;
             }
         }
         svg += `</svg>`; container.innerHTML = svg;
