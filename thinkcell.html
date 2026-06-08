@@ -1054,7 +1054,21 @@ function importConfigurationArchive(event) {
         const blob = new Blob([csvRows.join("\n")], {type: 'text/csv;charset=utf-8;'});
         const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_flattened_matrix.csv`; link.click();
     }
-
+function exportConfigurationArchive() {
+    if (actionUndoStack.length === 0) {
+        alert("No workspace state available to export.");
+        return;
+    }
+    const archivePayload = { 
+        version: "2026.MultiBarPresentationState", 
+        workspace: JSON.parse(actionUndoStack[actionUndoStack.length - 1]) 
+    };
+    const blob = new Blob([JSON.stringify(archivePayload, null, 2)], {type: 'application/json'});
+    const link = document.createElement('a'); 
+    link.href = URL.createObjectURL(blob); 
+    link.download = `gantt_workspace_archive.json`; 
+    link.click();
+}
     function parseRobustCSVLine(text) {
         let fields = []; let current = ''; let inQuotes = false;
         for (let i = 0; i < text.length; i++) {
