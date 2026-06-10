@@ -849,16 +849,24 @@
         }
 
         if (needsUpdate) {
+            activeDragState.hasMoved = true; // Mark that a true element translation happened
             updateChart();
         }
     }
 
-    function stopGlobalDragAction(e) {
+function stopGlobalDragAction(e) {
         if (!activeDragState) return;
         recordStateChange();
         renderInputRows(); 
         populateTrackerDashboardMatrix();
+        
+        const dragMovementOccurred = activeDragState.hasMoved;
         activeDragState = null;
+        
+        // Only tear down the DOM if an object actually changed positions
+        if (dragMovementOccurred) {
+            updateChart();
+        }
     }
 
     // ==========================================
