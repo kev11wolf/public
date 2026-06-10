@@ -2226,7 +2226,7 @@
                     
                     if (leaderAnchor === 'custom') {
                         // Injected directly into the topmost foreground interaction layer
-                        layerHandlesBuffer += `<circle cx="${targetTextLeaderX}" cy="${targetTextLeaderY}" r="5" fill="#2563eb" stroke="#ffffff" stroke-width="1.5" class="drag-hotspot" style="cursor:crosshair;" onmousedown="initiateDragInteraction(event, 'leader-text-end-drag', ${item.id}, ${ms.id})"/>`;
+                        layerHandlesBuffer += `<circle cx="${targetTextLeaderX}" cy="${targetTextLeaderY}" r="1" fill="#ffffff" stroke="#2563eb" stroke-width="1.5" opacity="0.5" class="drag-hotspot" style="cursor:crosshair;" onmousedown="initiateDragInteraction(event, 'leader-text-end-drag', ${item.id}, ${ms.id})"/>`;
                     }
                 }
 
@@ -2276,7 +2276,7 @@
                         
                         if (leaderAnchor === 'custom') {
                             // Injected directly into the topmost foreground interaction layer
-                            layerHandlesBuffer += `<circle cx="${targetDateLeaderX}" cy="${targetDateLeaderY}" r="5" fill="#ef4444" stroke="#ffffff" stroke-width="1.5" class="drag-hotspot" style="cursor:crosshair;" onmousedown="initiateDragInteraction(event, 'leader-date-end-drag', ${item.id}, ${ms.id})"/>`;
+                            layerHandlesBuffer += `<circle cx="${targetDateLeaderX}" cy="${targetDateLeaderY}" r="1" fill="#ffffff" stroke="#ef4444" stroke-width="1.5" opacity="0.5" class="drag-hotspot" style="cursor:crosshair;" onmousedown="initiateDragInteraction(event, 'leader-date-end-drag', ${item.id}, ${ms.id})"/>`;
                         }
                     }
                     
