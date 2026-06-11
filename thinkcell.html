@@ -20,13 +20,21 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: var(--bg-main); color: var(--text-dark); height: 100vh; overflow: hidden;}
         .app-wrapper { display: flex; height: 100vh; width: 100vw; }
         
-        /* Sidebar Configuration Deck (750px Wide) */
+/* Sidebar Configuration Deck (750px Wide) */
         .sidebar { 
             flex: 0 0 750px; 
             background: var(--bg-panel); 
             border-right: 1px solid var(--border-color);
             display: flex; flex-direction: column;
             overflow: hidden;
+            transition: flex-basis 0.3s ease, min-width 0.3s ease, width 0.3s ease;
+        }
+        /* Style rule to animate sidebar down to 0 width */
+        .sidebar.collapsed {
+            flex: 0 0 0px;
+            min-width: 0px;
+            width: 0px;
+            border-right: none;
         }
         .sidebar-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: #f8fafc; display: flex; justify-content: space-between; align-items: center;}
         .sidebar-header h1 { margin: 0; font-size: 18px; color: #1e3a8a; }
@@ -167,7 +175,7 @@
 
 <div class="app-wrapper">
     
-    <div class="sidebar">
+    <div class="sidebar" id="appSidebar">
         <div class="sidebar-header">
             <h1>Gantt Presentation Suite</h1>
             <div class="action-bar">
@@ -203,8 +211,11 @@
     </div>
 
     <div class="main-preview">
-        <div class="sticky-chart-container">
-            <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Right-click row track inside canvas to insert shapes; double-click elements to customize style)</span></h2>
+            <div class="sticky-chart-container">
+                <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">
+                    <button type="button" class="utility-btn" onclick="toggleSidebarLayout()" style="display:inline-flex; align-items:center; float:left; margin-right:12px; margin-top:-3px; padding:4px 8px;">🖥️ Presentation Mode</button>
+                    Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Right-click row track inside canvas to insert shapes; double-click elements to customize style)</span>
+                </h2>
             
             <div class="zoom-viewport-mask">
                 <div class="canvas-holder" id="svgContainer" 
@@ -1860,7 +1871,12 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
 
             lane.rows.forEach((row, rowIdx) => {
                 // Skip rendering rows that don't match our active search criteria
-            if (searchKeyword && !row.label.toLowerCase().includes(searchKeyword)) return;
+                if (searchKeyword && !row.label.toLowerCase().includes(searchKeyword)) return;
+
+                // Micro-Tab Layout States: Evaluate active panels (Default to 'bars' view)
+                let currentTab = row.activeTab || 'bars';
+                let tabBarsStyle = currentTab === 'bars' ? 'background: var(--primary); color: white; border-color: var(--primary);' : 'background: #f1f5f9; color: var(--text-dark);';
+                let tabMsStyle = currentTab === 'milestones' ? 'background: var(--primary); color: white; border-color: var(--primary);' : 'background: #f1f5f9; color: var(--text-dark);';
                 const card = document.createElement('div'); 
                 card.className = 'row-card'; card.id = `card-${row.id}`; 
                 card.setAttribute('draggable', 'true');
@@ -1905,7 +1921,12 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
                             <div class="control-item"><label>Predecessor Dependency Link</label><select onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'predecessor', this.value)">${predecessorOptions}</select></div>
                         </div>
 
-                        <div class="bars-section">
+                        <div style="display: flex; gap: 6px; margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px;">
+                            <button type="button" class="inner-action-btn" style="${tabBarsStyle} padding: 4px 10px; font-size: 11px;" onclick="setRowMicroTabLayout(${laneIdx}, ${rowIdx}, 'bars')">📊 Activity Bars (${row.bars.length})</button>
+                            <button type="button" class="inner-action-btn" style="${tabMsStyle} padding: 4px 10px; font-size: 11px;" onclick="setRowMicroTabLayout(${laneIdx}, ${rowIdx}, 'milestones')">✦ Milestones (${row.milestones.length})</button>
+                        </div>
+
+                        <div class="bars-section" style="${currentTab === 'bars' ? 'display: block;' : 'display: none; border-top: none;'}">
                             <div style="font-size:11px; font-weight:bold; color:#1e40af; margin-bottom:6px;">Activity Bars Array</div>
                             <div class="bars-list">
                                 ${row.bars.map((bar, barIdx) => `
@@ -1930,7 +1951,7 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
                             <button class="inner-action-btn" onclick="addBarNew(${laneIdx}, ${rowIdx})" style="margin-bottom:8px;">+ Add Custom Activity Bar</button>
                         </div>
 
-                        <div class="milestones-section">
+                        <div class="milestones-section" style="${currentTab === 'milestones' ? 'display: block;' : 'display: none; border-top: none;'}">
                             <div style="font-size:11px; font-weight:bold; color:#1e40af; margin-bottom:6px;">Row Target Milestones</div>
                             <div class="milestones-list">
                                 ${row.milestones.map((ms, msIdx) => `
@@ -2536,7 +2557,21 @@ function toggleWorkspaceHelpModal(e) {
         `;
         document.body.appendChild(dialog);
     }
-
+function toggleSidebarLayout() {
+        const sidebar = document.getElementById('appSidebar');
+        sidebar.classList.toggle('collapsed');
+        // Let structural animations finish executing before telling canvas viewport loop to dynamically auto-scale
+        setTimeout(() => {
+            updateChart();
+        }, 320);
+    }
+    
+    function setRowMicroTabLayout(laneIdx, rowIdx, chosenTabName) {
+        projectData[laneIdx].rows[rowIdx].activeTab = chosenTabName;
+        // Re-render layout matrices immediately to keep state variations unified
+        renderInputRows();
+    }
+    
     loadApplicationState(); 
 </script>
 </body>
