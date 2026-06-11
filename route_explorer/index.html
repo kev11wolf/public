@@ -1186,7 +1186,7 @@
                 const uiConfig = categoryConfigs[visualCatKey] || categoryConfigs['food'] || categoryConfigs['playground'];
                 
                 const googleMapsUniversalDeepLinkUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
-                const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
                 const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lon}`;
 
                 let existsInMasterRepoJson = repoFavoritesMemory.some(r => roundCoords(r.lat) === roundCoords(lat) && roundCoords(r.lon) === roundCoords(lon));
@@ -1793,8 +1793,8 @@
                                 continuousOffRouteDriftTicks = 0;
                             }
                         } else {
-                            white_continuousOffRouteDriftTicks = 0; 
-                        }
+    continuousOffRouteDriftTicks = 0; 
+}
 
                         if (!lastMileageUpdateGps || map.distance(snappedPoint, lastMileageUpdateGps) >= 400) {
                             let remainingDistanceMeters = 0;
