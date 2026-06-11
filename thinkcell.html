@@ -1562,6 +1562,19 @@ function stopGlobalDragAction(e) {
                 <div class="modal-field"><label><input type="checkbox" id="modalMsLdrDate" ${ms.leaderEnabledDate?'checked':''}> Draw Date Leader</label></div>
             </div>
             <div class="modal-row">
+                <div class="modal-field">
+                    <label>Display Date Label on Chart?</label>
+                    <div style="display: flex; gap: 15px; margin-top: 4px;">
+                        <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <input type="radio" name="modalMsShowDate" value="true" ${ms.showDate ? 'checked' : ''} style="width:auto;"> Yes
+                        </label>
+                        <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <input type="radio" name="modalMsShowDate" value="false" ${!ms.showDate ? 'checked' : ''} style="width:auto;"> No
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-row">
                 <div class="modal-field"><label>Text Line Attachment</label>
                     <select id="modalMsLdrAnchor">
                         <option value="left" ${ms.leaderAnchorText==='left'?'selected':''}>Left Side of Label</option>
@@ -1620,6 +1633,8 @@ function stopGlobalDragAction(e) {
             ms.leaderAnchorText = document.getElementById('modalMsLdrAnchor').value;
             ms.leaderWeight = parseInt(document.getElementById('modalMsLdrWeight').value) || 1;
             ms.leaderPattern = document.getElementById('modalMsLdrPattern').value;
+
+            ms.showDate = document.querySelector('input[name="modalMsShowDate"]:checked').value === "true";
 
             recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
         });
