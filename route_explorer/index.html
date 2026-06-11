@@ -127,24 +127,7 @@
             <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-slate-800 bg-slate-900/60 hidden rounded-b-2xl"></div>
         </div>
 
-        <div id="apple-navigation-hud" class="self-start ml-1 sm:ml-4 w-[85%] max-w-xs bg-slate-900/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-2.5 border border-slate-700/60 flex items-center gap-2.5 transition-all duration-500 transform translate-y-0 opacity-100 hidden select-none pointer-events-auto">
-            <div id="hud-turn-icon" class="w-9 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-xl font-black shrink-0 shadow-md">⬆️</div>
-            <div class="flex-1 min-w-0">
-                <h2 id="hud-turn-instruction" class="text-[11px] font-black tracking-tight leading-tight uppercase truncate text-slate-100">Calculating next turn...</h2>
-                <p id="hud-turn-distance" class="text-[10px] text-emerald-400 font-bold mt-0.5">0.0 mi until turn</p>
-            </div>
-            <div class="text-right shrink-0 border-l border-slate-700 pl-2">
-                <span class="text-[8px] uppercase font-black tracking-widest text-slate-400 block">Then</span>
-                <p id="hud-next-step-preview" class="text-[10px] font-bold text-amber-400 max-w-[65px] truncate mt-0.5">---</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="navigation-hud" class="absolute top-[340px] left-4 z-30 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 p-3 rounded-xl shadow-xl w-64 hidden flex flex-col gap-3 transition-all duration-300 max-h-60 select-none">
-        <div id="queue-hud-section" class="w-full flex flex-col gap-1.5">
-            <p class="text-[9px] font-black uppercase text-indigo-400 tracking-widest leading-none">📍 Stop Queue Order (Drag to Reorder)</p>
-            <div id="queue-items-list" class="flex flex-col max-h-44 overflow-y-auto no-scrollbar"></div>
-        </div>
+        
     </div>
 
     <div class="absolute bottom-28 right-4 z-30 flex flex-col gap-2 items-center">
@@ -157,7 +140,17 @@
     <div id="route-mileage-sticky" class="absolute bottom-6 left-4 z-30 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 px-4 py-2.5 rounded-xl shadow-xl hidden font-black text-xs transition-all duration-300 pointer-events-auto">
         🏁 Route Remaining: <span id="sticky-total-dist" class="text-emerald-400 font-black">0.0</span> mi
     </div>
-
+<div id="apple-navigation-hud" class="absolute bottom-20 left-4 z-40 w-[calc(100%-2rem)] sm:w-80 bg-slate-900/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-2.5 border border-slate-700/60 flex items-center gap-2.5 transition-all duration-500 transform translate-y-0 opacity-100 hidden select-none pointer-events-auto">
+            <div id="hud-turn-icon" class="w-9 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-xl font-black shrink-0 shadow-md">⬆️</div>
+            <div class="flex-1 min-w-0">
+                <h2 id="hud-turn-instruction" class="text-[11px] font-black tracking-tight leading-tight uppercase truncate text-slate-100">Calculating next turn...</h2>
+                <p id="hud-turn-distance" class="text-[10px] text-emerald-400 font-bold mt-0.5">0.0 mi until turn</p>
+            </div>
+            <div class="text-right shrink-0 border-l border-slate-700 pl-2">
+                <span class="text-[8px] uppercase font-black tracking-widest text-slate-400 block">Then</span>
+                <p id="hud-next-step-preview" class="text-[10px] font-bold text-amber-400 max-w-[65px] truncate mt-0.5">---</p>
+            </div>
+        </div>
     <div id="map"></div>
 
     <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
@@ -625,84 +618,8 @@
         }
 
         function updateQueueHUD() {
-            const section = document.getElementById('queue-hud-section');
-            const list = document.getElementById('queue-items-list');
-            const navHud = document.getElementById('navigation-hud');
-            if (!list || !section || !navHud) return;
-
-            list.innerHTML = '';
-            
-            const endInputVal = document.getElementById('end-input').value;
-            if (stopQueue.length === 0 && !endInputVal) {
-                section.classList.add('hidden');
-                navHud.classList.add('hidden');
-                return;
-            }
-
-            section.classList.remove('hidden');
-            if (!isUiExplicitlyHidden) navHud.classList.remove('hidden');
-
-            stopQueue.forEach((stop, index) => {
-                const container = document.createElement('div');
-                container.className = "drag-item flex items-center justify-between gap-1 text-[11px] bg-slate-800 px-2 py-1.5 rounded-lg border border-slate-700 font-bold cursor-grab active:cursor-grabbing mb-1 select-none";
-                container.setAttribute('data-index', index);
-                
-                const dragHandle = document.createElement('span');
-                dragHandle.className = "text-slate-500 mr-1 text-xs shrink-0";
-                dragHandle.innerText = "☰";
-                
-                const label = document.createElement('span');
-                label.className = "truncate flex-1 text-slate-200";
-                label.innerText = `${index + 1}. ${stop.name}`;
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = "text-red-400 hover:text-red-500 font-black text-xs px-1 cursor-pointer transition-colors select-none";
-                deleteBtn.innerText = "✕";
-                deleteBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    stopQueue.splice(index, 1);
-                    triggerToast("Removed stop from queue.");
-                    updateQueueHUD();
-                    triggerRouteCalculation(true);
-                });
-
-                container.appendChild(dragHandle);
-                container.appendChild(label);
-                container.appendChild(deleteBtn);
-                list.appendChild(container);
-            });
-
-            if (endInputVal) {
-                const destContainer = document.createElement('div');
-                destContainer.className = "non-draggable flex items-center gap-2 text-[11px] bg-slate-800/40 px-2 py-1.5 rounded-lg border border-slate-700/50 font-bold opacity-75 mt-1 select-none pointer-events-none";
-                destContainer.innerHTML = `<span class="text-emerald-400 shrink-0 text-xs">🏁</span><span class="truncate text-slate-300 flex-1">Dest: ${endInputVal}</span>`;
-                list.appendChild(destContainer);
-            }
-
-            if (window.Sortable && stopQueue.length > 1) {
-                if (list.sortableInstance) {
-                    list.sortableInstance.destroy();
-                }
-                list.sortableInstance = Sortable.create(list, {
-                    animation: 150,
-                    draggable: ".drag-item",
-                    onEnd: function (evt) {
-                        const oldIdx = evt.oldIndex;
-                        const newIdx = evt.newIndex;
-                        
-                        if (oldIdx !== undefined && newIdx !== undefined && oldIdx !== newIdx && newIdx < stopQueue.length) {
-                            const movedItem = stopQueue.splice(oldIdx, 1)[0];
-                            stopQueue.splice(newIdx, 0, movedItem);
-                            triggerToast("Recalculating layout queue priorities...");
-                            updateQueueHUD();
-                            triggerRouteCalculation(true);
-                        } else {
-                            updateQueueHUD();
-                        }
-                    }
-                });
-            }
-        }
+    // Stop queue system disabled safely
+}
 
         function findClosestPointOnLineSegment(p, p1, p2) {
             const x = p.lat, y = p.lng;
@@ -771,14 +688,14 @@
             
             if (currentRouteInstructions.length === 0 || routeLineCoordinates.length === 0) {
                 if (banner) {
-                    banner.classList.add('-translate-y-64', 'opacity-0');
+                    banner.classList.add('translate-y-64', 'opacity-0');
                     setTimeout(() => banner.classList.add('hidden'), 500);
                 }
                 return;
             }
 
             banner.classList.remove('hidden');
-            setTimeout(() => banner.classList.remove('-translate-y-64', 'opacity-0'), 50);
+            setTimeout(() => banner.classList.remove('translate-y-64', 'opacity-0'), 50);
 
             let minimumDistanceToRouteLine = Infinity;
             let currentClosestSegmentIndex = 0;
@@ -1206,7 +1123,7 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
                     fuelBadgeHtml = `<div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-955 my-1"><p>⛽ <b>UNL 87:</b> ${el.g87===1?'✅ Yes':'❌ No'}</p><p>⚡ <b>UNL 88 (E15):</b> ${el.g88===1?'✅ Yes':'❌ No'}</p></div>`;
                 }
 
-                let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}">📍 Set Stop</button>`;
+                let stopQueueBtnHtml = '';
 
                 const popupContent = `
                     <div class="w-full font-sans p-0.5 text-zinc-955">
@@ -1269,7 +1186,7 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
             const extraDetourMiles = (el.minD * 0.000621371).toFixed(2);
             let mileagePredictorBadgeHtml = `<div class="text-[10px] text-blue-600 font-bold tracking-tight my-1">🚗 Detour: +${extraDetourMiles} mi off route corridor</div>`;
 
-            let stopQueueBtnHtml = `<button class="queue-stop-trigger block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-[10px] py-1.5 rounded-xl border border-indigo-800 shadow-sm text-white font-black cursor-pointer active:scale-95 transition-transform" data-lat="${lat}" data-lon="${lon}" data-name="${popupHeadingName.replace(/"/g, '"')}">📍 Set Stop</button>`;
+            let stopQueueBtnHtml = '';
 
             const popupContent = `
                 <div class="w-full font-sans p-0.5 text-zinc-955">
@@ -1725,7 +1642,7 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
 
                 const banner = document.getElementById('apple-navigation-hud');
                 if (banner) {
-                    banner.classList.add('-translate-y-64', 'opacity-0');
+                    banner.classList.add('translate-y-64', 'opacity-0');
                     setTimeout(() => banner.classList.add('hidden'), 500);
                 }
             } else {
