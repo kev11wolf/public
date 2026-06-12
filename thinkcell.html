@@ -1058,63 +1058,66 @@ function stopGlobalDragAction(e) {
     // OVERHAULED ARCHITECTURE: FLATTENED EXCEL CSV AUTOMATION ENGINE
     // =========================================================================
     function exportExcelCSV() {
-        let headers = [
-            "Record Type", "Swimlane Title", "Swimlane Color", "Swimlane Summary",
-            "Row ID", "Row Display Title", "Predecessor ID", "Element ID",
-            "Label Name", "Start Target Date", "Finish Date", "Progress Thickness",
-            "Pattern Shape", "Color Hex Code", "OffsetX1", "OffsetY1", "OffsetX2", "OffsetY2", "Rules Matrix"
-        ];
-        let csvRows = [headers.join(",")];
+    let headers = [
+        "Record Type", "Swimlane Title", "Swimlane Color", "Swimlane Summary",
+        "Row ID", "Row Display Title", "Predecessor ID", "Element ID", "P6 Activity ID",
+        "Label Name", "Start Target Date", "Finish Date", "Progress Thickness",
+        "Pattern Shape", "Color Hex Code", "OffsetX1", "OffsetY1", "OffsetX2", "OffsetY2", "Rules Matrix"
+    ];
+    let csvRows = [headers.join(",")];
 
-        projectData.forEach(lane => {
-            if (lane.rows.length === 0) {
-                let fFields = ["ROW_EMPTY", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
-                csvRows.push(fFields.join(","));
-            } else {
-                lane.rows.forEach(row => {
-                    if (row.bars.length === 0 && row.milestones.length === 0) {
-                        let fFields = ["ROW_EMPTY", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE", row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", "", "", "", "", "", "", "", "", "", "", "", ""];
-                        csvRows.push(fFields.join(","));
-                    }
-                    
-                    row.bars.forEach(b => {
-                        let fFields = [
-                            "BAR", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE",
-                            row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", b.id,
-                            "", b.start, b.end, b.progress || 0, b.pattern || "solid", `"${b.color || ''}"`,
-                            "", "", "", "", `"${b.bgColor || ''}"`
-                        ];
-                        csvRows.push(fFields.join(","));
-                    });
-
-                    row.milestones.forEach(ms => {
-                        let ruleDetails = [ms.showDate ? "PinDate" : "HideDate", ms.leaderEnabledText ? "LdrTxt" : "NoLdrTxt", ms.leaderEnabledDate ? "LdrDt" : "NoLdrDt", ms.leaderAnchorText || "center"].join("|");
-                        let fFields = [
-                            "MILESTONE", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE",
-                            row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", ms.id,
-                            `"${ms.label.replace(/"/g, '""')}"`, ms.date, "", "",
-                            ms.symbol || "diamond", `"${ms.color || ''}"`, ms.labelOffsetX || 0, ms.labelOffsetY || 0,
-                            ms.dateOffsetX || 0, ms.dateOffsetY || 0, `"${ruleDetails}"`
-                        ];
-                        csvRows.push(fFields.join(","));
-                    });
-                });
-            }
-        });
-        
-
-        customTrackers.forEach(trk => {
-            let fFields = [
-                "TRACKER", "", "", "", "", "", "", trk.id,
-                `"${trk.label.replace(/"/g, '""')}"`, trk.date, "", trk.thickness || 2,
-                trk.pattern || "solid", `"${trk.color || ''}"`, trk.labelOffsetX || 0, trk.labelOffsetY || 0, "", "", ""
-            ];
+    projectData.forEach(lane => {
+        if (lane.rows.length === 0) {
+            let fFields = ["ROW_EMPTY", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
             csvRows.push(fFields.join(","));
-        });
+        } else {
+            lane.rows.forEach(row => {
+                if (row.bars.length === 0 && row.milestones.length === 0) {
+                    let fFields = ["ROW_EMPTY", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE", row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", "", "", "", "", "", "", "", "", "", "", "", "", ""];
+                    csvRows.push(fFields.join(","));
+                }
+                
+                row.bars.forEach(b => {
+                    let fFields = [
+                        "BAR", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE",
+                        row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", b.id,
+                        `"${b.p6Id || ''}"`,
+                        "", b.start, b.end, b.progress || 0, b.pattern || "solid", `"${b.color || ''}"`,
+                        "", "", "", "", `"${b.bgColor || ''}"`
+                    ];
+                    csvRows.push(fFields.join(","));
+                });
 
-        const blob = new Blob([csvRows.join("\n")], {type: 'text/csv;charset=utf-8;'});
-        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_flattened_matrix.csv`; link.click();
-    }
+                row.milestones.forEach(ms => {
+                    let ruleDetails = [ms.showDate ? "PinDate" : "HideDate", ms.leaderEnabledText ? "LdrTxt" : "NoLdrTxt", ms.leaderEnabledDate ? "LdrDt" : "NoLdrDt", ms.leaderAnchorText || "center"].join("|");
+                    let fFields = [
+                        "MILESTONE", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE",
+                        row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", ms.id,
+                        `"${ms.p6Id || ''}"`,
+                        `"${ms.label.replace(/"/g, '""')}"`, ms.date, "", "",
+                        ms.symbol || "diamond", `"${ms.color || ''}"`, ms.labelOffsetX || 0, ms.labelOffsetY || 0,
+                        ms.dateOffsetX || 0, ms.dateOffsetY || 0, `"${ruleDetails}"`
+                    ];
+                    csvRows.push(fFields.join(","));
+                });
+            });
+        }
+    });
+    
+
+    customTrackers.forEach(trk => {
+        let fFields = [
+            "TRACKER", "", "", "", "", "", "", trk.id,
+            "", 
+            `"${trk.label.replace(/"/g, '""')}"`, trk.date, "", trk.thickness || 2,
+            trk.pattern || "solid", `"${trk.color || ''}"`, trk.labelOffsetX || 0, trk.labelOffsetY || 0, "", "", ""
+        ];
+        csvRows.push(fFields.join(","));
+    });
+
+    const blob = new Blob([csvRows.join("\n")], {type: 'text/csv;charset=utf-8;'});
+    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_flattened_matrix.csv`; link.click();
+}
 
     function exportConfigurationArchive() {
         if (actionUndoStack.length === 0) {
@@ -1146,90 +1149,107 @@ function stopGlobalDragAction(e) {
         fields.push(current); return fields;
     }
 
-    function importCSVFile(event) {
-        const file = event.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const lines = e.target.result.split(/\r?\n/); if(lines.length <= 1) return;
-            let newImportData = []; let newTrackers = [];
-            let rIdCounter = 1; let mIdCounter = 1001; let bIdCounter = 5001; let tIdCounter = 7001;
+   function importCSVFile(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const lines = e.target.result.split(/\r?\n/); if(lines.length <= 1) return;
+        let newImportData = []; let newTrackers = [];
+        let rIdCounter = 1; let mIdCounter = 1001; let bIdCounter = 5001; let tIdCounter = 7001;
 
-            for(let i = 1; i < lines.length; i++) {
-                let line = lines[i].trim(); if(line === "") continue;
-                let columns = parseRobustCSVLine(line); if(columns.length < 8) continue;
+        for(let i = 1; i < lines.length; i++) {
+            let line = lines[i].trim(); if(line === "") continue;
+            let columns = parseRobustCSVLine(line); if(columns.length < 8) continue;
 
-                let recordType = columns[0].trim();
-                let laneTitle = columns[1].trim();
-                let laneColor = columns[2].trim();
-                let laneSummary = columns[3].trim() === "TRUE";
-                
-                if (recordType === "TRACKER") {
-                    let tId = parseInt(columns[7].trim()) || tIdCounter++;
-                    if(tId >= tIdCounter) tIdCounter = tId + 1;
-                    newTrackers.push({
-                        id: tId, label: columns[8].trim(), date: columns[9].trim(),
-                        thickness: parseInt(columns[11].trim()) || 2, pattern: columns[12].trim() || "solid",
-                        color: columns[13].trim(), labelOffsetX: parseFloat(columns[14]) || 0, labelOffsetY: parseFloat(columns[15]) || 0
-                    });
-                    continue;
-                }
-
-                let lane = newImportData.find(l => l.title === laneTitle);
-                if(!lane && laneTitle !== "") {
-                    lane = { id: newImportData.length, title: laneTitle, color: laneColor, showSummary: laneSummary, rows: [] };
-                    newImportData.push(lane);
-                }
-
-                let rowIdStr = columns[4].trim(); if(rowIdStr === "") continue;
-                let explicitRowId = parseInt(rowIdStr, 10);
-                if (explicitRowId >= rIdCounter) rIdCounter = explicitRowId + 1;
-
-                let rowLabel = columns[5].trim();
-                let rowPred = columns[6].trim(); if (rowPred.toUpperCase() === "NONE") rowPred = "";
-
-                let rowObject = lane.rows.find(r => r.id === explicitRowId);
-                if(!rowObject) {
-                    rowObject = { id: explicitRowId, label: rowLabel, predecessor: rowPred, bars: [], milestones: [] };
-                    lane.rows.push(rowObject);
-                }
-
-                if (recordType === "BAR") {
-                    let bId = parseInt(columns[7].trim()) || bIdCounter++;
-                    if (bId >= bIdCounter) bIdCounter = bId + 1;
-                    rowObject.bars.push({
-                        id: bId, start: columns[9].trim(), end: columns[10].trim(), progress: parseInt(columns[11].trim()) || 0,
-                        pattern: columns[12].trim() || "solid", color: columns[13].trim(), bgColor: columns[18].trim()
-                    });
-                } else if (recordType === "MILESTONE") {
-                    let mId = parseInt(columns[7].trim()) || mIdCounter++;
-                    if (mId >= mIdCounter) mIdCounter = mId + 1;
-                    let ruleStr = columns[18].trim();
-                    let pinDt = true, ldrTxt = false, ldrDt = false, anchorText = "center";
-                    if (ruleStr) {
-                        let rPieces = ruleStr.split('|');
-                        pinDt = rPieces[0] === "PinDate";
-                        ldrTxt = rPieces[1] === "LdrTxt";
-                        ldrDt = rPieces[2] === "LdrDt";
-                        if(rPieces[3]) anchorText = rPieces[3];
-                    }
-                    rowObject.milestones.push({
-                        id: mId, label: columns[8].trim(), date: columns[9].trim(), showDate: pinDt,
-                        manualLabel: true, labelOffsetX: parseFloat(columns[14]) || 0, labelOffsetY: parseFloat(columns[15]) || 0,
-                        manualDateLabel: true, dateOffsetX: parseFloat(columns[16]) || 0, dateOffsetY: parseFloat(columns[17]) || 0,
-                        symbol: columns[12].trim() || "diamond", color: columns[13].trim(),
-                        leaderEnabledText: ldrTxt, leaderEnabledDate: ldrDt, leaderAnchorText: anchorText
-                    });
-                }
+            let recordType = columns[0].trim();
+            let laneTitle = columns[1].trim();
+            let laneColor = columns[2].trim();
+            let laneSummary = columns[3].trim() === "TRUE";
+            
+            if (recordType === "TRACKER") {
+                let tId = parseInt(columns[7].trim()) || tIdCounter++;
+                if(tId >= tIdCounter) tIdCounter = tId + 1;
+                newTrackers.push({
+                    id: tId, label: columns[9].trim(), date: columns[10].trim(),
+                    thickness: parseInt(columns[12].trim()) || 2, pattern: columns[13].trim() || "solid",
+                    color: columns[14].trim(), labelOffsetX: parseFloat(columns[15]) || 0, labelOffsetY: parseFloat(columns[16]) || 0
+                });
+                continue;
             }
 
-            if(newImportData.length > 0 || newTrackers.length > 0) {
-                projectData = newImportData; customTrackers = newTrackers;
-                nextRowId = rIdCounter; nextMsId = mIdCounter; nextBarId = bIdCounter; nextTrackerId = tIdCounter;
-                recordStateChange(); renderInputRows(); populateTrackerDashboardMatrix(); updateChart();
+            let lane = newImportData.find(l => l.title === laneTitle);
+            if(!lane && laneTitle !== "") {
+                lane = { id: newImportData.length, title: laneTitle, color: laneColor, showSummary: laneSummary, rows: [] };
+                newImportData.push(lane);
             }
-        };
-        reader.readAsText(file);
-    }
+
+            let rowIdStr = columns[4].trim(); if(rowIdStr === "") continue;
+            let explicitRowId = parseInt(rowIdStr, 10);
+            if (explicitRowId >= rIdCounter) rIdCounter = explicitRowId + 1;
+
+            let rowLabel = columns[5].trim();
+            let rowPred = columns[6].trim(); if (rowPred.toUpperCase() === "NONE") rowPred = "";
+
+            let rowObject = lane.rows.find(r => r.id === explicitRowId);
+            if(!rowObject) {
+                rowObject = { id: explicitRowId, label: rowLabel, predecessor: rowPred, bars: [], milestones: [] };
+                lane.rows.push(rowObject);
+            }
+
+            if (recordType === "BAR") {
+                let bId = parseInt(columns[7].trim()) || bIdCounter++;
+                if (bId >= bIdCounter) bIdCounter = bId + 1;
+                rowObject.bars.push({
+                    id: bId,
+                    p6Id: columns[8].trim(),
+                    start: columns[10].trim(),
+                    end: columns[11].trim(),
+                    progress: parseInt(columns[12].trim()) || 0,
+                    pattern: columns[13].trim() || "solid",
+                    color: columns[14].trim(),
+                    bgColor: columns[19].trim()
+                });
+            } else if (recordType === "MILESTONE") {
+                let mId = parseInt(columns[7].trim()) || mIdCounter++;
+                if (mId >= mIdCounter) mIdCounter = mId + 1;
+                let ruleStr = columns[19].trim();
+                let pinDt = true, ldrTxt = false, ldrDt = false, anchorText = "center";
+                if (ruleStr) {
+                    let rPieces = ruleStr.split('|');
+                    pinDt = rPieces[0] === "PinDate";
+                    ldrTxt = rPieces[1] === "LdrTxt";
+                    ldrDt = rPieces[2] === "LdrDt";
+                    if(rPieces[3]) anchorText = rPieces[3];
+                }
+                rowObject.milestones.push({
+                    id: mId,
+                    p6Id: columns[8].trim(),
+                    label: columns[9].trim(),
+                    date: columns[10].trim(),
+                    showDate: pinDt,
+                    manualLabel: true,
+                    labelOffsetX: parseFloat(columns[15]) || 0,
+                    labelOffsetY: parseFloat(columns[16]) || 0,
+                    manualDateLabel: true,
+                    dateOffsetX: parseFloat(columns[17]) || 0,
+                    dateOffsetY: parseFloat(columns[18]) || 0,
+                    symbol: columns[13].trim() || "diamond",
+                    color: columns[14].trim(),
+                    leaderEnabledText: ldrTxt,
+                    leaderEnabledDate: ldrDt,
+                    leaderAnchorText: anchorText
+                });
+            }
+        }
+
+        if(newImportData.length > 0 || newTrackers.length > 0) {
+            projectData = newImportData; customTrackers = newTrackers;
+            nextRowId = rIdCounter; nextMsId = mIdCounter; nextBarId = bIdCounter; nextTrackerId = tIdCounter;
+            recordStateChange(); renderInputRows(); populateTrackerDashboardMatrix(); updateChart();
+        }
+    };
+    reader.readAsText(file);
+}
 
     function clearAllStoredData() {
         if (confirm("Are you sure you want to completely wipe all current tracks, layouts, and data?")) {
@@ -1246,25 +1266,25 @@ function stopGlobalDragAction(e) {
             actionUndoStack.push(structuralBackupCache); restoreStateFromSnapshot(JSON.parse(structuralBackupCache));
         } else {
             projectData = [
-                { id: 0, title: "Building 11 Swimlane", color: "#eff6ff", showSummary: true, rows: [
-                    { id: 0, label: "Production Labs - Phase A & B (Bldg 11)", predecessor: "", 
-                      bars: [
-                        { id: 5001, start: "01Mar2026", end: "15Jan2027", progress: 35, bgColor: "", color: "", pattern: "solid" },
-                        { id: 5002, start: "10Feb2027", end: "30Sep2027", progress: 0, bgColor: "", color: "", pattern: "crosshatch" }
-                      ],
-                      milestones: [
-                        { id: 1000, label: "Construction Complete", date: "01Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond", leaderEnabledText: true, leaderAnchorText: "center" },
-                        { id: 1001, label: "Interiors Start", date: "19Aug2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle", leaderEnabledText: false, leaderAnchorText: "center" }
-                    ]}
-                ]},
-                { id: 1, title: "Building 21 Swimlane", color: "#f0fdf4", showSummary: true, rows: [
-                    { id: 1, label: "Warehouse Admin 1st Floor (Bldg 21)", predecessor: "", 
-                      bars: [{ id: 5003, start: "01Mar2026", end: "04Nov2027", progress: 15, bgColor: "", color: "", pattern: "solid" }],
-                      milestones: [
-                        { id: 1002, label: "Construction Complete", date: "31Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond" }
-                    ]}
+            { id: 0, title: "Building 11 Swimlane", color: "#eff6ff", showSummary: true, rows: [
+                { id: 0, label: "Production Labs - Phase A & B (Bldg 11)", predecessor: "", 
+                  bars: [
+                    { id: 5001, p6Id: "A1000", start: "01Mar2026", end: "15Jan2027", progress: 35, bgColor: "", color: "", pattern: "solid" },
+                    { id: 5002, p6Id: "A1010", start: "10Feb2027", end: "30Sep2027", progress: 0, bgColor: "", color: "", pattern: "crosshatch" }
+                  ],
+                  milestones: [
+                    { id: 1000, p6Id: "M2000", label: "Construction Complete", date: "01Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond", leaderEnabledText: true, leaderAnchorText: "center" },
+                    { id: 1001, p6Id: "M2010", label: "Interiors Start", date: "19Aug2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle", leaderEnabledText: false, leaderAnchorText: "center" }
                 ]}
-            ];
+            ]},
+            { id: 1, title: "Building 21 Swimlane", color: "#f0fdf4", showSummary: true, rows: [
+                { id: 1, label: "Warehouse Admin 1st Floor (Bldg 21)", predecessor: "", 
+                  bars: [{ id: 5003, p6Id: "A2050", start: "01Mar2026", end: "04Nov2027", progress: 15, bgColor: "", color: "", pattern: "solid" }],
+                  milestones: [
+                    { id: 1002, p6Id: "M3000", label: "Construction Complete", date: "31Oct2027", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond" }
+                ]}
+            ]}
+        ];
             customTrackers = [
                 { id: 7001, label: "Procurement Deadline", date: "15Dec2026", thickness: 2, pattern: "dashed", color: "#e11d48", labelOffsetX: 0, labelOffsetY: 0 }
             ];
