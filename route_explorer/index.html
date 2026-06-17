@@ -23,137 +23,215 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/854/854878.png">
 
     <style>
-        body, html {
-            margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #111827;
-        }
-        #map { height: 100%; width: 100%; z-index: 1; }
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #0f172a;
+    }
+
+    body {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    #app-shell {
+        position: relative;
+        height: 100dvh;
+        width: 100vw;
+        overflow: hidden;
+        background: #0f172a;
+    }
+
+    #map {
+        position: absolute;
+        inset: 0;
+        height: 100%;
+        width: 100%;
+        z-index: 1;
+    }
+
         .safe-top { padding-top: env(safe-area-inset-top); }
-        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-        .leaflet-routing-container, .leaflet-routing-error, .leaflet-right { display: none !important; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    .top-safe { margin-top: max(8px, env(safe-area-inset-top)); }
 
-        .leaflet-map-pane {
-            transform: translate3d(0, 0, 0);
-            will-change: transform;
-        }
+    .leaflet-routing-container,
+    .leaflet-routing-error,
+    .leaflet-right {
+        display: none !important;
+    }
 
-        .custom-popup .leaflet-popup-content-wrapper {
-            border-radius: 14px; padding: 1px; max-width: 210px !important;
-            overflow: hidden; background-color: #ffffff;
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
-        }
-        .custom-popup .leaflet-popup-content { margin: 6px !important; max-width: 198px !important; }
-        .custom-popup .leaflet-popup-content a, .custom-popup .leaflet-popup-content button {
-            color: #ffffff !important; text-decoration: none !important;
-        }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .route-callout-marker {
-            transition: transform 0.2s ease-in-out;
-        }
-        .route-callout-marker:hover {
-            transform: scale(1.05);
-            z-index: 9999 !important;
-        }
-    </style>
+    .leaflet-map-pane {
+        transform: translate3d(0, 0, 0);
+        will-change: transform;
+    }
+
+    #top-directions-shell,
+    #bottom-controls-shell {
+        will-change: transform, opacity;
+    }
+
+    #apple-navigation-hud {
+        min-height: 78px;
+    }
+
+    #route-mileage-sticky {
+        backdrop-filter: blur(18px);
+    }
+
+    #master-header-panel {
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.25);
+    }
+
+    .custom-popup .leaflet-popup-content-wrapper {
+        border-radius: 14px;
+        padding: 1px;
+        max-width: 210px !important;
+        overflow: hidden;
+        background-color: #ffffff;
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+    }
+
+    .custom-popup .leaflet-popup-content {
+        margin: 6px !important;
+        max-width: 198px !important;
+    }
+
+    .custom-popup .leaflet-popup-content a,
+    .custom-popup .leaflet-popup-content button {
+        color: #ffffff !important;
+        text-decoration: none !important;
+    }
+
+    .route-callout-marker {
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .route-callout-marker:hover {
+        transform: scale(1.05);
+        z-index: 9999 !important;
+    }
+</style>
 </head>
-<body class="flex flex-col justify-end text-zinc-955 selection:bg-blue-500 selection:text-white">
+<body class="text-zinc-955 selection:bg-blue-500 selection:text-white overflow-hidden">
 
-    <div class="absolute top-3 right-4 z-50 pointer-events-auto">
-        <button id="ui-toggle-fab" class="bg-slate-900/95 backdrop-blur-md text-white border border-slate-700/60 shadow-xl font-bold rounded-xl text-xs px-3.5 h-11 flex items-center justify-center gap-1.5 active:scale-95 transition-all select-none cursor-pointer">
-            <span id="ui-fab-icon">⚡</span> <span id="ui-fab-text">Hide Panels</span>
-        </button>
-    </div>
+        <div id="app-shell">
+        <div id="map"></div>
 
-    <div id="controls-wrapper-deck" class="absolute top-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none gap-2 px-3 transition-all duration-300 transform translate-y-0 opacity-100">
-        
-        <div id="master-header-panel" class="w-full max-w-xl bg-slate-900/90 backdrop-blur-md border border-slate-700/60 safe-top rounded-2xl shadow-2xl flex flex-col transition-all duration-300 pointer-events-auto mt-2">
-            <div id="search-container" class="px-4 pt-3 pb-2 flex flex-col gap-2">
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <div class="relative flex-1">
-                        <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-slate-800/90 border border-slate-700/80 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-slate-100 font-medium placeholder-slate-400">
-                        <button id="start-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-400 transition-colors font-bold text-xs hidden">✕</button>
-                        <button id="start-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-400 transition-colors">📍</button>
-                        <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm text-slate-200"></div>
-                    </div>
-                    
-                    <button id="swap-locations-btn" type="button" class="self-center p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 active:scale-95 rounded-xl text-sm font-bold transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shadow-md border border-slate-700/40">⇆</button>
-                    
-                    <div class="relative flex-1">
-                        <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-slate-800/90 border border-slate-700/80 text-sm rounded-xl pl-3 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-slate-100 font-medium placeholder-slate-400">
-                        <button id="end-clear-btn" type="button" class="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-400 transition-colors font-bold text-xs hidden">✕</button>
-                        <button id="end-locate-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-400 transition-colors">📍</button>
-                        <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm text-slate-200"></div>
-                    </div>
-                </div>
-                <div class="flex gap-2">
-                    <button id="route-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-xl min-h-[44px] shadow-sm transition-all flex items-center justify-center gap-1">
-                        🗺️ Calculate Dynamic Alternate Routes
-                    </button>
-                </div>
-            </div>
-
-            <div class="px-4 py-2 flex justify-between items-center gap-2 border-t border-slate-800 bg-slate-900/40 rounded-b-2xl">
-                <div class="flex items-center gap-2 flex-1 min-w-0">
-                    <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-500 border-t-transparent hidden"></div>
-                    <p id="status" class="text-xs font-bold text-slate-300 truncate">System ready. Enter parameters to map alternatives.</p>
-                </div>
-                <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[70%] sm:max-w-none">
-                    <select id="buffer-select" class="bg-slate-800 text-slate-200 text-xs font-bold py-2 px-2.5 rounded-xl border border-slate-700 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
-                        <option value="4000" selected>⏱️ 5 Min Buffer</option>
-                        <option value="12000">⏱️ 15 Min Buffer</option>
-                        <option value="24000">⏱️ 30 Min Buffer</option>
-                    </select>
-                    <button id="push-master-btn" class="bg-amber-500 hover:bg-amber-600 text-zinc-955 text-xs font-black px-3 py-2 rounded-xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
-                    <button id="toggle-search-btn" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold px-3 py-2 rounded-xl min-h-[44px] whitespace-nowrap">🔍 Inputs</button>
-                    <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px] whitespace-nowrap">🚗 Track</button>
-                </div>
-            </div>
-
-            <div id="master-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-1.5 border-t border-slate-800/80">
-                <button data-cat="playground" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛝 Playgrounds</button>
-                <button data-cat="gas" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛽ Gas Stations</button>
-                <button data-cat="food" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🍔 Fast Food</button>
-                <button data-cat="shopping" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🛒 Shopping & Services</button>
-                <button data-cat="parks" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Parks & Attractions</button>
-                <button data-cat="campground" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">⛺ Campgrounds</button>
-                <button data-cat="medical" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏥 Emergency & Med</button>
-                <button data-cat="highway" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🏢 Highway Amenities</button>
-                <button data-cat="tourism" class="master-pill bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]">🌲 Tourism Exploration</button>
-            </div>
-
-            <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3 pt-1.5 border-t border-slate-800 bg-slate-900/60 hidden rounded-b-2xl"></div>
-        </div>
-
-        
-    </div>
-
-    <div class="absolute bottom-28 right-4 z-30 flex flex-col gap-2 items-center">
-        <button id="theme-toggle-btn" class="bg-white/95 backdrop-blur-md border border-gray-200 text-zinc-900 font-bold rounded-xl shadow-xl text-xs px-2.5 h-11 flex items-center justify-center active:scale-95 transition-all select-none cursor-pointer whitespace-nowrap">🌙 Mode</button>
-        <button id="zoom-in-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">＋</button>
-        <button id="zoom-out-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-xl transition-all select-none cursor-pointer">－</button>
-        <button id="center-loc-btn" class="bg-white/95 backdrop-blur-md text-zinc-900 border border-gray-200 shadow-xl font-bold rounded-xl w-11 h-11 flex items-center justify-center active:scale-95 text-lg transition-all select-none cursor-pointer" title="Center Current Position">🎯</button>
-    </div>
-
-    <div id="route-mileage-sticky" class="absolute bottom-6 left-4 z-30 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700 px-4 py-2.5 rounded-xl shadow-xl hidden font-black text-xs transition-all duration-300 pointer-events-auto">
-        🏁 Route Remaining: <span id="sticky-total-dist" class="text-emerald-400 font-black">0.0</span> mi
-    </div>
-<div id="apple-navigation-hud" class="absolute bottom-20 left-4 z-40 w-[calc(100%-2rem)] sm:w-80 bg-slate-900/95 backdrop-blur-md text-white rounded-xl shadow-2xl p-2.5 border border-slate-700/60 flex items-center gap-2.5 transition-all duration-500 transform translate-y-0 opacity-100 hidden select-none pointer-events-auto">
-            <div id="hud-turn-icon" class="w-9 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-xl font-black shrink-0 shadow-md">⬆️</div>
-            <div class="flex-1 min-w-0">
-                <h2 id="hud-turn-instruction" class="text-[11px] font-black tracking-tight leading-tight uppercase truncate text-slate-100">Calculating next turn...</h2>
-                <p id="hud-turn-distance" class="text-[10px] text-emerald-400 font-bold mt-0.5">0.0 mi until turn</p>
-            </div>
-            <div class="text-right shrink-0 border-l border-slate-700 pl-2">
-                <span class="text-[8px] uppercase font-black tracking-widest text-slate-400 block">Then</span>
-                <p id="hud-next-step-preview" class="text-[10px] font-bold text-amber-400 max-w-[65px] truncate mt-0.5">---</p>
+        <!-- INDEPENDENT BUTTON LAYER (Never hides) -->
+        <div id="persistent-fab-shell" class="absolute inset-x-0 top-0 z-[60] px-3 pt-2 top-safe pointer-events-none">
+            <div class="mx-auto flex w-full max-w-xl justify-end pointer-events-none">
+                <button id="ui-toggle-fab" class="pointer-events-auto bg-slate-900/95 backdrop-blur-md text-white border border-slate-700/60 shadow-xl font-bold rounded-xl text-xs px-3.5 h-11 flex items-center justify-center gap-1.5 active:scale-95 transition-all select-none cursor-pointer">
+                    <span id="ui-fab-icon">⚡</span>
+                    <span id="ui-fab-text">Hide UI</span>
+                </button>
             </div>
         </div>
-    <div id="map"></div>
 
-    <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
+        <!-- TOP DIRECTIONS SHELL (Sits below the button and hides independently) -->
+        <div id="top-directions-shell" class="absolute inset-x-0 top-0 z-50 px-3 pt-16 top-safe transition-all duration-300">
+            <div class="mx-auto flex w-full max-w-xl flex-col gap-2 pointer-events-none">
+
+                <div id="apple-navigation-hud" class="hidden pointer-events-auto items-center gap-3 rounded-2xl bg-blue-600/95 text-white border border-blue-400/40 shadow-2xl px-3 py-3 backdrop-blur-xl transition-all duration-500 transform translate-y-0 opacity-100 select-none">
+                    <div id="hud-turn-icon" class="w-11 h-11 bg-white text-blue-600 rounded-xl flex items-center justify-center text-2xl font-black shrink-0 shadow-md">⬆️</div>
+                    <div class="flex-1 min-w-0">
+                        <h2 id="hud-turn-instruction" class="text-sm font-black tracking-tight leading-tight truncate">Calculating next turn...</h2>
+                        <p id="hud-turn-distance" class="text-xs text-blue-100 font-bold mt-0.5">0.0 mi until turn</p>
+                    </div>
+                    <div class="text-right shrink-0 border-l border-white/20 pl-3">
+                        <span class="text-[9px] uppercase font-black tracking-widest text-blue-100 block">Then</span>
+                        <p id="hud-next-step-preview" class="text-[11px] font-bold text-white max-w-[90px] truncate mt-0.5">---</p>
+                    </div>
+                </div>
+
+                <div id="route-mileage-sticky" class="hidden pointer-events-auto self-start bg-white/95 text-slate-900 border border-slate-200 px-4 py-2 rounded-full shadow-xl font-black text-xs transition-all duration-300">
+                    🏁 Route Remaining:
+                    <span id="sticky-total-dist" class="text-emerald-600 font-black">0.0</span>
+                    mi
+                </div>
+            </div>
+        </div>
+
+        <div id="bottom-controls-shell" class="absolute inset-x-0 bottom-0 z-40 px-3 pb-3 safe-bottom transition-all duration-300">
+            <div id="master-header-panel" class="mx-auto w-full max-w-xl overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-xl pointer-events-auto">
+
+                <div id="search-container" class="border-b border-slate-200 px-4 pt-4 pb-3 bg-white">
+                    <div class="flex flex-col gap-2">
+                        <div class="relative">
+                            <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-slate-100 border border-slate-300 text-sm rounded-2xl pl-4 pr-16 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[50px] text-slate-900 font-medium placeholder-slate-500">
+                            <button id="start-clear-btn" type="button" class="absolute right-10 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
+                            <button id="start-locate-btn" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-blue-500 transition-colors">📍</button>
+                            <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm text-slate-800"></div>
+                        </div>
+
+                        <div class="relative">
+                            <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-slate-100 border border-slate-300 text-sm rounded-2xl pl-4 pr-16 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[50px] text-slate-900 font-medium placeholder-slate-500">
+                            <button id="end-clear-btn" type="button" class="absolute right-10 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
+                            <button id="end-locate-btn" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-blue-500 transition-colors">📍</button>
+                            <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm text-slate-800"></div>
+                        </div>
+
+                        <div class="grid grid-cols-[52px_1fr] gap-2">
+                            <button id="swap-locations-btn" type="button" class="p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 rounded-2xl text-sm font-bold transition-all min-h-[50px] flex items-center justify-center shadow-sm border border-slate-300">⇆</button>
+                            <button id="route-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-3 px-4 rounded-2xl min-h-[50px] shadow-sm transition-all flex items-center justify-center gap-1">
+                                🗺️ Calculate Routes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-b border-slate-200 px-4 py-3 bg-white/95">
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        <button id="theme-toggle-btn" class="bg-slate-100 border border-slate-300 text-slate-900 font-bold rounded-2xl shadow-sm text-xs px-3 h-11 flex items-center justify-center active:scale-95 transition-all whitespace-nowrap">🌙 Mode</button>
+                        <button id="zoom-in-btn" class="bg-slate-100 text-slate-900 border border-slate-300 shadow-sm font-bold rounded-2xl h-11 flex items-center justify-center active:scale-95 text-xl transition-all">＋</button>
+                        <button id="zoom-out-btn" class="bg-slate-100 text-slate-900 border border-slate-300 shadow-sm font-bold rounded-2xl h-11 flex items-center justify-center active:scale-95 text-xl transition-all">－</button>
+                        <button id="center-loc-btn" class="bg-slate-100 text-slate-900 border border-slate-300 shadow-sm font-bold rounded-2xl h-11 flex items-center justify-center active:scale-95 text-lg transition-all" title="Center Current Position">🎯</button>
+                        <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 h-11 rounded-2xl shadow-sm whitespace-nowrap">🚗 Track</button>
+                    </div>
+                </div>
+
+                <div class="border-b border-slate-200 px-4 py-3 bg-slate-50/90">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-500 border-t-transparent hidden"></div>
+                        <p id="status" class="text-xs font-bold text-slate-600 truncate">System ready. Enter parameters to map alternatives.</p>
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <select id="buffer-select" class="bg-white text-slate-800 text-xs font-bold py-2 px-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                            <option value="4000" selected>⏱️ 5 Min Buffer</option>
+                            <option value="12000">⏱️ 15 Min Buffer</option>
+                            <option value="24000">⏱️ 30 Min Buffer</option>
+                        </select>
+
+                        <button id="toggle-search-btn" class="bg-white border border-slate-300 text-slate-800 text-xs font-bold px-3 py-2 rounded-2xl min-h-[44px] whitespace-nowrap">✕ Close Inputs</button>
+
+                        <button id="push-master-btn" class="bg-amber-400 hover:bg-amber-500 text-slate-900 text-xs font-black px-3 py-2 rounded-2xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
+                    </div>
+                </div>
+
+                <div id="master-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-3 pb-2 bg-white">
+                    <button data-cat="playground" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🛝 Playgrounds</button>
+                    <button data-cat="gas" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">⛽ Gas Stations</button>
+                    <button data-cat="food" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🍔 Fast Food</button>
+                    <button data-cat="shopping" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🛒 Shopping & Services</button>
+                    <button data-cat="parks" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🌲 Parks & Attractions</button>
+                    <button data-cat="campground" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">⛺ Campgrounds</button>
+                    <button data-cat="medical" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🏥 Emergency & Med</button>
+                    <button data-cat="highway" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🏢 Highway Amenities</button>
+                    <button data-cat="tourism" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🌲 Tourism Exploration</button>
+                </div>
+
+                <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-4 pt-2 border-t border-slate-200 bg-slate-50/80 hidden"></div>
+            </div>
+        </div>
+
+        <div id="toast-container" class="absolute bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none max-w-sm safe-bottom"></div>
+    </div>
 
     <script>
         // =====================================================================
@@ -430,7 +508,32 @@
             const calculatedPixelWidthWidth = (activeBufferMeters / metersPerPixel) * 2;
             routeBufferPolyline.setStyle({ weight: Math.max(4, calculatedPixelWidthWidth) });
         }
+function setSearchPanelOpen(isOpen) {
+    const searchContainer = document.getElementById('search-container');
+    const toggleBtn = document.getElementById('toggle-search-btn');
+    if (!searchContainer) return;
 
+    if (isOpen) {
+        searchContainer.classList.remove('hidden');
+        if (toggleBtn) toggleBtn.innerText = '✕ Close Inputs';
+    } else {
+        searchContainer.classList.add('hidden');
+        if (toggleBtn) toggleBtn.innerText = '🔍 Inputs';
+    }
+}
+
+function getViewportPadding() {
+    const topShell = document.getElementById('top-directions-shell');
+    const bottomShell = document.getElementById('bottom-controls-shell');
+
+    const topPad = topShell ? Math.ceil(topShell.getBoundingClientRect().height + 12) : 110;
+    const bottomPad = bottomShell ? Math.ceil(bottomShell.getBoundingClientRect().height + 12) : 260;
+
+    return {
+        paddingTopLeft: [18, topPad],
+        paddingBottomRight: [18, bottomPad]
+    };
+}
         function roundCoords(num) { return Math.round(parseFloat(num) * 10000) / 10000; }
 
         function calculateIntersectedStates(routeCoords) {
@@ -509,31 +612,35 @@
         }
 
         function applyCalculatedSmartZoom() {
-            if (routeLineCoordinates.length === 0) return;
-            const totalDistStr = document.getElementById('sticky-total-dist').innerText;
-            const totalDistanceMiles = parseFloat(totalDistStr) || 0;
-            const targetCenter = computeTargetCenteringNode();
-            
-            if (totalDistanceMiles > 0 && totalDistanceMiles < 50) {
-                const routeBounds = L.polyline(routeLineCoordinates).getBounds();
-                map.fitBounds(routeBounds, { padding: [40, 40] });
-            } else {
-                const radiusMeters = 50 * 1609.34;
-                const tempCircle = L.circle(targetCenter, { radius: radiusMeters }).addTo(map);
-                const circleBounds = tempCircle.getBounds();
-                tempCircle.remove();
-                map.fitBounds(circleBounds);
-            }
-        }
+    if (routeLineCoordinates.length === 0) return;
+
+    const totalDistStr = document.getElementById('sticky-total-dist').innerText;
+    const totalDistanceMiles = parseFloat(totalDistStr) || 0;
+    const targetCenter = computeTargetCenteringNode();
+    const viewportPadding = getViewportPadding();
+
+    if (totalDistanceMiles > 0 && totalDistanceMiles < 50) {
+        const routeBounds = L.polyline(routeLineCoordinates).getBounds();
+        map.fitBounds(routeBounds, viewportPadding);
+    } else {
+        const radiusMeters = 50 * 1609.34;
+        const tempCircle = L.circle(targetCenter, { radius: radiusMeters }).addTo(map);
+        const circleBounds = tempCircle.getBounds();
+        tempCircle.remove();
+        map.fitBounds(circleBounds, viewportPadding);
+    }
+}
 
         // Dedicated interface toggling matrix (Auto-Hiding Engine)
-        function toggleInterfaceVisibility(forceHide = null) {
-            const wrapperDeck = document.getElementById('controls-wrapper-deck');
-            const navHudSide = document.getElementById('navigation-hud');
+                function toggleInterfaceVisibility(forceHide = null) {
+            const topShell = document.getElementById('top-directions-shell');
+            const bottomShell = document.getElementById('bottom-controls-shell');
+            const fabContainer = document.getElementById('fab-container');
+            const navBanner = document.getElementById('apple-navigation-hud');
             const mileageSticky = document.getElementById('route-mileage-sticky');
             const fabIcon = document.getElementById('ui-fab-icon');
             const fabText = document.getElementById('ui-fab-text');
-            
+
             if (forceHide !== null) {
                 isUiExplicitlyHidden = forceHide;
             } else {
@@ -541,24 +648,28 @@
             }
 
             if (isUiExplicitlyHidden) {
-                wrapperDeck.className = "absolute top-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none gap-2 px-3 transition-all duration-300 transform -translate-y-full opacity-0";
-                if (navHudSide) navHudSide.classList.add('hidden');
+                if (topShell) topShell.classList.add('-translate-y-full', 'opacity-0', 'pointer-events-none');
+                if (bottomShell) bottomShell.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
+                if (fabContainer) {
+                    fabContainer.classList.add('translate-y-full', 'pointer-events-auto');
+                    fabContainer.classList.remove('opacity-0');
+                }
+                if (navBanner) navBanner.classList.add('hidden');
                 if (mileageSticky) mileageSticky.classList.add('hidden');
-                if (fabIcon) fabIcon.innerText = "👁️";
-                if (fabText) fabText.innerText = "Show Panels";
+                if (fabIcon) fabIcon.innerText = '👁️';
+                if (fabText) fabText.innerText = 'Show UI';
             } else {
-                wrapperDeck.className = "absolute top-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none gap-2 px-3 transition-all duration-300 transform translate-y-0 opacity-100";
-                if (stopQueue.length > 0) {
-                    if (navHudSide) navHudSide.classList.remove('hidden');
+                if (topShell) topShell.classList.remove('-translate-y-full', 'opacity-0', 'pointer-events-none');
+                if (bottomShell) bottomShell.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
+                if (fabContainer) {
+                    fabContainer.classList.remove('translate-y-full');
                 }
-                if (routeLineCoordinates.length > 0) {
-                    if (mileageSticky) mileageSticky.classList.remove('hidden');
-                }
-                if (fabIcon) fabIcon.innerText = "⚡";
-                if (fabText) fabText.innerText = "Hide Panels";
+                if (stopQueue.length > 0 && navBanner) navBanner.classList.remove('hidden');
+                if (routeLineCoordinates.length > 0 && mileageSticky) mileageSticky.classList.remove('hidden');
+                if (fabIcon) fabIcon.innerText = '⚡';
+                if (fabText) fabText.innerText = 'Hide UI';
             }
         }
-
         async function loadMasterRepoFavoritesOnBoot() {
             try {
                 updateInlineStatus("Fetching dynamic favorites configuration from repository...", true);
@@ -758,10 +869,7 @@
             currentTrackedPolylineIndex = 0;
 
             // Automatically collapse address input fields cleanly upon path calculation completion
-            const searchContainer = document.getElementById('search-container');
-            if (searchContainer) {
-                searchContainer.style.setProperty('display', 'none', 'important');
-            }
+            setSearchPanelOpen(false);
 
             if (primaryRoutePolyline) { map.removeLayer(primaryRoutePolyline); }
             primaryRoutePolyline = L.polyline(routeLineCoordinates, {
@@ -808,10 +916,7 @@
             
             if (routesArray.length === 0) return;
 
-            const searchContainer = document.getElementById('search-container');
-            if (searchContainer) {
-                searchContainer.style.setProperty('display', 'none', 'important');
-            }
+            setSearchPanelOpen(false);
 
             if (routeBufferPolyline) { map.removeLayer(routeBufferPolyline); }
             routeBufferPolyline = L.polyline(routesArray[0].coordinates, {
@@ -873,18 +978,20 @@
             });
 
             if (!maintainMapViewportOnRouteFound && routesArray[0]) {
-                const initialDistMiles = (routesArray[0].summary.totalDistance * 0.000621371);
-                const targetCenter = computeTargetCenteringNode();
-                if (initialDistMiles > 0 && initialDistMiles < 50) {
-                    map.fitBounds(L.polyline(routesArray[0].coordinates).getBounds(), { padding: [40, 40] });
-                } else {
-                    const radiusMeters = 50 * 1609.34;
-                    const tempCircle = L.circle(targetCenter, { radius: radiusMeters }).addTo(map);
-                    const circleBounds = tempCircle.getBounds();
-                    tempCircle.remove();
-                    map.fitBounds(circleBounds);
-                }
-            }
+    const initialDistMiles = (routesArray[0].summary.totalDistance * 0.000621371);
+    const targetCenter = computeTargetCenteringNode();
+    const viewportPadding = getViewportPadding();
+
+    if (initialDistMiles > 0 && initialDistMiles < 50) {
+        map.fitBounds(L.polyline(routesArray[0].coordinates).getBounds(), viewportPadding);
+    } else {
+        const radiusMeters = 50 * 1609.34;
+        const tempCircle = L.circle(targetCenter, { radius: radiusMeters }).addTo(map);
+        const circleBounds = tempCircle.getBounds();
+        tempCircle.remove();
+        map.fitBounds(circleBounds, viewportPadding);
+    }
+}
         }
 
         async function requestAlternateStateJsonShardFallback(stateName) {
@@ -1332,16 +1439,11 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
             if (localJsonMemory) dispatchOffThreadAnalysis(); 
         });
         
-        document.getElementById('toggle-search-btn').addEventListener('click', () => { 
-            const s = document.getElementById('search-container'); 
-            if (s) {
-                if (s.style.display === 'none') {
-                    s.style.removeProperty('display');
-                } else {
-                    s.style.setProperty('display', 'none', 'important');
-                }
-            } 
-        });
+        document.getElementById('toggle-search-btn').addEventListener('click', () => {
+    const s = document.getElementById('search-container');
+    if (!s) return;
+    setSearchPanelOpen(s.classList.contains('hidden'));
+});
 
         // Manual interface toggle registry wire-up
         document.getElementById('ui-toggle-fab').addEventListener('click', () => {
@@ -1467,25 +1569,27 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
 
             loadMasterRepoFavoritesOnBoot();
 
-            const interactiveControlBars = ['master-header-panel', 'navigation-hud', 'center-loc-btn', 'apple-navigation-hud', 'route-mileage-sticky', 'ui-toggle-fab'];
-            interactiveControlBars.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    L.DomEvent.on(element, 'touchstart touchmove touchend mousedown dblclick contextmenu', L.DomEvent.stopPropagation);
-                    L.DomEvent.disableClickPropagation(element); L.DomEvent.disableScrollPropagation(element);
-                }
-            });
+            const interactiveControlBars = [
+    'top-directions-shell',
+    'bottom-controls-shell',
+    'center-loc-btn',
+    'apple-navigation-hud',
+    'route-mileage-sticky',
+    'ui-toggle-fab'
+];
 
-            map.on('movestart zoomstart', triggerAutoCenterDelay);
-            map.on('zoomend moveend', updateBufferVisualizerWeight);
+interactiveControlBars.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+        L.DomEvent.on(element, 'touchstart touchmove touchend mousedown dblclick contextmenu', L.DomEvent.stopPropagation);
+        L.DomEvent.disableClickPropagation(element);
+        L.DomEvent.disableScrollPropagation(element);
+    }
+});
 
-            // Gesture engine intercepts manual map manipulation to auto-collapse menus seamlessly
-            map.on('dragstart fontpanstart', () => {
-                if (!isUiExplicitlyHidden) {
-                    toggleInterfaceVisibility(true);
-                    triggerToast("Pan detected. Hiding panels to clear map view.");
-                }
-            });
+map.on('movestart zoomstart', triggerAutoCenterDelay);
+map.on('zoomend moveend', updateBufferVisualizerWeight);
+map.on('dragstart', triggerAutoCenterDelay);
         });
 
         routingControl.on('routesfound', async function(e) {
@@ -1650,8 +1754,7 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
                 requestScreenWakeLockBlock();
                 geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
                 
-                const searchInBox = document.getElementById('search-container');
-                if (searchInBox) searchInBox.style.setProperty('display', 'none', 'important');
+                setSearchPanelOpen(false);
 
                 watchId = navigator.geolocation.watchPosition((pos) => {
                     const { latitude, longitude, accuracy } = pos.coords;
