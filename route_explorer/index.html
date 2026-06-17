@@ -157,76 +157,80 @@
             </div>
         </div>
 
-        <div id="bottom-controls-shell" class="absolute inset-x-0 bottom-0 z-40 px-3 pb-3 safe-bottom transition-all duration-300">
-            <div id="master-header-panel" class="mx-auto w-full max-w-xl overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-xl pointer-events-auto">
+                <div id="bottom-controls-shell" class="absolute inset-x-0 bottom-0 z-40 px-2 pb-2 safe-bottom transition-all duration-300">
+            
+            <!-- Floating Map Controls (Attached to the top of the dock) -->
+            <div class="absolute right-0 bottom-full mb-3 mr-4 flex flex-col gap-2 pointer-events-none">
+                <button id="theme-toggle-btn" class="pointer-events-auto bg-white/90 backdrop-blur border border-slate-200 text-slate-700 shadow-md rounded-full w-10 h-10 flex items-center justify-center active:scale-95 transition-all text-sm" title="Toggle Theme">🌙</button>
+                <button id="zoom-in-btn" class="pointer-events-auto bg-white/90 backdrop-blur border border-slate-200 text-slate-700 shadow-md rounded-full w-10 h-10 flex items-center justify-center active:scale-95 transition-all text-xl font-medium">＋</button>
+                <button id="zoom-out-btn" class="pointer-events-auto bg-white/90 backdrop-blur border border-slate-200 text-slate-700 shadow-md rounded-full w-10 h-10 flex items-center justify-center active:scale-95 transition-all text-xl font-medium">－</button>
+                <button id="center-loc-btn" class="pointer-events-auto bg-white/90 backdrop-blur border border-slate-200 text-slate-700 shadow-md rounded-full w-10 h-10 flex items-center justify-center active:scale-95 transition-all text-lg" title="Center Current Position">🎯</button>
+                <button id="geo-btn" class="pointer-events-auto bg-blue-600/90 backdrop-blur border border-blue-500 text-white shadow-md rounded-full w-10 h-10 flex items-center justify-center active:scale-95 transition-all text-sm" title="Track GPS">🚗</button>
+            </div>
 
-                <div id="search-container" class="border-b border-slate-200 px-4 pt-4 pb-3 bg-white">
+            <!-- Main Bottom Dock -->
+            <div id="master-header-panel" class="mx-auto w-full max-w-xl overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-xl pointer-events-auto">
+
+                <!-- Condensed Search Container -->
+                <div id="search-container" class="border-b border-slate-200 px-3 pt-3 pb-2 bg-white">
                     <div class="flex flex-col gap-2">
-                        <div class="relative">
-                            <input id="start-input" type="text" autocomplete="off" placeholder="Start Address, City, State, Zip Code" class="w-full bg-slate-100 border border-slate-300 text-sm rounded-2xl pl-4 pr-16 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[50px] text-slate-900 font-medium placeholder-slate-500">
-                            <button id="start-clear-btn" type="button" class="absolute right-10 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
-                            <button id="start-locate-btn" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-blue-500 transition-colors">📍</button>
-                            <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm text-slate-800"></div>
-                        </div>
-
-                        <div class="relative">
-                            <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address, City, State, Zip Code" class="w-full bg-slate-100 border border-slate-300 text-sm rounded-2xl pl-4 pr-16 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[50px] text-slate-900 font-medium placeholder-slate-500">
-                            <button id="end-clear-btn" type="button" class="absolute right-10 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-red-500 transition-colors font-bold text-xs hidden">✕</button>
-                            <button id="end-locate-btn" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-blue-500 transition-colors">📍</button>
-                            <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-2xl hidden max-h-48 overflow-y-auto z-50 text-sm text-slate-800"></div>
-                        </div>
-
-                        <div class="grid grid-cols-[52px_1fr] gap-2">
-                            <button id="swap-locations-btn" type="button" class="p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 rounded-2xl text-sm font-bold transition-all min-h-[50px] flex items-center justify-center shadow-sm border border-slate-300">⇆</button>
-                            <button id="route-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-3 px-4 rounded-2xl min-h-[50px] shadow-sm transition-all flex items-center justify-center gap-1">
-                                🗺️ Calculate Routes
+                        <div class="flex gap-2">
+                            <div class="flex-1 flex flex-col gap-1.5">
+                                <div class="relative">
+                                    <input id="start-input" type="text" autocomplete="off" placeholder="Start Address" class="w-full bg-slate-100 border border-slate-200 text-[13px] rounded-xl pl-3 pr-14 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 h-10 text-slate-900 font-medium placeholder-slate-500">
+                                    <button id="start-clear-btn" type="button" class="absolute right-7 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-500 font-bold text-xs hidden">✕</button>
+                                    <button id="start-locate-btn" type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-blue-500 text-sm">📍</button>
+                                    <div id="start-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl hidden max-h-40 overflow-y-auto z-50 text-[13px] text-slate-800"></div>
+                                </div>
+                                <div class="relative">
+                                    <input id="end-input" type="text" autocomplete="off" placeholder="Destination Address" class="w-full bg-slate-100 border border-slate-200 text-[13px] rounded-xl pl-3 pr-14 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 h-10 text-slate-900 font-medium placeholder-slate-500">
+                                    <button id="end-clear-btn" type="button" class="absolute right-7 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-500 font-bold text-xs hidden">✕</button>
+                                    <button id="end-locate-btn" type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-blue-500 text-sm">📍</button>
+                                    <div id="end-autocomplete" class="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl hidden max-h-40 overflow-y-auto z-50 text-[13px] text-slate-800"></div>
+                                </div>
+                            </div>
+                            <button id="swap-locations-btn" type="button" class="w-10 h-[86px] bg-slate-100 hover:bg-slate-200 text-slate-600 active:scale-95 rounded-xl text-lg flex items-center justify-center shadow-sm border border-slate-200 shrink-0 transition-all">
+                                <span class="transform rotate-90 text-sm">⇆</span>
                             </button>
                         </div>
+                        <button id="route-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-bold rounded-xl h-10 shadow-sm transition-all flex items-center justify-center gap-1.5">
+                            🗺️ Calculate Route
+                        </button>
                     </div>
                 </div>
 
-                <div class="border-b border-slate-200 px-4 py-3 bg-white/95">
-                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                        <button id="theme-toggle-btn" class="bg-slate-100 border border-slate-300 text-slate-900 font-bold rounded-2xl shadow-sm text-xs px-3 h-11 flex items-center justify-center active:scale-95 transition-all whitespace-nowrap">🌙 Mode</button>
-                        <button id="zoom-in-btn" class="bg-slate-100 text-slate-900 border border-slate-300 shadow-sm font-bold rounded-2xl h-11 flex items-center justify-center active:scale-95 text-xl transition-all">＋</button>
-                        <button id="zoom-out-btn" class="bg-slate-100 text-slate-900 border border-slate-300 shadow-sm font-bold rounded-2xl h-11 flex items-center justify-center active:scale-95 text-xl transition-all">－</button>
-                        <button id="center-loc-btn" class="bg-slate-100 text-slate-900 border border-slate-300 shadow-sm font-bold rounded-2xl h-11 flex items-center justify-center active:scale-95 text-lg transition-all" title="Center Current Position">🎯</button>
-                        <button id="geo-btn" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3 h-11 rounded-2xl shadow-sm whitespace-nowrap">🚗 Track</button>
+                <!-- Settings & Status Bar -->
+                <div class="border-b border-slate-200 px-3 py-1.5 bg-slate-50/90 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                        <div id="status-spinner" class="animate-spin rounded-full h-3 w-3 border-2 border-blue-500 border-t-transparent hidden"></div>
+                        <p id="status" class="text-[11px] font-bold text-slate-600 truncate">System ready.</p>
                     </div>
-                </div>
-
-                <div class="border-b border-slate-200 px-4 py-3 bg-slate-50/90">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <div id="status-spinner" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-500 border-t-transparent hidden"></div>
-                        <p id="status" class="text-xs font-bold text-slate-600 truncate">System ready. Enter parameters to map alternatives.</p>
-                    </div>
-
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        <select id="buffer-select" class="bg-white text-slate-800 text-xs font-bold py-2 px-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-blue-500 min-h-[44px]">
-                            <option value="4000" selected>⏱️ 5 Min Buffer</option>
-                            <option value="12000">⏱️ 15 Min Buffer</option>
-                            <option value="24000">⏱️ 30 Min Buffer</option>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <select id="buffer-select" class="bg-white text-slate-700 text-[11px] font-bold py-0.5 px-2 rounded-lg border border-slate-200 h-7 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="4000" selected>⏱️ 5m Buffer</option>
+                            <option value="12000">⏱️ 15m Buffer</option>
+                            <option value="24000">⏱️ 30m Buffer</option>
                         </select>
-
-                        <button id="toggle-search-btn" class="bg-white border border-slate-300 text-slate-800 text-xs font-bold px-3 py-2 rounded-2xl min-h-[44px] whitespace-nowrap">✕ Close Inputs</button>
-
-                        <button id="push-master-btn" class="bg-amber-400 hover:bg-amber-500 text-slate-900 text-xs font-black px-3 py-2 rounded-2xl min-h-[44px] shadow-sm active:scale-95 transition-all whitespace-nowrap">💾 Save Repo Favorites</button>
+                        <button id="toggle-search-btn" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-bold px-2 rounded-lg h-7 transition-colors">✕ Inputs</button>
+                        <button id="push-master-btn" class="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[11px] font-bold px-2 rounded-lg h-7 active:scale-95 transition-all flex items-center gap-1">💾 Save</button>
                     </div>
                 </div>
 
-                <div id="master-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-3 pb-2 bg-white">
-                    <button data-cat="playground" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🛝 Playgrounds</button>
-                    <button data-cat="gas" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">⛽ Gas Stations</button>
-                    <button data-cat="food" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🍔 Fast Food</button>
-                    <button data-cat="shopping" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🛒 Shopping & Services</button>
-                    <button data-cat="parks" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🌲 Parks & Attractions</button>
-                    <button data-cat="campground" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">⛺ Campgrounds</button>
-                    <button data-cat="medical" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🏥 Emergency & Med</button>
-                    <button data-cat="highway" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🏢 Highway Amenities</button>
-                    <button data-cat="tourism" class="master-pill bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2 rounded-2xl whitespace-nowrap min-h-[44px] border border-slate-200">🌲 Tourism Exploration</button>
+                <!-- POI Master Filter -->
+                <div id="master-filter-bar" class="flex gap-1.5 overflow-x-auto no-scrollbar px-3 py-2 bg-white">
+                    <button data-cat="playground" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">🛝 Playgrounds</button>
+                    <button data-cat="gas" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">⛽ Gas</button>
+                    <button data-cat="food" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">🍔 Food</button>
+                    <button data-cat="shopping" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">🛒 Shopping</button>
+                    <button data-cat="parks" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">🌲 Parks</button>
+                    <button data-cat="campground" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">⛺ Camp</button>
+                    <button data-cat="medical" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">🏥 Med</button>
+                    <button data-cat="highway" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">🏢 Highway</button>
+                    <button data-cat="tourism" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">🌲 Tourism</button>
                 </div>
 
-                <div id="sub-filter-bar" class="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-4 pt-2 border-t border-slate-200 bg-slate-50/80 hidden"></div>
+                <!-- Sub Filter Bar -->
+                <div id="sub-filter-bar" class="flex gap-1.5 overflow-x-auto no-scrollbar px-3 pb-2 pt-1 border-t border-slate-200 bg-slate-50/80 hidden"></div>
             </div>
         </div>
 
@@ -1398,16 +1402,31 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
         // =====================================================================
         // --- PHASE 8: REFINED CORE INTERACTION EVENT REGISTRIES -------------
         // =====================================================================
-        function generateSubMenuUI(catId) {
+                function generateSubMenuUI(catId) {
             const subBar = document.getElementById('sub-filter-bar'); subBar.innerHTML = '';
             const definition = subMenuDefinitions[catId]; if (!definition) { subBar.classList.add('hidden'); return; }
             definition.forEach((sub) => {
                 const subButton = document.createElement('button'); subButton.setAttribute('data-sub', sub.id);
-                subButton.className = "sub-pill bg-slate-800 border border-slate-700/60 text-slate-300 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] cursor-pointer shadow-sm transition-colors hover:bg-slate-700";
+                // Updated to match the white/sleek UI
+                subButton.className = "sub-pill bg-white text-slate-600 border border-slate-200 text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap min-h-[32px] cursor-pointer hover:bg-slate-50 transition-colors";
                 subButton.innerText = sub.label; subBar.appendChild(subButton);
             });
             subBar.classList.remove('hidden');
         }
+
+        // ... skipping requestScreenWakeLockBlock and master-filter-bar listener ...
+
+        document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
+            const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
+            
+            // Reset all pills to inactive state (White, subtle border)
+            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-white text-slate-600 border border-slate-200 text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap min-h-[32px] cursor-pointer hover:bg-slate-50 transition-colors");
+            
+            // Set clicked pill to active state (Blue background, white text)
+            subPill.className = "sub-pill bg-blue-600 border border-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap min-h-[32px] cursor-pointer shadow-md";
+            
+            currentSubFilter = subPill.getAttribute('data-sub'); dispatchOffThreadAnalysis();
+        });
 
         async function requestScreenWakeLockBlock() {
             try {
@@ -1427,12 +1446,7 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
 
         document.getElementById('master-filter-bar').addEventListener('click', (e) => { const pill = e.target.closest('.master-pill'); if (pill) handleMasterCategorySelection(pill); });
         
-        document.getElementById('sub-filter-bar').addEventListener('click', (e) => {
-            const subPill = e.target.closest('.sub-pill'); if (!subPill) return;
-            document.querySelectorAll('.sub-pill').forEach(btn => btn.className = "sub-pill bg-slate-800 border border-slate-700/60 text-slate-300 text-xs font-semibold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px] transition-colors hover:bg-slate-700");
-            subPill.className = "sub-pill bg-gray-100 text-slate-900 text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap min-h-[36px]";
-            currentSubFilter = subPill.getAttribute('data-sub'); dispatchOffThreadAnalysis();
-        });
+        
 
         document.getElementById('buffer-select').addEventListener('change', (e) => { 
             activeBufferMeters = parseInt(e.target.value); updateBufferVisualizerWeight();
