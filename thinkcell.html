@@ -534,8 +534,9 @@
         let d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
         let formatted = formatDateToDDMMMYYYY(d);
         
-        if (msIdx !== null) {
+                if (msIdx !== null) {
             projectData[laneIdx].rows[rowIdx].milestones[msIdx][key] = formatted;
+            sortMilestonesChronologically(laneIdx, rowIdx);
         } else if (barIdx !== null) {
             projectData[laneIdx].rows[rowIdx].bars[barIdx][key] = formatted;
         } else {
@@ -1821,11 +1822,14 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
             id: nextMsId++, label: "Custom Milestone", date: "01Jun2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond",
             leaderEnabledText: true, leaderEnabledDate: false, leaderAnchorText: "center"
         });
+        sortMilestonesChronologically(laneIdx, rowIdx); // Re-sort after adding
         recordStateChange(); renderInputRows(); updateChart();
     }
-    function updateMilestoneFieldNew(laneIdx, rowIdx, msIdx, key, val) {
+        function updateMilestoneFieldNew(laneIdx, rowIdx, msIdx, key, val) {
         projectData[laneIdx].rows[rowIdx].milestones[msIdx][key] = val;
-        recordStateChange(); updateChart();
+        // Re-sort in case someone manually typed a date in a text field that acts as a date
+        sortMilestonesChronologically(laneIdx, rowIdx); 
+        recordStateChange(); renderInputRows(); updateChart();
     }
     function deleteMilestoneNew(laneIdx, rowIdx, msIdx) {
         projectData[laneIdx].rows[rowIdx].milestones.splice(msIdx, 1);
@@ -1975,12 +1979,14 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
                             <div style="font-size:11px; font-weight:bold; color:#1e40af; margin-bottom:6px;">Row Target Milestones</div>
                             <div class="milestones-list">
                                 ${row.milestones.map((ms, msIdx) => `
-                                    <div class="milestone-input-row">
-                                        <input type="text" value="${ms.label}" onchange="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'label', this.value)">
+                                                                        <div class="milestone-input-row">
+                                        <!-- Changed onchange to onblur -->
+                                        <input type="text" value="${ms.label}" onblur="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'label', this.value)">
                                         
                                         <div class="date-input-wrapper">
                                             <span class="date-display-badge">${ms.date}</span>
-                                            <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'date', ${msIdx})">
+                                            <!-- Changed onchange to onblur -->
+                                            <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}" onblur="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'date', ${msIdx})">
                                         </div>
                                         
                                         <label class="ms-checkbox-wrap">
@@ -2584,7 +2590,13 @@ function toggleSidebarLayout() {
             updateChart();
         }, 320);
     }
-    
+        function sortMilestonesChronologically(laneIdx, rowIdx) {
+        projectData[laneIdx].rows[rowIdx].milestones.sort((a, b) => {
+            let timeA = parseAnyDateToTimestamp(a.date);
+            let timeB = parseAnyDateToTimestamp(b.date);
+            return timeA - timeB;
+        });
+    }
     function setRowMicroTabLayout(laneIdx, rowIdx, chosenTabName) {
         projectData[laneIdx].rows[rowIdx].activeTab = chosenTabName;
         // Re-render layout matrices immediately to keep state variations unified
