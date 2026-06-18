@@ -2448,13 +2448,12 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
                 let stylePattern = tracker.pattern || "solid";
                 let strokeDash = (stylePattern === 'dashed') ? "4 4" : (stylePattern === 'dotted') ? "1 3" : "";
                 
-                svg += `<line x1="${xTracker}" y1="${axisLineY}" x2="${xTracker}" y2="${bottomOfLastRow}" stroke="${tracker.color}" stroke-width="${tracker.thickness || 2}" stroke-dasharray="${strokeDash}" style="cursor:ew-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'tracker-line-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})"/>`;
+                svg += `<line x1="${xTracker}" y1="${axisLineY}" x2="${xTracker}" y2="${bottomOfLastRow}" stroke="${tracker.color}" stroke-width="${tracker.thickness || 2}" stroke-dasharray="${strokeDash}" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'tracker-line-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})"/>`;
                 
                 let lblX = xTracker + (tracker.labelOffsetX || 0);
                 let lblY = bottomOfLastRow + 24 + (tracker.labelOffsetY || 0);
                 
                 svg += `<g fill="${tracker.color}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'tracker-label-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})">
-                    <rect x="${lblX - 50}" y="${lblY - 11}" width="100" height="15" rx="3" fill="#ffffff" stroke="${tracker.color}" stroke-width="1"/>
                     <text x="${lblX}" y="${lblY}" font-size="8" font-weight="bold" fill="${tracker.color}" text-anchor="middle">${tracker.label.toUpperCase()}</text>
                 </g>`;
             }
