@@ -608,20 +608,13 @@ function getViewportPadding() {
         function applyCalculatedSmartZoom() {
     if (routeLineCoordinates.length === 0) return;
 
-    const totalDistStr = document.getElementById('sticky-total-dist').innerText;
-    const totalDistanceMiles = parseFloat(totalDistStr) || 0;
-    const targetCenter = computeTargetCenteringNode();
-    const viewportPadding = getViewportPadding();
-
-    if (totalDistanceMiles > 0 && totalDistanceMiles < 50) {
-        const routeBounds = L.polyline(routeLineCoordinates).getBounds();
-        map.fitBounds(routeBounds, viewportPadding);
+    if (lastUserGpsCoord) {
+        // Force the map center to remain strictly on the user's GPS coordinates
+        map.setView(L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]), 13);
     } else {
-        const radiusMeters = 50 * 1609.34;
-        const tempCircle = L.circle(targetCenter, { radius: radiusMeters }).addTo(map);
-        const circleBounds = tempCircle.getBounds();
-        tempCircle.remove();
-        map.fitBounds(circleBounds, viewportPadding);
+        // Fallback to route bounds only if no GPS is available
+        const routeBounds = L.polyline(routeLineCoordinates).getBounds();
+        map.fitBounds(routeBounds, getViewportPadding());
     }
 }
 
@@ -918,21 +911,15 @@ function getViewportPadding() {
                 }
             });
 
-            if (!maintainMapViewportOnRouteFound && routesArray[0]) {
-    const initialDistMiles = (routesArray[0].summary.totalDistance * 0.000621371);
-    const targetCenter = computeTargetCenteringNode();
-    const viewportPadding = getViewportPadding();
-
-    if (initialDistMiles > 0 && initialDistMiles < 50) {
-        map.fitBounds(L.polyline(routesArray[0].coordinates).getBounds(), viewportPadding);
-    } else {
-        const radiusMeters = 50 * 1609.34;
-        const tempCircle = L.circle(targetCenter, { radius: radiusMeters }).addTo(map);
-        const circleBounds = tempCircle.getBounds();
-        tempCircle.remove();
-        map.fitBounds(circleBounds, viewportPadding);
-    }
-}
+                            if (!maintainMapViewportOnRouteFound && routesArray[0]) {
+                    if (lastUserGpsCoord) {
+                        // Force map to current location rather than fitting alternate route bounds
+                        map.setView(L.latLng(lastUserGpsCoord[0], lastUserGpsCoord[1]), 13);
+                    } else {
+                        // Fallback if no GPS tracking is active
+                        map.fitBounds(L.polyline(routesArray[0].coordinates).getBounds(), getViewportPadding());
+                    }
+                }
         }
 
         async function requestAlternateStateJsonShardFallback(stateName) {
@@ -969,7 +956,29 @@ function getViewportPadding() {
         // --- PHASE 3: MAP TILES CANVAS CORE SETUP DEFINITIONS ----------------
         // =====================================================================
         map = L.map('map', { zoomControl: false }).setView(MAP_INITIAL_CENTER, 5);
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const { latitude, longitude } = pos.coords;
+            const currentLatLng = L.latLng(latitude, longitude);
 
+            lastUserGpsCoord = [latitude, longitude];
+
+            // optional: drop user marker at startup
+            if (!userMarker) {
+                userMarker = L.marker(currentLatLng, {
+                    icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false)
+                }).addTo(map);
+            }
+
+            map.setView(currentLatLng, 13);
+        },
+        () => {
+            // keep default MAP_INITIAL_CENTER if GPS fails or not allowed
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+    );
+}
         mapLayersPool = {
             light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                 attribution: '© OpenStreetMap contributors © CARTO'
@@ -1085,11 +1094,11 @@ function getViewportPadding() {
             addWaypoints: true, 
             draggableWaypoints: true, 
             serviceUrl: 'https://router.project-osrm.org/route/v1',
-            router: L.Routing.osrmv1({ 
-                serviceUrl: 'https://router.project-osrm.org/route/v1',
-                profile: 'driving',
-                routingOptions: { alternatives: true, steps: true } 
-            }),
+                    router: L.Routing.osrmv1({
+            serviceUrl: 'https://router.project-osrm.org/route/v1',
+            profile: 'driving',
+            routingOptions: { alternatives: true, steps: false }
+        }),
             lineOptions: { styles: [{ opacity: 0, weight: 0 }] },
             routeWhileDragging: false,
             fitSelectedRoutes: false,
@@ -1685,104 +1694,50 @@ map.on('dragstart', triggerAutoCenterDelay);
         });
 
         const geoBtn = document.getElementById('geo-btn');
-        geoBtn.addEventListener('click', () => {
-            if (isTracking) { 
-                if (watchId) navigator.geolocation.clearWatch(watchId); 
-                releaseScreenWakeLockBlock();
-                isTracking = false; allowAutoCenter = true; clearTimeout(autoCenterTimeoutId);
-                geoBtn.innerText = "🚗 Track"; geoBtn.className = "bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; 
-                
-                const searchInBox = document.getElementById('search-container');
-                if (searchInBox) searchInBox.style.display = 'flex';
+geoBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+        alert("GPS hardware unavailable.");
+        return;
+    }
 
-                const banner = document.getElementById('apple-navigation-hud');
-                if (banner) {
-                    banner.classList.add('translate-y-64', 'opacity-0');
-                    setTimeout(() => banner.classList.add('hidden'), 500);
-                }
-            } else {
-                if (!navigator.geolocation) { alert("GPS hardware unavailable."); return; }
-                requestScreenWakeLockBlock();
-                geoBtn.innerText = "🛑 Stop"; geoBtn.className = "bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm min-h-[44px]"; isTracking = true;
-                
-                setSearchPanelOpen(false);
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const { latitude, longitude } = pos.coords;
+            const currentLatLng = L.latLng(latitude, longitude);
 
-                watchId = navigator.geolocation.watchPosition((pos) => {
-                    const { latitude, longitude, accuracy } = pos.coords;
-                    
-                    if (accuracy && accuracy > 65) return;
+            // remember last GPS position
+            lastUserGpsCoord = [latitude, longitude];
 
-                    const startInField = document.getElementById('start-input');
-                    startInField.value = "Current Location";
-                    startInField.dataset.lat = latitude;
-                    startInField.dataset.lon = longitude;
-                    document.getElementById('start-clear-btn').classList.remove('hidden');
-
-                    if (lastUserGpsCoord) {
-                        const distanceMoved = map.distance([latitude, longitude], lastUserGpsCoord); 
-                        if (distanceMoved < 12) return; 
-                    }
-                    
-                    const currentLatLngRaw = L.latLng(latitude, longitude);
-                    lastUserGpsCoord = [latitude, longitude];
-
-                    const snappedPoint = computeSnapToRouteVector(currentLatLngRaw);
-                    
-                    if (!userMarker) { 
-                        userMarker = L.marker(snappedPoint, { icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false) }).addTo(map); 
-                    } else { 
-                        userMarker.setLatLng(snappedPoint); 
-                    }
-                    if (allowAutoCenter) map.panTo(snappedPoint);
-
-                    if (stopQueue.length > 0) {
-                        const distToActiveStop = map.distance(snappedPoint, L.latLng(stopQueue[0].lat, stopQueue[0].lon));
-                        if (distToActiveStop < 45) { 
-                            triggerToast(`Arrived at stop: "${stopQueue[0].name}"`);
-                            stopQueue.shift();
-                            updateQueueHUD();
-                            triggerRouteCalculation(true);
-                            return; 
-                        }
-                    }
-
-                    if (routeLineCoordinates.length > 0 && !isAlternateMatrixModeActive) {
-                        updateAppleNavigationHUD(snappedPoint);
-
-                        let absoluteDistanceToRouteLine = Infinity;
-                        if (routeLineCoordinates[currentTrackedPolylineIndex]) {
-                            absoluteDistanceToRouteLine = map.distance(currentLatLngRaw, routeLineCoordinates[currentTrackedPolylineIndex]);
-                        }
-
-                        if (absoluteDistanceToRouteLine > 120) { 
-                            continuousOffRouteDriftTicks++;
-                            const currentTime = Date.now();
-                            if (continuousOffRouteDriftTicks >= 5 && (currentTime - lastAutoRecalcTimestamp > 30000)) { 
-                                triggerToast("Off-route deviation confirmed. Recalculating path corridor...", 4000);
-                                lastAutoRecalcTimestamp = currentTime;
-                                triggerRouteCalculation(true);
-                                continuousOffRouteDriftTicks = 0;
-                            }
-                        } else {
-    continuousOffRouteDriftTicks = 0; 
-}
-
-                        if (!lastMileageUpdateGps || map.distance(snappedPoint, lastMileageUpdateGps) >= 400) {
-                            let remainingDistanceMeters = 0;
-                            let startCalculationNode = Math.max(activeInstructionIndex, currentTrackedPolylineIndex);
-                            for (let i = startCalculationNode; i < routeLineCoordinates.length - 1; i++) {
-                                remainingDistanceMeters += map.distance(routeLineCoordinates[i], routeLineCoordinates[i+1]);
-                            }
-                            const remainingDistanceMiles = (remainingDistanceMeters * 0.000621371).toFixed(1);
-                            const stickyLabelValue = document.getElementById('sticky-total-dist');
-                            if (stickyLabelValue) stickyLabelValue.innerText = remainingDistanceMiles;
-                            
-                            lastMileageUpdateGps = snappedPoint;
-                        }
-                    }
-                }, () => { isTracking = false; }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
+            // update start field to "Current Location" with coords
+            const startInField = document.getElementById('start-input');
+            if (startInField) {
+                startInField.value = "Current Location";
+                startInField.dataset.lat = latitude;
+                startInField.dataset.lon = longitude;
+                const startClearBtn = document.getElementById('start-clear-btn');
+                if (startClearBtn) startClearBtn.classList.remove('hidden');
             }
-        });
+
+            // create or move the car marker
+            if (!userMarker) {
+                userMarker = L.marker(currentLatLng, {
+                    icon: createCustomIcon('🚗', 'bg-blue-500 border-white text-white', false)
+                }).addTo(map);
+            } else {
+                userMarker.setLatLng(currentLatLng);
+            }
+
+            // center map on current location
+            map.setView(currentLatLng, 13);
+
+            triggerToast("Centered on current GPS position.");
+        },
+        () => {
+            triggerToast("Failed to read GPS position.");
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+});
     </script>
 </body>
 </html>
