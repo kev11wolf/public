@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Advanced Budget & Cash Flow Forecaster</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-text-size-adjust: 100%; }
+        
+        /* Inputs & Utilities */
+        .input-group label { display: block; font-size: 0.875rem; font-weight: 500; color: #4b5563; margin-bottom: 0.25rem; }
+        .input-group input, .input-group select { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 16px; transition: all 0.2s; }
+        .input-group input:not([readonly]):focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        
+        /* Tooltips */
+        .tooltip-icon { cursor: help; color: #6b7280; margin-left: 0.5rem; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; border: 1px solid #9ca3af; font-size: 10px; font-weight: bold; }
+        .tooltip-container .tooltip-text { visibility: hidden; opacity: 0; transition: opacity 0.2s; position: absolute; z-index: 50; width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); background-color: #1f2937; color: #fff; text-align: left; padding: 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: normal; line-height: 1.5; pointer-events: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
+        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        /* Print to PDF Formatting - Aggressively scaled for 1 page */
+        @media print {
+            @page { size: landscape; margin: 0.2in; }
+            body { 
+                background-color: #f3f4f6 !important; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+                zoom: 0.72; /* Force single page scaling on Chrome/Safari/Edge */
+            }
+            @-moz-document url-prefix() { body { transform: scale(0.72); transform-origin: top left; width: 138%; } }
+            
+            /* Hide UI elements not meant for paper */
+            .no-print, .tooltip-container, button { display: none !important; }
+            
+            /* Force the desktop grid layout in print & tighten spacing */
+            .max-w-7xl { max-width: 100% !important; width: 100% !important; margin: 0 !important; }
+            .lg\:grid-cols-3 { display: grid !important; grid-template-columns: 1fr 2fr !important; gap: 1rem !important; }
+            .md\:grid-cols-3 { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 0.75rem !important; }
+            .md\:grid-cols-2 { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 1rem !important; }
+            
+            /* Shrink paddings */
+            .p-4, .p-5, .p-6 { padding: 0.75rem !important; }
+            .space-y-6 > * + * { margin-top: 0.75rem !important; }
+            .mb-4 { margin-bottom: 0.5rem !important; }
+            
+            /* Prevent page breaks inside cards */
+            .bg-white, .bg-gray-800 { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; border: 1px solid #d1d5db; }
+            .bg-gray-800 { background-color: #1f2937 !important; color: white !important; }
+            
+            /* Turn inputs into flat text for clean reading */
+            input, select { border: none !important; background: transparent !important; color: #111827 !important; padding: 0 !important; font-weight: 600; -webkit-appearance: none; appearance: none; }
+            input[type="number"] { text-align: right; }
+            
+            /* Lock chart sizes so they don't explode */
+            .h-56 { height: 160px !important; }
+            .h-72 { height: 200px !important; }
+            canvas { max-height: 100% !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-6">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4 border-gray-300">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Cash Flow Forecaster</h1>
+                <p class="text-gray-500 text-sm mt-1">Income, Expenses & Budget Health</p>
+            </div>
+            <div class="flex gap-4 no-print w-full md:w-auto">
+                <button onclick="window.print()" class="flex-1 md:flex-none bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700 transition text-sm font-medium">🖨️ Print to PDF</button>
+                <button onclick="resetData()" class="flex-1 md:flex-none bg-red-50 text-red-600 px-4 py-2 rounded shadow hover:bg-red-100 transition text-sm font-medium">Reset Data</button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Column: Inputs -->
+            <div class="space-y-6">
+                
+                <!-- Income Inputs -->
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <div class="flex justify-between items-center border-b pb-2 mb-4">
+                        <h2 class="text-lg font-semibold">Income & Taxes</h2>
+                        <select id="incomeTimeframe" onchange="handleIncomeTimeframeChange()" class="text-sm border rounded p-1 bg-gray-50 font-medium cursor-pointer w-auto no-print">
+                            <option value="biweekly" selected>Bi-Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                        <span class="hidden print:inline text-sm font-bold text-gray-600" id="printIncomeTf">Bi-Weekly</span>
+                    </div>
+                    <div class="space-y-4">
+                        
+                        <!-- Gross Pay -->
+                        <div class="input-group relative">
+                            <label class="flex items-center">Gross Pay</label>
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-600 font-semibold">$</span>
+                                <input type="number" id="grossPay" value="7885" step="1" onchange="handleGrossChange()">
+                            </div>
+                        </div>
+
+                        <!-- Read-Only Taxes -->
+                        <div class="space-y-3 pt-2 border-t border-gray-100">
+                            <div class="input-group">
+                                <label class="flex items-center">
+                                    Federal Tax (MFJ 2026)
+                                    <div class="relative tooltip-container no-print">
+                                        <span class="tooltip-icon">?</span>
+                                        <span class="tooltip-text" id="fedTaxTooltip">Loading...</span>
+                                    </div>
+                                </label>
+                                <div class="flex gap-4">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <span class="text-gray-400 font-semibold">$</span>
+                                        <input type="number" id="fedTax_val" class="w-full bg-gray-50 text-gray-500 cursor-not-allowed" readonly>
+                                    </div>
+                                    <div class="flex items-center gap-1 w-24">
+                                        <input type="text" id="fedTax_pct" class="w-full text-right bg-gray-50 text-gray-500 cursor-not-allowed" readonly>
+                                        <span class="text-gray-400 font-semibold">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="flex items-center">State Tax (NC Flat 3.99%)</label>
+                                <div class="flex gap-4">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <span class="text-gray-400 font-semibold">$</span>
+                                        <input type="number" id="stateTax_val" class="w-full bg-gray-50 text-gray-500 cursor-not-allowed" readonly>
+                                    </div>
+                                    <div class="flex items-center gap-1 w-24">
+                                        <input type="text" id="stateTax_pct" class="w-full text-right bg-gray-50 text-gray-500 cursor-not-allowed" readonly>
+                                        <span class="text-gray-400 font-semibold">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="flex items-center">FICA (SS + Medicare)</label>
+                                <div class="flex gap-4">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <span class="text-gray-400 font-semibold">$</span>
+                                        <input type="number" id="ficaTax_val" class="w-full bg-gray-50 text-gray-500 cursor-not-allowed" readonly>
+                                    </div>
+                                    <div class="flex items-center gap-1 w-24">
+                                        <input type="text" id="ficaTax_pct" class="w-full text-right bg-gray-50 text-gray-500 cursor-not-allowed" readonly>
+                                        <span class="text-gray-400 font-semibold">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Editable Deductions -->
+                        <div class="space-y-3 pt-2 border-t border-gray-100">
+                            <div class="input-group">
+                                <label class="flex items-center">401(k) Retirement</label>
+                                <div class="flex gap-4">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <span class="text-gray-600 font-semibold">$</span>
+                                        <input type="number" id="retirement_val" value="789" step="1" onchange="handleRetirementVal()">
+                                    </div>
+                                    <div class="flex items-center gap-1 w-24">
+                                        <input type="number" id="retirement_pct" value="10.0" step="0.1" class="text-right" onchange="handleRetirementPct()">
+                                        <span class="text-gray-600 font-semibold">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="flex items-center">Pre-Tax Benefits (HSA/Med)</label>
+                                <div class="flex gap-4">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <span class="text-gray-600 font-semibold">$</span>
+                                        <input type="number" id="benefits_val" value="308" step="1" onchange="handleBenefitsVal()">
+                                    </div>
+                                    <div class="flex items-center gap-1 w-24">
+                                        <input type="number" id="benefits_pct" step="0.1" class="text-right" onchange="handleBenefitsPct()">
+                                        <span class="text-gray-600 font-semibold">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expenses Inputs -->
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <div class="flex justify-between items-center border-b pb-2 mb-4">
+                        <h2 class="text-lg font-semibold flex items-center">
+                            Expenses
+                            <div class="relative tooltip-container no-print">
+                                <span class="tooltip-icon">?</span>
+                                <span class="tooltip-text">
+                                    <strong>Expert Guidelines (% of Gross):</strong><br><br>
+                                    🏠 <strong>Housing/Rent:</strong> < 28%<br>
+                                    🚗 <strong>Auto/Transport:</strong> < 10%<br>
+                                    💳 <strong>Debt/Credit:</strong> < 5%<br>
+                                    📈 <strong>Retirement/Savings:</strong> > 15-20%<br><br>
+                                    <em>Use these targets to plan your budget and ensure you aren't over-leveraged in any one category.</em>
+                                </span>
+                            </div>
+                        </h2>
+                        <select id="expenseTimeframe" onchange="handleExpenseTimeframeChange()" class="text-sm border rounded p-1 bg-gray-50 font-medium cursor-pointer w-auto no-print">
+                            <option value="biweekly">Bi-Weekly</option>
+                            <option value="monthly" selected>Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                        <span class="hidden print:inline text-sm font-bold text-gray-600" id="printExpenseTf">Monthly</span>
+                    </div>
+                    <div id="expenseList" class="space-y-3 mb-4">
+                        <!-- Expenses injected via JS -->
+                    </div>
+                    <button onclick="addExpense()" class="w-full bg-blue-50 text-blue-600 border border-blue-200 px-3 py-2 text-sm rounded hover:bg-blue-100 font-medium transition no-print">+ Add Expense</button>
+                </div>
+            </div>
+
+            <!-- Middle & Right Columns: Dashboards -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
+                        <p class="text-sm text-gray-500 font-medium">Net Pay (Monthly)</p>
+                        <p class="text-2xl md:text-3xl font-bold text-gray-900" id="kpiNetPay">$0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
+                        <p class="text-sm text-gray-500 font-medium">Expenses (Monthly)</p>
+                        <p class="text-2xl md:text-3xl font-bold text-gray-900" id="kpiExpenses">$0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
+                        <p class="text-sm text-gray-500 font-medium">Free Cash Flow (Monthly)</p>
+                        <p class="text-2xl md:text-3xl font-bold text-gray-900" id="kpiCashFlow">$0</p>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-5 rounded-lg shadow">
+                        <h3 class="text-md font-semibold mb-4 text-center text-gray-700">Income Breakdown</h3>
+                        <div class="relative h-56">
+                            <canvas id="incomeDoughnut"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg shadow">
+                        <h3 class="text-md font-semibold mb-4 text-center text-gray-700">Expense Breakdown</h3>
+                        <div class="relative h-56">
+                            <canvas id="expensePie"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-md font-semibold mb-4 text-center text-gray-700">Monthly Cash Flow Projection</h3>
+                    <div class="relative h-72">
+                        <canvas id="cashFlowBar"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State variables
+        let incomeTf = 'biweekly';
+        let expenseTf = 'monthly';
+        let expenses = [];
+        
+        let incomeDoughnutInst = null;
+        let expensePieInst = null;
+        let cashFlowBarInst = null;
+
+        // Math Helpers
+        const val = id => Math.round(parseFloat(document.getElementById(id).value)) || 0;
+        const getMultiplier = tf => tf === 'biweekly' ? 26 : tf === 'monthly' ? 12 : 1;
+        const toAnnual = (v, tf) => Math.round(v * getMultiplier(tf));
+        const fromAnnual = (v, tf) => Math.round(v / getMultiplier(tf));
+        const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+        function init() {
+            const saved = localStorage.getItem('budgetForecasterData_v6');
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('grossPay').value = data.grossPay;
+                document.getElementById('incomeTimeframe').value = data.incomeTf;
+                document.getElementById('expenseTimeframe').value = data.expenseTf;
+                document.getElementById('retirement_val').value = data.retVal;
+                document.getElementById('benefits_val').value = data.benVal;
+                incomeTf = data.incomeTf;
+                expenseTf = data.expenseTf;
+                expenses = data.expenses || [];
+            } else {
+                // Defaults
+                document.getElementById('incomeTimeframe').value = 'biweekly';
+                document.getElementById('expenseTimeframe').value = 'monthly';
+                document.getElementById('grossPay').value = 7885;
+                document.getElementById('retirement_val').value = 789;
+                document.getElementById('benefits_val').value = 308; // Exactly $8k/yr bi-weekly
+                expenses = [
+                    { id: 1, name: 'Housing / Rent', val: 2500 },     
+                    { id: 2, name: 'Auto / Transport', val: 400 },    
+                    { id: 3, name: 'Groceries / Costco', val: 800 },    
+                    { id: 4, name: 'Credit Card Debt', val: 100 }
+                ];
+            }
+
+            renderExpenses();
+            
+            // Sync initial percentages
+            const gross = val('grossPay');
+            if (gross > 0) {
+                document.getElementById('retirement_pct').value = ((val('retirement_val') / gross) * 100).toFixed(1);
+                document.getElementById('benefits_pct').value = ((val('benefits_val') / gross) * 100).toFixed(1);
+            }
+            recalcExpensePercents();
+            handleInputsChanged();
+        }
+
+        function saveData() {
+            localStorage.setItem('budgetForecasterData_v6', JSON.stringify({
+                grossPay: val('grossPay'),
+                incomeTf: incomeTf,
+                expenseTf: expenseTf,
+                retVal: val('retirement_val'),
+                benVal: val('benefits_val'),
+                expenses: expenses
+            }));
+        }
+
+        function resetData() {
+            if(confirm('Reset all data to defaults?')) {
+                localStorage.removeItem('budgetForecasterData_v6');
+                location.reload();
+            }
+        }
+
+        /* --- GROSS PAY CHANGED --- */
+        function handleGrossChange() {
+            const gross = val('grossPay');
+            // Keep Retirement % fixed -> update $
+            const retPct = parseFloat(document.getElementById('retirement_pct').value) || 0;
+            document.getElementById('retirement_val').value = Math.round(gross * (retPct / 100));
+            
+            // Keep Benefits $ fixed -> update %
+            const benVal = val('benefits_val');
+            document.getElementById('benefits_pct').value = gross ? ((benVal / gross) * 100).toFixed(1) : "0.0";
+            
+            recalcExpensePercents();
+            handleInputsChanged();
+        }
+
+        /* --- DEDUCTION INPUTS --- */
+        function handleRetirementVal() {
+            const gross = val('grossPay');
+            document.getElementById('retirement_pct').value = gross ? ((val('retirement_val') / gross) * 100).toFixed(1) : "0.0";
+            handleInputsChanged();
+        }
+        function handleRetirementPct() {
+            const pct = parseFloat(document.getElementById('retirement_pct').value) || 0;
+            document.getElementById('retirement_val').value = Math.round(val('grossPay') * (pct / 100));
+            handleInputsChanged();
+        }
+        function handleBenefitsVal() {
+            const gross = val('grossPay');
+            document.getElementById('benefits_pct').value = gross ? ((val('benefits_val') / gross) * 100).toFixed(1) : "0.0";
+            handleInputsChanged();
+        }
+        function handleBenefitsPct() {
+            const pct = parseFloat(document.getElementById('benefits_pct').value) || 0;
+            document.getElementById('benefits_val').value = Math.round(val('grossPay') * (pct / 100));
+            handleInputsChanged();
+        }
+
+        /* --- TIMEFRAME TOGGLES --- */
+        function handleIncomeTimeframeChange() {
+            const newTf = document.getElementById('incomeTimeframe').value;
+            const multiplier = getMultiplier(incomeTf) / getMultiplier(newTf);
+            
+            ['grossPay', 'retirement_val', 'benefits_val'].forEach(id => {
+                document.getElementById(id).value = Math.round(val(id) * multiplier);
+            });
+            
+            incomeTf = newTf; 
+            document.getElementById('printIncomeTf').innerText = capitalize(incomeTf);
+            handleInputsChanged();
+        }
+
+        function handleExpenseTimeframeChange() {
+            const newTf = document.getElementById('expenseTimeframe').value;
+            const multiplier = getMultiplier(expenseTf) / getMultiplier(newTf);
+            
+            expenses.forEach((exp, i) => {
+                exp.val = Math.round(exp.val * multiplier);
+                document.getElementById(`exp_val_${i}`).value = exp.val;
+            });
+            
+            expenseTf = newTf;
+            document.getElementById('printExpenseTf').innerText = capitalize(expenseTf);
+            handleInputsChanged();
+        }
+
+        /* --- EXPENSE INPUTS --- */
+        function renderExpenses() {
+            const list = document.getElementById('expenseList');
+            list.innerHTML = '';
+            expenses.forEach((exp, index) => {
+                list.innerHTML += `
+                    <div class="flex items-center gap-2">
+                        <input type="text" value="${exp.name}" onchange="updateExpenseName(${index}, this.value)" class="flex-1 border rounded px-2 py-1 placeholder-gray-400 no-print" style="font-size: 14px;">
+                        <span id="exp_print_name_${index}" class="hidden print:inline flex-1 text-sm font-medium border-b border-gray-300 pb-1 truncate">${exp.name || 'Expense'}</span>
+                        
+                        <div class="flex items-center gap-1 w-24">
+                            <span class="text-gray-500 font-semibold text-sm">$</span>
+                            <input type="number" id="exp_val_${index}" value="${exp.val}" step="1" onchange="handleExpenseVal(${index})" class="w-full border rounded px-1 py-1 text-right" style="font-size: 14px;">
+                        </div>
+                        <div class="flex items-center gap-1 w-16 no-print">
+                            <input type="number" id="exp_pct_${index}" step="0.1" onchange="handleExpensePct(${index})" class="w-full border rounded px-1 py-1 text-right" style="font-size: 14px;">
+                            <span class="text-gray-500 font-semibold text-xs">%</span>
+                        </div>
+                        <button onclick="removeExpense(${index})" class="text-red-500 hover:bg-red-50 rounded px-2 text-lg font-bold transition no-print">&times;</button>
+                    </div>
+                `;
+            });
+            recalcExpensePercents();
+        }
+
+        function recalcExpensePercents() {
+            const annualGross = toAnnual(val('grossPay'), incomeTf);
+            expenses.forEach((exp, i) => {
+                const el = document.getElementById(`exp_pct_${i}`);
+                if (el) {
+                    const annualExp = toAnnual(exp.val, expenseTf);
+                    el.value = annualGross ? ((annualExp / annualGross) * 100).toFixed(1) : "0.0";
+                }
+            });
+        }
+
+        function handleExpenseVal(index) {
+            expenses[index].val = val(`exp_val_${index}`);
+            recalcExpensePercents();
+            handleInputsChanged();
+        }
+
+        function handleExpensePct(index) {
+            const p = parseFloat(document.getElementById(`exp_pct_${index}`).value) || 0;
+            const annualGross = toAnnual(val('grossPay'), incomeTf);
+            const targetAnnual = annualGross * (p / 100);
+            const targetVal = fromAnnual(targetAnnual, expenseTf);
+            expenses[index].val = Math.round(targetVal);
+            document.getElementById(`exp_val_${index}`).value = expenses[index].val;
+            handleInputsChanged();
+        }
+
+        function updateExpenseName(index, name) { 
+            expenses[index].name = name; 
+            const printSpan = document.getElementById(`exp_print_name_${index}`);
+            if(printSpan) printSpan.innerText = name || 'Expense';
+            handleInputsChanged(); 
+        }
+
+        function addExpense() { expenses.push({ id: Date.now(), name: 'New Expense', val: 0 }); renderExpenses(); handleInputsChanged(); }
+        function removeExpense(index) { expenses.splice(index, 1); renderExpenses(); handleInputsChanged(); }
+
+        /* --- CORE ENGINE --- */
+        function calculateTaxes() {
+            const gross = val('grossPay');
+            const annualGross = toAnnual(gross, incomeTf);
+            const annualRetirement = toAnnual(val('retirement_val'), incomeTf);
+            const annualBenefits = toAnnual(val('benefits_val'), incomeTf);
+
+            // Federal MFJ 2026
+            const brackets = [ {max:24800, r:0.10}, {max:100800, r:0.12}, {max:211400, r:0.22}, {max:403550, r:0.24}, {max:512450, r:0.32}, {max:768700, r:0.35}, {max:Infinity, r:0.37} ];
+            const stdDeduction = 32200, ctc = 2000;
+            let fedTaxable = Math.max(0, annualGross - annualRetirement - annualBenefits - stdDeduction);
+            
+            let fedAnnual = 0, prevMax = 0, remaining = fedTaxable;
+            let tt = `<div class="mb-2 border-b border-gray-600 pb-2"><div class="flex justify-between"><span>Annual Gross:</span> <span>$${annualGross.toLocaleString()}</span></div><div class="flex justify-between text-red-300"><span>- Pre-Tax Deds:</span> <span>-$${(annualRetirement + annualBenefits).toLocaleString()}</span></div><div class="flex justify-between text-red-300"><span>- Std Ded (MFJ):</span> <span>-$${stdDeduction.toLocaleString()}</span></div><div class="flex justify-between font-bold mt-1"><span>Taxable:</span> <span>$${fedTaxable.toLocaleString()}</span></div></div><div class="space-y-1">`;
+            
+            for (let b of brackets) {
+                if (remaining <= 0) break;
+                let bSize = b.max - prevMax;
+                let inBracket = Math.min(remaining, bSize);
+                let tax = inBracket * b.r;
+                fedAnnual += tax;
+                tt += `<div class="flex justify-between text-xs"><span>${(b.r*100).toFixed(0)}% Bracket:</span><span>$${Math.round(tax).toLocaleString()}</span></div>`;
+                remaining -= inBracket; prevMax = b.max;
+            }
+            fedAnnual = Math.max(0, Math.round(fedAnnual - ctc));
+            tt += `</div><div class="mt-2 border-t border-gray-600 pt-2 text-xs"><div class="flex justify-between text-green-300"><span>- Child Tax Credit:</span><span>-$${ctc}</span></div><div class="flex justify-between font-bold mt-1"><span>Total Tax:</span><span>$${fedAnnual.toLocaleString()}</span></div></div>`;
+            document.getElementById('fedTaxTooltip').innerHTML = tt;
+
+            // State (NC Flat)
+            const ncTaxable = Math.max(0, annualGross - annualRetirement - annualBenefits - 28000);
+            const stateAnnual = Math.round(ncTaxable * 0.0399);
+
+            // FICA
+            const ficaTaxable = Math.max(0, annualGross - annualBenefits);
+            const ficaAnnual = Math.round((Math.min(ficaTaxable, 176100) * 0.062) + (ficaTaxable * 0.0145));
+
+            // Populate Read-Only Inputs
+            const applyTax = (id, annTax) => {
+                const tfTax = fromAnnual(annTax, incomeTf);
+                document.getElementById(`${id}_val`).value = tfTax;
+                document.getElementById(`${id}_pct`).value = gross ? ((tfTax / gross) * 100).toFixed(1) : "0.0";
+                return tfTax; 
+            };
+
+            return applyTax('fedTax', fedAnnual) + applyTax('stateTax', stateAnnual) + applyTax('ficaTax', ficaAnnual);
+        }
+
+        function handleInputsChanged() {
+            const totalTaxes = calculateTaxes();
+            saveData();
+            
+            // Normalize to MONTHLY
+            const gross = val('grossPay');
+            const monthlyGross = fromAnnual(toAnnual(gross, incomeTf), 'monthly');
+            const monthlyTaxes = fromAnnual(toAnnual(totalTaxes, incomeTf), 'monthly');
+            const monthlyBenefits = fromAnnual(toAnnual(val('benefits_val'), incomeTf), 'monthly');
+            const monthlyRetirement = fromAnnual(toAnnual(val('retirement_val'), incomeTf), 'monthly');
+            
+            const monthlyNetPay = monthlyGross - monthlyTaxes - monthlyBenefits - monthlyRetirement;
+            
+            const totalExpTf = expenses.reduce((sum, exp) => sum + exp.val, 0);
+            const monthlyExpenses = fromAnnual(toAnnual(totalExpTf, expenseTf), 'monthly');
+            const monthlyCashFlow = monthlyNetPay - monthlyExpenses;
+
+            document.getElementById('kpiNetPay').innerText = '$' + monthlyNetPay.toLocaleString();
+            document.getElementById('kpiExpenses').innerText = '$' + monthlyExpenses.toLocaleString();
+            document.getElementById('kpiCashFlow').innerText = '$' + monthlyCashFlow.toLocaleString();
+            document.getElementById('kpiCashFlow').className = `text-2xl md:text-3xl font-bold ${monthlyCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`;
+
+            updateCharts(monthlyNetPay, monthlyTaxes, monthlyBenefits, monthlyRetirement, monthlyGross, monthlyExpenses, monthlyCashFlow);
+        }
+
+        /* --- VISUALIZATIONS --- */
+        function updateCharts(netPay, taxes, benefits, retirement, monthlyGross, monthlyExpenses, monthlyCashFlow) {
+            Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+            Chart.defaults.color = '#6b7280';
+
+            // 1. Income Doughnut
+            const ctxDoughnut = document.getElementById('incomeDoughnut').getContext('2d');
+            if (incomeDoughnutInst) incomeDoughnutInst.destroy();
+            incomeDoughnutInst = new Chart(ctxDoughnut, {
+                type: 'doughnut',
+                data: { labels: ['Net Pay', 'Taxes', 'Pre-Tax Benefits', '401(k) Ret.'], datasets: [{ data: [netPay, taxes, benefits, retirement], backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
+            });
+
+            // 2. Expense Pie
+            const ctxPie = document.getElementById('expensePie').getContext('2d');
+            if (expensePieInst) expensePieInst.destroy();
+            const expLabels = expenses.map(e => e.name || 'Unnamed');
+            const expData = expenses.map(e => fromAnnual(toAnnual(e.val, expenseTf), 'monthly'));
+            const colors = ['#3b82f6', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#f97316'];
+            expensePieInst = new Chart(ctxPie, {
+                type: 'pie',
+                data: { labels: expLabels, datasets: [{ data: expData, backgroundColor: colors, borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
+            });
+
+            // 3. Cash Flow Bar
+            const ctxBar = document.getElementById('cashFlowBar').getContext('2d');
+            if (cashFlowBarInst) cashFlowBarInst.destroy();
+            cashFlowBarInst = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Average Month'],
+                    datasets: [
+                        { label: 'Take-Home (Net Pay)', data: [netPay], backgroundColor: '#10b981', borderRadius: 4 },
+                        { label: 'Total Expenses', data: [monthlyExpenses], backgroundColor: '#ef4444', borderRadius: 4 },
+                        { label: 'Free Cash Flow', data: [monthlyCashFlow], backgroundColor: monthlyCashFlow >= 0 ? '#3b82f6' : '#94a3b8', borderRadius: 4 }
+                    ]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } },
+                    plugins: { legend: { position: 'top' } }
+                }
+            });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
