@@ -468,41 +468,86 @@
     // =========================================================
     // PARSING VECTOR ENGINE: DDMMMYYYY INTELLIGENT NORMALIZER
     // =========================================================
-    function parseAnyDateToTimestamp(str) {
-        if(!str || typeof str !== 'string') return NaN;
-        let cleaned = str.trim();
-        let timestamp = Date.parse(cleaned);
-        
-        if (isNaN(timestamp)) {
-            let match = cleaned.match(/^(\d{1,2})\s*([A-Za-z]{3})\s*(\d{4})$/);
-            if (match) {
-                let day = parseInt(match[1], 10);
-                let monthStr = match[2].toLowerCase();
-                let year = parseInt(match[3], 10);
-                let months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
-                let idx = months.indexOf(monthStr);
-                if (idx !== -1) {
-                    timestamp = new Date(year, idx, day).getTime();
-                }
-            }
+   function parseAnyDateToTimestamp(str) {
+    if (!str && str !== 0) return NaN;
+
+    let cleaned = String(str).trim();
+    if (!cleaned) return NaN;
+
+    let months = {
+        jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+        jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+    };
+
+    // 01Mar2026, 01-Mar-2026, 01 Mar 2026, 01/Mar/2026, 1-mar-26
+    let alphaMatch = cleaned.match(/^(\d{1,2})[\s\-\/]*([A-Za-z]{3,9})[\s,\-\/]*(\d{2,4})$/);
+    if (alphaMatch) {
+        let day = parseInt(alphaMatch[1], 10);
+        let monthKey = alphaMatch[2].toLowerCase().slice(0, 3);
+        let year = parseInt(alphaMatch[3], 10);
+        if (year < 100) year += 2000;
+
+        if (months.hasOwnProperty(monthKey)) {
+            return new Date(year, months[monthKey], day).getTime();
         }
-        return timestamp;
     }
+
+    // 2026-03-01 or 2026/03/01
+    let isoMatch = cleaned.match(/^(\d{4})[\-\/](\d{1,2})[\-\/](\d{1,2})$/);
+    if (isoMatch) {
+        let year = parseInt(isoMatch[1], 10);
+        let month = parseInt(isoMatch[2], 10);
+        let day = parseInt(isoMatch[3], 10);
+        return new Date(year, month - 1, day).getTime();
+    }
+
+    // 3/1/2026, 03/01/26, 31/03/2026
+    let numMatch = cleaned.match(/^(\d{1,2})[\-\/](\d{1,2})[\-\/](\d{2,4})$/);
+    if (numMatch) {
+        let a = parseInt(numMatch[1], 10);
+        let b = parseInt(numMatch[2], 10);
+        let year = parseInt(numMatch[3], 10);
+        if (year < 100) year += 2000;
+
+        let month, day;
+
+        if (a > 12) {
+            day = a;
+            month = b;
+        } else if (b > 12) {
+            month = a;
+            day = b;
+        } else {
+            // default ambiguous numeric dates to US-style MM/DD/YYYY
+            month = a;
+            day = b;
+        }
+
+        return new Date(year, month - 1, day).getTime();
+    }
+
+    let timestamp = Date.parse(cleaned);
+    return isNaN(timestamp) ? NaN : timestamp;
+}
 
     function convertDDMMMYYYYToYYYYMMDD(str) {
-        if(!str) return "";
-        let match = str.trim().match(/^(\d{1,2})\s*([A-Za-z]{3})\s*(\d{4})$/);
-        if (!match) return "";
-        let day = match[1].padStart(2, '0');
-        let monthStr = match[2].toLowerCase();
-        let year = match[3];
-        let months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
-        let idx = months.indexOf(monthStr);
-        if (idx === -1) return "";
-        let month = String(idx + 1).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
+    if (!str) return "";
+    let ts = parseAnyDateToTimestamp(str);
+    if (isNaN(ts)) return "";
 
+    let d = new Date(ts);
+    let year = d.getFullYear();
+    let month = String(d.getMonth() + 1).padStart(2, '0');
+    let day = String(d.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+function normalizeDateString(val) {
+    if (!val) return "";
+    let ts = parseAnyDateToTimestamp(val);
+    if (isNaN(ts)) return String(val).trim();
+    return formatDateToDDMMMYYYY(new Date(ts));
+}
     function formatDateToDDMMMYYYY(d) {
         if (isNaN(d.getTime())) return "";
         let day = String(d.getDate()).padStart(2, '0');
@@ -1170,7 +1215,7 @@ function stopGlobalDragAction(e) {
                 let tId = parseInt(columns[7].trim()) || tIdCounter++;
                 if(tId >= tIdCounter) tIdCounter = tId + 1;
                                 newTrackers.push({
-                    id: tId, label: columns[10].trim(), date: columns[11].trim(),
+                    id: tId, label: columns[10].trim(), date: normalizeDateString(columns[11].trim()),
                     thickness: parseInt(columns[13].trim()) || 2, pattern: columns[14].trim() || "solid",
                     color: columns[15].trim(), labelOffsetX: parseFloat(columns[16]) || 0, labelOffsetY: parseFloat(columns[17]) || 0
                 });
@@ -1202,8 +1247,8 @@ function stopGlobalDragAction(e) {
                                rowObject.bars.push({
                     id: bId,
                     p6Id: columns[8].trim(),
-                    start: columns[11].trim(),
-                    end: columns[12].trim(),
+                    start: normalizeDateString(columns[11].trim()),
+end: normalizeDateString(columns[12].trim()),
                     progress: parseInt(columns[13].trim()) || 0,
                     pattern: columns[14].trim() || "solid",
                     color: columns[15].trim(),
@@ -1225,7 +1270,7 @@ function stopGlobalDragAction(e) {
                     id: mId,
                     p6Id: columns[8].trim(),
                     label: columns[10].trim(),
-                    date: columns[11].trim(),
+                    date: normalizeDateString(columns[11].trim()),
                     showDate: pinDt,
                     manualLabel: true,
                     labelOffsetX: parseFloat(columns[16]) || 0,
@@ -1329,14 +1374,24 @@ function stopGlobalDragAction(e) {
     }
 
     function editMilestoneLabelDirectlyGlobal(rowId, msId) {
-        let row = findRowGlobally(rowId); if (!row) return;
-        let ms = row.milestones.find(m => m.id === msId); if (!ms) return;
-        
-        let newLabel = prompt("Edit Milestone Title Name Directly:", ms.label);
-        if (newLabel !== null && newLabel.trim() !== "") {
-            ms.label = newLabel.trim(); recordStateChange(); renderInputRows(); updateChart();
+    let row = findRowGlobally(rowId);
+    if (!row) return;
+
+    let ms = row.milestones.find(m => m.id === msId);
+    if (!ms) return;
+
+    let newLabel = prompt("Edit Milestone Title Name Directly", ms.label || "");
+    if (newLabel !== null) {
+        let trimmed = newLabel.trim();
+        if (trimmed !== ms.label) {
+            ms.label = trimmed;
+            if (!ms.label) ms.leaderEnabledText = false;
+            recordStateChange();
+            renderInputRows();
+            updateChart();
         }
     }
+}
 
     // ==========================================================
     // INTERACTIVE DRILL DOWN MANAGEMENT: CUSTOM VERTICAL TRACKERS
@@ -1485,33 +1540,50 @@ function stopGlobalDragAction(e) {
         menu.style.top = `${top}px`;
     }
 
-    function executeContextInsertion(type) {
-        if (!activeContextState) return;
-        let row = findRowGlobally(activeContextState.rowId);
-        if (!row) return;
+   function executeContextInsertion(type) {
+    if (!activeContextState) return;
+    let row = findRowGlobally(activeContextState.rowId);
+    if (!row) return;
 
-        if (type === 'milestone') {
-            row.milestones.push({
-                id: nextMsId++, label: "Inserted Milestone", date: activeContextState.targetDate,
-                showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond",
-                leaderEnabledText: true, leaderEnabledDate: false, leaderAnchorText: "center"
-            });
-        } else if (type === 'bar') {
-            let startTime = parseAnyDateToTimestamp(activeContextState.targetDate);
-            let endTime = startTime + (60 * 24 * 60 * 60 * 1000);
-            let calculatedEndStr = formatDateToDDMMMYYYY(new Date(endTime));
+    if (type === "milestone") {
+        row.milestones.push({
+            id: nextMsId++,
+            label: "",
+            date: activeContextState.targetDate,
+            showDate: true,
+            manualLabel: false,
+            labelOffsetX: 0,
+            labelOffsetY: 0,
+            manualDateLabel: false,
+            dateOffsetX: 0,
+            dateOffsetY: 0,
+            color: "",
+            symbol: "diamond",
+            leaderEnabledText: false,
+            leaderEnabledDate: false,
+            leaderAnchorText: "center"
+        });
+    } else if (type === 'bar') {
+        let startTime = parseAnyDateToTimestamp(activeContextState.targetDate);
+        let endTime = startTime + (60 * 24 * 60 * 60 * 1000);
+        let calculatedEndStr = formatDateToDDMMMYYYY(new Date(endTime));
 
-            row.bars.push({
-                id: nextBarId++, start: activeContextState.targetDate, end: calculatedEndStr,
-                progress: 0, bgColor: "", color: "", pattern: "solid"
-            });
-        }
-
-        recordStateChange();
-        renderInputRows();
-        updateChart();
-        dismissContextMenus();
+        row.bars.push({
+            id: nextBarId++,
+            start: activeContextState.targetDate,
+            end: calculatedEndStr,
+            progress: 0,
+            bgColor: "",
+            color: "",
+            pattern: "solid"
+        });
     }
+
+    recordStateChange();
+    renderInputRows();
+    updateChart();
+    dismissContextMenus();
+}
 
     function dismissContextMenus() {
         let menu = document.getElementById('rowWorkspaceContextMenu');
@@ -1674,12 +1746,12 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
         });
         document.getElementById('modalMsSaveBtn').addEventListener('click', function() {
             let nameVal = document.getElementById('modalMsLabel').value.trim();
-            let dateVal = document.getElementById('modalMsDatePicker').value;
-            
-            if (!nameVal) { alert("Milestone name fields require input criteria."); return; }
-            if (!dateVal) { alert("Milestone date fields require input criteria."); return; }
+let dateVal = document.getElementById('modalMsDatePicker').value;
+
+if (!dateVal) { alert("Milestone date fields require input criteria."); return; }
             
             ms.label = nameVal;
+            if (!ms.label) ms.leaderEnabledText = false;
             ms.date = formatDateToDDMMMYYYY(new Date(dateVal + "T00:00:00"));
             ms.symbol = document.getElementById('modalMsSymbol').value;
             
@@ -1816,14 +1888,29 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
         projectData[laneIdx].rows[rowIdx].bars.splice(barIdx, 1);
         recordStateChange(); renderInputRows(); updateChart();
     }
-    function addMilestoneNew(laneIdx, rowIdx) {
-        projectData[laneIdx].rows[rowIdx].milestones.push({
-            id: nextMsId++, label: "Custom Milestone", date: "01Jun2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond",
-            leaderEnabledText: true, leaderEnabledDate: false, leaderAnchorText: "center"
-        });
-        sortMilestonesChronologically(laneIdx, rowIdx); // Re-sort after adding
-        recordStateChange(); renderInputRows(); updateChart();
-    }
+ function addMilestoneNew(laneIdx, rowIdx) {
+    projectData[laneIdx].rows[rowIdx].milestones.push({
+        id: nextMsId,
+        label: "",
+        date: "01Jun2026",
+        showDate: true,
+        manualLabel: false,
+        labelOffsetX: 0,
+        labelOffsetY: 0,
+        manualDateLabel: false,
+        dateOffsetX: 0,
+        dateOffsetY: 0,
+        color: "",
+        symbol: "diamond",
+        leaderEnabledText: false,
+        leaderEnabledDate: false,
+        leaderAnchorText: "center"
+    });
+    sortMilestonesChronologically(laneIdx, rowIdx);
+    recordStateChange();
+    renderInputRows();
+    updateChart();
+}
         function updateMilestoneFieldNew(laneIdx, rowIdx, msIdx, key, val) {
         projectData[laneIdx].rows[rowIdx].milestones[msIdx][key] = val;
         // Re-sort in case someone manually typed a date in a text field that acts as a date
@@ -2069,6 +2156,7 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
         let axisLineY = startY - 15; 
 
         let dynamicTotalRowsHeight = 0;
+        
         projectData.forEach(l => {
             if (l.rows.length > 0) {
                 dynamicTotalRowsHeight += swimlaneHeight; dynamicTotalRowsHeight += l.rows.length * rowHeight;
@@ -2227,6 +2315,11 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
         }
 
         let currentDrawY = axisLineY;
+        let allLayerBarsBuffer = "";
+let allLayerLeadersBuffer = "";
+let allLayerSymbolsBuffer = "";
+let allLayerTextsBuffer = "";
+let allLayerHandlesBuffer = "";
         projectData.forEach((lane, laneIdx) => {
             if (lane.rows.length === 0) return;
 
@@ -2432,7 +2525,11 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
                         }
                     }
                     
-                    layerTextsBuffer += `<text x="${finalComputedDateX}" y="${finalComputedDateY}" font-size="8" font-weight="bold" fill="#64748b" text-anchor="middle" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${presentationDateLabel}</text>`;
+                    let dateHitBoxW = Math.max(24, presentationDateLabel.trim().length * 4.8 + 10);
+
+layerHandlesBuffer += `<rect x="${finalComputedDateX - (dateHitBoxW / 2)}" y="${finalComputedDateY - 10}" width="${dateHitBoxW}" height="14" fill="transparent" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})" />`;
+
+layerTextsBuffer += `<text x="${finalComputedDateX}" y="${finalComputedDateY}" font-size="8" font-weight="bold" fill="#64748b" text-anchor="middle" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${presentationDateLabel}</text>`;
 
                     if (isDateDragging) {
                         let boxDateW = presentationDateLabel.trim().length * 4.8 + 4; // Optimized tight typography bounds
@@ -2441,11 +2538,19 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', function()
                     }   
                 }
 
-                svg += layerBarsBuffer + layerLeadersBuffer + layerSymbolsBuffer + layerTextsBuffer + layerHandlesBuffer;
+                allLayerBarsBuffer += layerBarsBuffer;
+allLayerLeadersBuffer += layerLeadersBuffer;
+allLayerSymbolsBuffer += layerSymbolsBuffer;
+allLayerTextsBuffer += layerTextsBuffer;
+allLayerHandlesBuffer += layerHandlesBuffer;
             currentDrawY += rowHeight;
             });
         });
-
+svg += allLayerBarsBuffer
+    + allLayerLeadersBuffer
+    + allLayerSymbolsBuffer
+    + allLayerTextsBuffer
+    + allLayerHandlesBuffer;
         customTrackers.forEach(tracker => {
             let trkTime = parseAnyDateToTimestamp(tracker.date);
             if (!isNaN(trkTime) && trkTime >= scaleMinTime && trkTime <= scaleMaxTime) {
