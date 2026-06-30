@@ -17,22 +17,30 @@
         .input-group input, .input-group select { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 16px; transition: all 0.2s; }
         .input-group input[type="checkbox"] { width: auto; transform: scale(1.2); margin-right: 0.5rem; }
         .input-group input:focus, .input-group select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
         
         .compact-input { padding: 0.25rem 0.5rem !important; font-size: 0.875rem !important; text-align: right; }
         .compact-row { display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.5rem; }
         .compact-row label { font-size: 0.875rem; font-weight: 500; color: #4b5563; margin: 0; }
         
+        /* Tooltips */
         .tooltip-icon { cursor: help; color: #6b7280; margin-left: 0.5rem; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; border: 1px solid #9ca3af; font-size: 10px; font-weight: bold; }
         .tooltip-container { position: relative; display: inline-block; }
-        .tooltip-container .tooltip-text { visibility: hidden; opacity: 0; transition: opacity 0.2s; position: absolute; z-index: 50; width: 250px; bottom: 125%; left: 50%; transform: translateX(-50%); background-color: #1f2937; color: #fff; text-align: left; padding: 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: normal; line-height: 1.5; pointer-events: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
+        .tooltip-container .tooltip-text { visibility: hidden; opacity: 0; transition: opacity 0.2s; position: absolute; z-index: 50; width: 250px; bottom: 125%; left: 50%; transform: translateX(-50%); background-color: #1f2937; color: #fff; text-align: left; padding: 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; line-height: 1.5; pointer-events: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
         .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        /* KPI Tooltips */
+        .kpi-card { position: relative; }
+        .kpi-tooltip { visibility: hidden; opacity: 0; transition: opacity 0.2s; position: absolute; z-index: 100; width: 280px; top: 110%; right: 0; background-color: #1f2937; color: #fff; padding: 0.75rem; border-radius: 0.375rem; font-size: 0.8rem; line-height: 1.4; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); pointer-events: none; }
+        .kpi-card:hover .kpi-tooltip { visibility: visible; opacity: 1; }
+        .kpi-tooltip strong { color: #93c5fd; } 
+
+        /* Modal */
+        #assumptionsModal { display: none; background: rgba(0,0,0,0.5); }
 
         @media print {
             @page { size: landscape; margin: 0.2in; }
             body { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; zoom: 0.72; }
-            .no-print, .tooltip-container, button { display: none !important; }
+            .no-print, .tooltip-container, button, .kpi-tooltip { display: none !important; }
             .max-w-7xl { max-width: 100% !important; width: 100% !important; margin: 0 !important; }
             .lg\:grid-cols-3 { display: grid !important; grid-template-columns: 1fr 2fr !important; gap: 1rem !important; }
             .bg-white { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; border: 1px solid #d1d5db; }
@@ -42,6 +50,22 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-4 md:p-6">
 
+    <!-- Assumptions Modal -->
+    <div id="assumptionsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 relative">
+            <button onclick="document.getElementById('assumptionsModal').style.display='none'" class="absolute top-4 right-4 text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Engine Assumptions & Logic</h2>
+            <div class="space-y-3 text-sm text-gray-700">
+                <p><strong>1. Inflation Scaling:</strong> To prevent your long-term model from breaking, Income, Taxes, HSA/401k Contributions, and Living Expenses automatically grow by your targeted Inflation Rate every year.</p>
+                <p><strong>2. Escrow & Home Scaling:</strong> Your Home Value appreciates at your specified rate. Because property taxes and insurance scale with home value, your <em>Mortgage Escrow</em> outflow dynamically grows at this exact same appreciation rate over time.</p>
+                <p><strong>3. Fixed Debt:</strong> Mortgage P&I, Auto Loans, and Student Loans remain completely flat against inflation. Once their balances hit $0, their monthly payments are swept directly into your Free Cash Flow / Savings bucket.</p>
+                <p><strong>4. Vehicle Depreciation:</strong> Your vehicle value drops annually by the targeted percentage, stopping at 0.</p>
+                <p><strong>5. Real vs. Nominal:</strong> Nominal means the exact bank balance. Real means discounting that bank balance back to today's purchasing power using the inflation rate.</p>
+            </div>
+            <button onclick="document.getElementById('assumptionsModal').style.display='none'" class="mt-6 w-full bg-blue-600 text-white py-2 rounded shadow hover:bg-blue-700">Got it</button>
+        </div>
+    </div>
+
     <div class="max-w-7xl mx-auto space-y-6">
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4 border-gray-300">
             <div>
@@ -49,9 +73,10 @@
                 <p class="text-gray-500 text-sm mt-1">Income, Fixed Expenses, Itemized Assets & Integrated Projections</p>
             </div>
             <div class="flex gap-2 no-print w-full md:w-auto flex-wrap">
-                <button onclick="document.getElementById('importFile').click()" class="bg-indigo-50 text-indigo-600 px-3 py-2 rounded shadow hover:bg-indigo-100 transition text-sm font-medium">📂 Import JSON</button>
+                <button onclick="document.getElementById('assumptionsModal').style.display='flex'" class="bg-blue-50 text-blue-600 px-3 py-2 rounded shadow hover:bg-blue-100 transition text-sm font-medium">⚙️ Assumptions</button>
+                <button onclick="document.getElementById('importFile').click()" class="bg-indigo-50 text-indigo-600 px-3 py-2 rounded shadow hover:bg-indigo-100 transition text-sm font-medium">📂 Import</button>
                 <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
-                <button onclick="exportData()" class="bg-green-50 text-green-600 px-3 py-2 rounded shadow hover:bg-green-100 transition text-sm font-medium">💾 Export JSON</button>
+                <button onclick="exportData()" class="bg-green-50 text-green-600 px-3 py-2 rounded shadow hover:bg-green-100 transition text-sm font-medium">💾 Export</button>
                 <button onclick="window.print()" class="bg-gray-800 text-white px-3 py-2 rounded shadow hover:bg-gray-700 transition text-sm font-medium">🖨️ Print</button>
                 <button onclick="resetData()" class="bg-red-50 text-red-600 px-3 py-2 rounded shadow hover:bg-red-100 transition text-sm font-medium">Reset</button>
             </div>
@@ -83,12 +108,12 @@
                     <div class="mb-4">
                         <h3 class="text-sm font-bold text-green-600 uppercase tracking-wider mb-2">Assets (+)</h3>
                         <div class="space-y-1">
-                            <div class="compact-row"><label>Home Value</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="assetHome" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                            <div class="compact-row"><label>Vehicles Value</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="assetVehicle" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                            <div class="compact-row"><label>Cash & Savings</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="assetCash" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                            <div class="compact-row"><label>401(k) / IRA</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="asset401k" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                            <div class="compact-row"><label>HSA / FSA</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="assetHsa" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                            <div class="compact-row"><label>Brokerage / Other</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="assetInvestments" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                            <div class="compact-row"><label>Home Value</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="assetHome" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                            <div class="compact-row"><label>Vehicles Value</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="assetVehicle" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                            <div class="compact-row"><label>Cash & Savings</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="assetCash" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                            <div class="compact-row"><label>401(k) / IRA</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="asset401k" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                            <div class="compact-row"><label>HSA / FSA</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="assetHsa" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                            <div class="compact-row"><label>Brokerage / Other</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="assetInvestments" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
                         </div>
                     </div>
 
@@ -96,10 +121,10 @@
                     <div>
                         <h3 class="text-sm font-bold text-red-500 uppercase tracking-wider mb-2 border-t pt-3">Liabilities (-)</h3>
                         <div class="space-y-1">
-                            <div class="compact-row"><label>Mortgage Bal.</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="debtMortgage" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                            <div class="compact-row"><label>Auto Loans</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="debtAuto" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                            <div class="compact-row"><label>Credit Cards</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="debtCredit" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                            <div class="compact-row"><label>Student / Other</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="debtStudent" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                            <div class="compact-row"><label>Mortgage Bal.</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="debtMortgage" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                            <div class="compact-row"><label>Auto Loans</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="debtAuto" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                            <div class="compact-row"><label>Credit Cards</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="debtCredit" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                            <div class="compact-row"><label>Student / Other</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="debtStudent" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
                         </div>
                     </div>
                 </div>
@@ -119,18 +144,18 @@
                             <label>Gross Pay</label>
                             <div class="flex items-center gap-2">
                                 <span class="text-gray-600 font-semibold">$</span>
-                                <input type="number" id="grossPay" value="7500" step="1" onchange="handleGrossChange()">
+                                <input type="text" inputmode="numeric" id="grossPay" class="fmt-curr" onblur="handleGrossChange()">
                             </div>
                         </div>
                         <div class="space-y-3 pt-2 border-t border-gray-100">
-                            <div class="input-group"><label>Federal Tax</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-400 font-semibold">$</span><input type="number" id="fedTax_val" onchange="handleTaxChange('fedTax', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" step="0.1" id="fedTax_pct" class="text-right" onchange="handleTaxChange('fedTax', 'pct')"><span class="text-gray-400 font-semibold">%</span></div></div></div>
-                            <div class="input-group"><label class="flex items-center">State Tax<div class="tooltip-container no-print"><span class="tooltip-icon">?</span><span class="tooltip-text" id="stateTaxTooltip">Select state info.</span></div></label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-400 font-semibold">$</span><input type="number" id="stateTax_val" onchange="handleTaxChange('stateTax', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" step="0.1" id="stateTax_pct" class="text-right" onchange="handleTaxChange('stateTax', 'pct')"><span class="text-gray-400 font-semibold">%</span></div></div></div>
-                            <div class="input-group"><label>FICA (SS + Medicare)</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-400 font-semibold">$</span><input type="number" id="ficaTax_val" onchange="handleTaxChange('ficaTax', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" step="0.1" id="ficaTax_pct" class="text-right" onchange="handleTaxChange('ficaTax', 'pct')"><span class="text-gray-400 font-semibold">%</span></div></div></div>
+                            <div class="input-group"><label>Federal Tax</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-400 font-semibold">$</span><input type="text" inputmode="numeric" id="fedTax_val" class="fmt-curr" onblur="handleTaxChange('fedTax', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" step="0.1" id="fedTax_pct" class="text-right" onchange="handleTaxChange('fedTax', 'pct')"><span class="text-gray-400 font-semibold">%</span></div></div></div>
+                            <div class="input-group"><label class="flex items-center">State Tax<div class="tooltip-container no-print"><span class="tooltip-icon">?</span><span class="tooltip-text" id="stateTaxTooltip">Select state info.</span></div></label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-400 font-semibold">$</span><input type="text" inputmode="numeric" id="stateTax_val" class="fmt-curr" onblur="handleTaxChange('stateTax', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" step="0.1" id="stateTax_pct" class="text-right" onchange="handleTaxChange('stateTax', 'pct')"><span class="text-gray-400 font-semibold">%</span></div></div></div>
+                            <div class="input-group"><label>FICA (SS + Medicare)</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-400 font-semibold">$</span><input type="text" inputmode="numeric" id="ficaTax_val" class="fmt-curr" onblur="handleTaxChange('ficaTax', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" step="0.1" id="ficaTax_pct" class="text-right" onchange="handleTaxChange('ficaTax', 'pct')"><span class="text-gray-400 font-semibold">%</span></div></div></div>
                         </div>
                         <div class="space-y-3 pt-2 border-t border-gray-100">
-                            <div class="input-group"><label>401(k) Contribution</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-600 font-semibold">$</span><input type="number" id="retirement_val" value="789" onchange="handleDeductionChange('retirement', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" id="retirement_pct" step="0.1" class="text-right" onchange="handleDeductionChange('retirement', 'pct')"><span class="text-gray-600 font-semibold">%</span></div></div></div>
-                            <div class="input-group"><label>Employer 401(k) Match %</label><div class="flex items-center gap-1"><input type="number" id="employerMatchPct" value="4.0" step="0.5" class="text-right w-full" onchange="handleInputsChanged()"><span class="text-gray-600 font-semibold">%</span></div></div>
-                            <div class="input-group"><label>HSA/FSA Contribution</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-600 font-semibold">$</span><input type="number" id="benefits_val" value="308" onchange="handleDeductionChange('benefits', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" id="benefits_pct" step="0.1" class="text-right" onchange="handleDeductionChange('benefits', 'pct')"><span class="text-gray-600 font-semibold">%</span></div></div></div>
+                            <div class="input-group"><label>401(k) Contribution</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-600 font-semibold">$</span><input type="text" inputmode="numeric" id="retirement_val" class="fmt-curr" onblur="handleDeductionChange('retirement', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" id="retirement_pct" step="0.1" class="text-right" onchange="handleDeductionChange('retirement', 'pct')"><span class="text-gray-600 font-semibold">%</span></div></div></div>
+                            <div class="input-group"><label>Employer 401(k) Match %</label><div class="flex items-center gap-1"><input type="number" id="employerMatchPct" step="0.5" class="text-right w-full" onchange="handleInputsChanged()"><span class="text-gray-600 font-semibold">%</span></div></div>
+                            <div class="input-group"><label>HSA/FSA Contribution</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-600 font-semibold">$</span><input type="text" inputmode="numeric" id="benefits_val" class="fmt-curr" onblur="handleDeductionChange('benefits', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" id="benefits_pct" step="0.1" class="text-right" onchange="handleDeductionChange('benefits', 'pct')"><span class="text-gray-600 font-semibold">%</span></div></div></div>
                         </div>
                     </div>
                 </div>
@@ -148,19 +173,19 @@
                     
                     <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Debt Service</h3>
                     <div class="space-y-1 mb-4">
-                        <div class="compact-row"><label>Mortgage P&I</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expMortgagePI" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                        <div class="compact-row"><label>Mortgage Escrow</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expEscrow" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                        <div class="compact-row"><label>Auto Loan Pmt</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expAuto" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                        <div class="compact-row"><label>Student Loan Pmt</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expStudent" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Mortgage P&I</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="expMortgagePI" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Mortgage Escrow</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="expEscrow" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Auto Loan Pmt</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="expAuto" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Student Loan Pmt</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="expStudent" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
                     </div>
 
                     <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 border-t pt-2">Living Expenses</h3>
                     <div class="space-y-1">
-                        <div class="compact-row"><label>Monthly CC Bill</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expCC" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                        <div class="compact-row"><label>Groceries / Dining</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expGroceries" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                        <div class="compact-row"><label>Utilities / Internet</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expUtilities" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                        <div class="compact-row"><label>Insurance (Auto/Life)</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expInsurance" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
-                        <div class="compact-row"><label>Misc / Hobbies</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expMisc" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Monthly CC Bill</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="expCC" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Groceries / Dining</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="expGroceries" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Utilities / Internet</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="expUtilities" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Insurance (Auto/Life)</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="expInsurance" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Misc / Hobbies</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="text" inputmode="numeric" id="expMisc" class="w-full border rounded compact-input fmt-curr" onblur="handleInputsChanged()"></div></div>
                     </div>
                 </div>
 
@@ -174,7 +199,7 @@
                         <div class="flex gap-2">
                             <select id="newEventType" class="border rounded px-2 py-1 text-sm flex-1"><option value="expense">Expense (-)</option><option value="income">Income (+)</option></select>
                             <input type="number" id="newEventYear" placeholder="Year (1-50)" class="border rounded px-2 py-1 text-sm w-24">
-                            <input type="number" id="newEventAmount" placeholder="$ Amt" class="border rounded px-2 py-1 text-sm w-24">
+                            <input type="text" inputmode="numeric" id="newEventAmount" placeholder="$ Amt" class="border rounded px-2 py-1 text-sm w-24 fmt-curr">
                         </div>
                         <button onclick="addEvent()" class="bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1 rounded text-sm hover:bg-blue-200 font-medium w-full mt-1">+ Add Event</button>
                     </div>
@@ -184,35 +209,88 @@
 
             <!-- Middle & Right Columns: Dashboards & Charts -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- KPI Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
-                        <p class="text-sm text-gray-500 font-medium">Net Pay (Monthly)</p>
-                        <p class="text-2xl md:text-3xl font-bold text-gray-900" id="kpiNetPay">$0</p>
+                <!-- Advanced KPI Cards (12 Cards) -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> Your take-home pay.<br><strong>How:</strong> Gross Pay minus Taxes, 401k, and HSA.</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Net Pay (Mo)</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiNetPay">$0</p>
                     </div>
-                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
-                        <p class="text-sm text-gray-500 font-medium">Total Outflows (Monthly)</p>
-                        <p class="text-2xl md:text-3xl font-bold text-gray-900" id="kpiExpenses">$0</p>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-red-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> Everything you spend.<br><strong>How:</strong> Sum of Living Expenses and Debt Service.</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Outflows (Mo)</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiExpenses">$0</p>
                     </div>
-                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
-                        <p class="text-sm text-gray-500 font-medium">Free Cash Flow (Monthly)</p>
-                        <p class="text-2xl md:text-3xl font-bold text-gray-900" id="kpiCashFlow">$0</p>
-                        <p class="text-xs text-gray-400 mt-1">Flows to Cash & Savings</p>
+                    
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> Unspent monthly cash.<br><strong>How:</strong> Net Pay minus Total Outflows. Sweeps into Savings.</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Free Cash (Mo)</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiCashFlow">$0</p>
                     </div>
-                </div>
 
-                <!-- Grading Card -->
-                <div class="bg-white p-6 rounded-lg shadow border-l-4" id="gradeCard">
-                    <h3 class="text-xl font-bold mb-2 flex items-center justify-between">
-                        Expert Financial Analysis <span id="gradeLetter" class="text-3xl font-extrabold px-3 py-1 rounded bg-gray-100">A</span>
-                    </h3>
-                    <div class="space-y-3 text-gray-700" id="gradeDetails"></div>
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-indigo-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> Your current financial footprint.<br><strong>How:</strong> Total Assets minus Total Liabilities.</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Net Worth</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiNetWorth">$0</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> Percentage of gross income saved.<br><strong>How:</strong> (401k + Match + HSA + Free Cash) / Gross Pay.</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Savings Rate</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiSavingsRate">0%</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> Time to reach the two-comma club.<br><strong>How:</strong> Internal projection of asset growth vs debt reduction.</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Years to $1M</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiYears1M">0</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-teal-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> Years until you can retire.<br><strong>How:</strong> Calculates when Liquid Assets cover your target Retirement Duration based on future inflated expenses.</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Years to Retire</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiYearsRetire">0</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-orange-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> When you own your home free and clear.<br><strong>How:</strong> Amortizes your mortgage balance against your P&I input.</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Mtg Payoff (Yrs)</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiYearsMortgage">0</p>
+                    </div>
+
+                    <!-- New KPIs -->
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-pink-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> Liquid asset target required to retire.<br><strong>How:</strong> (Annual Future Expenses) x (Retirement Years). Projected at the year you hit retirement.</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Retirement Target $</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiTargetRetire">$0</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-cyan-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> Emergency fund health.<br><strong>How:</strong> (Cash + HSA + Brokerage) / Monthly Outflows. (Excludes locked 401k/Home).</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Liquid Runway (Mo)</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiRunway">0</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-gray-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> Financial leverage.<br><strong>How:</strong> Total Debt / Total Assets. Lower is better.</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Debt-to-Asset Ratio</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiDti">0%</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-lime-500 kpi-card">
+                        <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ<div class="kpi-tooltip"><strong>What:</strong> Current passive income generation.<br><strong>How:</strong> All Liquid Assets x 4% Safe Withdrawal Rate / 12 Months.</div></div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Safe Withdraw (Mo)</p>
+                        <p class="text-lg md:text-xl font-bold text-gray-900 mt-1" id="kpiSwr">$0</p>
+                    </div>
+
                 </div>
 
                 <!-- Scenario Parameters -->
-                <div class="bg-white p-5 rounded-lg shadow border-t-4 border-indigo-500">
+                <div class="bg-white p-5 rounded-lg shadow border-t-4 border-indigo-500 mt-6">
                     <h3 class="text-md font-semibold border-b pb-2 mb-4">Projection Variables & Return Rates</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div class="input-group">
                             <label>Timeline (Years)</label>
                             <select id="projectionYears" onchange="handleInputsChanged()">
@@ -226,13 +304,17 @@
                             </select>
                         </div>
                         <div class="input-group">
+                            <label>Retirement Length (Yrs)</label>
+                            <input type="number" id="retireYears" value="20" step="1" onchange="handleInputsChanged()">
+                        </div>
+                        <div class="input-group">
                             <label>Inflation Rate (%)</label>
                             <input type="number" id="inflationRate" value="2.5" step="0.1" onchange="handleInputsChanged()">
                         </div>
                         <div class="input-group col-span-2 flex items-center pt-5">
                             <label class="flex items-center cursor-pointer">
                                 <input type="checkbox" id="inflationToggle" onchange="handleInputsChanged()">
-                                <span class="font-bold text-gray-700">Adjust charts for inflation (Real Dollars)</span>
+                                <span class="font-bold text-gray-700 text-sm">Adjust charts/KPIs for Inflation (Real $)</span>
                             </label>
                         </div>
 
@@ -265,22 +347,17 @@
                     <div class="relative h-64"><canvas id="overallProjectionLine"></canvas></div>
                 </div>
 
-                <!-- Component Charts (Mortgage, Investments, Savings) -->
+                <!-- Component Charts -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Mortgage Amortization -->
                     <div class="bg-white p-5 rounded-lg shadow">
                         <h3 class="text-md font-semibold mb-4 text-center text-sm">Mortgage Paydown</h3>
                         <div class="relative h-48"><canvas id="mortgageChart"></canvas></div>
                         <p id="mortgagePayoffText" class="text-xs text-gray-500 mt-2 text-center"></p>
                     </div>
-
-                    <!-- Investments -->
                     <div class="bg-white p-5 rounded-lg shadow">
                         <h3 class="text-md font-semibold mb-4 text-center text-sm">Investments (401k/HSA/Brokerage)</h3>
                         <div class="relative h-48"><canvas id="investChart"></canvas></div>
                     </div>
-
-                    <!-- Savings -->
                     <div class="bg-white p-5 rounded-lg shadow">
                         <h3 class="text-md font-semibold mb-4 text-center text-sm">Liquid Cash & Savings</h3>
                         <div class="relative h-48"><canvas id="savingsChart"></canvas></div>
@@ -292,26 +369,44 @@
     </div>
 
     <script>
-        const stateTaxData = {"AK": {"name": "Alaska", "rate": 0.0, "type": "none"}, "AL": {"name": "Alabama", "rate": 5.0, "type": "graduated"}, "AR": {"name": "Arkansas", "rate": 3.9, "type": "graduated"}, "AZ": {"name": "Arizona", "rate": 2.5, "type": "flat"}, "CA": {"name": "California", "rate": 13.3, "type": "graduated"}, "CO": {"name": "Colorado", "rate": 4.4, "type": "flat"}, "CT": {"name": "Connecticut", "rate": 6.99, "type": "graduated"}, "DC": {"name": "District of Columbia", "rate": 10.75, "type": "graduated"}, "DE": {"name": "Delaware", "rate": 6.6, "type": "graduated"}, "FL": {"name": "Florida", "rate": 0.0, "type": "none"}, "GA": {"name": "Georgia", "rate": 5.49, "type": "flat"}, "HI": {"name": "Hawaii", "rate": 11.0, "type": "graduated"}, "IA": {"name": "Iowa", "rate": 5.7, "type": "graduated"}, "ID": {"name": "Idaho", "rate": 5.8, "type": "flat"}, "IL": {"name": "Illinois", "rate": 4.95, "type": "flat"}, "IN": {"name": "Indiana", "rate": 2.95, "type": "flat"}, "KS": {"name": "Kansas", "rate": 5.7, "type": "graduated"}, "KY": {"name": "Kentucky", "rate": 3.5, "type": "flat"}, "LA": {"name": "Louisiana", "rate": 4.25, "type": "graduated"}, "MA": {"name": "Massachusetts", "rate": 5.0, "type": "flat"}, "MD": {"name": "Maryland", "rate": 5.75, "type": "graduated"}, "ME": {"name": "Maine", "rate": 7.15, "type": "graduated"}, "MI": {"name": "Michigan", "rate": 4.25, "type": "flat"}, "MN": {"name": "Minnesota", "rate": 9.85, "type": "graduated"}, "MO": {"name": "Missouri", "rate": 4.8, "type": "graduated"}, "MS": {"name": "Mississippi", "rate": 4.0, "type": "flat"}, "MT": {"name": "Montana", "rate": 5.65, "type": "graduated"}, "NC": {"name": "North Carolina", "rate": 3.99, "type": "flat"}, "ND": {"name": "North Dakota", "rate": 2.5, "type": "graduated"}, "NE": {"name": "Nebraska", "rate": 5.5, "type": "graduated"}, "NH": {"name": "New Hampshire", "rate": 0.0, "type": "none"}, "NJ": {"name": "New Jersey", "rate": 10.75, "type": "graduated"}, "NM": {"name": "New Mexico", "rate": 5.9, "type": "graduated"}, "NV": {"name": "Nevada", "rate": 0.0, "type": "none"}, "NY": {"name": "New York", "rate": 10.9, "type": "graduated"}, "OH": {"name": "Ohio", "rate": 2.75, "type": "graduated"}, "OK": {"name": "Oklahoma", "rate": 4.5, "type": "graduated"}, "OR": {"name": "Oregon", "rate": 9.9, "type": "graduated"}, "PA": {"name": "Pennsylvania", "rate": 3.07, "type": "flat"}, "RI": {"name": "Rhode Island", "rate": 5.99, "type": "graduated"}, "SC": {"name": "South Carolina", "rate": 6.4, "type": "graduated"}, "SD": {"name": "South Dakota", "rate": 0.0, "type": "none"}, "TN": {"name": "Tennessee", "rate": 0.0, "type": "none"}, "TX": {"name": "Texas", "rate": 0.0, "type": "none"}, "UT": {"name": "Utah", "rate": 4.65, "type": "flat"}, "VA": {"name": "Virginia", "rate": 5.75, "type": "graduated"}, "VT": {"name": "Vermont", "rate": 8.75, "type": "graduated"}, "WA": {"name": "Washington", "rate": 0.0, "type": "none"}, "WI": {"name": "Wisconsin", "rate": 7.65, "type": "graduated"}, "WV": {"name": "West Virginia", "rate": 5.12, "type": "graduated"}, "WY": {"name": "Wyoming", "rate": 0.0, "type": "none"}};
+        const stateTaxData = {"AK": {"name": "Alaska", "rate": 0.0}, "AL": {"name": "Alabama", "rate": 5.0}, "AR": {"name": "Arkansas", "rate": 3.9}, "AZ": {"name": "Arizona", "rate": 2.5}, "CA": {"name": "California", "rate": 13.3}, "CO": {"name": "Colorado", "rate": 4.4}, "CT": {"name": "Connecticut", "rate": 6.99}, "DC": {"name": "District of Columbia", "rate": 10.75}, "DE": {"name": "Delaware", "rate": 6.6}, "FL": {"name": "Florida", "rate": 0.0}, "GA": {"name": "Georgia", "rate": 5.49}, "HI": {"name": "Hawaii", "rate": 11.0}, "IA": {"name": "Iowa", "rate": 5.7}, "ID": {"name": "Idaho", "rate": 5.8}, "IL": {"name": "Illinois", "rate": 4.95}, "IN": {"name": "Indiana", "rate": 2.95}, "KS": {"name": "Kansas", "rate": 5.7}, "KY": {"name": "Kentucky", "rate": 3.5}, "LA": {"name": "Louisiana", "rate": 4.25}, "MA": {"name": "Massachusetts", "rate": 5.0}, "MD": {"name": "Maryland", "rate": 5.75}, "ME": {"name": "Maine", "rate": 7.15}, "MI": {"name": "Michigan", "rate": 4.25}, "MN": {"name": "Minnesota", "rate": 9.85}, "MO": {"name": "Missouri", "rate": 4.8}, "MS": {"name": "Mississippi", "rate": 4.0}, "MT": {"name": "Montana", "rate": 5.65}, "NC": {"name": "North Carolina", "rate": 3.99}, "ND": {"name": "North Dakota", "rate": 2.5}, "NE": {"name": "Nebraska", "rate": 5.5}, "NH": {"name": "New Hampshire", "rate": 0.0}, "NJ": {"name": "New Jersey", "rate": 10.75}, "NM": {"name": "New Mexico", "rate": 5.9}, "NV": {"name": "Nevada", "rate": 0.0}, "NY": {"name": "New York", "rate": 10.9}, "OH": {"name": "Ohio", "rate": 2.75}, "OK": {"name": "Oklahoma", "rate": 4.5}, "OR": {"name": "Oregon", "rate": 9.9}, "PA": {"name": "Pennsylvania", "rate": 3.07}, "RI": {"name": "Rhode Island", "rate": 5.99}, "SC": {"name": "South Carolina", "rate": 6.4}, "SD": {"name": "South Dakota", "rate": 0.0}, "TN": {"name": "Tennessee", "rate": 0.0}, "TX": {"name": "Texas", "rate": 0.0}, "UT": {"name": "Utah", "rate": 4.65}, "VA": {"name": "Virginia", "rate": 5.75}, "VT": {"name": "Vermont", "rate": 8.75}, "WA": {"name": "Washington", "rate": 0.0}, "WI": {"name": "Wisconsin", "rate": 7.65}, "WV": {"name": "West Virginia", "rate": 5.12}, "WY": {"name": "Wyoming", "rate": 0.0}};
 
         const assetFields = ['assetHome', 'assetVehicle', 'assetCash', 'asset401k', 'assetHsa', 'assetInvestments'];
         const debtFields = ['debtMortgage', 'debtAuto', 'debtCredit', 'debtStudent'];
         const expFields = ['expMortgagePI', 'expEscrow', 'expAuto', 'expStudent', 'expCC', 'expGroceries', 'expUtilities', 'expInsurance', 'expMisc'];
+        const livingExpFields = ['expCC', 'expGroceries', 'expUtilities', 'expInsurance', 'expMisc'];
 
         let incomeTf = 'biweekly', expenseTf = 'monthly', events = [];
         let overallProjectionLineInst, mortgageChartInst, investChartInst, savingsChartInst;
 
-        const val = id => parseFloat(document.getElementById(id).value) || 0;
+        // Comma formatting helpers
+        const unformatCurrency = str => parseFloat(String(str).replace(/,/g, '')) || 0;
+        const formatCurrency = num => Number(num).toLocaleString('en-US');
+        const val = id => unformatCurrency(document.getElementById(id).value);
+
         const getMultiplier = tf => tf === 'biweekly' ? 26 : tf === 'monthly' ? 12 : 1;
         const toAnnual = (v, tf) => v * getMultiplier(tf);
         const fromAnnual = (v, tf) => v / getMultiplier(tf);
+
+        function setupFormatting() {
+            document.querySelectorAll('.fmt-curr').forEach(el => {
+                if(el.value) el.value = formatCurrency(el.value);
+                el.addEventListener('focus', function() { this.value = unformatCurrency(this.value) || ''; });
+                el.addEventListener('blur', function() {
+                    this.value = formatCurrency(this.value || 0);
+                    if(this.id !== 'grossPay' && !this.id.includes('Tax_val') && !this.id.includes('retirement_val') && !this.id.includes('benefits_val')) {
+                        handleInputsChanged();
+                    }
+                });
+            });
+        }
 
         function init() {
             const stateSelect = document.getElementById('userState');
             Object.keys(stateTaxData).forEach(st => stateSelect.add(new Option(stateTaxData[st].name, st)));
             stateSelect.value = "NC";
 
-            const saved = localStorage.getItem('budgetForecasterData_v13');
+            const saved = localStorage.getItem('budgetForecasterData_v16');
             if (saved) {
                 const data = JSON.parse(saved);
                 document.getElementById('grossPay').value = data.grossPay;
@@ -332,13 +427,12 @@
                     document.getElementById(`${id}_pct`).value = data[`${id}_pct`] || 0;
                 });
                 
-                ['employerMatchPct', 'projectionYears', 'mortgageInterest', 'investReturn', 'savingsReturn', 'inflationRate', 'homeAppr', 'autoDepr'].forEach(id => {
+                ['retireYears', 'employerMatchPct', 'projectionYears', 'mortgageInterest', 'investReturn', 'savingsReturn', 'inflationRate', 'homeAppr', 'autoDepr'].forEach(id => {
                     if (data[id]) document.getElementById(id).value = data[id];
                 });
 
                 incomeTf = data.incomeTf; expenseTf = data.expenseTf; events = data.events || [];
             } else {
-                // Personal Context Defaults
                 document.getElementById('grossPay').value = 7500;
                 document.getElementById('fedTax_pct').value = 12.0; document.getElementById('ficaTax_pct').value = 7.65;
                 document.getElementById('employerMatchPct').value = 4.0;
@@ -355,7 +449,6 @@
                 document.getElementById('debtCredit').value = 0;
                 document.getElementById('debtStudent').value = 0;
 
-                // Default Hardcoded Expenses
                 document.getElementById('expMortgagePI').value = 2400;
                 document.getElementById('expEscrow').value = 500;
                 document.getElementById('expAuto').value = 0;
@@ -367,22 +460,22 @@
                 document.getElementById('expMisc').value = 200;
 
                 document.getElementById('projectionYears').value = 10;
+                document.getElementById('retireYears').value = 20;
                 document.getElementById('mortgageInterest').value = 6.6;
                 document.getElementById('inflationRate').value = 2.5;
                 
                 handleStateChange(true);
             }
-            renderEvents(); handleGrossChange();
+            setupFormatting(); renderEvents(); handleGrossChange();
         }
 
         function exportData() {
             saveData();
-            const dataStr = localStorage.getItem('budgetForecasterData_v13');
+            const dataStr = localStorage.getItem('budgetForecasterData_v16');
             const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-            const exportFileDefaultName = 'budget-forecaster-backup.json';
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.setAttribute('download', 'budget-forecaster.json');
             linkElement.click();
         }
 
@@ -390,15 +483,7 @@
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    localStorage.setItem('budgetForecasterData_v13', JSON.stringify(data));
-                    location.reload();
-                } catch(err) {
-                    alert("Invalid JSON file. Please ensure it was exported from this tool.");
-                }
-            };
+            reader.onload = e => { try { localStorage.setItem('budgetForecasterData_v16', JSON.stringify(JSON.parse(e.target.result))); location.reload(); } catch(err) { alert("Invalid JSON file."); } };
             reader.readAsText(file);
         }
 
@@ -406,7 +491,7 @@
             const data = {
                 grossPay: val('grossPay'), incomeTf, expenseTf, events, age: val('userAge'), partner: document.getElementById('userPartner').value,
                 kids: val('userKids'), state: document.getElementById('userState').value, inflationToggle: document.getElementById('inflationToggle').checked,
-                projectionYears: val('projectionYears'), mortgageInterest: val('mortgageInterest'), 
+                projectionYears: val('projectionYears'), retireYears: val('retireYears'), mortgageInterest: val('mortgageInterest'), 
                 investReturn: val('investReturn'), savingsReturn: val('savingsReturn'), employerMatchPct: val('employerMatchPct'),
                 inflationRate: val('inflationRate'), homeAppr: val('homeAppr'), autoDepr: val('autoDepr')
             };
@@ -416,15 +501,15 @@
             ['fedTax', 'stateTax', 'ficaTax', 'retirement', 'benefits'].forEach(id => {
                 data[`${id}_val`] = val(`${id}_val`); data[`${id}_pct`] = parseFloat(document.getElementById(`${id}_pct`).value) || 0;
             });
-            localStorage.setItem('budgetForecasterData_v13', JSON.stringify(data));
+            localStorage.setItem('budgetForecasterData_v16', JSON.stringify(data));
         }
 
-        function resetData() { if(confirm('Reset all data?')) { localStorage.removeItem('budgetForecasterData_v13'); location.reload(); } }
+        function resetData() { if(confirm('Reset all data?')) { localStorage.removeItem('budgetForecasterData_v16'); location.reload(); } }
 
         function handleGrossChange() {
             const gross = val('grossPay');
             ['fedTax', 'stateTax', 'ficaTax', 'retirement', 'benefits'].forEach(id => {
-                document.getElementById(`${id}_val`).value = Math.round(gross * ((parseFloat(document.getElementById(`${id}_pct`).value) || 0) / 100));
+                document.getElementById(`${id}_val`).value = formatCurrency(Math.round(gross * ((parseFloat(document.getElementById(`${id}_pct`).value) || 0) / 100)));
             });
             handleInputsChanged();
         }
@@ -432,7 +517,7 @@
         function handleTaxChange(id, type) {
             const gross = val('grossPay');
             if(type === 'val') document.getElementById(`${id}_pct`).value = gross ? ((val(`${id}_val`) / gross) * 100).toFixed(2) : 0;
-            else document.getElementById(`${id}_val`).value = Math.round(gross * ((parseFloat(document.getElementById(`${id}_pct`).value) || 0) / 100));
+            else document.getElementById(`${id}_val`).value = formatCurrency(Math.round(gross * ((parseFloat(document.getElementById(`${id}_pct`).value) || 0) / 100)));
             handleInputsChanged();
         }
         
@@ -440,21 +525,21 @@
 
         function handleStateChange(isInit = false) {
             const data = stateTaxData[document.getElementById('userState').value];
-            document.getElementById('stateTaxTooltip').innerHTML = `<strong>${data.name} Tax Info</strong><hr class="my-1 border-gray-600">Type: ${data.type.toUpperCase()}<br>Rate: ${data.rate}%`;
+            document.getElementById('stateTaxTooltip').innerHTML = `<strong>${data.name} Tax Info</strong><br>Rate: ${data.rate}%`;
             if(!isInit) { document.getElementById('stateTax_pct').value = data.rate; handleTaxChange('stateTax', 'pct'); }
         }
 
         function handleIncomeTimeframeChange() {
             const newTf = document.getElementById('incomeTimeframe').value;
             const mult = getMultiplier(incomeTf) / getMultiplier(newTf);
-            ['grossPay', 'fedTax_val', 'stateTax_val', 'ficaTax_val', 'retirement_val', 'benefits_val'].forEach(id => document.getElementById(id).value = Math.round(val(id) * mult));
+            ['grossPay', 'fedTax_val', 'stateTax_val', 'ficaTax_val', 'retirement_val', 'benefits_val'].forEach(id => document.getElementById(id).value = formatCurrency(Math.round(val(id) * mult)));
             incomeTf = newTf; handleInputsChanged();
         }
 
         function handleExpenseTimeframeChange() {
             const newTf = document.getElementById('expenseTimeframe').value;
             const mult = getMultiplier(expenseTf) / getMultiplier(newTf);
-            expFields.forEach(id => { document.getElementById(id).value = Math.round(val(id) * mult); });
+            expFields.forEach(id => { document.getElementById(id).value = formatCurrency(Math.round(val(id) * mult)); });
             expenseTf = newTf; handleInputsChanged();
         }
 
@@ -464,7 +549,7 @@
             events.forEach((ev, i) => {
                 const color = ev.type === 'income' ? 'text-green-600' : 'text-red-600';
                 const sign = ev.type === 'income' ? '+' : '-';
-                list.innerHTML += `<div class="flex justify-between items-center text-sm border-b border-gray-200 pb-2"><span class="font-medium text-gray-700">Year ${ev.year}: ${ev.name}</span><div class="flex items-center gap-3"><span class="${color} font-bold">${sign}$${ev.val.toLocaleString()}</span><button onclick="events.splice(${i},1); renderEvents(); handleInputsChanged()" class="text-gray-400 hover:text-red-600 font-bold text-lg">&times;</button></div></div>`;
+                list.innerHTML += `<div class="flex justify-between items-center text-sm border-b border-gray-200 pb-2"><span class="font-medium text-gray-700">Year ${ev.year}: ${ev.name}</span><div class="flex items-center gap-3"><span class="${color} font-bold">${sign}$${formatCurrency(ev.val)}</span><button onclick="events.splice(${i},1); renderEvents(); handleInputsChanged()" class="text-gray-400 hover:text-red-600 font-bold text-lg">&times;</button></div></div>`;
             });
         }
 
@@ -472,17 +557,131 @@
             const name = document.getElementById('newEventName').value || 'Unnamed Event';
             const type = document.getElementById('newEventType').value;
             const year = parseInt(document.getElementById('newEventYear').value);
-            const valObj = parseFloat(document.getElementById('newEventAmount').value);
+            const valObj = unformatCurrency(document.getElementById('newEventAmount').value);
             
             if(year > 0 && valObj > 0) {
                 events.push({ id: Date.now(), name, type, year, val: valObj });
-                document.getElementById('newEventName').value = '';
-                document.getElementById('newEventYear').value = '';
-                document.getElementById('newEventAmount').value = '';
+                document.getElementById('newEventName').value = ''; document.getElementById('newEventYear').value = ''; document.getElementById('newEventAmount').value = '';
                 renderEvents(); handleInputsChanged();
-            } else {
-                alert("Please enter a valid Year and Dollar Amount greater than 0.");
+            } else { alert("Please enter a valid Year and Dollar Amount greater than 0."); }
+        }
+
+        function calculateHiddenMilestones(mGross, mTaxes, mRet, mBen, mLivingExp, mEscrow, employerMatchMonthly, pAndI_payment, mAutoPmt, mStudentPmt) {
+            const mortgageRate = val('mortgageInterest') / 100 / 12;
+            const investRate = val('investReturn') / 100 / 12;
+            const savingsRate = val('savingsReturn') / 100 / 12;
+            const homeApprRate = val('homeAppr') / 100; // Annual
+            const autoDeprRate = val('autoDepr') / 100; // Annual
+            const inflationRate = val('inflationRate') / 100; // Annual
+            const retireMultiplier = val('retireYears');
+            
+            let mortgageBal = val('debtMortgage'), autoBal = val('debtAuto'), studentBal = val('debtStudent');
+            let investBal = val('asset401k') + val('assetHsa') + val('assetInvestments');
+            let savingsBal = val('assetCash'), homeBal = val('assetHome'), vehicleBal = val('assetVehicle'), ccDebt = val('debtCredit');
+
+            let nom_monthsTo1M = -1, nom_monthsToRetire = -1;
+            let real_monthsTo1M = -1, real_monthsToRetire = -1;
+            let monthsToMortgage = -1;
+            
+            let targetPortfolioNominal = 0, targetPortfolioReal = 0;
+
+            let dynLiving = mLivingExp;
+            let dynEscrow = mEscrow;
+            let dynGross = mGross, dynTaxes = mTaxes, dynRet = mRet, dynBen = mBen, dynEmp = employerMatchMonthly;
+
+            let currentNW = (investBal + savingsBal + homeBal + vehicleBal) - (mortgageBal + autoBal + studentBal + ccDebt);
+            if (currentNW >= 1000000) { nom_monthsTo1M = 0; real_monthsTo1M = 0; }
+            if (mortgageBal <= 0) monthsToMortgage = 0;
+
+            let m = 0;
+            while (m < 1200 && (nom_monthsTo1M < 0 || nom_monthsToRetire < 0 || monthsToMortgage < 0 || real_monthsTo1M < 0 || real_monthsToRetire < 0)) {
+                m++;
+                let y = Math.ceil(m / 12);
+                
+                // Annual Inflations & Scaling
+                if (m > 1 && m % 12 === 1) {
+                    dynGross *= (1 + inflationRate);
+                    dynTaxes *= (1 + inflationRate);
+                    dynRet *= (1 + inflationRate);
+                    dynBen *= (1 + inflationRate);
+                    dynEmp *= (1 + inflationRate);
+                    dynLiving *= (1 + inflationRate);
+                    dynEscrow *= (1 + homeApprRate);
+                    homeBal *= (1 + homeApprRate);
+                    vehicleBal *= (1 - autoDeprRate);
+                    
+                    let yearEvents = events.filter(e => e.year === y);
+                    yearEvents.forEach(e => { savingsBal += (e.type === 'expense' ? -e.val : e.val); });
+                }
+
+                let monthlyOutflows = dynLiving + dynEscrow;
+                let dynSpareCash = dynGross - dynTaxes - dynRet - dynBen - monthlyOutflows;
+
+                if (mortgageBal > 0) {
+                    let interest = mortgageBal * mortgageRate;
+                    let principal = pAndI_payment - interest;
+                    if (principal > mortgageBal) principal = mortgageBal;
+                    mortgageBal -= principal;
+                    dynSpareCash -= pAndI_payment;
+                    monthlyOutflows += pAndI_payment;
+                } else {
+                    if (monthsToMortgage < 0) monthsToMortgage = m;
+                }
+
+                if (autoBal > 0) {
+                    let principal = mAutoPmt;
+                    if (principal > autoBal) principal = autoBal;
+                    autoBal -= principal;
+                    dynSpareCash -= mAutoPmt;
+                    monthlyOutflows += mAutoPmt;
+                }
+
+                if (studentBal > 0) {
+                    let principal = mStudentPmt;
+                    if (principal > studentBal) principal = studentBal;
+                    studentBal -= principal;
+                    dynSpareCash -= mStudentPmt;
+                    monthlyOutflows += mStudentPmt;
+                }
+
+                investBal = (investBal + dynRet + dynEmp + dynBen) * (1 + investRate);
+                savingsBal = (savingsBal + Math.max(0, dynSpareCash)) * (1 + savingsRate);
+
+                let nw = (investBal + savingsBal + homeBal + vehicleBal) - (mortgageBal + autoBal + studentBal + ccDebt);
+                let liquidAssets = investBal + savingsBal;
+
+                let exactYears = m / 12;
+                let discountFactor = Math.pow(1 + inflationRate, exactYears);
+                let realNW = nw / discountFactor;
+                let realLiquid = liquidAssets / discountFactor;
+                
+                let curRetireTargetNominal = monthlyOutflows * 12 * retireMultiplier;
+                let curRetireTargetReal = curRetireTargetNominal / discountFactor;
+
+                if (nom_monthsTo1M < 0 && nw >= 1000000) nom_monthsTo1M = m;
+                if (nom_monthsToRetire < 0 && liquidAssets >= curRetireTargetNominal) {
+                    nom_monthsToRetire = m;
+                    targetPortfolioNominal = curRetireTargetNominal;
+                }
+                if (real_monthsTo1M < 0 && realNW >= 1000000) real_monthsTo1M = m;
+                if (real_monthsToRetire < 0 && realLiquid >= curRetireTargetReal) {
+                    real_monthsToRetire = m;
+                    targetPortfolioReal = curRetireTargetReal;
+                }
             }
+
+            // Fallbacks for Target if never retired in projection
+            if (targetPortfolioNominal === 0) targetPortfolioNominal = (dynLiving + dynEscrow + pAndI_payment + mAutoPmt + mStudentPmt) * 12 * retireMultiplier;
+            if (targetPortfolioReal === 0) targetPortfolioReal = targetPortfolioNominal / Math.pow(1 + inflationRate, 100);
+
+            return {
+                nomYears1M: nom_monthsTo1M >= 0 ? (nom_monthsTo1M / 12).toFixed(1) : '100+',
+                nomYearsRetire: nom_monthsToRetire >= 0 ? (nom_monthsToRetire / 12).toFixed(1) : '100+',
+                realYears1M: real_monthsTo1M >= 0 ? (real_monthsTo1M / 12).toFixed(1) : '100+',
+                realYearsRetire: real_monthsToRetire >= 0 ? (real_monthsToRetire / 12).toFixed(1) : '100+',
+                yearsToMortgage: monthsToMortgage >= 0 ? (monthsToMortgage / 12).toFixed(1) : '0',
+                targetPortfolioNominal, targetPortfolioReal
+            };
         }
 
         function handleInputsChanged() {
@@ -491,158 +690,145 @@
             const mTaxes = fromAnnual(toAnnual(val('fedTax_val')+val('stateTax_val')+val('ficaTax_val'), incomeTf), 'monthly');
             const mBen = fromAnnual(toAnnual(val('benefits_val'), incomeTf), 'monthly');
             const mRet = fromAnnual(toAnnual(val('retirement_val'), incomeTf), 'monthly');
-            
             const employerMatchMonthly = mGross * (val('employerMatchPct') / 100);
 
             const mNet = mGross - mTaxes - mBen - mRet;
             
-            const sumExp = expFields.reduce((s, id) => s + val(id), 0);
-            const mExp = fromAnnual(toAnnual(sumExp, expenseTf), 'monthly');
-            const mCash = mNet - mExp; 
+            const sumLiving = livingExpFields.reduce((s, id) => s + val(id), 0);
+            const mLivingExp = fromAnnual(toAnnual(sumLiving, expenseTf), 'monthly');
+            const mEscrow = fromAnnual(toAnnual(val('expEscrow'), expenseTf), 'monthly');
+            const pAndI_payment = fromAnnual(toAnnual(val('expMortgagePI'), expenseTf), 'monthly');
+            const mAutoPmt = fromAnnual(toAnnual(val('expAuto'), expenseTf), 'monthly');
+            const mStudentPmt = fromAnnual(toAnnual(val('expStudent'), expenseTf), 'monthly');
+            
+            const mExpTotal = mLivingExp + mEscrow + pAndI_payment + mAutoPmt + mStudentPmt;
+            const mCash = mNet - mExpTotal; 
 
-            document.getElementById('kpiNetPay').innerText = '$' + Math.round(mNet).toLocaleString();
-            document.getElementById('kpiExpenses').innerText = '$' + Math.round(mExp).toLocaleString();
-            document.getElementById('kpiCashFlow').innerText = '$' + Math.round(mCash).toLocaleString();
-            document.getElementById('kpiCashFlow').className = `text-2xl md:text-3xl font-bold ${mCash >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            document.getElementById('kpiNetPay').innerText = '$' + formatCurrency(Math.round(mNet));
+            document.getElementById('kpiExpenses').innerText = '$' + formatCurrency(Math.round(mExpTotal));
+            document.getElementById('kpiCashFlow').innerText = '$' + formatCurrency(Math.round(mCash));
+            document.getElementById('kpiCashFlow').className = `text-lg md:text-xl font-bold mt-1 ${mCash >= 0 ? 'text-green-600' : 'text-red-600'}`;
 
             const totalAssets = assetFields.reduce((sum, id) => sum + val(id), 0);
             const totalDebt = debtFields.reduce((sum, id) => sum + val(id), 0);
             const nw = totalAssets - totalDebt;
+            const liquidAssets = val('assetCash') + val('assetHsa') + val('assetInvestments') + val('asset401k');
             
-            document.getElementById('miniNetWorth').innerText = `$${Math.round(nw).toLocaleString()}`;
+            document.getElementById('miniNetWorth').innerText = `$${formatCurrency(Math.round(nw))}`;
+            document.getElementById('kpiNetWorth').innerText = `$${formatCurrency(Math.round(nw))}`;
 
-            generateGrade(toAnnual(mGross, 'monthly'), mRet + Math.max(0, mCash) + employerMatchMonthly, nw);
-            updateProjections(mCash, mRet, mBen, employerMatchMonthly);
+            // KPI: Savings Rate
+            const savingsRate = mGross > 0 ? (((mRet + mBen + employerMatchMonthly + Math.max(0, mCash)) / mGross) * 100).toFixed(1) : 0;
+            document.getElementById('kpiSavingsRate').innerText = `${savingsRate}%`;
+
+            // KPI: Liquid Runway (Months)
+            const runway = mExpTotal > 0 ? (val('assetCash') + val('assetInvestments') + val('assetHsa')) / mExpTotal : 999;
+            document.getElementById('kpiRunway').innerText = runway.toFixed(1);
+
+            // KPI: Debt to Asset Ratio
+            const dti = totalAssets > 0 ? (totalDebt / totalAssets * 100).toFixed(1) : 0;
+            document.getElementById('kpiDti').innerText = `${dti}%`;
+
+            // KPI: Safe Withdrawal Rate (4% Rule Monthly)
+            const swrMo = (liquidAssets * 0.04) / 12;
+            document.getElementById('kpiSwr').innerText = `$${formatCurrency(Math.round(swrMo))}`;
+
+            // Calculate Milestones
+            const milestones = calculateHiddenMilestones(mGross, mTaxes, mRet, mBen, mLivingExp, mEscrow, employerMatchMonthly, pAndI_payment, mAutoPmt, mStudentPmt);
+            const adjustInf = document.getElementById('inflationToggle').checked;
+            
+            if (adjustInf) {
+                document.getElementById('kpiYears1M').innerHTML = `${milestones.realYears1M} <span class="block text-[10px] font-normal text-gray-500 mt-1">Nom: ${milestones.nomYears1M}</span>`;
+                document.getElementById('kpiYearsRetire').innerHTML = `${milestones.realYearsRetire} <span class="block text-[10px] font-normal text-gray-500 mt-1">Nom: ${milestones.nomYearsRetire}</span>`;
+                document.getElementById('kpiTargetRetire').innerHTML = `$${formatCurrency(Math.round(milestones.targetPortfolioReal))} <span class="block text-[10px] font-normal text-gray-500 mt-1">Nom: $${formatCurrency(Math.round(milestones.targetPortfolioNominal))}</span>`;
+            } else {
+                document.getElementById('kpiYears1M').innerText = milestones.nomYears1M;
+                document.getElementById('kpiYearsRetire').innerText = milestones.nomYearsRetire;
+                document.getElementById('kpiTargetRetire').innerText = `$${formatCurrency(Math.round(milestones.targetPortfolioNominal))}`;
+            }
+            document.getElementById('kpiYearsMortgage').innerText = milestones.yearsToMortgage;
+
+            updateProjections(mGross, mTaxes, mRet, mBen, mLivingExp, mEscrow, employerMatchMonthly, pAndI_payment, mAutoPmt, mStudentPmt);
         }
 
-        function generateGrade(annualSalary, monthlySavings, nw) {
-            const age = val('userAge');
-            const savingsRate = (monthlySavings * 12) / (annualSalary || 1);
-
-            let tm = age < 30 ? Math.max(0, (age - 20) / 10) : age < 35 ? 1 : age < 40 ? 2 : age < 50 ? 3 : age < 60 ? 6 : 8;
-            const targetNW = annualSalary * tm;
-            const nwHealth = targetNW > 0 ? (nw / targetNW) : 1;
-            const score = (Math.min(nwHealth, 1.2) / 1.2 * 60) + (Math.min(savingsRate, 0.20) / 0.20 * 40);
-            
-            let grade = 'F', color = 'border-red-500 text-red-600';
-            if(score > 90) { grade = 'A'; color = 'border-green-500 text-green-600'; }
-            else if(score > 75) { grade = 'B'; color = 'border-blue-500 text-blue-600'; }
-            else if(score > 60) { grade = 'C'; color = 'border-yellow-500 text-yellow-600'; }
-            else if(score > 45) { grade = 'D'; color = 'border-orange-500 text-orange-600'; }
-
-            document.getElementById('gradeCard').className = `bg-white p-6 rounded-lg shadow border-l-4 ${color.split(' ')[0]}`;
-            document.getElementById('gradeLetter').innerText = grade;
-            document.getElementById('gradeLetter').className = `text-3xl font-extrabold px-3 py-1 rounded bg-gray-50 ${color.split(' ')[1]}`;
-
-            document.getElementById('gradeDetails').innerHTML = `
-                <div class="grid grid-cols-2 gap-4 border-b pb-2 mb-2">
-                    <div><span class="block text-xs font-bold uppercase">Target Net Worth (Age ${age})</span>$${Math.round(targetNW).toLocaleString()}</div>
-                    <div><span class="block text-xs font-bold uppercase">Your Total Savings Rate</span>${(savingsRate*100).toFixed(1)}% <span class="text-xs font-normal">(Goal: 15-20%)</span></div>
-                </div>
-                <ul class="list-disc pl-5 text-sm space-y-1 mt-2">
-                    ${nw >= targetNW ? `<li>🟢 Outstanding! Your net worth exceeds the Fidelity benchmark for your age group.</li>` : `<li>🟠 Your net worth is currently below the benchmark for age ${age}. Focus on increasing investments.</li>`}
-                    ${savingsRate >= 0.15 ? `<li>🟢 Excellent savings rate. You are successfully retaining wealth from your income.</li>` : `<li>🔴 Your savings rate is below the 15% recommended minimum. Look for ways to trim expenses.</li>`}
-                </ul>
-            `;
-        }
-
-        function updateProjections(monthlySpareCash, monthly401k, monthlyHsa, employerMatchMonthly) {
+        function updateProjections(mGross, mTaxes, mRet, mBen, mLivingExp, mEscrow, employerMatchMonthly, pAndI_payment, mAutoPmt, mStudentPmt) {
             let years = [];
             const projYears = val('projectionYears') || 10;
             const adjustInflation = document.getElementById('inflationToggle').checked;
             
-            // Interest & Env rates
             const mortgageRate = val('mortgageInterest') / 100 / 12;
             const investRate = val('investReturn') / 100 / 12;
             const savingsRate = val('savingsReturn') / 100 / 12;
-            const homeApprRate = val('homeAppr') / 100 / 12;
-            const autoDeprRate = val('autoDepr') / 100 / 12;
+            const homeApprRate = val('homeAppr') / 100;
+            const autoDeprRate = val('autoDepr') / 100;
             const inflationRate = val('inflationRate') / 100;
             
-            // Starting Balances
-            let mortgageBal = val('debtMortgage');
-            let autoBal = val('debtAuto');
-            let studentBal = val('debtStudent');
+            let mortgageBal = val('debtMortgage'), autoBal = val('debtAuto'), studentBal = val('debtStudent');
             let investBal = val('asset401k') + val('assetHsa') + val('assetInvestments');
-            let savingsBal = val('assetCash');
-            let homeBal = val('assetHome');
-            let vehicleBal = val('assetVehicle');
-            let ccDebt = val('debtCredit');
+            let savingsBal = val('assetCash'), homeBal = val('assetHome'), vehicleBal = val('assetVehicle'), ccDebt = val('debtCredit');
 
-            // Find configured monthly debt service values
-            let pAndI_payment = fromAnnual(toAnnual(val('expMortgagePI'), expenseTf), 'monthly');
-            let mAutoPmt = fromAnnual(toAnnual(val('expAuto'), expenseTf), 'monthly');
-            let mStudentPmt = fromAnnual(toAnnual(val('expStudent'), expenseTf), 'monthly');
-            
-            // Arrays for Charts
             let initialNW = (investBal + savingsBal + homeBal + vehicleBal) - (mortgageBal + autoBal + studentBal + ccDebt);
-            let mortgageData = [mortgageBal], investData = [investBal], savingsData = [savingsBal], overallNWData = [initialNW];
-
+            let mortgageData = [mortgageBal], investData = [investBal], savingsData = [savingsBal];
+            let real_overallNWData = [initialNW], nom_overallNWData = [initialNW];
             let mortgagePayoffMonth = 0;
+
+            let dynLiving = mLivingExp, dynEscrow = mEscrow;
+            let dynGross = mGross, dynTaxes = mTaxes, dynRet = mRet, dynBen = mBen, dynEmp = employerMatchMonthly;
 
             for (let y = 1; y <= projYears; y++) {
                 years.push(`Year ${y}`);
                 
-                // Aggregate any lifecycle events occurring this year
+                if (y > 1) {
+                    dynGross *= (1 + inflationRate); dynTaxes *= (1 + inflationRate); dynRet *= (1 + inflationRate); dynBen *= (1 + inflationRate); dynEmp *= (1 + inflationRate); dynLiving *= (1 + inflationRate); dynEscrow *= (1 + homeApprRate);
+                    homeBal *= (1 + homeApprRate); vehicleBal *= (1 - autoDeprRate);
+                }
+
                 let yearEvents = events.filter(e => e.year === y);
                 let eventNet = 0;
                 yearEvents.forEach(e => { eventNet += (e.type === 'expense' ? -e.val : e.val); });
 
-                let dynamicSpareCash = monthlySpareCash;
-
                 for(let m=1; m<=12; m++) {
-                    // Apply lifecycle event impact in January of that year
                     if(m === 1) savingsBal += eventNet;
 
-                    // Mortgage Loop
+                    let dynSpareCash = dynGross - dynTaxes - dynRet - dynBen - dynLiving - dynEscrow;
+
                     if (mortgageBal > 0) {
                         let interest = mortgageBal * mortgageRate;
                         let principal = pAndI_payment - interest;
                         if (principal > mortgageBal) principal = mortgageBal;
                         mortgageBal -= principal;
+                        dynSpareCash -= pAndI_payment;
                     } else {
                         if (mortgagePayoffMonth === 0) mortgagePayoffMonth = (y-1)*12 + m;
-                        dynamicSpareCash += pAndI_payment; // Add this payment to free cash flow once paid off
                     }
 
-                    // Auto Loan Loop
                     if (autoBal > 0) {
                         let principal = mAutoPmt;
                         if (principal > autoBal) principal = autoBal;
                         autoBal -= principal;
-                    } else {
-                        dynamicSpareCash += mAutoPmt;
+                        dynSpareCash -= mAutoPmt;
                     }
 
-                    // Student Loan Loop
                     if (studentBal > 0) {
                         let principal = mStudentPmt;
                         if (principal > studentBal) principal = studentBal;
                         studentBal -= principal;
-                    } else {
-                        dynamicSpareCash += mStudentPmt;
+                        dynSpareCash -= mStudentPmt;
                     }
 
-                    // Asset Appreciation / Depreciation
-                    homeBal = homeBal * (1 + homeApprRate);
-                    vehicleBal = vehicleBal * (1 - autoDeprRate);
-
-                    // Investment Loop
-                    investBal = (investBal + monthly401k + employerMatchMonthly + monthlyHsa) * (1 + investRate);
-
-                    // Savings Loop
-                    savingsBal = (savingsBal + Math.max(0, dynamicSpareCash)) * (1 + savingsRate);
+                    investBal = (investBal + dynRet + dynEmp + dynBen) * (1 + investRate);
+                    savingsBal = (savingsBal + Math.max(0, dynSpareCash)) * (1 + savingsRate);
                 }
 
-                // Inflation discounting factor
                 const discountFactor = adjustInflation ? Math.pow(1 + inflationRate, y) : 1;
 
                 mortgageData.push(Math.round(mortgageBal / discountFactor));
                 investData.push(Math.round(investBal / discountFactor));
                 savingsData.push(Math.round(savingsBal / discountFactor));
                 
-                let nw = (investBal + savingsBal + homeBal + vehicleBal) - (mortgageBal + autoBal + studentBal + ccDebt);
-                overallNWData.push(Math.round(nw / discountFactor));
+                let nominalNW = (investBal + savingsBal + homeBal + vehicleBal) - (mortgageBal + autoBal + studentBal + ccDebt);
+                nom_overallNWData.push(Math.round(nominalNW));
+                real_overallNWData.push(Math.round(nominalNW / discountFactor));
             }
 
             if (mortgagePayoffMonth > 0) {
@@ -653,36 +839,41 @@
 
             Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
             
-            // Overall NW Chart
             if (overallProjectionLineInst) overallProjectionLineInst.destroy();
+            let datasets = [];
+            
+            if(adjustInflation) {
+                datasets.push({ label: 'Real Net Worth (Purchasing Power)', data: real_overallNWData, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3, borderWidth: 3 });
+                datasets.push({ label: 'Nominal Net Worth (Bank Balance)', data: nom_overallNWData, borderColor: '#9ca3af', borderDash: [5, 5], tension: 0.3, borderWidth: 2 });
+            } else {
+                datasets.push({ label: 'Nominal Net Worth', data: nom_overallNWData, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3, borderWidth: 3 });
+            }
+
             overallProjectionLineInst = new Chart(document.getElementById('overallProjectionLine').getContext('2d'), {
                 type: 'line',
-                data: { labels: ['Today', ...years], datasets: [{ label: 'Total Net Worth', data: overallNWData, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3, borderWidth: 3 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: function(context) { return '$' + context.parsed.y.toLocaleString(); } } }, legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } } } }
+                data: { labels: ['Today', ...years], datasets: datasets },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: function(context) { return '$' + formatCurrency(context.parsed.y); } } }, legend: { display: adjustInflation, position: 'bottom' } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { callback: function(value) { return '$' + formatCurrency(value); } } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } } } }
             });
 
-            // Mortgage Chart
             if (mortgageChartInst) mortgageChartInst.destroy();
             mortgageChartInst = new Chart(document.getElementById('mortgageChart').getContext('2d'), {
                 type: 'bar',
                 data: { labels: ['Today', ...years], datasets: [{ label: 'Mortgage Balance', data: mortgageData, backgroundColor: '#ef4444' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }, x: { ticks: { maxTicksLimit: 10 } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: function(context) { return '$' + formatCurrency(context.parsed.y); } } }, legend: { display: false } }, scales: { y: { ticks: { callback: function(value) { return '$' + formatCurrency(value); } } }, x: { ticks: { maxTicksLimit: 10 } } } }
             });
 
-            // Invest Chart
             if (investChartInst) investChartInst.destroy();
             investChartInst = new Chart(document.getElementById('investChart').getContext('2d'), {
                 type: 'line',
                 data: { labels: ['Today', ...years], datasets: [{ label: 'Investments', data: investData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }, x: { ticks: { maxTicksLimit: 10 } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: function(context) { return '$' + formatCurrency(context.parsed.y); } } }, legend: { display: false } }, scales: { y: { ticks: { callback: function(value) { return '$' + formatCurrency(value); } } }, x: { ticks: { maxTicksLimit: 10 } } } }
             });
 
-            // Savings Chart
             if (savingsChartInst) savingsChartInst.destroy();
             savingsChartInst = new Chart(document.getElementById('savingsChart').getContext('2d'), {
                 type: 'line',
                 data: { labels: ['Today', ...years], datasets: [{ label: 'Savings', data: savingsData, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.3 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }, x: { ticks: { maxTicksLimit: 10 } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: function(context) { return '$' + formatCurrency(context.parsed.y); } } }, legend: { display: false } }, scales: { y: { ticks: { callback: function(value) { return '$' + formatCurrency(value); } } }, x: { ticks: { maxTicksLimit: 10 } } } }
             });
         }
 
