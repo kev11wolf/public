@@ -334,7 +334,16 @@
                         <option value="monochrome">Minimalist Tech Monochrome</option>
                         <option value="darkNeutral">Sleek Dark Slate Neutral</option>
                     </select>
-                <div class="control-grid" style="grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                               <div class="control-grid" style="grid-template-columns: repeat(6, 1fr); gap: 10px;">
+                    <div class="control-item">
+                        <label>Row Label Width</label>
+                        <div style="display:flex; gap:4px;">
+                            <input type="number" id="rowLabelWidth" value="240" min="50" max="800" onchange="recordStateChange(); updateChart();" style="width: 60px;">
+                            <button type="button" class="inner-action-btn" style="flex:1; padding:6px; font-size:9px;" onclick="autoFitRowLabelWidth()">↕ Auto-Fit</button>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label>Font Typography</label>
                     <div class="control-item">
                         <label>Font Typography</label>
                         <select id="fontFamily" onchange="recordStateChange(); updateChart();">
@@ -963,7 +972,8 @@ function stopGlobalDragAction(e) {
             fontFamily: document.getElementById('fontFamily').value,
             fontSize: document.getElementById('fontSize').value,
             swimlaneHeight: document.getElementById('swimlaneHeight').value,
-            canvasWidth: document.getElementById('canvasWidth').value,
+                        canvasWidth: document.getElementById('canvasWidth').value,
+            rowLabelWidth: document.getElementById('rowLabelWidth').value,
             rowHeight: document.getElementById('rowHeight').value,
             barBgColor: document.getElementById('barBgColor').value,
             barColor: document.getElementById('barColor').value,
@@ -1024,9 +1034,10 @@ function stopGlobalDragAction(e) {
         syncBoundaryFields();
 
         document.getElementById('fontFamily').value = state.fontFamily;
-        document.getElementById('fontSize').value = state.fontSize;
-        document.getElementById('swimlaneHeight').value = state.swimlaneHeight || 30;
+                document.getElementById('fontSize').value = state.fontSize;
+        document.getElementById('swimlaneHeight').value = state.swimlaneHeight;
         document.getElementById('canvasWidth').value = state.canvasWidth;
+        if(state.rowLabelWidth) document.getElementById('rowLabelWidth').value = state.rowLabelWidth;
         document.getElementById('rowHeight').value = state.rowHeight;
         document.getElementById('barBgColor').value = state.barBgColor;
         document.getElementById('barColor').value = state.barColor;
@@ -2139,12 +2150,9 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
         renderInputRows();
     }
 
-    function collapseAllSwimlanes() {
+        function collapseAllSwimlanes() {
         if (!projectData || projectData.length === 0) return;
         
-        // Determine the target state: 
-        // If at least one lane is NOT collapsed, our action should be to collapse them all.
-        // If ALL lanes are already collapsed, our action should be to expand them all.
         const shouldCollapse = projectData.some(lane => !lane.collapsed);
         
         projectData.forEach(lane => {
@@ -2153,6 +2161,35 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
         
         recordStateChange();
         renderInputRows();
+    }
+
+    function autoFitRowLabelWidth() {
+        if (!projectData || projectData.length === 0) return;
+        
+        let maxLength = 0;
+        const fontSize = parseInt(document.getElementById('fontSize').value) || 12;
+        
+        // Loop through all visible labels to find the longest character count
+        projectData.forEach(lane => {
+            if (!lane.collapsed) {
+                lane.rows.forEach(row => {
+                    const labelStr = row.label || "";
+                    if (labelStr.length > maxLength) maxLength = labelStr.length;
+                });
+            }
+        });
+        
+        // Simple heuristic formula: Character count * avg pixel width per character + padding buffer
+        let newWidth = Math.ceil(maxLength * (fontSize * 0.6)) + 45;
+        
+        // Setup lower bounding limit so it doesn't break layout if lanes are empty
+        if (newWidth < 120) newWidth = 120;
+        if (newWidth > 800) newWidth = 800; // Upper limit sanity check
+        
+        document.getElementById('rowLabelWidth').value = newWidth;
+        recordStateChange();
+        updateChart();
+    
     }
     function updateLaneColor(laneIdx, val) { projectData[laneIdx].color = val; recordStateChange(); updateChart(); }
     function updateLaneTitle(laneIdx, val) { projectData[laneIdx].title = val; recordStateChange(); updateChart(); }
@@ -2165,9 +2202,12 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
     // =========================================================
     // GRAPHIC VECTOR GENERATION PIPELINE ENGINE (SVG DRAW LOOP)
     // =========================================================
-    function updateChart() {
+        function updateChart() {
         const container = document.getElementById('svgContainer');
         if (projectData.length === 0) { container.innerHTML = ''; return; }
+        
+        // Dynamic fetch of the row label width overriding the global default
+        scaleMarginLeft = parseInt(document.getElementById('rowLabelWidth').value) || 240;
 
         const sizingMode = document.querySelector('input[name="sizingMode"]:checked')?.value || 'fixed';
         
