@@ -15,6 +15,7 @@
         
         .input-group label { display: block; font-size: 0.875rem; font-weight: 500; color: #4b5563; margin-bottom: 0.25rem; }
         .input-group input, .input-group select { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 16px; transition: all 0.2s; }
+        .input-group input[type="checkbox"] { width: auto; transform: scale(1.2); margin-right: 0.5rem; }
         .input-group input:focus, .input-group select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
@@ -45,11 +46,14 @@
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4 border-gray-300">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Total Net Worth & Cash Flow Forecaster</h1>
-                <p class="text-gray-500 text-sm mt-1">Income, Expenses, Itemized Assets & 10-Year Projections</p>
+                <p class="text-gray-500 text-sm mt-1">Income, Fixed Expenses, Itemized Assets & Integrated Projections</p>
             </div>
-            <div class="flex gap-4 no-print w-full md:w-auto">
-                <button onclick="window.print()" class="flex-1 md:flex-none bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700 transition text-sm font-medium">🖨️ Print Report</button>
-                <button onclick="resetData()" class="flex-1 md:flex-none bg-red-50 text-red-600 px-4 py-2 rounded shadow hover:bg-red-100 transition text-sm font-medium">Reset Data</button>
+            <div class="flex gap-2 no-print w-full md:w-auto flex-wrap">
+                <button onclick="document.getElementById('importFile').click()" class="bg-indigo-50 text-indigo-600 px-3 py-2 rounded shadow hover:bg-indigo-100 transition text-sm font-medium">📂 Import JSON</button>
+                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
+                <button onclick="exportData()" class="bg-green-50 text-green-600 px-3 py-2 rounded shadow hover:bg-green-100 transition text-sm font-medium">💾 Export JSON</button>
+                <button onclick="window.print()" class="bg-gray-800 text-white px-3 py-2 rounded shadow hover:bg-gray-700 transition text-sm font-medium">🖨️ Print</button>
+                <button onclick="resetData()" class="bg-red-50 text-red-600 px-3 py-2 rounded shadow hover:bg-red-100 transition text-sm font-medium">Reset</button>
             </div>
         </header>
 
@@ -92,7 +96,7 @@
                     <div>
                         <h3 class="text-sm font-bold text-red-500 uppercase tracking-wider mb-2 border-t pt-3">Liabilities (-)</h3>
                         <div class="space-y-1">
-                            <div class="compact-row"><label>Mortgage</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="debtMortgage" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                            <div class="compact-row"><label>Mortgage Bal.</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="debtMortgage" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
                             <div class="compact-row"><label>Auto Loans</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="debtAuto" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
                             <div class="compact-row"><label>Credit Cards</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="debtCredit" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
                             <div class="compact-row"><label>Student / Other</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="debtStudent" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
@@ -115,7 +119,7 @@
                             <label>Gross Pay</label>
                             <div class="flex items-center gap-2">
                                 <span class="text-gray-600 font-semibold">$</span>
-                                <input type="number" id="grossPay" value="7885" step="1" onchange="handleGrossChange()">
+                                <input type="number" id="grossPay" value="7500" step="1" onchange="handleGrossChange()">
                             </div>
                         </div>
                         <div class="space-y-3 pt-2 border-t border-gray-100">
@@ -124,28 +128,61 @@
                             <div class="input-group"><label>FICA (SS + Medicare)</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-400 font-semibold">$</span><input type="number" id="ficaTax_val" onchange="handleTaxChange('ficaTax', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" step="0.1" id="ficaTax_pct" class="text-right" onchange="handleTaxChange('ficaTax', 'pct')"><span class="text-gray-400 font-semibold">%</span></div></div></div>
                         </div>
                         <div class="space-y-3 pt-2 border-t border-gray-100">
-                            <div class="input-group"><label>401(k) Retirement</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-600 font-semibold">$</span><input type="number" id="retirement_val" value="789" onchange="handleDeductionChange('retirement', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" id="retirement_pct" step="0.1" class="text-right" onchange="handleDeductionChange('retirement', 'pct')"><span class="text-gray-600 font-semibold">%</span></div></div></div>
-                            <div class="input-group"><label>Pre-Tax Benefits (HSA/Med)</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-600 font-semibold">$</span><input type="number" id="benefits_val" value="308" onchange="handleDeductionChange('benefits', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" id="benefits_pct" step="0.1" class="text-right" onchange="handleDeductionChange('benefits', 'pct')"><span class="text-gray-600 font-semibold">%</span></div></div></div>
+                            <div class="input-group"><label>401(k) Contribution</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-600 font-semibold">$</span><input type="number" id="retirement_val" value="789" onchange="handleDeductionChange('retirement', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" id="retirement_pct" step="0.1" class="text-right" onchange="handleDeductionChange('retirement', 'pct')"><span class="text-gray-600 font-semibold">%</span></div></div></div>
+                            <div class="input-group"><label>Employer 401(k) Match %</label><div class="flex items-center gap-1"><input type="number" id="employerMatchPct" value="4.0" step="0.5" class="text-right w-full" onchange="handleInputsChanged()"><span class="text-gray-600 font-semibold">%</span></div></div>
+                            <div class="input-group"><label>HSA/FSA Contribution</label><div class="flex gap-4"><div class="flex items-center gap-2 flex-1"><span class="text-gray-600 font-semibold">$</span><input type="number" id="benefits_val" value="308" onchange="handleDeductionChange('benefits', 'val')"></div><div class="flex items-center gap-1 w-24"><input type="number" id="benefits_pct" step="0.1" class="text-right" onchange="handleDeductionChange('benefits', 'pct')"><span class="text-gray-600 font-semibold">%</span></div></div></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Expenses -->
+                <!-- Hardcoded Outflows (Debt & Expenses) -->
                 <div class="bg-white p-5 rounded-lg shadow">
                     <div class="flex justify-between items-center border-b pb-2 mb-4">
-                        <h2 class="text-lg font-semibold">Expenses</h2>
+                        <h2 class="text-lg font-semibold">Fixed Outflows</h2>
                         <select id="expenseTimeframe" onchange="handleExpenseTimeframeChange()" class="text-sm border rounded p-1 bg-gray-50 font-medium w-auto no-print">
                             <option value="biweekly">Bi-Weekly</option>
                             <option value="monthly" selected>Monthly</option>
                             <option value="yearly">Yearly</option>
                         </select>
                     </div>
-                    <div id="expenseList" class="space-y-3 mb-4"></div>
-                    <button onclick="addExpense()" class="w-full bg-blue-50 text-blue-600 border border-blue-200 px-3 py-2 text-sm rounded hover:bg-blue-100 font-medium no-print">+ Add Expense</button>
+                    
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Debt Service</h3>
+                    <div class="space-y-1 mb-4">
+                        <div class="compact-row"><label>Mortgage P&I</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expMortgagePI" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Mortgage Escrow</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expEscrow" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Auto Loan Pmt</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expAuto" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Student Loan Pmt</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expStudent" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                    </div>
+
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 border-t pt-2">Living Expenses</h3>
+                    <div class="space-y-1">
+                        <div class="compact-row"><label>Monthly CC Bill</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expCC" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Groceries / Dining</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expGroceries" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Utilities / Internet</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expUtilities" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Insurance (Auto/Life)</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expInsurance" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                        <div class="compact-row"><label>Misc / Hobbies</label><div class="flex items-center gap-1 w-32"><span class="text-gray-400 text-sm">$</span><input type="number" id="expMisc" class="w-full border rounded compact-input" onchange="handleInputsChanged()"></div></div>
+                    </div>
                 </div>
+
+                <!-- One-Off Lifecycle Events -->
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <h2 class="text-lg font-semibold border-b pb-2 mb-4">One-Off Events (Lifecycle)</h2>
+                    <p class="text-xs text-gray-500 mb-3">Simulate future cash injections or major expenses. Impact affects your liquid cash in that year.</p>
+                    <div id="eventsList" class="space-y-2 mb-4"></div>
+                    <div class="flex flex-col gap-2 bg-gray-50 p-2 rounded border no-print">
+                        <input type="text" id="newEventName" placeholder="e.g. Kitchen Remodel" class="border rounded px-2 py-1 text-sm w-full">
+                        <div class="flex gap-2">
+                            <select id="newEventType" class="border rounded px-2 py-1 text-sm flex-1"><option value="expense">Expense (-)</option><option value="income">Income (+)</option></select>
+                            <input type="number" id="newEventYear" placeholder="Year (1-50)" class="border rounded px-2 py-1 text-sm w-24">
+                            <input type="number" id="newEventAmount" placeholder="$ Amt" class="border rounded px-2 py-1 text-sm w-24">
+                        </div>
+                        <button onclick="addEvent()" class="bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1 rounded text-sm hover:bg-blue-200 font-medium w-full mt-1">+ Add Event</button>
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Middle & Right Columns: Dashboards -->
+            <!-- Middle & Right Columns: Dashboards & Charts -->
             <div class="lg:col-span-2 space-y-6">
                 <!-- KPI Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -154,12 +191,13 @@
                         <p class="text-2xl md:text-3xl font-bold text-gray-900" id="kpiNetPay">$0</p>
                     </div>
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
-                        <p class="text-sm text-gray-500 font-medium">Expenses (Monthly)</p>
+                        <p class="text-sm text-gray-500 font-medium">Total Outflows (Monthly)</p>
                         <p class="text-2xl md:text-3xl font-bold text-gray-900" id="kpiExpenses">$0</p>
                     </div>
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
                         <p class="text-sm text-gray-500 font-medium">Free Cash Flow (Monthly)</p>
                         <p class="text-2xl md:text-3xl font-bold text-gray-900" id="kpiCashFlow">$0</p>
+                        <p class="text-xs text-gray-400 mt-1">Flows to Cash & Savings</p>
                     </div>
                 </div>
 
@@ -168,24 +206,87 @@
                     <h3 class="text-xl font-bold mb-2 flex items-center justify-between">
                         Expert Financial Analysis <span id="gradeLetter" class="text-3xl font-extrabold px-3 py-1 rounded bg-gray-100">A</span>
                     </h3>
-                    <div class="flex justify-between items-center mb-4">
-                        <p class="text-sm text-gray-500">Current Net Worth: <span id="displayNetWorth" class="font-bold text-gray-800 text-lg"></span></p>
-                    </div>
                     <div class="space-y-3 text-gray-700" id="gradeDetails"></div>
                 </div>
 
-                <!-- Projection Chart -->
-                <div class="bg-white p-5 rounded-lg shadow">
-                    <h3 class="text-md font-semibold mb-4 text-center">10-Year Wealth Projection</h3>
-                    <div class="relative h-64"><canvas id="projectionLine"></canvas></div>
-                    <p class="text-xs text-gray-400 mt-2 text-center">Assumes 7% annual return on assets + active debt paydown via monthly cash flow.</p>
+                <!-- Scenario Parameters -->
+                <div class="bg-white p-5 rounded-lg shadow border-t-4 border-indigo-500">
+                    <h3 class="text-md font-semibold border-b pb-2 mb-4">Projection Variables & Return Rates</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="input-group">
+                            <label>Timeline (Years)</label>
+                            <select id="projectionYears" onchange="handleInputsChanged()">
+                                <option value="5">5 Years</option>
+                                <option value="10" selected>10 Years</option>
+                                <option value="15">15 Years</option>
+                                <option value="20">20 Years</option>
+                                <option value="30">30 Years</option>
+                                <option value="40">40 Years</option>
+                                <option value="50">50 Years</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Inflation Rate (%)</label>
+                            <input type="number" id="inflationRate" value="2.5" step="0.1" onchange="handleInputsChanged()">
+                        </div>
+                        <div class="input-group col-span-2 flex items-center pt-5">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="inflationToggle" onchange="handleInputsChanged()">
+                                <span class="font-bold text-gray-700">Adjust charts for inflation (Real Dollars)</span>
+                            </label>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Invest Return (%)</label>
+                            <input type="number" id="investReturn" value="8.0" step="0.5" onchange="handleInputsChanged()">
+                        </div>
+                        <div class="input-group">
+                            <label>HYSA Yield (%)</label>
+                            <input type="number" id="savingsReturn" value="4.0" step="0.1" onchange="handleInputsChanged()">
+                        </div>
+                        <div class="input-group">
+                            <label>Real Estate Appr. (%)</label>
+                            <input type="number" id="homeAppr" value="3.0" step="0.5" onchange="handleInputsChanged()">
+                        </div>
+                        <div class="input-group">
+                            <label>Vehicle Depr. (%)</label>
+                            <input type="number" id="autoDepr" value="10.0" step="1.0" onchange="handleInputsChanged()">
+                        </div>
+                        <div class="input-group">
+                            <label>Mortgage Interest (%)</label>
+                            <input type="number" id="mortgageInterest" value="6.6" step="0.1" onchange="handleInputsChanged()">
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Charts -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-5 rounded-lg shadow"><h3 class="text-md font-semibold mb-4 text-center">Income Breakdown</h3><div class="relative h-48"><canvas id="incomeDoughnut"></canvas></div></div>
-                    <div class="bg-white p-5 rounded-lg shadow"><h3 class="text-md font-semibold mb-4 text-center">Expense Breakdown</h3><div class="relative h-48"><canvas id="expensePie"></canvas></div></div>
+                <!-- Combined Overall Net Worth Projection Chart -->
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-md font-semibold mb-4 text-center">Integrated Total Net Worth Projection</h3>
+                    <div class="relative h-64"><canvas id="overallProjectionLine"></canvas></div>
                 </div>
+
+                <!-- Component Charts (Mortgage, Investments, Savings) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Mortgage Amortization -->
+                    <div class="bg-white p-5 rounded-lg shadow">
+                        <h3 class="text-md font-semibold mb-4 text-center text-sm">Mortgage Paydown</h3>
+                        <div class="relative h-48"><canvas id="mortgageChart"></canvas></div>
+                        <p id="mortgagePayoffText" class="text-xs text-gray-500 mt-2 text-center"></p>
+                    </div>
+
+                    <!-- Investments -->
+                    <div class="bg-white p-5 rounded-lg shadow">
+                        <h3 class="text-md font-semibold mb-4 text-center text-sm">Investments (401k/HSA/Brokerage)</h3>
+                        <div class="relative h-48"><canvas id="investChart"></canvas></div>
+                    </div>
+
+                    <!-- Savings -->
+                    <div class="bg-white p-5 rounded-lg shadow">
+                        <h3 class="text-md font-semibold mb-4 text-center text-sm">Liquid Cash & Savings</h3>
+                        <div class="relative h-48"><canvas id="savingsChart"></canvas></div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -195,9 +296,10 @@
 
         const assetFields = ['assetHome', 'assetVehicle', 'assetCash', 'asset401k', 'assetHsa', 'assetInvestments'];
         const debtFields = ['debtMortgage', 'debtAuto', 'debtCredit', 'debtStudent'];
+        const expFields = ['expMortgagePI', 'expEscrow', 'expAuto', 'expStudent', 'expCC', 'expGroceries', 'expUtilities', 'expInsurance', 'expMisc'];
 
-        let incomeTf = 'biweekly', expenseTf = 'monthly', expenses = [];
-        let incomeDoughnutInst, expensePieInst, projectionLineInst;
+        let incomeTf = 'biweekly', expenseTf = 'monthly', events = [];
+        let overallProjectionLineInst, mortgageChartInst, investChartInst, savingsChartInst;
 
         const val = id => parseFloat(document.getElementById(id).value) || 0;
         const getMultiplier = tf => tf === 'biweekly' ? 26 : tf === 'monthly' ? 12 : 1;
@@ -209,7 +311,7 @@
             Object.keys(stateTaxData).forEach(st => stateSelect.add(new Option(stateTaxData[st].name, st)));
             stateSelect.value = "NC";
 
-            const saved = localStorage.getItem('budgetForecasterData_v9');
+            const saved = localStorage.getItem('budgetForecasterData_v13');
             if (saved) {
                 const data = JSON.parse(saved);
                 document.getElementById('grossPay').value = data.grossPay;
@@ -219,21 +321,28 @@
                 document.getElementById('userPartner').value = data.partner || 'yes';
                 document.getElementById('userKids').value = data.kids || 1;
                 document.getElementById('userState').value = data.state || 'NC';
+                document.getElementById('inflationToggle').checked = data.inflationToggle || false;
                 
                 assetFields.forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = data[id] || 0; });
                 debtFields.forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = data[id] || 0; });
+                expFields.forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = data[id] || 0; });
                 
                 ['fedTax', 'stateTax', 'ficaTax', 'retirement', 'benefits'].forEach(id => {
                     document.getElementById(`${id}_val`).value = data[`${id}_val`] || 0;
                     document.getElementById(`${id}_pct`).value = data[`${id}_pct`] || 0;
                 });
-                incomeTf = data.incomeTf; expenseTf = data.expenseTf; expenses = data.expenses || [];
-            } else {
-                // Defaults
-                expenses = [{ id: 1, name: 'Mortgage & Escrow', val: 2900 }, { id: 2, name: 'Auto / Transport', val: 400 }, { id: 3, name: 'Groceries / Utilities', val: 1200 }];
-                document.getElementById('fedTax_pct').value = 12.0; document.getElementById('ficaTax_pct').value = 7.65;
                 
-                // Asset & Liability Defaults
+                ['employerMatchPct', 'projectionYears', 'mortgageInterest', 'investReturn', 'savingsReturn', 'inflationRate', 'homeAppr', 'autoDepr'].forEach(id => {
+                    if (data[id]) document.getElementById(id).value = data[id];
+                });
+
+                incomeTf = data.incomeTf; expenseTf = data.expenseTf; events = data.events || [];
+            } else {
+                // Personal Context Defaults
+                document.getElementById('grossPay').value = 7500;
+                document.getElementById('fedTax_pct').value = 12.0; document.getElementById('ficaTax_pct').value = 7.65;
+                document.getElementById('employerMatchPct').value = 4.0;
+                
                 document.getElementById('assetHome').value = 425000;
                 document.getElementById('assetVehicle').value = 35000;
                 document.getElementById('assetCash').value = 15000;
@@ -246,32 +355,78 @@
                 document.getElementById('debtCredit').value = 0;
                 document.getElementById('debtStudent').value = 0;
 
+                // Default Hardcoded Expenses
+                document.getElementById('expMortgagePI').value = 2400;
+                document.getElementById('expEscrow').value = 500;
+                document.getElementById('expAuto').value = 0;
+                document.getElementById('expStudent').value = 0;
+                document.getElementById('expCC').value = 600;
+                document.getElementById('expGroceries').value = 500;
+                document.getElementById('expUtilities').value = 350;
+                document.getElementById('expInsurance').value = 150;
+                document.getElementById('expMisc').value = 200;
+
+                document.getElementById('projectionYears').value = 10;
+                document.getElementById('mortgageInterest').value = 6.6;
+                document.getElementById('inflationRate').value = 2.5;
+                
                 handleStateChange(true);
             }
-            renderExpenses(); handleGrossChange();
+            renderEvents(); handleGrossChange();
+        }
+
+        function exportData() {
+            saveData();
+            const dataStr = localStorage.getItem('budgetForecasterData_v13');
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'budget-forecaster-backup.json';
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    localStorage.setItem('budgetForecasterData_v13', JSON.stringify(data));
+                    location.reload();
+                } catch(err) {
+                    alert("Invalid JSON file. Please ensure it was exported from this tool.");
+                }
+            };
+            reader.readAsText(file);
         }
 
         function saveData() {
             const data = {
-                grossPay: val('grossPay'), incomeTf, expenseTf, expenses, age: val('userAge'), partner: document.getElementById('userPartner').value,
-                kids: val('userKids'), state: document.getElementById('userState').value
+                grossPay: val('grossPay'), incomeTf, expenseTf, events, age: val('userAge'), partner: document.getElementById('userPartner').value,
+                kids: val('userKids'), state: document.getElementById('userState').value, inflationToggle: document.getElementById('inflationToggle').checked,
+                projectionYears: val('projectionYears'), mortgageInterest: val('mortgageInterest'), 
+                investReturn: val('investReturn'), savingsReturn: val('savingsReturn'), employerMatchPct: val('employerMatchPct'),
+                inflationRate: val('inflationRate'), homeAppr: val('homeAppr'), autoDepr: val('autoDepr')
             };
             assetFields.forEach(id => data[id] = val(id));
             debtFields.forEach(id => data[id] = val(id));
+            expFields.forEach(id => data[id] = val(id));
             ['fedTax', 'stateTax', 'ficaTax', 'retirement', 'benefits'].forEach(id => {
                 data[`${id}_val`] = val(`${id}_val`); data[`${id}_pct`] = parseFloat(document.getElementById(`${id}_pct`).value) || 0;
             });
-            localStorage.setItem('budgetForecasterData_v9', JSON.stringify(data));
+            localStorage.setItem('budgetForecasterData_v13', JSON.stringify(data));
         }
 
-        function resetData() { if(confirm('Reset all data?')) { localStorage.removeItem('budgetForecasterData_v9'); location.reload(); } }
+        function resetData() { if(confirm('Reset all data?')) { localStorage.removeItem('budgetForecasterData_v13'); location.reload(); } }
 
         function handleGrossChange() {
             const gross = val('grossPay');
             ['fedTax', 'stateTax', 'ficaTax', 'retirement', 'benefits'].forEach(id => {
                 document.getElementById(`${id}_val`).value = Math.round(gross * ((parseFloat(document.getElementById(`${id}_pct`).value) || 0) / 100));
             });
-            recalcExpensePercents(); handleInputsChanged();
+            handleInputsChanged();
         }
 
         function handleTaxChange(id, type) {
@@ -297,27 +452,38 @@
         }
 
         function handleExpenseTimeframeChange() {
-            const mult = getMultiplier(expenseTf) / getMultiplier(document.getElementById('expenseTimeframe').value);
-            expenses.forEach((exp, i) => { exp.val = Math.round(exp.val * mult); document.getElementById(`exp_val_${i}`).value = exp.val; });
-            expenseTf = document.getElementById('expenseTimeframe').value; handleInputsChanged();
+            const newTf = document.getElementById('expenseTimeframe').value;
+            const mult = getMultiplier(expenseTf) / getMultiplier(newTf);
+            expFields.forEach(id => { document.getElementById(id).value = Math.round(val(id) * mult); });
+            expenseTf = newTf; handleInputsChanged();
         }
 
-        function renderExpenses() {
-            const list = document.getElementById('expenseList'); list.innerHTML = '';
-            expenses.forEach((exp, i) => {
-                list.innerHTML += `<div class="flex items-center gap-2"><input type="text" value="${exp.name}" onchange="expenses[${i}].name=this.value; saveData()" class="flex-1 border rounded px-2 py-1"><div class="flex items-center gap-1 w-24"><span class="text-gray-500 text-sm">$</span><input type="number" id="exp_val_${i}" value="${exp.val}" onchange="expenses[${i}].val=val('exp_val_${i}'); recalcExpensePercents(); handleInputsChanged()" class="w-full border rounded px-1 py-1 text-right"></div><div class="flex items-center gap-1 w-16 no-print"><input type="number" id="exp_pct_${i}" step="0.1" onchange="const p=parseFloat(this.value)||0; expenses[${i}].val=Math.round(fromAnnual(toAnnual(val('grossPay'), incomeTf)*(p/100), expenseTf)); document.getElementById('exp_val_${i}').value=expenses[${i}].val; handleInputsChanged()" class="w-full border rounded px-1 py-1 text-right"><span class="text-gray-500 text-xs">%</span></div><button onclick="expenses.splice(${i},1); renderExpenses(); handleInputsChanged()" class="text-red-500 font-bold">&times;</button></div>`;
+        function renderEvents() {
+            const list = document.getElementById('eventsList'); list.innerHTML = '';
+            if (events.length === 0) list.innerHTML = '<p class="text-xs text-gray-400 italic mb-2">No lifecycle events added.</p>';
+            events.forEach((ev, i) => {
+                const color = ev.type === 'income' ? 'text-green-600' : 'text-red-600';
+                const sign = ev.type === 'income' ? '+' : '-';
+                list.innerHTML += `<div class="flex justify-between items-center text-sm border-b border-gray-200 pb-2"><span class="font-medium text-gray-700">Year ${ev.year}: ${ev.name}</span><div class="flex items-center gap-3"><span class="${color} font-bold">${sign}$${ev.val.toLocaleString()}</span><button onclick="events.splice(${i},1); renderEvents(); handleInputsChanged()" class="text-gray-400 hover:text-red-600 font-bold text-lg">&times;</button></div></div>`;
             });
-            recalcExpensePercents();
         }
 
-        function recalcExpensePercents() {
-            const annGross = toAnnual(val('grossPay'), incomeTf);
-            expenses.forEach((exp, i) => {
-                const el = document.getElementById(`exp_pct_${i}`);
-                if (el) el.value = annGross ? ((toAnnual(exp.val, expenseTf) / annGross) * 100).toFixed(1) : 0;
-            });
+        function addEvent() {
+            const name = document.getElementById('newEventName').value || 'Unnamed Event';
+            const type = document.getElementById('newEventType').value;
+            const year = parseInt(document.getElementById('newEventYear').value);
+            const valObj = parseFloat(document.getElementById('newEventAmount').value);
+            
+            if(year > 0 && valObj > 0) {
+                events.push({ id: Date.now(), name, type, year, val: valObj });
+                document.getElementById('newEventName').value = '';
+                document.getElementById('newEventYear').value = '';
+                document.getElementById('newEventAmount').value = '';
+                renderEvents(); handleInputsChanged();
+            } else {
+                alert("Please enter a valid Year and Dollar Amount greater than 0.");
+            }
         }
-        function addExpense() { expenses.push({ id: Date.now(), name: 'New Expense', val: 0 }); renderExpenses(); handleInputsChanged(); }
 
         function handleInputsChanged() {
             saveData();
@@ -325,9 +491,14 @@
             const mTaxes = fromAnnual(toAnnual(val('fedTax_val')+val('stateTax_val')+val('ficaTax_val'), incomeTf), 'monthly');
             const mBen = fromAnnual(toAnnual(val('benefits_val'), incomeTf), 'monthly');
             const mRet = fromAnnual(toAnnual(val('retirement_val'), incomeTf), 'monthly');
+            
+            const employerMatchMonthly = mGross * (val('employerMatchPct') / 100);
+
             const mNet = mGross - mTaxes - mBen - mRet;
-            const mExp = fromAnnual(toAnnual(expenses.reduce((s, e) => s + e.val, 0), expenseTf), 'monthly');
-            const mCash = mNet - mExp;
+            
+            const sumExp = expFields.reduce((s, id) => s + val(id), 0);
+            const mExp = fromAnnual(toAnnual(sumExp, expenseTf), 'monthly');
+            const mCash = mNet - mExp; 
 
             document.getElementById('kpiNetPay').innerText = '$' + Math.round(mNet).toLocaleString();
             document.getElementById('kpiExpenses').innerText = '$' + Math.round(mExp).toLocaleString();
@@ -339,11 +510,9 @@
             const nw = totalAssets - totalDebt;
             
             document.getElementById('miniNetWorth').innerText = `$${Math.round(nw).toLocaleString()}`;
-            document.getElementById('displayNetWorth').innerText = `$${Math.round(nw).toLocaleString()}`;
 
-            updateCharts(mNet, mTaxes, mBen, mRet, mExp);
-            generateGrade(toAnnual(mGross, 'monthly'), mRet + Math.max(0, mCash), nw);
-            updateProjection(totalAssets, totalDebt, mRet + Math.max(0, mCash));
+            generateGrade(toAnnual(mGross, 'monthly'), mRet + Math.max(0, mCash) + employerMatchMonthly, nw);
+            updateProjections(mCash, mRet, mBen, employerMatchMonthly);
         }
 
         function generateGrade(annualSalary, monthlySavings, nw) {
@@ -377,44 +546,144 @@
             `;
         }
 
-        function updateProjection(currentAssets, currentDebt, monthlyAdditions) {
-            let years = [], assetData = [], debtData = [], nwData = [];
-            let a = currentAssets, d = currentDebt;
-            const monthlyReturn = 0.07 / 12;
+        function updateProjections(monthlySpareCash, monthly401k, monthlyHsa, employerMatchMonthly) {
+            let years = [];
+            const projYears = val('projectionYears') || 10;
+            const adjustInflation = document.getElementById('inflationToggle').checked;
             
-            for(let i=0; i<=10; i++) {
-                years.push(`Year ${i}`);
-                assetData.push(Math.round(a));
-                debtData.push(Math.round(d));
-                nwData.push(Math.round(a - d));
+            // Interest & Env rates
+            const mortgageRate = val('mortgageInterest') / 100 / 12;
+            const investRate = val('investReturn') / 100 / 12;
+            const savingsRate = val('savingsReturn') / 100 / 12;
+            const homeApprRate = val('homeAppr') / 100 / 12;
+            const autoDeprRate = val('autoDepr') / 100 / 12;
+            const inflationRate = val('inflationRate') / 100;
+            
+            // Starting Balances
+            let mortgageBal = val('debtMortgage');
+            let autoBal = val('debtAuto');
+            let studentBal = val('debtStudent');
+            let investBal = val('asset401k') + val('assetHsa') + val('assetInvestments');
+            let savingsBal = val('assetCash');
+            let homeBal = val('assetHome');
+            let vehicleBal = val('assetVehicle');
+            let ccDebt = val('debtCredit');
+
+            // Find configured monthly debt service values
+            let pAndI_payment = fromAnnual(toAnnual(val('expMortgagePI'), expenseTf), 'monthly');
+            let mAutoPmt = fromAnnual(toAnnual(val('expAuto'), expenseTf), 'monthly');
+            let mStudentPmt = fromAnnual(toAnnual(val('expStudent'), expenseTf), 'monthly');
+            
+            // Arrays for Charts
+            let initialNW = (investBal + savingsBal + homeBal + vehicleBal) - (mortgageBal + autoBal + studentBal + ccDebt);
+            let mortgageData = [mortgageBal], investData = [investBal], savingsData = [savingsBal], overallNWData = [initialNW];
+
+            let mortgagePayoffMonth = 0;
+
+            for (let y = 1; y <= projYears; y++) {
+                years.push(`Year ${y}`);
                 
-                for(let m=0; m<12; m++) {
-                    a = (a + monthlyAdditions) * (1 + monthlyReturn);
-                    d = Math.max(0, d - 1000);
+                // Aggregate any lifecycle events occurring this year
+                let yearEvents = events.filter(e => e.year === y);
+                let eventNet = 0;
+                yearEvents.forEach(e => { eventNet += (e.type === 'expense' ? -e.val : e.val); });
+
+                let dynamicSpareCash = monthlySpareCash;
+
+                for(let m=1; m<=12; m++) {
+                    // Apply lifecycle event impact in January of that year
+                    if(m === 1) savingsBal += eventNet;
+
+                    // Mortgage Loop
+                    if (mortgageBal > 0) {
+                        let interest = mortgageBal * mortgageRate;
+                        let principal = pAndI_payment - interest;
+                        if (principal > mortgageBal) principal = mortgageBal;
+                        mortgageBal -= principal;
+                    } else {
+                        if (mortgagePayoffMonth === 0) mortgagePayoffMonth = (y-1)*12 + m;
+                        dynamicSpareCash += pAndI_payment; // Add this payment to free cash flow once paid off
+                    }
+
+                    // Auto Loan Loop
+                    if (autoBal > 0) {
+                        let principal = mAutoPmt;
+                        if (principal > autoBal) principal = autoBal;
+                        autoBal -= principal;
+                    } else {
+                        dynamicSpareCash += mAutoPmt;
+                    }
+
+                    // Student Loan Loop
+                    if (studentBal > 0) {
+                        let principal = mStudentPmt;
+                        if (principal > studentBal) principal = studentBal;
+                        studentBal -= principal;
+                    } else {
+                        dynamicSpareCash += mStudentPmt;
+                    }
+
+                    // Asset Appreciation / Depreciation
+                    homeBal = homeBal * (1 + homeApprRate);
+                    vehicleBal = vehicleBal * (1 - autoDeprRate);
+
+                    // Investment Loop
+                    investBal = (investBal + monthly401k + employerMatchMonthly + monthlyHsa) * (1 + investRate);
+
+                    // Savings Loop
+                    savingsBal = (savingsBal + Math.max(0, dynamicSpareCash)) * (1 + savingsRate);
                 }
+
+                // Inflation discounting factor
+                const discountFactor = adjustInflation ? Math.pow(1 + inflationRate, y) : 1;
+
+                mortgageData.push(Math.round(mortgageBal / discountFactor));
+                investData.push(Math.round(investBal / discountFactor));
+                savingsData.push(Math.round(savingsBal / discountFactor));
+                
+                let nw = (investBal + savingsBal + homeBal + vehicleBal) - (mortgageBal + autoBal + studentBal + ccDebt);
+                overallNWData.push(Math.round(nw / discountFactor));
             }
 
-            if (projectionLineInst) projectionLineInst.destroy();
-            projectionLineInst = new Chart(document.getElementById('projectionLine').getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: years,
-                    datasets: [
-                        { label: 'Total Net Worth', data: nwData, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3, borderWidth: 3 },
-                        { label: 'Total Assets', data: assetData, borderColor: '#10b981', borderDash: [5, 5], tension: 0.3, borderWidth: 2 },
-                        { label: 'Total Debt', data: debtData, borderColor: '#ef4444', borderDash: [5, 5], tension: 0.3, borderWidth: 2 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } } }
-            });
-        }
+            if (mortgagePayoffMonth > 0) {
+                document.getElementById('mortgagePayoffText').innerText = `Estimated Payoff in ${(mortgagePayoffMonth/12).toFixed(1)} Years`;
+            } else {
+                document.getElementById('mortgagePayoffText').innerText = `Mortgage remains active beyond ${projYears} years at current payment.`;
+            }
 
-        function updateCharts(mNet, mTaxes, mBen, mRet, mExp) {
             Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
-            if (incomeDoughnutInst) incomeDoughnutInst.destroy();
-            incomeDoughnutInst = new Chart(document.getElementById('incomeDoughnut').getContext('2d'), { type: 'doughnut', data: { labels: ['Net Pay', 'Taxes', 'Benefits', 'Retirement'], datasets: [{ data: [mNet, mTaxes, mBen, mRet], backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } } });
-            if (expensePieInst) expensePieInst.destroy();
-            expensePieInst = new Chart(document.getElementById('expensePie').getContext('2d'), { type: 'pie', data: { labels: expenses.map(e => e.name), datasets: [{ data: expenses.map(e => fromAnnual(toAnnual(e.val, expenseTf), 'monthly')), backgroundColor: ['#3b82f6', '#8b5cf6', '#d946ef', '#f43f5e', '#f97316'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } } });
+            
+            // Overall NW Chart
+            if (overallProjectionLineInst) overallProjectionLineInst.destroy();
+            overallProjectionLineInst = new Chart(document.getElementById('overallProjectionLine').getContext('2d'), {
+                type: 'line',
+                data: { labels: ['Today', ...years], datasets: [{ label: 'Total Net Worth', data: overallNWData, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3, borderWidth: 3 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: function(context) { return '$' + context.parsed.y.toLocaleString(); } } }, legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } } } }
+            });
+
+            // Mortgage Chart
+            if (mortgageChartInst) mortgageChartInst.destroy();
+            mortgageChartInst = new Chart(document.getElementById('mortgageChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: ['Today', ...years], datasets: [{ label: 'Mortgage Balance', data: mortgageData, backgroundColor: '#ef4444' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }, x: { ticks: { maxTicksLimit: 10 } } } }
+            });
+
+            // Invest Chart
+            if (investChartInst) investChartInst.destroy();
+            investChartInst = new Chart(document.getElementById('investChart').getContext('2d'), {
+                type: 'line',
+                data: { labels: ['Today', ...years], datasets: [{ label: 'Investments', data: investData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }, x: { ticks: { maxTicksLimit: 10 } } } }
+            });
+
+            // Savings Chart
+            if (savingsChartInst) savingsChartInst.destroy();
+            savingsChartInst = new Chart(document.getElementById('savingsChart').getContext('2d'), {
+                type: 'line',
+                data: { labels: ['Today', ...years], datasets: [{ label: 'Savings', data: savingsData, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.3 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }, x: { ticks: { maxTicksLimit: 10 } } } }
+            });
         }
 
         window.onload = init;
