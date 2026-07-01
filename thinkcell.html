@@ -1151,13 +1151,13 @@ function stopGlobalDragAction(e) {
                     csvRows.push(fFields.join(","));
                 });
 
-                row.milestones.forEach(ms => {
+                                row.milestones.forEach(ms => {
                     let ruleDetails = [ms.showDate ? "PinDate" : "HideDate", ms.leaderEnabledText ? "LdrTxt" : "NoLdrTxt", ms.leaderEnabledDate ? "LdrDt" : "NoLdrDt", ms.leaderAnchorText || "center"].join("|");
                     let fFields = [
                         "MILESTONE", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE",
                         row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", ms.id,
                         `"${ms.p6IdStart || ''}"`, `"${ms.p6IdFinish || ''}"`, `"${ms.label.replace(/"/g, '""')}"`, ms.date, "",
-                        ms.symbol || "diamond", `"${ms.color || ''}"`, ms.labelOffsetX || 0, ms.labelOffsetY || 0,
+                        "", ms.symbol || "diamond", `"${ms.color || ''}"`, ms.labelOffsetX || 0, ms.labelOffsetY || 0,
                         ms.dateOffsetX || 0, ms.dateOffsetY || 0, `"${ruleDetails}"`
                     ];
                     csvRows.push(fFields.join(","));
