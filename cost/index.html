@@ -28,16 +28,16 @@
         .tooltip-container .tooltip-text { visibility: hidden; opacity: 0; transition: opacity 0.2s; position: absolute; z-index: 50; width: 250px; bottom: 125%; left: 50%; transform: translateX(-50%); background-color: #1f2937; color: #fff; text-align: left; padding: 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; line-height: 1.5; pointer-events: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
         .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
 
-        /* KPI Tooltips (Noob Proof) */
+        /* KPI Tooltips (Detailed & Noob Proof) */
         .kpi-card { position: relative; }
         .kpi-tooltip { 
             visibility: hidden; opacity: 0; transition: opacity 0.2s; position: absolute; z-index: 100; 
-            width: 300px; top: 110%; right: 0; background-color: #1f2937; color: #f9fafb; padding: 1rem; 
+            width: 320px; top: 110%; right: 0; background-color: #1f2937; color: #f9fafb; padding: 1rem; 
             border-radius: 0.5rem; font-size: 0.8rem; line-height: 1.5; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); 
             pointer-events: none; border: 1px solid #374151;
         }
         .kpi-card:hover .kpi-tooltip { visibility: visible; opacity: 1; }
-        .kpi-tooltip strong { color: #93c5fd; display: block; margin-top: 0.5rem; margin-bottom: 0.1rem; }
+        .kpi-tooltip strong { color: #93c5fd; display: block; margin-top: 0.6rem; margin-bottom: 0.1rem; }
         .kpi-tooltip strong:first-child { margin-top: 0; }
 
         /* Modal */
@@ -221,9 +221,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> The money that actually hits your bank account every month.<br>
-                                <strong>How we calculate it:</strong> We take your Gross Pay and subtract taxes, 401(k), and HSA contributions.<br>
-                                <strong>Why it matters:</strong> This is the actual cash you have available to spend or save.
+                                <strong>What it is:</strong> The actual take-home cash hitting your checking account.<br>
+                                <strong>Included/Assumed:</strong> Gross Pay minus Federal Tax, State Tax, FICA, 401(k), and HSA/FSA contributions. Scales with inflation over time.<br>
+                                <strong>Excluded:</strong> Other payroll deductions like health insurance premiums or union dues.
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Net Pay (Mo)</p>
@@ -233,9 +233,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-red-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> The total amount of money leaving your bank account every month.<br>
-                                <strong>How we calculate it:</strong> We add up your Living Expenses (groceries, bills, etc.) and Debt Service (mortgages, loans).<br>
-                                <strong>Why it matters:</strong> Keeping this lower than your Net Pay is the only way to build wealth.
+                                <strong>What it is:</strong> The total amount of money leaving your bank account to cover life and debts.<br>
+                                <strong>Included/Assumed:</strong> Sum of Debt Service (Mortgage P&I, Escrow, Auto, Student) and Living Expenses (CC bills, groceries, etc). Living expenses and Escrow scale up with inflation over time.<br>
+                                <strong>Excluded:</strong> Extra unlisted principal payments on debt.
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Outflows (Mo)</p>
@@ -245,9 +245,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> The money left over after all your expenses and bills are paid.<br>
-                                <strong>How we calculate it:</strong> Net Pay minus Total Outflows.<br>
-                                <strong>Why it matters:</strong> This money automatically goes into your Savings to grow your wealth.
+                                <strong>What it is:</strong> The surplus cash generated each month.<br>
+                                <strong>Included/Assumed:</strong> Net Pay minus Total Outflows. Assumes 100% of this surplus is successfully swept into your 'Cash & Savings' asset bucket to compound at your HYSA yield.<br>
+                                <strong>Excluded:</strong> Cash spent on unlisted impulse purchases.
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Free Cash (Mo)</p>
@@ -257,9 +257,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-indigo-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> The grand total of your financial life.<br>
-                                <strong>How we calculate it:</strong> We add up everything you own (Assets) and subtract everything you owe (Liabilities).<br>
-                                <strong>Why it matters:</strong> This is the ultimate scorecard of your financial health.
+                                <strong>What it is:</strong> The total value of everything you own minus everything you owe.<br>
+                                <strong>Included/Assumed:</strong> (Home + Vehicles + Cash + 401k + HSA + Brokerage) MINUS (Mortgage + Auto + Credit Card + Student Loans). Assumes assets appreciate and depreciate based on your inputs.<br>
+                                <strong>Excluded:</strong> Personal property like jewelry or furniture.
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Net Worth</p>
@@ -269,9 +269,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> The percentage of your total income that you are saving for the future.<br>
-                                <strong>How we calculate it:</strong> (401k + Match + HSA + Free Cash) divided by Gross Pay.<br>
-                                <strong>Why it matters:</strong> Financial experts recommend saving 15-20% to retire comfortably.
+                                <strong>What it is:</strong> The percentage of your gross income captured for future wealth.<br>
+                                <strong>Included/Assumed:</strong> (401k + Employer Match + HSA + Free Cash Flow) divided by Gross Pay.<br>
+                                <strong>Excluded:</strong> Mortgage principal paydown is historically excluded from standard savings rate formulas, and is excluded here.
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Savings Rate</p>
@@ -281,9 +281,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> How long it will take for your Total Net Worth to reach $1,000,000.<br>
-                                <strong>How we calculate it:</strong> We project your asset growth and debt payoff over time.<br>
-                                <strong>Why it matters:</strong> A major milestone! The Nominal number is the bank balance, the Real number adjusts for inflation to show today's purchasing power.
+                                <strong>What it is:</strong> The exact time it will take for your Total Net Worth to cross $1,000,000.<br>
+                                <strong>Included/Assumed:</strong> Monthly compounding of investment returns, HYSA yields, home appreciation, vehicle depreciation, and fixed debt paydown.<br>
+                                <strong>Excluded:</strong> Market volatility, sudden job loss, or taxes on unrealized capital gains.
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Years to $1M</p>
@@ -293,9 +293,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-teal-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> The time until you have enough investments to stop working.<br>
-                                <strong>How we calculate it:</strong> We check when your Liquid Assets cover your yearly expenses multiplied by your Retirement Length.<br>
-                                <strong>Why it matters:</strong> <em>Note: This often matches your Mortgage Payoff year exactly. Why? Because paying off your house drops your monthly expenses so dramatically that your required retirement target drops, instantly making you ready to retire!</em>
+                                <strong>What it is:</strong> The time until your liquid investments can support your standard of living.<br>
+                                <strong>Included/Assumed:</strong> Triggers when Liquid Assets (Cash + 401k + HSA + Brokerage) equal your Future Inflated Annual Outflows multiplied by Retirement Length.<br>
+                                <strong>Excluded:</strong> Home equity is excluded from liquid assets. Does not account for Social Security or pensions.
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Years to Retire</p>
@@ -305,9 +305,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-orange-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> How long until you completely own your home with no mortgage.<br>
-                                <strong>How we calculate it:</strong> We track your remaining balance based on your regular monthly payment.<br>
-                                <strong>Why it matters:</strong> A paid-off house is a huge step toward financial freedom.
+                                <strong>What it is:</strong> How long until your home is owned free and clear.<br>
+                                <strong>Included/Assumed:</strong> Standard amortization based on your exact P&I payment input vs current balance at your stated interest rate.<br>
+                                <strong>Excluded:</strong> Does not assume you use your Free Cash to make extra principal payments.
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Mtg Payoff (Yrs)</p>
@@ -317,9 +317,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-pink-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> The exact amount of money you need in the bank to safely retire.<br>
-                                <strong>How we calculate it:</strong> We take your inflated future yearly expenses and multiply by your Retirement Length.<br>
-                                <strong>Why it matters:</strong> This is your "finish line" number.
+                                <strong>What it is:</strong> The required liquid portfolio size to safely retire.<br>
+                                <strong>Included/Assumed:</strong> (Current Monthly Outflows * Inflation scaling until retirement) * 12 months * Retirement Length. Dynamically adjusts if your mortgage gets paid off before you retire.<br>
+                                <strong>Excluded:</strong> Does not factor in capital gains taxes owed upon liquidating your accounts.
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Retirement Target $</p>
@@ -329,9 +329,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-cyan-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> How many months you could survive if you lost your job today.<br>
-                                <strong>How we calculate it:</strong> (Cash + Investments + HSA) divided by your current Monthly Outflows.<br>
-                                <strong>Why it matters:</strong> Experts recommend having at least 3-6 months of runway for emergencies.
+                                <strong>What it is:</strong> How many months you could pay your bills if you lost your job today.<br>
+                                <strong>Included/Assumed:</strong> (Cash + HSA + Brokerage) divided by Current Monthly Outflows.<br>
+                                <strong>Excluded:</strong> 401(k) and Home Equity are excluded because they carry massive penalties or take months to liquidate.
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Liquid Runway (Mo)</p>
@@ -341,9 +341,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-gray-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> How much of your wealth is funded by debt.<br>
-                                <strong>How we calculate it:</strong> Total Debt divided by Total Assets.<br>
-                                <strong>Why it matters:</strong> A ratio below 50% is generally healthy. Lower means you own more of your stuff and the bank owns less.
+                                <strong>What it is:</strong> How much of your financial life is funded by the bank.<br>
+                                <strong>Included/Assumed:</strong> Total Liabilities divided by Total Assets. Values shift dynamically over time as debts are paid down and assets change value.<br>
+                                <strong>Excluded:</strong> Does not factor in your income (which would be DTI, a different metric).
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Debt-to-Asset Ratio</p>
@@ -353,9 +353,9 @@
                     <div class="bg-white p-4 rounded-lg shadow border-l-4 border-lime-500 kpi-card">
                         <div class="absolute top-2 right-2 text-gray-400 cursor-help">ⓘ
                             <div class="kpi-tooltip">
-                                <strong>What it is:</strong> The monthly "paycheck" your investments could safely pay you right now without running out.<br>
-                                <strong>How we calculate it:</strong> Your Liquid Assets multiplied by the 4% safe withdrawal rule, divided by 12 months.<br>
-                                <strong>Why it matters:</strong> When this number grows large enough to match your Monthly Outflows, you can officially retire!
+                                <strong>What it is:</strong> The monthly passive income your current liquid portfolio could safely generate.<br>
+                                <strong>Included/Assumed:</strong> (Cash + 401k + HSA + Brokerage) * 4% safe withdrawal rate / 12 months.<br>
+                                <strong>Excluded:</strong> Does not subtract the income tax you would theoretically owe on these withdrawals.
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Safe Withdraw (Mo)</p>
@@ -456,7 +456,6 @@
         let incomeTf = 'biweekly', expenseTf = 'monthly', events = [];
         let overallProjectionLineInst, mortgageChartInst, investChartInst, savingsChartInst;
 
-        // Comma formatting helpers
         const unformatCurrency = str => parseFloat(String(str).replace(/,/g, '')) || 0;
         const formatCurrency = num => Number(num).toLocaleString('en-US');
         const val = id => unformatCurrency(document.getElementById(id).value);
@@ -481,9 +480,8 @@
         function init() {
             const stateSelect = document.getElementById('userState');
             Object.keys(stateTaxData).forEach(st => stateSelect.add(new Option(stateTaxData[st].name, st)));
-            stateSelect.value = "NC";
 
-            const saved = localStorage.getItem('budgetForecasterData_v17');
+            const saved = localStorage.getItem('budgetForecasterData_v18');
             if (saved) {
                 const data = JSON.parse(saved);
                 document.getElementById('grossPay').value = data.grossPay;
@@ -509,28 +507,30 @@
                 });
 
                 incomeTf = data.incomeTf; expenseTf = data.expenseTf; events = data.events || [];
+                handleStateChange(true); // Updates tooltip text
             } else {
+                stateSelect.value = "NC";
                 document.getElementById('grossPay').value = 7500;
                 document.getElementById('fedTax_pct').value = 12.0; document.getElementById('ficaTax_pct').value = 7.65;
                 document.getElementById('employerMatchPct').value = 4.0;
                 
-                document.getElementById('assetHome').value = 425000;
-                document.getElementById('assetVehicle').value = 35000;
+                document.getElementById('assetHome').value = 395000;
+                document.getElementById('assetVehicle').value = 20000;
                 document.getElementById('assetCash').value = 15000;
-                document.getElementById('asset401k').value = 125000;
-                document.getElementById('assetHsa').value = 6000;
+                document.getElementById('asset401k').value = 110000;
+                document.getElementById('assetHsa').value = 11000;
                 document.getElementById('assetInvestments').value = 5000;
                 
-                document.getElementById('debtMortgage').value = 315000;
+                document.getElementById('debtMortgage').value = 313000;
                 document.getElementById('debtAuto').value = 0;
                 document.getElementById('debtCredit').value = 0;
                 document.getElementById('debtStudent').value = 0;
 
-                document.getElementById('expMortgagePI').value = 2400;
-                document.getElementById('expEscrow').value = 500;
+                document.getElementById('expMortgagePI').value = 2600;
+                document.getElementById('expEscrow').value = 300;
                 document.getElementById('expAuto').value = 0;
                 document.getElementById('expStudent').value = 0;
-                document.getElementById('expCC').value = 600;
+                document.getElementById('expCC').value = 7000;
                 document.getElementById('expGroceries').value = 500;
                 document.getElementById('expUtilities').value = 350;
                 document.getElementById('expInsurance').value = 150;
@@ -541,14 +541,14 @@
                 document.getElementById('mortgageInterest').value = 6.6;
                 document.getElementById('inflationRate').value = 2.5;
                 
-                handleStateChange(true);
+                handleStateChange(); // Forces the state tax % to update based on the newly selected default
             }
             setupFormatting(); renderEvents(); handleGrossChange();
         }
 
         function exportData() {
             saveData();
-            const dataStr = localStorage.getItem('budgetForecasterData_v17');
+            const dataStr = localStorage.getItem('budgetForecasterData_v18');
             const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
@@ -560,7 +560,7 @@
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = e => { try { localStorage.setItem('budgetForecasterData_v17', JSON.stringify(JSON.parse(e.target.result))); location.reload(); } catch(err) { alert("Invalid JSON file."); } };
+            reader.onload = e => { try { localStorage.setItem('budgetForecasterData_v18', JSON.stringify(JSON.parse(e.target.result))); location.reload(); } catch(err) { alert("Invalid JSON file."); } };
             reader.readAsText(file);
         }
 
@@ -578,10 +578,10 @@
             ['fedTax', 'stateTax', 'ficaTax', 'retirement', 'benefits'].forEach(id => {
                 data[`${id}_val`] = val(`${id}_val`); data[`${id}_pct`] = parseFloat(document.getElementById(`${id}_pct`).value) || 0;
             });
-            localStorage.setItem('budgetForecasterData_v17', JSON.stringify(data));
+            localStorage.setItem('budgetForecasterData_v18', JSON.stringify(data));
         }
 
-        function resetData() { if(confirm('Reset all data?')) { localStorage.removeItem('budgetForecasterData_v17'); location.reload(); } }
+        function resetData() { if(confirm('Reset all data?')) { localStorage.removeItem('budgetForecasterData_v18'); location.reload(); } }
 
         function handleGrossChange() {
             const gross = val('grossPay');
@@ -603,6 +603,7 @@
         function handleStateChange(isInit = false) {
             const data = stateTaxData[document.getElementById('userState').value];
             document.getElementById('stateTaxTooltip').innerHTML = `<strong>${data.name} Tax Info</strong><br>Rate: ${data.rate}%`;
+            // If the user changed the dropdown, automatically override and recalculate the state tax field
             if(!isInit) { document.getElementById('stateTax_pct').value = data.rate; handleTaxChange('stateTax', 'pct'); }
         }
 
