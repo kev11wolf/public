@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Org Chart - Improved Version</title>
+  <!-- Load Roboto font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <!-- Library for JPG/PNG Export: html2canvas -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    body, button, input, .org-node, select {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #f3f4f6;
+      color: #333;
+      overflow: hidden; /* We'll rely on #orgChartOuter for scrolling */
+    }
+    /* Fixed toolbar on the left */
+    #sidePanel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 250px;
+      bottom: 0;
+      z-index: 9999;
+      background: #fff;
+      overflow-y: auto;
+      border-right: 1px solid #ccc;
+      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+      padding: 8px;
+    }
+    #sidePanel h3 {
+      margin-top: 0;
+      font-size: 1rem;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+    }
+    .toolbar-column {
+      margin-bottom: 16px;
+    }
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+      align-items: center;
+    }
+    #sidePanel button,
+    #sidePanel input[type="color"],
+    #sidePanel input[type="range"],
+    #sidePanel input[type="text"],
+    #sidePanel select,
+    #sidePanel input[type="number"] {
+      padding: 4px 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 0.85rem;
+    }
+    #sidePanel button:hover {
+      background: #ddd;
+    }
+    #sidePanel input[type="color"] {
+      height: 28px;
+      width: 28px;
+      padding: 0;
+      border: 1px solid #ccc;
+    }
+    .opacity-range {
+      width: 60px;
+    }
+    /* Disabled style */
+    input[disabled],
+    button[disabled],
+    select[disabled] {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    /* 50px buffer to the right of the fixed toolbar */
+    #orgChartOuter {
+      position: fixed;
+      top: 0;
+      left: 280px; /* 250px for toolbar + 50px buffer */
+      right: 0;
+      bottom: 0;
+      overflow: auto;
+      background: #fafafa;
+    }
+    /* Main container for nodes and connectors */
+    #orgChartContainer {
+      position: relative;
+      width: 20000px;
+      height: 20000px;
+      transform-origin: top left;
+      transform: translate(0px, 0px) scale(1);
+      background: #FFFFFF; /* white background for the chart container */
+    }
+    #connectorSVG {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 20000px;
+      height: 20000px;
+      overflow: visible;
+      z-index: 0;
+    }
+    .org-node {
+      position: absolute;
+      min-height: 40px;
+      min-width: 110px;
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #333;
+      border-radius: 4px;
+      text-align: center;
+      cursor: move;
+      box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      user-select: none;
+      z-index: 10; /* above SVG */
+      white-space: normal;
+      word-wrap: break-word;
+      overflow: hidden;
+      background: #ffffff; /* ensure node backgrounds are white too */
+    }
+    .org-node .name {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .org-node .title {
+      font-size: 12px;
+      color: #666;
+    }
+    .org-node .department,
+    .org-node .officeLocation,
+    .org-node .client,
+    .org-node .years {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+      display: none;
+    }
+    .resize-handle {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 15px;
+      height: 15px;
+      background: transparent;
+      cursor: se-resize;
+      user-select: none;
+    }
+    /* Selected node highlight */
+    .org-node.selected {
+      outline: 2px solid blue;
+      font-weight: bold;
+    }
+    /* Context menu */
+    #contextMenu {
+      position: absolute;
+      display: none;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      z-index: 99999;
+      padding: 5px;
+    }
+    #contextMenu button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 4px 10px;
+      margin: 0;
+      border: none;
+      background: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    #contextMenu button:hover {
+      background: #eee;
+    }
+    .hidden {
+      display: none;
+    }
+    /* Sticky panel for node editing at bottom of sidePanel */
+    #nodeEditPanel {
+      position: sticky;
+      bottom: 0;
+      background: #fff;
+      border-top: 1px solid #ccc;
+      padding: 8px;
+      margin-top: 12px;
+    }
+    #nodeEditPanel h3 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+      font-size: 1rem;
+    }
+    /* About modal */
+    #aboutModal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    #aboutContent {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 8px;
+    }
+    #closeAbout {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    #closeAbout:hover,
+    #closeAbout:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    /* Print adjustments: remove or override fixed dimensions and transformations */
+    @media print {
+      body {
+        overflow: visible !important;
+      }
+      #orgChartOuter {
+        position: static !important;
+        margin-left: 0 !important;
+        overflow: visible !important;
+      }
+      #sidePanel {
+        display: none; /* or keep if you want the toolbar in print */
+      }
+      #orgChartContainer {
+        width: auto !important;
+        height: auto !important;
+        transform: none !important;
+        margin-left: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="sidePanel">
+  <div class="toolbar-column">
+    <h3>Nodes</h3>
+    <div class="control-row">
+      <button id="newNodeBtn">New Node</button>
+      <button id="autoOrganizeBtn">Auto-Organize</button>
+    </div>
+    <div class="control-row">
+      <button id="autoSizeBtn">Auto Size All</button>
+      <button id="autoSizeSelectedBtn">Auto Size Sel</button>
+    </div>
+    <div class="control-row">
+      <button id="deleteNodeBtn" disabled>Delete Node</button>
+    </div>
+    <div class="control-row">
+      <button id="selectAllBtn">Select All Nodes</button>
+    </div>
+    <div class="control-row" style="font-size:0.85rem;">
+      <label for="nodeChooser">Edit Node:</label>
+      <select id="nodeChooser" style="max-width:100%;">
+        <option value="">Select a node...</option>
+      </select>
+    </div>
+  </div>
+  <div class="toolbar-column">
+    <h3>Zoom</h3>
+    <div class="control-row">
+      <button id="zoomOutBtn">- Zoom</button>
+      <button id="zoomInBtn">+ Zoom</button>
+    </div>
+    <div class="control-row">
+      <label for="zoomSlider">Zoom Slider:</label>
+      <input type="range" id="zoomSlider" min="10" max="300" value="100">
+    </div>
+  </div>
+  <div class="toolbar-column">
+    <h3>Center</h3>
+    <div class="control-row">
+      <button id="autoCenterBtn">Auto Center</button>
+    </div>
+  </div>
+  <div class="toolbar-column">
+    <h3>Connectors &amp; Colors</h3>
+    <div class="control-row">
+      <button id="drawConnectorBtn">Connector</button>
+      <button id="clearConnectorsBtn">Clear</button>
+    </div>
+    <div class="control-row">
+      <label>Color:</label>
+      <input type="color" id="connectorColorInput" value="#333333">
+      <input type="range" id="connectorAlphaRange" class="opacity-range" min="0" max="100" value="100">
+    </div>
+  </div>
+  <div class="toolbar-column">
+    <h3>Load/Save &amp; Exports</h3>
+    <div class="control-row">
+      <button id="saveChartBtn">Save</button>
+      <button id="loadChartBtn">Load</button>
+      <input type="file" id="loadFile" accept="application/json" style="display:none;">
+    </div>
+    <!-- Export buttons -->
+    <div class="control-row">
+      <button id="printJPGBtn">Export to JPG</button>
+      <button id="exportPNGBtn">Export to PNG</button>
+    </div>
+  </div>
+  <div class="toolbar-column">
+    <h3>Z-Index</h3>
+    <div class="control-row">
+      <button id="bringFrontBtn">Front</button>
+      <button id="sendBackBtn">Back</button>
+    </div>
+  </div>
+  <div class="toolbar-column">
+    <h3>History &amp; Create</h3>
+    <div class="control-row">
+      <button id="undoBtn">Undo</button>
+      <button id="redoBtn">Redo</button>
+    </div>
+  </div>
+  <div class="toolbar-column">
+    <h3>Search &amp; Filter</h3>
+    <div class="control-row">
+      <input type="text" id="searchInput" placeholder="Name/Dept" style="flex:1;">
+      <button id="clearFilterBtn">Clear</button>
+    </div>
+    <div class="control-row" style="font-size: 0.85rem;">
+      <label for="attributeSelect">Attr:</label>
+      <select id="attributeSelect">
+        <option value="name">Name</option>
+        <option value="department">Department</option>
+        <option value="officeLocation">Office</option>
+        <option value="client">Client</option>
+        <option value="title">Title</option>
+      </select>
+    </div>
+    <div class="control-row">
+      <input type="text" id="attributeInput" placeholder="Filter text" style="flex:1;">
+      <button id="attributeFilterBtn">Filter</button>
+      <button id="clearAttributeFilterBtn">Clear</button>
+    </div>
+  </div>
+  <div class="toolbar-column" style="margin-bottom:50px;">
+    <h3>Stats</h3>
+    <div class="control-row" style="font-size:0.9rem;">
+      <span>Nodes: <span id="nodesCount">0</span></span>
+      <span>Connectors: <span id="connectorsCount">0</span></span>
+    </div>
+  </div>
+  <div class="toolbar-column">
+    <h3>About</h3>
+    <div class="control-row">
+      <button id="aboutBtn">About This Tool</button>
+    </div>
+  </div>
+  <div id="nodeEditPanel">
+    <h3>Edit Node</h3>
+    <div class="control-row" style="font-size:0.85rem;">
+      <label>Name:</label>
+      <input type="text" id="editNodeName" style="width:130px;" disabled>
+    </div>
+    <div class="control-row" style="font-size:0.85rem;">
+      <label>Title:</label>
+      <input type="text" id="editNodeTitle" style="width:130px;" disabled>
+    </div>
+    <div class="control-row" style="font-size:0.85rem;">
+      <label>Dept:</label>
+      <input type="text" id="editNodeDepartment" style="width:130px;" disabled>
+    </div>
+    <div class="control-row" style="font-size:0.85rem;">
+      <label>Color:</label>
+      <input type="color" id="editNodeColor" value="#ffffff" disabled>
+      <input type="range" id="editNodeAlpha" class="opacity-range" min="0" max="100" value="100" disabled>
+    </div>
+    <div class="control-row" style="font-size:0.85rem;">
+      <label>Office:</label>
+      <input type="text" id="editNodeOffice" style="width:60px;" disabled>
+      <label>Client:</label>
+      <input type="text" id="editNodeClient" style="width:60px;" disabled>
+    </div>
+    <div class="control-row" style="font-size:0.85rem;">
+      <label>Years:</label>
+      <input type="number" id="editNodeYears" min="0" style="width:60px;" disabled>
+    </div>
+    <div class="control-row" style="font-size:0.85rem;">
+      <label>TxtC:</label>
+      <input type="color" id="editTextColor" value="#000000" disabled>
+      <label>Bord:</label>
+      <input type="color" id="editBorderColor" value="#333333" disabled>
+    </div>
+    <div class="control-row" style="font-size:0.85rem;">
+      <label>F.Size:</label>
+      <input type="number" id="editFontSize" min="8" max="30" value="14" style="width:50px;" disabled>
+    </div>
+    <div class="control-row" style="font-size: 0.85rem; margin-top:6px;">
+      <button id="deleteNodeBtn" disabled>Delete Node</button>
+    </div>
+  </div>
+</div>
+<div id="orgChartOuter">
+  <div id="orgChartContainer">
+    <!-- SVG for connectors; nodes will be created dynamically -->
+    <svg id="connectorSVG">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#333333" />
+        </marker>
+      </defs>
+    </svg>
+  </div>
+</div>
+<div id="contextMenu" style="display: none;">
+  <button id="ctxDeleteNode">Delete Node</button>
+  <button id="ctxAutoSizeNode">Auto-Size Node</button>
+  <button id="ctxBringFront">Bring to Front</button>
+  <button id="ctxSendBack">Send to Back</button>
+  <button id="ctxRemoveConnections">Remove Connections</button>
+  <button id="ctxCopyNode">Copy Node</button>
+  <button id="ctxPasteNode">Paste Node</button>
+  <button id="ctxAddNewNode">Add New Node</button>
+  <button id="ctxAutoCenterBG">Auto Center Org Chart</button>
+</div>
+<!-- About Modal -->
+<div id="aboutModal">
+  <div id="aboutContent">
+    <span id="closeAbout">&times;</span>
+    <h2>About This Tool</h2>
+    <p>This is an interactive Organizational Chart editor built entirely with vanilla HTML, CSS, and JavaScript. No frameworks or external servers are used—everything runs client-side in your browser.</p>
+    <h3>Key Features:</h3>
+    <ul>
+      <li><strong>Nodes:</strong> Create, drag, resize, edit, delete, copy/paste, auto-size, and select multiple nodes.</li>
+      <li><strong>Connectors:</strong> Draw lines between nodes with arrows; connectors imply hierarchy for auto-organization.</li>
+      <li><strong>Hierarchy & Layout:</strong> Auto-organize into levels based on connections (parent-child relationships).</li>
+      <li><strong>Zoom & Pan:</strong> Zoom in/out with buttons/slider, pan by left-click dragging on the canvas background.</li>
+      <li><strong>Editing:</strong> Change node details like name, title, department, colors, font size via sidebar.</li>
+      <li><strong>Search & Filter:</strong> Filter nodes by name/dept or custom attributes.</li>
+      <li><strong>History:</strong> Undo/redo actions.</li>
+      <li><strong>Exports:</strong> Save/load JSON, export to JPG (with background) or PNG (transparent).</li>
+      <li><strong>Stats:</strong> View node and connector counts.</li>
+    </ul>
+    <h3>How It Works:</h3>
+    <p>Nodes are DIV elements positioned absolutely. Connectors are SVG lines with arrows. Data is stored in JavaScript arrays/objects. Changes auto-save to localStorage. For hierarchy, connectors set parentId on child nodes, enabling tree-based auto-layout.</p>
+    <p>Use context menu (right-click) on nodes or background for quick actions. Keyboard: Arrow keys to move selected node, Delete to remove, Enter to edit.</p>
+    <p>This tool is designed for desktop use. For questions or issues, inspect console or modify the code—it's open!</p>
+  </div>
+</div>
+<script>
+/************************************************
+ * Global Data & Settings
+ ************************************************/
+// Start with an empty orgData; we'll load default or localStorage below.
+let orgData = [];
+// Connectors stored as { from: idNum, to: idNum, line: <svg line> }
+let connectors = [];
+// Selection & states
+let selectedNodes = new Set();
+let currentScale = 1.0;
+let translationX = 0;
+let translationY = 0;
+const MIN_ZOOM = 0.3;
+const MAX_ZOOM = 3.0;
+let connectorColorHex = "#333333";
+let connectorAlpha = 100;
+let isDraggingNodes = false;
+let groupOffsets = {};
+let isDrawingConnector = false;
+let startNodeId = null;
+let copiedNodeData = null;
+let contextClickX = 0;
+let contextClickY = 0;
+// Snap-to-grid
+let snapGridSize = 10;
+// Undo/Redo
+let stateHistory = [];
+let currentHistoryIndex = -1;
+// UI references
+const orgChartOuter = document.getElementById('orgChartOuter');
+const orgChartContainer = document.getElementById('orgChartContainer');
+const connectorSVG = document.getElementById('connectorSVG');
+const contextMenu = document.getElementById('contextMenu');
+const nodeChooser = document.getElementById('nodeChooser');
+const nodesCountEl = document.getElementById('nodesCount');
+const connectorsCountEl = document.getElementById('connectorsCount');
+// Edit panel references
+const editNameInput = document.getElementById('editNodeName');
+const editTitleInput = document.getElementById('editNodeTitle');
+const editDeptInput = document.getElementById('editNodeDepartment');
+const editColorInput = document.getElementById('editNodeColor');
+const editAlphaInput = document.getElementById('editNodeAlpha');
+const editOfficeInput = document.getElementById('editNodeOffice');
+const editClientInput = document.getElementById('editNodeClient');
+const editYearsInput = document.getElementById('editNodeYears');
+const editTextColorInput = document.getElementById('editTextColor');
+const editBorderColorInput = document.getElementById('editBorderColor');
+const editFontSizeInput = document.getElementById('editFontSize');
+const deleteNodeBtn = document.getElementById('deleteNodeBtn');
+// Context menu items
+const ctxDeleteNode = document.getElementById('ctxDeleteNode');
+const ctxAutoSizeNode = document.getElementById('ctxAutoSizeNode');
+const ctxBringFront = document.getElementById('ctxBringFront');
+const ctxSendBack = document.getElementById('ctxSendBack');
+const ctxRemoveConnections = document.getElementById('ctxRemoveConnections');
+const ctxCopyNode = document.getElementById('ctxCopyNode');
+const ctxPasteNode = document.getElementById('ctxPasteNode');
+const ctxAddNewNode = document.getElementById('ctxAddNewNode');
+const ctxAutoCenterBG = document.getElementById('ctxAutoCenterBG');
+// "Select All Nodes" button reference
+const selectAllBtn = document.getElementById('selectAllBtn');
+// Export buttons references
+const printJPGBtn = document.getElementById('printJPGBtn');
+const exportPNGBtn = document.getElementById('exportPNGBtn');
+// Panning state
+let isPanning = false;
+let panStartX = 0;
+let panStartY = 0;
+let panStartTranslateX = 0;
+let panStartTranslateY = 0;
+// About modal
+const aboutModal = document.getElementById('aboutModal');
+const closeAbout = document.getElementById('closeAbout');
+const aboutBtn = document.getElementById('aboutBtn');
+/************************************************
+ * INIT
+ ************************************************/
+function init() {
+  // Attempt to load from local storage.
+  // If this fails or has no data, we load default nodes:
+  const loadedOK = loadFromLocalStorage();
+  if (!loadedOK) {
+    // Provide default nodes if no local saved data
+    orgData = [
+      {
+        id: 1,
+        name: "Alice",
+        title: "CEO",
+        department: "Head Office",
+        officeLocation: "New York",
+        client: "HQ Client",
+        yearsWithCompany: 5,
+        x: 400,
+        y: 100,
+        width: 130,
+        height: 60,
+        colorHex: "#ffffff",
+        colorAlpha: 100,
+        textColor: "#000000",
+        borderColor: "#333333",
+        fontSize: 14,
+        parentId: null
+      },
+      {
+        id: 2,
+        name: "Bob",
+        title: "CTO",
+        department: "Technology",
+        officeLocation: "Los Angeles",
+        client: "CloudCore",
+        yearsWithCompany: 3,
+        x: 600,
+        y: 300,
+        width: 130,
+        height: 60,
+        colorHex: "#ffffff",
+        colorAlpha: 100,
+        textColor: "#000000",
+        borderColor: "#333333",
+        fontSize: 14,
+        parentId: 1
+      }
+    ];
+  }
+  createOrgNodes();
+  updateAllConnectors();
+  updateEditFields();
+  updateStats();
+  pushState("Initial load");
+}
+/************************************************
+ * CREATE & UPDATE NODES
+ ************************************************/
+let nodeElements = {};
+function createOrgNodes() {
+  // Remove existing elements
+  Object.values(nodeElements).forEach(el => {
+    if (el.parentNode) el.parentNode.removeChild(el);
+  });
+  nodeElements = {};
+  // Create new elements from orgData
+  orgData.forEach(node => {
+    const nodeEl = document.createElement('div');
+    nodeEl.classList.add('org-node');
+    nodeEl.id = `node-${node.id}`;
+    nodeEl.style.left = node.x + 'px';
+    nodeEl.style.top = node.y + 'px';
+    nodeEl.style.width = node.width + 'px';
+    nodeEl.style.height = node.height + 'px';
+    nodeEl.style.backgroundColor = hexAlphaToRGBA(node.colorHex, node.colorAlpha);
+    nodeEl.style.color = node.textColor;
+    nodeEl.style.borderColor = node.borderColor;
+    nodeEl.style.fontSize = node.fontSize + 'px';
+    nodeEl.setAttribute('role', 'treeitem');
+    nodeEl.setAttribute('aria-label', `Node: ${node.name}, Title: ${node.title}`);
+    nodeEl.innerHTML = `
+      <div class="name"></div>
+      <div class="title"></div>
+      <div class="department"></div>
+      <div class="officeLocation"></div>
+      <div class="client"></div>
+      <div class="years"></div>
+      <div class="resize-handle"></div>
+    `;
+    orgChartContainer.appendChild(nodeEl);
+    nodeElements[node.id] = nodeEl;
+    makeDraggableAndResizable(nodeEl, node);
+    updateNodeElement(node.id);
+  });
+  updateNodeDropdown();
+  updateStats();
+}
+function updateNodeElement(nodeId, autoSize=false) {
+  const node = orgData.find(n => n.id === nodeId);
+  if (!node) return;
+  const nodeEl = nodeElements[nodeId];
+  if (!nodeEl) return;
+  nodeEl.querySelector('.name').textContent = node.name;
+  nodeEl.querySelector('.title').textContent = node.title;
+  const depEl = nodeEl.querySelector('.department');
+  const offEl = nodeEl.querySelector('.officeLocation');
+  const clientEl = nodeEl.querySelector('.client');
+  const yearsEl = nodeEl.querySelector('.years');
+  if (node.department) {
+    depEl.style.display = 'block';
+    depEl.textContent = node.department;
+  } else {
+    depEl.style.display = 'none';
+  }
+  if (node.officeLocation) {
+    offEl.style.display = 'block';
+    offEl.textContent = "Office: " + node.officeLocation;
+  } else {
+    offEl.style.display = 'none';
+  }
+  if (node.client) {
+    clientEl.style.display = 'block';
+    clientEl.textContent = "Client: " + node.client;
+  } else {
+    clientEl.style.display = 'none';
+  }
+  if (node.yearsWithCompany) {
+    yearsEl.style.display = 'block';
+    yearsEl.textContent = "Years: " + node.yearsWithCompany;
+  } else {
+    yearsEl.style.display = 'none';
+  }
+  nodeEl.style.backgroundColor = hexAlphaToRGBA(node.colorHex, node.colorAlpha);
+  nodeEl.style.color = node.textColor;
+  nodeEl.style.borderColor = node.borderColor;
+  nodeEl.style.fontSize = node.fontSize + 'px';
+  if (autoSize) {
+    autoSizeSingleNode(nodeId);
+  }
+}
+/************************************************
+ * DRAG & RESIZE
+ ************************************************/
+function makeDraggableAndResizable(nodeEl, nodeData) {
+  const resizeHandle = nodeEl.querySelector('.resize-handle');
+  nodeEl.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('resize-handle')) {
+      e.stopPropagation();
+      startNodeResize(e, nodeEl, nodeData);
+      return;
+    }
+    // Multiple selection with CTRL
+    if (e.ctrlKey) {
+      if (selectedNodes.has(nodeData.id)) {
+        selectedNodes.delete(nodeData.id);
+      } else {
+        selectedNodes.add(nodeData.id);
+      }
+    } else {
+      if (!selectedNodes.has(nodeData.id)) {
+        unselectAllNodes();
+        selectedNodes.add(nodeData.id);
+      }
+    }
+    updateSelectedStyles();
+    updateEditFields();
+    nodeChooser.value = nodeData.id;
+    startNodeDrag(e, nodeData);
+  });
+  nodeEl.addEventListener('keydown', handleKeyboardNav);
+}
+function startNodeDrag(e, nodeData) {
+  isDraggingNodes = true;
+  const { x: mouseX, y: mouseY } = screenToLocal(e.clientX, e.clientY);
+  groupOffsets = {};
+  selectedNodes.forEach(selId => {
+    const theNode = orgData.find(n => n.id === selId);
+    if (!theNode) return;
+    groupOffsets[selId] = { offsetX: theNode.x - mouseX, offsetY: theNode.y - mouseY };
+  });
+}
+function startNodeResize(e, nodeEl, nodeData) {
+  let startW = nodeEl.offsetWidth;
+  let startH = nodeEl.offsetHeight;
+  let startX = e.clientX;
+  let startY = e.clientY;
+  function mouseMoveResize(ev) {
+    ev.preventDefault();
+    let newW = startW + (ev.clientX - startX);
+    let newH = startH + (ev.clientY - startY);
+    if (newW < 60) newW = 60;
+    if (newH < 40) newH = 40;
+    nodeEl.style.width = newW + 'px';
+    nodeEl.style.height = newH + 'px';
+    nodeData.width = newW;
+    nodeData.height = newH;
+    updateAllConnectors();
+  }
+  function mouseUpResize() {
+    document.removeEventListener('mousemove', mouseMoveResize);
+    document.removeEventListener('mouseup', mouseUpResize);
+    pushState("Resize node");
+  }
+  document.addEventListener('mousemove', mouseMoveResize);
+  document.addEventListener('mouseup', mouseUpResize);
+}
+document.addEventListener('mousemove', e => {
+  if (isDraggingNodes) {
+    e.preventDefault();
+    const { x: mouseX, y: mouseY } = screenToLocal(e.clientX, e.clientY);
+    selectedNodes.forEach(selId => {
+      const theNode = orgData.find(n => n.id === selId);
+      if (!theNode) return;
+      let newX = mouseX + groupOffsets[selId].offsetX;
+      let newY = mouseY + groupOffsets[selId].offsetY;
+      // Snap to grid
+      if (snapGridSize > 0) {
+        newX = Math.round(newX / snapGridSize) * snapGridSize;
+        newY = Math.round(newY / snapGridSize) * snapGridSize;
+      }
+      // 50px left buffer + 20px top buffer
+      if (newX < 50) newX = 50;
+      if (newY < 20) newY = 20;
+      theNode.x = newX;
+      theNode.y = newY;
+      nodeElements[selId].style.left = newX + 'px';
+      nodeElements[selId].style.top = newY + 'px';
+    });
+    updateAllConnectors();
+  }
+});
+document.addEventListener('mouseup', () => {
+  if (isDraggingNodes) {
+    isDraggingNodes = false;
+    pushState("Move nodes");
+  }
+});
+/************************************************
+ * ZOOM & TRANSFORM
+ ************************************************/
+function setZoom(newScale, reason = "") {
+  if (newScale < MIN_ZOOM) newScale = MIN_ZOOM;
+  if (newScale > MAX_ZOOM) newScale = MAX_ZOOM;
+  currentScale = newScale;
+  applyTransform();
+  pushState(reason);
+}
+function applyTransform() {
+  orgChartContainer.style.transformOrigin = 'top left';
+  orgChartContainer.style.transform = `translate(${translationX}px, ${translationY}px) scale(${currentScale})`;
+}
+function screenToLocal(screenX, screenY) {
+  const rect = orgChartContainer.getBoundingClientRect();
+  let localX = (screenX - rect.left - translationX) / currentScale;
+  let localY = (screenY - rect.top - translationY) / currentScale;
+  return { x: localX, y: localY };
+}
+/************************************************
+ * CONNECTORS
+ ************************************************/
+function createConnector(from, to) {
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  line.setAttribute("stroke-width", 2);
+  line.setAttribute("stroke", connectorColorHex);
+  line.setAttribute("stroke-opacity", connectorAlpha / 100);
+  line.setAttribute("marker-end", "url(#arrow)");
+  connectorSVG.appendChild(line);
+  const obj = { from, to, line };
+  connectors.push(obj);
+  // Update hierarchy
+  const childNode = orgData.find(n => n.id === to);
+  if (childNode) {
+    childNode.parentId = from;
+  }
+  updateConnectorPositions(obj);
+  updateStats();
+}
+function updateConnectorPositions(conn) {
+  const { from, to, line } = conn;
+  const nodeA = orgData.find(n => n.id === from);
+  const nodeB = orgData.find(n => n.id === to);
+  if (!nodeA || !nodeB) return;
+  const centerA = { x: nodeA.x + nodeA.width / 2, y: nodeA.y + nodeA.height / 2 };
+  const centerB = { x: nodeB.x + nodeB.width / 2, y: nodeB.y + nodeB.height / 2 };
+  line.setAttribute("x1", centerA.x);
+  line.setAttribute("y1", centerA.y);
+  line.setAttribute("x2", centerB.x);
+  line.setAttribute("y2", centerB.y);
+  line.setAttribute("stroke", connectorColorHex);
+  line.setAttribute("stroke-opacity", connectorAlpha / 100);
+}
+function updateAllConnectors() {
+  connectors.forEach(conn => updateConnectorPositions(conn));
+  updateStats();
+}
+function clearAllConnectors() {
+  connectors.forEach(c => {
+    if (c.line && c.line.parentNode) {
+      c.line.parentNode.removeChild(c.line);
+    }
+  });
+  connectors = [];
+  // Reset parentIds
+  orgData.forEach(n => n.parentId = null);
+  updateStats();
+}
+/************************************************
+ * SELECTION
+ ************************************************/
+function unselectAllNodes() {
+  selectedNodes.clear();
+  updateSelectedStyles();
+  updateEditFields();
+  nodeChooser.value = "";
+}
+function updateSelectedStyles() {
+  Object.keys(nodeElements).forEach(idStr => {
+    const idNum = parseInt(idStr, 10);
+    if (selectedNodes.has(idNum)) {
+      nodeElements[idNum].classList.add('selected');
+      nodeElements[idNum].setAttribute('aria-selected', 'true');
+    } else {
+      nodeElements[idNum].classList.remove('selected');
+      nodeElements[idNum].setAttribute('aria-selected', 'false');
+    }
+  });
+}
+/************************************************
+ * EDIT PANEL
+ ************************************************/
+function updateEditFields() {
+  const c = selectedNodes.size;
+  if (!c) {
+    disableEditFields("Select node to edit attributes");
+  } else if (c > 1) {
+    disableEditFields("Cannot batch edit");
+  } else {
+    enableEditFields();
+  }
+}
+function disableEditFields(msg) {
+  editNameInput.value = msg;
+  editTitleInput.value = msg;
+  editDeptInput.value = msg;
+  editOfficeInput.value = "";
+  editClientInput.value = "";
+  editYearsInput.value = "";
+  editColorInput.value = "#ffffff";
+  editAlphaInput.value = 100;
+  editTextColorInput.value = "#000000";
+  editBorderColorInput.value = "#333333";
+  editFontSizeInput.value = 14;
+  [
+    editNameInput,
+    editTitleInput,
+    editDeptInput,
+    editOfficeInput,
+    editClientInput,
+    editYearsInput,
+    editColorInput,
+    editAlphaInput,
+    editTextColorInput,
+    editBorderColorInput,
+    editFontSizeInput,
+    deleteNodeBtn
+  ].forEach(el => el.disabled = true);
+}
+function enableEditFields() {
+  const onlyId = [...selectedNodes][0];
+  const node = orgData.find(n => n.id === onlyId);
+  if (!node) return;
+  editNameInput.value = node.name;
+  editTitleInput.value = node.title;
+  editDeptInput.value = node.department || "";
+  editOfficeInput.value = node.officeLocation || "";
+  editClientInput.value = node.client || "";
+  const yrsVal = parseInt(editYearsInput.value, 10);
+  editYearsInput.value = isNaN(yrsVal) ? node.yearsWithCompany : yrsVal;
+  editColorInput.value = node.colorHex || "#ffffff";
+  editAlphaInput.value = node.colorAlpha;
+  editTextColorInput.value = node.textColor;
+  editBorderColorInput.value = node.borderColor;
+  editFontSizeInput.value = node.fontSize;
+  [
+    editNameInput,
+    editTitleInput,
+    editDeptInput,
+    editOfficeInput,
+    editClientInput,
+    editYearsInput,
+    editColorInput,
+    editAlphaInput,
+    editTextColorInput,
+    editBorderColorInput,
+    editFontSizeInput,
+    deleteNodeBtn
+  ].forEach(el => el.disabled = false);
+}
+function onFieldChange() {
+  if (selectedNodes.size !== 1) return;
+  const onlyId = [...selectedNodes][0];
+  const node = orgData.find(n => n.id === onlyId);
+  if (!node) return;
+  node.name = editNameInput.value;
+  node.title = editTitleInput.value;
+  node.department = editDeptInput.value;
+  node.officeLocation = editOfficeInput.value;
+  node.client = editClientInput.value;
+  const yrsVal = parseInt(editYearsInput.value, 10);
+  node.yearsWithCompany = isNaN(yrsVal) ? 0 : yrsVal;
+  node.colorHex = editColorInput.value;
+  node.colorAlpha = parseInt(editAlphaInput.value, 10);
+  node.textColor = editTextColorInput.value;
+  node.borderColor = editBorderColorInput.value;
+  node.fontSize = parseInt(editFontSizeInput.value, 10);
+  updateNodeElement(onlyId, true);
+  pushState("Edit node fields");
+}
+[
+  editNameInput,
+  editTitleInput,
+  editDeptInput,
+  editOfficeInput,
+  editClientInput,
+  editYearsInput,
+  editColorInput,
+  editAlphaInput,
+  editTextColorInput,
+  editBorderColorInput,
+  editFontSizeInput
+].forEach(inp => inp.addEventListener('input', onFieldChange));
+function deleteSelectedNode() {
+  if (selectedNodes.size !== 1) return;
+  const idNum = [...selectedNodes][0];
+  // Update children parentId
+  orgData.forEach(n => {
+    if (n.parentId === idNum) n.parentId = null;
+  });
+  orgData = orgData.filter(n => n.id !== idNum);
+  // Remove connectors linked to this node
+  connectors.forEach(conn => {
+    if (conn.from === idNum || conn.to === idNum) {
+      if (conn.line && conn.line.parentNode) {
+        conn.line.parentNode.removeChild(conn.line);
+      }
+    }
+  });
+  connectors = connectors.filter(c => c.from !== idNum && c.to !== idNum);
+  // Remove the node element
+  const el = nodeElements[idNum];
+  if (el && el.parentNode) el.parentNode.removeChild(el);
+  delete nodeElements[idNum];
+  unselectAllNodes();
+  updateAllConnectors();
+  updateNodeDropdown();
+  updateStats();
+  pushState("Delete node");
+}
+deleteNodeBtn.addEventListener('click', deleteSelectedNode);
+/************************************************
+ * NODE DROPDOWN
+ ************************************************/
+function updateNodeDropdown() {
+  nodeChooser.innerHTML = '';
+  const opt = document.createElement('option');
+  opt.value = "";
+  opt.textContent = "Select a node...";
+  nodeChooser.appendChild(opt);
+  const sorted = [...orgData].sort((a, b) => a.name.localeCompare(b.name));
+  sorted.forEach(n => {
+    const o = document.createElement('option');
+    o.value = n.id;
+    o.textContent = n.name;
+    nodeChooser.appendChild(o);
+  });
+  if (selectedNodes.size === 1) {
+    nodeChooser.value = [...selectedNodes][0];
+  } else {
+    nodeChooser.value = "";
+  }
+}
+nodeChooser.addEventListener('change', e => {
+  const idNum = parseInt(e.target.value, 10);
+  if (!isNaN(idNum)) {
+    unselectAllNodes();
+    selectedNodes.add(idNum);
+    updateSelectedStyles();
+    updateEditFields();
+  }
+});
+/************************************************
+ * CONTEXT MENU
+ ************************************************/
+document.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  contextMenu.style.display = 'none';
+  contextClickX = e.clientX;
+  contextClickY = e.clientY;
+  const nodeDiv = e.target.closest('.org-node');
+  if (nodeDiv) {
+    const nodeIdNum = parseInt(nodeDiv.id.replace('node-',''),10);
+    if (!selectedNodes.has(nodeIdNum)) {
+      unselectAllNodes();
+      selectedNodes.add(nodeIdNum);
+      updateSelectedStyles();
+      updateEditFields();
+      nodeChooser.value = nodeIdNum;
+    }
+    showContextMenuForNode(e);
+  } else {
+    showContextMenuForBackground(e);
+  }
+});
+function showContextMenuForNode(e) {
+  ctxDeleteNode.style.display = "block";
+  ctxAutoSizeNode.style.display = "block";
+  ctxBringFront.style.display = "block";
+  ctxSendBack.style.display = "block";
+  ctxRemoveConnections.style.display = "block";
+  ctxCopyNode.style.display = "block";
+  ctxPasteNode.style.display = "block";
+  ctxAddNewNode.style.display = "none";
+  ctxAutoCenterBG.style.display = "none";
+  ctxPasteNode.disabled = (copiedNodeData === null);
+  contextMenu.style.display = 'block';
+  contextMenu.style.left = e.pageX + 'px';
+  contextMenu.style.top = e.pageY + 'px';
+}
+function showContextMenuForBackground(e) {
+  ctxDeleteNode.style.display = "none";
+  ctxAutoSizeNode.style.display = "none";
+  ctxBringFront.style.display = "none";
+  ctxSendBack.style.display = "none";
+  ctxRemoveConnections.style.display = "none";
+  ctxCopyNode.style.display = "none";
+  ctxAddNewNode.style.display = "block";
+  ctxPasteNode.style.display = "block";
+  ctxAutoCenterBG.style.display = "block";
+  ctxPasteNode.disabled = (copiedNodeData === null);
+  contextMenu.style.display = 'block';
+  contextMenu.style.left = e.pageX + 'px';
+  contextMenu.style.top = e.pageY + 'px';
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#contextMenu')) {
+    contextMenu.style.display = 'none';
+    if (!e.target.closest('.org-node') && !e.target.closest('#sidePanel')) {
+      unselectAllNodes();
+    }
+  }
+});
+ctxDeleteNode.addEventListener('click', () => {
+  deleteSelectedNode();
+  contextMenu.style.display = 'none';
+});
+ctxAutoSizeNode.addEventListener('click', () => {
+  autoSizeSelectedNodes();
+  contextMenu.style.display = 'none';
+});
+ctxBringFront.addEventListener('click', () => {
+  bringSelectedNodesToFront();
+  contextMenu.style.display = 'none';
+});
+ctxSendBack.addEventListener('click', () => {
+  sendSelectedNodesToBack();
+  contextMenu.style.display = 'none';
+});
+ctxRemoveConnections.addEventListener('click', () => {
+  removeConnectionsFromSelectedNode();
+  contextMenu.style.display = 'none';
+});
+ctxCopyNode.addEventListener('click', () => {
+  copySelectedNode();
+  contextMenu.style.display = 'none';
+});
+ctxPasteNode.addEventListener('click', () => {
+  const { x, y } = screenToLocal(contextClickX, contextClickY);
+  pasteNodeAt(x, y);
+  contextMenu.style.display = 'none';
+});
+ctxAddNewNode.addEventListener('click', () => {
+  const { x, y } = screenToLocal(contextClickX, contextClickY);
+  addNewNode(x, y);
+  contextMenu.style.display = 'none';
+});
+ctxAutoCenterBG.addEventListener('click', () => {
+  autoCenter();
+  contextMenu.style.display = 'none';
+});
+function handleConnectorClick(nodeId) {
+  if (startNodeId === null) {
+    startNodeId = nodeId;
+    alert("Select the second node to connect to.");
+  } else {
+    if (startNodeId !== nodeId) {
+      createConnector(startNodeId, nodeId);
+      pushState("Create connector");
+    }
+    startNodeId = null;
+    isDrawingConnector = false;
+  }
+}
+/************************************************
+ * Z-INDEX
+ ************************************************/
+function bringSelectedNodesToFront() {
+  selectedNodes.forEach(idNum => {
+    nodeElements[idNum].style.zIndex = 1000;
+  });
+  pushState("Bring front");
+}
+function sendSelectedNodesToBack() {
+  selectedNodes.forEach(idNum => {
+    nodeElements[idNum].style.zIndex = 1;
+  });
+  pushState("Send back");
+}
+/************************************************
+ * ZOOM
+ ************************************************/
+function zoomIn() {
+  setZoom(currentScale + 0.1, "Zoom in");
+}
+function zoomOut() {
+  setZoom(currentScale - 0.1, "Zoom out");
+}
+const zoomSlider = document.getElementById('zoomSlider');
+zoomSlider.addEventListener('input', e => {
+  let val = parseInt(e.target.value, 10);
+  let newScale = val / 100;
+  setZoom(newScale, "Slider zoom");
+});
+/************************************************
+ * AUTO CENTER
+ ************************************************/
+function autoCenter() {
+  let bounds = getNodesBoundingBox();
+  if (bounds.width <= 0 || bounds.height <= 0) return;
+  let outerWidth = orgChartOuter.clientWidth;
+  let outerHeight = orgChartOuter.clientHeight;
+  let scaleX = outerWidth / bounds.width;
+  let scaleY = outerHeight / bounds.height;
+  let newScale = Math.min(scaleX, scaleY);
+  newScale *= 0.95;
+  newScale = Math.min(newScale, MAX_ZOOM);
+  newScale = Math.max(newScale, MIN_ZOOM);
+  currentScale = newScale;
+  translationX = (outerWidth - bounds.width * newScale) / 2 - bounds.minX * newScale;
+  translationY = (outerHeight - bounds.height * newScale) / 2 - bounds.minY * newScale;
+  applyTransform();
+  pushState("Auto center");
+}
+/************************************************
+ * STATS
+ ************************************************/
+function updateStats() {
+  nodesCountEl.textContent = orgData.length;
+  connectorsCountEl.textContent = connectors.length;
+}
+/************************************************
+ * NODE UTILS
+ ************************************************/
+function addNewNode(x=300, y=200, parentId=null) {
+  const maxId = orgData.reduce((acc, n) => Math.max(acc, n.id), 0);
+  const newId = maxId + 1;
+  const nn = {
+    id: newId,
+    name: `Node ${newId}`,
+    title: "",
+    department: "",
+    officeLocation: "",
+    client: "",
+    yearsWithCompany: 0,
+    x, y,
+    width: 130,
+    height: 60,
+    colorHex: "#ffffff",
+    colorAlpha: 100,
+    textColor: "#000000",
+    borderColor: "#333333",
+    fontSize: 14,
+    parentId
+  };
+  orgData.push(nn);
+  createOrgNodes();
+  updateAllConnectors();
+  updateStats();
+  pushState("Add node");
+}
+function removeConnectionsFromSelectedNode() {
+  if (selectedNodes.size !== 1) return;
+  const idNum = [...selectedNodes][0];
+  connectors.forEach(conn => {
+    if (conn.from === idNum || conn.to === idNum) {
+      if (conn.line && conn.line.parentNode) {
+        conn.line.parentNode.removeChild(conn.line);
+      }
+    }
+  });
+  connectors = connectors.filter(c => c.from !== idNum && c.to !== idNum);
+  // Reset child parentIds
+  orgData.forEach(n => {
+    if (n.parentId === idNum) n.parentId = null;
+  });
+  updateAllConnectors();
+  pushState("Remove connections");
+}
+function copySelectedNode() {
+  if (selectedNodes.size !== 1) return;
+  const onlyId = [...selectedNodes][0];
+  const srcNode = orgData.find(n => n.id === onlyId);
+  if (!srcNode) return;
+  copiedNodeData = {
+    name: srcNode.name,
+    title: srcNode.title,
+    department: srcNode.department,
+    officeLocation: srcNode.officeLocation,
+    client: srcNode.client,
+    yearsWithCompany: srcNode.yearsWithCompany,
+    width: srcNode.width,
+    height: srcNode.height,
+    colorHex: srcNode.colorHex,
+    colorAlpha: srcNode.colorAlpha,
+    textColor: srcNode.textColor,
+    borderColor: srcNode.borderColor,
+    fontSize: srcNode.fontSize,
+    parentId: srcNode.parentId
+  };
+  pushState("Copy node data");
+}
+function pasteNodeAt(x, y) {
+  if (!copiedNodeData) return;
+  const maxId = orgData.reduce((acc, n) => Math.max(acc, n.id), 0);
+  const newId = maxId + 1;
+  const nn = {
+    id: newId,
+    name: copiedNodeData.name + " (copy)",
+    title: copiedNodeData.title,
+    department: copiedNodeData.department,
+    officeLocation: copiedNodeData.officeLocation,
+    client: copiedNodeData.client,
+    yearsWithCompany: copiedNodeData.yearsWithCompany,
+    x, y,
+    width: copiedNodeData.width,
+    height: copiedNodeData.height,
+    colorHex: copiedNodeData.colorHex,
+    colorAlpha: copiedNodeData.colorAlpha,
+    textColor: copiedNodeData.textColor,
+    borderColor: copiedNodeData.borderColor,
+    fontSize: copiedNodeData.fontSize,
+    parentId: copiedNodeData.parentId
+  };
+  orgData.push(nn);
+  createOrgNodes();
+  updateAllConnectors();
+  updateStats();
+  pushState("Paste node");
+}
+function buildHierarchy() {
+  const hierarchy = {};
+  orgData.forEach(node => {
+    if (!hierarchy[node.id]) hierarchy[node.id] = { node, children: [] };
+    if (node.parentId) {
+      if (!hierarchy[node.parentId]) hierarchy[node.parentId] = { node: orgData.find(n => n.id === node.parentId), children: [] };
+      hierarchy[node.parentId].children.push(hierarchy[node.id]);
+    }
+  });
+  // Find roots
+  const roots = Object.values(hierarchy).filter(item => !item.node.parentId);
+  return roots;
+}
+function autoOrganize() {
+  const hierarchy = buildHierarchy();
+  if (hierarchy.length === 0) return;
+
+  const levelGap = 150;
+  const siblingGap = 200;
+  let currentX = 400;
+
+  function layoutLevel(nodes, level = 0) {
+    nodes.forEach(item => {
+      item.node.x = currentX;
+      item.node.y = 100 + level * levelGap;
+      currentX += item.node.width + siblingGap;
+      if (item.children.length > 0) {
+        const childStartX = currentX;
+        layoutLevel(item.children, level + 1);
+        // Center parent over children
+        const childWidth = currentX - childStartX - siblingGap;
+        item.node.x = childStartX + (childWidth / 2) - (item.node.width / 2);
+      }
+    });
+  }
+
+  hierarchy.forEach(root => {
+    const startXForRoot = currentX;
+    layoutLevel([root]);
+    // Adjust if multiple roots
+    const rootWidth = currentX - startXForRoot - siblingGap;
+    root.node.x = startXForRoot + (rootWidth / 2) - (root.node.width / 2);
+  });
+
+  createOrgNodes();
+  updateAllConnectors();
+  pushState("Auto-organize");
+}
+function autoSizeSingleNode(idNum) {
+  const nodeEl = nodeElements[idNum];
+  const node = orgData.find(n => n.id === idNum);
+  if (!nodeEl || !node) return;
+  nodeEl.style.width = 'auto';
+  nodeEl.style.height = 'auto';
+  nodeEl.style.whiteSpace = 'nowrap';
+  const newW = nodeEl.offsetWidth + 10;
+  const newH = nodeEl.offsetHeight + 10;
+  nodeEl.style.whiteSpace = 'normal';
+  node.width = newW;
+  node.height = newH;
+  nodeEl.style.width = newW + 'px';
+  nodeEl.style.height = newH + 'px';
+  updateAllConnectors();
+}
+function autoSizeAllNodes() {
+  orgData.forEach(n => autoSizeSingleNode(n.id));
+  pushState("Auto-size all");
+}
+function autoSizeSelectedNodes() {
+  selectedNodes.forEach(id => autoSizeSingleNode(id));
+  pushState("Auto-size selected");
+}
+/************************************************
+ * EXPORT FUNCTIONS
+ ************************************************/
+async function exportChart(format = 'jpeg', backgroundColor = '#FFFFFF') {
+  try {
+    // Get full bounds including connectors
+    const nodeBounds = getNodesBoundingBox();
+    let minX = nodeBounds.minX, minY = nodeBounds.minY, maxX = nodeBounds.minX + nodeBounds.width, maxY = nodeBounds.minY + nodeBounds.height;
+    connectors.forEach(conn => {
+      const pos = { x1: parseFloat(conn.line.getAttribute('x1')), y1: parseFloat(conn.line.getAttribute('y1')), x2: parseFloat(conn.line.getAttribute('x2')), y2: parseFloat(conn.line.getAttribute('y2')) };
+      minX = Math.min(minX, pos.x1, pos.x2);
+      minY = Math.min(minY, pos.y1, pos.y2);
+      maxX = Math.max(maxX, pos.x1, pos.x2);
+      maxY = Math.max(maxY, pos.y1, pos.y2);
+    });
+    const width = maxX - minX;
+    const height = maxY - minY;
+    if (width <= 0 || height <= 0) {
+      alert("No content to export.");
+      return;
+    }
+
+    const margin = 50;
+    const exportWidth = width + margin * 2;
+    const exportHeight = height + margin * 2;
+
+    // Temporarily reset transform
+    const originalTransform = orgChartContainer.style.transform;
+    orgChartContainer.style.transform = 'none';
+    updateAllConnectors(); // Recalculate in untransformed state
+
+    // Create offscreen container
+    const exportContainer = document.createElement('div');
+    exportContainer.style.position = 'absolute';
+    exportContainer.style.left = '-9999px';
+    exportContainer.style.width = `${exportWidth}px`;
+    exportContainer.style.height = `${exportHeight}px`;
+    exportContainer.style.background = backgroundColor;
+    document.body.appendChild(exportContainer);
+
+    // Clone and offset
+    const clone = orgChartContainer.cloneNode(true);
+    const offsetX = margin - minX;
+    const offsetY = margin - minY;
+    clone.style.left = `${offsetX}px`;
+    clone.style.top = `${offsetY}px`;
+    exportContainer.appendChild(clone);
+
+    // Adjust clone SVG
+    const cloneSVG = clone.querySelector('#connectorSVG');
+    cloneSVG.setAttribute('width', exportWidth);
+    cloneSVG.setAttribute('height', exportHeight);
+
+    // Offset nodes and lines in clone
+    const cloneNodes = clone.querySelectorAll('.org-node');
+    cloneNodes.forEach(nodeEl => {
+      const left = parseFloat(nodeEl.style.left) + offsetX;
+      const top = parseFloat(nodeEl.style.top) + offsetY;
+      nodeEl.style.left = `${left}px`;
+      nodeEl.style.top = `${top}px`;
+    });
+    const cloneLines = cloneSVG.querySelectorAll('line');
+    cloneLines.forEach(line => {
+      line.setAttribute('x1', parseFloat(line.getAttribute('x1')) + offsetX);
+      line.setAttribute('y1', parseFloat(line.getAttribute('y1')) + offsetY);
+      line.setAttribute('x2', parseFloat(line.getAttribute('x2')) + offsetX);
+      line.setAttribute('y2', parseFloat(line.getAttribute('y2')) + offsetY);
+    });
+
+    // Render with html2canvas
+    const scaleFactor = 2;
+    const canvas = await html2canvas(exportContainer, {
+      width: exportWidth,
+      height: exportHeight,
+      scale: scaleFactor,
+      backgroundColor: backgroundColor,
+      useCORS: true,
+      logging: false
+    });
+
+    // Cleanup
+    document.body.removeChild(exportContainer);
+    orgChartContainer.style.transform = originalTransform;
+    updateAllConnectors();
+
+    // Download
+    const quality = (format === 'jpeg') ? 0.95 : undefined;
+    const mimeType = (format === 'jpeg') ? 'image/jpeg' : 'image/png';
+    const extension = (format === 'jpeg') ? 'jpg' : 'png';
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL(mimeType, quality);
+    link.download = `orgchart.${extension}`;
+    link.click();
+  } catch (e) {
+    alert(`Export failed: ${e.message}`);
+    // Restore on error
+    orgChartContainer.style.transform = originalTransform;
+    updateAllConnectors();
+  }
+}
+/************************************************
+ * IMPORT, SAVE, HISTORY
+ ************************************************/
+function saveChart() {
+  const connectorPairs = connectors.map(c => ({ from: c.from, to: c.to }));
+  const data = { orgData, connectorPairs };
+  const str = JSON.stringify(data, null, 2);
+  const blob = new Blob([str], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "orgchart.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+function loadChartFromJSON(str) {
+  try {
+    const parsed = JSON.parse(str);
+    if (!parsed.orgData || !parsed.connectorPairs) {
+      alert("Invalid file format.");
+      return;
+    }
+    clearAllConnectors();
+    orgData = parsed.orgData;
+    createOrgNodes();
+    parsed.connectorPairs.forEach(cp => createConnector(cp.from, cp.to));
+    updateAllConnectors();
+    pushState("Load from JSON");
+  } catch (e) {
+    alert("Error reading file:\n" + e);
+  }
+}
+function pushState(actionDesc="") {
+  const connectorPairs = connectors.map(c => ({ from: c.from, to: c.to }));
+  const snapshot = {
+    orgData: JSON.parse(JSON.stringify(orgData)),
+    connectorPairs
+  };
+  if (currentHistoryIndex < stateHistory.length - 1) {
+    stateHistory.splice(currentHistoryIndex + 1);
+  }
+  stateHistory.push(snapshot);
+  currentHistoryIndex = stateHistory.length - 1;
+  localStorage.setItem('orgChartAutoSave', JSON.stringify(snapshot));
+}
+function restoreState(index) {
+  if (index < 0 || index >= stateHistory.length) return;
+  const saved = stateHistory[index];
+  orgData = JSON.parse(JSON.stringify(saved.orgData));
+  clearAllConnectors();
+  createOrgNodes();
+  saved.connectorPairs.forEach(cp => createConnector(cp.from, cp.to));
+  updateAllConnectors();
+  updateStats();
+}
+function undoChart() {
+  if (currentHistoryIndex > 0) {
+    currentHistoryIndex--;
+    restoreState(currentHistoryIndex);
+  }
+}
+function redoChart() {
+  if (currentHistoryIndex < stateHistory.length - 1) {
+    currentHistoryIndex++;
+    restoreState(currentHistoryIndex);
+  }
+}
+/**
+ * Loads from localStorage if present. Returns true if loaded successfully, else false.
+ */
+function loadFromLocalStorage() {
+  const autoSaved = localStorage.getItem('orgChartAutoSave');
+  if (autoSaved) {
+    try {
+      const parsed = JSON.parse(autoSaved);
+      if (parsed.orgData && parsed.connectorPairs) {
+        orgData = parsed.orgData;
+        createOrgNodes();
+        connectors = [];
+        parsed.connectorPairs.forEach(cp => createConnector(cp.from, cp.to));
+        updateAllConnectors();
+        updateStats();
+        pushState("Load from localStorage");
+        return true;
+      }
+    } catch (e) {
+      console.warn("Local storage data invalid:", e);
+    }
+  }
+  return false;
+}
+/************************************************
+ * MISC UTILS
+ ************************************************/
+function getNodesBoundingBox() {
+  if (orgData.length === 0) {
+    return { minX: 0, minY: 0, width: 0, height: 0 };
+  }
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  orgData.forEach(n => {
+    const x2 = n.x + n.width;
+    const y2 = n.y + n.height;
+    if (n.x < minX) minX = n.x;
+    if (n.y < minY) minY = n.y;
+    if (x2 > maxX) maxX = x2;
+    if (y2 > maxY) maxY = y2;
+  });
+  if (minX > maxX || minY > maxY) {
+    return { minX: 0, minY: 0, width: 0, height: 0 };
+  }
+  const width = maxX - minX;
+  const height = maxY - minY;
+  return { minX, minY, width, height };
+}
+function hexAlphaToRGBA(hex, alphaVal) {
+  if (!hex.startsWith("#")) return "rgba(0,0,0,1)";
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const a = alphaVal / 100;
+  return `rgba(${r},${g},${b},${a})`;
+}
+/************************************************
+ * KEYBOARD NAVIGATION
+ ************************************************/
+function handleKeyboardNav(e) {
+  if (selectedNodes.size !== 1) return;
+  const idNum = [...selectedNodes][0];
+  const node = orgData.find(n => n.id === idNum);
+  if (!node) return;
+  const step = 10;
+  switch (e.key) {
+    case 'ArrowUp':
+      node.y -= step;
+      break;
+    case 'ArrowDown':
+      node.y += step;
+      break;
+    case 'ArrowLeft':
+      node.x -= step;
+      break;
+    case 'ArrowRight':
+      node.x += step;
+      break;
+    case 'Delete':
+      deleteSelectedNode();
+      return;
+    case 'Enter':
+      // Focus edit name
+      editNameInput.focus();
+      return;
+    default:
+      return;
+  }
+  e.preventDefault();
+  nodeElements[idNum].style.left = node.x + 'px';
+  nodeElements[idNum].style.top = node.y + 'px';
+  updateAllConnectors();
+  pushState("Keyboard move");
+}
+/************************************************
+ * PANNING
+ ************************************************/
+orgChartOuter.addEventListener('mousedown', e => {
+  if (e.target.closest('.org-node') || e.button !== 0) return;
+  isPanning = true;
+  panStartX = e.clientX;
+  panStartY = e.clientY;
+  panStartTranslateX = translationX;
+  panStartTranslateY = translationY;
+  orgChartOuter.style.cursor = 'grabbing';
+});
+document.addEventListener('mousemove', e => {
+  if (!isPanning) return;
+  const dx = e.clientX - panStartX;
+  const dy = e.clientY - panStartY;
+  translationX = panStartTranslateX + dx;
+  translationY = panStartTranslateY + dy;
+  applyTransform();
+});
+document.addEventListener('mouseup', () => {
+  if (isPanning) {
+    isPanning = false;
+    orgChartOuter.style.cursor = 'default';
+    pushState("Pan");
+  }
+});
+/************************************************
+ * ABOUT MODAL
+ ************************************************/
+aboutBtn.addEventListener('click', () => {
+  aboutModal.style.display = "block";
+});
+closeAbout.addEventListener('click', () => {
+  aboutModal.style.display = "none";
+});
+window.addEventListener('click', (e) => {
+  if (e.target === aboutModal) {
+    aboutModal.style.display = "none";
+  }
+});
+/************************************************
+ * EVENT LISTENERS & CUSTOM ACTIONS
+ ************************************************/
+document.getElementById('newNodeBtn').addEventListener('click', () => addNewNode());
+document.getElementById('autoOrganizeBtn').addEventListener('click', autoOrganize);
+document.getElementById('autoSizeBtn').addEventListener('click', autoSizeAllNodes);
+document.getElementById('autoSizeSelectedBtn').addEventListener('click', autoSizeSelectedNodes);
+document.getElementById('drawConnectorBtn').addEventListener('click', () => {
+  isDrawingConnector = !isDrawingConnector;
+  if (isDrawingConnector) {
+    startNodeId = null;
+    alert("Select first node, then select second node to connect to.");
+  }
+});
+document.getElementById('clearConnectorsBtn').addEventListener('click', () => {
+  clearAllConnectors();
+  pushState("Clear connectors");
+});
+document.getElementById('connectorColorInput').addEventListener('input', e => {
+  connectorColorHex = e.target.value;
+  updateAllConnectors();
+  pushState("Connector color");
+});
+document.getElementById('connectorAlphaRange').addEventListener('input', e => {
+  connectorAlpha = parseInt(e.target.value, 10);
+  updateAllConnectors();
+  pushState("Connector alpha");
+});
+document.getElementById('saveChartBtn').addEventListener('click', saveChart);
+document.getElementById('loadChartBtn').addEventListener('click', () => {
+  document.getElementById('loadFile').click();
+});
+document.getElementById('loadFile').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = evt => {
+    loadChartFromJSON(evt.target.result);
+  };
+  r.readAsText(f);
+  e.target.value = "";
+});
+// Export buttons
+printJPGBtn.addEventListener('click', () => exportChart('jpeg', '#FFFFFF'));
+exportPNGBtn.addEventListener('click', () => exportChart('png', null));
+document.getElementById('zoomOutBtn').addEventListener('click', zoomOut);
+document.getElementById('zoomInBtn').addEventListener('click', zoomIn);
+document.getElementById('undoBtn').addEventListener('click', undoChart);
+document.getElementById('redoBtn').addEventListener('click', redoChart);
+document.getElementById('bringFrontBtn').addEventListener('click', bringSelectedNodesToFront);
+document.getElementById('sendBackBtn').addEventListener('click', sendSelectedNodesToBack);
+document.getElementById('autoCenterBtn').addEventListener('click', autoCenter);
+const searchInputEl = document.getElementById('searchInput');
+const clearFilterBtnEl = document.getElementById('clearFilterBtn');
+searchInputEl.addEventListener('input', filterNodesByNameDept);
+clearFilterBtnEl.addEventListener('click', () => {
+  searchInputEl.value = "";
+  filterNodesByNameDept();
+});
+function filterNodesByNameDept() {
+  const q = searchInputEl.value.toLowerCase().trim();
+  orgData.forEach(n => {
+    const el = nodeElements[n.id];
+    if (!el) return;
+    const c = (n.name + " " + n.department).toLowerCase();
+    if (q && !c.includes(q)) el.classList.add('hidden');
+    else el.classList.remove('hidden');
+  });
+}
+const attributeSelectEl = document.getElementById('attributeSelect');
+const attributeInputEl = document.getElementById('attributeInput');
+const attributeFilterBtnEl = document.getElementById('attributeFilterBtn');
+const clearAttributeFilterBtnEl = document.getElementById('clearAttributeFilterBtn');
+attributeFilterBtnEl.addEventListener('click', () => {
+  const attr = attributeSelectEl.value;
+  const val = attributeInputEl.value.toLowerCase().trim();
+  orgData.forEach(n => {
+    const el = nodeElements[n.id];
+    if (!el) return;
+    const nodeVal = (n[attr] || "").toString().toLowerCase();
+    if (val && !nodeVal.includes(val)) {
+      el.classList.add('hidden');
+    } else {
+      el.classList.remove('hidden');
+    }
+  });
+});
+clearAttributeFilterBtnEl.addEventListener('click', () => {
+  attributeInputEl.value = "";
+  orgData.forEach(n => {
+    const el = nodeElements[n.id];
+    if (el) el.classList.remove('hidden');
+  });
+});
+// Handle connector creation clicks
+orgChartContainer.addEventListener('click', e => {
+  const nodeDiv = e.target.closest('.org-node');
+  if (nodeDiv && isDrawingConnector) {
+    const nodeIdNum = parseInt(nodeDiv.id.replace('node-',''),10);
+    handleConnectorClick(nodeIdNum);
+  }
+});
+// "Select All Nodes" button listener
+selectAllBtn.addEventListener('click', () => {
+  selectedNodes = new Set(orgData.map(n => n.id));
+  updateSelectedStyles();
+  updateEditFields();
+  pushState("Select all nodes");
+});
+// Make container focusable for keyboard
+orgChartContainer.setAttribute('tabindex', '0');
+orgChartContainer.setAttribute('role', 'tree');
+// Finally, initialize
+init();
+</script>
+</body>
+</html>
