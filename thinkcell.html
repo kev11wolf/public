@@ -196,8 +196,12 @@
                     <button class="inner-action-btn" onclick="exportConfigurationArchive()">↓ Save Workspace (.json)</button>
                     <button class="inner-action-btn" onclick="document.getElementById('archiveFileInput').click()">↑ Load Workspace</button>
                     <button class="inner-action-btn" style="color:#166534; border-color:#bbf7d0;" onclick="exportExcelCSV()">↓ Export Excel CSV</button>
-                    <button class="inner-action-btn" style="color:#166534; border-color:#bbf7d0;" onclick="document.getElementById('csvFileInput').click()">↑ Import Excel CSV</button>
+                                        <button class="inner-action-btn" style="color:#166534; border-color:#bbf7d0;" onclick="document.getElementById('csvFileInput').click()">↑ Import Excel CSV</button>
                     
+                    <!-- Callout Controls -->
+                    <button class="inner-action-btn" onclick="addNewCallout()" style="background: #e0f2fe; color: #0369a1; border-color: #7dd3fc; width: 100%; margin-top: 5px;">+ Add Custom Text Callout</button>
+                    <div id="calloutListContainer" style="width: 100%; max-height: 200px; overflow-y: auto;"></div>
+
                     <input type="file" id="archiveFileInput" accept=".json" style="display:none;" onchange="importConfigurationArchive(event)">
                     <input type="file" id="csvFileInput" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display:none;" onchange="importCSVFile(event)">
                 </div>
@@ -455,9 +459,20 @@
 <div id="rowWorkspaceContextMenu" class="workspace-context-menu">
     <button onclick="executeContextInsertion('milestone')">✦ Insert Milestone Here</button>
     <button onclick="executeContextInsertion('bar')">█ Insert Activity Bar Here</button>
+    <button onclick="executeContextInsertion('callout')" style="color: #0369a1;">+ Add Text Callout</button>
 </div>
 
 <script>
+    // --- Custom Callout State ---
+    let calloutData = []; 
+    let isDraggingCallout = false;
+    let isDraggingLeader = false;
+    let activeCalloutId = null;
+    let dragStartX, dragStartY;
+    let initialCalloutX, initialCalloutY;
+    let initialLeaderX, initialLeaderY;
+    // ---------------------------
+    
     let projectData = [];
     let customTrackers = [];
     let nextRowId = 4;
@@ -958,9 +973,10 @@ function stopGlobalDragAction(e) {
     // TRANSACTIONS CONTROL HISTORY (UNDO / REDO)
     // ==========================================
     function recordStateChange() {
-        const stateSnapshot = {
+                const stateSnapshot = {
             data: JSON.parse(JSON.stringify(projectData)),
             trackers: JSON.parse(JSON.stringify(customTrackers)),
+            callouts: JSON.parse(JSON.stringify(calloutData)),
             nextRowId: nextRowId,
             nextMsId: nextMsId,
             nextBarId: nextBarId,
@@ -1012,9 +1028,11 @@ function stopGlobalDragAction(e) {
         restoreStateFromSnapshot(JSON.parse(target));
     }
 
-    function restoreStateFromSnapshot(state) {
+        function restoreStateFromSnapshot(state) {
         projectData = state.data || [];
         customTrackers = state.trackers || [];
+        calloutData = state.callouts || [];
+        renderCalloutControls();
         
         nextRowId = state.nextRowId; 
         nextMsId = state.nextMsId;
@@ -1177,7 +1195,12 @@ function stopGlobalDragAction(e) {
         csvRows.push(fFields.join(","));
     });
 
-    const blob = new Blob([csvRows.join("\n")], {type: 'text/csv;charset=utf-8;'});
+    calloutData.forEach(c => {
+        let fFields = ["CALLOUT", `"${c.text.replace(/"/g, '""')}"`, c.x, c.y, c.leaderX, c.leaderY, c.bgColor, c.textColor, c.fontSize, c.isBold ? "TRUE" : "FALSE", c.bgTransparent ? "TRUE" : "FALSE", "", "", "", "", "", "", "", "", "", ""];
+        csvRows.push(fFields.join(","));
+    });
+
+    const blob = new Blob([csvRows.join("\n")], { type: 'text/csv' });
     const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_flattened_matrix.csv`; link.click();
 }
 
@@ -1211,14 +1234,14 @@ function stopGlobalDragAction(e) {
         fields.push(current); return fields;
     }
 
-   function importCSVFile(event) {
+      function importCSVFile(event) {
     const file = event.target.files[0]; 
     if (!file) return;
 
     // Helper function to process the extracted text payload
     const processDataPayload = function(csvText) {
         const lines = csvText.split(/\r?\n/); if(lines.length <= 1) return;
-        let newImportData = []; let newTrackers = [];
+        let newImportData = []; let newTrackers = []; let newCallouts = [];
         let rIdCounter = 1; let mIdCounter = 1001; let bIdCounter = 5001; let tIdCounter = 7001;
 
         for(let i = 1; i < lines.length; i++) {
@@ -1226,6 +1249,25 @@ function stopGlobalDragAction(e) {
             let columns = parseRobustCSVLine(line); if(columns.length < 8) continue;
 
             let recordType = columns[0].trim();
+            
+            // --- NEW: INTERCEPT CALLOUT RECORDS ---
+            if (recordType === "CALLOUT") {
+                newCallouts.push({
+                    id: generateUUID(), 
+                    text: columns[1] ? columns[1].replace(/""/g, '"').trim() : "Callout", 
+                    x: parseFloat(columns[2]) || 350, 
+                    y: parseFloat(columns[3]) || 100, 
+                    leaderX: parseFloat(columns[4]) || 350, 
+                    leaderY: parseFloat(columns[5]) || 150,
+                    bgColor: columns[6] ? columns[6].trim() : "#ffffff", 
+                    textColor: columns[7] ? columns[7].trim() : "#000000", 
+                    fontSize: parseInt(columns[8]) || 14, 
+                    isBold: columns[9] ? columns[9].trim() === "TRUE" : false, 
+                    bgTransparent: columns[10] ? columns[10].trim() === "TRUE" : false
+                });
+                continue;
+            }
+
             let laneTitle = columns[1].trim();
             let laneColor = columns[2].trim();
             let laneSummary = columns[3].trim() === "TRUE";
@@ -1308,9 +1350,13 @@ function stopGlobalDragAction(e) {
             }
         }
 
-        if(newImportData.length > 0 || newTrackers.length > 0) {
-            projectData = newImportData; customTrackers = newTrackers;
+        if(newImportData.length > 0 || newTrackers.length > 0 || newCallouts.length > 0) {
+            projectData = newImportData; 
+            customTrackers = newTrackers;
+            calloutData = newCallouts; // Reset and assign callouts
             nextRowId = rIdCounter; nextMsId = mIdCounter; nextBarId = bIdCounter; nextTrackerId = tIdCounter;
+            
+            renderCalloutControls(); // Update UI
             recordStateChange(); renderInputRows(); populateTrackerDashboardMatrix(); updateChart();
         }
     };
@@ -1342,8 +1388,8 @@ function stopGlobalDragAction(e) {
         reader.readAsText(file);
     }
     
-    // Reset file input so the user can upload the same file again if needed
-    event.target.value = "";
+    // Clear out the input so you can re-import the identical file again later without refreshing the DOM if needed.
+    event.target.value = '';
 }
 
     function clearAllStoredData() {
@@ -1572,12 +1618,13 @@ function stopGlobalDragAction(e) {
         const activeScaleFactor = parseFloat(document.getElementById('workspaceZoom').value) || 1.0;
         let mouseX = (e.clientX - rect.left) / activeScaleFactor;
         
-        let totalDuration = scaleMaxTime - scaleMinTime;
+                let totalDuration = scaleMaxTime - scaleMinTime;
         let evaluatedTime = scaleMinTime + ((mouseX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
         evaluatedTime = Math.max(scaleMinTime, Math.min(scaleMaxTime, evaluatedTime));
         let computedTargetDateStr = formatDateToDDMMMYYYY(new Date(evaluatedTime));
         
-        activeContextState = { rowId: rowId, targetDate: computedTargetDateStr };
+        let mouseY = (e.clientY - rect.top) / activeScaleFactor;
+        activeContextState = { rowId: rowId, targetDate: computedTargetDateStr, mouseX: mouseX, mouseY: mouseY };
         
         let menu = document.getElementById('rowWorkspaceContextMenu');
         menu.style.display = 'block';
@@ -1618,7 +1665,7 @@ function stopGlobalDragAction(e) {
         let endTime = startTime + (60 * 24 * 60 * 60 * 1000);
         let calculatedEndStr = formatDateToDDMMMYYYY(new Date(endTime));
 
-        row.bars.push({
+                row.bars.push({
             id: nextBarId++,
             start: activeContextState.targetDate,
             end: calculatedEndStr,
@@ -1627,6 +1674,11 @@ function stopGlobalDragAction(e) {
             color: "",
             pattern: "solid"
         });
+    } else if (type === 'callout') {
+        // Drop exactly where the right-click occurred
+        const mouseX = activeContextState.mouseX || 350; 
+        const mouseY = activeContextState.mouseY || 100;
+        addNewCallout(mouseX, mouseY);
     }
 
     recordStateChange();
@@ -1909,6 +1961,185 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
             }
         });
     }
+
+ // --- Callout Logic & Drag Events ---
+function generateUUID() { return Math.random().toString(36).substring(2) + Date.now().toString(36); }
+
+function addNewCallout(targetX = 350, targetY = 100) {
+    calloutData.push({
+        id: generateUUID(), text: "New Callout",
+        x: targetX, y: targetY - 50, 
+        leaderX: targetX, leaderY: targetY, 
+        leaderAttachment: 'center', 
+        bgColor: "#ffffff", textColor: "#ef4444", leaderColor: "#ef4444",
+        fontSize: 14, isBold: true, bgTransparent: false, leaderThickness: 2
+    });
+    renderCalloutControls(); updateChart();
+}
+
+function removeCallout(id) {
+    calloutData = calloutData.filter(c => c.id !== id);
+    renderCalloutControls(); updateChart();
+    let dlg = document.getElementById('floatingCalloutDialog');
+    if (dlg) dlg.remove();
+}
+
+function updateCalloutProperty(id, property, value) {
+    const callout = calloutData.find(c => c.id === id);
+    if (callout) {
+        if (property === 'fontSize' || property === 'leaderThickness') {
+            callout[property] = parseInt(value) || 2;
+        } else {
+            callout[property] = value;
+        }
+        updateChart();
+    }
+}
+
+function renderCalloutControls() {
+    const container = document.getElementById('calloutListContainer');
+    if (!container) return;
+    container.innerHTML = calloutData.map(c => `
+        <div style="border: 1px solid var(--border-color); padding: 6px; margin-top: 6px; border-radius: 4px; background: #f8fafc;">
+            <div style="display: flex; gap: 4px; margin-bottom: 4px;">
+                <input type="text" value="${c.text}" oninput="updateCalloutProperty('${c.id}', 'text', this.value)" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                <button onclick="removeCallout('${c.id}')" style="background: var(--danger); color: white; border: none; border-radius: 3px; cursor: pointer; padding: 2px 8px;">X</button>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center; font-size: 11px; flex-wrap: wrap;">
+                Sz:<input type="number" value="${c.fontSize}" oninput="updateCalloutProperty('${c.id}', 'fontSize', this.value)" style="width: 45px; padding: 2px; box-sizing: border-box;" title="Font Size">
+                Wt:<input type="number" value="${c.leaderThickness || 2}" oninput="updateCalloutProperty('${c.id}', 'leaderThickness', this.value)" style="width: 45px; padding: 2px; box-sizing: border-box;" title="Line Thickness">
+                <select onchange="updateCalloutProperty('${c.id}', 'leaderAttachment', this.value)" style="padding: 2px; font-size: 11px;">
+                    <option value="left" ${c.leaderAttachment === 'left' ? 'selected' : ''}>Left Center</option>
+                    <option value="right" ${c.leaderAttachment === 'right' ? 'selected' : ''}>Right Center</option>
+                    <option value="top" ${c.leaderAttachment === 'top' ? 'selected' : ''}>Top Center</option>
+                    <option value="bottom" ${c.leaderAttachment === 'bottom' || !c.leaderAttachment ? 'selected' : ''}>Bottom Center</option>
+                </select>
+                <br>
+                Bg:<input type="color" value="${c.bgColor}" onchange="updateCalloutProperty('${c.id}', 'bgColor', this.value)" style="width: 24px; padding: 0; cursor: pointer;" ${c.bgTransparent ? 'disabled' : ''}>
+                <label><input type="checkbox" ${c.bgTransparent ? 'checked' : ''} onchange="updateCalloutProperty('${c.id}', 'bgTransparent', this.checked); renderCalloutControls();"> Clr</label>
+                Txt:<input type="color" value="${c.textColor}" onchange="updateCalloutProperty('${c.id}', 'textColor', this.value)" style="width: 24px; padding: 0; cursor: pointer;">
+                Ldr:<input type="color" value="${c.leaderColor || c.textColor}" onchange="updateCalloutProperty('${c.id}', 'leaderColor', this.value)" style="width: 24px; padding: 0; cursor: pointer;">
+                <label><input type="checkbox" ${c.isBold ? 'checked' : ''} onchange="updateCalloutProperty('${c.id}', 'isBold', this.checked)"> B</label>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getMouseCoords(e) {
+    const svgElement = document.querySelector('#svgContainer svg');
+    if (!svgElement) return { x: e.offsetX, y: e.offsetY };
+    const pt = svgElement.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const ctm = svgElement.getScreenCTM();
+    if(!ctm) return { x: e.offsetX, y: e.offsetY };
+    const svgPt = pt.matrixTransform(ctm.inverse());
+    return { x: svgPt.x, y: svgPt.y };
+}
+
+document.addEventListener('mousedown', (e) => {
+    // Close floating dialog if clicking outside
+    let dlg = document.getElementById('floatingCalloutDialog');
+    if (dlg && !dlg.contains(e.target)) dlg.remove();
+
+    const target = e.target;
+    if (target.classList && (target.classList.contains('draggable-callout') || target.classList.contains('draggable-leader'))) {
+        activeCalloutId = target.getAttribute('data-id');
+        const coords = getMouseCoords(e);
+        dragStartX = coords.x; dragStartY = coords.y;
+        const callout = calloutData.find(c => c.id === activeCalloutId);
+        if (!callout) return;
+        
+        if (target.classList.contains('draggable-leader')) {
+            isDraggingLeader = true; initialLeaderX = callout.leaderX; initialLeaderY = callout.leaderY;
+        } else {
+            isDraggingCallout = true; initialCalloutX = callout.x; initialCalloutY = callout.y;
+        }
+    }
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isDraggingCallout && !isDraggingLeader) return;
+    const callout = calloutData.find(c => c.id === activeCalloutId);
+    if (!callout) return;
+    const coords = getMouseCoords(e);
+    const dx = coords.x - dragStartX; const dy = coords.y - dragStartY;
+    
+    if (isDraggingCallout) {
+        callout.x = initialCalloutX + dx; callout.y = initialCalloutY + dy;
+    } else if (isDraggingLeader) {
+        callout.leaderX = initialLeaderX + dx; callout.leaderY = initialLeaderY + dy;
+    }
+    updateChart();
+});
+
+document.addEventListener('mouseup', () => { isDraggingCallout = false; isDraggingLeader = false; activeCalloutId = null; });
+
+// Double Click Popup Logic
+// Double Click Popup Logic
+document.addEventListener('dblclick', (e) => {
+    const target = e.target;
+    if (target.classList && target.classList.contains('draggable-callout')) {
+        const id = target.getAttribute('data-id');
+        const callout = calloutData.find(c => c.id === id);
+        if (!callout) return;
+
+        let existingDialog = document.getElementById('floatingCalloutDialog');
+        if (existingDialog) existingDialog.remove();
+
+        let dialog = document.createElement('div');
+        dialog.id = 'floatingCalloutDialog'; dialog.className = 'floating-date-dialog';
+        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 300)}px`;
+        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 280)}px`;
+        
+        dialog.innerHTML = `
+            <h4>Callout Configuration</h4>
+            <div class="dialog-row">
+                <label>Text Label:</label>
+                <input type="text" value="${callout.text}" oninput="updateCalloutProperty('${id}', 'text', this.value); renderCalloutControls();" style="width: 140px; box-sizing: border-box;">
+            </div>
+            <div class="dialog-row">
+                <label>Font Size:</label>
+                <input type="number" value="${callout.fontSize}" oninput="updateCalloutProperty('${id}', 'fontSize', this.value); renderCalloutControls();" style="width: 60px; box-sizing: border-box;">
+            </div>
+            <div class="dialog-row">
+                <label>Line Weight:</label>
+                <input type="number" value="${callout.leaderThickness || 2}" oninput="updateCalloutProperty('${id}', 'leaderThickness', this.value); renderCalloutControls();" style="width: 60px; box-sizing: border-box;">
+            </div>
+            <div class="dialog-row">
+                <label>Attachment:</label>
+                <select onchange="updateCalloutProperty('${id}', 'leaderAttachment', this.value); renderCalloutControls();" style="width: 105px;">
+                    <option value="left" ${callout.leaderAttachment === 'left' ? 'selected' : ''}>Left Center</option>
+                    <option value="right" ${callout.leaderAttachment === 'right' ? 'selected' : ''}>Right Center</option>
+                    <option value="top" ${callout.leaderAttachment === 'top' ? 'selected' : ''}>Top Center</option>
+                    <option value="bottom" ${callout.leaderAttachment === 'bottom' || !callout.leaderAttachment ? 'selected' : ''}>Bottom Center</option>
+                </select>
+            </div>
+                        <div class="dialog-row" style="margin-top: 5px;">
+                <label><input type="checkbox" ${callout.isBold ? 'checked' : ''} onchange="updateCalloutProperty('${id}', 'isBold', this.checked); renderCalloutControls();"> Bold Text</label>
+                <label><input type="checkbox" ${callout.bgTransparent ? 'checked' : ''} onchange="updateCalloutProperty('${id}', 'bgTransparent', this.checked); renderCalloutControls();"> Clear BG</label>
+            </div>
+            <div class="dialog-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); justify-content: space-between;">
+                <div style="display:flex; flex-direction:column; align-items:center;">
+                    <span style="font-size:10px;">Text</span>
+                    <input type="color" value="${callout.textColor}" onchange="updateCalloutProperty('${id}', 'textColor', this.value); renderCalloutControls();" style="cursor: pointer;">
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center;">
+                    <span style="font-size:10px;">Leader</span>
+                    <input type="color" value="${callout.leaderColor || callout.textColor}" onchange="updateCalloutProperty('${id}', 'leaderColor', this.value); renderCalloutControls();" style="cursor: pointer;">
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center;">
+                    <span style="font-size:10px;">Back</span>
+                    <input type="color" value="${callout.bgColor}" onchange="updateCalloutProperty('${id}', 'bgColor', this.value); renderCalloutControls();" ${callout.bgTransparent ? 'disabled' : ''} style="cursor: pointer;">
+                </div>
+            </div>
+            <div class="dialog-actions" style="margin-top: 15px;">
+                <button class="primary-btn" onclick="document.getElementById('floatingCalloutDialog').remove()">Done</button>
+                <button class="utility-btn" onclick="removeCallout('${id}')" style="color: var(--danger); border-color: #fca5a5;">Delete</button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
+    }
+});
 
     document.addEventListener('mousedown', function(e) {
         ['floatingBarDateDialog', 'floatingMilestoneDialog', 'floatingLaneSummaryDialog', 'floatingTrackerDialog', 'floatingHelpDialog'].forEach(id => {
@@ -2673,6 +2904,55 @@ svg += allLayerBarsBuffer
                 svg += `<text x="${xToday}" y="${bottomOfLastRow + 11}" font-size="8" font-weight="bold" fill="${todayColor}" text-anchor="middle" style="pointer-events:none;">TODAY</text>`;
             }
         }
+
+                // --- DRAW CUSTOM CALLOUTS ---
+                   // --- DRAW CUSTOM CALLOUTS ---
+        calloutData.forEach(callout => {
+            const fontWeight = callout.isBold ? 'bold' : 'normal';
+            // Reduced padding significantly (from 20 to 8 width, 16 to 4 height)
+            const estWidth = callout.text.length * (callout.fontSize * 0.6) + 8; 
+            const boxHeight = callout.fontSize + 4;
+            const halfBoxWidth = estWidth / 2;
+            const fillStyle = callout.bgTransparent ? "transparent" : callout.bgColor;
+            const strokeColor = callout.leaderColor || callout.textColor; 
+            const lThick = callout.leaderThickness || 2;
+
+            // Calculate attachment coordinate dynamically (Top, Bottom, Left, Right)
+            let lBaseX = callout.x; 
+            let lBaseY = callout.y + boxHeight; // Default to bottom
+            
+            if (callout.leaderAttachment === 'left') {
+                lBaseX = callout.x - halfBoxWidth;
+                lBaseY = callout.y + (boxHeight / 2);
+            } else if (callout.leaderAttachment === 'right') {
+                lBaseX = callout.x + halfBoxWidth;
+                lBaseY = callout.y + (boxHeight / 2);
+            } else if (callout.leaderAttachment === 'top') {
+                lBaseX = callout.x;
+                lBaseY = callout.y;
+            }
+
+            // Draw Leader Line
+            svg += `<line x1="${lBaseX}" y1="${lBaseY}" x2="${callout.leaderX}" y2="${callout.leaderY}" 
+                    stroke="${strokeColor}" stroke-width="${lThick}" style="pointer-events: none;" />`;
+            
+            // Draw Interactive Target Handle (End)
+            svg += `<circle class="draggable-leader" data-id="${callout.id}" cx="${callout.leaderX}" cy="${callout.leaderY}" r="5" 
+                    fill="transparent" stroke="transparent" stroke-width="6" cursor="crosshair" />`;
+
+            // Draw Callout Box
+            svg += `<rect class="draggable-callout" data-id="${callout.id}" 
+                    x="${callout.x - halfBoxWidth}" y="${callout.y}" width="${estWidth}" height="${boxHeight}" rx="4" 
+                    fill="${fillStyle}" cursor="move" />`;
+            
+            // Draw Callout Text
+            // Note: We use ${fontFamily} from the main visual settings engine instead of sans-serif
+            svg += `<text class="draggable-callout" data-id="${callout.id}" 
+                    x="${callout.x}" y="${callout.y + (boxHeight/2) + (callout.fontSize/3)}" 
+                    text-anchor="middle" font-family="${fontFamily}" font-size="${callout.fontSize}px" font-weight="${fontWeight}" fill="${callout.textColor}" cursor="move">${callout.text}</text>`;
+        });
+        // ---------------------------
+
         svg += `</svg>`; container.innerHTML = svg;
     }
 
