@@ -1449,14 +1449,49 @@ function stopGlobalDragAction(e) {
     // ==========================================
     // GRAPHIC TEXT EDITOR DIRECT INTERCEPTORS
     // ==========================================
-    function editRowLabelDirectly(laneIdx, rowIdx) {
+        function editRowLabelDirectly(e, laneIdx, rowIdx) {
+        e.stopPropagation();
         const row = projectData[laneIdx].rows[rowIdx];
-        if(row) {
-            let newLabel = prompt("Edit Task Track Title Name Directly:", row.label);
-            if (newLabel !== null && newLabel.trim() !== "") {
-                row.label = newLabel.trim(); recordStateChange(); renderInputRows(); updateChart();
-            }
-        }
+        if(!row) return;
+
+        let existingDialog = document.getElementById('floatingRowLabelDialog');
+        if (existingDialog) existingDialog.remove();
+
+        let dialog = document.createElement('div');
+        dialog.id = 'floatingRowLabelDialog'; 
+        dialog.className = 'floating-date-dialog';
+        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 280)}px`;
+        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 150)}px`;
+
+        dialog.innerHTML = `
+            <h4>Row Label Settings</h4>
+            <div class="dialog-row">
+                <label>Row Title:</label>
+                <input type="text" id="tempRowLabelInput" value="${row.label}" style="width: 150px; padding: 2px;">
+            </div>
+            <div class="dialog-row" style="margin-top: 10px;">
+                <label style="cursor: pointer; font-size: 11px;">
+                    <input type="checkbox" id="tempRowDateToggle" ${row.showDateRange ? 'checked' : ''}>
+                    Append Bar Dates (Start - Finish)
+                </label>
+            </div>
+            <div class="dialog-actions" style="margin-top: 15px;">
+                <button class="primary-btn" id="saveRowLabelBtn">Save</button>
+                <button class="utility-btn" onclick="document.getElementById('floatingRowLabelDialog').remove()">Cancel</button>
+            </div>
+        `;
+        document.body.appendChild(dialog);
+
+        document.getElementById('saveRowLabelBtn').onclick = function() {
+            let newLabel = document.getElementById('tempRowLabelInput').value.trim();
+            if (newLabel !== "") row.label = newLabel;
+            row.showDateRange = document.getElementById('tempRowDateToggle').checked;
+            
+            recordStateChange(); 
+            renderInputRows(); 
+            updateChart();
+            dialog.remove();
+        };
     }
 
     function editLaneLabelDirectly(laneIdx) {
@@ -2037,9 +2072,12 @@ function getMouseCoords(e) {
 }
 
 document.addEventListener('mousedown', (e) => {
-    // Close floating dialog if clicking outside
+        // Close floating dialog if clicking outside
     let dlg = document.getElementById('floatingCalloutDialog');
     if (dlg && !dlg.contains(e.target)) dlg.remove();
+    
+    let rowDlg = document.getElementById('floatingRowLabelDialog');
+    if (rowDlg && !rowDlg.contains(e.target)) rowDlg.remove();
 
     const target = e.target;
     if (target.classList && (target.classList.contains('draggable-callout') || target.classList.contains('draggable-leader'))) {
@@ -2676,12 +2714,23 @@ let allLayerHandlesBuffer = "";
 
             currentDrawY += swimlaneHeight;
 
-            lane.rows.forEach((item, rowIdx) => {
+                        lane.rows.forEach((item, rowIdx) => {
                 let y = currentDrawY;
+                
+                // Determine if we need to append the dates to the display string
+                let displayLabel = item.label;
+                if (item.showDateRange && item.bars && item.bars.length === 1) {
+                    let singleBar = item.bars[0];
+                    if (singleBar.start && singleBar.end) {
+                        displayLabel += `  (${singleBar.start} - ${singleBar.end})`;
+                    }
+                }
                 
                 svg += `<rect x="10" y="${y}" width="${endBoundaryXCoordinate - 10}" height="${rowHeight}" fill="transparent" style="cursor:context-menu;" oncontextmenu="handleWorkspaceRowContextMenu(event, ${item.id})"/>`;
                 svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1" style="pointer-events:none;"/>`;
-                svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(${laneIdx}, ${rowIdx})">${item.label}</text>`;
+                
+                // Note: We pass 'event' here to the updated function so the modal knows where the mouse is
+                svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(event, ${laneIdx}, ${rowIdx})">${displayLabel}</text>`;
                 
                 let layerBarsBuffer = "";
                 let layerLeadersBuffer = "";
