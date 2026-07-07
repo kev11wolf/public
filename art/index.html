@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line, Wash & Atmospheric Impressionism Reference Directory</title>
+    <style>
+        :root {
+            --bg-color: #f6f6f3;
+            --card-bg: #ffffff;
+            --text-dark: #111111;
+            --text-muted: #4a5568;
+            --accent-ink: #2c3e50;
+            --accent-wash: #edf2f7;
+            --btn-color: #1a1a1a;
+            --btn-hover: #444444;
+            --border-color: #e2e8f0;
+            --section-title: #718096;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 50px 20px;
+        }
+
+        header {
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto 50px auto;
+            border-bottom: 2px solid var(--text-dark);
+            padding-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.15rem;
+        }
+
+        .section-divider {
+            max-width: 1200px;
+            margin: 40px auto 20px auto;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--section-title);
+            border-left: 4px solid var(--text-dark);
+            padding-left: 15px;
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto 60px auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .artist-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .artist-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.08);
+        }
+
+        .artist-header {
+            margin-bottom: 12px;
+        }
+
+        .artist-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .artist-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            background-color: var(--accent-wash);
+            color: var(--accent-ink);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+            font-weight: 700;
+        }
+
+        .style-definition {
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .signature-tip {
+            background-color: #fafaf7;
+            border-left: 3px solid var(--text-dark);
+            padding: 12px;
+            margin-bottom: 20px;
+            font-style: italic;
+            font-size: 0.85rem;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .links-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .links-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            color: var(--section-title);
+            font-weight: 700;
+        }
+
+        .links-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .view-work-btn {
+            display: block;
+            text-align: center;
+            background-color: var(--btn-color);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: background-color 0.1s ease;
+        }
+
+        .view-work-btn:hover {
+            background-color: var(--btn-hover);
+        }
+
+        .view-work-btn.secondary {
+            background-color: transparent;
+            color: var(--text-dark);
+            border: 1px solid var(--text-dark);
+        }
+
+        .view-work-btn.secondary:hover {
+            background-color: var(--accent-wash);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Line, Wash & Atmospheric Light Directory</h1>
+        <p>A masterlook database grouping 26 historic and contemporary legends of watercolor luminescence, maritime structure, and low-palette line control.</p>
+    </header>
+
+    <h3 class="section-divider">The Turner School & Atmospheric Historical Masters</h3>
+    <main class="container">
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">J.M.W. Turner</h2>
+                    <span class="artist-tag">Atmospheric Luminism</span>
+                </div>
+                <p class="style-definition">The "painter of light." Turner captured vast maritime layouts and coastlines using bleeding, highly diluted color grounds, punctuated by minimal, razor-sharp anchor lines to denote ships or architecture.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Apply watercolor directly to highly wet paper to establish seamless, bleeding sky transitions. Wait for total dryness before anchoring a few sharp Sharpie structural points.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.tate.org.uk/art/turner-worldwide" target="_blank" rel="noopener noreferrer" class="view-work-btn">Tate Britain Turner Repository</a>
+                    <a href="https://www.nationalgallery.org.uk/artists/joseph-mallord-william-turner" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">National Gallery Overview</a>
+                    <a href="https://www.wikiart.org/en/j-m-w-turner" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Landscape Log</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Thomas Girtin</h2>
+                    <span class="artist-tag">Early Romantic Landscape</span>
+                </div>
+                <p class="style-definition">Turner's closest peer and rival. Girtin revolutionized early watercolor by abandoning strict ink-and-tint patterns for sweeping, scenic washes tracking vast rolling horizons on textured papers.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Use wide, continuous landscape brush sweeps using warm earth pigments (like yellow ochre or burnt sienna) combined with minimal horizon ink accents.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.tate.org.uk/art/artists/thomas-girtin-213" target="_blank" rel="noopener noreferrer" class="view-work-btn">Tate Artist Collection</a>
+                    <a href="https://www.britishmuseum.org/collection/search?keyword=thomas&keyword=girtin" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">British Museum Drawings</a>
+                    <a href="https://www.wikiart.org/en/thomas-girtin" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Girtin Portfolio</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">John Sell Cotman</h2>
+                    <span class="artist-tag">Graphic Watercolor Flatness</span>
+                </div>
+                <p class="style-definition">A master of structural geometry within nature. Cotman constructed highly advanced, flat interlocking shapes of color bounded by strict graphic control lines, heavily influencing modern graphic art.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Map your subjects using stark, blocked shapes of light and shade. Avoid complex gradient blends; keep your watercolor washes flat inside clean pen definitions.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.britishmuseum.org/collection/search?keyword=john&keyword=sell&keyword=cotman" target="_blank" rel="noopener noreferrer" class="view-work-btn">British Museum Folio</a>
+                    <a href="https://www.tate.org.uk/art/artists/john-sell-cotman-114" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Tate Cotman Collection</a>
+                    <a href="https://www.wikiart.org/en/john-sell-cotman" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Geometric Studies</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Winslow Homer</h2>
+                    <span class="artist-tag">Dramatic Marine Wash</span>
+                </div>
+                <p class="style-definition">The giant of raw American realism. Homer utilized exceptionally dynamic, wet watercolor fields to capture violent ocean white-water waves, rocky shores, and deep woodland environments.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Charge dark pigment into wet pools of blue or gray to suggest heavy waves and deep rock shadows, running your pen over the forms to freeze hard spray edges.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.metmuseum.org/art/collection/search?q=Winslow+Homer+watercolor" target="_blank" rel="noopener noreferrer" class="view-work-btn">Met Museum Watercolor Catalog</a>
+                    <a href="https://www.nga.gov/collection/artist-info.1401.html" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">National Gallery of Art Profile</a>
+                    <a href="https://www.wikiart.org/en/winslow-homer" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Marine Archive</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">John Singer Sargent</h2>
+                    <span class="artist-tag">Impressionistic Liquid Light</span>
+                </div>
+                <p class="style-definition">The peak of confident watercolor execution. Sargent’s travel logs capture Venetian architecture and mountain streams using lightning-fast, slashing brush movements paired with deep, structural value contrast.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Paint with a highly loaded, dripping brush. Use confident, single-pass strokes to form shadows, keeping pen lines strictly reserved for focal highlights.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.metmuseum.org/art/collection/search?q=John+Singer+Sargent+watercolor" target="_blank" rel="noopener noreferrer" class="view-work-btn">Met Museum Sargent Gallery</a>
+                    <a href="https://collections.mfa.org/search/objects/*/watercolor/Sargent" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">MFA Boston Collection</a>
+                    <a href="https://www.wikiart.org/en/john-singer-sargent" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Fluid Vault</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">David Cox</h2>
+                    <span class="artist-tag">Breezy Atmospheric Texture</span>
+                </div>
+                <p class="style-definition">Pioneer of rough, textured paper sketches. Cox specialized in translating gusty wind, heavy rainstorms, and moving coastal skies via fractured, flickering wash applications.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Dab your brush dry on a paper towel before dragging it sideways across rougher sheets. This dry-brush layout beautifully mimics coastal wind and water texture.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.tate.org.uk/art/artists/david-cox-119" target="_blank" rel="noopener noreferrer" class="view-work-btn">Tate Gallery Cox Index</a>
+                    <a href="https://www.britishmuseum.org/collection/search?keyword=david&keyword=cox" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">British Museum Ledger</a>
+                    <a href="https://www.wikiart.org/en/david-cox" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Landscape Folio</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Richard Parkes Bonington</h2>
+                    <span class="artist-tag">Anglo-French Romantic Wash</span>
+                </div>
+                <p class="style-definition">An exceptional young talent who bridged British watercolor and French Romanticism. He mixed clean, brilliant coastal ambient reflections with detailed, highly calligraphic structural micro-linework.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Frame vast marine skies with highly diluted blue-to-pink transitions, using tiny, micro-fine horizontal pen ticks along the base line to construct faraway ships.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.tate.org.uk/art/artists/richard-parkes-bonington-43" target="_blank" rel="noopener noreferrer" class="view-work-btn">Tate Collection Profile</a>
+                    <a href="https://www.wallacecollection.org/art/collection/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Wallace Collection Search</a>
+                    <a href="https://www.wikiart.org/en/richard-parkes-bonington" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Coastal Database</a>
+                </div>
+            </div>
+        </article>
+
+    </main>
+
+    <h3 class="section-divider">Graphic & Impressionist Foundations</h3>
+    <main class="container">
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Vincent van Gogh</h2>
+                    <span class="artist-tag">Graphic Impressionism</span>
+                </div>
+                <p class="style-definition">Famous for heavy oils, his ink and watercolor sketches showcase exceptional graphic movement. He applied hand-cut reed pens to establish immense structural line density below light color glazes.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Build tone using dense groupings of lines, dots, and hash patterns. Let your fine pen do 90% of the texturing work.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.vangoghmuseum.nl/en/collection" target="_blank" rel="noopener noreferrer" class="view-work-btn">Van Gogh Museum Catalog</a>
+                    <a href="https://www.metmuseum.org/art/collection/search?q=Vincent+van+Gogh" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Met Museum Search Portfolio</a>
+                    <a href="https://www.wikiart.org/en/vincent-van-gogh/all-works#!#filterType:drawings-and-sketches" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Drawings Database</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Paul Cézanne</h2>
+                    <span class="artist-tag">Post-Impressionism Plane Study</span>
+                </div>
+                <p class="style-definition">Built form through overlapping, highly controlled patches of limited value pairings. His watercolors are incredibly sparse, relying heavily on unpainted white space to construct light fields.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Isolate a warm tone and cool tone block. Restrict paint placement to structural planes, allowing raw paper paths to map focal points.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.moma.org/artists/1053" target="_blank" rel="noopener noreferrer" class="view-work-btn">MoMA Cézanne Vault</a>
+                    <a href="https://www.barnesfoundation.org/whats-on/collection" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Barnes Foundation Profile</a>
+                    <a href="https://www.wikiart.org/en/paul-cezanne/all-works#!#filterType:watercolor" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Watercolor Archive</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Rembrandt van Rijn</h2>
+                    <span class="artist-tag">Monochrome Realism</span>
+                </div>
+                <p class="style-definition">The king of single-color value study. His sketches leverage rapid quill pen frameworks balanced with a single dark sepia wash layer diluted to various strengths to map light and shadow.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Try using exclusively your Sharpie and various water concentrations of your brown block to create high-end volumetric realism.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.rijksmuseum.nl/en/rembrandt-van-rijn" target="_blank" rel="noopener noreferrer" class="view-work-btn">Rijksmuseum Collection Home</a>
+                    <a href="https://www.britishmuseum.org/collection/search?keyword=rembrandt&keyword=drawing" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">British Museum Drawings</a>
+                    <a href="https://www.metmuseum.org/art/collection/search?q=Rembrandt+drawing" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Met Museum Drawing Log</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Edgar Degas</h2>
+                    <span class="artist-tag">Impressionist Fluid Line</span>
+                </div>
+                <p class="style-definition">Degas experimented deeply with print monotypes, forming rich dark ink contours pressed onto paper, which he then coated with light, transparent watercolor layers to isolate light tracks.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Trace action poses with sweeping pen marks, avoiding stiff details. Follow with flat color glazes over the primary torso curves.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.tate.org.uk/art/artists/edgar-degas-998" target="_blank" rel="noopener noreferrer" class="view-work-btn">Tate Gallery Degas File</a>
+                    <a href="https://www.metmuseum.org/toah/hd/dgsa/hd_dgsa.htm" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Met Museum Chronology</a>
+                    <a href="https://www.wikiart.org/en/edgar-degas" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Master Directory</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Henri de Toulouse-Lautrec</h2>
+                    <span class="artist-tag">Graphic Post-Impressionism</span>
+                </div>
+                <p class="style-definition">The architect of classic posters. His approach showcases fluid contour paths tracking figures, supported by flat, graphic color fills or heavy paint spray textures.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Emphasize line pressure and speed with your pen. Keep the paint application completely flat and graphic inside your line contours.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.moma.org/artists/5901" target="_blank" rel="noopener noreferrer" class="view-work-btn">MoMA Print Inventory</a>
+                    <a href="https://www.musee-toulouse-lautrec.com/en" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Official French Museum Site</a>
+                    <a href="https://www.wikiart.org/en/henri-de-toulouse-lautrec" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Lithograph Folder</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Camille Pissarro</h2>
+                    <span class="artist-tag">Core Impressionism Structure</span>
+                </div>
+                <p class="style-definition">The organizing force of original impressionism. Pissarro logged local village configurations via highly structured ink sketches overlaid with clean, pulsing landscape washes.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Manage deep shade regions using clean pen cross-hatching paths instead of loading dense layers of muddy paint.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.nationalgallery.org.uk/artists/camille-pissarro" target="_blank" rel="noopener noreferrer" class="view-work-btn">National Gallery Directory</a>
+                    <a href="https://www.metmuseum.org/art/collection/search?q=Camille+Pissarro" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Met Museum Pissarro Search</a>
+                    <a href="https://www.wikiart.org/en/camille-pissarro" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Graphic Ledger</a>
+                </div>
+            </div>
+        </article>
+
+    </main>
+
+    <h3 class="section-divider">The Contemporary Master Sketchers</h3>
+    <main class="container">
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Peter Sheeler</h2>
+                    <span class="artist-tag">Clean Rural Realism</span>
+                </div>
+                <p class="style-definition">An absolute favorite online educator tracking barns and landscapes. His process tracks crisp, uniform structural ink lines matched with minimalist split-complementary wash fields.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Excellent beginner model. Frame hard structural horizons in clean pen, then wash across focusing purely on light-to-dark value changes.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.youtube.com/@PeterSheelerArt/videos" target="_blank" rel="noopener noreferrer" class="view-work-btn">YouTube Process Library</a>
+                    <a href="https://www.instagram.com/petersheelerart/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Official Instagram Portfolio</a>
+                    <a href="https://www.facebook.com/petersheelerart/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Official Studio Community</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Simone Ridyard</h2>
+                    <span class="artist-tag">Urban Architectural Impressionism</span>
+                </div>
+                <p class="style-definition">Architect and urban drawing leader. Her workflow links exact perspective lines in black ink with highly independent, loose color bursts that float past edge boundaries.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Break the border rule. Paint an environmental background wash completely independent of the clean layout line borders underneath.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="http://www.simoneridyard.co.uk/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Official Studio Website</a>
+                    <a href="https://www.instagram.com/simoneridyard/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Instagram Project Feed</a>
+                    <a href="https://urbansketchers.org/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Urban Sketchers International</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Phil Dean</h2>
+                    <span class="artist-tag">Street Impressionism</span>
+                </div>
+                <p class="style-definition">'The Shoreditch Sketcher' utilizes rich line variations and sharp value changes to establish urban depth before applying direct local spot washes to emphasize primary objects.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Isolate a focal feature. Ink the entire scene, but paint *only* one structural highlight (like a red chimney or blue door) against raw white paper.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.shoreditchsketcher.com/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Official Studio Portal</a>
+                    <a href="https://www.youtube.com/@shoreditchsketcher/videos" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">YouTube Masterclass Channel</a>
+                    <a href="https://www.instagram.com/shoreditchsketcher/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Instagram Work Feed</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Edward Seago</h2>
+                    <span class="artist-tag">20th-Century Atmospheric Impressionism</span>
+                </div>
+                <p class="style-definition">A highly respected modern British master who carried forward Turner’s atmospheric lineage. Seago tracked moody Norfolk skies and marshlands using incredible, fluid wet washes paired with minimal structural anchor lines.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Keep your paint mixes highly liquid. Lay down a continuous grey/blue cloud mass in single sweeps, then use your pen to slice a few crisp, horizontal mast lines at the bottom.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.portlandgallery.com/artists/43-edward-seago/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Portland Gallery Archive</a>
+                    <a href="https://www.tate.org.uk/art/artists/edgar-seago-1920" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Tate Gallery Seago Log</a>
+                    <a href="https://www.wikiart.org/en/edward-seago" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">WikiArt Impressionist Portfolio</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Teoh Yi Chie</h2>
+                    <span class="artist-tag">Minimalist Urban Journalism</span>
+                </div>
+                <p class="style-definition">Singaporean journaling educator (Parka Blogs). Teoh drafts detailed urban locations using quick pen layouts backed by highly limited 3-color primary wash configurations.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Restrict your palette. Choose exactly one red, one yellow, and one blue block from your kit, mixing all shadow gradients exclusively from that trio.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.parkablogs.com/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Parka Blogs Core Site</a>
+                    <a href="https://www.youtube.com/@teohyichie/videos" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">YouTube Video Vault</a>
+                    <a href="https://www.instagram.com/parkablogs/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Instagram Sketch Log</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Liz Steel</h2>
+                    <span class="artist-tag">Rapid Sketching Impressionism</span>
+                </div>
+                <p class="style-definition">Architectural drawer celebrated for swift locations. Her design language tracks loose, intersecting pen line paths layered with spontaneous, fast watercolor steps.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Put down your pen details in exactly 5 minutes, followed by 3 minutes of wash application. Speed prevents you from overworking the composition.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.lizsteel.com/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Official Educational Blog</a>
+                    <a href="https://www.youtube.com/@LizSteel/videos" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">YouTube Video School</a>
+                    <a href="https://www.instagram.com/lizsteelart/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Instagram Art Hub</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Stephanie Bower</h2>
+                    <span class="artist-tag">Luminous Perspective Layout</span>
+                </div>
+                <p class="style-definition">Premier global architectural illustrator. Bower tracks accurate perspective lines filled with beautifully smooth, graded watercolor sheets to simulate light direction.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Leverage your pen or a straight edge to align accurate lines, floating light, fading water mixes smoothly within the geometric boundaries.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.stephaniebower.com/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Official Artist Website</a>
+                    <a href="https://www.instagram.com/stephaniebower/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Instagram Work Showcase</a>
+                    <a href="https://www.skillshare.com/en/browse/stephanie-bower" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Skillshare Profile Index</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Alvaro Castagnet</h2>
+                    <span class="artist-tag">Atmospheric Impressionist Sweep</span>
+                </div>
+                <p class="style-definition">A titan of expressive watercolor. He applies immense, deep tonal value sheets directly across locations, punctuated by razor-sharp calligraphic line accents for center focus.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Sweep large wash backgrounds onto the paper first, waiting for full dryness before drawing fine sharp pen highlights to anchor scale.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://alvarocastagnet.net/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Official Studio Homepage</a>
+                    <a href="https://www.youtube.com/user/AlvaroCastagnet" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">YouTube Work Demos</a>
+                    <a href="https://www.instagram.com/alvarocastagnet/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Instagram Gallery Log</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Ch'ng Kiah Kiean</h2>
+                    <span class="artist-tag">Organic Line Texture</span>
+                </div>
+                <p class="style-definition">Malaysian master who creates complex layout textures using graphite and ink, balanced cleanly with isolated, highly calculated tiny dry-brush spot watercolors.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Keep 95% of your sheet naked paper. Let your fine-point pen map out rich texture, using paint only for small, vibrant focal spots.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.kiahkiean.com/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Official Artist Portfolio</a>
+                    <a href="https://www.youtube.com/user/kiahkiean" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">YouTube Studio Stream</a>
+                    <a href="https://www.behance.net/kiahkiean" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Behance Portfolio Hub</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Felix Scheinberger</h2>
+                    <span class="artist-tag">Expressive Illustrative Wash</span>
+                </div>
+                <p class="style-definition">German author who leverages a loose, chaotic drawing language, combining rapid, erratic ink configurations with vibrant, non-realistic color selections.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Avoid trying to make things look perfect. Intentionally embrace loose, shaky lines with your pen, matching them with bright, playful color pops.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.felixscheinberger.de/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Official Illustration Portal</a>
+                    <a href="https://www.instagram.com/felixscheinberger/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Instagram Work Timeline</a>
+                    <a href="https://www.domestika.org/en/teachers/423223-felix-scheinberger" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Domestika Class Hub</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Gabi Campanario</h2>
+                    <span class="artist-tag">Editorial Journal Sketching</span>
+                </div>
+                <p class="style-definition">Founder of the international Urban Sketchers movement. Campanario documents locations using clear, highly readable illustrative pen contours filled with neat, localized watercolor tints.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Treat your paper like a news notebook. Focus on cleanly mapping outlines with your pen, adding light, orderly color values to fill the frame.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://www.gabicampanario.com/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Official Artist Website</a>
+                    <a href="https://www.instagram.com/gadicampanario/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Instagram Sketch Stream</a>
+                    <a href="https://www.seattletimes.com/author/gabi-campanario/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Seattle Times Column Vault</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Inma Serrano</h2>
+                    <span class="artist-tag">Fragmented Abstraction</span>
+                </div>
+                <p class="style-definition">Spanish sketching educator. Her design approach breaks shapes down using quick, fragmented pen marks and bursts of non-blended, heavy color values.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Deconstruct objects into raw shapes instead of trying to draw them perfectly. Let your pen lines stay loose, jagged, and energetic.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://inmaserrano.es/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Official Studio Blog</a>
+                    <a href="https://www.instagram.com/inmaserranito/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Instagram Work Feed</a>
+                    <a href="https://www.flickr.com/photos/inmaserrano/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Flickr Historical Archive</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="artist-card">
+            <div>
+                <div class="artist-header">
+                    <h2 class="artist-name">Shari Blaukopf</h2>
+                    <span class="artist-tag">Graphic Shadow Mapping</span>
+                </div>
+                <p class="style-definition">Canadian master artist known for a graphic landscape style built on strong cast shadow maps intersecting sharp structural pen lines.</p>
+                <div class="signature-tip">
+                    <strong>Kit Takeaway:</strong> Track cast shadows. Frame layout lines with your pen, then block the entire shadow shape using a single cool blue or purple wash mix.
+                </div>
+            </div>
+            <div class="links-section">
+                <p class="links-title">External Reference Links</p>
+                <div class="links-grid">
+                    <a href="https://shariblaukopf.com/" target="_blank" rel="noopener noreferrer" class="view-work-btn">Official Studio Website</a>
+                    <a href="https://www.instagram.com/shariblaukopf/" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">Instagram Sketch Feed</a>
+                    <a href="https://www.youtube.com/channel/UC_S-uXhS4_S_GfM_mD_oRkg" target="_blank" rel="noopener noreferrer" class="view-work-btn secondary">YouTube Video Channel</a>
+                </div>
+            </div>
+        </article>
+
+    </main>
+
+    <footer>
+        <p>Keep your lines sharp, your washes loose, and embrace the white space.</p>
+    </footer>
+
+</body>
+</html>
