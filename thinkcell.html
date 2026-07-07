@@ -572,6 +572,28 @@
 
     return `${year}-${month}-${day}`;
 }
+
+function normalizeImportedBoolean(value, defaultValue = true) {
+    if (value === undefined || value === null) return defaultValue;
+    const cleaned = String(value).trim().toUpperCase();
+
+    if (cleaned === "") return defaultValue;
+    if (cleaned === "TRUE" || cleaned === "YES" || cleaned === "1") return true;
+    if (cleaned === "FALSE" || cleaned === "NO" || cleaned === "0") return false;
+
+    return defaultValue;
+}
+
+function hydrateRowDefaults() {
+    projectData.forEach(lane => {
+        (lane.rows || []).forEach(row => {
+            if (typeof row.showDateRangeInRowName !== "boolean") {
+                row.showDateRangeInRowName = true;
+            }
+        });
+    });
+}
+
 function normalizeDateString(val) {
     if (!val) return "";
     let ts = parseAnyDateToTimestamp(val);
@@ -1029,8 +1051,9 @@ function stopGlobalDragAction(e) {
     }
 
         function restoreStateFromSnapshot(state) {
-        projectData = state.data || [];
-        customTrackers = state.trackers || [];
+    projectData = state.data || [];
+    hydrateRowDefaults();
+    customTrackers = state.trackers || [];
         calloutData = state.callouts || [];
         renderCalloutControls();
         
@@ -1138,70 +1161,99 @@ function stopGlobalDragAction(e) {
     // =========================================================================
     // OVERHAULED ARCHITECTURE: FLATTENED EXCEL CSV AUTOMATION ENGINE
     // =========================================================================
-        function exportExcelCSV() {
-        let headers = [
+    function exportExcelCSV() {
+    const headers = [
         "Record Type", "Swimlane Title", "Swimlane Color", "Swimlane Summary",
         "Row ID", "Row Display Title", "Predecessor ID", "Element ID", "P6 ID Start", "P6 ID Finish",
         "Label Name", "Start Target Date", "Finish Date", "Progress Thickness",
-        "Pattern Shape", "Color Hex Code", "OffsetX1", "OffsetY1", "OffsetX2", "OffsetY2", "Rules Matrix"
+        "Pattern Shape", "Color Hex Code", "OffsetX1", "OffsetY1", "OffsetX2", "OffsetY2",
+        "Rules Matrix", "Row Name Date Range"
     ];
-    let csvRows = [headers.join(",")];
+
+    const csvSafe = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const csvRows = [headers.map(csvSafe).join(",")];
 
     projectData.forEach(lane => {
-        if (lane.rows.length === 0) {
-            let fFields = ["ROW_EMPTY", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",""];
-            csvRows.push(fFields.join(","));
-        } else {
-            lane.rows.forEach(row => {
-                if (row.bars.length === 0 && row.milestones.length === 0) {
-                    let fFields = ["ROW_EMPTY", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE", row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", "", "", "", "", "", "", "", "", "", "", "", "", "",""];
-                    csvRows.push(fFields.join(","));
-                }
-                
-                                row.bars.forEach(b => {
-                    let fFields = [
-                        "BAR", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE",
-                        row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", b.id,
-                        `"${b.p6IdStart || ''}"`, `"${b.p6IdFinish || ''}"`,
-                        "", b.start, b.end, b.progress || 0, b.pattern || "solid", `"${b.color || ''}"`,
-                        "", "", "", "", `"${b.bgColor || ''}"`
-                    ];
-                    csvRows.push(fFields.join(","));
-                });
-
-                                row.milestones.forEach(ms => {
-                    let ruleDetails = [ms.showDate ? "PinDate" : "HideDate", ms.leaderEnabledText ? "LdrTxt" : "NoLdrTxt", ms.leaderEnabledDate ? "LdrDt" : "NoLdrDt", ms.leaderAnchorText || "center"].join("|");
-                    let fFields = [
-                        "MILESTONE", `"${lane.title.replace(/"/g, '""')}"`, `"${lane.color || ''}"`, lane.showSummary ? "TRUE" : "FALSE",
-                        row.id, `"${row.label.replace(/"/g, '""')}"`, row.predecessor || "NONE", ms.id,
-                        `"${ms.p6IdStart || ''}"`, `"${ms.p6IdFinish || ''}"`, `"${ms.label.replace(/"/g, '""')}"`, ms.date, "",
-                        "", ms.symbol || "diamond", `"${ms.color || ''}"`, ms.labelOffsetX || 0, ms.labelOffsetY || 0,
-                        ms.dateOffsetX || 0, ms.dateOffsetY || 0, `"${ruleDetails}"`
-                    ];
-                    csvRows.push(fFields.join(","));
-                });
-            });
+        if (!lane.rows || lane.rows.length === 0) {
+            const fields = [
+                "ROW_EMPTY", lane.title || "", lane.color || "", lane.showSummary ? "TRUE" : "FALSE",
+                "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
+            ];
+            csvRows.push(fields.map(csvSafe).join(","));
+            return;
         }
+
+        lane.rows.forEach(row => {
+            const rowDateRange = row.showDateRangeInRowName ? "TRUE" : "FALSE";
+            const bars = row.bars || [];
+            const milestones = row.milestones || [];
+
+            if (bars.length === 0 && milestones.length === 0) {
+                const fields = [
+                    "ROW_EMPTY", lane.title || "", lane.color || "", lane.showSummary ? "TRUE" : "FALSE",
+                    row.id ?? "", row.label || "", row.predecessor || "NONE", "", "", "", "", "", "", "", "", "", "", "", "", "", "", rowDateRange
+                ];
+                csvRows.push(fields.map(csvSafe).join(","));
+            }
+
+            bars.forEach(b => {
+                const fields = [
+                    "BAR", lane.title || "", lane.color || "", lane.showSummary ? "TRUE" : "FALSE",
+                    row.id ?? "", row.label || "", row.predecessor || "NONE", b.id ?? "",
+                    b.p6IdStart || "", b.p6IdFinish || "", "",
+                    b.start || "", b.end || "", b.progress ?? 0,
+                    b.pattern || "solid", b.color || "", "", "", "", "",
+                    b.bgColor || "", rowDateRange
+                ];
+                csvRows.push(fields.map(csvSafe).join(","));
+            });
+
+            milestones.forEach(ms => {
+                const ruleDetails = [
+                    ms.showDate ? "PinDate" : "HideDate",
+                    ms.leaderEnabledText ? "LdrTxt" : "NoLdrTxt",
+                    ms.leaderEnabledDate ? "LdrDt" : "NoLdrDt",
+                    ms.leaderAnchorText || "center"
+                ].join("|");
+
+                const fields = [
+                    "MILESTONE", lane.title || "", lane.color || "", lane.showSummary ? "TRUE" : "FALSE",
+                    row.id ?? "", row.label || "", row.predecessor || "NONE", ms.id ?? "",
+                    ms.p6IdStart || "", ms.p6IdFinish || "", ms.label || "",
+                    ms.date || "", "", "", ms.symbol || "diamond", ms.color || "",
+                    ms.labelOffsetX ?? 0, ms.labelOffsetY ?? 0,
+                    ms.dateOffsetX ?? 0, ms.dateOffsetY ?? 0,
+                    ruleDetails, rowDateRange
+                ];
+                csvRows.push(fields.map(csvSafe).join(","));
+            });
+        });
     });
-    
 
     customTrackers.forEach(trk => {
-                let fFields = [
-            "TRACKER", "", "", "", "", "", "", trk.id,
-            "", "",
-            `"${trk.label.replace(/"/g, '""')}"`, trk.date, "", trk.thickness || 2,
-            trk.pattern || "solid", `"${trk.color || ''}"`, trk.labelOffsetX || 0, trk.labelOffsetY || 0, "", "", ""
+        const fields = [
+            "TRACKER", "", "", "", "", "", "", trk.id ?? "", "", "",
+            trk.label || "", trk.date || "", "", trk.thickness ?? 2,
+            trk.pattern || "solid", trk.color || "", trk.labelOffsetX ?? 0, trk.labelOffsetY ?? 0,
+            "", "", "", ""
         ];
-        csvRows.push(fFields.join(","));
+        csvRows.push(fields.map(csvSafe).join(","));
     });
 
     calloutData.forEach(c => {
-        let fFields = ["CALLOUT", `"${c.text.replace(/"/g, '""')}"`, c.x, c.y, c.leaderX, c.leaderY, c.bgColor, c.textColor, c.fontSize, c.isBold ? "TRUE" : "FALSE", c.bgTransparent ? "TRUE" : "FALSE", "", "", "", "", "", "", "", "", "", ""];
-        csvRows.push(fFields.join(","));
+        const fields = [
+            "CALLOUT", c.text || "", c.x ?? "", c.y ?? "", c.leaderX ?? "", c.leaderY ?? "",
+            c.bgColor || "", c.textColor || "", c.fontSize ?? "", c.isBold ? "TRUE" : "FALSE",
+            c.bgTransparent ? "TRUE" : "FALSE", "", "", "", "", "", "", "", "", "", "", ""
+        ];
+        csvRows.push(fields.map(csvSafe).join(","));
     });
 
-    const blob = new Blob([csvRows.join("\n")], { type: 'text/csv' });
-    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `gantt_flattened_matrix.csv`; link.click();
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "gantt_flattened_matrix.csv";
+    link.click();
 }
 
     function exportConfigurationArchive() {
@@ -1296,11 +1348,24 @@ function stopGlobalDragAction(e) {
             let rowLabel = columns[5] ? columns[5].trim() : "";
             let rowPred = columns[6] ? columns[6].trim() : ""; if (rowPred.toUpperCase() === "NONE") rowPred = "";
 
-            let rowObject = lane.rows.find(r => r.id === explicitRowId);
-            if(!rowObject) {
-                rowObject = { id: explicitRowId, label: rowLabel, predecessor: rowPred, bars: [], milestones: [] };
-                lane.rows.push(rowObject);
-            }
+            let rowDateRangeFlag = normalizeImportedBoolean(columns[21], true);
+
+let rowObject = lane.rows.find(r => r.id === explicitRowId);
+if (!rowObject) {
+    rowObject = {
+        id: explicitRowId,
+        label: rowLabel,
+        predecessor: rowPred,
+        showDateRangeInRowName: rowDateRangeFlag,
+        bars: [],
+        milestones: []
+    };
+    lane.rows.push(rowObject);
+} else {
+    rowObject.label = rowLabel || rowObject.label;
+    rowObject.predecessor = rowPred;
+    rowObject.showDateRangeInRowName = rowDateRangeFlag;
+}
 
             if (recordType === "BAR") {
                 let bId = parseInt(columns[7].trim()) || bIdCounter++;
@@ -2465,7 +2530,27 @@ document.addEventListener('dblclick', (e) => {
     function addNewSwimlane() { projectData.push({ id: projectData.length, title: "New Building Workstream", color: "#f8fafc", showSummary: true, rows: [] }); recordStateChange(); renderInputRows(); updateChart(); }
     function deleteSwimlane(laneIdx) { projectData.splice(laneIdx, 1); recordStateChange(); renderInputRows(); updateChart(); }
 
-    function addNewRowToLane(laneIdx) { projectData[laneIdx].rows.push({ id: nextRowId++, label: "New Task Activity Track", predecessor: "", bars: [{ id: nextBarId++, start: "01Mar2026", end: "01Jun2026", progress: 0, bgColor: "", color: "", pattern: "solid" }], milestones: [] }); recordStateChange(); renderInputRows(); updateChart(); }
+    function addNewRowToLane(laneIdx) {
+    projectData[laneIdx].rows.push({
+        id: nextRowId++,
+        label: "New Task Activity Track",
+        predecessor: "",
+        showDateRangeInRowName: true,
+        bars: [{
+            id: nextBarId++,
+            start: "01Mar2026",
+            end: "01Jun2026",
+            progress: 0,
+            bgColor: "",
+            color: "",
+            pattern: "solid"
+        }],
+        milestones: []
+    });
+    recordStateChange();
+    renderInputRows();
+    updateChart();
+}
     function deleteRowFromLane(laneIdx, rowIdx) { projectData[laneIdx].rows.splice(rowIdx, 1); recordStateChange(); renderInputRows(); updateChart(); }
 
     // =========================================================
