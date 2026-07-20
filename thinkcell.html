@@ -50,7 +50,7 @@
         .reset-btn { background: #fff1f2; border: 1px solid #fca5a5; padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: var(--danger); }
         .reset-btn:hover { background: #ffe4e6; }
 
-        .sidebar-content { padding: 20px; overflow-y: auto; flex-grow: 1; padding-bottom: 100px;}
+        .sidebar-content { padding: 10px; overflow-y: auto; flex-grow: 1; padding-bottom: 100px;}
         
         h3 { margin: 15px 0 8px 0; color: #1e40af; border-bottom: 1px solid var(--border-color); padding-bottom: 3px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
         .control-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
@@ -61,10 +61,10 @@
         input[type="color"] { border: none; width: 100%; height: 34px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
         
         /* Timeline Data Cards & Drag and Drop Styling */
-        .row-card { background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); position: relative; transition: transform 0.15s ease, background 0.15s ease; }
+        .row-card { background: #ffffff; border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); position: relative; transition: transform 0.15s ease, background 0.15s ease; }
         .row-card.dragover-active { border-top: 3px solid var(--primary); background: #f0f6ff; }
         .row-card.conflict-warning { border-color: var(--danger); background-color: var(--warning-bg); }
-        .row-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;}
+        .row-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;}
         .row-card-title { font-size: 12px; font-weight: bold; color: #475569; display: flex; align-items: center; }
         .conflict-badge { background: var(--danger); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 8px; }
         
@@ -2279,13 +2279,13 @@ document.addEventListener('dblclick', (e) => {
         projectData.forEach((lane, laneIdx) => {
             const laneWrapper = document.createElement('div');
             laneWrapper.className = 'swimlane-container';
-            laneWrapper.style.cssText = "border:1px solid #cbd5e1; padding:15px; border-radius:8px; margin-bottom:20px; background:#f8fafc;";
+                        laneWrapper.style.cssText = "border:1px solid #cbd5e1; padding:8px; border-radius:6px; margin-bottom:10px; background:#f8fafc;";
             
             laneWrapper.addEventListener('dragover', (e) => e.preventDefault());
             laneWrapper.addEventListener('drop', (e) => handleRowDropOnLane(e, laneIdx));
 
             laneWrapper.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:2px solid #cbd5e1; padding-bottom:6px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:2px solid #cbd5e1; padding-bottom:4px;">
                     <div style="display:flex; align-items:center; gap:8px; width:75%;">
                         <button type="button" style="background:none; border:none; cursor:pointer; font-size:14px; color:#1e3a8a; padding:0 4px; font-weight:bold;" onclick="toggleSwimlaneCollapseState(${laneIdx})">
                             ${lane.collapsed ? '►' : '▼'}
@@ -2298,8 +2298,12 @@ document.addEventListener('dblclick', (e) => {
                             <label style="display:flex; align-items:center; gap:2px; cursor:pointer;"><input type="radio" name=\"summaryToggle-${laneIdx}\" value="on" ${lane.showSummary !== false ? 'checked' : ''} onchange="updateLaneSummary(${laneIdx}, true)">On</label>
                             <label style="display:flex; align-items:center; gap:2px; cursor:pointer;"><input type="radio" name=\"summaryToggle-${laneIdx}\" value="off" ${lane.showSummary === false ? 'checked' : ''} onchange="updateLaneSummary(${laneIdx}, false)">Off</label>
                         </div>
+                                       </div>
+                    <div style="display:flex; gap: 4px;">
+                        <button type="button" class="inner-action-btn" style="padding:2px 6px; font-size:11px;" onclick="moveSwimlaneUp(${laneIdx})" ${laneIdx === 0 ? 'disabled' : ''}>▲ Up</button>
+                        <button type="button" class="inner-action-btn" style="padding:2px 6px; font-size:11px;" onclick="moveSwimlaneDown(${laneIdx})" ${laneIdx === projectData.length - 1 ? 'disabled' : ''}>▼ Down</button>
+                        <button class="delete-btn" style="padding:2px 6px;" onclick="deleteSwimlane(${laneIdx})">Delete Lane</button>
                     </div>
-                    <button class="delete-btn" style="padding:2px 6px;" onclick="deleteSwimlane(${laneIdx})">Delete Lane</button>
                 </div>
                 <div id="lane-toggle-wrapper-${laneIdx}">
                     <div class="lane-rows-slots" id="lane-rows-box-${laneIdx}"></div>
@@ -2373,7 +2377,7 @@ document.addEventListener('dblclick', (e) => {
                         <button class="delete-btn" onclick="deleteRowFromLane(${laneIdx}, ${rowIdx})">Delete Row</button>
                     </div>
                     <div class="card-input-group">
-                        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-bottom:10px;">
+                                                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:8px; margin-bottom:6px;">
                             <div class="control-item"><label>Row Display Label Name</label><input type="text" value="${row.label}" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'label', this.value)"></div>
                             <div class="control-item"><label>Predecessor Dependency Link</label><select onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'predecessor', this.value)">${predecessorOptions}</select></div>
                         </div>
@@ -3107,6 +3111,28 @@ function applyThemePalettePreset(paletteKey) {
         renderInputRows(); // Forces sidebar color pickers to match the new theme look
         updateChart();
     }
+    
+    // --- NEW SWIMLANE REORDER FUNCTIONS ---
+function moveSwimlaneUp(laneIdx) {
+    if (laneIdx === 0) return; // Already at the top
+    const temp = projectData[laneIdx];
+    projectData[laneIdx] = projectData[laneIdx - 1];
+    projectData[laneIdx - 1] = temp;
+    recordStateChange();
+    renderInputRows();
+    updateChart();
+}
+
+function moveSwimlaneDown(laneIdx) {
+    if (laneIdx === projectData.length - 1) return; // Already at the bottom
+    const temp = projectData[laneIdx];
+    projectData[laneIdx] = projectData[laneIdx + 1];
+    projectData[laneIdx + 1] = temp;
+    recordStateChange();
+    renderInputRows();
+    updateChart();
+}
+// --------------------------------------
     
     function downloadPNG() {
         const svgElement = document.querySelector('#svgContainer svg'); if (!svgElement) return;
