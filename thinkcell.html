@@ -2237,7 +2237,7 @@ document.addEventListener('dblclick', (e) => {
     }
  function addMilestoneNew(laneIdx, rowIdx) {
     projectData[laneIdx].rows[rowIdx].milestones.push({
-        id: nextMsId,
+        id: nextMsId++,
         label: "",
         date: "01Jun2026",
         showDate: true,
