@@ -50,18 +50,18 @@
         .reset-btn { background: #fff1f2; border: 1px solid #fca5a5; padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: var(--danger); }
         .reset-btn:hover { background: #ffe4e6; }
 
-        .sidebar-content { padding: 10px; overflow-y: auto; flex-grow: 1; padding-bottom: 100px;}
+                .sidebar-content { padding: 10px; overflow-y: auto; flex-grow: 1; padding-bottom: 100px;}
         
         h3 { margin: 15px 0 8px 0; color: #1e40af; border-bottom: 1px solid var(--border-color); padding-bottom: 3px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
         .control-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
-        .control-item { display: flex; flex-direction: column; font-size: 11px; font-weight: 600; color: #4a5568; }
+        
         .control-item label { margin-bottom: 3px; }
         
-        input[type="text"], select, input[type="number"] { padding: 7px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; width: 100%; box-sizing: border-box; }
+        input[type="text"], select, input[type="number"] { padding: 5px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; width: 100%; box-sizing: border-box; }
         input[type="color"] { border: none; width: 100%; height: 34px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
         
         /* Timeline Data Cards & Drag and Drop Styling */
-        .row-card { background: #ffffff; border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); position: relative; transition: transform 0.15s ease, background 0.15s ease; }
+                .row-card { background: #ffffff; border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 4px; margin-bottom: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); position: relative; transition: transform 0.15s ease, background 0.15s ease; }
         .row-card.dragover-active { border-top: 3px solid var(--primary); background: #f0f6ff; }
         .row-card.conflict-warning { border-color: var(--danger); background-color: var(--warning-bg); }
         .row-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;}
@@ -72,54 +72,54 @@
         .row-drag-handle:active { cursor: grabbing; }
 
         .delete-btn { background: none; border: 1px solid #fca5a5; color: var(--danger); padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; }
-        .horizontal-input-row { display: grid; grid-template-columns: 1.8fr 1.4fr 1.4fr 0.7fr auto; gap: 10px; align-items: flex-end; margin-bottom: 8px; }
-        
+        .horizontal-input-row { display: grid; grid-template-columns: 1fr 1fr 60px auto; gap: 4px; align-items: flex-end; margin-bottom: 4px; background: #f8fafc; padding: 4px; border-radius: 4px; border: 1px solid #e2e8f0; }
+
         /* Custom Textless Calendar Icon Configuration Wrapper */
-        .date-input-wrapper { display: flex; gap: 6px; align-items: center; width: 100%; }
-        .date-display-badge { font-size: 12px; font-weight: 700; background: #f1f5f9; padding: 7px 4px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%; box-sizing: border-box; display: inline-block; text-align: center; color: #334155; }
-        
-        .native-date-picker { 
+        .date-input-wrapper { display: flex; gap: 2px; align-items: center; width: 100%; }
+        .date-display-badge { font-size: 11px; font-weight: 700; background: #ffffff; padding: 4px 2px; border-radius: 3px; border: 1px solid #cbd5e1; width: 65px; box-sizing: border-box; display: inline-block; text-align: center; color: #334155; flex-shrink: 0;}
+
+        .native-date-picker {
             position: relative;
-            width: 34px; 
-            height: 32px; 
-            padding: 0; 
-            border: 1px solid #cbd5e1; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            flex-shrink: 0; 
-            background: #ffffff;
-            overflow: hidden;
-            display: inline-block;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: white;
             box-sizing: border-box;
+            color: transparent; /* Hides the standard date text */
         }
-        .native-date-picker::-webkit-datetime-edit,
-        .native-date-picker::-webkit-inner-spin-button,
-        .native-date-picker::-webkit-clear-button {
-            display: none !important;
-            -webkit-appearance: none;
-        }
+
         .native-date-picker::-webkit-calendar-picker-indicator {
             position: absolute;
-            left: 0;
             top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             width: 100%;
             height: 100%;
             margin: 0;
             padding: 0;
             cursor: pointer;
+            opacity: 1; /* Keep icon visible */
+        }
+        
+        /* Fallback for firefox */
+        .native-date-picker::-moz-calendar-picker-indicator {
+            width: 100%;
+            height: 100%;
             opacity: 1;
-            display: block;
         }
 
-        /* Dynamic Form Blocks */
-        .bars-section, .milestones-section { margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
-        .bars-list, .milestones-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
-        .milestone-input-row { display: grid; grid-template-columns: 2fr 1.7fr 1fr auto; gap: 8px; align-items: center; }
-        .ms-checkbox-wrap { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer;}
+        .bars-section, .milestones-section { margin-top: 4px; border-top: 1px dashed #e2e8f0; padding-top: 4px; }
+        .bars-list, .milestones-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
+        .milestone-input-row { display: grid; grid-template-columns: 1.5fr 1fr 60px auto; gap: 4px; align-items: center; background: #f8fafc; padding: 4px; border-radius: 4px; border: 1px solid #e2e8f0; }
+        .ms-checkbox-wrap { display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: var(--text-muted); cursor: pointer;}
         .ms-checkbox-wrap input { width: 14px; height: 14px; cursor: pointer; margin: 0; }
         
         .inner-action-btn { background: #ffffff; color: var(--primary); border: 1px solid #cbd5e1; padding: 5px 10px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: 600; }
-        .inner-action-btn:hover { background: #f8fafc; border-color: #94a3b8; }
+        
         .mini-delete-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; font-weight: bold; padding: 0 4px; }
 
         .archive-tools { background: #f0fdf4; border: 1px dashed #bbf7d0; padding: 12px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;}
@@ -2279,18 +2279,17 @@ document.addEventListener('dblclick', (e) => {
         projectData.forEach((lane, laneIdx) => {
             const laneWrapper = document.createElement('div');
             laneWrapper.className = 'swimlane-container';
-                        laneWrapper.style.cssText = "border:1px solid #cbd5e1; padding:8px; border-radius:6px; margin-bottom:10px; background:#f8fafc;";
+            laneWrapper.style.cssText = "border:1px solid #cbd5e1; padding:8px; border-radius:6px; margin-bottom:10px; background:#f8fafc;";
             
             laneWrapper.addEventListener('dragover', (e) => e.preventDefault());
             laneWrapper.addEventListener('drop', (e) => handleRowDropOnLane(e, laneIdx));
 
             laneWrapper.innerHTML = `
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:2px solid #cbd5e1; padding-bottom:4px;">
-                    <div style="display:flex; align-items:center; gap:8px; width:75%;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:2px solid #cbd5e1; padding-bottom:4px;">
+                    <div style="display:flex; align-items:center; gap:8px; width:70%;">
                         <button type="button" style="background:none; border:none; cursor:pointer; font-size:14px; color:#1e3a8a; padding:0 4px; font-weight:bold;" onclick="toggleSwimlaneCollapseState(${laneIdx})">
                             ${lane.collapsed ? '►' : '▼'}
                         </button>
-                        <label style="font-size:11px; font-weight:bold; color:#1e3a8a; text-transform:uppercase; flex-shrink:0;">Swimlane Group:</label>
                         <input type="text" value="${lane.title}" style="font-weight:bold; color:#1e3a8a; font-size:13px; padding:4px;" onchange="updateLaneTitle(${laneIdx}, this.value)">
                         <input type="color" value="${lane.color || '#f8fafc'}" style="width:34px; height:28px; padding:0; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer; flex-shrink:0;" onchange="updateLaneColor(${laneIdx}, this.value)">
                         <div style="display:flex; align-items:center; gap:6px; font-size:11px; margin-left:10px; background:#ffffff; padding:2px 6px; border:1px solid #cbd5e1; border-radius:4px; white-space:nowrap;">
@@ -2298,7 +2297,7 @@ document.addEventListener('dblclick', (e) => {
                             <label style="display:flex; align-items:center; gap:2px; cursor:pointer;"><input type="radio" name=\"summaryToggle-${laneIdx}\" value="on" ${lane.showSummary !== false ? 'checked' : ''} onchange="updateLaneSummary(${laneIdx}, true)">On</label>
                             <label style="display:flex; align-items:center; gap:2px; cursor:pointer;"><input type="radio" name=\"summaryToggle-${laneIdx}\" value="off" ${lane.showSummary === false ? 'checked' : ''} onchange="updateLaneSummary(${laneIdx}, false)">Off</label>
                         </div>
-                                       </div>
+                    </div>
                     <div style="display:flex; gap: 4px;">
                         <button type="button" class="inner-action-btn" style="padding:2px 6px; font-size:11px;" onclick="moveSwimlaneUp(${laneIdx})" ${laneIdx === 0 ? 'disabled' : ''}>▲ Up</button>
                         <button type="button" class="inner-action-btn" style="padding:2px 6px; font-size:11px;" onclick="moveSwimlaneDown(${laneIdx})" ${laneIdx === projectData.length - 1 ? 'disabled' : ''}>▼ Down</button>
@@ -2367,75 +2366,71 @@ document.addEventListener('dblclick', (e) => {
                     });
                 });
                 
-                card.innerHTML = `
-                    <div class="row-card-header">
-                        <div class="row-card-title">
-                            <span class="row-drag-handle">☰</span>
-                            Track Row Configuration Panel
-                            ${isConflicted ? `<span class="conflict-badge">CROSS-ROW PREDECESSOR OVERLAP</span>` : ''}
-                        </div>
-                        <button class="delete-btn" onclick="deleteRowFromLane(${laneIdx}, ${rowIdx})">Delete Row</button>
+                                               card.innerHTML = `
+                    <!-- Row 1: Core Row Details -->
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom: 6px;">
+                        <span class="row-drag-handle" style="margin:0; font-size:14px; cursor:grab;">☰</span>
+                        <input type="text" style="flex:1; font-weight:bold; font-size:11px; padding:4px; margin:0;" value="${row.label}" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'label', this.value)" placeholder="Row Label">
+                        <select style="width:120px; font-size:10px; padding:4px; margin:0;" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'predecessor', this.value)">
+                            ${predecessorOptions}
+                        </select>
+                        <button class="delete-btn" style="padding:4px 6px; margin:0; font-size:11px;" title="Delete Row" onclick="deleteRowFromLane(${laneIdx}, ${rowIdx})">✕</button>
                     </div>
-                    <div class="card-input-group">
-                                                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:8px; margin-bottom:6px;">
-                            <div class="control-item"><label>Row Display Label Name</label><input type="text" value="${row.label}" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'label', this.value)"></div>
-                            <div class="control-item"><label>Predecessor Dependency Link</label><select onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'predecessor', this.value)">${predecessorOptions}</select></div>
-                        </div>
+                    
+                    ${isConflicted ? `<div style="margin-bottom:4px;"><span class="conflict-badge" style="margin-left:0;">CROSS-ROW OVERLAP DETECTED</span></div>` : ''}
 
-                        <div style="display: flex; gap: 6px; margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px;">
-                            <button type="button" class="inner-action-btn" style="${tabBarsStyle} padding: 4px 10px; font-size: 11px;" onclick="setRowMicroTabLayout(${laneIdx}, ${rowIdx}, 'bars')">📊 Activity Bars (${row.bars.length})</button>
-                            <button type="button" class="inner-action-btn" style="${tabMsStyle} padding: 4px 10px; font-size: 11px;" onclick="setRowMicroTabLayout(${laneIdx}, ${rowIdx}, 'milestones')">✦ Milestones (${row.milestones.length})</button>
-                        </div>
+                    <!-- Row 2: Clear Tab Toggles for Bars vs Milestones -->
+                    <div style="display:flex; gap:2px; border-bottom: 2px solid #cbd5e1; margin-bottom: 4px;">
+                        <button type="button" style="${tabBarsStyle} padding: 4px 10px; font-size: 10px; border:none; border-radius: 4px 4px 0 0; cursor:pointer; font-weight:bold;" onclick="setRowMicroTabLayout(${laneIdx}, ${rowIdx}, 'bars')">📊 Activity Bars (${row.bars.length})</button>
+                        <button type="button" style="${tabMsStyle} padding: 4px 10px; font-size: 10px; border:none; border-radius: 4px 4px 0 0; cursor:pointer; font-weight:bold;" onclick="setRowMicroTabLayout(${laneIdx}, ${rowIdx}, 'milestones')">✦ Milestones (${row.milestones.length})</button>
+                    </div>
 
-                        <div class="bars-section" style="${currentTab === 'bars' ? 'display: block;' : 'display: none; border-top: none;'}">
-                            <div style="font-size:11px; font-weight:bold; color:#1e40af; margin-bottom:6px;">Activity Bars Array</div>
-                            <div class="bars-list">
-                                ${row.bars.map((bar, barIdx) => `
-                                    <div class="horizontal-input-row">
-                                        <div class="control-item"><label>Start Date</label>
-                                            <div class="date-input-wrapper">
-                                                <span class="date-display-badge">${bar.start}</span>
-                                                <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'start', null, ${barIdx})">
-                                            </div>
-                                        </div>
-                                        <div class="control-item"><label>End Date</label>
-                                            <div class="date-input-wrapper">
-                                                <span class="date-display-badge">${bar.end}</span>
-                                                <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'end', null, ${barIdx})">
-                                            </div>
-                                        </div>
-                                        <div class="control-item" style="width:70px;"><label>Progress %</label><input type="number" min="0" max="100" value="${bar.progress || 0}" onchange="updateBarFieldDirect(${laneIdx}, ${rowIdx}, ${barIdx}, 'progress', this.value)"></div>
-                                        <button class="mini-delete-btn" style="margin-bottom:6px;" onclick="deleteBarNew(${laneIdx}, ${rowIdx}, ${barIdx})">&times;</button>
-                                    </div>
-                                `).join('')}
-                            </div>
-                            <button class="inner-action-btn" onclick="addBarNew(${laneIdx}, ${rowIdx})" style="margin-bottom:8px;">+ Add Custom Activity Bar</button>
-                        </div>
-
-                        <div class="milestones-section" style="${currentTab === 'milestones' ? 'display: block;' : 'display: none; border-top: none;'}">
-                            <div style="font-size:11px; font-weight:bold; color:#1e40af; margin-bottom:6px;">Row Target Milestones</div>
-                            <div class="milestones-list">
-                                ${row.milestones.map((ms, msIdx) => `
-                                                                        <div class="milestone-input-row">
-                                        <!-- Changed onchange to onblur -->
-                                        <input type="text" value="${ms.label}" onblur="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'label', this.value)">
-                                        
+                    <!-- Section: Activity Bars -->
+                    <div class="bars-section" style="${currentTab === 'bars' ? 'display: block;' : 'display: none;'} margin-top:0; padding-top:0; border:none;">
+                        <div class="bars-list">
+                            ${row.bars.map((bar, barIdx) => `
+                                <div class="horizontal-input-row" style="margin-bottom:2px; padding:2px;">
+                                    <div class="control-item" style="margin:0;">
                                         <div class="date-input-wrapper">
-                                            <span class="date-display-badge">${ms.date}</span>
-                                            <!-- Changed onchange to onblur -->
-                                            <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}" onblur="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'date', ${msIdx})">
+                                            <span class="date-display-badge">${bar.start}</span>
+                                            <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'start', null, ${barIdx})">
                                         </div>
-                                        
-                                        <label class="ms-checkbox-wrap">
-                                            <input type="checkbox" ${(ms.showDate) ? 'checked' : ''} onchange="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'showDate', this.checked)">
-                                            Pin Date
-                                        </label>
-                                        <button class="mini-delete-btn" onclick="deleteMilestoneNew(${laneIdx}, ${rowIdx}, ${msIdx})">&times;</button>
                                     </div>
-                                `).join('')}
-                            </div>
-                            <button class="inner-action-btn" onclick="addMilestoneNew(${laneIdx}, ${rowIdx})">+ Add Custom Milestone</button>
+                                    <div class="control-item" style="margin:0;">
+                                        <div class="date-input-wrapper">
+                                            <span class="date-display-badge">${bar.end}</span>
+                                            <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}" onchange="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'end', null, ${barIdx})">
+                                        </div>
+                                    </div>
+                                    <div class="control-item" style="margin:0;"><input type="number" min="0" max="100" style="height:28px; padding:2px; font-size:11px;" value="${bar.progress || 0}" onchange="updateBarFieldDirect(${laneIdx}, ${rowIdx}, ${barIdx}, 'progress', this.value)"></div>
+                                    <button class="mini-delete-btn" style="margin-bottom:0;" onclick="deleteBarNew(${laneIdx}, ${rowIdx}, ${barIdx})">&times;</button>
+                                </div>
+                            `).join('')}
                         </div>
+                        <button class="inner-action-btn" onclick="addBarNew(${laneIdx}, ${rowIdx})" style="padding:2px 6px; font-size:10px; margin-top:2px;">+ Add Bar</button>
+                    </div>
+
+                    <!-- Section: Milestones -->
+                    <div class="milestones-section" style="${currentTab === 'milestones' ? 'display: block;' : 'display: none;'} margin-top:0; padding-top:0; border:none;">
+                        <div class="milestones-list">
+                            ${row.milestones.map((ms, msIdx) => `
+                                <div class="milestone-input-row" style="margin-bottom:2px; padding:2px;">
+                                    <input type="text" style="height:28px; font-size:10px; padding:2px;" value="${ms.label}" onblur="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'label', this.value)">
+                                    
+                                    <div class="date-input-wrapper">
+                                        <span class="date-display-badge">${ms.date}</span>
+                                        <input type="date" class="native-date-picker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}" onblur="handleNativeDatePickerDirectNew(this, ${laneIdx}, ${rowIdx}, 'date', ${msIdx})">
+                                    </div>
+                                    
+                                    <label class="ms-checkbox-wrap" style="font-size:9px;">
+                                        <input type="checkbox" ${(ms.showDate) ? 'checked' : ''} onchange="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'showDate', this.checked)">
+                                        Pin
+                                    </label>
+                                    <button class="mini-delete-btn" onclick="deleteMilestoneNew(${laneIdx}, ${rowIdx}, ${msIdx})">&times;</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button class="inner-action-btn" onclick="addMilestoneNew(${laneIdx}, ${rowIdx})" style="padding:2px 6px; font-size:10px; margin-top:2px;">+ Add Milestone</button>
                     </div>
                 `; rowsContainerBox.appendChild(card);
             });
