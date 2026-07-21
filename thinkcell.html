@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <head>
     <meta charset="UTF-8">
     <title>Enterprise Presentation Gantt Workspace Suite</title>
     <!-- SheetJS Library for reading Excel files -->
@@ -128,7 +127,7 @@
             RIGHT PANEL: LIVE WORKSPACE
            ============================== */
         .main-preview { flex: 1; padding: 25px; display: flex; flex-direction: column; overflow-y: auto; }
-        .sticky-chart-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;}
+        .sticky-chart-container { background: white; padding: 5px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;}
         
         /* Zoom Engine Viewport Mask */
         .zoom-viewport-mask { width: 100%; overflow: auto; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 15px; background: #ffffff; }
@@ -142,6 +141,56 @@
         .bottom-card { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
         .radio-group { display: flex; gap: 10px; margin-top: 5px; background: #ffffff; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; flex-wrap: wrap; }
         .radio-option { display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 12px; font-weight: 500; }
+
+        /* Sidebar Tabs UI CSS */
+        .sidebar-tabs {
+            display: flex;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+        .sidebar-tabs::-webkit-scrollbar { height: 4px; }
+        .sidebar-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        .sidebar-tab-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .sidebar-tab-btn:hover { color: var(--primary); background: #f1f5f9; }
+        .sidebar-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #ffffff; }
+        
+               .sidebar-tab-content {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .sidebar-tab-content.active { display: flex; opacity: 1; }
+        
+        .sidebar-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            padding: 0;
+            background: #f8fafc;
+        }
+        .bottom-config-panel { display: flex; flex-direction: column; gap: 15px; margin-top: 0; }
 
         /* Floating Inline Dialogue Modals */
         .floating-date-dialog {
@@ -178,59 +227,288 @@
 
 <div class="app-wrapper">
     
-    <div class="sidebar" id="appSidebar">
-        <div class="sidebar-header">
-            <h1>Gantt Presentation Suite</h1>
-            <div class="action-bar">
-                <button class="utility-btn" onclick="toggleWorkspaceHelpModal(event)" style="background: #f0fdf4; color: #166534; border-color: #bbf7d0;">💡 Tips</button>
-                <button class="utility-btn" id="undoBtn" onclick="executeUndoAction()" title="Undo Step (Ctrl+Z)">↶ Undo</button>
-                <button class="utility-btn" id="redoBtn" onclick="executeRedoAction()" title="Redo Step (Ctrl+Y)">↷ Redo</button>
-                <button class="reset-btn" onclick="clearAllStoredData()">Reset</button>
-            </div>
-        </div>
-        
-        <div class="sidebar-content">
-            <div class="archive-tools">
-                <div style="font-size: 12px; font-weight: 700; color: #166534;">File Backup & Configuration Matrix Controls</div>
-                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px;">
-                    <button class="inner-action-btn" onclick="exportConfigurationArchive()">↓ Save Workspace (.json)</button>
-                    <button class="inner-action-btn" onclick="document.getElementById('archiveFileInput').click()">↑ Load Workspace</button>
-                    <button class="inner-action-btn" style="color:#166534; border-color:#bbf7d0;" onclick="exportExcelCSV()">↓ Export Excel CSV</button>
-                                        <button class="inner-action-btn" style="color:#166534; border-color:#bbf7d0;" onclick="document.getElementById('csvFileInput').click()">↑ Import Excel CSV</button>
-                    
-                    <!-- Callout Controls -->
-                    <button class="inner-action-btn" onclick="addNewCallout()" style="background: #e0f2fe; color: #0369a1; border-color: #7dd3fc; width: 100%; margin-top: 5px;">+ Add Custom Text Callout</button>
-                    <div id="calloutListContainer" style="width: 100%; max-height: 200px; overflow-y: auto;"></div>
+  <div class="sidebar" id="appSidebar">
+            <!-- Modified Header to stack title/actions and file matrix -->
+            <div class="sidebar-header" style="flex-direction: column; align-items: stretch; gap: 12px; padding-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1>Gantt Presentation Suite</h1>
+                                        <div class="action-bar">
+                        <button class="utility-btn" onclick="toggleWorkspaceHelpModal(event)" style="background: #f0fdf4; color: #166534; border-color: #bbf7d0;">💡 Tips</button>
+                                                <button class="utility-btn" id="undoBtn" onclick="executeUndoAction()" title="Undo Step (Ctrl+Z)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg> Undo
+                        </button>
+                        <button class="utility-btn" id="redoBtn" onclick="executeRedoAction()" title="Redo Step (Ctrl+Y)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/></svg> Redo
+                        </button>
+                        <button class="reset-btn" onclick="clearAllStoredData()">Reset</button>
+                    </div>
+                </div>
 
-                    <input type="file" id="archiveFileInput" accept=".json" style="display:none;" onchange="importConfigurationArchive(event)">
-                    <input type="file" id="csvFileInput" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display:none;" onchange="importCSVFile(event)">
+                <div id="unsavedIndicator" style="display:none; align-items:center; gap:6px; font-size:11px; font-weight:700; color:#b45309; background:#fff7ed; border:1px solid #fdba74; padding:4px 10px; border-radius:6px;">
+                    <span style="width:8px; height:8px; background:#f97316; border-radius:50%; display:inline-block;"></span>
+                    Unsaved changes — last saved <span id="lastSavedTimeText">never</span>
+                </div>
+                
+                <!-- NEW File Backup & Configuration Matrix Control Row -->
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <span style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase;">File Matrix:</span>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="utility-btn" onclick="exportConfigurationArchive()" style="padding: 4px 8px;">↓ Save JSON</button>
+                        <button class="utility-btn" onclick="document.getElementById('archiveFileInput').click()" style="padding: 4px 8px;">↑ Load JSON</button>
+                        <div style="width: 1px; background: #cbd5e1; margin: 0 2px;"></div>
+                        <button class="utility-btn" style="color:#166534; border-color:#bbf7d0; padding: 4px 8px;" onclick="exportExcelCSV()">↓ Export CSV</button>
+                        <button class="utility-btn" style="color:#166534; border-color:#bbf7d0; padding: 4px 8px;" onclick="document.getElementById('csvFileInput').click()">↑ Import CSV</button>
+                    </div>
                 </div>
             </div>
-<div style="margin-bottom: 14px;">
-                <input type="text" id="sidebarSearchInput" placeholder="🔍 Search and filter rows by name..." oninput="renderInputRows()" style="padding: 8px 12px; font-size: 13px; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff;">
+
+            <!-- Hidden File Inputs Moved Here -->
+            <input type="file" id="archiveFileInput" accept=".json" style="display:none;" onchange="importConfigurationArchive(event)">
+            <input type="file" id="csvFileInput" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display:none;" onchange="importCSVFile(event)">
+
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab-btn active" onclick="openSidebarTab('tab-swimlanes')">Swimlanes & Data</button>
+                <button class="sidebar-tab-btn" onclick="openSidebarTab('tab-viewport')">Timeline Settings</button>
+                <button class="sidebar-tab-btn" onclick="openSidebarTab('tab-layout')">Layout Settings</button>
+                <button class="sidebar-tab-btn" onclick="openSidebarTab('tab-colors')">Graphic Settings</button>
+                <button class="sidebar-tab-btn" onclick="openSidebarTab('tab-files')">Custom Callout Manager</button> <!-- Renamed Tab -->
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                            <h3 style="margin:0; border:none; padding:0;">Project Workstream Swimlanes</h3>
-                <div style="display: flex; gap: 8px;">
-                    <button class="inner-action-btn" onclick="collapseAllSwimlanes()" style="background: #e2e8f0; color: #334155;">↕ Collapse/Expand All</button>
-                    <button class="inner-action-btn" onclick="addNewSwimlane()">+ Add New Swimlane Block</button>
+
+        <div class="sidebar-content">
+            <!-- TAB 1: SWIMLANES & DATA -->
+            <div id="tab-swimlanes" class="sidebar-tab-content active" style="background: white;">
+                <div style="margin-bottom: 14px;">
+                    <input type="text" id="sidebarSearchInput" placeholder="🔍 Search and filter rows by name..." oninput="renderInputRows()" style="padding: 8px 12px; font-size: 13px; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff;">
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3 style="margin:0; border:none; padding:0; font-size: 14px;">Project Workstream Swimlanes</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="inner-action-btn" onclick="collapseAllSwimlanes()" style="background: #e2e8f0; color: #334155;">↕ Collapse All</button>
+                        <button class="inner-action-btn" onclick="addNewSwimlane()">+ Add Block</button>
+                    </div>
+                </div>
+                <div class="data-rows-container" id="dataRowsContainer" style="padding-bottom: 40px;"></div>
+            </div>
+
+            <!-- TAB 2: TIMELINE & VIEWPORT -->
+            <div id="tab-viewport" class="sidebar-tab-content">
+                <div class="bottom-config-panel">
+                    <div class="bottom-card">
+                        <div class="control-grid" style="grid-template-columns: 1fr; gap: 15px;">
+                            <div class="control-item">
+                                <label>Scope Calculation Engine</label>
+                                <div class="radio-group">
+                                    <label class="radio-option"><input type="radio" name="rangeMode" value="auto" onchange="handleRangeModeChange(this.value)"> Auto</label>
+                                    <label class="radio-option"><input type="radio" name="rangeMode" value="manual" checked onchange="handleRangeModeChange(this.value)"> Manual Custom</label>
+                                </div>
+                            </div>
+                            <div class="control-item">
+                                <label>Sizing Model Strategy</label>
+                                <div class="radio-group">
+                                    <label class="radio-option"><input type="radio" name="sizingMode" value="fixed" checked onchange="recordStateChange(); updateChart();"> Fixed Pixel Width</label>
+                                                                        <label class="radio-option"><input type="radio" name="sizingMode" value="ticker-tape" title="Chart automatically stretches to fill the visible browser width instead of using a fixed pixel size" onchange="recordStateChange(); updateChart();"> Ticker-Tape Screen Fit</label>
+                                </div>
+                            </div>
+                            
+                            <div id="manualDateFieldsRow" style="display: flex; flex-direction: column; gap: 10px; margin-top:5px;">
+                                <div class="control-item">
+                                    <label>Start Boundary</label>
+                                    <div class="date-input-wrapper">
+                                        <span id="customBoundaryMinDisplay" class="date-display-badge">01May2026</span>
+                                        <input type="date" id="customBoundaryMinPicker" class="native-date-picker" onchange="handleManualBoundaryChangeDirect('min', this.value)">
+                                    </div>
+                                </div>
+                                <div class="control-item">
+                                    <label>End Boundary</label>
+                                    <div class="date-input-wrapper">
+                                        <span id="customBoundaryMaxDisplay" class="date-display-badge">09Aug2028</span>
+                                        <input type="date" id="customBoundaryMaxPicker" class="native-date-picker" onchange="handleManualBoundaryChangeDirect('max', this.value)">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="control-item">
+                                <label>Quick-Focus Macro Horizons</label>
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                                    <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3m')">3 Months</button>
+                                    <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('1y')">1 Year</button>
+                                    <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3y')">3 Years</button>
+                                </div>
+                            </div>
+
+                            <div class="control-item">
+                                <label>Live Workspace View Zoom</label>
+                                <select id="workspaceZoom" onchange="handleZoomFactorChange(this.value)">
+                                    <option value="1.0" selected>100% Standard View</option>
+                                    <option value="1.25">125% Magnified</option>
+                                    <option value="1.5">150% Intermediate</option>
+                                    <option value="2.0">200% High Detail</option>
+                                    <option value="2.5">250% Ultra Zoom</option>
+                                    <option value="3.0">300% Maximum Scale</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="data-rows-container" id="dataRowsContainer"></div>
+
+            <!-- TAB 3: LAYOUT STRUCTURE -->
+            <div id="tab-layout" class="sidebar-tab-content">
+                <div class="bottom-config-panel">
+                    <div class="bottom-card">
+                        <div class="control-grid" style="grid-template-columns: 1fr; gap: 15px;">
+                            <div class="control-item">
+                                <label>Timescale Header Hierarchy</label>
+                                <div class="radio-group" style="flex-direction: column; align-items: flex-start;">
+                                    <label class="radio-option"><input type="checkbox" id="showHeaderYear" checked onchange="recordStateChange(); updateChart();"> Years</label>
+                                    <label class="radio-option"><input type="checkbox" id="showHeaderQuarter" checked onchange="recordStateChange(); updateChart();"> Quarters</label>
+                                    <label class="radio-option"><input type="checkbox" id="showHeaderMonth" onchange="recordStateChange(); updateChart();"> Months</label>
+                                    <label class="radio-option"><input type="checkbox" id="showHeaderDay" onchange="recordStateChange(); updateChart();"> Days</label>
+                                </div>
+                            </div>
+
+                            <div class="control-item">
+                                <label>Row Label Width</label>
+                                <div style="display:flex; gap:4px;">
+                                    <input type="number" id="rowLabelWidth" value="240" min="50" max="800" onchange="recordStateChange(); updateChart();" style="width: 100%;">
+                                    <button type="button" class="inner-action-btn" onclick="autoFitRowLabelWidth()">Auto</button>
+                                </div>
+                            </div>
+
+                            <div class="control-item">
+                                <label>Font Typography</label>
+                                <select id="fontFamily" onchange="recordStateChange(); updateChart();">
+                                    <option value="Tahoma, sans-serif">Tahoma</option>
+                                    <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                                    <option value="Arial, sans-serif">Arial</option>
+                                    <option value="Calibri, sans-serif">Calibri</option>
+                                </select>
+                            </div>
+
+                            <div class="control-item">
+                                <label>Dimensions</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <div><span style="font-size: 10px; color: var(--text-muted);">Font</span><input type="number" id="fontSize" value="10" min="8" max="20" onchange="recordStateChange(); updateChart();" style="width:100%;"></div>
+                                    <div><span style="font-size: 10px; color: var(--text-muted);">Lane</span><input type="number" id="swimlaneHeight" value="30" min="20" max="100" onchange="recordStateChange(); updateChart();" style="width:100%;"></div>
+                                    <div><span style="font-size: 10px; color: var(--text-muted);">Row</span><input type="number" id="rowHeight" value="50" min="40" max="155" onchange="recordStateChange(); updateChart();" style="width:100%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="control-item">
+                                <label>Manual Width Control</label>
+                                <div style="display:flex; gap:4px;">
+                                    <button type="button" class="inner-action-btn" style="flex:1;" onclick="adjustCanvasZoomMultiplier(0.85)">🔍 -</button>
+                                    <button type="button" class="inner-action-btn" style="flex:1;" onclick="adjustCanvasZoomMultiplier(1.15)">🔍 +</button>
+                                </div>
+                                <input type="hidden" id="canvasWidth" value="806">
+                            </div>
+                            
+                            <div class="control-item">
+                                <label>Layout Snapping Steps</label>
+                                                                <select id="snapResolution" title="Rounds dragged elements to the nearest pixel step for cleaner alignment" onchange="recordStateChange(); updateChart();">
+                                    <option value="0" selected>None (Free Drag)</option>
+                                    <option value="1">1px Ultra-Fine Step</option>
+                                    <option value="2">2px Micro Step</option>
+                                    <option value="5">5px Precision Step</option>
+                                    <option value="10">10px Medium Step</option>
+                                    <option value="25">25px Coarse Step</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: COLORS & DASHBOARDS -->
+            <div id="tab-colors" class="sidebar-tab-content">
+                <div class="bottom-config-panel">
+                    <div class="bottom-card">
+                        <div class="control-item" style="margin-bottom: 15px;">
+                            <label style="color:#1e40af;">Palette Presets</label>
+                            <select onchange="applyThemePalettePreset(this.value)" style="font-weight: bold; border-color: #94a3b8; color:#1e40af;">
+                                <option value="">-- Select cohesive layout look --</option>
+                                <option value="executive">Executive Navy & Charcoal</option>
+                                <option value="crimson">Crimson Red & Coral</option>
+                                <option value="amber">Warm Amber & Espresso</option>
+                                <option value="monochrome">Minimalist Tech Monochrome</option>
+                                <option value="darkNeutral">Sleek Dark Slate Neutral</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="control-item"><label>Unfilled Bar</label><input type="color" id="barBgColor" value="#5c95be" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
+                            <div class="control-item"><label>Progress Fill</label><input type="color" id="barColor" value="#2563eb" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
+                            <div class="control-item"><label>Summary Bar</label><input type="color" id="summaryColor" value="#475569" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
+                            <div class="control-item"><label>Milestone</label><input type="color" id="msColor" value="#000000" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
+                            <div class="control-item"><label>Today Line</label><input type="color" id="todayColor" value="#b71010" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
+                            <div class="control-item"><label>Master Leader</label><input type="color" id="masterLeaderColor" value="#94a3b8" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
+                            <div class="control-item"><label>Date Headers</label><input type="color" id="headerColor" value="#000000" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
+                        </div>
+
+                        <div class="control-grid" style="grid-template-columns: 1fr; gap: 10px; margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                            <div class="control-item">
+                                <label>Vertical Today Tracker Line</label>
+                                <div class="radio-group">
+                                    <label class="radio-option"><input type="radio" name="todayLineToggle" value="show" checked onchange="recordStateChange(); updateChart();"> Visible</label>
+                                    <label class="radio-option"><input type="radio" name="todayLineToggle" value="hide" onchange="recordStateChange(); updateChart();"> Hidden</label>
+                                </div>
+                            </div>
+                            <div class="control-item">
+                                <label>Grid Settings</label>
+                                <div style="display: flex; gap: 15px; margin-top: 5px;">
+                                    <label class="radio-option"><input type="checkbox" id="showVGrid" checked onchange="recordStateChange(); updateChart();"> Time Gridlines</label>
+                                    <label class="radio-option"><input type="checkbox" id="showAlignGrid" onchange="recordStateChange(); updateChart();"> Backdrop Mesh</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <h4 style="margin:0;">Tracker Lines Matrix</h4>
+                                <button class="inner-action-btn" onclick="addNewCustomTrackerLine()">+ Deploy New Tracker Line</button>
+                            </div>
+                            <div style="max-height: 250px; overflow-y: auto; overflow-x: auto; margin-top: 10px;">
+                                <table class="tracker-dashboard-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Label</th>
+                                            <th>Date</th>
+                                            <th>Color</th>
+                                            <th>Controls</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="trackerTableBody">
+                                        <!-- Dynamic Tracker Rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                        <!-- TAB 5: CALLOUTS -->
+            <div id="tab-files" class="sidebar-tab-content">
+                <div class="archive-tools" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 13px; font-weight: 700; color: #0369a1; margin-bottom: 10px;">Custom Text Callouts Dashboard</div>
+                    <button class="inner-action-btn" onclick="addNewCallout()" style="background: #e0f2fe; color: #0369a1; border-color: #7dd3fc; width: 100%; margin-bottom: 10px;">+ Add Custom Text Callout</button>
+                    <div id="calloutListContainer" style="width: 100%; flex: 1; overflow-y: auto;"></div>
+                </div>
+            </div>
         </div>
-    </div>
+    </div> <!-- Close out sidebar entirely -->
 
     <div class="main-preview">
-            <div class="sticky-chart-container">
-                <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">
-                    <button type="button" class="utility-btn" onclick="toggleSidebarLayout()" style="display:inline-flex; align-items:center; float:left; margin-right:12px; margin-top:-3px; padding:4px 8px;">🖥️ Presentation Mode</button>
-                    Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Right-click row track inside canvas to insert shapes; double-click elements to customize style)</span>
-                </h2>
+        <div class="sticky-chart-container">
+            <h2 style="margin-top:0; font-size:15px; color: #1e3a8a;">
+                <button type="button" class="utility-btn" onclick="toggleSidebarLayout()" style="display:inline-flex; align-items:center; float:left; margin-right:12px; margin-top:-3px; padding:4px 8px;">🖥️ Presentation Mode</button>
+                Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Right-click row track inside canvas to insert shapes; double-click elements to customize style)</span>
+            </h2>
             
             <div class="zoom-viewport-mask">
-                <div class="canvas-holder" id="svgContainer" 
-                     onmousemove="handleGlobalDragMove(event)" 
-                     onmouseup="stopGlobalDragAction(event)" 
+                <div class="canvas-holder" id="svgContainer"
+                     onmousemove="handleGlobalDragMove(event)"
+                     onmouseup="stopGlobalDragAction(event)"
                      onmouseleave="stopGlobalDragAction(event)">
                 </div>
             </div>
@@ -240,221 +518,7 @@
                 <button class="download-btn" style="background: var(--success);" onclick="downloadPNG()">Download High-Res Presentation PNG (2x)</button>
             </div>
         </div>
-
-        <div class="bottom-config-panel">
-            
-            <div class="bottom-card">
-                <h3>1. Timeline Scaling & Horizon Focus</h3>
-                <div class="control-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="control-item">
-                        <label>Scope Calculation Engine</label>
-                        <div class="radio-group">
-                            <label class="radio-option"><input type="radio" name="rangeMode" value="auto" onchange="handleRangeModeChange(this.value)"> Automatic</label>
-                            <label class="radio-option"><input type="radio" name="rangeMode" value="manual" checked onchange="handleRangeModeChange(this.value)"> Manual Custom</label>
-                        </div>
-                    </div>
-                    <div class="control-item">
-                        <label>Sizing Model Strategy</label>
-                        <div class="radio-group">
-                            <label class="radio-option"><input type="radio" name="sizingMode" value="fixed" checked onchange="recordStateChange(); updateChart();"> Fixed Pixel Width</label>
-                            <label class="radio-option"><input type="radio" name="sizingMode" value="ticker-tape" onchange="recordStateChange(); updateChart();"> Ticker-Tape Screen Fit</label>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="control-grid" id="manualDateFieldsRow" style="grid-template-columns: 1fr 1fr; margin-top:10px;">
-                    <div class="control-item">
-                        <label>Start Boundary (DDMMMYYYY)</label>
-                        <div class="date-input-wrapper">
-                            <span id="customBoundaryMinDisplay" class="date-display-badge">01May2026</span>
-                            <input type="date" id="customBoundaryMinPicker" class="native-date-picker" onchange="handleManualBoundaryChangeDirect('min', this.value)">
-                        </div>
-                    </div>
-                    <div class="control-item">
-                        <label>End Boundary (DDMMMYYYY)</label>
-                        <div class="date-input-wrapper">
-                            <span id="customBoundaryMaxDisplay" class="date-display-badge">09Aug2028</span>
-                            <input type="date" id="customBoundaryMaxPicker" class="native-date-picker" onchange="handleManualBoundaryChangeDirect('max', this.value)">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="control-item" style="margin-top: 10px;">
-                    <label>Ticker-Tape Quick-Focus Macro Horizons (Auto-Stretches Window)</label>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
-                        <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3m')">Show Next 3 Months</button>
-                        <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('1y')">Show Full Year</button>
-                        <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3y')">Show 3-Year Roadmap</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bottom-card">
-                <h3>2. Multi-Tier Timescale Header Customizer</h3>
-                <div class="control-item">
-                    <label>Active Stacking Timescale Headers (Top to Bottom Hierarchy)</label>
-                    <div class="radio-group">
-                        <label class="radio-option"><input type="checkbox" id="showHeaderYear" checked onchange="recordStateChange(); updateChart();"> Years</label>
-                        <label class="radio-option"><input type="checkbox" id="showHeaderQuarter" checked onchange="recordStateChange(); updateChart();"> Quarters</label>
-                        <label class="radio-option"><input type="checkbox" id="showHeaderMonth" onchange="recordStateChange(); updateChart();"> Months</label>
-                        <label class="radio-option"><input type="checkbox" id="showHeaderDay" onchange="recordStateChange(); updateChart();"> Days</label>
-                    </div>
-                </div>
-                <div class="control-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
-                    <div class="control-item">
-                        <label>Live Workspace View Zoom</label>
-                        <select id="workspaceZoom" onchange="handleZoomFactorChange(this.value)">
-                            <option value="1.0" selected>100% Standard View</option>
-                            <option value="1.25">125% Magnified</option>
-                            <option value="1.5">150% Intermediate</option>
-                            <option value="2.0">200% High Detail</option>
-                            <option value="2.5">250% Ultra Zoom</option>
-                            <option value="3.0">300% Maximum Scale</option>
-                        </select>
-                    </div>
-                    <div class="control-item">
-                        <label>Layout Snapping Steps</label>
-                        <select id="snapResolution" onchange="recordStateChange(); updateChart();">
-                            <option value="0" selected>None (Free Drag)</option>
-                            <option value="1">1px Ultra-Fine Step</option>
-                            <option value="2">2px Micro Step</option>
-                            <option value="5">5px Precision Step</option>
-                            <option value="10">10px Medium Step</option>
-                            <option value="25">25px Coarse Step</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bottom-card" style="grid-column: span 2;">
-                <h3>3. Formatting, Metrics, Grid mesh, & Global Base Colors</h3>
-                <div class="control-item" style="grid-column: span 4; margin-bottom: 8px;">
-                    <label style="color:#1e40af;">Presentation Executive Palette Presets</label>
-                 <select onchange="applyThemePalettePreset(this.value)" style="font-weight: bold; border-color: #94a3b8; color:#1e40af;">
-                        <option value="">-- Select cohesive layout look --</option>
-                        <option value="executive">Executive Navy & Charcoal</option>
-                        <option value="crimson">Crimson Red & Coral</option>
-                        <option value="amber">Warm Amber & Espresso</option>
-                        <option value="monochrome">Minimalist Tech Monochrome</option>
-                        <option value="darkNeutral">Sleek Dark Slate Neutral</option>
-                    </select>
-                               <div class="control-grid" style="grid-template-columns: repeat(6, 1fr); gap: 10px;">
-                    <div class="control-item">
-                        <label>Row Label Width</label>
-                        <div style="display:flex; gap:4px;">
-                            <input type="number" id="rowLabelWidth" value="240" min="50" max="800" onchange="recordStateChange(); updateChart();" style="width: 60px;">
-                            <button type="button" class="inner-action-btn" style="flex:1; padding:6px; font-size:9px;" onclick="autoFitRowLabelWidth()">↕ Auto-Fit</button>
-                        </div>
-                    </div>
-                    <div class="control-item">
-                        <label>Font Typography</label>
-                    <div class="control-item">
-                        <label>Font Typography</label>
-                        <select id="fontFamily" onchange="recordStateChange(); updateChart();">
-                            <option value="Tahoma, sans-serif">Tahoma</option>
-                            <option value="'Segoe UI', sans-serif">Segoe UI</option>
-                            <option value="Arial, sans-serif">Arial</option>
-                            <option value="Calibri, sans-serif">Calibri</option>
-                        </select>
-                    </div>
-                    <div class="control-item">
-                        <label>Font Size (px)</label>
-                        <input type="number" id="fontSize" value="10" min="8" max="20" onchange="recordStateChange(); updateChart();">
-                    </div>
-                    <div class="control-item">
-                        <label>Swimlane Height (px)</label>
-                        <input type="number" id="swimlaneHeight" value="30" min="20" max="100" onchange="recordStateChange(); updateChart();">
-                    </div>
-                    <div class="control-item">
-                        <label>Row Height (px)</label>
-                        <input type="number" id="rowHeight" value="50" min="40" max="155" onchange="recordStateChange(); updateChart();">
-                    </div>
-                    <div class="control-item">
-                        <label>Canvas Manual Width Control</label>
-                        <div style="display:flex; gap:4px;">
-                            <button type="button" class="inner-action-btn" style="flex:1; padding:6px;" onclick="adjustCanvasZoomMultiplier(0.85)">🔍 -</button>
-                            <button type="button" class="inner-action-btn" style="flex:1; padding:6px;" onclick="adjustCanvasZoomMultiplier(1.15)">🔍 +</button>
-                        </div>
-                        <input type="hidden" id="canvasWidth" value="806">
-                    </div>
-                </div>
-                <div class="control-grid" style="grid-template-columns: repeat(8, 1fr); margin-top: 10px;">
-                    <div class="control-item">
-                        <label>Global Unfilled Bar</label>
-                        <input type="color" id="barBgColor" value="#5c95be" onchange="recordStateChange(); updateChart();">
-                    </div>
-                    <div class="control-item">
-                        <label>Global Progress Fill</label>
-                        <input type="color" id="barColor" value="#2563eb" onchange="recordStateChange(); updateChart();">
-                    </div>
-                    <div class="control-item">
-                        <label>Global Summary Bar</label>
-                        <input type="color" id="summaryColor" value="#475569" onchange="recordStateChange(); updateChart();">
-                    </div>
-                    <div class="control-item">
-                        <label>Global Milestone</label>
-                        <input type="color" id="msColor" value="#000000" onchange="recordStateChange(); updateChart();">
-                    </div>
-                    <div class="control-item">
-                        <label>Today Line</label>
-                        <input type="color" id="todayColor" value="#b71010" onchange="recordStateChange(); updateChart();">
-                    </div>
-                    <div class="control-item">
-                        <label>Master Leader Color</label>
-                        <input type="color" id="masterLeaderColor" value="#94a3b8" onchange="recordStateChange(); updateChart();">
-                    </div>
-                    <div class="control-item">
-                        <label>Date Headers</label>
-                        <input type="color" id="headerColor" value="#000000" onchange="recordStateChange(); updateChart();">
-                    </div>
-                    <div class="control-item" style="justify-content: center; align-items: center;">
-                        <label>Time Gridlines</label>
-                        <input type="checkbox" id="showVGrid" checked style="width:16px; height:16px; margin-top:2px;" onchange="recordStateChange(); updateChart();">
-                    </div>
-                </div>
-                <div class="control-grid" style="grid-template-columns: repeat(3, 1fr); margin-top: 5px;">
-                    <div class="control-item">
-                        <label>Vertical Today Tracker Line</label>
-                        <div class="radio-group">
-                            <label class="radio-option"><input type="radio" name="todayLineToggle" value="show" checked onchange="recordStateChange(); updateChart();"> Visible</label>
-                            <label class="radio-option"><input type="radio" name="todayLineToggle" value="hide" onchange="recordStateChange(); updateChart();"> Hidden</label>
-                        </div>
-                    </div>
-                    <div class="control-item" style="justify-content: center; align-items: flex-start; padding-left: 10px;">
-                        <label>Alignment Snap Grid Pattern</label>
-                        <label class="radio-option" style="margin-top: 5px;"><input type="checkbox" id="showAlignGrid" onchange="recordStateChange(); updateChart();"> Backdrop Mesh Active</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bottom-card" style="grid-column: span 2;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3>4. Draggable Custom Vertical Tracker Lines Dashboard Matrix</h3>
-                    <button class="inner-action-btn" onclick="addNewCustomTrackerLine()">+ Deploy New Tracker Line</button>
-                </div>
-                <div style="max-height: 150px; overflow-y: auto; margin-top: 5px;">
-                    <table class="tracker-dashboard-table">
-                        <thead>
-                            <tr>
-                                <th>Line Entity ID</th>
-                                <th>Label Description Name</th>
-                                <th>Target Date Metric</th>
-                                <th>Stroke Design Pattern</th>
-                                <th>Thickness (px)</th>
-                                <th>Color Hex</th>
-                                <th>Action Tool</th>
-                            </tr>
-                        </thead>
-                        <tbody id="trackerDashboardBody">
-                            <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No custom vertical tracker vectors initialized.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </div>
     </div>
-</div>
 
 <div id="rowWorkspaceContextMenu" class="workspace-context-menu">
     <button onclick="executeContextInsertion('milestone')">✦ Insert Milestone Here</button>
@@ -493,7 +557,37 @@
     let manualBoundaryMin = "01May2026";
     let manualBoundaryMax = "09Aug2028";
     
-    let activeContextState = null;
+        let activeContextState = null;
+
+    function markUnsavedState() {
+        const indicator = document.getElementById('unsavedIndicator');
+        if (indicator) indicator.style.display = 'flex';
+    }
+
+    function markSavedState() {
+        const indicator = document.getElementById('unsavedIndicator');
+        const timeText = document.getElementById('lastSavedTimeText');
+        if (indicator) indicator.style.display = 'none';
+        if (timeText) timeText.innerText = new Date().toLocaleTimeString();
+    }
+
+    function startWithExampleProject() {
+        localStorage.setItem('gantt_seen_welcome', 'true');
+        document.getElementById('welcomeOverlay').style.display = 'none';
+    }
+
+    function startBlankProject() {
+        localStorage.setItem('gantt_seen_welcome', 'true');
+        projectData = [];
+        customTrackers = [];
+        calloutData = [];
+        recordStateChange();
+        renderInputRows();
+        renderCalloutControls();
+        populateTrackerDashboardMatrix();
+        updateChart();
+        document.getElementById('welcomeOverlay').style.display = 'none';
+    }
 
     // =========================================================
     // PARSING VECTOR ENGINE: DDMMMYYYY INTELLIGENT NORMALIZER
@@ -970,8 +1064,9 @@ function normalizeDateString(val) {
             needsUpdate = true;
         }
 
-        if (needsUpdate) {
+                if (needsUpdate) {
             activeDragState.hasMoved = true; // Mark that a true element translation happened
+            markUnsavedState();
             updateChart();
         }
     }
@@ -994,8 +1089,9 @@ function stopGlobalDragAction(e) {
     // ==========================================
     // TRANSACTIONS CONTROL HISTORY (UNDO / REDO)
     // ==========================================
-    function recordStateChange() {
+        function recordStateChange() {
                 const stateSnapshot = {
+            schemaVersion: CURRENT_SCHEMA_VERSION,
             data: JSON.parse(JSON.stringify(projectData)),
             trackers: JSON.parse(JSON.stringify(customTrackers)),
             callouts: JSON.parse(JSON.stringify(calloutData)),
@@ -1030,10 +1126,23 @@ function stopGlobalDragAction(e) {
             showHeaderMonth: document.getElementById('showHeaderMonth').checked,
             showHeaderDay: document.getElementById('showHeaderDay').checked
         };
-        actionUndoStack.push(JSON.stringify(stateSnapshot));
+                actionUndoStack.push(JSON.stringify(stateSnapshot));
         actionRedoStack = []; 
         syncUndoRedoButtonsState();
         saveApplicationState();
+        checkBackupReminder();
+    }
+
+    let changeCounterSinceBackup = 0;
+
+    function checkBackupReminder() {
+        changeCounterSinceBackup++;
+        if (changeCounterSinceBackup >= 20) {
+            changeCounterSinceBackup = 0;
+            if (confirm("You've made 20+ changes since your last backup. Download a JSON backup file now?")) {
+                exportConfigurationArchive();
+            }
+        }
     }
 
     function executeUndoAction() {
@@ -1420,19 +1529,48 @@ function stopGlobalDragAction(e) {
     event.target.value = '';
 }
 
-    function clearAllStoredData() {
-        if (confirm("Are you sure you want to completely wipe all current tracks, layouts, and data?")) {
+   function clearAllStoredData() {
+        const typedValue = prompt("This will permanently erase all swimlanes, bars, milestones, and settings.\n\nType RESET to confirm:");
+        if (typedValue === "RESET") {
             localStorage.removeItem('gantt_v8_master_snapshot');
-            actionUndoStack = []; actionRedoStack = []; customTrackers = []; loadApplicationState();
+            localStorage.removeItem('gantt_seen_welcome');
+            actionUndoStack = []; actionRedoStack = []; customTrackers = []; calloutData = [];
+            loadApplicationState();
+        } else if (typedValue !== null) {
+            alert("Reset cancelled — text did not match.");
         }
     }
 
-    function saveApplicationState() { if(actionUndoStack.length > 0) localStorage.setItem('gantt_v8_master_snapshot', actionUndoStack[actionUndoStack.length - 1]); }
+function saveApplicationState() {
+        if(actionUndoStack.length > 0) {
+            localStorage.setItem('gantt_v8_master_snapshot', actionUndoStack[actionUndoStack.length - 1]);
+            markSavedState();
+        }
+    }
     
+           const CURRENT_SCHEMA_VERSION = 2;
+
+    function migrateSnapshotIfNeeded(state) {
+        if (!state.schemaVersion) {
+            state.schemaVersion = 1;
+        }
+        if (state.schemaVersion < 2) {
+            state.showAlignGrid = state.showAlignGrid || false;
+            state.schemaVersion = 2;
+        }
+        return state;
+    }
+
     function loadApplicationState() {
         const structuralBackupCache = localStorage.getItem('gantt_v8_master_snapshot');
+        if (!structuralBackupCache && !localStorage.getItem('gantt_seen_welcome')) {
+            const overlayEl = document.getElementById('welcomeOverlay');
+            if (overlayEl) overlayEl.style.display = 'flex';
+        }
         if (structuralBackupCache) {
-            actionUndoStack.push(structuralBackupCache); restoreStateFromSnapshot(JSON.parse(structuralBackupCache));
+            let parsedState = migrateSnapshotIfNeeded(JSON.parse(structuralBackupCache));
+            actionUndoStack.push(JSON.stringify(parsedState));
+            restoreStateFromSnapshot(parsedState);
         } else {
             projectData = [
             { id: 0, title: "Building 11 Swimlane", color: "#eff6ff", showSummary: true, rows: [
@@ -2518,7 +2656,17 @@ document.addEventListener('dblclick', (e) => {
     // =========================================================
     // GRAPHIC VECTOR GENERATION PIPELINE ENGINE (SVG DRAW LOOP)
     // =========================================================
-        function updateChart() {
+            function updateChart() {
+        const totalElements = projectData.reduce((sum, lane) => sum + (lane.rows ? lane.rows.length : 0), 0);
+        if (totalElements === 0) {
+            document.getElementById('svgContainer').innerHTML = `
+                <div style="width:100%; padding:60px 20px; text-align:center; color:#94a3b8; font-size:14px;">
+                    <div style="font-size:32px; margin-bottom:10px;">📊</div>
+                    No swimlanes yet.<br>
+                    Click <strong>+ Add Block</strong> in the sidebar to get started.
+                </div>`;
+            return;
+        }
         const container = document.getElementById('svgContainer');
         if (projectData.length === 0) { container.innerHTML = ''; return; }
         
@@ -2562,7 +2710,7 @@ document.addEventListener('dblclick', (e) => {
         let hDayDelta = showHeaderDay ? 22 : 0;
         const startY = headerTrackingYPointer + hYearDelta + hQuarterDelta + hMonthDelta + hDayDelta + 15;
 
-        const marginXRight = 130; const chartWidth = width - scaleMarginLeft - marginXRight;
+        const marginXRight = 20; const chartWidth = width - scaleMarginLeft - marginXRight;
         const barThickness = 18;
 
         let axisLineY = startY - 15; 
@@ -3200,8 +3348,36 @@ function toggleSidebarLayout() {
         // Re-render layout matrices immediately to keep state variations unified
         renderInputRows();
     }
+
+    function openSidebarTab(tabId) {
+        // Hide all contents
+        const tabContents = document.querySelectorAll('.sidebar-tab-content');
+        tabContents.forEach(tab => tab.classList.remove('active'));
+        
+        // Remove active class from buttons
+        const tabBtns = document.querySelectorAll('.sidebar-tab-btn');
+        tabBtns.forEach(btn => btn.classList.remove('active'));
+        
+        // Activate target tab and button
+        document.getElementById(tabId).classList.add('active');
+        const targetBtn = document.querySelector(`button[onclick="openSidebarTab('${tabId}')"]`);
+        if(targetBtn) targetBtn.classList.add('active');
+    }
     
-    loadApplicationState(); 
+ 
+
+       loadApplicationState(); 
+
 </script>
 </body>
+<div id="welcomeOverlay" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:30000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; padding:30px; width:420px; text-align:center; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+        <h2 style="margin-top:0; color:#1e3a8a;">Welcome to Gantt Presentation Suite</h2>
+        <p style="color:#64748b; font-size:13px;">Everything runs locally in your browser — no data leaves your machine. How would you like to start?</p>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+            <button class="download-btn" style="background:var(--primary);" onclick="startWithExampleProject()">Load Example Project</button>
+            <button class="download-btn" style="background:#64748b;" onclick="startBlankProject()">Start Blank</button>
+        </div>
+    </div>
+    </div>
 </html>
