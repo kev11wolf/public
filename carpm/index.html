@@ -1,945 +1,629 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garage Maintenance Hub</title>
-    <style>
-        :root {
-            --bg-color: #f4f7f6;
-            --surface-color: #ffffff;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --accent-red: #ef4444;
-            --accent-green: #10b981;
-            --font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Garage Maintenance Hub</title>
+<meta name="description" content="Detailed preventive maintenance tracker with reminder engine for your vehicles">
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GarageHub">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
 
-        body {
-            font-family: var(--font-family);
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.6;
-        }
-
-        header {
-            background-color: var(--surface-color);
-            padding: 2rem 5%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            text-align: center;
-            border-bottom: 3px solid var(--primary);
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            color: var(--text-main);
-            margin-bottom: 0.5rem;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        /* Vehicle Tabs */
-        .vehicle-tabs {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .v-tab {
-            padding: 1rem 2rem;
-            background-color: var(--surface-color);
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: var(--text-muted);
-        }
-
-        .v-tab:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .v-tab.active {
-            background-color: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-        }
-
-        /* Main Workspace Content Layout */
-        .workspace {
-            display: none;
-            grid-template-columns: 250px 1fr;
-            gap: 2rem;
-            background: transparent;
-        }
-
-        .workspace.active {
-            display: grid;
-        }
-
-        @media (max-width: 768px) {
-            .workspace.active {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Service Tabs (Sidebar) */
-        .service-tabs {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            background: var(--surface-color);
-            padding: 1rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.03);
-            height: fit-content;
-        }
-
-        .s-tab {
-            padding: 0.8rem 1rem;
-            background: transparent;
-            border: none;
-            text-align: left;
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--text-main);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .s-tab:hover {
-            background: var(--bg-color);
-        }
-
-        .s-tab.active {
-            background: var(--bg-color);
-            color: var(--primary);
-            border-left: 4px solid var(--primary);
-            font-weight: 600;
-        }
-
-        /* Service Content Area */
-        .service-content {
-            background: var(--surface-color);
-            border-radius: 12px;
-            padding: 2.5rem;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.03);
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .service-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .service-header {
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .service-header h2 {
-            font-size: 2rem;
-            color: var(--primary);
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .grid-2 { grid-template-columns: 1fr; }
-        }
-
-        .card {
-            background: var(--bg-color);
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-        }
-
-        .card h3 {
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-main);
-        }
-
-        .tag-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .tag-list li {
-            position: relative;
-            padding-left: 1.5rem;
-        }
-
-        .tag-list li::before {
-            content: "•";
-            color: var(--primary);
-            font-size: 1.5rem;
-            position: absolute;
-            left: 0;
-            top: -0.3rem;
-        }
-
-        .procedure {
-            margin-top: 2rem;
-        }
-
-        .procedure h3 {
-            margin-bottom: 1.5rem;
-            color: var(--text-main);
-        }
-
-        .step {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-            background: var(--surface-color);
-        }
-
-        .step-num {
-            flex-shrink: 0;
-            width: 35px;
-            height: 35px;
-            background: var(--primary);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .step-text {
-            padding-top: 0.3rem;
-        }
-
-        .tips-box {
-            margin-top: 3rem;
-            background: #fffbeb;
-            border-left: 5px solid #f59e0b;
-            padding: 1.5rem;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .tips-box h4 {
-            color: #b45309;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .disclaimer {
-            text-align: center;
-            margin-top: 3rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-    </style>
+<style>
+:root{
+  --bg-color:#f4f7f6;--surface-color:#ffffff;--primary:#2563eb;--primary-hover:#1d4ed8;
+  --text-main:#1e293b;--text-muted:#64748b;--border:#e2e8f0;--accent-red:#ef4444;--accent-green:#10b981;
+  --accent-amber:#f59e0b;--font-family:'Inter',system-ui,-apple-system,sans-serif;
+  --safe-top:env(safe-area-inset-top);--safe-bottom:env(safe-area-inset-bottom);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
+body{font-family:var(--font-family);background:var(--bg-color);color:var(--text-main);line-height:1.6;
+  -webkit-user-select:none;user-select:none;padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);
+  overscroll-behavior-y:none;}
+input,textarea{-webkit-user-select:text;user-select:text;}
+header{background:var(--surface-color);padding:1.1rem 5%;box-shadow:0 2px 10px rgba(0,0,0,.05);text-align:center;
+  border-bottom:3px solid var(--primary);position:sticky;top:0;z-index:50;}
+h1{font-size:1.5rem;}
+.subtitle{color:var(--text-muted);font-size:.85rem;}
+.container{max-width:1200px;margin:1.2rem auto;padding:0 16px 4rem;display:flex;flex-direction:column;gap:1.2rem;}
+.topnav{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;position:sticky;top:60px;z-index:40;background:var(--bg-color);padding:.5rem 0;}
+.nav-btn{padding:.6rem 1.1rem;background:var(--surface-color);border:2px solid var(--border);border-radius:8px;
+  font-size:.88rem;font-weight:600;cursor:pointer;color:var(--text-muted);transition:.2s;}
+.nav-btn.active{background:#0f172a;color:#fff;border-color:#0f172a;}
+.v-tab{padding:.65rem 1.1rem;background:var(--surface-color);border:2px solid var(--border);border-radius:8px;
+  font-size:.88rem;font-weight:600;cursor:pointer;color:var(--text-muted);transition:.2s;}
+.v-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.view{display:none;}
+.view.active{display:block;}
+.workspace{display:none;grid-template-columns:220px 1fr;gap:1.2rem;}
+.workspace.active{display:grid;}
+@media (max-width:768px){.workspace.active{grid-template-columns:1fr;}}
+.service-tabs{display:flex;flex-direction:column;gap:.35rem;background:var(--surface-color);padding:.7rem;
+  border-radius:12px;box-shadow:0 2px 15px rgba(0,0,0,.03);height:fit-content;max-height:80vh;overflow-y:auto;}
+.s-tab{padding:.65rem .8rem;background:transparent;border:none;text-align:left;font-size:.88rem;font-weight:500;
+  color:var(--text-main);border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;gap:.4rem;}
+.s-tab:hover{background:var(--bg-color);}
+.s-tab.active{background:var(--bg-color);color:var(--primary);border-left:4px solid var(--primary);font-weight:600;}
+.badge{font-size:.65rem;font-weight:700;padding:.15rem .4rem;border-radius:20px;white-space:nowrap;}
+.badge.ok{background:#ecfdf5;color:#059669;}
+.badge.soon{background:#fffbeb;color:#b45309;}
+.badge.overdue{background:#fef2f2;color:#dc2626;}
+.service-content{background:var(--surface-color);border-radius:12px;padding:1.4rem;box-shadow:0 2px 15px rgba(0,0,0,.03);display:none;}
+.service-content.active{display:block;}
+.service-header{margin-bottom:1.1rem;padding-bottom:.7rem;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;}
+.service-header h2{font-size:1.25rem;color:var(--primary);}
+.cat-tag{font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.03em;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+@media (max-width:600px){.grid-2{grid-template-columns:1fr;}}
+.card{background:var(--bg-color);padding:1rem;border-radius:8px;border:1px solid var(--border);}
+.card h3{margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem;font-size:.9rem;}
+.tag-list{list-style:none;display:flex;flex-direction:column;gap:.35rem;}
+.tag-list li{position:relative;padding-left:1.2rem;font-size:.87rem;}
+.tag-list li::before{content:"•";color:var(--primary);font-size:1.2rem;position:absolute;left:0;top:-.25rem;}
+.procedure{margin-top:1.3rem;}
+.step{display:flex;gap:.9rem;margin-bottom:.9rem;}
+.step-num{flex-shrink:0;width:26px;height:26px;background:var(--primary);color:#fff;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;}
+.step-text{padding-top:.15rem;font-size:.88rem;}
+.tips-box{margin-top:1.3rem;background:#fffbeb;border-left:5px solid var(--accent-amber);padding:.9rem;border-radius:0 8px 8px 0;font-size:.87rem;}
+.tips-box h4{color:#b45309;margin-bottom:.4rem;font-size:.87rem;}
+.track-box{margin-top:1.3rem;background:#eff6ff;border-radius:8px;padding:.9rem;border:1px solid #bfdbfe;}
+.track-row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:flex-end;margin-top:.6rem;}
+.track-row label{font-size:.8rem;color:var(--text-muted);display:block;}
+input[type=number],input[type=date],input[type=text],input[type=password],textarea{padding:.5rem;border:1px solid var(--border);border-radius:6px;font-size:.88rem;width:130px;}
+textarea{width:100%;min-height:60px;font-family:inherit;}
+button.btn{background:var(--primary);color:#fff;border:none;padding:.55rem 1rem;border-radius:6px;font-weight:600;cursor:pointer;font-size:.85rem;}
+button.btn:active{background:var(--primary-hover);}
+button.btn.secondary{background:var(--text-muted);}
+button.btn.danger{background:var(--accent-red);}
+.due-line{font-size:.85rem;margin-top:.5rem;font-weight:600;}
+.due-line.ok{color:var(--accent-green);}
+.due-line.soon{color:#b45309;}
+.due-line.overdue{color:var(--accent-red);}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1rem;}
+.dash-card{background:var(--surface-color);border-radius:10px;padding:1rem;border-left:5px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.03);}
+.dash-card.ok{border-color:var(--accent-green);}
+.dash-card.soon{border-color:var(--accent-amber);}
+.dash-card.overdue{border-color:var(--accent-red);}
+.dash-card h4{font-size:.82rem;color:var(--text-muted);margin-bottom:.2rem;}
+.dash-card .svc{font-weight:700;font-size:.92rem;margin-bottom:.3rem;}
+.section-title{font-size:1.1rem;font-weight:700;margin:1rem 0 .6rem;}
+.odo-panel{background:var(--surface-color);border-radius:12px;padding:1.2rem;box-shadow:0 2px 15px rgba(0,0,0,.03);}
+.odo-row{display:flex;flex-wrap:wrap;gap:.8rem;align-items:flex-end;margin-bottom:.9rem;padding-bottom:.9rem;border-bottom:1px solid var(--border);}
+.odo-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.odo-row .vname{font-weight:700;min-width:170px;font-size:.9rem;}
+.settings-panel{background:var(--surface-color);border-radius:12px;padding:1.2rem;box-shadow:0 2px 15px rgba(0,0,0,.03);display:flex;flex-direction:column;gap:.8rem;}
+.settings-panel label{font-size:.82rem;color:var(--text-muted);}
+.settings-panel input{width:100%;max-width:420px;}
+.status-line{font-size:.82rem;color:var(--text-muted);margin-top:.4rem;}
+table.log-table{width:100%;border-collapse:collapse;font-size:.85rem;}
+table.log-table th,table.log-table td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--border);}
+table.log-table th{color:var(--text-muted);font-weight:700;font-size:.75rem;text-transform:uppercase;}
+.log-filters{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:.8rem;}
+select{padding:.5rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;}
+.disclaimer{text-align:center;margin-top:2rem;color:var(--text-muted);font-size:.78rem;}
+.toast{position:fixed;bottom:calc(20px + var(--safe-bottom));left:50%;transform:translateX(-50%);
+  background:#0f172a;color:#fff;padding:.7rem 1.2rem;border-radius:8px;font-size:.85rem;opacity:0;
+  transition:opacity .3s;z-index:100;pointer-events:none;max-width:90%;text-align:center;}
+.toast.show{opacity:1;}
+#installBanner{display:none;position:fixed;bottom:calc(10px + var(--safe-bottom));left:10px;right:10px;
+  background:#0f172a;color:#fff;padding:.8rem 1rem;border-radius:10px;font-size:.83rem;z-index:90;
+  align-items:center;justify-content:space-between;gap:.6rem;}
+#installBanner button{background:var(--primary);color:#fff;border:none;padding:.4rem .8rem;border-radius:6px;font-weight:600;}
+.pill{display:inline-block;background:var(--bg-color);border:1px solid var(--border);border-radius:20px;padding:.15rem .6rem;font-size:.72rem;color:var(--text-muted);}
+</style>
 </head>
 <body>
 
-    <header>
-        <h1>Garage Maintenance Hub</h1>
-        <p class="subtitle">Comprehensive Service Procedures & Fluid Specifications</p>
-    </header>
+<header>
+  <h1>Garage Maintenance Hub</h1>
+  <p class="subtitle">PM Tracker · Reminder Engine · Work Log</p>
+</header>
 
-    <div class="container">
-        <!-- Vehicle Selection Tabs -->
-        <div class="vehicle-tabs">
-            <button class="v-tab active" data-target="yukon">2009 GMC Yukon XL 6.2L</button>
-            <button class="v-tab" data-target="tiguan">2019 VW Tiguan 2.0T</button>
-            <button class="v-tab" data-target="rav4">2020 Toyota RAV4 2.5L</button>
-        </div>
+<div class="container">
+  <div class="topnav">
+    <button class="nav-btn active" data-view="dashboardView">📊 Dashboard</button>
+    <button class="nav-btn" data-view="odoView">🚗 Odometer</button>
+    <button class="nav-btn" data-view="servicesView">🛠️ Services</button>
+    <button class="nav-btn" data-view="logView">📋 Work Log</button>
+    <button class="nav-btn" data-view="settingsView">⚙️ Sync Settings</button>
+  </div>
 
-        <!-- YUKON WORKSPACE -->
-        <div class="workspace active" id="yukon">
-            <div class="service-tabs">
-                <button class="s-tab active" data-target="yukon-oil">Oil Change</button>
-                <button class="s-tab" data-target="yukon-engine">Engine Air Filter</button>
-                <button class="s-tab" data-target="yukon-cabin">Cabin Air Filter</button>
-                <button class="s-tab" data-target="yukon-trans">Transmission Service</button>
-                <button class="s-tab" data-target="yukon-diff">Diffs & Transfer Case</button>
-            </div>
+  <!-- DASHBOARD -->
+  <div class="view active" id="dashboardView">
+    <div class="section-title">⏰ Due Soon (next 1,000 mi)</div>
+    <div class="dash-grid" id="dueSoonGrid"></div>
+    <div class="section-title">🚨 Overdue</div>
+    <div class="dash-grid" id="overdueGrid"></div>
+    <div class="section-title">✅ On Track</div>
+    <div class="dash-grid" id="okGrid"></div>
+  </div>
 
-            <div class="service-container">
-                <!-- Yukon Oil -->
-                <div class="service-content active" id="yukon-oil">
-                    <div class="service-header">
-                        <h2>Engine Oil & Filter Change</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>15mm Box Wrench or Socket</li>
-                                <li>Oil Filter Wrench (End-cap style or pliers)</li>
-                                <li>Oil Drain Pan (Min 8 qt capacity)</li>
-                                <li>Funnel</li>
-                                <li>Shop Towels</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials & Volumes</h3>
-                            <ul class="tag-list">
-                                <li><strong>Fluid:</strong> 6.0 Quarts 5W-30 Full Synthetic (High Mileage works perfectly here)</li>
-                                <li><strong>Filter:</strong> ACDelco PF48 (or PF48E)</li>
-                                <li><strong>Drain Plug Torque:</strong> 18 lb-ft</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <div class="step">
-                            <div class="step-num">1</div>
-                            <div class="step-text">Warm up the engine for 5 minutes to ensure oil flows smoothly, then park on level ground.</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">2</div>
-                            <div class="step-text">Locate the 15mm oil pan drain plug on the passenger side of the oil pan. Position drain pan and remove plug.</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">3</div>
-                            <div class="step-text">Locate the oil filter near the driver side front of the oil pan. Remove it (expect some oil to spill). Ensure the old rubber gasket comes off with the old filter.</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">4</div>
-                            <div class="step-text">Apply a light coat of fresh oil to the rubber gasket of the new PF48 filter. Thread it on by hand until it makes contact, then tighten another 3/4 to 1 full turn.</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">5</div>
-                            <div class="step-text">Reinstall the 15mm drain plug. Torque to 18 lb-ft (or snug, do not overtighten).</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">6</div>
-                            <div class="step-text">Fill the engine with 6.0 quarts of 5W-30. Start engine, check for leaks under the vehicle, then shut off and verify level on dipstick.</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">7</div>
-                            <div class="step-text">Reset Oil Life: Turn key to ON (engine off). Fully depress gas pedal 3 times within 5 seconds.</div>
-                        </div>
-                    </div>
-                    <div class="tips-box">
-                        <h4>💡 Pro-Tips</h4>
-                        <p>For the 6.2L L92 engine without AFM, 5W-30 High Mileage Full Synthetic is the absolute perfect choice for 160k miles. Prefill the oil filter about halfway before screwing it on to reduce dry-start wear.</p>
-                    </div>
-                </div>
+  <!-- ODOMETER -->
+  <div class="view" id="odoView">
+    <div class="odo-panel" id="odoPanel"></div>
+  </div>
 
-                <!-- Yukon Engine Air -->
-                <div class="service-content" id="yukon-engine">
-                    <div class="service-header">
-                        <h2>Engine Air Filter</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>T25 Torx Driver or Phillips Screwdriver</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Filter:</strong> Standard Panel Filter (ACDelco A3181C or equivalent)</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <div class="step">
-                            <div class="step-num">1</div><div class="step-text">Locate the airbox on the passenger side of the engine bay.</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">2</div><div class="step-text">Loosen the 4 captive screws holding the lid down (T25 Torx or Phillips depending on exact year/hardware).</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">3</div><div class="step-text">Lift the lid, pull out the old filter, and vacuum out any leaves or debris in the bottom housing.</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">4</div><div class="step-text">Insert the new filter, ensuring the rubber seal is seated flush in the groove.</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">5</div><div class="step-text">Reinstall the lid and hand-tighten the 4 screws (do not use power tools, the plastic strips easily).</div>
-                        </div>
-                    </div>
-                </div>
+  <!-- SERVICES -->
+  <div class="view" id="servicesView">
+    <div class="topnav" id="vehicleTabs"></div>
+    <div id="workspaces"></div>
+  </div>
 
-                <!-- Yukon Cabin Air -->
-                <div class="service-content" id="yukon-cabin">
-                    <div class="service-header">
-                        <h2>Cabin Air Filter</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>Box cutter / Utility knife (If first time / un-modded)</li>
-                                <li>5.5mm or 7mm socket (for trim panels)</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Kit Needed:</strong> Dorman Retrofit Kit (259-200) - *See tips*</li>
-                                <li><strong>Filter:</strong> Standard GM cabin filter sizing (included in kit usually)</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <div class="step">
-                            <div class="step-num">1</div><div class="step-text">Remove the plastic kick panel beneath the passenger side glovebox (usually held by 2 or 3 hex screws and push pins).</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">2</div><div class="step-text">Look up at the bottom of the HVAC blower housing. If it is solid plastic with a faint rectangular groove, your truck NEVER had a cabin filter from the factory.</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">3</div><div class="step-text">If not yet cut: Carefully use a utility knife to cut along the grooved rectangle to open the slot.</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">4</div><div class="step-text">If already cut: Remove the cover plate installed previously.</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">5</div><div class="step-text">Slide the old filter out (it bends to get around the floorboard carpet).</div>
-                        </div>
-                        <div class="step">
-                            <div class="step-num">6</div><div class="step-text">Slide the new filter in (ensure airflow arrows point towards the rear of the vehicle / towards the blower). Secure the cover plate.</div>
-                        </div>
-                    </div>
-                    <div class="tips-box">
-                        <h4>💡 Pro-Tips</h4>
-                        <p>GM bafflingly removed the cabin air filter from 2007-2014 full-size trucks. If this is your first time checking it, you will likely need the Dorman Retrofit Kit. It involves cutting the sealed plastic slot open and using their provided cover plate and screw to seal it back up.</p>
-                    </div>
-                </div>
-
-                <!-- Yukon Trans -->
-                <div class="service-content" id="yukon-trans">
-                    <div class="service-header">
-                        <h2>Transmission Fluid & Filter (6L80)</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>10mm Socket with extensions</li>
-                                <li>Large fluid catch pan</li>
-                                <li>Flathead screwdriver / seal puller</li>
-                                <li>Pry bar (sometimes needed for exhaust clearance)</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Fluid:</strong> ~6.0 - 6.5 Quarts DEXRON-VI Full Synthetic</li>
-                                <li><strong>Filter:</strong> ACDelco 6L80 Filter Kit (with pan gasket)</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <div class="step"><div class="step-num">1</div><div class="step-text">Support vehicle safely. Position large catch pan under the transmission pan.</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text">The 6L80 pan does not have a drain plug. Loosen all 10mm pan bolts. Remove the rear and side bolts entirely, leaving the front bolts loose by a few threads.</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text">Carefully pry the rear of the pan down to allow fluid to cascade out over the lip into the pan.</div></div>
-                        <div class="step"><div class="step-num">4</div><div class="step-text">Once mostly drained, support the pan, remove the remaining front bolts, and lower the pan. Note: The passenger side exhaust Y-pipe is very close to the pan. You may need to pry the exhaust slightly or drop the exhaust bracket to slide the pan out.</div></div>
-                        <div class="step"><div class="step-num">5</div><div class="step-text">Pull the old filter straight down. Ensure the metal/rubber seal ring comes out of the pump bore. If it stays in the transmission, carefully pry it out with a seal puller.</div></div>
-                        <div class="step"><div class="step-num">6</div><div class="step-text">Clean the pan and the magnet inside it thoroughly. Install the new filter (push the new seal ring into the bore first, then push the filter neck into it).</div></div>
-                        <div class="step"><div class="step-num">7</div><div class="step-text">Reinstall the pan with a new reusable gasket. Torque bolts to 80 in-lbs (approx 7 ft-lbs) in a crisscross pattern.</div></div>
-                        <div class="step"><div class="step-num">8</div><div class="step-text">Add 5.5 quarts of Dexron VI down the dipstick tube. Start engine, shift through all gears pausing 3 seconds in each. With engine RUNNING and trans warm, check dipstick and top off as needed.</div></div>
-                    </div>
-                </div>
-
-                <!-- Yukon Diffs -->
-                <div class="service-content" id="yukon-diff">
-                    <div class="service-header">
-                        <h2>Differentials & Transfer Case (AWD/4WD)</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>3/8" Drive Ratchet (fits directly into plugs)</li>
-                                <li>Fluid pump (to pump fluid from bottles into diffs)</li>
-                                <li>18mm socket (for transfer case shield if equipped)</li>
-                                <li>Drain pan</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Front Diff:</strong> ~1.8 Quarts 75W-90 Synthetic GL-5</li>
-                                <li><strong>Rear Diff:</strong> ~2.8 Quarts 75W-90 Synthetic GL-5 (with limited slip additive if G80 code, though most synthetics include it)</li>
-                                <li><strong>Transfer Case (AWD):</strong> ~1.6 Quarts DEXRON-VI</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <p><em>Always loosen the FILL plug before the drain plug on any gear case to ensure you can refill it!</em></p>
-                        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Transfer Case:</strong> Use 3/8" ratchet to remove upper Fill plug. Remove lower Drain plug. Drain fluid. Reinstall Drain plug (15 lb-ft). Pump Dexron-VI into fill hole until it starts weeping out. Reinstall Fill plug.</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Front Differential:</strong> Remove Fill plug, then Drain plug. Drain. Clean magnet on drain plug. Reinstall drain plug. Pump in 75W-90 until it weeps out the fill hole. Reinstall fill plug.</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Rear Differential:</strong> Most 14-bolt 6.2L rear diffs have a standard drain plug on the bottom of the pumpkin. Remove fill, remove drain. Clean magnet. Reinstall drain. Pump in 75W-90 until level with fill hole. Reinstall fill plug. (If no drain plug exists, you must remove the differential cover, drain, clean mating surfaces, apply RTV or gasket, and reinstall cover before filling).</div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- TIGUAN WORKSPACE -->
-        <div class="workspace" id="tiguan">
-            <div class="service-tabs">
-                <button class="s-tab active" data-target="tiguan-oil">Oil Change</button>
-                <button class="s-tab" data-target="tiguan-engine">Engine Air Filter</button>
-                <button class="s-tab" data-target="tiguan-cabin">Cabin Air Filter</button>
-                <button class="s-tab" data-target="tiguan-trans">Transmission Service</button>
-                <button class="s-tab" data-target="tiguan-diff">Haldex & Diffs</button>
-            </div>
-
-            <div class="service-container">
-                <!-- Tiguan Oil -->
-                <div class="service-content active" id="tiguan-oil">
-                    <div class="service-header">
-                        <h2>Engine Oil & Filter Change</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>32mm Socket (for oil filter housing)</li>
-                                <li>T45 Torx or 19mm socket (for drain plug, depending on pan)</li>
-                                <li>Fluid Extractor (Highly Recommended for top-down changes)</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials & Volumes</h3>
-                            <ul class="tag-list">
-                                <li><strong>Fluid:</strong> 6.0 Quarts (5.7L) VW 508.00 0W-20</li>
-                                <li><strong>Filter:</strong> Cartridge type (Mann HU6002Z or equivalent)</li>
-                                <li><strong>O-Ring:</strong> Comes with filter</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure (Top-Down Extractor Method)</h3>
-                        <div class="step"><div class="step-num">1</div><div class="step-text">Warm up engine to operating temp, then shut off.</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text">Remove the dipstick. Insert the tube of your fluid extractor down the dipstick tube until it hits the bottom of the oil pan.</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text">Pump the extractor to begin siphoning the oil (should extract around 5.5 to 6 quarts).</div></div>
-                        <div class="step"><div class="step-num">4</div><div class="step-text">While extracting, use the 32mm socket to loosen the oil filter housing at the top front of the engine. Unscrew it slowly to allow residual oil to drain down into the block.</div></div>
-                        <div class="step"><div class="step-num">5</div><div class="step-text">Pull the filter housing out. Remove the old cartridge filter and use a pick to remove the old rubber O-ring on the plastic housing threads.</div></div>
-                        <div class="step"><div class="step-num">6</div><div class="step-text">Lubricate the new O-ring with fresh oil, install it on the housing, and snap the new filter cartridge into place.</div></div>
-                        <div class="step"><div class="step-num">7</div><div class="step-text">Thread housing back into the engine and torque to 25 Nm (18 lb-ft).</div></div>
-                        <div class="step"><div class="step-num">8</div><div class="step-text">Refill engine with 5.7 Liters of oil. Check dipstick.</div></div>
-                        <div class="step"><div class="step-num">9</div><div class="step-text">Reset service interval via the infotainment screen (Car > Setup > Service).</div></div>
-                    </div>
-                    <div class="tips-box">
-                        <h4>💡 Pro-Tips</h4>
-                        <p>Regarding your 5W-30 High Mileage Synthetic preference: The EA888 engine family runs excellently on a hot 30-weight oil, giving superior film strength to the turbo bearings at 150k miles. The only caveat is that standard high mileage oils lack Euro low-SAPS chemistry, meaning intake valve carbon buildup may accelerate. With your 5k mile intervals and mild climate, running 5W-30 is mechanically sound, but keep an eye on valve carbon.</p>
-                    </div>
-                </div>
-
-                <!-- Tiguan Engine Air -->
-                <div class="service-content" id="tiguan-engine">
-                    <div class="service-header">
-                        <h2>Engine Air Filter</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>T25 Torx Driver</li>
-                                <li>Hose clamp pliers (optional for intake hose)</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Filter:</strong> Mann C 30 005 or equivalent</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <div class="step"><div class="step-num">1</div><div class="step-text">Locate the large plastic airbox on the passenger side of the engine bay.</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text">Unscrew the T25 Torx screws around the perimeter of the airbox lid. They remain captive in the lid, so just loosen them fully.</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text">If you need more clearance, disconnect the vacuum line clip and loosen the clamp on the main air intake hose.</div></div>
-                        <div class="step"><div class="step-num">4</div><div class="step-text">Lift the lid and remove the cylindrical/panel filter.</div></div>
-                        <div class="step"><div class="step-num">5</div><div class="step-text">Wipe out the inside of the airbox. Insert the new filter.</div></div>
-                        <div class="step"><div class="step-num">6</div><div class="step-text">Reinstall the lid, ensuring it seats perfectly flat before tightening the T25 screws. Reattach any hoses.</div></div>
-                    </div>
-                </div>
-
-                <!-- Tiguan Cabin Air -->
-                <div class="service-content" id="tiguan-cabin">
-                    <div class="service-header">
-                        <h2>Cabin Air Filter</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>None (No tools required)</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Filter:</strong> Mann CUK 26 009 (Charcoal activated recommended)</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <div class="step"><div class="step-num">1</div><div class="step-text">Open the passenger side glovebox. Empty its contents.</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text">Locate the two tabs at the top edge of the inside of the glovebox. Push upwards and pull the glovebox down further.</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text">Behind the glovebox, look for a rectangular plastic cover with three retaining clips at the top.</div></div>
-                        <div class="step"><div class="step-num">4</div><div class="step-text">Press down on the clips and pull the cover off to expose the filter.</div></div>
-                        <div class="step"><div class="step-num">5</div><div class="step-text">Pull out the old filter. Note the direction of the airflow arrows (pointing DOWN).</div></div>
-                        <div class="step"><div class="step-num">6</div><div class="step-text">Insert the new filter with arrows pointing DOWN. Snap the cover back into place and close the glovebox firmly until it clicks.</div></div>
-                    </div>
-                </div>
-
-                <!-- Tiguan Trans -->
-                <div class="service-content" id="tiguan-trans">
-                    <div class="service-header">
-                        <h2>Transmission Service (09P Aisin 8-Speed)</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>OBD2 Scanner (VCDS or OBDeleven for temp reading)</li>
-                                <li>10mm Hex / T40 Torx</li>
-                                <li>Fluid Fill Pump with VW adapter (VAS 6262A or similar)</li>
-                                <li>Level vehicle (4 jack stands)</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Fluid:</strong> 4-5 Quarts VW G 053 001 A2 (or Aisin specific WS equivalent)</li>
-                                <li><strong>Gaskets:</strong> New drain plug crush washer, new overflow tube</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <div class="step"><div class="step-num">1</div><div class="step-text">Vehicle must be completely level and fluid must be cold (below 35°C / 95°F).</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text">Remove the drain plug. A small amount of fluid will come out.</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text">Insert an Allen key to unscrew the plastic overflow standpipe inside the drain hole. This will release the rest of the fluid (approx 3-4 quarts).</div></div>
-                        <div class="step"><div class="step-num">4</div><div class="step-text">Reinstall the plastic standpipe (do not overtighten).</div></div>
-                        <div class="step"><div class="step-num">5</div><div class="step-text">Screw your fill pump adapter into the drain hole. Pump in approximately 4 to 4.5 quarts of new fluid.</div></div>
-                        <div class="step"><div class="step-num">6</div><div class="step-text">Start the engine. Step on the brake and shift through P-R-N-D several times, pausing in each gear. Leave engine RUNNING in Park.</div></div>
-                        <div class="step"><div class="step-num">7</div><div class="step-text">Connect OBD scanner and monitor ATF temperature. Once it reaches exactly 35°C to 45°C (95°F - 113°F), remove the fill hose.</div></div>
-                        <div class="step"><div class="step-num">8</div><div class="step-text">Allow excess fluid to drain out of the hole (it is draining down to the height of the standpipe). Once it slows to a steady drip, install the drain plug with a new washer and torque to 15 Nm.</div></div>
-                    </div>
-                    <div class="tips-box">
-                        <h4>💡 Pro-Tips</h4>
-                        <p>VW calls this a "lifetime" fluid, but Aisin (the manufacturer) recommends 60k mile intervals. Because there is no dipstick, the temperature-specific overflow method is the ONLY way to ensure the correct fluid level. If the fluid gets hotter than 45°C during the process, it expands too much, you will underfill the transmission, and it will slip.</p>
-                    </div>
-                </div>
-
-                <!-- Tiguan Diffs -->
-                <div class="service-content" id="tiguan-diff">
-                    <div class="service-header">
-                        <h2>Haldex AWD System & Bevel Box</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>VCDS or OBDeleven (for Haldex pump relearn)</li>
-                                <li>Fluid Pump</li>
-                                <li>Hex/Torx bits for drain/fill plugs</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Haldex Fluid:</strong> 1 Liter VW G 060 175 A2</li>
-                                <li><strong>Bevel Box (Front Transfer):</strong> ~1 Qt 75W-90 GL-5</li>
-                                <li><strong>Rear Diff:</strong> ~1 Qt 75W-90 GL-5</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure (Haldex Clutch)</h3>
-                        <div class="step"><div class="step-num">1</div><div class="step-text">Locate the Haldex unit bolted to the front of the rear differential. Identify the fill plug and drain plug. Always open fill plug first.</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text">Remove the drain plug and drain the Haldex fluid. Optional but recommended at 150k: Remove the two screws holding the Haldex pump, pull the pump out, and clean the mesh filter screen on the end (clogs easily).</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text">Reinstall pump and drain plug. Pump in new Haldex fluid until it weeps out the fill hole.</div></div>
-                        <div class="step"><div class="step-num">4</div><div class="step-text">Connect OBD scanner, run the Haldex pump "Basic Settings / Relearn" procedure to bleed air from the pump.</div></div>
-                        <div class="step"><div class="step-num">5</div><div class="step-text">Check fluid level again (top off if level dropped) and install fill plug.</div></div>
-                        <div class="step"><div class="step-num">6</div><div class="step-text"><strong>Bevel Box & Rear Diff:</strong> Standard drain and fill procedure using 75W-90 until fluid weeps from the fill holes.</div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- RAV4 WORKSPACE -->
-        <div class="workspace" id="rav4">
-            <div class="service-tabs">
-                <button class="s-tab active" data-target="rav4-oil">Oil Change</button>
-                <button class="s-tab" data-target="rav4-engine">Engine Air Filter</button>
-                <button class="s-tab" data-target="rav4-cabin">Cabin Air Filter</button>
-                <button class="s-tab" data-target="rav4-trans">Transmission Service</button>
-                <button class="s-tab" data-target="rav4-diff">Diffs & Transfer Case</button>
-            </div>
-
-            <div class="service-container">
-                <!-- RAV4 Oil -->
-                <div class="service-content active" id="rav4-oil">
-                    <div class="service-header">
-                        <h2>Engine Oil & Filter Change</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>14mm Socket or Wrench</li>
-                                <li>64mm / 14-flute oil filter wrench (if factory tight)</li>
-                                <li>10mm socket (for plastic splash shield)</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials & Volumes</h3>
-                            <ul class="tag-list">
-                                <li><strong>Fluid:</strong> 4.8 Quarts 0W-16 Full Synthetic</li>
-                                <li><strong>Filter:</strong> Toyota 90915-YZZN1 (Spin-on)</li>
-                                <li><strong>Drain Plug Gasket:</strong> Toyota crush washer (replace every time)</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <div class="step"><div class="step-num">1</div><div class="step-text">Remove the small access panel on the plastic engine splash shield underneath the vehicle (requires removing several 10mm bolts/clips).</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text">Place drain pan under the oil pan. Remove 14mm drain plug and let oil drain. Remove the old crush washer.</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text">Locate the spin-on oil filter right next to the oil pan. Remove it. Make sure the rubber gasket comes off.</div></div>
-                        <div class="step"><div class="step-num">4</div><div class="step-text">Apply a light coat of new oil to the new filter's rubber seal. Spin it on until hand tight.</div></div>
-                        <div class="step"><div class="step-num">5</div><div class="step-text">Install a new crush washer on the drain plug. Torque to 30 lb-ft.</div></div>
-                        <div class="step"><div class="step-num">6</div><div class="step-text">Fill engine with exactly 4.8 quarts of 0W-16. Start engine, verify no leaks, check dipstick.</div></div>
-                        <div class="step"><div class="step-num">7</div><div class="step-text">Reset Maintenance Light: Use steering wheel controls to go to Settings (Gear icon) -> Vehicle Settings -> Scheduled Maintenance -> Reset Data.</div></div>
-                    </div>
-                    <div class="tips-box">
-                        <h4>💡 Pro-Tips</h4>
-                        <p>Regarding your 5W-30 High Mileage preference: The RAV4 has ultra-tight clearances and a variable displacement oil pump. Pumping 5W-30 through this engine at 60k miles creates parasitic drag and can throw VVT codes. Furthermore, the "High Mileage" seal conditioners are bad for a healthy 60k-mile engine. Stick to 0W-16 (or 0W-20 standard synthetic at the absolute heaviest).</p>
-                    </div>
-                </div>
-
-                <!-- RAV4 Engine Air -->
-                <div class="service-content" id="rav4-engine">
-                    <div class="service-header">
-                        <h2>Engine Air Filter</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>None (Tool-less design)</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Filter:</strong> Toyota 17801-F0050 or equivalent</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <div class="step"><div class="step-num">1</div><div class="step-text">Locate the airbox on the driver side of the engine bay.</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text">Pop off the two metal spring clips holding the lid down.</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text">Lift the lid slightly and pull it towards you to unhinge the rear tabs.</div></div>
-                        <div class="step"><div class="step-num">4</div><div class="step-text">Pull out the old filter. Note the orientation of the flat corner.</div></div>
-                        <div class="step"><div class="step-num">5</div><div class="step-text">Install the new filter, ensuring it sits flat.</div></div>
-                        <div class="step"><div class="step-num">6</div><div class="step-text">Slide the rear tabs of the lid back into their slots, push down, and secure the two metal clips.</div></div>
-                    </div>
-                </div>
-
-                <!-- RAV4 Cabin Air -->
-                <div class="service-content" id="rav4-cabin">
-                    <div class="service-header">
-                        <h2>Cabin Air Filter</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>None</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Filter:</strong> Toyota 87139-YZZ82 or equivalent</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <div class="step"><div class="step-num">1</div><div class="step-text">Open glovebox. On the right exterior side, locate the dampener rod. Squeeze the tips and slide it off the peg.</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text">Squeeze the top left and right corners of the glovebox inwards to clear the stopper tabs. Lower the glovebox to the floorboard.</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text">Look straight back to see a white rectangular cover. Pinch the tab on the right side and pull the cover off.</div></div>
-                        <div class="step"><div class="step-num">4</div><div class="step-text">Pull out the old filter. Notice the arrow usually points UP for Toyota filters (Check text on filter: "UP" vs "Air Flow").</div></div>
-                        <div class="step"><div class="step-num">5</div><div class="step-text">Slide new filter in, replace cover, lift glovebox, and reattach the dampener arm.</div></div>
-                    </div>
-                </div>
-
-                <!-- RAV4 Trans -->
-                <div class="service-content" id="rav4-trans">
-                    <div class="service-header">
-                        <h2>Transmission Service (Direct Shift 8-Speed)</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>24mm socket (Fill plug)</li>
-                                <li>6mm Allen/Hex (Drain and Overflow plugs)</li>
-                                <li>Fluid transfer pump</li>
-                                <li>Wire jumper for OBD port (or scan tool)</li>
-                                <li>Level ground</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Fluid:</strong> Toyota Genuine ATF WS (Approx 3-4 Qts for drain/fill)</li>
-                                <li><strong>Washers:</strong> New crush washers for fill, drain, and overflow plugs</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <div class="step"><div class="step-num">1</div><div class="step-text">Ensure vehicle is cold and level. Locate the 24mm fill plug behind the driver's side front wheel (remove wheel/splash shield for access). Loosen it first.</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text">Remove the 6mm hex drain plug on the pan and drain fluid. Reinstall plug.</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text">Pump new ATF WS into the fill plug until it slightly overflows. Reinstall fill plug loosely.</div></div>
-                        <div class="step"><div class="step-num">4</div><div class="step-text"><strong>Temperature Mode:</strong> Jump pins 4 and 13 on the OBD port. Start engine. Shift P-R-N-D-N-R-P. Shift rapidly between N and D for 6 seconds until the gear indicator "D" stays illuminated for 2 seconds. You are now in temp check mode.</div></div>
-                        <div class="step"><div class="step-num">5</div><div class="step-text">Let the engine idle. When the "D" light comes on solid, the trans is at exactly 104°F to 113°F (40-45°C). Leave engine RUNNING.</div></div>
-                        <div class="step"><div class="step-num">6</div><div class="step-text">Quickly get under the car and remove the 6mm hex OVERFLOW plug (smaller plug on the bottom of the pan). Let fluid drain until it becomes a thin trickle.</div></div>
-                        <div class="step"><div class="step-num">7</div><div class="step-text">If no fluid comes out, add more fluid through the fill hole until it trickles out the overflow.</div></div>
-                        <div class="step"><div class="step-num">8</div><div class="step-text">Reinstall overflow plug. Turn off engine. Tighten all plugs to spec with new washers.</div></div>
-                    </div>
-                </div>
-
-                <!-- RAV4 Diffs -->
-                <div class="service-content" id="rav4-diff">
-                    <div class="service-header">
-                        <h2>Transfer Case & Rear Differential</h2>
-                    </div>
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3>🛠️ Tools Required</h3>
-                            <ul class="tag-list">
-                                <li>10mm Hex (Allen) socket for front transfer case</li>
-                                <li>10mm Hex (Allen) socket for rear diff</li>
-                                <li>Fluid pump</li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <h3>📦 Materials</h3>
-                            <ul class="tag-list">
-                                <li><strong>Fluid:</strong> 75W-85 GL-5 Gear Oil (Approx 1 Qt total for both)</li>
-                                <li><strong>Washers:</strong> 4x Toyota aluminum crush washers</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="procedure">
-                        <h3>Procedure</h3>
-                        <p><em>Note: If you have a Torque Vectoring AWD model (Adventure/TRD), the rear differential has electronic clutches and requires a specific bleeding procedure. Standard XLE AWD uses a traditional differential.</em></p>
-                        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Transfer Case:</strong> Located near the right front axle. Use 10mm hex to remove the FILL plug. Then remove the DRAIN plug. Drain fluid. Reinstall drain plug with a new washer (29 lb-ft). Pump 75W-85 in until it overflows. Reinstall fill plug with new washer.</div></div>
-                        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Rear Differential:</strong> Remove the 10mm hex FILL plug on the back/side of the diff. Remove the DRAIN plug on the bottom. Drain fluid. Clean the magnet on the drain plug.</div></div>
-                        <div class="step"><div class="step-num">3</div><div class="step-text">Reinstall drain plug with new washer (29 lb-ft). Pump 75W-85 fluid into the fill hole until it overflows.</div></div>
-                        <div class="step"><div class="step-num">4</div><div class="step-text">Reinstall the fill plug with a new washer and torque to 29 lb-ft. Wipe cases clean to monitor for leaks.</div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="disclaimer">
-            Information provided for reference only. Always consult factory service manuals for the most up-to-date specifications and safety procedures. <br>Generated specifically for the Raleigh NC environment (5k intervals, mild climate).
-        </div>
-
+  <!-- WORK LOG -->
+  <div class="view" id="logView">
+    <div class="log-filters">
+      <select id="logFilterVehicle"><option value="all">All Vehicles</option></select>
+      <button class="btn secondary" id="exportLogBtn">Export CSV</button>
     </div>
+    <div class="odo-panel" style="overflow-x:auto;">
+      <table class="log-table" id="logTable">
+        <thead><tr><th>Date</th><th>Vehicle</th><th>Service</th><th>Mileage</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="logTableBody"></tbody>
+      </table>
+    </div>
+  </div>
 
-    <script>
-        // Vehicle Tab Switching
-        const vehicleTabs = document.querySelectorAll('.v-tab');
-        const workspaces = document.querySelectorAll('.workspace');
+  <!-- SETTINGS / GITHUB SYNC -->
+  <div class="view" id="settingsView">
+    <div class="settings-panel">
+      <strong>GitHub Sync (optional — overwrites data.json in your repo)</strong>
+      <p class="status-line">Create a fine-grained Personal Access Token scoped ONLY to this repo with "Contents: Read and write" permission. It is stored in this browser's localStorage only, never sent anywhere except GitHub's API.</p>
+      <label>GitHub Username/Org<input type="text" id="ghOwner" placeholder="e.g. kevinsmith"></label>
+      <label>Repository Name<input type="text" id="ghRepo" placeholder="e.g. garage-maintenance-hub"></label>
+      <label>Branch<input type="text" id="ghBranch" placeholder="main" value="main"></label>
+      <label>Personal Access Token<input type="password" id="ghToken" placeholder="github_pat_..."></label>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+        <button class="btn" id="saveSettingsBtn">Save Settings</button>
+        <button class="btn secondary" id="pullBtn">Pull Latest from GitHub</button>
+        <button class="btn" id="pushBtn">Push / Save to GitHub</button>
+      </div>
+      <div class="status-line" id="syncStatus">Not synced yet this session.</div>
+    </div>
+  </div>
 
-        vehicleTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active from all tabs
-                vehicleTabs.forEach(t => t.classList.remove('active'));
-                workspaces.forEach(w => w.classList.remove('active'));
-                
-                // Add active to clicked
-                tab.classList.add('active');
-                const target = tab.getAttribute('data-target');
-                document.getElementById(target).classList.add('active');
-            });
-        });
+  <div class="disclaimer">
+    Reference only — always consult factory service manuals for exact specs. Tuned for Raleigh, NC (5k mi intervals, mild climate).
+  </div>
+</div>
 
-        // Service Tab Switching
-        const serviceTabs = document.querySelectorAll('.s-tab');
-        const serviceContents = document.querySelectorAll('.service-content');
+<div id="installBanner">
+  <span>Install this app: tap Share → Add to Home Screen</span>
+  <button onclick="document.getElementById('installBanner').style.display='none'">Got it</button>
+</div>
+<div class="toast" id="toast"></div>
 
-        serviceTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Find parent workspace to only toggle active within that vehicle
-                const workspace = tab.closest('.workspace');
-                const localTabs = workspace.querySelectorAll('.s-tab');
-                const localContents = workspace.querySelectorAll('.service-content');
+<script>
+const VEHICLES = [{"id": "yukon", "name": "2009 GMC Yukon XL 6.2L", "engine": "6.2L L92 V8", "drivetrain": "4WD/AWD", "services": [{"id": "oil", "name": "Engine Oil & Filter Change", "category": "Powertrain", "intervalMiles": 5000, "intervalMonths": 6, "tools": ["15mm Box Wrench/Socket", "Oil Filter Wrench (end-cap style)", "Drain pan (8+ qt)", "Funnel", "Shop towels"], "materials": ["6.0 Quarts 5W-30 Full Synthetic High Mileage", "ACDelco PF48 Filter", "N/A drain washer (metal-metal seal)"], "steps": ["Warm engine 5 min, park level.", "Remove 15mm drain plug (passenger side of pan), drain into pan.", "Remove oil filter (driver front of pan); confirm old gasket comes off with it.", "Oil the new PF48 gasket, thread on hand-tight plus 3/4-1 turn.", "Reinstall drain plug, torque to 18 lb-ft.", "Fill 6.0 qts 5W-30, start engine, check for leaks, verify dipstick level.", "Reset Oil Life: Key ON engine OFF, floor the gas pedal 3x within 5 sec."], "tips": "6.2L L92 (non-AFM) runs great on 5W-30 High Mileage synthetic even at 160k+ miles. Prefill filter halfway to reduce dry-start wear."}, {"id": "engine-air", "name": "Engine Air Filter", "category": "Intake", "intervalMiles": 15000, "intervalMonths": 12, "tools": ["T25 Torx or Phillips screwdriver"], "materials": ["ACDelco A3181C panel filter"], "steps": ["Locate airbox, passenger side of engine bay.", "Loosen 4 captive screws (leave in lid).", "Lift lid, vacuum debris from housing.", "Insert new filter, seat rubber seal in groove.", "Reinstall lid, hand-tighten screws only."], "tips": "Check every oil change in dusty/gravel driveway conditions; replace early if visibly dark."}, {"id": "cabin-air", "name": "Cabin Air Filter", "category": "HVAC", "intervalMiles": 15000, "intervalMonths": 12, "tools": ["Box cutter (first-time only)", "5.5mm or 7mm socket"], "materials": ["Dorman Retrofit Kit 259-200 (first time)", "Standard GM cabin filter"], "steps": ["Remove kick panel under passenger glovebox.", "Inspect blower housing for factory-cut slot.", "If uncut, carefully knife-cut the molded rectangle.", "Slide out old filter (bends around carpet).", "Insert new filter, arrows toward rear/blower, snap cover on."], "tips": "2007-2014 GM full-size trucks shipped WITHOUT a cabin filter from the factory; the Dorman kit is required the first time."}, {"id": "trans", "name": "Transmission Fluid & Filter (6L80)", "category": "Powertrain", "intervalMiles": 45000, "intervalMonths": 36, "tools": ["10mm socket w/ extensions", "Large catch pan", "Seal puller/flathead", "Pry bar"], "materials": ["6.0-6.5 Qts DEXRON-VI Full Synthetic", "ACDelco 6L80 filter kit w/ gasket"], "steps": ["Support vehicle, position catch pan under trans pan.", "Loosen all 10mm pan bolts; remove rear/side, leave front loose.", "Pry rear of pan down to cascade fluid out.", "Remove remaining bolts, lower pan (watch passenger exhaust Y-pipe clearance).", "Pull filter down; confirm seal ring exits pump bore.", "Clean pan and magnet; install new filter/seal.", "Reinstall pan with new gasket, torque bolts ~80 in-lb crisscross.", "Add 5.5 qts DEXRON-VI via dipstick tube; cycle gears; top off hot/running."], "tips": "Filter/fluid service only (not a full flush) - 45k-mile interval extends transmission life significantly on 6.2L trucks."}, {"id": "diff", "name": "Differentials & Transfer Case", "category": "Drivetrain", "intervalMiles": 50000, "intervalMonths": 48, "tools": ["3/8\" drive ratchet", "Fluid pump", "18mm socket (T-case shield)", "Drain pan"], "materials": ["Front Diff: 1.8 Qts 75W-90 GL-5", "Rear Diff: 2.8 Qts 75W-90 GL-5", "Transfer Case: 1.6 Qts DEXRON-VI"], "steps": ["Always loosen FILL plug before DRAIN plug on any gear case.", "Transfer case: drain, reinstall drain (15 lb-ft), refill via fill hole until it weeps out.", "Front diff: drain, clean magnet, refill 75W-90 until weeping.", "Rear diff: drain, clean magnet, refill until level with fill hole (remove cover if no drain plug)."], "tips": "Severe duty (towing, off-road, water crossings) - cut this interval in half."}, {"id": "coolant", "name": "Coolant / Antifreeze Flush", "category": "Cooling", "intervalMiles": 100000, "intervalMonths": 60, "tools": ["Radiator drain pan", "Coolant funnel", "Pliers for hose clamps"], "materials": ["~14 Qts Dex-Cool (Orange, GM spec) or approved OAT coolant, 50/50 premix"], "steps": ["Cool engine fully. Open radiator drain (petcock) at lower radiator tank.", "Remove block drain plugs if accessible for full drain.", "Close drains, refill with 50/50 premix through radiator/coolant reservoir.", "Squeeze upper radiator hose to help purge air; top off reservoir.", "Run engine to operating temp with heater on max; recheck level once cool."], "tips": "Never mix Dex-Cool with green/HOAT coolant - causes gel/clogging."}, {"id": "brake-fluid", "name": "Brake Fluid Flush", "category": "Brakes", "intervalMiles": 30000, "intervalMonths": 24, "tools": ["Brake bleeder kit or pressure bleeder", "10mm/11mm bleeder wrench", "Clear tubing"], "materials": ["DOT 3 brake fluid (GM spec)"], "steps": ["Top off master cylinder reservoir.", "Bleed sequence: RR, LR, RF, LF (typical GM diagonal-split sequence, verify manual).", "Pump/hold pedal, open bleeder, close before releasing pedal, repeat until clean fluid flows.", "Top off reservoir between wheels; verify firm pedal when done."], "tips": "Brake fluid is hygroscopic - moisture lowers boiling point and can cause spongy pedal/corrosion in ABS module."}, {"id": "spark-plugs", "name": "Spark Plugs & Ignition", "category": "Ignition", "intervalMiles": 100000, "intervalMonths": 84, "tools": ["5/8\" spark plug socket", "Long extension", "Torque wrench", "Dielectric grease"], "materials": ["ACDelco 41-993 (or OE iridium) x8", "Anti-seize (small amount on threads)"], "steps": ["Remove engine covers/coil packs to access plugs.", "Blow out debris from plug wells with compressed air.", "Remove old plugs; inspect gap/wear.", "Anti-seize threads lightly, install new plugs, torque to 13 lb-ft.", "Reinstall coils, apply dielectric grease to boots."], "tips": "L92 iridium plugs are rated for 100k but inspect at 60k if any misfire codes appear."}, {"id": "belts", "name": "Serpentine Belt & Tensioner", "category": "Accessory Drive", "intervalMiles": 90000, "intervalMonths": 72, "tools": ["15mm breaker bar (tensioner)", "Belt routing diagram (underhood sticker)"], "materials": ["Gates/ACDelco serpentine belt", "Tensioner assembly if noisy/worn"], "steps": ["Note routing from underhood sticker/photo.", "Rotate tensioner with 15mm breaker bar to release belt tension.", "Slip belt off pulleys, inspect tensioner pulley bearing for play/noise.", "Route new belt per diagram, release tensioner slowly."], "tips": "Inspect for cracking/glazing every oil change; replace tensioner proactively if it's original at 100k+ miles."}, {"id": "battery", "name": "Battery Test & Terminal Service", "category": "Electrical", "intervalMiles": 15000, "intervalMonths": 12, "tools": ["10mm wrench", "Battery terminal brush", "Multimeter/load tester"], "materials": ["Terminal protector spray/felt washers", "Dielectric grease"], "steps": ["Test resting voltage (12.6V+ healthy) and load test/CCA if available.", "Disconnect negative then positive terminal.", "Clean posts and clamps with terminal brush; clean corrosion.", "Reconnect positive then negative; apply protectant."], "tips": "GM AGM/flooded batteries in trucks typically last 4-5 years in NC heat; test annually after year 3."}, {"id": "wipers", "name": "Wiper Blades", "category": "Exterior", "intervalMiles": 10000, "intervalMonths": 12, "tools": ["None"], "materials": ["22\" driver / 22\" passenger blade set (verify size)"], "steps": ["Lift wiper arm off windshield.", "Press release tab, slide old blade off hook.", "Slide new blade on until it clicks.", "Lower arm gently onto glass."], "tips": "Replace both blades together even if only one is streaking."}, {"id": "brakes-pads", "name": "Brake Pads & Rotors Inspection", "category": "Brakes", "intervalMiles": 15000, "intervalMonths": 12, "tools": ["Jack/stands", "Lug wrench", "Caliper piston tool (when replacing)"], "materials": ["Ceramic pads + rotors when below 3mm/minimum spec"], "steps": ["Remove wheel, inspect pad thickness through caliper window.", "Measure rotor thickness/check for grooving with calipers.", "Inspect caliper slide pins/boots for binding or grease loss.", "Repack slide pins with high-temp brake grease as needed."], "tips": "Full-size trucks tow/haul often - inspect more frequently if you tow regularly."}, {"id": "pcv", "name": "PCV Valve", "category": "Emissions", "intervalMiles": 50000, "intervalMonths": 48, "tools": ["Pliers for hose clamps"], "materials": ["ACDelco PCV valve/orifice"], "steps": ["Locate PCV valve on valve cover or intake manifold.", "Detach hose, twist/pull PCV valve out.", "Install new valve, reseat hose and clamp."], "tips": "Rough idle or oil consumption increase can indicate a stuck/clogged PCV valve."}, {"id": "driveline", "name": "U-Joints & Driveshaft Inspection", "category": "Drivetrain", "intervalMiles": 30000, "intervalMonths": 24, "tools": ["Grease gun", "Flashlight"], "materials": ["NLGI GC-LB chassis grease"], "steps": ["Support vehicle safely, grab driveshaft and check for play at U-joints.", "Grease U-joints (if equipped with grease fittings) until fresh grease purges seals.", "Inspect center support bearing (AWD models) for wobble/noise."], "tips": "Clunking on acceleration/deceleration often points to worn U-joints."}, {"id": "alignment", "name": "Wheel Alignment & Tire Rotation", "category": "Suspension", "intervalMiles": 7500, "intervalMonths": 6, "tools": ["Alignment rack (shop service)", "Torque wrench for lug nuts"], "materials": ["N/A"], "steps": ["Rotate tires front-to-back (same side) unless directional tread.", "Torque lug nuts to 140 lb-ft in star pattern.", "Full 4-wheel alignment if uneven wear or after suspension work."], "tips": "Rotate every oil change to maximize tread life on a heavy 4WD truck."}]}, {"id": "tiguan", "name": "2019 VW Tiguan 2.0T", "engine": "2.0L EA888 Turbo", "drivetrain": "4Motion AWD (Haldex)", "services": [{"id": "oil", "name": "Engine Oil & Filter Change", "category": "Powertrain", "intervalMiles": 5000, "intervalMonths": 6, "tools": ["32mm socket (filter housing)", "T45 Torx or 19mm (drain plug)", "Fluid extractor (recommended)"], "materials": ["6.0 Qts (5.7L) VW 508.00 0W-20 (or 5W-30 HM per owner pref)", "Mann HU6002Z cartridge filter + O-ring"], "steps": ["Warm engine to operating temp, shut off.", "Remove dipstick, insert extractor tube to pan bottom, pump out ~6 qts.", "Loosen 32mm filter housing at top-front of engine while extracting.", "Remove housing, pull old cartridge + O-ring.", "Lubricate new O-ring with fresh oil, snap in new cartridge.", "Thread housing back in, torque to 25 Nm (18 lb-ft).", "Refill 5.7L oil; check dipstick.", "Reset service interval via infotainment: Car > Setup > Service."], "tips": "EA888 runs fine on hot 5W-30 HM at 150k, but lacks Euro low-SAPS chemistry - watch for intake valve carbon buildup over time."}, {"id": "engine-air", "name": "Engine Air Filter", "category": "Intake", "intervalMiles": 20000, "intervalMonths": 24, "tools": ["T25 Torx driver", "Hose clamp pliers (optional)"], "materials": ["Mann C 30 005 filter"], "steps": ["Locate airbox, passenger side of engine bay.", "Loosen captive T25 screws around lid perimeter.", "Disconnect vacuum line clip/loosen intake hose clamp for clearance if needed.", "Lift lid, remove filter.", "Wipe housing, insert new filter.", "Reinstall lid flat, tighten screws, reattach hoses."], "tips": "Turbo engines are sensitive to airflow restriction - don't extend past 20k miles."}, {"id": "cabin-air", "name": "Cabin Air Filter", "category": "HVAC", "intervalMiles": 15000, "intervalMonths": 12, "tools": ["None"], "materials": ["Mann CUK 26 009 (activated charcoal)"], "steps": ["Open glovebox, empty contents.", "Push tabs at top-inside of glovebox upward, drop glovebox down further.", "Locate rectangular cover behind glovebox (3 clips).", "Press clips, remove cover.", "Pull old filter, note airflow arrow points DOWN.", "Insert new filter arrows DOWN, snap cover, close glovebox."], "tips": "Charcoal filter reduces cabin odors significantly vs standard particulate filter."}, {"id": "trans", "name": "Transmission Service (09P Aisin 8-Speed)", "category": "Powertrain", "intervalMiles": 40000, "intervalMonths": 36, "tools": ["OBD2 scanner (VCDS/OBDeleven for temp)", "10mm hex / T40 Torx", "Fill pump w/ VW adapter (VAS 6262A)", "4 jack stands (must be level)"], "materials": ["4-5 Qts VW G 053 001 A2 (Aisin WS equivalent)", "New drain plug crush washer + overflow tube"], "steps": ["Vehicle must be level, fluid cold (<35C/95F).", "Remove drain plug; small amount drains.", "Unscrew plastic overflow standpipe inside drain hole to release remaining fluid (~3-4 qts).", "Reinstall standpipe (don't overtighten).", "Pump in ~4-4.5 qts new fluid via drain hole.", "Start engine, cycle P-R-N-D repeatedly, leave running in Park.", "Monitor ATF temp via OBD; once 35-45C, remove fill hose.", "Let excess drain to standpipe height; reinstall drain plug w/ new washer, torque 15 Nm."], "tips": "VW calls it 'lifetime' fluid but Aisin recommends 60k intervals. Overfilling/underfilling if temp window is missed will cause slipping."}, {"id": "diff", "name": "Haldex AWD & Bevel Box", "category": "Drivetrain", "intervalMiles": 40000, "intervalMonths": 36, "tools": ["VCDS/OBDeleven (Haldex relearn)", "Fluid pump", "Hex/Torx bits"], "materials": ["Haldex: 1L VW G 060 175 A2", "Bevel box: ~1 Qt 75W-90 GL-5", "Rear diff: ~1 Qt 75W-90 GL-5"], "steps": ["Open fill plug first, then drain plug on Haldex unit (front of rear diff).", "Optional at 150k: pull pump, clean mesh filter screen.", "Reinstall pump/drain, refill until weeping from fill hole.", "Run OBD 'Basic Settings/Relearn' to bleed pump air.", "Recheck/top off level, reinstall fill plug.", "Bevel box & rear diff: standard drain/fill with 75W-90 until weeping."], "tips": "Haldex pump mesh filter clogs over time - cleaning it restores AWD response on rough/wet roads."}, {"id": "coolant", "name": "Coolant Flush (G13)", "category": "Cooling", "intervalMiles": 100000, "intervalMonths": 60, "tools": ["Drain pan", "Funnel", "Pliers"], "materials": ["VW G13 (violet/purple, lobrid OAT) coolant, 50/50 premix"], "steps": ["Cool engine, remove lower radiator hose or drain plug.", "Drain into pan; open expansion tank cap to speed draining.", "Refill with G13 premix via expansion tank.", "Bleed air using bleed screw (if equipped) with engine running/heater on.", "Top off once cooled and level stabilizes."], "tips": "Never substitute G12/G12++ pink coolant with G13 without a full flush - they aren't always compatible."}, {"id": "brake-fluid", "name": "Brake Fluid Flush", "category": "Brakes", "intervalMiles": 24000, "intervalMonths": 24, "tools": ["Bleeder kit", "11mm bleeder wrench"], "materials": ["VW-approved DOT 4 fluid"], "steps": ["Top off reservoir.", "Bleed sequence per VW: typically RR, LF, LR, RF (verify).", "Pump/hold, open, close, release, repeat until clear fluid.", "Top off reservoir; verify firm pedal."], "tips": "VW specifies DOT4 (not DOT3) - check reservoir cap for spec confirmation."}, {"id": "spark-plugs", "name": "Spark Plugs (EA888 Turbo)", "category": "Ignition", "intervalMiles": 40000, "intervalMonths": 36, "tools": ["Spark plug socket (14mm hex plugs)", "Long extension", "Torque wrench"], "materials": ["NGK/OE iridium plugs x4", "Anti-seize (light)"], "steps": ["Remove engine cover.", "Disconnect ignition coils, remove coil bracket if present.", "Remove old plugs, inspect for oil fouling/wear.", "Install new plugs, torque to 25-30 Nm.", "Reinstall coils and cover."], "tips": "Turbo direct-injection engines wear plugs faster than naturally aspirated - do not stretch past 40k."}, {"id": "belts", "name": "Timing Chain Tensioner & Accessory Belt", "category": "Accessory Drive", "intervalMiles": 100000, "intervalMonths": 84, "tools": ["Belt tensioner tool", "Torque wrench"], "materials": ["OE serpentine belt, tensioner if noisy"], "steps": ["Note belt routing.", "Release tensioner, remove belt.", "Inspect tensioner pulley and idlers for play.", "Install new belt, verify routing, release tensioner."], "tips": "EA888 uses a timing chain (not belt) - listen for chain rattle on cold start, which indicates tensioner wear."}, {"id": "battery", "name": "Battery Test & AGM Registration", "category": "Electrical", "intervalMiles": 15000, "intervalMonths": 12, "tools": ["Multimeter", "VCDS/OBDeleven (battery registration)"], "materials": ["AGM battery when replacing"], "steps": ["Test resting voltage and load test.", "If replacing, use VCDS/OBDeleven to register new battery to BCM.", "Clean terminals, apply protectant."], "tips": "VW ECUs track battery age for charging strategy - always register a new battery or you'll get inaccurate charging behavior."}, {"id": "wipers", "name": "Wiper Blades", "category": "Exterior", "intervalMiles": 10000, "intervalMonths": 12, "tools": ["None"], "materials": ["24\" driver / 19\" passenger (verify size)"], "steps": ["Lift arm off glass.", "Release tab, slide old blade off.", "Slide new blade on until click.", "Lower arm gently."], "tips": "Tiguan uses proprietary VW clip - confirm adapter type when ordering blades."}, {"id": "brakes-pads", "name": "Brake Pads & Rotors Inspection", "category": "Brakes", "intervalMiles": 15000, "intervalMonths": 12, "tools": ["Jack/stands", "Caliper tool"], "materials": ["OE-spec pads/rotors when due"], "steps": ["Remove wheel, inspect pad thickness.", "Check rotor thickness/scoring.", "Inspect slide pins/boots, regrease if needed."], "tips": "Front pads wear faster on turbo AWD due to added weight - check every rotation."}, {"id": "pcv", "name": "PCV / Diverter Valve", "category": "Emissions", "intervalMiles": 60000, "intervalMonths": 48, "tools": ["Pliers", "Torx bits"], "materials": ["OE PCV diaphragm/valve"], "steps": ["Locate PCV valve on cylinder head cover.", "Remove hoses/clips, extract valve.", "Install new valve/diaphragm, reseat hoses."], "tips": "Failing PCV diaphragms are a common EA888 oil-consumption culprit - address rough idle promptly."}, {"id": "driveline", "name": "Driveshaft & Haldex Coupling Inspection", "category": "Drivetrain", "intervalMiles": 30000, "intervalMonths": 24, "tools": ["Flashlight", "Grease gun (if fitted)"], "materials": ["N/A"], "steps": ["Support vehicle, inspect driveshaft center bearing/CV boots for play or cracks.", "Check Haldex coupling housing for leaks.", "Inspect rear diff mounts for wear."], "tips": "Torn CV boots lead to rapid joint wear - replace boots immediately if cracked, even if joint feels fine."}, {"id": "alignment", "name": "Wheel Alignment & Tire Rotation", "category": "Suspension", "intervalMiles": 7500, "intervalMonths": 6, "tools": ["Alignment rack", "Torque wrench"], "materials": ["N/A"], "steps": ["Rotate tires front-to-back same side.", "Torque lug bolts to 120 Nm.", "Full alignment if uneven wear noted."], "tips": "Turbo Tiguans are more alignment-sensitive - uneven wear often signals worn control arm bushings."}]}, {"id": "rav4", "name": "2020 Toyota RAV4 2.5L", "engine": "2.5L Dynamic Force", "drivetrain": "AWD", "services": [{"id": "oil", "name": "Engine Oil & Filter Change", "category": "Powertrain", "intervalMiles": 5000, "intervalMonths": 6, "tools": ["14mm socket/wrench", "64mm/14-flute filter wrench (if tight)", "10mm socket (splash shield)"], "materials": ["4.8 Qts 0W-16 Full Synthetic", "Toyota 90915-YZZN1 spin-on filter", "Crush washer (replace every time)"], "steps": ["Remove splash shield access panel underneath.", "Position drain pan, remove 14mm drain plug, drain oil, remove old washer.", "Remove spin-on filter next to pan, confirm old gasket removed.", "Oil new filter's rubber seal, spin on hand-tight.", "Install new crush washer on drain plug, torque to 30 lb-ft.", "Fill exactly 4.8 qts 0W-16, start, check leaks, check dipstick.", "Reset maintenance light via steering controls: Settings > Vehicle Settings > Scheduled Maintenance > Reset Data."], "tips": "Do NOT use 5W-30 High Mileage - tight VVT clearances and variable pump create drag/codes. Stick to 0W-16 (0W-20 max)."}, {"id": "engine-air", "name": "Engine Air Filter", "category": "Intake", "intervalMiles": 20000, "intervalMonths": 24, "tools": ["None (tool-less)"], "materials": ["Toyota 17801-F0050 filter"], "steps": ["Locate airbox, driver side of engine bay.", "Pop the two metal spring clips.", "Lift lid, unhinge rear tabs.", "Remove old filter noting flat-corner orientation.", "Install new filter flat, reseat lid tabs, close clips."], "tips": "Hybrid/AWD variants share the same tool-less design - very quick DIY job."}, {"id": "cabin-air", "name": "Cabin Air Filter", "category": "HVAC", "intervalMiles": 15000, "intervalMonths": 12, "tools": ["None"], "materials": ["Toyota 87139-YZZ82"], "steps": ["Open glovebox, remove dampener rod (squeeze tips, slide off peg).", "Squeeze top corners inward, lower glovebox to floorboard.", "Locate white rectangular cover, pinch tab, remove.", "Pull old filter; note arrow direction (usually UP).", "Insert new filter, replace cover, lift glovebox, reattach dampener."], "tips": "Check the printed arrow carefully - Toyota filters vary between 'UP' and 'Air Flow' markings by model year."}, {"id": "trans", "name": "Transmission Service (Direct Shift 8-Speed)", "category": "Powertrain", "intervalMiles": 40000, "intervalMonths": 36, "tools": ["24mm socket (fill plug)", "6mm hex (drain/overflow)", "Fluid transfer pump", "OBD jumper/scan tool"], "materials": ["Toyota Genuine ATF WS, ~3-4 Qts", "New crush washers x3"], "steps": ["Vehicle cold and level. Loosen 24mm fill plug behind driver front wheel first.", "Remove 6mm drain plug, drain, reinstall.", "Pump new ATF WS into fill plug until slight overflow; reinstall loosely.", "Jump pins 4 & 13 on OBD port, start engine, shift P-R-N-D-N-R-P then rapid N-D cycling 6 sec until 'D' stays lit 2 sec (temp check mode).", "Idle until 'D' light solid = 104-113F (40-45C); leave engine running.", "Remove 6mm overflow plug quickly, drain until thin trickle.", "Add more fluid via fill hole if nothing trickles from overflow.", "Reinstall overflow plug, turn off engine, torque all plugs w/ new washers."], "tips": "Missing the exact temp window under/overfills the transmission - use a reliable OBD scanner for this step."}, {"id": "diff", "name": "Transfer Case & Rear Differential", "category": "Drivetrain", "intervalMiles": 50000, "intervalMonths": 48, "tools": ["10mm hex (Allen) socket x2", "Fluid pump"], "materials": ["75W-85 GL-5, ~1 Qt total", "4x Toyota aluminum crush washers"], "steps": ["Transfer case (near right front axle): remove fill then drain plug, drain, reinstall drain (29 lb-ft new washer), refill until overflow, reinstall fill.", "Rear diff: remove fill then drain plug, drain, clean magnet.", "Reinstall drain w/ new washer (29 lb-ft), pump in fluid until overflow.", "Reinstall fill plug w/ new washer, torque 29 lb-ft, wipe clean to monitor leaks."], "tips": "Torque Vectoring AWD trims (Adventure/TRD) have electronic rear diff clutches requiring a special bleed - standard XLE AWD uses a traditional diff."}, {"id": "coolant", "name": "Coolant Flush (Toyota Red/Pink)", "category": "Cooling", "intervalMiles": 100000, "intervalMonths": 60, "tools": ["Drain pan", "Funnel"], "materials": ["Toyota Super Long Life Coolant (pink), 50/50 premix"], "steps": ["Cool engine, open radiator drain petcock, drain into pan.", "Close drain, refill via radiator/reservoir with premix.", "Run engine w/ heater on max to purge air; top off when cool."], "tips": "Toyota's factory coolant is rated for 10 years/100k miles under normal use - don't over-service unnecessarily."}, {"id": "brake-fluid", "name": "Brake Fluid Flush", "category": "Brakes", "intervalMiles": 30000, "intervalMonths": 24, "tools": ["Bleeder kit", "10mm bleeder wrench"], "materials": ["DOT 3 brake fluid"], "steps": ["Top off reservoir.", "Bleed sequence: RR, LF, RF, LR (typical Toyota diagonal split, verify manual).", "Pump/hold, open, close, release, repeat until clear fluid.", "Top off, verify firm pedal."], "tips": "RAV4 AWD models add slightly more brake line volume - budget extra fluid."}, {"id": "spark-plugs", "name": "Spark Plugs (2.5L Dynamic Force)", "category": "Ignition", "intervalMiles": 120000, "intervalMonths": 96, "tools": ["Spark plug socket", "Extension", "Torque wrench"], "materials": ["Toyota/Denso iridium plugs x4"], "steps": ["Remove engine cover.", "Disconnect coils, remove bracket if present.", "Remove old plugs, inspect wear.", "Install new plugs, torque to 18 lb-ft.", "Reinstall coils and cover."], "tips": "Long 120k interval is standard for this engine - no need to service early unless misfire codes appear."}, {"id": "belts", "name": "Accessory Belt Inspection", "category": "Accessory Drive", "intervalMiles": 90000, "intervalMonths": 72, "tools": ["Flashlight", "Belt tension gauge (optional)"], "materials": ["OE serpentine belt if worn"], "steps": ["Inspect belt for cracking/glazing.", "Check tensioner pulley for play/noise.", "Replace belt and/or tensioner if worn."], "tips": "2.5L Dynamic Force uses a single accessory belt - inspection is quick each oil change."}, {"id": "battery", "name": "Battery Test & Terminal Service", "category": "Electrical", "intervalMiles": 15000, "intervalMonths": 12, "tools": ["Multimeter/load tester", "10mm wrench"], "materials": ["Terminal protectant, dielectric grease"], "steps": ["Test resting voltage and load/CCA.", "Clean terminals and posts.", "Reconnect (positive first, negative last), apply protectant."], "tips": "Toyota AGM batteries (if equipped for AWD models) require registration reset after replacement in some trims."}, {"id": "wipers", "name": "Wiper Blades", "category": "Exterior", "intervalMiles": 10000, "intervalMonths": 12, "tools": ["None"], "materials": ["26\" driver / 16\" passenger blade set (verify size)"], "steps": ["Lift arm off glass.", "Release tab, slide old blade off hook.", "Slide new blade on until click.", "Lower arm gently."], "tips": "RAV4 uses a hybrid-style hook adapter - confirm compatibility when purchasing aftermarket blades."}, {"id": "brakes-pads", "name": "Brake Pads & Rotors Inspection", "category": "Brakes", "intervalMiles": 15000, "intervalMonths": 12, "tools": ["Jack/stands", "Caliper tool"], "materials": ["OE-spec pads/rotors when due"], "steps": ["Remove wheel, inspect pad thickness through caliper window.", "Check rotor thickness/grooving.", "Inspect slide pins/boots, regrease as needed."], "tips": "RAV4 pads generally last 40-50k miles under normal driving - inspect visually each rotation."}, {"id": "pcv", "name": "PCV Valve", "category": "Emissions", "intervalMiles": 60000, "intervalMonths": 48, "tools": ["Pliers"], "materials": ["OE PCV valve"], "steps": ["Locate PCV valve on valve cover.", "Detach hose, remove old valve.", "Install new valve, reseat hose."], "tips": "Rough idle at startup can indicate a clogged PCV - inexpensive part to replace proactively."}, {"id": "driveline", "name": "CV Axles & Rear Driveshaft Inspection", "category": "Drivetrain", "intervalMiles": 30000, "intervalMonths": 24, "tools": ["Flashlight"], "materials": ["N/A"], "steps": ["Support vehicle, inspect CV boots for cracks/grease leaks.", "Check rear driveshaft/coupling for leaks (AWD models).", "Inspect diff mounts for wear."], "tips": "Clicking noise while turning usually indicates a worn outer CV joint - address quickly to avoid stranding."}, {"id": "alignment", "name": "Wheel Alignment & Tire Rotation", "category": "Suspension", "intervalMiles": 7500, "intervalMonths": 6, "tools": ["Alignment rack", "Torque wrench"], "materials": ["N/A"], "steps": ["Rotate tires front-to-back same side.", "Torque lug nuts to 97 lb-ft.", "Full alignment if uneven wear noted."], "tips": "RAV4's electric power steering can mask alignment issues - rotate tires consistently to catch wear early."}]}];
+const STORAGE_KEY = 'gmh_data_v2';
+const SETTINGS_KEY = 'gmh_gh_settings_v1';
+const DUE_SOON_MILES = 1000;
+const DUE_SOON_DAYS = 21;
 
-                localTabs.forEach(t => t.classList.remove('active'));
-                localContents.forEach(c => c.classList.remove('active'));
+function defaultData(){
+  return {
+    meta: { lastUpdated: null, schemaVersion: 1 },
+    vehicles: Object.fromEntries(VEHICLES.map(v=>[v.id, {odometer:0, odometerDate:null}])),
+    serviceState: {},
+    history: []
+  };
+}
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultData();
+    const parsed = JSON.parse(raw);
+    return Object.assign(defaultData(), parsed);
+  }catch(e){ return defaultData(); }
+}
+function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+let data = loadData();
 
-                tab.classList.add('active');
-                const target = tab.getAttribute('data-target');
-                document.getElementById(target).classList.add('active');
-            });
-        });
-    </script>
+function loadSettings(){
+  try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveSettings(s){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
+let ghSettings = loadSettings();
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ---------- Web Worker: reminder engine ----------
+const workerCode = `
+self.onmessage = function(e){
+  const {vehicles, serviceState, vehicleOdo, dueSoonMiles, dueSoonDays} = e.data;
+  const now = Date.now();
+  const results = [];
+  vehicles.forEach(v => {
+    const cm = (vehicleOdo[v.id] && vehicleOdo[v.id].odometer) || 0;
+    v.services.forEach(s => {
+      const key = v.id + '::' + s.id;
+      const rec = serviceState[key] || {};
+      const lastMiles = rec.lastMiles || 0;
+      const lastDate = rec.lastDate ? new Date(rec.lastDate).getTime() : null;
+      const dueMiles = lastMiles + s.intervalMiles;
+      const dueDate = lastDate ? (lastDate + s.intervalMonths*30*24*3600*1000) : null;
+      const milesRemaining = dueMiles - cm;
+      const daysRemaining = dueDate ? Math.round((dueDate - now)/(24*3600*1000)) : null;
+      let status = 'ok';
+      if(milesRemaining <= 0 || (dueDate !== null && now >= dueDate)) status = 'overdue';
+      else if(milesRemaining <= dueSoonMiles || (dueDate !== null && daysRemaining <= dueSoonDays)) status = 'soon';
+      results.push({
+        vehicleId: v.id, vehicleName: v.name, serviceId: s.id, serviceName: s.name,
+        category: s.category, lastMiles, lastDate, dueMiles, dueDate, milesRemaining, daysRemaining, status,
+        currentMiles: cm
+      });
+    });
+  });
+  self.postMessage(results);
+};
+`;
+let worker;
+try{
+  const blob = new Blob([workerCode], {type:'application/javascript'});
+  worker = new Worker(URL.createObjectURL(blob));
+}catch(err){ console.warn('Web Worker unavailable, using main-thread fallback', err); }
+
+function computeStatuses(cb){
+  if(worker){
+    worker.onmessage = (e)=>cb(e.data);
+    worker.postMessage({vehicles: VEHICLES, serviceState: data.serviceState, vehicleOdo: data.vehicles,
+      dueSoonMiles: DUE_SOON_MILES, dueSoonDays: DUE_SOON_DAYS});
+  } else {
+    const now = Date.now(); const results = [];
+    VEHICLES.forEach(v=>{
+      const cm = (data.vehicles[v.id] && data.vehicles[v.id].odometer) || 0;
+      v.services.forEach(s=>{
+        const key=v.id+'::'+s.id; const rec=data.serviceState[key]||{};
+        const lastMiles=rec.lastMiles||0;
+        const lastDate=rec.lastDate?new Date(rec.lastDate).getTime():null;
+        const dueMiles=lastMiles+s.intervalMiles;
+        const dueDate=lastDate?(lastDate+s.intervalMonths*30*24*3600*1000):null;
+        const milesRemaining=dueMiles-cm;
+        const daysRemaining = dueDate ? Math.round((dueDate-now)/(24*3600*1000)) : null;
+        let status='ok';
+        if(milesRemaining<=0||(dueDate!==null&&now>=dueDate)) status='overdue';
+        else if(milesRemaining<=DUE_SOON_MILES||(dueDate!==null&&daysRemaining<=DUE_SOON_DAYS)) status='soon';
+        results.push({vehicleId:v.id,vehicleName:v.name,serviceId:s.id,serviceName:s.name,category:s.category,
+          lastMiles,lastDate,dueMiles,dueDate,milesRemaining,daysRemaining,status,currentMiles:cm});
+      });
+    });
+    cb(results);
+  }
+}
+
+function fmtDate(ts){ if(!ts) return '—'; return new Date(ts).toLocaleDateString(); }
+
+// ---------- Dashboard ----------
+function renderDashboard(statusMap){
+  const items = Object.values(statusMap);
+  const soon = items.filter(i=>i.status==='soon');
+  const overdue = items.filter(i=>i.status==='overdue');
+  const ok = items.filter(i=>i.status==='ok');
+
+  const cardHtml = (it) => `
+    <div class="dash-card ${it.status}">
+      <h4>${it.vehicleName}</h4>
+      <div class="svc">${it.serviceName}</div>
+      <div style="font-size:.8rem;color:var(--text-muted)">
+        ${it.status==='overdue' ? 'Overdue' : (it.milesRemaining.toLocaleString()+' mi left')}
+        ${it.dueDate ? ' · by '+fmtDate(it.dueDate) : ''}
+      </div>
+    </div>`;
+
+  document.getElementById('dueSoonGrid').innerHTML = soon.length ? soon.map(cardHtml).join('') : '<p class="status-line">Nothing due within 1,000 miles.</p>';
+  document.getElementById('overdueGrid').innerHTML = overdue.length ? overdue.map(cardHtml).join('') : '<p class="status-line">Nothing overdue. 🎉</p>';
+  document.getElementById('okGrid').innerHTML = ok.map(cardHtml).join('');
+}
+
+// ---------- Odometer panel ----------
+function renderOdoPanel(){
+  const panel = document.getElementById('odoPanel');
+  panel.innerHTML = VEHICLES.map(v=>{
+    const rec = data.vehicles[v.id] || {odometer:0, odometerDate:null};
+    return `<div class="odo-row">
+      <div class="vname">${v.name}</div>
+      <label>Current mileage<br><input type="number" id="odo-${v.id}" value="${rec.odometer||''}" placeholder="e.g. 155200"></label>
+      <label>As of date<br><input type="date" id="odo-date-${v.id}" value="${rec.odometerDate||new Date().toISOString().slice(0,10)}"></label>
+      <button class="btn" data-odo-save="${v.id}">Update Mileage</button>
+    </div>`;
+  }).join('');
+  panel.querySelectorAll('[data-odo-save]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.odoSave;
+      const miles = Number(document.getElementById('odo-'+id).value)||0;
+      const date = document.getElementById('odo-date-'+id).value;
+      data.vehicles[id] = { odometer: miles, odometerDate: date };
+      data.meta.lastUpdated = new Date().toISOString();
+      saveData();
+      showToast('Mileage updated ✓');
+      refreshAll();
+    });
+  });
+}
+
+// ---------- Vehicle / Service workspace ----------
+function renderVehicleTabs(){
+  const tabbar = document.getElementById('vehicleTabs');
+  tabbar.innerHTML = VEHICLES.map((v,i)=>`<button class="v-tab ${i===0?'active':''}" data-target="${v.id}">${v.name}</button>`).join('');
+  tabbar.querySelectorAll('.v-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      tabbar.querySelectorAll('.v-tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.workspace').forEach(w=>w.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
+    });
+  });
+}
+
+function renderWorkspaces(statusMap){
+  const container = document.getElementById('workspaces');
+  container.innerHTML = VEHICLES.map((v,vi)=>{
+    const svcTabs = v.services.map((s,si)=>{
+      const st = statusMap[v.id+'::'+s.id];
+      return `<button class="s-tab ${si===0?'active':''}" data-target="${v.id}-${s.id}">
+        <span>${s.name}</span><span class="badge ${st.status}">${st.status==='overdue'?'OVERDUE':st.status==='soon'?'SOON':'OK'}</span>
+      </button>`;
+    }).join('');
+
+    const svcContents = v.services.map((s,si)=>{
+      const key = v.id+'::'+s.id;
+      const st = statusMap[key];
+      const rec = data.serviceState[key] || {};
+      return `
+      <div class="service-content ${si===0?'active':''}" id="${v.id}-${s.id}">
+        <div class="service-header">
+          <div><span class="cat-tag">${s.category}</span><h2>${s.name}</h2></div>
+          <span class="badge ${st.status}">${st.status==='overdue'?'OVERDUE':st.status==='soon'?'DUE SOON':'ON TRACK'}</span>
+        </div>
+        <div class="grid-2">
+          <div class="card"><h3>🛠️ Tools Required</h3><ul class="tag-list">${s.tools.map(t=>`<li>${t}</li>`).join('')}</ul></div>
+          <div class="card"><h3>📦 Materials</h3><ul class="tag-list">${s.materials.map(m=>`<li>${m}</li>`).join('')}</ul></div>
+        </div>
+        <div class="procedure"><h3>Procedure</h3>
+          ${s.steps.map((txt,i)=>`<div class="step"><div class="step-num">${i+1}</div><div class="step-text">${txt}</div></div>`).join('')}
+        </div>
+        <div class="tips-box"><h4>💡 Pro-Tip</h4><p>${s.tips}</p></div>
+        <div class="track-box">
+          <strong>Interval:</strong> every ${s.intervalMiles.toLocaleString()} mi / ${s.intervalMonths} mo
+          <div class="due-line ${st.status}">
+            ${st.status==='overdue' ? 'OVERDUE now' : (st.milesRemaining>0 ? st.milesRemaining.toLocaleString()+' mi remaining' : 'Due now')}
+            ${st.dueDate ? ' · Due by ' + fmtDate(st.dueDate) : ''}
+            · Last done: ${st.lastMiles ? st.lastMiles.toLocaleString()+' mi' : '—'} ${st.lastDate ? '('+fmtDate(st.lastDate)+')' : ''}
+          </div>
+          <div class="track-row">
+            <label>Mileage at service<br><input type="number" id="in-${key}-miles" value="${rec.lastMiles||''}" placeholder="e.g. 152300"></label>
+            <label>Date completed<br><input type="date" id="in-${key}-date" value="${rec.lastDate||new Date().toISOString().slice(0,10)}"></label>
+            <button class="btn" data-log="${key}">Log Service</button>
+          </div>
+          <div class="track-row">
+            <label style="width:100%">Notes (parts used, torque, observations)<br><textarea id="in-${key}-notes" placeholder="Optional notes for this service event"></textarea></label>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="workspace ${vi===0?'active':''}" id="${v.id}">
+      <div class="service-tabs">${svcTabs}</div>
+      <div class="service-container">${svcContents}</div>
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('.s-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      const ws = tab.closest('.workspace');
+      ws.querySelectorAll('.s-tab').forEach(t=>t.classList.remove('active'));
+      ws.querySelectorAll('.service-content').forEach(c=>c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
+    });
+  });
+
+  container.querySelectorAll('[data-log]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.dataset.log;
+      const [vehicleId, serviceId] = key.split('::');
+      const vehicle = VEHICLES.find(v=>v.id===vehicleId);
+      const service = vehicle.services.find(s=>s.id===serviceId);
+      const miles = Number(document.getElementById('in-'+key+'-miles').value)||0;
+      const dateVal = document.getElementById('in-'+key+'-date').value || new Date().toISOString().slice(0,10);
+      const notes = document.getElementById('in-'+key+'-notes').value || '';
+
+      data.serviceState[key] = { lastMiles: miles, lastDate: dateVal };
+      data.history.push({
+        id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
+        vehicleId, vehicleName: vehicle.name, serviceId, serviceName: service.name,
+        miles, date: dateVal, notes, loggedAt: new Date().toISOString()
+      });
+      const currentOdo = (data.vehicles[vehicleId] && data.vehicles[vehicleId].odometer) || 0;
+      if(miles > currentOdo){
+        data.vehicles[vehicleId] = { odometer: miles, odometerDate: dateVal };
+      }
+      data.meta.lastUpdated = new Date().toISOString();
+      saveData();
+      showToast('Service logged to Work Log ✓');
+      refreshAll();
+    });
+  });
+}
+
+// ---------- Work Log ----------
+function populateLogFilter(){
+  const sel = document.getElementById('logFilterVehicle');
+  sel.innerHTML = '<option value="all">All Vehicles</option>' +
+    VEHICLES.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+}
+function renderLogTable(){
+  const filter = document.getElementById('logFilterVehicle').value;
+  const tbody = document.getElementById('logTableBody');
+  let rows = [...data.history].sort((a,b)=> new Date(b.date) - new Date(a.date) || new Date(b.loggedAt) - new Date(a.loggedAt));
+  if(filter !== 'all') rows = rows.filter(r=>r.vehicleId === filter);
+  if(rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="6" class="status-line">No service history logged yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r=>`
+    <tr>
+      <td>${fmtDate(new Date(r.date).getTime())}</td>
+      <td>${r.vehicleName}</td>
+      <td>${r.serviceName}</td>
+      <td>${r.miles.toLocaleString()} mi</td>
+      <td>${r.notes ? r.notes.replace(/</g,'&lt;') : '—'}</td>
+      <td><button class="btn danger" data-del-log="${r.id}" style="padding:.3rem .6rem;font-size:.75rem;">Delete</button></td>
+    </tr>`).join('');
+
+  tbody.querySelectorAll('[data-del-log]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      data.history = data.history.filter(r=>r.id !== btn.dataset.delLog);
+      saveData();
+      renderLogTable();
+      showToast('Entry deleted');
+    });
+  });
+}
+document.getElementById('logFilterVehicle')?.addEventListener('change', renderLogTable);
+document.getElementById('exportLogBtn').addEventListener('click', ()=>{
+  const rows = [['Date','Vehicle','Service','Mileage','Notes']];
+  data.history.forEach(r=> rows.push([r.date, r.vehicleName, r.serviceName, r.miles, (r.notes||'').replace(/\n/g,' ')]));
+  const csv = rows.map(r=> r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'garagehub-work-log.csv';
+  a.click();
+});
+
+// ---------- GitHub Sync ----------
+function populateSettingsForm(){
+  document.getElementById('ghOwner').value = ghSettings.owner || '';
+  document.getElementById('ghRepo').value = ghSettings.repo || '';
+  document.getElementById('ghBranch').value = ghSettings.branch || 'main';
+  document.getElementById('ghToken').value = ghSettings.token || '';
+}
+document.getElementById('saveSettingsBtn').addEventListener('click', ()=>{
+  ghSettings = {
+    owner: document.getElementById('ghOwner').value.trim(),
+    repo: document.getElementById('ghRepo').value.trim(),
+    branch: document.getElementById('ghBranch').value.trim() || 'main',
+    token: document.getElementById('ghToken').value.trim()
+  };
+  saveSettings(ghSettings);
+  showToast('Settings saved ✓');
+});
+
+function ghApiBase(){
+  return `https://api.github.com/repos/${ghSettings.owner}/${ghSettings.repo}/contents/data.json`;
+}
+
+async function pullFromGitHub(){
+  if(!ghSettings.owner || !ghSettings.repo){ showToast('Set GitHub owner/repo first'); return; }
+  const statusEl = document.getElementById('syncStatus');
+  statusEl.textContent = 'Pulling...';
+  try{
+    const url = `https://raw.githubusercontent.com/${ghSettings.owner}/${ghSettings.repo}/${ghSettings.branch||'main'}/data.json?t=${Date.now()}`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const remote = await res.json();
+    data = Object.assign(defaultData(), remote);
+    saveData();
+    refreshAll();
+    statusEl.textContent = 'Pulled latest data.json from GitHub at ' + new Date().toLocaleTimeString();
+    showToast('Pulled from GitHub ✓');
+  }catch(err){
+    statusEl.textContent = 'Pull failed: ' + err.message;
+    showToast('Pull failed — check repo/branch');
+  }
+}
+
+async function pushToGitHub(){
+  if(!ghSettings.owner || !ghSettings.repo || !ghSettings.token){
+    showToast('Fill in owner, repo, and token first'); return;
+  }
+  const statusEl = document.getElementById('syncStatus');
+  statusEl.textContent = 'Pushing...';
+  try{
+    let sha = null;
+    const getRes = await fetch(ghApiBase() + `?ref=${ghSettings.branch||'main'}`, {
+      headers: { 'Authorization': `Bearer ${ghSettings.token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if(getRes.ok){ const j = await getRes.json(); sha = j.sha; }
+    else if(getRes.status !== 404){ throw new Error('GET failed HTTP '+getRes.status); }
+
+    data.meta.lastUpdated = new Date().toISOString();
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+    const body = {
+      message: `Update data.json via GarageHub PWA (${new Date().toISOString()})`,
+      content,
+      branch: ghSettings.branch || 'main'
+    };
+    if(sha) body.sha = sha;
+
+    const putRes = await fetch(ghApiBase(), {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${ghSettings.token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if(!putRes.ok){ const errJ = await putRes.json().catch(()=>({})); throw new Error(errJ.message || 'PUT failed HTTP '+putRes.status); }
+    statusEl.textContent = 'Pushed to GitHub successfully at ' + new Date().toLocaleTimeString();
+    showToast('Saved to GitHub repo ✓');
+  }catch(err){
+    statusEl.textContent = 'Push failed: ' + err.message;
+    showToast('Push failed — check token/permissions');
+  }
+}
+
+document.getElementById('pullBtn').addEventListener('click', pullFromGitHub);
+document.getElementById('pushBtn').addEventListener('click', pushToGitHub);
+
+// ---------- Nav ----------
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.view).classList.add('active');
+    if(btn.dataset.view === 'logView') renderLogTable();
+  });
+});
+
+// ---------- Orchestration ----------
+function refreshAll(){
+  computeStatuses(statusResults=>{
+    const map = {};
+    statusResults.forEach(r=> map[r.vehicleId+'::'+r.serviceId] = r);
+    renderDashboard(map);
+    renderWorkspaces(map);
+  });
+  renderOdoPanel();
+}
+
+renderVehicleTabs();
+populateLogFilter();
+populateSettingsForm();
+refreshAll();
+
+// iOS install banner
+if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone){
+  // already installed
+} else if(/iphone|ipad|ipod/i.test(navigator.userAgent)){
+  document.getElementById('installBanner').style.display = 'flex';
+}
+
+// Service Worker registration
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(err=>console.warn('SW registration failed', err));
+  });
+}
+</script>
 </body>
 </html>
