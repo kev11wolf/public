@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Enterprise Presentation Gantt Workspace Suite</title>
-    
-    
-    <!-- SheetJS Library for reading Excel files -->
-      <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="theme-color" content="#2563eb">
-<script src="xlsx.full.min.js"></script>
+
+    <!-- Add these two lines: they stop the favicon 404 in DevTools -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <script src="xlsx.full.min.js"></script>
     
     
     <style>
@@ -158,8 +157,51 @@
 #tab-layout .bottom-card { border-left-color: #7c3aed; }
 #tab-colors .bottom-card { border-left-color: var(--success); }
 #tab-files .archive-tools { border-left: 3px solid var(--info); }
-        .radio-group { display: flex; gap: 10px; margin-top: 5px; background: #ffffff; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; flex-wrap: wrap; }
-        .radio-option { display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 12px; font-weight: 500; }
+       /* Sleek pill-style segmented control — replaces plain radio dots */
+.radio-group {
+    display: flex;
+    gap: 0;
+    margin-top: 6px;
+    background: var(--bg-subtle);
+    padding: 3px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+.radio-group.vertical-stack { flex-direction: column; gap: 4px; background: transparent; padding: 0; border: none; }
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    flex: 1;
+    padding: 7px 12px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.radio-option:hover { background: #eef2f7; color: var(--text-dark); }
+
+/* Hide the native dot; the whole pill becomes the "selected" indicator */
+.radio-option input[type="radio"] { appearance: none; width: 0; height: 0; margin: 0; position: absolute; opacity: 0; }
+.radio-option:has(input:checked) {
+    background: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(37,99,235,0.4);
+}
+
+/* Vertical variant keeps a visible dot since it's a checklist, not a switcher */
+.radio-group.vertical-stack .radio-option {
+    flex: none; justify-content: flex-start; background: #ffffff;
+    border: 1px solid var(--border-color); padding: 8px 10px;
+}
+.radio-group.vertical-stack .radio-option input[type="radio"] { position: static; width: 14px; height: 14px; opacity: 1; }
+.radio-group.vertical-stack .radio-option:has(input:checked) { background: #eff6ff; color: var(--primary); border-color: var(--primary); }
 
         /* Sidebar Tabs UI CSS */
         .sidebar-tabs {
@@ -275,6 +317,41 @@
     .zoom-viewport-mask { border: none; overflow: visible; }
     body { overflow: visible; background: #ffffff; }
 }
+
+
+.dialog-backdrop {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.35);
+    z-index: 9999; backdrop-filter: blur(1px);
+}
+.floating-date-dialog { z-index: 10000; }
+.dialog-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;
+}
+.dialog-header h4 { margin: 0; font-size: 14px; color: #1e3a8a; }
+.dialog-close-x {
+    background: none; border: none; font-size: 20px; line-height: 1;
+    cursor: pointer; color: #94a3b8; padding: 0 4px;
+}
+.dialog-close-x:hover { color: #1e293b; }
+.checkbox-label { display: flex; align-items: center; gap: 6px; font-weight: 500; cursor: pointer; }
+.dialog-save-btn { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 700; }
+.dialog-cancel-btn { background: #f1f5f9; color: #475569; }
+.dialog-danger-btn { background: #fff1f2; color: var(--danger); border-color: #fca5a5; font-weight: 700; }
+
+.field-hint { margin: 2px 0 6px 0; font-size: 10px; color: var(--text-muted); font-weight: 400; }
+
+.btn-cluster { display: flex; gap: 2px; border: 1px solid var(--border-color); border-radius: 6px; padding: 2px; background: #f8fafc; }
+.btn-cluster .utility-btn { border: none; background: transparent; box-shadow: none; }
+.btn-cluster .utility-btn:hover { background: #ffffff; }
+.btn-spacer { flex: 1; }
+.macro-btn-row { display: flex; gap: 6px; margin-top: 4px; }
+.macro-btn {
+    flex: 1; background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe;
+    padding: 8px 10px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer;
+    transition: background 0.15s ease;
+}
+.macro-btn:hover { background: #dbeafe; }
     </style>
 </head>
 <body>
@@ -283,19 +360,24 @@
     
   <div class="sidebar" id="appSidebar">
             <!-- Modified Header to stack title/actions and file matrix -->
-            <div class="sidebar-header" style="flex-direction: column; align-items: stretch; gap: 12px; padding-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h1>Gantt Presentation Suite</h1>
-                                        <div class="action-bar">
-                        <button class="utility-btn" onclick="toggleWorkspaceHelpModal(event)" style="background: #f0fdf4; color: #166534; border-color: #bbf7d0;">💡 Tips</button>
-                                                <button class="utility-btn" id="undoBtn" onclick="executeUndoAction()" title="Undo Step (Ctrl+Z)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg> Undo
-                        </button>
-                        <button class="utility-btn" id="redoBtn" onclick="executeRedoAction()" title="Redo Step (Ctrl+Y)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/></svg> Redo
-                        </button>
-                        <button class="reset-btn" onclick="clearAllStoredData()">Reset</button>
-                    </div>
+            <div class="action-bar">
+    <!-- Group 1: safe, reversible actions -->
+    <div class="btn-cluster">
+        <button class="utility-btn" id="undoBtn" onclick="executeUndoAction()" title="Undo Step (Ctrl+Z)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg> Undo
+        </button>
+        <button class="utility-btn" id="redoBtn" onclick="executeRedoAction()" title="Redo Step (Ctrl+Y)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/></svg> Redo
+        </button>
+    </div>
+
+    <!-- Group 2: help, always available, neutral -->
+    <button class="utility-btn" onclick="toggleWorkspaceHelpModal(event)" style="background: #f0fdf4; color: #166534; border-color: #bbf7d0;">💡 Tips</button>
+
+    <!-- Separated + pushed right: destructive action gets breathing room -->
+    <div class="btn-spacer"></div>
+    <button class="reset-btn" onclick="clearAllStoredData()" title="Erase everything and start over">🗑 Reset</button>
+</div>
                 </div>
 
                 <div id="unsavedIndicator" style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:#166534; background:#f0fdf4; border:1px solid #bbf7d0; padding:4px 10px; border-radius:6px;">
@@ -358,19 +440,34 @@
                     <div class="bottom-card">
                         <div class="control-grid" style="grid-template-columns: 1fr; gap: 15px;">
                             <div class="control-item">
-                                <label>Scope Calculation Engine</label>
-                                <div class="radio-group">
-                                    <label class="radio-option"><input type="radio" name="rangeMode" value="auto" onchange="handleRangeModeChange(this.value)"> Auto</label>
-                                    <label class="radio-option"><input type="radio" name="rangeMode" value="manual" checked onchange="handleRangeModeChange(this.value)"> Manual Custom</label>
-                                </div>
-                            </div>
-                            <div class="control-item">
-                                <label>Sizing Model Strategy</label>
-                                <div class="radio-group">
-                                    <label class="radio-option"><input type="radio" name="sizingMode" value="fixed" checked onchange="recordStateChange(); updateChart();"> Fixed Pixel Width</label>
-                                                                        <label class="radio-option"><input type="radio" name="sizingMode" value="ticker-tape" title="Chart automatically stretches to fill the visible browser width instead of using a fixed pixel size" onchange="recordStateChange(); updateChart();"> Ticker-Tape Screen Fit</label>
-                                </div>
-                            </div>
+    <label>Timeline date range</label>
+    <p class="field-hint">How the chart decides its start/end dates</p>
+    <div class="radio-group">
+        <label class="radio-option">
+            <input type="radio" name="rangeMode" value="auto" onchange="handleRangeModeChange(this.value)">
+            Auto-fit to data
+        </label>
+        <label class="radio-option">
+            <input type="radio" name="rangeMode" value="manual" checked onchange="handleRangeModeChange(this.value)">
+            Set dates manually
+        </label>
+    </div>
+</div>
+
+<div class="control-item">
+    <label>Chart width</label>
+    <p class="field-hint">Controls how the canvas sizes itself on screen</p>
+    <div class="radio-group">
+        <label class="radio-option">
+            <input type="radio" name="sizingMode" value="fixed" checked onchange="recordStateChange(); updateChart();">
+            Fixed width (px)
+        </label>
+        <label class="radio-option" title="Chart automatically stretches to fill the visible browser width instead of using a fixed pixel size">
+            <input type="radio" name="sizingMode" value="ticker-tape" onchange="recordStateChange(); updateChart();">
+            Fit to browser
+        </label>
+    </div>
+</div>
                             
                             <div id="manualDateFieldsRow" style="display: flex; flex-direction: column; gap: 10px; margin-top:5px;">
                                 <div class="control-item">
@@ -390,13 +487,14 @@
                             </div>
 
                             <div class="control-item">
-                                <label>Quick-Focus Macro Horizons</label>
-                                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
-                                    <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3m')">3 Months</button>
-                                    <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('1y')">1 Year</button>
-                                    <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3y')">3 Years</button>
-                                </div>
-                            </div>
+    <label>Jump to a preset date range</label>
+    <p class="field-hint">Instantly sets start/end dates and header detail level</p>
+    <div class="macro-btn-row">
+        <button type="button" class="macro-btn" onclick="applyDateHorizonMacro('3m')">3 Months</button>
+        <button type="button" class="macro-btn" onclick="applyDateHorizonMacro('1y')">1 Year</button>
+        <button type="button" class="macro-btn" onclick="applyDateHorizonMacro('3y')">3 Years</button>
+    </div>
+</div>
 
                             <div class="control-item">
                                 <label>Live Workspace View Zoom</label>
@@ -509,12 +607,19 @@
 
                         <div class="control-grid" style="grid-template-columns: 1fr; gap: 10px; margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
                             <div class="control-item">
-                                <label>Vertical Today Tracker Line</label>
-                                <div class="radio-group">
-                                    <label class="radio-option"><input type="radio" name="todayLineToggle" value="show" checked onchange="recordStateChange(); updateChart();"> Visible</label>
-                                    <label class="radio-option"><input type="radio" name="todayLineToggle" value="hide" onchange="recordStateChange(); updateChart();"> Hidden</label>
-                                </div>
-                            </div>
+    <label>"Today" marker line</label>
+    <p class="field-hint">Vertical line showing the current date on the chart</p>
+    <div class="radio-group">
+        <label class="radio-option">
+            <input type="radio" name="todayLineToggle" value="show" checked onchange="recordStateChange(); updateChart();">
+            Show line
+        </label>
+        <label class="radio-option">
+            <input type="radio" name="todayLineToggle" value="hide" onchange="recordStateChange(); updateChart();">
+            Hide line
+        </label>
+    </div>
+</div>
                             <div class="control-item">
                                 <label>Grid Settings</label>
                                 <div style="display: flex; gap: 15px; margin-top: 5px;">
@@ -1856,29 +1961,71 @@ function migrateSnapshotIfNeeded(state) {
         }).join('');
     }
 
-    function editTrackerPropertiesModalDirect(e, id) {
-        e.stopPropagation();
-        let trk = customTrackers.find(t => t.id === id); if(!trk) return;
+    // One reusable, accessible modal shell for ALL double-click dialogs
+function openWorkspaceDialog({ id, title, bodyHTML, anchorX, anchorY, width = 340, onSave, onDelete, deleteLabel = 'Delete' }) {
+    closeAnyOpenDialog(); // ensures only one modal exists at a time
 
-        let existing = document.getElementById('floatingTrackerDialog'); if(existing) existing.remove();
-        let dialog = document.createElement('div');
-        dialog.id = 'floatingTrackerDialog'; dialog.className = 'floating-date-dialog';
-        
-        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 340)}px`;
-        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 260)}px`;
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    backdrop.id = 'activeDialogBackdrop';
+    backdrop.onclick = () => closeAnyOpenDialog();
 
-        dialog.innerHTML = `
-            <h4>Customize Tracker Line Properties</h4>
-            <div class="modal-row">
-                <div class="modal-field"><label>Description Name</label><input type="text" id="modTrkLabel" value="${trk.label}"></div>
+    const dialog = document.createElement('div');
+    dialog.id = id;
+    dialog.className = 'floating-date-dialog';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.style.width = `${width}px`;
+    dialog.style.left = `${Math.max(10, Math.min(anchorX, window.innerWidth - width - 10))}px`;
+    dialog.style.top = `${Math.max(10, Math.min(anchorY, window.innerHeight - 300))}px`;
+
+    dialog.innerHTML = `
+        <div class="dialog-header">
+            <h4>${title}</h4>
+            <button class="dialog-close-x" aria-label="Close" onclick="closeAnyOpenDialog()">&times;</button>
+        </div>
+        <div class="dialog-body">${bodyHTML}</div>
+        <div class="modal-actions">
+            ${onDelete ? `<button class="dialog-danger-btn" id="dlgDeleteBtn">${deleteLabel}</button>` : '<span></span>'}
+            <div style="display:flex; gap:6px;">
+                <button class="dialog-cancel-btn" onclick="closeAnyOpenDialog()">Cancel</button>
+                <button class="dialog-save-btn" id="dlgSaveBtn">Save Changes</button>
             </div>
-            <div class="modal-row">
-                <div class="modal-field"><label>Target Date Vector</label><input type="date" id="modTrkDate" value="${convertDDMMMYYYYToYYYYMMDD(trk.date)}"></div>
-            </div>
+        </div>
+    `;
+
+    document.body.append(backdrop, dialog);
+    document.getElementById('dlgSaveBtn').onclick = () => { onSave(dialog); closeAnyOpenDialog(); };
+    if (onDelete) document.getElementById('dlgDeleteBtn').onclick = () => onDelete(dialog);
+
+    dialog.querySelector('input, select')?.focus();
+    document.addEventListener('keydown', dialogEscHandler);
+}
+
+function dialogEscHandler(e) { if (e.key === 'Escape') closeAnyOpenDialog(); }
+
+function closeAnyOpenDialog() {
+    document.querySelectorAll('.floating-date-dialog, .dialog-backdrop').forEach(el => el.remove());
+    document.removeEventListener('keydown', dialogEscHandler);
+}
+
+// Now the tracker-line edit function becomes short and clear:
+function editTrackerPropertiesModalDirect(e, id) {
+    e.stopPropagation();
+    const trk = customTrackers.find(t => t.id === id);
+    if (!trk) return;
+
+    openWorkspaceDialog({
+        id: 'floatingTrackerDialog',
+        title: '📏 Tracker Line Settings',
+        anchorX: e.clientX,
+        anchorY: e.clientY,
+        bodyHTML: `
+            <div class="modal-field"><label>Line Label</label><input type="text" id="modTrkLabel" value="${trk.label}"></div>
+            <div class="modal-field"><label>Target Date</label><input type="date" id="modTrkDate" value="${convertDDMMMYYYYToYYYYMMDD(trk.date)}"></div>
             <div class="modal-row">
                 <div class="modal-field"><label>Line Color</label><input type="color" id="modTrkColor" value="${trk.color || '#10b981'}"></div>
-                <div class="modal-field">
-                    <label>Stroke Pattern</label>
+                <div class="modal-field"><label>Line Style</label>
                     <select id="modTrkPattern">
                         <option value="solid" ${trk.pattern === 'solid' ? 'selected' : ''}>Solid</option>
                         <option value="dashed" ${trk.pattern === 'dashed' ? 'selected' : ''}>Dashed</option>
@@ -1886,26 +2033,19 @@ function migrateSnapshotIfNeeded(state) {
                     </select>
                 </div>
             </div>
-            <div class="modal-row">
-                <div class="modal-field"><label>Thickness Weight (px)</label><input type="number" min="1" max="10" id="modTrkThickness" value="${trk.thickness || 2}"></div>
-            </div>
-            <div class="modal-actions">
-                <button id="modTrkCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
-                <button id="modTrkSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply Style</button>
-            </div>
-        `;
-        document.body.appendChild(dialog);
-        document.getElementById('modTrkCancelBtn').addEventListener('click', () => dialog.remove());
-        document.getElementById('modTrkSaveBtn').addEventListener('click', function() {
-            trk.label = document.getElementById('modTrkLabel').value;
-            let dVal = document.getElementById('modTrkDate').value;
-            if(dVal) trk.date = formatDateToDDMMMYYYY(new Date(dVal + "T00:00:00"));
+            <div class="modal-field"><label>Line Thickness (px)</label><input type="number" min="1" max="10" id="modTrkThickness" value="${trk.thickness || 2}"></div>
+        `,
+        onSave: () => {
+            trk.label = document.getElementById('modTrkLabel').value.trim() || 'Tracker Line';
+            const dVal = document.getElementById('modTrkDate').value;
+            if (dVal) trk.date = formatDateToDDMMMYYYY(new Date(dVal + "T00:00:00"));
             trk.color = document.getElementById('modTrkColor').value;
             trk.pattern = document.getElementById('modTrkPattern').value;
             trk.thickness = parseInt(document.getElementById('modTrkThickness').value) || 2;
-            recordStateChange(); populateTrackerDashboardMatrix(); updateChart(); dialog.remove();
-        });
-    }
+            recordStateChange(); populateTrackerDashboardMatrix(); updateChart();
+        }
+    });
+}
 
     // ==========================================
     // INTERACTIVE WORKSPACE CONTEXT MENU HANDLERS
@@ -2072,7 +2212,12 @@ function migrateSnapshotIfNeeded(state) {
                         <option value="vertical-bar" ${currentSymbol === 'vertical-bar' ? 'selected' : ''}>Vertical Bar</option>
                     </select>
                 </div>
-                <div class="modal-field"><label>Override Check</label><label style="font-size:11px; margin-top:6px;"><input type="checkbox" id="modalMsOverrideColor" ${isOverridden?'checked':''}> Custom Color</label></div>
+                <div class="modal-field">
+  <label class="checkbox-label">
+    <input type="checkbox" id="modalMsOverrideColor">
+    Use a custom color for this milestone
+  </label>
+</div>
                 <div class="modal-field"><label>Color Picker</label><input type="color" id="modalMsColor" value="${currentMsColor}"></div>
             </div>
             <h4 style="margin-top:10px; font-size:11px;">Milestone Traceable Leader Lines</h4>
