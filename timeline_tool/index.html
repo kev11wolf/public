@@ -268,6 +268,14 @@
     .zoom-viewport-mask { border: none; overflow: visible; }
     body { overflow: visible; background: #ffffff; }
 }
+
+/* NEW: Unique cursor per element type so hover tells you what double-click does */
+.bar-rect { cursor: pointer !important; }
+.ms-shape { cursor: cell !important; }
+.tracker-line-hitbox { cursor: ns-resize !important; }
+.draggable-callout { cursor: text !important; }
+.draggable-leader { cursor: crosshair !important; }
+
     </style>
 </head>
 <body>
@@ -561,10 +569,7 @@
             </h2>
             
             <div class="zoom-viewport-mask">
-                <div class="canvas-holder" id="svgContainer"
-                     onmousemove="handleGlobalDragMove(event)"
-                     onmouseup="stopGlobalDragAction(event)"
-                     onmouseleave="stopGlobalDragAction(event)">
+                <div class="canvas-holder" id="svgContainer" onmousemove="handleGlobalDragMove(event); updateTimelineCrosshair(event)" onmouseup="stopGlobalDragAction(event)" onmouseleave="stopGlobalDragAction(event); hideTimelineCrosshair()">
                 </div>
             </div>
             
@@ -615,6 +620,52 @@ let nextRowId = 4;
     let manualBoundaryMax = "09Aug2028";
     
         let activeContextState = null;
+
+// === NEW: Smart Popup Positioner (prevents all popups from clipping off screen) ===
+function positionFloatingDialogSmart(dialog, e) {
+  dialog.style.visibility = 'hidden';
+  document.body.appendChild(dialog);
+
+  const rect = dialog.getBoundingClientRect();
+  const padding = 12;
+  let left = e.clientX;
+  let top = e.clientY;
+
+  if (left + rect.width + padding > window.innerWidth) {
+    left = window.innerWidth - rect.width - padding;
+  }
+  if (left < padding) left = padding;
+
+  if (top + rect.height + padding > window.innerHeight) {
+    top = e.clientY - rect.height - padding;
+    if (top < padding) top = padding;
+  }
+
+  dialog.style.left = left + 'px';
+  dialog.style.top = top + 'px';
+  dialog.style.visibility = 'visible';
+}
+
+// === NEW: Shared Modal Shell (makes Milestone and Bar editors look identical) ===
+function buildStandardModal(dialogId, titleText, bodyHTML, buttonsHTML) {
+  let existing = document.getElementById(dialogId);
+  if (existing) existing.remove();
+
+  let dialog = document.createElement('div');
+  dialog.id = dialogId;
+  dialog.className = 'floating-date-dialog';
+  dialog.style.width = '340px';
+  dialog.innerHTML = `
+    <h4 style="margin:0 0 12px 0; font-size:13px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">${titleText}</h4>
+    <div class="standard-modal-body" style="display:flex; flex-direction:column; gap:10px;">
+      ${bodyHTML}
+    </div>
+    <div class="standard-modal-actions" style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:10px; border-top:1px solid #e2e8f0;">
+      ${buttonsHTML}
+    </div>
+  `;
+  return dialog;
+}
 
    function markUnsavedState() {
     const dot = document.getElementById('saveStatusDot');
@@ -1135,6 +1186,69 @@ function normalizeDateString(val) {
             updateChart();
         }
     }
+
+// === NEW: Vertical Crosshair showing the date under the mouse ===
+function updateTimelineCrosshair(e) {
+  if (scaleMinTime === null) return;
+  const container = document.getElementById('svgContainer');
+  const svgEl = container.querySelector('svg');
+  if (!svgEl) return;
+
+  const rect = container.getBoundingClientRect();
+  const activeScaleFactor = parseFloat(document.getElementById('workspaceZoom').value) || 1.0;
+  const mouseX = (e.clientX - rect.left) / activeScaleFactor;
+
+  if (mouseX < scaleMarginLeft || mouseX > scaleMarginLeft + scaleChartWidth) {
+    hideTimelineCrosshair();
+    return;
+  }
+
+  const totalDuration = scaleMaxTime - scaleMinTime;
+  let evaluatedTime = scaleMinTime + ((mouseX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
+  evaluatedTime = Math.max(scaleMinTime, Math.min(scaleMaxTime, evaluatedTime));
+  const dateLabel = formatDateToDDMMMYYYY(new Date(evaluatedTime));
+
+  let line = document.getElementById('timelineCrosshairLine');
+  let badge = document.getElementById('timelineCrosshairBadge');
+  const svgHeight = parseInt(svgEl.getAttribute('height')) || 600;
+
+  if (!line) {
+    line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.id = 'timelineCrosshairLine';
+    line.setAttribute('stroke', '#0369a1');
+    line.setAttribute('stroke-width', '1');
+    line.setAttribute('stroke-dasharray', '4,3');
+    line.style.pointerEvents = 'none';
+    svgEl.appendChild(line);
+  }
+  line.setAttribute('x1', mouseX);
+  line.setAttribute('x2', mouseX);
+  line.setAttribute('y1', 0);
+  line.setAttribute('y2', svgHeight);
+  line.style.display = 'block';
+
+  if (!badge) {
+    badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    badge.id = 'timelineCrosshairBadge';
+    badge.setAttribute('fill', '#0369a1');
+    badge.setAttribute('font-size', '11');
+    badge.setAttribute('font-weight', 'bold');
+    badge.style.pointerEvents = 'none';
+    svgEl.appendChild(badge);
+  }
+  const badgeX = Math.min(mouseX + 4, scaleMarginLeft + scaleChartWidth - 70);
+  badge.setAttribute('x', badgeX);
+  badge.setAttribute('y', 14);
+  badge.textContent = dateLabel;
+  badge.style.display = 'block';
+}
+
+function hideTimelineCrosshair() {
+  const line = document.getElementById('timelineCrosshairLine');
+  const badge = document.getElementById('timelineCrosshairBadge');
+  if (line) line.style.display = 'none';
+  if (badge) badge.style.display = 'none';
+}
 
 function stopGlobalDragAction(e) {
         if (!activeDragState) return;
@@ -1719,8 +1833,7 @@ function migrateSnapshotIfNeeded(state) {
         let dialog = document.createElement('div');
         dialog.id = 'floatingRowLabelDialog'; 
         dialog.className = 'floating-date-dialog';
-        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 280)}px`;
-        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 150)}px`;
+        positionFloatingDialogSmart(dialog, e);
 
         dialog.innerHTML = `
             <h4>Row Label Settings</h4>
@@ -1857,8 +1970,7 @@ function migrateSnapshotIfNeeded(state) {
         let dialog = document.createElement('div');
         dialog.id = 'floatingTrackerDialog'; dialog.className = 'floating-date-dialog';
         
-        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 340)}px`;
-        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 260)}px`;
+        positionFloatingDialogSmart(dialog, e);
 
         dialog.innerHTML = `
             <h4>Customize Tracker Line Properties</h4>
@@ -1999,8 +2111,7 @@ function migrateSnapshotIfNeeded(state) {
 
         let dialog = document.createElement('div');
         dialog.id = 'floatingLaneSummaryDialog'; dialog.className = 'floating-date-dialog';
-        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 280)}px`;
-        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 180)}px`;
+        positionFloatingDialogSmart(dialog, e);
 
         let globalSummaryColor = document.getElementById('summaryColor').value;
         let currentSummaryColor = lane.summaryColor || globalSummaryColor;
@@ -2024,98 +2135,66 @@ function migrateSnapshotIfNeeded(state) {
     }
 
     function editMilestoneDateDirectlyGlobal(e, rowId, msId) {
-        e.stopPropagation();
-        let row = findRowGlobally(rowId); if (!row) return;
-        let ms = row.milestones.find(m => m.id === msId); if (!ms) return;
+    e.stopPropagation();
+    let row = findRowGlobally(rowId); if (!row) return;
+    let ms = row.milestones.find(m => m.id === msId); if (!ms) return;
 
-        let existingDialog = document.getElementById('floatingMilestoneDialog');
-        if (existingDialog) existingDialog.remove();
+    let existingDialog = document.getElementById('floatingMilestoneDialog');
+    if (existingDialog) existingDialog.remove();
 
-        let dialog = document.createElement('div');
-        dialog.id = 'floatingMilestoneDialog'; 
-        dialog.className = 'floating-date-dialog';
-        dialog.style.width = "350px";
-        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 370)}px`;
-        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 420)}px`;
+    let bodyHTML = `
+      <div class="modal-field"><label>Label</label><input type="text" id="modalMsLabel" value="${ms.label || ''}"></div>
+      <div class="modal-field"><label>Date</label><input type="date" id="modalMsDatePicker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}"></div>
+      <div class="modal-field"><label>Symbol</label>
+        <select id="modalMsSymbol">
+          <option value="diamond" ${ms.symbol==='diamond'?'selected':''}>Diamond</option>
+          <option value="circle" ${ms.symbol==='circle'?'selected':''}>Circle</option>
+          <option value="triangle" ${ms.symbol==='triangle'?'selected':''}>Triangle</option>
+          <option value="star" ${ms.symbol==='star'?'selected':''}>Star</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label><input type="checkbox" id="modalMsOverrideColor" ${ms.color?'checked':''}> Override Color</label>
+        <input type="color" id="modalMsColor" value="${ms.color || document.getElementById('msColor').value}">
+      </div>
+      <div class="modal-field"><label><input type="checkbox" id="modalMsLdrText" ${ms.leaderEnabledText?'checked':''}> Leader to Text</label></div>
+      <div class="modal-field"><label><input type="checkbox" id="modalMsLdrDate" ${ms.leaderEnabledDate?'checked':''}> Leader to Date</label></div>
+      <div class="modal-field"><label>Leader Anchor</label>
+        <select id="modalMsLdrAnchor">
+          <option value="center" ${ms.leaderAnchorText==='center'?'selected':''}>Center</option>
+          <option value="top" ${ms.leaderAnchorText==='top'?'selected':''}>Top</option>
+          <option value="bottom" ${ms.leaderAnchorText==='bottom'?'selected':''}>Bottom</option>
+        </select>
+      </div>
+      <div class="modal-field"><label>Leader Weight</label><input type="number" id="modalMsLdrWeight" min="1" max="10" value="${ms.leaderWeight || 1}"></div>
+      <div class="modal-field"><label>Leader Pattern</label>
+        <select id="modalMsLdrPattern">
+          <option value="solid" ${ms.leaderPattern==='solid'?'selected':''}>Solid</option>
+          <option value="dashed" ${ms.leaderPattern==='dashed'?'selected':''}>Dashed</option>
+          <option value="dotted" ${ms.leaderPattern==='dotted'?'selected':''}>Dotted</option>
+        </select>
+      </div>
+      <div class="modal-field"><label>Show Date</label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="modalMsShowDate" value="true" ${ms.showDate!==false?'checked':''}> Yes</label>
+          <label class="radio-option"><input type="radio" name="modalMsShowDate" value="false" ${ms.showDate===false?'checked':''}> No</label>
+        </div>
+      </div>
+    `;
 
-        let currentMsColor = ms.color || document.getElementById('msColor').value;
-        let isOverridden = !!ms.color;
-        let currentSymbol = ms.symbol || 'diamond';
+    let buttonsHTML = `
+      <div style="display:flex; gap:6px;">
+        <button id="modalMsDeleteBtn" style="background:#fff1f2; color:#e11d48; border-color:#fca5a5; font-weight:bold;">Delete</button>
+        <button id="modalMsResetPosBtn" style="background:#f1f5f9; color:#475569;">Reset Position</button>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button id="modalMsCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
+        <button id="modalMsSaveBtn" style="background:var(--primary); color:#fff; border-color:var(--primary);">Apply</button>
+      </div>
+    `;
 
-        dialog.innerHTML = `
-            <h4>Modify Milestone Properties & Style</h4>
-            <div class="modal-row">
-                <div class="modal-field">
-                    <label>Milestone Title / Name Label</label>
-                    <input type="text" id="modalMsLabel" value="${ms.label}">
-                </div>
-            </div>
-            <div class="modal-row">
-                <div class="modal-field">
-                    <label>Select Target Date</label>
-                    <input type="date" id="modalMsDatePicker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}">
-                </div>
-            </div>
-            <div class="modal-row">
-                <div class="modal-field"><label>Shape Symbol</label>
-                    <select id="modalMsSymbol">
-                        <option value="diamond" ${currentSymbol === 'diamond' ? 'selected' : ''}>Diamond</option>
-                        <option value="circle" ${currentSymbol === 'circle' ? 'selected' : ''}>Circle</option>
-                        <option value="triangle" ${currentSymbol === 'triangle' ? 'selected' : ''}>Triangle</option>
-                        <option value="vertical-bar" ${currentSymbol === 'vertical-bar' ? 'selected' : ''}>Vertical Bar</option>
-                    </select>
-                </div>
-                <div class="modal-field"><label>Override Check</label><label style="font-size:11px; margin-top:6px;"><input type="checkbox" id="modalMsOverrideColor" ${isOverridden?'checked':''}> Custom Color</label></div>
-                <div class="modal-field"><label>Color Picker</label><input type="color" id="modalMsColor" value="${currentMsColor}"></div>
-            </div>
-            <h4 style="margin-top:10px; font-size:11px;">Milestone Traceable Leader Lines</h4>
-            <div class="modal-row">
-                <div class="modal-field"><label><input type="checkbox" id="modalMsLdrText" ${ms.leaderEnabledText?'checked':''}> Draw Title Leader</label></div>
-                <div class="modal-field"><label><input type="checkbox" id="modalMsLdrDate" ${ms.leaderEnabledDate?'checked':''}> Draw Date Leader</label></div>
-            </div>
-            <div class="modal-row">
-                <div class="modal-field">
-                    <label>Display Date Label on Chart?</label>
-                    <div style="display: flex; gap: 15px; margin-top: 4px;">
-                        <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                            <input type="radio" name="modalMsShowDate" value="true" ${ms.showDate ? 'checked' : ''} style="width:auto;"> Yes
-                        </label>
-                        <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                            <input type="radio" name="modalMsShowDate" value="false" ${!ms.showDate ? 'checked' : ''} style="width:auto;"> No
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-row">
-                <div class="modal-field"><label>Text Line Attachment</label>
-                    <select id="modalMsLdrAnchor">
-                        <option value="left" ${ms.leaderAnchorText==='left'?'selected':''}>Left Side of Label</option>
-                        <option value="center" ${(ms.leaderAnchorText==='center' || !ms.leaderAnchorText)?'selected':''}>Center of Label</option>
-                        <option value="right" ${ms.leaderAnchorText==='right'?'selected':''}>Right Side of Label</option>
-                        <option value="custom" ${ms.leaderAnchorText==='custom'?'selected':''}>Custom (Draggable End)</option>
-                    </select>
-                </div>
-                <div class="modal-field"><label>Stroke Weight</label><input type="number" min="1" max="5" id="modalMsLdrWeight" value="${ms.leaderWeight || 1}"></div>
-                <div class="modal-field"><label>Stroke Pattern</label>
-                    <select id="modalMsLdrPattern">
-                        <option value="solid" ${ms.leaderPattern==='solid'?'selected':''}>Solid</option>
-                        <option value="dashed" ${ms.leaderPattern==='dashed'?'selected':''}>Dashed</option>
-                        <option value="dotted" ${ms.leaderPattern==='dotted'?'selected':''}>Dotted</option>
-                    </select>
-                </div>
-            </div>
-<div class="modal-actions">
-                <div style="display:flex; gap:6px;">
-                    <button id="modalMsDeleteBtn" style="background:#fff1f2; color:var(--danger); border-color:#fca5a5; font-weight:bold;">Delete Milestone</button>
-                    <button id="modalMsResetPosBtn" style="background:#f1f5f9; color:#475569;">Reset Positions</button>
-                </div>
-                <div style="display:flex; gap:6px;">
-                    <button id="modalMsCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
-                    <button id="modalMsSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply</button>
-                </div>
-            </div>
-        `;
-
+    let dialog = buildStandardModal('floatingMilestoneDialog', 'Milestone Settings', bodyHTML, buttonsHTML);
+    positionFloatingDialogSmart(dialog, e);
         document.body.appendChild(dialog);
         document.getElementById('modalMsCancelBtn').addEventListener('click', () => dialog.remove());
         
@@ -2177,47 +2256,36 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
         let existingDialog = document.getElementById('floatingBarDateDialog');
         if (existingDialog) existingDialog.remove();
 
-        let dialog = document.createElement('div');
-        dialog.id = 'floatingBarDateDialog'; dialog.className = 'floating-date-dialog';
-        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 360)}px`;
-        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 280)}px`;
+        let bodyHTML = `
+  <div class="modal-field"><label>Start Date</label><input type="date" id="modalStartPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}"></div>
+  <div class="modal-field"><label>Finish Date</label><input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}"></div>
+  <div class="modal-field"><label>Unfilled Color</label><input type="color" id="modalBarBgColor" value="${bar.bgColor || document.getElementById('barBgColor').value}"></div>
+  <div class="modal-field"><label>Progress Fill Color</label><input type="color" id="modalBarColor" value="${bar.color || document.getElementById('barColor').value}"></div>
+  <div class="modal-field"><label>Fill Pattern</label>
+    <select id="modalBarPattern">
+      <option value="solid" ${bar.pattern==='solid'?'selected':''}>Solid</option>
+      <option value="crosshatch" ${bar.pattern==='crosshatch'?'selected':''}>Cross Hatch</option>
+      <option value="grid" ${bar.pattern==='grid'?'selected':''}>Grid</option>
+      <option value="dashed" ${bar.pattern==='dashed'?'selected':''}>Dashed</option>
+      <option value="gingham" ${bar.pattern==='gingham'?'selected':''}>Gingham</option>
+    </select>
+  </div>
+`;
 
-        let currentBgColor = bar.bgColor || document.getElementById('barBgColor').value;
-        let currentColor = bar.color || document.getElementById('barColor').value;
-        let currentPattern = bar.pattern || 'solid';
+let buttonsHTML = `
+  <div style="display:flex; gap:6px;">
+    <button id="modalBarDeleteBtn" style="background:#fff1f2; color:#e11d48; border-color:#fca5a5; font-weight:bold;">Delete</button>
+  </div>
+  <div style="display:flex; gap:6px;">
+    <button id="modalCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
+    <button id="modalSaveBtn" style="background:var(--primary); color:#fff; border-color:var(--primary);">Apply</button>
+  </div>
+`;
 
-        dialog.innerHTML = `
-            <h4>Modify Activity Bounds & Patterns</h4>
-            <div class="modal-row">
-                <div class="modal-field"><label>Select Start Date</label><input type="date" id="modalStartPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}"></div>
-                <div class="modal-field"><label>Select Finish Date</label><input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}"></div>
-            </div>
-            <div class="modal-row">
-                <div class="modal-field"><label>Unfilled Bar Color</label><input type="color" id="modalBarBgColor" value="${currentBgColor}"></div>
-                <div class="modal-field"><label>Progress Fill Color</label><input type="color" id="modalBarColor" value="${currentColor}"></div>
-            </div>
-            <div class="modal-row">
-                <div class="modal-field"><label>Fill Core Texture Pattern</label>
-                    <select id="modalBarPattern">
-                        <option value="solid" ${currentPattern === 'solid' ? 'selected' : ''}>Solid</option>
-                        <option value="crosshatch" ${currentPattern === 'crosshatch' ? 'selected' : ''}>Cross Hatch</option>
-                        <option value="grid" ${currentPattern === 'grid' ? 'selected' : ''}>Grid</option>
-                        <option value="dashed" ${currentPattern === 'dashed' ? 'selected' : ''}>Dashed</option>
-                        <option value="gingham" ${currentPattern === 'gingham' ? 'selected' : ''}>Gingham</option>
-                    </select>
-                </div>
-            </div>
-           <div class="modal-actions">
-                <button id="modalBarDeleteBtn" style="background:#fff1f2; color:var(--danger); border-color:#fca5a5; font-weight:bold;">Delete Bar</button>
-                <div style="display:flex; gap:6px;">
-                    <button id="modalCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
-                    <button id="modalSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply</button>
-                </div>
-            </div>
-            
-        `;
+let dialog = buildStandardModal('floatingBarDateDialog', 'Activity Bar Settings', bodyHTML, buttonsHTML);
+positionFloatingDialogSmart(dialog, e);
 
-        document.body.appendChild(dialog);
+
         // Handle activity bar element deletions from the workspace data matrix
         document.getElementById('modalBarDeleteBtn').addEventListener('click', function() {
             if (confirm("Are you sure you want to permanently delete this activity bar track?")) {
@@ -2385,8 +2453,7 @@ document.addEventListener('dblclick', (e) => {
 
         let dialog = document.createElement('div');
         dialog.id = 'floatingCalloutDialog'; dialog.className = 'floating-date-dialog';
-        dialog.style.left = `${Math.min(e.clientX, window.innerWidth - 300)}px`;
-        dialog.style.top = `${Math.min(e.clientY, window.innerHeight - 280)}px`;
+        positionFloatingDialogSmart(dialog, e);
         
         dialog.innerHTML = `
             <h4>Callout Configuration</h4>
@@ -2434,7 +2501,7 @@ document.addEventListener('dblclick', (e) => {
                 <button class="utility-btn" onclick="removeCallout('${id}')" style="color: var(--danger); border-color: #fca5a5;">Delete</button>
             </div>
         `;
-        document.body.appendChild(dialog);
+     
     }
 });
 
@@ -3412,7 +3479,7 @@ function toggleWorkspaceHelpModal(e) {
         
         let dialog = document.createElement('div');
         dialog.id = 'floatingHelpDialog'; dialog.className = 'floating-date-dialog';
-        dialog.style.left = '760px'; dialog.style.top = '55px'; dialog.style.width = '320px';
+        positionFloatingDialogSmart(dialog, e);
         dialog.innerHTML = `
             <h4>Workspace Workflow Shortcuts</h4>
             <ul style="font-size:11px; margin:0; padding-left:16px; line-height:1.6; color:#334155;">
@@ -3551,12 +3618,6 @@ function clearSidebarSearch() {
     renderInputRows();
     toggleSearchClearBtn();
 }
-
-
-
-
-
-       loadApplicationState(); 
 
 </script>
 
