@@ -592,18 +592,7 @@
     let dragStartX, dragStartY;
     let initialCalloutX, initialCalloutY;
     let initialLeaderX, initialLeaderY;
-    // ---------------------------
-    
-    const CURRENT_SCHEMA_VERSION = 1;
-
-function migrateSnapshotIfNeeded(state) {
-    if (!state.schemaVersion) {
-        state.schemaVersion = 1;
-    }
-    // Future migrations go here, e.g.:
-    // if (state.schemaVersion < 2) { /* transform old fields */ state.schemaVersion = 2; }
-    return state;
-}
+// ---------------------------
 
 let projectData = [];
 let customTrackers = [];
@@ -1625,24 +1614,21 @@ link.click();
     }
 
 function saveApplicationState() {
-        if(actionUndoStack.length > 0) {
-            localStorage.setItem('gantt_v8_master_snapshot', actionUndoStack[actionUndoStack.length - 1]);
-            markSavedState();
-        }
+    if (actionUndoStack.length > 0) {
+        localStorage.setItem('gantt_v8_master_snapshot', actionUndoStack[actionUndoStack.length - 1]);
     }
-    
-           const CURRENT_SCHEMA_VERSION = 2;
+    markSavedState();
+}
 
-    function migrateSnapshotIfNeeded(state) {
-        if (!state.schemaVersion) {
-            state.schemaVersion = 1;
-        }
-        if (state.schemaVersion < 2) {
-            state.showAlignGrid = state.showAlignGrid || false;
-            state.schemaVersion = 2;
-        }
-        return state;
+const CURRENT_SCHEMA_VERSION = 2;
+function migrateSnapshotIfNeeded(state) {
+    if (!state.schemaVersion) { state.schemaVersion = 1; }
+    if (state.schemaVersion < 2) {
+        state.showAlignGrid = state.showAlignGrid ?? false;
+        state.schemaVersion = 2;
     }
+    return state;
+}
 
     function loadApplicationState() {
     const structuralBackupCache = localStorage.getItem('gantt_v8_master_snapshot');
