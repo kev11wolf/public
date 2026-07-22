@@ -1420,10 +1420,58 @@ function stopGlobalDragAction(e) {
     // ==========================================
     // SIDEBAR BACKEND FORM PROCESSORS 
     // ==========================================
-    function handleZoomFactorChange(val, triggerRecord = true) {
+       function handleZoomFactorChange(val, triggerRecord = true) {
         document.getElementById('svgContainer').style.transform = `scale(${val})`;
         if (triggerRecord) { recordStateChange(); }
     }
+
+// Reusable, accessible modal shell for ALL double-click dialogs
+function openWorkspaceDialog({ id, title, bodyHTML, anchorX, anchorY, width = 340, onSave, onDelete, deleteLabel = 'Delete' }) {
+    closeAnyOpenDialog();
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    backdrop.id = 'activeDialogBackdrop';
+    backdrop.onclick = () => closeAnyOpenDialog();
+
+    const dialog = document.createElement('div');
+    dialog.id = id;
+    dialog.className = 'floating-date-dialog';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.style.width = `${width}px`;
+    dialog.style.left = `${Math.max(10, Math.min(anchorX, window.innerWidth - width - 10))}px`;
+    dialog.style.top = `${Math.max(10, Math.min(anchorY, window.innerHeight - 300))}px`;
+
+    dialog.innerHTML = `
+        <div class="dialog-header">
+            <h4>${title}</h4>
+            <button class="dialog-close-x" aria-label="Close" onclick="closeAnyOpenDialog()">&times;</button>
+        </div>
+        <div class="dialog-body">${bodyHTML}</div>
+        <div class="modal-actions">
+            ${onDelete ? `<button class="dialog-danger-btn" id="dlgDeleteBtn">${deleteLabel}</button>` : '<span></span>'}
+            <div style="display:flex; gap:6px;">
+                <button class="dialog-cancel-btn" onclick="closeAnyOpenDialog()">Cancel</button>
+                <button class="dialog-save-btn" id="dlgSaveBtn">Save Changes</button>
+            </div>
+        </div>
+    `;
+
+    document.body.append(backdrop, dialog);
+    document.getElementById('dlgSaveBtn').onclick = () => { onSave(dialog); closeAnyOpenDialog(); };
+    if (onDelete) document.getElementById('dlgDeleteBtn').onclick = () => onDelete(dialog);
+
+    dialog.querySelector('input, select')?.focus();
+    document.addEventListener('keydown', dialogEscHandler);
+}
+
+function dialogEscHandler(e) { if (e.key === 'Escape') closeAnyOpenDialog(); }
+
+function closeAnyOpenDialog() {
+    document.querySelectorAll('.floating-date-dialog, .dialog-backdrop').forEach(el => el.remove());
+    document.removeEventListener('keydown', dialogEscHandler);
+}
 
     function importConfigurationArchive(event) {
     const file = event.target.files[0]; if (!file) return;
@@ -2591,14 +2639,10 @@ document.addEventListener('dblclick', (e) => {
 });
 
     document.addEventListener('mousedown', function(e) {
-        ['floatingBarDateDialog', 'floatingMilestoneDialog', 'floatingLaneSummaryDialog', 'floatingTrackerDialog', 'floatingHelpDialog'].forEach(id => {
-            let box = document.getElementById(id);
-            if (box && !box.contains(e.target) && !e.target.classList.contains('drag-hotspot')) { box.remove(); }
-        });
-        
-        let menu = document.getElementById('rowWorkspaceContextMenu');
-        if(menu && !menu.contains(e.target)) dismissContextMenus();
-    });
+    // Dialogs now self-manage via closeAnyOpenDialog() + backdrop click — no manual cleanup needed here.
+    let menu = document.getElementById('rowWorkspaceContextMenu');
+    if (menu && !menu.contains(e.target)) dismissContextMenus();
+});
 
     function updateRowFieldDirect(laneIdx, rowIdx, key, val) {
         projectData[laneIdx].rows[rowIdx][key] = val;
