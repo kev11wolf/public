@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garage Maintenance Hub</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --surface-color: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent-red: #ef4444;
+            --accent-green: #10b981;
+            --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--surface-color);
+            padding: 2rem 5%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Vehicle Tabs */
+        .vehicle-tabs {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .v-tab {
+            padding: 1rem 2rem;
+            background-color: var(--surface-color);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-muted);
+        }
+
+        .v-tab:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .v-tab.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Main Workspace Content Layout */
+        .workspace {
+            display: none;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            background: transparent;
+        }
+
+        .workspace.active {
+            display: grid;
+        }
+
+        @media (max-width: 768px) {
+            .workspace.active {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Service Tabs (Sidebar) */
+        .service-tabs {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            background: var(--surface-color);
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.03);
+            height: fit-content;
+        }
+
+        .s-tab {
+            padding: 0.8rem 1rem;
+            background: transparent;
+            border: none;
+            text-align: left;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-main);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .s-tab:hover {
+            background: var(--bg-color);
+        }
+
+        .s-tab.active {
+            background: var(--bg-color);
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
+            font-weight: 600;
+        }
+
+        /* Service Content Area */
+        .service-content {
+            background: var(--surface-color);
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.03);
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .service-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .service-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .service-header h2 {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--bg-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .card h3 {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .tag-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .tag-list li {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .tag-list li::before {
+            content: "•";
+            color: var(--primary);
+            font-size: 1.5rem;
+            position: absolute;
+            left: 0;
+            top: -0.3rem;
+        }
+
+        .procedure {
+            margin-top: 2rem;
+        }
+
+        .procedure h3 {
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+        }
+
+        .step {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--surface-color);
+        }
+
+        .step-num {
+            flex-shrink: 0;
+            width: 35px;
+            height: 35px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .step-text {
+            padding-top: 0.3rem;
+        }
+
+        .tips-box {
+            margin-top: 3rem;
+            background: #fffbeb;
+            border-left: 5px solid #f59e0b;
+            padding: 1.5rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .tips-box h4 {
+            color: #b45309;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .disclaimer {
+            text-align: center;
+            margin-top: 3rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Garage Maintenance Hub</h1>
+        <p class="subtitle">Comprehensive Service Procedures & Fluid Specifications</p>
+    </header>
+
+    <div class="container">
+        <!-- Vehicle Selection Tabs -->
+        <div class="vehicle-tabs">
+            <button class="v-tab active" data-target="yukon">2009 GMC Yukon XL 6.2L</button>
+            <button class="v-tab" data-target="tiguan">2019 VW Tiguan 2.0T</button>
+            <button class="v-tab" data-target="rav4">2020 Toyota RAV4 2.5L</button>
+        </div>
+
+        <!-- YUKON WORKSPACE -->
+        <div class="workspace active" id="yukon">
+            <div class="service-tabs">
+                <button class="s-tab active" data-target="yukon-oil">Oil Change</button>
+                <button class="s-tab" data-target="yukon-engine">Engine Air Filter</button>
+                <button class="s-tab" data-target="yukon-cabin">Cabin Air Filter</button>
+                <button class="s-tab" data-target="yukon-trans">Transmission Service</button>
+                <button class="s-tab" data-target="yukon-diff">Diffs & Transfer Case</button>
+            </div>
+
+            <div class="service-container">
+                <!-- Yukon Oil -->
+                <div class="service-content active" id="yukon-oil">
+                    <div class="service-header">
+                        <h2>Engine Oil & Filter Change</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>15mm Box Wrench or Socket</li>
+                                <li>Oil Filter Wrench (End-cap style or pliers)</li>
+                                <li>Oil Drain Pan (Min 8 qt capacity)</li>
+                                <li>Funnel</li>
+                                <li>Shop Towels</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials & Volumes</h3>
+                            <ul class="tag-list">
+                                <li><strong>Fluid:</strong> 6.0 Quarts 5W-30 Full Synthetic (High Mileage works perfectly here)</li>
+                                <li><strong>Filter:</strong> ACDelco PF48 (or PF48E)</li>
+                                <li><strong>Drain Plug Torque:</strong> 18 lb-ft</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div class="step-text">Warm up the engine for 5 minutes to ensure oil flows smoothly, then park on level ground.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div class="step-text">Locate the 15mm oil pan drain plug on the passenger side of the oil pan. Position drain pan and remove plug.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div class="step-text">Locate the oil filter near the driver side front of the oil pan. Remove it (expect some oil to spill). Ensure the old rubber gasket comes off with the old filter.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">4</div>
+                            <div class="step-text">Apply a light coat of fresh oil to the rubber gasket of the new PF48 filter. Thread it on by hand until it makes contact, then tighten another 3/4 to 1 full turn.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">5</div>
+                            <div class="step-text">Reinstall the 15mm drain plug. Torque to 18 lb-ft (or snug, do not overtighten).</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">6</div>
+                            <div class="step-text">Fill the engine with 6.0 quarts of 5W-30. Start engine, check for leaks under the vehicle, then shut off and verify level on dipstick.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">7</div>
+                            <div class="step-text">Reset Oil Life: Turn key to ON (engine off). Fully depress gas pedal 3 times within 5 seconds.</div>
+                        </div>
+                    </div>
+                    <div class="tips-box">
+                        <h4>💡 Pro-Tips</h4>
+                        <p>For the 6.2L L92 engine without AFM, 5W-30 High Mileage Full Synthetic is the absolute perfect choice for 160k miles. Prefill the oil filter about halfway before screwing it on to reduce dry-start wear.</p>
+                    </div>
+                </div>
+
+                <!-- Yukon Engine Air -->
+                <div class="service-content" id="yukon-engine">
+                    <div class="service-header">
+                        <h2>Engine Air Filter</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>T25 Torx Driver or Phillips Screwdriver</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Filter:</strong> Standard Panel Filter (ACDelco A3181C or equivalent)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <div class="step">
+                            <div class="step-num">1</div><div class="step-text">Locate the airbox on the passenger side of the engine bay.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div><div class="step-text">Loosen the 4 captive screws holding the lid down (T25 Torx or Phillips depending on exact year/hardware).</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div><div class="step-text">Lift the lid, pull out the old filter, and vacuum out any leaves or debris in the bottom housing.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">4</div><div class="step-text">Insert the new filter, ensuring the rubber seal is seated flush in the groove.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">5</div><div class="step-text">Reinstall the lid and hand-tighten the 4 screws (do not use power tools, the plastic strips easily).</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Yukon Cabin Air -->
+                <div class="service-content" id="yukon-cabin">
+                    <div class="service-header">
+                        <h2>Cabin Air Filter</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>Box cutter / Utility knife (If first time / un-modded)</li>
+                                <li>5.5mm or 7mm socket (for trim panels)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Kit Needed:</strong> Dorman Retrofit Kit (259-200) - *See tips*</li>
+                                <li><strong>Filter:</strong> Standard GM cabin filter sizing (included in kit usually)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <div class="step">
+                            <div class="step-num">1</div><div class="step-text">Remove the plastic kick panel beneath the passenger side glovebox (usually held by 2 or 3 hex screws and push pins).</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div><div class="step-text">Look up at the bottom of the HVAC blower housing. If it is solid plastic with a faint rectangular groove, your truck NEVER had a cabin filter from the factory.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div><div class="step-text">If not yet cut: Carefully use a utility knife to cut along the grooved rectangle to open the slot.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">4</div><div class="step-text">If already cut: Remove the cover plate installed previously.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">5</div><div class="step-text">Slide the old filter out (it bends to get around the floorboard carpet).</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">6</div><div class="step-text">Slide the new filter in (ensure airflow arrows point towards the rear of the vehicle / towards the blower). Secure the cover plate.</div>
+                        </div>
+                    </div>
+                    <div class="tips-box">
+                        <h4>💡 Pro-Tips</h4>
+                        <p>GM bafflingly removed the cabin air filter from 2007-2014 full-size trucks. If this is your first time checking it, you will likely need the Dorman Retrofit Kit. It involves cutting the sealed plastic slot open and using their provided cover plate and screw to seal it back up.</p>
+                    </div>
+                </div>
+
+                <!-- Yukon Trans -->
+                <div class="service-content" id="yukon-trans">
+                    <div class="service-header">
+                        <h2>Transmission Fluid & Filter (6L80)</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>10mm Socket with extensions</li>
+                                <li>Large fluid catch pan</li>
+                                <li>Flathead screwdriver / seal puller</li>
+                                <li>Pry bar (sometimes needed for exhaust clearance)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Fluid:</strong> ~6.0 - 6.5 Quarts DEXRON-VI Full Synthetic</li>
+                                <li><strong>Filter:</strong> ACDelco 6L80 Filter Kit (with pan gasket)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <div class="step"><div class="step-num">1</div><div class="step-text">Support vehicle safely. Position large catch pan under the transmission pan.</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text">The 6L80 pan does not have a drain plug. Loosen all 10mm pan bolts. Remove the rear and side bolts entirely, leaving the front bolts loose by a few threads.</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text">Carefully pry the rear of the pan down to allow fluid to cascade out over the lip into the pan.</div></div>
+                        <div class="step"><div class="step-num">4</div><div class="step-text">Once mostly drained, support the pan, remove the remaining front bolts, and lower the pan. Note: The passenger side exhaust Y-pipe is very close to the pan. You may need to pry the exhaust slightly or drop the exhaust bracket to slide the pan out.</div></div>
+                        <div class="step"><div class="step-num">5</div><div class="step-text">Pull the old filter straight down. Ensure the metal/rubber seal ring comes out of the pump bore. If it stays in the transmission, carefully pry it out with a seal puller.</div></div>
+                        <div class="step"><div class="step-num">6</div><div class="step-text">Clean the pan and the magnet inside it thoroughly. Install the new filter (push the new seal ring into the bore first, then push the filter neck into it).</div></div>
+                        <div class="step"><div class="step-num">7</div><div class="step-text">Reinstall the pan with a new reusable gasket. Torque bolts to 80 in-lbs (approx 7 ft-lbs) in a crisscross pattern.</div></div>
+                        <div class="step"><div class="step-num">8</div><div class="step-text">Add 5.5 quarts of Dexron VI down the dipstick tube. Start engine, shift through all gears pausing 3 seconds in each. With engine RUNNING and trans warm, check dipstick and top off as needed.</div></div>
+                    </div>
+                </div>
+
+                <!-- Yukon Diffs -->
+                <div class="service-content" id="yukon-diff">
+                    <div class="service-header">
+                        <h2>Differentials & Transfer Case (AWD/4WD)</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>3/8" Drive Ratchet (fits directly into plugs)</li>
+                                <li>Fluid pump (to pump fluid from bottles into diffs)</li>
+                                <li>18mm socket (for transfer case shield if equipped)</li>
+                                <li>Drain pan</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Front Diff:</strong> ~1.8 Quarts 75W-90 Synthetic GL-5</li>
+                                <li><strong>Rear Diff:</strong> ~2.8 Quarts 75W-90 Synthetic GL-5 (with limited slip additive if G80 code, though most synthetics include it)</li>
+                                <li><strong>Transfer Case (AWD):</strong> ~1.6 Quarts DEXRON-VI</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <p><em>Always loosen the FILL plug before the drain plug on any gear case to ensure you can refill it!</em></p>
+                        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Transfer Case:</strong> Use 3/8" ratchet to remove upper Fill plug. Remove lower Drain plug. Drain fluid. Reinstall Drain plug (15 lb-ft). Pump Dexron-VI into fill hole until it starts weeping out. Reinstall Fill plug.</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Front Differential:</strong> Remove Fill plug, then Drain plug. Drain. Clean magnet on drain plug. Reinstall drain plug. Pump in 75W-90 until it weeps out the fill hole. Reinstall fill plug.</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Rear Differential:</strong> Most 14-bolt 6.2L rear diffs have a standard drain plug on the bottom of the pumpkin. Remove fill, remove drain. Clean magnet. Reinstall drain. Pump in 75W-90 until level with fill hole. Reinstall fill plug. (If no drain plug exists, you must remove the differential cover, drain, clean mating surfaces, apply RTV or gasket, and reinstall cover before filling).</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- TIGUAN WORKSPACE -->
+        <div class="workspace" id="tiguan">
+            <div class="service-tabs">
+                <button class="s-tab active" data-target="tiguan-oil">Oil Change</button>
+                <button class="s-tab" data-target="tiguan-engine">Engine Air Filter</button>
+                <button class="s-tab" data-target="tiguan-cabin">Cabin Air Filter</button>
+                <button class="s-tab" data-target="tiguan-trans">Transmission Service</button>
+                <button class="s-tab" data-target="tiguan-diff">Haldex & Diffs</button>
+            </div>
+
+            <div class="service-container">
+                <!-- Tiguan Oil -->
+                <div class="service-content active" id="tiguan-oil">
+                    <div class="service-header">
+                        <h2>Engine Oil & Filter Change</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>32mm Socket (for oil filter housing)</li>
+                                <li>T45 Torx or 19mm socket (for drain plug, depending on pan)</li>
+                                <li>Fluid Extractor (Highly Recommended for top-down changes)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials & Volumes</h3>
+                            <ul class="tag-list">
+                                <li><strong>Fluid:</strong> 6.0 Quarts (5.7L) VW 508.00 0W-20</li>
+                                <li><strong>Filter:</strong> Cartridge type (Mann HU6002Z or equivalent)</li>
+                                <li><strong>O-Ring:</strong> Comes with filter</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure (Top-Down Extractor Method)</h3>
+                        <div class="step"><div class="step-num">1</div><div class="step-text">Warm up engine to operating temp, then shut off.</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text">Remove the dipstick. Insert the tube of your fluid extractor down the dipstick tube until it hits the bottom of the oil pan.</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text">Pump the extractor to begin siphoning the oil (should extract around 5.5 to 6 quarts).</div></div>
+                        <div class="step"><div class="step-num">4</div><div class="step-text">While extracting, use the 32mm socket to loosen the oil filter housing at the top front of the engine. Unscrew it slowly to allow residual oil to drain down into the block.</div></div>
+                        <div class="step"><div class="step-num">5</div><div class="step-text">Pull the filter housing out. Remove the old cartridge filter and use a pick to remove the old rubber O-ring on the plastic housing threads.</div></div>
+                        <div class="step"><div class="step-num">6</div><div class="step-text">Lubricate the new O-ring with fresh oil, install it on the housing, and snap the new filter cartridge into place.</div></div>
+                        <div class="step"><div class="step-num">7</div><div class="step-text">Thread housing back into the engine and torque to 25 Nm (18 lb-ft).</div></div>
+                        <div class="step"><div class="step-num">8</div><div class="step-text">Refill engine with 5.7 Liters of oil. Check dipstick.</div></div>
+                        <div class="step"><div class="step-num">9</div><div class="step-text">Reset service interval via the infotainment screen (Car > Setup > Service).</div></div>
+                    </div>
+                    <div class="tips-box">
+                        <h4>💡 Pro-Tips</h4>
+                        <p>Regarding your 5W-30 High Mileage Synthetic preference: The EA888 engine family runs excellently on a hot 30-weight oil, giving superior film strength to the turbo bearings at 150k miles. The only caveat is that standard high mileage oils lack Euro low-SAPS chemistry, meaning intake valve carbon buildup may accelerate. With your 5k mile intervals and mild climate, running 5W-30 is mechanically sound, but keep an eye on valve carbon.</p>
+                    </div>
+                </div>
+
+                <!-- Tiguan Engine Air -->
+                <div class="service-content" id="tiguan-engine">
+                    <div class="service-header">
+                        <h2>Engine Air Filter</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>T25 Torx Driver</li>
+                                <li>Hose clamp pliers (optional for intake hose)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Filter:</strong> Mann C 30 005 or equivalent</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <div class="step"><div class="step-num">1</div><div class="step-text">Locate the large plastic airbox on the passenger side of the engine bay.</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text">Unscrew the T25 Torx screws around the perimeter of the airbox lid. They remain captive in the lid, so just loosen them fully.</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text">If you need more clearance, disconnect the vacuum line clip and loosen the clamp on the main air intake hose.</div></div>
+                        <div class="step"><div class="step-num">4</div><div class="step-text">Lift the lid and remove the cylindrical/panel filter.</div></div>
+                        <div class="step"><div class="step-num">5</div><div class="step-text">Wipe out the inside of the airbox. Insert the new filter.</div></div>
+                        <div class="step"><div class="step-num">6</div><div class="step-text">Reinstall the lid, ensuring it seats perfectly flat before tightening the T25 screws. Reattach any hoses.</div></div>
+                    </div>
+                </div>
+
+                <!-- Tiguan Cabin Air -->
+                <div class="service-content" id="tiguan-cabin">
+                    <div class="service-header">
+                        <h2>Cabin Air Filter</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>None (No tools required)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Filter:</strong> Mann CUK 26 009 (Charcoal activated recommended)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <div class="step"><div class="step-num">1</div><div class="step-text">Open the passenger side glovebox. Empty its contents.</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text">Locate the two tabs at the top edge of the inside of the glovebox. Push upwards and pull the glovebox down further.</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text">Behind the glovebox, look for a rectangular plastic cover with three retaining clips at the top.</div></div>
+                        <div class="step"><div class="step-num">4</div><div class="step-text">Press down on the clips and pull the cover off to expose the filter.</div></div>
+                        <div class="step"><div class="step-num">5</div><div class="step-text">Pull out the old filter. Note the direction of the airflow arrows (pointing DOWN).</div></div>
+                        <div class="step"><div class="step-num">6</div><div class="step-text">Insert the new filter with arrows pointing DOWN. Snap the cover back into place and close the glovebox firmly until it clicks.</div></div>
+                    </div>
+                </div>
+
+                <!-- Tiguan Trans -->
+                <div class="service-content" id="tiguan-trans">
+                    <div class="service-header">
+                        <h2>Transmission Service (09P Aisin 8-Speed)</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>OBD2 Scanner (VCDS or OBDeleven for temp reading)</li>
+                                <li>10mm Hex / T40 Torx</li>
+                                <li>Fluid Fill Pump with VW adapter (VAS 6262A or similar)</li>
+                                <li>Level vehicle (4 jack stands)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Fluid:</strong> 4-5 Quarts VW G 053 001 A2 (or Aisin specific WS equivalent)</li>
+                                <li><strong>Gaskets:</strong> New drain plug crush washer, new overflow tube</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <div class="step"><div class="step-num">1</div><div class="step-text">Vehicle must be completely level and fluid must be cold (below 35°C / 95°F).</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text">Remove the drain plug. A small amount of fluid will come out.</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text">Insert an Allen key to unscrew the plastic overflow standpipe inside the drain hole. This will release the rest of the fluid (approx 3-4 quarts).</div></div>
+                        <div class="step"><div class="step-num">4</div><div class="step-text">Reinstall the plastic standpipe (do not overtighten).</div></div>
+                        <div class="step"><div class="step-num">5</div><div class="step-text">Screw your fill pump adapter into the drain hole. Pump in approximately 4 to 4.5 quarts of new fluid.</div></div>
+                        <div class="step"><div class="step-num">6</div><div class="step-text">Start the engine. Step on the brake and shift through P-R-N-D several times, pausing in each gear. Leave engine RUNNING in Park.</div></div>
+                        <div class="step"><div class="step-num">7</div><div class="step-text">Connect OBD scanner and monitor ATF temperature. Once it reaches exactly 35°C to 45°C (95°F - 113°F), remove the fill hose.</div></div>
+                        <div class="step"><div class="step-num">8</div><div class="step-text">Allow excess fluid to drain out of the hole (it is draining down to the height of the standpipe). Once it slows to a steady drip, install the drain plug with a new washer and torque to 15 Nm.</div></div>
+                    </div>
+                    <div class="tips-box">
+                        <h4>💡 Pro-Tips</h4>
+                        <p>VW calls this a "lifetime" fluid, but Aisin (the manufacturer) recommends 60k mile intervals. Because there is no dipstick, the temperature-specific overflow method is the ONLY way to ensure the correct fluid level. If the fluid gets hotter than 45°C during the process, it expands too much, you will underfill the transmission, and it will slip.</p>
+                    </div>
+                </div>
+
+                <!-- Tiguan Diffs -->
+                <div class="service-content" id="tiguan-diff">
+                    <div class="service-header">
+                        <h2>Haldex AWD System & Bevel Box</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>VCDS or OBDeleven (for Haldex pump relearn)</li>
+                                <li>Fluid Pump</li>
+                                <li>Hex/Torx bits for drain/fill plugs</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Haldex Fluid:</strong> 1 Liter VW G 060 175 A2</li>
+                                <li><strong>Bevel Box (Front Transfer):</strong> ~1 Qt 75W-90 GL-5</li>
+                                <li><strong>Rear Diff:</strong> ~1 Qt 75W-90 GL-5</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure (Haldex Clutch)</h3>
+                        <div class="step"><div class="step-num">1</div><div class="step-text">Locate the Haldex unit bolted to the front of the rear differential. Identify the fill plug and drain plug. Always open fill plug first.</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text">Remove the drain plug and drain the Haldex fluid. Optional but recommended at 150k: Remove the two screws holding the Haldex pump, pull the pump out, and clean the mesh filter screen on the end (clogs easily).</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text">Reinstall pump and drain plug. Pump in new Haldex fluid until it weeps out the fill hole.</div></div>
+                        <div class="step"><div class="step-num">4</div><div class="step-text">Connect OBD scanner, run the Haldex pump "Basic Settings / Relearn" procedure to bleed air from the pump.</div></div>
+                        <div class="step"><div class="step-num">5</div><div class="step-text">Check fluid level again (top off if level dropped) and install fill plug.</div></div>
+                        <div class="step"><div class="step-num">6</div><div class="step-text"><strong>Bevel Box & Rear Diff:</strong> Standard drain and fill procedure using 75W-90 until fluid weeps from the fill holes.</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- RAV4 WORKSPACE -->
+        <div class="workspace" id="rav4">
+            <div class="service-tabs">
+                <button class="s-tab active" data-target="rav4-oil">Oil Change</button>
+                <button class="s-tab" data-target="rav4-engine">Engine Air Filter</button>
+                <button class="s-tab" data-target="rav4-cabin">Cabin Air Filter</button>
+                <button class="s-tab" data-target="rav4-trans">Transmission Service</button>
+                <button class="s-tab" data-target="rav4-diff">Diffs & Transfer Case</button>
+            </div>
+
+            <div class="service-container">
+                <!-- RAV4 Oil -->
+                <div class="service-content active" id="rav4-oil">
+                    <div class="service-header">
+                        <h2>Engine Oil & Filter Change</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>14mm Socket or Wrench</li>
+                                <li>64mm / 14-flute oil filter wrench (if factory tight)</li>
+                                <li>10mm socket (for plastic splash shield)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials & Volumes</h3>
+                            <ul class="tag-list">
+                                <li><strong>Fluid:</strong> 4.8 Quarts 0W-16 Full Synthetic</li>
+                                <li><strong>Filter:</strong> Toyota 90915-YZZN1 (Spin-on)</li>
+                                <li><strong>Drain Plug Gasket:</strong> Toyota crush washer (replace every time)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <div class="step"><div class="step-num">1</div><div class="step-text">Remove the small access panel on the plastic engine splash shield underneath the vehicle (requires removing several 10mm bolts/clips).</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text">Place drain pan under the oil pan. Remove 14mm drain plug and let oil drain. Remove the old crush washer.</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text">Locate the spin-on oil filter right next to the oil pan. Remove it. Make sure the rubber gasket comes off.</div></div>
+                        <div class="step"><div class="step-num">4</div><div class="step-text">Apply a light coat of new oil to the new filter's rubber seal. Spin it on until hand tight.</div></div>
+                        <div class="step"><div class="step-num">5</div><div class="step-text">Install a new crush washer on the drain plug. Torque to 30 lb-ft.</div></div>
+                        <div class="step"><div class="step-num">6</div><div class="step-text">Fill engine with exactly 4.8 quarts of 0W-16. Start engine, verify no leaks, check dipstick.</div></div>
+                        <div class="step"><div class="step-num">7</div><div class="step-text">Reset Maintenance Light: Use steering wheel controls to go to Settings (Gear icon) -> Vehicle Settings -> Scheduled Maintenance -> Reset Data.</div></div>
+                    </div>
+                    <div class="tips-box">
+                        <h4>💡 Pro-Tips</h4>
+                        <p>Regarding your 5W-30 High Mileage preference: The RAV4 has ultra-tight clearances and a variable displacement oil pump. Pumping 5W-30 through this engine at 60k miles creates parasitic drag and can throw VVT codes. Furthermore, the "High Mileage" seal conditioners are bad for a healthy 60k-mile engine. Stick to 0W-16 (or 0W-20 standard synthetic at the absolute heaviest).</p>
+                    </div>
+                </div>
+
+                <!-- RAV4 Engine Air -->
+                <div class="service-content" id="rav4-engine">
+                    <div class="service-header">
+                        <h2>Engine Air Filter</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>None (Tool-less design)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Filter:</strong> Toyota 17801-F0050 or equivalent</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <div class="step"><div class="step-num">1</div><div class="step-text">Locate the airbox on the driver side of the engine bay.</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text">Pop off the two metal spring clips holding the lid down.</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text">Lift the lid slightly and pull it towards you to unhinge the rear tabs.</div></div>
+                        <div class="step"><div class="step-num">4</div><div class="step-text">Pull out the old filter. Note the orientation of the flat corner.</div></div>
+                        <div class="step"><div class="step-num">5</div><div class="step-text">Install the new filter, ensuring it sits flat.</div></div>
+                        <div class="step"><div class="step-num">6</div><div class="step-text">Slide the rear tabs of the lid back into their slots, push down, and secure the two metal clips.</div></div>
+                    </div>
+                </div>
+
+                <!-- RAV4 Cabin Air -->
+                <div class="service-content" id="rav4-cabin">
+                    <div class="service-header">
+                        <h2>Cabin Air Filter</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>None</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Filter:</strong> Toyota 87139-YZZ82 or equivalent</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <div class="step"><div class="step-num">1</div><div class="step-text">Open glovebox. On the right exterior side, locate the dampener rod. Squeeze the tips and slide it off the peg.</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text">Squeeze the top left and right corners of the glovebox inwards to clear the stopper tabs. Lower the glovebox to the floorboard.</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text">Look straight back to see a white rectangular cover. Pinch the tab on the right side and pull the cover off.</div></div>
+                        <div class="step"><div class="step-num">4</div><div class="step-text">Pull out the old filter. Notice the arrow usually points UP for Toyota filters (Check text on filter: "UP" vs "Air Flow").</div></div>
+                        <div class="step"><div class="step-num">5</div><div class="step-text">Slide new filter in, replace cover, lift glovebox, and reattach the dampener arm.</div></div>
+                    </div>
+                </div>
+
+                <!-- RAV4 Trans -->
+                <div class="service-content" id="rav4-trans">
+                    <div class="service-header">
+                        <h2>Transmission Service (Direct Shift 8-Speed)</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>24mm socket (Fill plug)</li>
+                                <li>6mm Allen/Hex (Drain and Overflow plugs)</li>
+                                <li>Fluid transfer pump</li>
+                                <li>Wire jumper for OBD port (or scan tool)</li>
+                                <li>Level ground</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Fluid:</strong> Toyota Genuine ATF WS (Approx 3-4 Qts for drain/fill)</li>
+                                <li><strong>Washers:</strong> New crush washers for fill, drain, and overflow plugs</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <div class="step"><div class="step-num">1</div><div class="step-text">Ensure vehicle is cold and level. Locate the 24mm fill plug behind the driver's side front wheel (remove wheel/splash shield for access). Loosen it first.</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text">Remove the 6mm hex drain plug on the pan and drain fluid. Reinstall plug.</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text">Pump new ATF WS into the fill plug until it slightly overflows. Reinstall fill plug loosely.</div></div>
+                        <div class="step"><div class="step-num">4</div><div class="step-text"><strong>Temperature Mode:</strong> Jump pins 4 and 13 on the OBD port. Start engine. Shift P-R-N-D-N-R-P. Shift rapidly between N and D for 6 seconds until the gear indicator "D" stays illuminated for 2 seconds. You are now in temp check mode.</div></div>
+                        <div class="step"><div class="step-num">5</div><div class="step-text">Let the engine idle. When the "D" light comes on solid, the trans is at exactly 104°F to 113°F (40-45°C). Leave engine RUNNING.</div></div>
+                        <div class="step"><div class="step-num">6</div><div class="step-text">Quickly get under the car and remove the 6mm hex OVERFLOW plug (smaller plug on the bottom of the pan). Let fluid drain until it becomes a thin trickle.</div></div>
+                        <div class="step"><div class="step-num">7</div><div class="step-text">If no fluid comes out, add more fluid through the fill hole until it trickles out the overflow.</div></div>
+                        <div class="step"><div class="step-num">8</div><div class="step-text">Reinstall overflow plug. Turn off engine. Tighten all plugs to spec with new washers.</div></div>
+                    </div>
+                </div>
+
+                <!-- RAV4 Diffs -->
+                <div class="service-content" id="rav4-diff">
+                    <div class="service-header">
+                        <h2>Transfer Case & Rear Differential</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>🛠️ Tools Required</h3>
+                            <ul class="tag-list">
+                                <li>10mm Hex (Allen) socket for front transfer case</li>
+                                <li>10mm Hex (Allen) socket for rear diff</li>
+                                <li>Fluid pump</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>📦 Materials</h3>
+                            <ul class="tag-list">
+                                <li><strong>Fluid:</strong> 75W-85 GL-5 Gear Oil (Approx 1 Qt total for both)</li>
+                                <li><strong>Washers:</strong> 4x Toyota aluminum crush washers</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="procedure">
+                        <h3>Procedure</h3>
+                        <p><em>Note: If you have a Torque Vectoring AWD model (Adventure/TRD), the rear differential has electronic clutches and requires a specific bleeding procedure. Standard XLE AWD uses a traditional differential.</em></p>
+                        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Transfer Case:</strong> Located near the right front axle. Use 10mm hex to remove the FILL plug. Then remove the DRAIN plug. Drain fluid. Reinstall drain plug with a new washer (29 lb-ft). Pump 75W-85 in until it overflows. Reinstall fill plug with new washer.</div></div>
+                        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Rear Differential:</strong> Remove the 10mm hex FILL plug on the back/side of the diff. Remove the DRAIN plug on the bottom. Drain fluid. Clean the magnet on the drain plug.</div></div>
+                        <div class="step"><div class="step-num">3</div><div class="step-text">Reinstall drain plug with new washer (29 lb-ft). Pump 75W-85 fluid into the fill hole until it overflows.</div></div>
+                        <div class="step"><div class="step-num">4</div><div class="step-text">Reinstall the fill plug with a new washer and torque to 29 lb-ft. Wipe cases clean to monitor for leaks.</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="disclaimer">
+            Information provided for reference only. Always consult factory service manuals for the most up-to-date specifications and safety procedures. <br>Generated specifically for the Raleigh NC environment (5k intervals, mild climate).
+        </div>
+
+    </div>
+
+    <script>
+        // Vehicle Tab Switching
+        const vehicleTabs = document.querySelectorAll('.v-tab');
+        const workspaces = document.querySelectorAll('.workspace');
+
+        vehicleTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active from all tabs
+                vehicleTabs.forEach(t => t.classList.remove('active'));
+                workspaces.forEach(w => w.classList.remove('active'));
+                
+                // Add active to clicked
+                tab.classList.add('active');
+                const target = tab.getAttribute('data-target');
+                document.getElementById(target).classList.add('active');
+            });
+        });
+
+        // Service Tab Switching
+        const serviceTabs = document.querySelectorAll('.s-tab');
+        const serviceContents = document.querySelectorAll('.service-content');
+
+        serviceTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Find parent workspace to only toggle active within that vehicle
+                const workspace = tab.closest('.workspace');
+                const localTabs = workspace.querySelectorAll('.s-tab');
+                const localContents = workspace.querySelectorAll('.service-content');
+
+                localTabs.forEach(t => t.classList.remove('active'));
+                localContents.forEach(c => c.classList.remove('active'));
+
+                tab.classList.add('active');
+                const target = tab.getAttribute('data-target');
+                document.getElementById(target).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
