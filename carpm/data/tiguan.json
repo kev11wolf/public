@@ -1,0 +1,410 @@
+{
+  "id": "tiguan",
+  "name": "2019 VW Tiguan 2.0T",
+  "engine": "2.0L EA888 Turbo",
+  "drivetrain": "4Motion AWD (Haldex)",
+  "services": [
+    {
+      "id": "oil",
+      "name": "Engine Oil & Filter Change",
+      "category": "Powertrain",
+      "intervalMiles": 5000,
+      "intervalMonths": 6,
+      "tools": [
+        "32mm socket (filter housing)",
+        "T45 Torx or 19mm (drain plug)",
+        "Fluid extractor (recommended)"
+      ],
+      "materials": [
+        "6.0 Qts (5.7L) VW 508.00 0W-20 (or 5W-30 HM per owner pref)",
+        "Mann HU6002Z cartridge filter + O-ring"
+      ],
+      "steps": [
+        "Warm engine to operating temp, shut off.",
+        "Remove dipstick, insert extractor tube to pan bottom, pump out ~6 qts.",
+        "Loosen 32mm filter housing at top-front of engine while extracting.",
+        "Remove housing, pull old cartridge + O-ring.",
+        "Lubricate new O-ring with fresh oil, snap in new cartridge.",
+        "Thread housing back in, torque to 25 Nm (18 lb-ft).",
+        "Refill 5.7L oil; check dipstick.",
+        "Reset service interval via infotainment: Car > Setup > Service."
+      ],
+      "tips": "EA888 runs fine on hot 5W-30 HM at 150k, but lacks Euro low-SAPS chemistry - watch for intake valve carbon buildup over time.",
+      "whatItDoes": "Removes old, contaminated oil and replaces it along with the filter, restoring clean lubrication and cooling to all moving engine parts.",
+      "whyItMatters": "Oil breaks down and picks up metal particles, soot, and acids over time. Skipping this accelerates engine wear, can cause sludge buildup, and is the single most impactful thing you can do for engine longevity.",
+      "estCost": "$55-$75 (5.7L VW-spec synthetic + cartridge filter)",
+      "ifDelayed": "Old oil thickens/oxidizes into sludge that clogs oil passages and the pickup screen, causing accelerated bearing and cam wear; in severe cases this leads to a spun rod bearing knock and a full engine rebuild costing $4,000-$8,000+ versus a $50 service."
+    },
+    {
+      "id": "engine-air",
+      "name": "Engine Air Filter",
+      "category": "Intake",
+      "intervalMiles": 20000,
+      "intervalMonths": 24,
+      "tools": [
+        "T25 Torx driver",
+        "Hose clamp pliers (optional)"
+      ],
+      "materials": [
+        "Mann C 30 005 filter"
+      ],
+      "steps": [
+        "Locate airbox, passenger side of engine bay.",
+        "Loosen captive T25 screws around lid perimeter.",
+        "Disconnect vacuum line clip/loosen intake hose clamp for clearance if needed.",
+        "Lift lid, remove filter.",
+        "Wipe housing, insert new filter.",
+        "Reinstall lid flat, tighten screws, reattach hoses."
+      ],
+      "tips": "Turbo engines are sensitive to airflow restriction - don't extend past 20k miles.",
+      "whatItDoes": "Replaces the paper/foam filter that cleans air before it enters the engine's intake.",
+      "whyItMatters": "A clogged filter restricts airflow, hurting fuel economy and power, and on turbo engines can increase strain on the turbocharger. Cheap insurance against long-term intake wear.",
+      "estCost": "$20-$35",
+      "ifDelayed": "Restricted airflow richens the fuel mixture, cutting fuel economy 5-10% and causing soot buildup on injectors/spark plugs; on turbo engines it can also increase intake vacuum and pull more debris past the filter edges over time."
+    },
+    {
+      "id": "cabin-air",
+      "name": "Cabin Air Filter",
+      "category": "HVAC",
+      "intervalMiles": 15000,
+      "intervalMonths": 12,
+      "tools": [
+        "None"
+      ],
+      "materials": [
+        "Mann CUK 26 009 (activated charcoal)"
+      ],
+      "steps": [
+        "Open glovebox, empty contents.",
+        "Push tabs at top-inside of glovebox upward, drop glovebox down further.",
+        "Locate rectangular cover behind glovebox (3 clips).",
+        "Press clips, remove cover.",
+        "Pull old filter, note airflow arrow points DOWN.",
+        "Insert new filter arrows DOWN, snap cover, close glovebox."
+      ],
+      "tips": "Charcoal filter reduces cabin odors significantly vs standard particulate filter.",
+      "whatItDoes": "Replaces the filter that cleans air blown through the HVAC system into the passenger cabin.",
+      "whyItMatters": "A clogged cabin filter reduces airflow from vents, causes musty odors, and lets more dust/allergens into the cabin. Not safety-critical but affects comfort and HVAC blower motor lifespan.",
+      "estCost": "$20-$35 (charcoal filter)",
+      "ifDelayed": "A clogged filter starves the HVAC blower, reducing defrost/AC output (a safety issue in fog/rain) and can let the blower motor overheat from working harder against the blockage, shortening motor life."
+    },
+    {
+      "id": "trans",
+      "name": "Transmission Service (09P Aisin 8-Speed)",
+      "category": "Powertrain",
+      "intervalMiles": 40000,
+      "intervalMonths": 36,
+      "tools": [
+        "OBD2 scanner (VCDS/OBDeleven for temp)",
+        "10mm hex / T40 Torx",
+        "Fill pump w/ VW adapter (VAS 6262A)",
+        "4 jack stands (must be level)"
+      ],
+      "materials": [
+        "4-5 Qts VW G 053 001 A2 (Aisin WS equivalent)",
+        "New drain plug crush washer + overflow tube"
+      ],
+      "steps": [
+        "Vehicle must be level and ATF cold (below 35C/95F) - check current fluid temp via VCDS/OBDeleven live data before starting; doing this hot is the #1 mistake that causes overfilling.",
+        "Raise and support on 4 jack stands; the 09P pan sits close to the front subframe on the Tiguan.",
+        "REAL-WORLD TRICK: Unlike the Yukon, there's no exhaust in the way here - the real obstacle is the front subframe crossmember and the plastic under-tray. Remove the full lower engine belly pan (8-10 Torx/plastic rivets) rather than just the trans access panel; trying to work through the small cutout alone makes it nearly impossible to see the drain/fill plugs clearly.",
+        "Loosen the drain plug (10mm hex) at the bottom of the pan; only a small amount drains initially because the fill level is controlled by an internal overflow standpipe, not the drain plug.",
+        "Unscrew the plastic overflow standpipe from inside the drain hole using needle-nose pliers or a small hook tool - this releases the bulk of the fluid (roughly 3-4 qts) in a rush, so have the pan positioned and be ready.",
+        "Once drained, hand-thread the standpipe back in - snug only, it's plastic and strips/cracks easily with a wrench.",
+        "Using the VW fill pump adapter (or an improvised adapter that seals against the drain hole), pump in approximately 4.5 qts of fresh G 052 990 or Aisin WS-equivalent fluid through the drain hole.",
+        "Start the engine, shift slowly through P-R-N-D-N-R-P once, then leave in Park with engine idling.",
+        "Monitor ATF temperature live via OBD scanner; you're targeting the 35-45C window specified by VW - this window passes quickly (often under 2-3 minutes from cold start), so watch closely.",
+        "The instant temp hits the window, quickly remove the standpipe again; fluid should trickle/drain until level, indicating correct fill level.",
+        "If nothing drains, add a bit more fluid via the drain hole and recheck at temp; if it gushes heavily, some must be drained off.",
+        "Reinstall standpipe and drain plug with a new crush washer, torque to 15 Nm - do not overtighten, the housing threads are aluminum and strip easily.",
+        "Reinstall belly pan, lower vehicle, and road test checking for shift quality after fluid change."
+      ],
+      "tips": "VW calls it 'lifetime' fluid but Aisin recommends 60k intervals. The biggest real-world failure point is missing the narrow 35-45C temperature window - it passes in minutes, so have your OBD scanner mounted and visible before you start the engine, not scrambling to find it after.",
+      "whatItDoes": "Drains and refills the 09P Aisin 8-speed automatic transmission fluid to the OE-specified level using the temperature-gated fill procedure specific to VW/Aisin transmissions.",
+      "whyItMatters": "Transmission fluid lubricates and cools internal clutches and gears while also transmitting hydraulic pressure. Degraded fluid causes harsh shifting, overheating, and expensive internal damage \u2014 this is one of the costliest repairs to neglect.",
+      "estCost": "$70-$110 (4-5 qts VW-spec ATF)",
+      "ifDelayed": "Old ATF loses its friction modifiers, causing harsh/delayed shifts and torque converter shudder; contaminated fluid clogs the filter and starves the valve body, and can escalate from a $100 fluid/filter service into a $3,000-$4,500 transmission rebuild if ignored long-term."
+    },
+    {
+      "id": "diff",
+      "name": "Haldex AWD & Bevel Box",
+      "category": "Drivetrain",
+      "intervalMiles": 40000,
+      "intervalMonths": 36,
+      "tools": [
+        "VCDS/OBDeleven (Haldex relearn)",
+        "Fluid pump",
+        "Hex/Torx bits"
+      ],
+      "materials": [
+        "Haldex: 1L VW G 060 175 A2",
+        "Bevel box: ~1 Qt 75W-90 GL-5",
+        "Rear diff: ~1 Qt 75W-90 GL-5"
+      ],
+      "steps": [
+        "Open fill plug first, then drain plug on Haldex unit (front of rear diff).",
+        "Optional at 150k: pull pump, clean mesh filter screen.",
+        "Reinstall pump/drain, refill until weeping from fill hole.",
+        "Run OBD 'Basic Settings/Relearn' to bleed pump air.",
+        "Recheck/top off level, reinstall fill plug.",
+        "Bevel box & rear diff: standard drain/fill with 75W-90 until weeping."
+      ],
+      "tips": "Haldex pump mesh filter clogs over time - cleaning it restores AWD response on rough/wet roads.",
+      "whatItDoes": "Drains and replaces gear oil in the differential(s) and transfer case that split power between wheels/axles.",
+      "whyItMatters": "Gear oil breaks down under the extreme pressure of meshing gears. Old fluid loses viscosity and lets metal-on-metal contact increase, leading to premature gear and bearing failure \u2014 especially costly to repair on AWD/4WD systems.",
+      "estCost": "$60-$100 (Haldex fluid + gear oil, both diffs)",
+      "ifDelayed": "Degraded gear oil loses film strength under load, letting metal-on-metal contact wear gear teeth and bearings; this often shows up first as whining/howling noise and can require a full differential rebuild ($800-$1,500) instead of a $70 fluid service."
+    },
+    {
+      "id": "coolant",
+      "name": "Coolant Flush (G13)",
+      "category": "Cooling",
+      "intervalMiles": 100000,
+      "intervalMonths": 60,
+      "tools": [
+        "Drain pan",
+        "Funnel",
+        "Pliers"
+      ],
+      "materials": [
+        "VW G13 (violet/purple, lobrid OAT) coolant, 50/50 premix"
+      ],
+      "steps": [
+        "Cool engine, remove lower radiator hose or drain plug.",
+        "Drain into pan; open expansion tank cap to speed draining.",
+        "Refill with G13 premix via expansion tank.",
+        "Bleed air using bleed screw (if equipped) with engine running/heater on.",
+        "Top off once cooled and level stabilizes."
+      ],
+      "tips": "Never substitute G12/G12++ pink coolant with G13 without a full flush - they aren't always compatible.",
+      "whatItDoes": "Drains old antifreeze/coolant and refills the cooling system with fresh coolant at the correct concentration.",
+      "whyItMatters": "Coolant additives that prevent corrosion and control boiling/freezing points deplete over time. Old coolant can corrode the radiator, head gasket sealing surfaces, and water pump \u2014 a failure here can strand you and cause engine overheating damage.",
+      "estCost": "$45-$65 (G13 coolant)",
+      "ifDelayed": "Old coolant loses corrosion inhibitors, allowing internal rust/scale buildup that clogs the radiator and heater core and can eat through the water pump seal or head gasket - an overheating failure on the road can crack a head or warp the block, a $2,000-$5,000+ repair."
+    },
+    {
+      "id": "brake-fluid",
+      "name": "Brake Fluid Flush",
+      "category": "Brakes",
+      "intervalMiles": 24000,
+      "intervalMonths": 24,
+      "tools": [
+        "Bleeder kit",
+        "11mm bleeder wrench"
+      ],
+      "materials": [
+        "VW-approved DOT 4 fluid"
+      ],
+      "steps": [
+        "Top off the reservoir before starting - never let it run dry mid-bleed, or you'll introduce air into the ABS module, requiring a much longer bleed procedure.",
+        "REAL-WORLD TRICK: Use VCDS/OBDeleven's 'Brake Bleed' function first if available - it cycles the ABS pump/valves to push fluid through the module itself, which a manual gravity/pedal bleed alone cannot do on modern VWs with electronic stability control.",
+        "After the ABS-assisted cycle, do a standard manual bleed as backup: RR, LF, LR, RF sequence (verify against your specific model year in a repair manual).",
+        "Pump the pedal 3x, hold, open bleeder screw, watch for old/dark fluid then clear fluid, close screw BEFORE releasing the pedal, repeat until fluid runs clear with no bubbles.",
+        "Top off the reservoir between each wheel - running low mid-process reintroduces air.",
+        "Verify a firm, high pedal at the end; a soft/spongy pedal after bleeding usually means air is still trapped in the ABS module and the electronic bleed step needs to be repeated."
+      ],
+      "tips": "VW specifies DOT4 (not DOT3). The electronic ABS bleed step is the real-world difference-maker on VWs - skipping it and doing a purely manual bleed often leaves a soft pedal because trapped air sits inside the ABS unit where gravity/pedal pressure alone can't reach it.",
+      "whatItDoes": "Bleeds old, moisture-contaminated brake fluid out of the lines and calipers and replaces it with fresh fluid.",
+      "whyItMatters": "Brake fluid absorbs moisture from the air over time (it's hygroscopic), which lowers its boiling point and can cause a spongy pedal or corrosion inside the ABS module and calipers. This is a direct safety item.",
+      "estCost": "$15-$25 (DOT 4)",
+      "ifDelayed": "Moisture-saturated brake fluid lowers the boiling point, risking brake fade under hard/repeated braking (e.g. mountain descents or towing), and corrodes ABS module and caliper internals from the inside out - ABS module replacement alone can run $600-$1,200."
+    },
+    {
+      "id": "spark-plugs",
+      "name": "Spark Plugs (EA888 Turbo)",
+      "category": "Ignition",
+      "intervalMiles": 40000,
+      "intervalMonths": 36,
+      "tools": [
+        "Spark plug socket (14mm hex plugs)",
+        "Long extension",
+        "Torque wrench"
+      ],
+      "materials": [
+        "NGK/OE iridium plugs x4",
+        "Anti-seize (light)"
+      ],
+      "steps": [
+        "Remove engine cover.",
+        "Disconnect ignition coils, remove coil bracket if present.",
+        "Remove old plugs, inspect for oil fouling/wear.",
+        "Install new plugs, torque to 25-30 Nm.",
+        "Reinstall coils and cover."
+      ],
+      "tips": "Turbo direct-injection engines wear plugs faster than naturally aspirated - do not stretch past 40k.",
+      "whatItDoes": "Removes worn spark plugs and installs new ones that ignite the air/fuel mixture in each cylinder.",
+      "whyItMatters": "Worn plugs cause misfires, rough idle, poor fuel economy, and can eventually damage the ignition coils or catalytic converter if left too long.",
+      "estCost": "$40-$70 (4 plugs)",
+      "ifDelayed": "Worn plugs misfire under load, which can wash cylinder walls with unburned fuel, damage the catalytic converter (a $1,000-$2,500 repair), and in some cases foul or damage ignition coils that then also need replacement."
+    },
+    {
+      "id": "belts",
+      "name": "Timing Chain Tensioner & Accessory Belt",
+      "category": "Accessory Drive",
+      "intervalMiles": 100000,
+      "intervalMonths": 84,
+      "tools": [
+        "Belt tensioner tool",
+        "Torque wrench"
+      ],
+      "materials": [
+        "OE serpentine belt, tensioner if noisy"
+      ],
+      "steps": [
+        "Note belt routing.",
+        "Release tensioner, remove belt.",
+        "Inspect tensioner pulley and idlers for play.",
+        "Install new belt, verify routing, release tensioner."
+      ],
+      "tips": "EA888 uses a timing chain (not belt) - listen for chain rattle on cold start, which indicates tensioner wear.",
+      "whatItDoes": "Inspects and replaces the serpentine belt (and/or tensioner) that drives the alternator, power steering pump, and A/C compressor.",
+      "whyItMatters": "A snapped belt instantly kills your alternator charging, power steering, and A/C \u2014 often stranding you on the roadside. Cracked or glazed belts are a warning sign that failure is near.",
+      "estCost": "$30-$70",
+      "ifDelayed": "A cracked/glazed belt can snap without warning, instantly killing the alternator (dead battery within minutes), power steering (very heavy steering effort), and A/C - often stranding you and, on some engines, can also drive the water pump, causing sudden overheating."
+    },
+    {
+      "id": "battery",
+      "name": "Battery Test & AGM Registration",
+      "category": "Electrical",
+      "intervalMiles": 15000,
+      "intervalMonths": 12,
+      "tools": [
+        "Multimeter",
+        "VCDS/OBDeleven (battery registration)"
+      ],
+      "materials": [
+        "AGM battery when replacing"
+      ],
+      "steps": [
+        "Test resting voltage and load test.",
+        "If replacing, use VCDS/OBDeleven to register new battery to BCM.",
+        "Clean terminals, apply protectant."
+      ],
+      "tips": "VW ECUs track battery age for charging strategy - always register a new battery or you'll get inaccurate charging behavior.",
+      "whatItDoes": "Tests battery voltage/capacity and cleans corrosion off the terminals and cable clamps.",
+      "whyItMatters": "Corroded terminals cause hard starts and charging issues, and a weak battery can fail without warning \u2014 usually at the worst possible time (cold mornings, after sitting).",
+      "estCost": "$0 (test) or $180-$260 (AGM replacement + registration)",
+      "ifDelayed": "A weak, un-tested battery can fail without warning in cold weather or after the vehicle sits, leaving you stranded; corroded terminals also cause intermittent electrical gremlins (dash warning lights, hard starts) that are hard to diagnose after the fact."
+    },
+    {
+      "id": "wipers",
+      "name": "Wiper Blades",
+      "category": "Exterior",
+      "intervalMiles": 10000,
+      "intervalMonths": 12,
+      "tools": [
+        "None"
+      ],
+      "materials": [
+        "24\" driver / 19\" passenger (verify size)"
+      ],
+      "steps": [
+        "Lift arm off glass.",
+        "Release tab, slide old blade off.",
+        "Slide new blade on until click.",
+        "Lower arm gently."
+      ],
+      "tips": "Tiguan uses proprietary VW clip - confirm adapter type when ordering blades.",
+      "whatItDoes": "Replaces the rubber wiper blade inserts that clear rain/debris from the windshield.",
+      "whyItMatters": "Worn blades streak and skip, reducing visibility in rain right when you need it most \u2014 a low-cost item with outsized safety impact.",
+      "estCost": "$20-$35 (pair)",
+      "ifDelayed": "Streaking/skipping blades reduce visibility in exactly the conditions where you need it most (rain, road spray), which is a direct safety risk, and can also scratch the windshield glass over extended use."
+    },
+    {
+      "id": "brakes-pads",
+      "name": "Brake Pads & Rotors Inspection",
+      "category": "Brakes",
+      "intervalMiles": 15000,
+      "intervalMonths": 12,
+      "tools": [
+        "Jack/stands",
+        "Caliper tool"
+      ],
+      "materials": [
+        "OE-spec pads/rotors when due"
+      ],
+      "steps": [
+        "Remove wheel, inspect pad thickness.",
+        "Check rotor thickness/scoring.",
+        "Inspect slide pins/boots, regrease if needed."
+      ],
+      "tips": "Front pads wear faster on turbo AWD due to added weight - check every rotation.",
+      "whatItDoes": "Inspects pad thickness and rotor condition, replacing pads/rotors once they're worn past minimum spec.",
+      "whyItMatters": "Worn-out pads dramatically increase stopping distance and can damage rotors (and eventually calipers) if metal-to-metal contact occurs \u2014 a core safety system.",
+      "estCost": "$0 (inspect) or $130-$230 per axle",
+      "ifDelayed": "Pads worn to metal backing plates damage rotors (turning a $30 pad job into a $150-$250 pad+rotor job) and dramatically increase stopping distance - continuing to drive on metal-to-metal contact is a direct safety hazard."
+    },
+    {
+      "id": "pcv",
+      "name": "PCV / Diverter Valve",
+      "category": "Emissions",
+      "intervalMiles": 60000,
+      "intervalMonths": 48,
+      "tools": [
+        "Pliers",
+        "Torx bits"
+      ],
+      "materials": [
+        "OE PCV diaphragm/valve"
+      ],
+      "steps": [
+        "Locate PCV valve on cylinder head cover.",
+        "Remove hoses/clips, extract valve.",
+        "Install new valve/diaphragm, reseat hoses."
+      ],
+      "tips": "Failing PCV diaphragms are a common EA888 oil-consumption culprit - address rough idle promptly.",
+      "whatItDoes": "Replaces the valve that vents crankcase pressure/vapors back into the intake for combustion.",
+      "whyItMatters": "A stuck or clogged PCV valve can cause oil consumption, rough idle, and increased crankcase pressure that can blow out seals/gaskets over time.",
+      "estCost": "$25-$45 (diverter valve)",
+      "ifDelayed": "A stuck-closed PCV valve builds excess crankcase pressure that can blow out gaskets/seals (valve cover, front/rear main) leading to oil leaks; a stuck-open valve causes oil to be sucked into the intake, fouling plugs and increasing oil consumption."
+    },
+    {
+      "id": "driveline",
+      "name": "Driveshaft & Haldex Coupling Inspection",
+      "category": "Drivetrain",
+      "intervalMiles": 30000,
+      "intervalMonths": 24,
+      "tools": [
+        "Flashlight",
+        "Grease gun (if fitted)"
+      ],
+      "materials": [
+        "N/A"
+      ],
+      "steps": [
+        "Support vehicle, inspect driveshaft center bearing/CV boots for play or cracks.",
+        "Check Haldex coupling housing for leaks.",
+        "Inspect rear diff mounts for wear."
+      ],
+      "tips": "Torn CV boots lead to rapid joint wear - replace boots immediately if cracked, even if joint feels fine.",
+      "whatItDoes": "Inspects (and greases, where applicable) U-joints, CV joints, and driveshaft components that transmit power to the wheels.",
+      "whyItMatters": "Worn driveline components cause vibration, clunking, and can fail completely while driving \u2014 catching wear early avoids more expensive driveshaft or axle replacement.",
+      "estCost": "$0 (inspect) or $150-$300 (CV boot/joint replacement)",
+      "ifDelayed": "Worn U-joints/CV joints that go unaddressed can seize or separate while driving, causing loss of drive power or a dropped driveshaft - a safety hazard and a much larger repair (driveshaft/axle replacement) than the original grease/inspection."
+    },
+    {
+      "id": "alignment",
+      "name": "Wheel Alignment & Tire Rotation",
+      "category": "Suspension",
+      "intervalMiles": 7500,
+      "intervalMonths": 6,
+      "tools": [
+        "Alignment rack",
+        "Torque wrench"
+      ],
+      "materials": [
+        "N/A"
+      ],
+      "steps": [
+        "Rotate tires front-to-back same side.",
+        "Torque lug bolts to 120 Nm.",
+        "Full alignment if uneven wear noted."
+      ],
+      "tips": "Turbo Tiguans are more alignment-sensitive - uneven wear often signals worn control arm bushings.",
+      "whatItDoes": "Rotates tires to even out wear and, when needed, adjusts suspension angles so all four wheels track correctly.",
+      "whyItMatters": "Uneven wear from skipped rotations shortens tire life significantly, and poor alignment causes pulling, vibration, and accelerated tire wear \u2014 both cost you money in tires over time.",
+      "estCost": "$0 (rotation) or $90-$130 (shop alignment)",
+      "ifDelayed": "Skipped rotations cause uneven tread wear that shortens tire life by thousands of miles, and unresolved alignment issues cause pulling/vibration and accelerate wear on tie rods and bushings, compounding into a larger suspension repair."
+    }
+  ]
+}
