@@ -1,684 +1,2679 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Garage Maintenance Hub</title>
-<meta name="description" content="Detailed preventive maintenance tracker with reminder engine for your vehicles">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="description" content="A preventive-maintenance tracker, reminder engine, and work log for your vehicles.">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GarageHub">
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="GarageHub">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="icon" href="icons/icon-192.png">
+  <title>Garage Maintenance Hub</title>
 
-<style>
-:root{
-  --bg-color:#f4f7f6;--surface-color:#ffffff;--primary:#2563eb;--primary-hover:#1d4ed8;
-  --text-main:#1e293b;--text-muted:#64748b;--border:#e2e8f0;--accent-red:#ef4444;--accent-green:#10b981;
-  --accent-amber:#f59e0b;--font-family:'Inter',system-ui,-apple-system,sans-serif;
-  --safe-top:env(safe-area-inset-top);--safe-bottom:env(safe-area-inset-bottom);
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
-body{font-family:var(--font-family);background:var(--bg-color);color:var(--text-main);line-height:1.6;
-  -webkit-user-select:none;user-select:none;padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);
-  overscroll-behavior-y:none;}
-input,textarea{-webkit-user-select:text;user-select:text;}
-header{background:var(--surface-color);padding:1.1rem 5%;box-shadow:0 2px 10px rgba(0,0,0,.05);text-align:center;
-  border-bottom:3px solid var(--primary);position:sticky;top:0;z-index:50;}
-h1{font-size:1.5rem;}
-.subtitle{color:var(--text-muted);font-size:.85rem;}
-.container{max-width:1200px;margin:1.2rem auto;padding:0 16px 4rem;display:flex;flex-direction:column;gap:1.2rem;}
-.topnav{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;position:sticky;top:60px;z-index:40;background:var(--bg-color);padding:.5rem 0;}
-.nav-btn{padding:.6rem 1.1rem;background:var(--surface-color);border:2px solid var(--border);border-radius:8px;
-  font-size:.88rem;font-weight:600;cursor:pointer;color:var(--text-muted);transition:.2s;}
-.nav-btn.active{background:#0f172a;color:#fff;border-color:#0f172a;}
-.v-tab{padding:.65rem 1.1rem;background:var(--surface-color);border:2px solid var(--border);border-radius:8px;
-  font-size:.88rem;font-weight:600;cursor:pointer;color:var(--text-muted);transition:.2s;}
-.v-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
-.view{display:none;}
-.view.active{display:block;}
-.workspace{display:none;grid-template-columns:220px 1fr;gap:1.2rem;}
-.workspace.active{display:grid;}
-@media (max-width:768px){.workspace.active{grid-template-columns:1fr;}}
-.service-tabs{display:flex;flex-direction:column;gap:.35rem;background:var(--surface-color);padding:.7rem;
-  border-radius:12px;box-shadow:0 2px 15px rgba(0,0,0,.03);height:fit-content;max-height:80vh;overflow-y:auto;}
-.s-tab{padding:.65rem .8rem;background:transparent;border:none;text-align:left;font-size:.88rem;font-weight:500;
-  color:var(--text-main);border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;gap:.4rem;}
-.s-tab:hover{background:var(--bg-color);}
-.s-tab.active{background:var(--bg-color);color:var(--primary);border-left:4px solid var(--primary);font-weight:600;}
-.badge{font-size:.65rem;font-weight:700;padding:.15rem .4rem;border-radius:20px;white-space:nowrap;}
-.badge.ok{background:#ecfdf5;color:#059669;}
-.badge.soon{background:#fffbeb;color:#b45309;}
-.badge.overdue{background:#fef2f2;color:#dc2626;}
-.service-content{background:var(--surface-color);border-radius:12px;padding:1.4rem;box-shadow:0 2px 15px rgba(0,0,0,.03);display:none;}
-.service-content.active{display:block;}
-.service-header{margin-bottom:1.1rem;padding-bottom:.7rem;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;}
-.service-header h2{font-size:1.25rem;color:var(--primary);}
-.cat-tag{font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.03em;}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
-@media (max-width:600px){.grid-2{grid-template-columns:1fr;}}
-.card{background:var(--bg-color);padding:1rem;border-radius:8px;border:1px solid var(--border);}
-.card h3{margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem;font-size:.9rem;}
-.tag-list{list-style:none;display:flex;flex-direction:column;gap:.35rem;}
-.tag-list li{position:relative;padding-left:1.2rem;font-size:.87rem;}
-.tag-list li::before{content:"•";color:var(--primary);font-size:1.2rem;position:absolute;left:0;top:-.25rem;}
-.procedure{margin-top:1.3rem;}
-.step{display:flex;gap:.9rem;margin-bottom:.9rem;}
-.step-num{flex-shrink:0;width:26px;height:26px;background:var(--primary);color:#fff;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;}
-.step-text{padding-top:.15rem;font-size:.88rem;}
-.tips-box{margin-top:1.3rem;background:#fffbeb;border-left:5px solid var(--accent-amber);padding:.9rem;border-radius:0 8px 8px 0;font-size:.87rem;}
-.tips-box h4{color:#b45309;margin-bottom:.4rem;font-size:.87rem;}
-.info-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:.9rem;margin-bottom:1rem;font-size:.87rem;}
-.info-item{margin-bottom:.5rem;}
-.info-item:last-child{margin-bottom:0;}
-.cost-pill{display:inline-block;background:#dcfce7;color:#166534;font-weight:700;padding:.15rem .55rem;border-radius:20px;font-size:.82rem;}
-.delay-box{margin-top:1rem;background:#fef2f2;border-left:5px solid var(--accent-red);padding:.9rem;border-radius:0 8px 8px 0;font-size:.87rem;}
-.delay-box h4{color:#dc2626;margin-bottom:.4rem;font-size:.87rem;}
-.track-box{margin-top:1.3rem;background:#eff6ff;border-radius:8px;padding:.9rem;border:1px solid #bfdbfe;}
-.track-row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:flex-end;margin-top:.6rem;}
-.track-row label{font-size:.8rem;color:var(--text-muted);display:block;}
-input[type=number],input[type=date],input[type=text],input[type=password],textarea{padding:.5rem;border:1px solid var(--border);border-radius:6px;font-size:.88rem;width:130px;}
-textarea{width:100%;min-height:60px;font-family:inherit;}
-button.btn{background:var(--primary);color:#fff;border:none;padding:.55rem 1rem;border-radius:6px;font-weight:600;cursor:pointer;font-size:.85rem;}
-button.btn:active{background:var(--primary-hover);}
-button.btn.secondary{background:var(--text-muted);}
-button.btn.danger{background:var(--accent-red);}
-.due-line{font-size:.85rem;margin-top:.5rem;font-weight:600;}
-.due-line.ok{color:var(--accent-green);}
-.due-line.soon{color:#b45309;}
-.due-line.overdue{color:var(--accent-red);}
-.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1rem;}
-.dash-card{background:var(--surface-color);border-radius:10px;padding:1rem;border-left:5px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.03);}
-.dash-card.ok{border-color:var(--accent-green);}
-.dash-card.soon{border-color:var(--accent-amber);}
-.dash-card.overdue{border-color:var(--accent-red);}
-.dash-card h4{font-size:.82rem;color:var(--text-muted);margin-bottom:.2rem;}
-.dash-card .svc{font-weight:700;font-size:.92rem;margin-bottom:.3rem;}
-.section-title{font-size:1.1rem;font-weight:700;margin:1rem 0 .6rem;}
-.odo-panel{background:var(--surface-color);border-radius:12px;padding:1.2rem;box-shadow:0 2px 15px rgba(0,0,0,.03);}
-.odo-row{display:flex;flex-wrap:wrap;gap:.8rem;align-items:flex-end;margin-bottom:.9rem;padding-bottom:.9rem;border-bottom:1px solid var(--border);}
-.odo-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
-.odo-row .vname{font-weight:700;min-width:170px;font-size:.9rem;}
-.settings-panel{background:var(--surface-color);border-radius:12px;padding:1.2rem;box-shadow:0 2px 15px rgba(0,0,0,.03);display:flex;flex-direction:column;gap:.8rem;}
-.settings-panel label{font-size:.82rem;color:var(--text-muted);}
-.settings-panel input{width:100%;max-width:420px;}
-.status-line{font-size:.82rem;color:var(--text-muted);margin-top:.4rem;}
-table.log-table{width:100%;border-collapse:collapse;font-size:.85rem;}
-table.log-table th,table.log-table td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--border);}
-table.log-table th{color:var(--text-muted);font-weight:700;font-size:.75rem;text-transform:uppercase;}
-.log-filters{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:.8rem;}
-select{padding:.5rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;}
-.disclaimer{text-align:center;margin-top:2rem;color:var(--text-muted);font-size:.78rem;}
-.toast{position:fixed;bottom:calc(20px + var(--safe-bottom));left:50%;transform:translateX(-50%);
-  background:#0f172a;color:#fff;padding:.7rem 1.2rem;border-radius:8px;font-size:.85rem;opacity:0;
-  transition:opacity .3s;z-index:100;pointer-events:none;max-width:90%;text-align:center;}
-.toast.show{opacity:1;}
-#installBanner{display:none;position:fixed;bottom:calc(10px + var(--safe-bottom));left:10px;right:10px;
-  background:#0f172a;color:#fff;padding:.8rem 1rem;border-radius:10px;font-size:.83rem;z-index:90;
-  align-items:center;justify-content:space-between;gap:.6rem;}
-#installBanner button{background:var(--primary);color:#fff;border:none;padding:.4rem .8rem;border-radius:6px;font-weight:600;}
-.pill{display:inline-block;background:var(--bg-color);border:1px solid var(--border);border-radius:20px;padding:.15rem .6rem;font-size:.72rem;color:var(--text-muted);}
-</style>
-</head>
-<body>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" href="icons/icon-192.png">
 
-<header>
-  <h1>Garage Maintenance Hub</h1>
-  <p class="subtitle">PM Tracker · Reminder Engine · Work Log</p>
-</header>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-muted: #f8fafc;
+      --surface-dark: #0f172a;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-soft: #eff6ff;
+      --text: #172033;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --green: #059669;
+      --green-bg: #ecfdf5;
+      --amber: #b45309;
+      --amber-bg: #fffbeb;
+      --red: #dc2626;
+      --red-bg: #fef2f2;
+      --blue-bg: #f0f9ff;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, .04);
+      --shadow: 0 10px 28px rgba(15, 23, 42, .07);
+      --radius: 14px;
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
 
-<div class="container">
-  <div class="topnav">
-    <button class="nav-btn active" data-view="dashboardView">📊 Dashboard</button>
-    <button class="nav-btn" data-view="odoView">🚗 Odometer</button>
-    <button class="nav-btn" data-view="servicesView">🛠️ Services</button>
-    <button class="nav-btn" data-view="logView">📋 Work Log</button>
-    <button class="nav-btn" data-view="settingsView">⚙️ Sync Settings</button>
-  </div>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-  <!-- DASHBOARD -->
-  <div class="view active" id="dashboardView">
-    <div class="section-title">⏰ Due Soon (next 1,000 mi)</div>
-    <div class="dash-grid" id="dueSoonGrid"></div>
-    <div class="section-title">🚨 Overdue</div>
-    <div class="dash-grid" id="overdueGrid"></div>
-    <div class="section-title">✅ On Track</div>
-    <div class="dash-grid" id="okGrid"></div>
-  </div>
+    html {
+      background: var(--bg);
+    }
 
-  <!-- ODOMETER -->
-  <div class="view" id="odoView">
-    <div class="odo-panel" id="odoPanel"></div>
-  </div>
+    body {
+      margin: 0;
+      min-width: 320px;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+      color: var(--text);
+      background:
+        radial-gradient(circle at 95% -10%, rgba(37, 99, 235, .10), transparent 30rem),
+        var(--bg);
+      font-family: var(--font);
+      line-height: 1.5;
+      overscroll-behavior-y: none;
+    }
 
-  <!-- SERVICES -->
-  <div class="view" id="servicesView">
-    <div class="topnav" id="vehicleTabs"></div>
-    <div id="workspaces"></div>
-  </div>
+    body.modal-open {
+      overflow: hidden;
+    }
 
-  <!-- WORK LOG -->
-  <div class="view" id="logView">
-    <div class="log-filters">
-      <select id="logFilterVehicle"><option value="all">All Vehicles</option></select>
-      <button class="btn secondary" id="exportLogBtn">Export CSV</button>
-    </div>
-    <div class="odo-panel" style="overflow-x:auto;">
-      <table class="log-table" id="logTable">
-        <thead><tr><th>Date</th><th>Vehicle</th><th>Service</th><th>Mileage</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="logTableBody"></tbody>
-      </table>
-    </div>
-  </div>
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
 
-  <!-- SETTINGS / GITHUB SYNC -->
-  <div class="view" id="settingsView">
-    <div class="settings-panel">
-      <strong>GitHub Sync (optional — overwrites data.json in your repo)</strong>
-      <p class="status-line">Create a fine-grained Personal Access Token scoped ONLY to this repo with "Contents: Read and write" permission. It is stored in this browser's localStorage only, never sent anywhere except GitHub's API.</p>
-      <label>GitHub Username/Org<input type="text" id="ghOwner" placeholder="e.g. kevinsmith"></label>
-      <label>Repository Name<input type="text" id="ghRepo" placeholder="e.g. garage-maintenance-hub"></label>
-      <label>Branch<input type="text" id="ghBranch" placeholder="main" value="main"></label>
-      <label>Personal Access Token<input type="password" id="ghToken" placeholder="github_pat_..."></label>
-      <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
-        <input type="checkbox" id="autoSyncToggle" style="width:auto;">
-        Auto Push after every logged service/mileage update, and Auto Pull on app open
-      </label>
-      <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
-        <button class="btn" id="saveSettingsBtn">Save Settings</button>
-        <button class="btn secondary" id="pullBtn">Pull Latest from GitHub</button>
-        <button class="btn" id="pushBtn">Push / Save to GitHub</button>
-      </div>
-      <div class="status-line" id="syncStatus">Not synced yet this session.</div>
-    </div>
-  </div>
+    button {
+      cursor: pointer;
+    }
 
-  <div class="disclaimer">
-    Reference only — always consult factory service manuals for exact specs. Tuned for Raleigh, NC (5k mi intervals, mild climate).
-  </div>
-</div>
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .58;
+    }
 
-<div id="installBanner">
-  <span>Install this app: tap Share → Add to Home Screen</span>
-  <button onclick="document.getElementById('installBanner').style.display='none'">Got it</button>
-</div>
-<div class="toast" id="toast"></div>
+    input,
+    textarea,
+    select {
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      border-radius: 9px;
+      background: #fff;
+      transition: border-color .15s, box-shadow .15s;
+    }
 
-<script>
-let VEHICLES = [];
-const STORAGE_KEY = 'gmh_data_v2';
-const SETTINGS_KEY = 'gmh_gh_settings_v1';
-const DUE_SOON_MILES = 1000;
-const DUE_SOON_DAYS = 21;
+    input:focus,
+    textarea:focus,
+    select:focus,
+    button:focus-visible {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, .16);
+    }
 
-function defaultData(){
-  return {
-    meta: { lastUpdated: null, schemaVersion: 1 },
-    vehicles: Object.fromEntries(VEHICLES.map(v=>[v.id, {odometer:0, odometerDate:null}])),
-    serviceState: {},
-    history: []
-  };
-}
-function loadData(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return defaultData();
-    const parsed = JSON.parse(raw);
-    return Object.assign(defaultData(), parsed);
-  }catch(e){ return defaultData(); }
-}
-function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
-let data = defaultData();
+    input[type="number"],
+    input[type="date"],
+    input[type="text"],
+    input[type="password"],
+    select {
+      min-height: 42px;
+      padding: .55rem .7rem;
+    }
 
-function loadSettings(){
-  try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; }catch(e){ return {}; }
-}
-function saveSettings(s){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
-let ghSettings = loadSettings();
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 76px;
+      padding: .65rem .7rem;
+      resize: vertical;
+    }
 
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
-}
+    .skip-link {
+      position: fixed;
+      top: -60px;
+      left: 12px;
+      z-index: 200;
+      padding: .6rem .85rem;
+      color: #fff;
+      background: var(--surface-dark);
+      border-radius: 8px;
+    }
 
-// ---------- Web Worker: reminder engine ----------
-const workerCode = `
-self.onmessage = function(e){
-  const {vehicles, serviceState, vehicleOdo, dueSoonMiles, dueSoonDays} = e.data;
-  const now = Date.now();
-  const results = [];
-  vehicles.forEach(v => {
-    const cm = (vehicleOdo[v.id] && vehicleOdo[v.id].odometer) || 0;
-    v.services.forEach(s => {
-      const key = v.id + '::' + s.id;
-      const rec = serviceState[key] || {};
-      const lastMiles = rec.lastMiles || 0;
-      const lastDate = rec.lastDate ? new Date(rec.lastDate).getTime() : null;
-      const dueMiles = lastMiles + s.intervalMiles;
-      const dueDate = lastDate ? (lastDate + s.intervalMonths*30*24*3600*1000) : null;
-      const milesRemaining = dueMiles - cm;
-      const daysRemaining = dueDate ? Math.round((dueDate - now)/(24*3600*1000)) : null;
-      let status = 'ok';
-      if(milesRemaining <= 0 || (dueDate !== null && now >= dueDate)) status = 'overdue';
-      else if(milesRemaining <= dueSoonMiles || (dueDate !== null && daysRemaining <= dueSoonDays)) status = 'soon';
-      results.push({
-        vehicleId: v.id, vehicleName: v.name, serviceId: s.id, serviceName: s.name,
-        category: s.category, lastMiles, lastDate, dueMiles, dueDate, milesRemaining, daysRemaining, status,
-        currentMiles: cm
-      });
-    });
-  });
-  self.postMessage(results);
-};
-`;
-let worker;
-try{
-  const blob = new Blob([workerCode], {type:'application/javascript'});
-  worker = new Worker(URL.createObjectURL(blob));
-}catch(err){ console.warn('Web Worker unavailable, using main-thread fallback', err); }
+    .skip-link:focus {
+      top: 12px;
+    }
 
-function computeStatuses(cb){
-  if(worker){
-    worker.onmessage = (e)=>cb(e.data);
-    worker.postMessage({vehicles: VEHICLES, serviceState: data.serviceState, vehicleOdo: data.vehicles,
-      dueSoonMiles: DUE_SOON_MILES, dueSoonDays: DUE_SOON_DAYS});
-  } else {
-    const now = Date.now(); const results = [];
-    VEHICLES.forEach(v=>{
-      const cm = (data.vehicles[v.id] && data.vehicles[v.id].odometer) || 0;
-      v.services.forEach(s=>{
-        const key=v.id+'::'+s.id; const rec=data.serviceState[key]||{};
-        const lastMiles=rec.lastMiles||0;
-        const lastDate=rec.lastDate?new Date(rec.lastDate).getTime():null;
-        const dueMiles=lastMiles+s.intervalMiles;
-        const dueDate=lastDate?(lastDate+s.intervalMonths*30*24*3600*1000):null;
-        const milesRemaining=dueMiles-cm;
-        const daysRemaining = dueDate ? Math.round((dueDate-now)/(24*3600*1000)) : null;
-        let status='ok';
-        if(milesRemaining<=0||(dueDate!==null&&now>=dueDate)) status='overdue';
-        else if(milesRemaining<=DUE_SOON_MILES||(dueDate!==null&&daysRemaining<=DUE_SOON_DAYS)) status='soon';
-        results.push({vehicleId:v.id,vehicleName:v.name,serviceId:s.id,serviceName:s.name,category:s.category,
-          lastMiles,lastDate,dueMiles,dueDate,milesRemaining,daysRemaining,status,currentMiles:cm});
-      });
-    });
-    cb(results);
-  }
-}
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      border-bottom: 1px solid rgba(226, 232, 240, .9);
+      background: rgba(255, 255, 255, .92);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow-sm);
+    }
 
-function fmtDate(ts){ if(!ts) return '—'; return new Date(ts).toLocaleDateString(); }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      max-width: 1240px;
+      min-height: 70px;
+      margin: 0 auto;
+      padding: .8rem 1rem;
+    }
 
-// ---------- Dashboard ----------
-function renderDashboard(statusMap){
-  const items = Object.values(statusMap);
-  const soon = items.filter(i=>i.status==='soon');
-  const overdue = items.filter(i=>i.status==='overdue');
-  const ok = items.filter(i=>i.status==='ok');
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: .72rem;
+    }
 
-  const cardHtml = (it) => `
-    <div class="dash-card ${it.status}">
-      <h4>${it.vehicleName}</h4>
-      <div class="svc">${it.serviceName}</div>
-      <div style="font-size:.8rem;color:var(--text-muted)">
-        ${it.status==='overdue' ? 'Overdue' : (it.milesRemaining.toLocaleString()+' mi left')}
-        ${it.dueDate ? ' · by '+fmtDate(it.dueDate) : ''}
-      </div>
-    </div>`;
+    .brand-mark {
+      display: grid;
+      flex: 0 0 38px;
+      width: 38px;
+      height: 38px;
+      color: #fff;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      border-radius: 11px;
+      box-shadow: 0 7px 18px rgba(37, 99, 235, .25);
+      place-items: center;
+      font-size: 1.12rem;
+    }
 
-  document.getElementById('dueSoonGrid').innerHTML = soon.length ? soon.map(cardHtml).join('') : '<p class="status-line">Nothing due within 1,000 miles.</p>';
-  document.getElementById('overdueGrid').innerHTML = overdue.length ? overdue.map(cardHtml).join('') : '<p class="status-line">Nothing overdue. 🎉</p>';
-  document.getElementById('okGrid').innerHTML = ok.map(cardHtml).join('');
-}
+    .brand h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      line-height: 1.2;
+      letter-spacing: -.02em;
+    }
 
-// ---------- Odometer panel ----------
-function renderOdoPanel(){
-  const panel = document.getElementById('odoPanel');
-  panel.innerHTML = VEHICLES.map(v=>{
-    const rec = data.vehicles[v.id] || {odometer:0, odometerDate:null};
-    return `<div class="odo-row">
-      <div class="vname">${v.name}</div>
-      <label>Current mileage<br><input type="number" id="odo-${v.id}" value="${rec.odometer||''}" placeholder="e.g. 155200"></label>
-      <label>As of date<br><input type="date" id="odo-date-${v.id}" value="${rec.odometerDate||new Date().toISOString().slice(0,10)}"></label>
-      <button class="btn" data-odo-save="${v.id}">Update Mileage</button>
-    </div>`;
-  }).join('');
-  panel.querySelectorAll('[data-odo-save]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const id = btn.dataset.odoSave;
-      const miles = Number(document.getElementById('odo-'+id).value)||0;
-      const date = document.getElementById('odo-date-'+id).value;
-      data.vehicles[id] = { odometer: miles, odometerDate: date };
-      data.meta.lastUpdated = new Date().toISOString();
-      saveData();
-      showToast('Mileage updated ✓');
-      refreshAll();
-      autoPushIfEnabled();
-    });
-  });
-}
+    .brand p {
+      margin: .12rem 0 0;
+      overflow: hidden;
+      color: var(--text-muted);
+      font-size: .74rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
-// ---------- Vehicle / Service workspace ----------
-function renderVehicleTabs(){
-  const tabbar = document.getElementById('vehicleTabs');
-  tabbar.innerHTML = VEHICLES.map((v,i)=>`<button class="v-tab ${i===0?'active':''}" data-target="${v.id}">${v.name}</button>`).join('');
-  tabbar.querySelectorAll('.v-tab').forEach(tab=>{
-    tab.addEventListener('click', ()=>{
-      tabbar.querySelectorAll('.v-tab').forEach(t=>t.classList.remove('active'));
-      document.querySelectorAll('.workspace').forEach(w=>w.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById(tab.dataset.target).classList.add('active');
-    });
-  });
-}
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      color: var(--text-muted);
+      font-size: .76rem;
+      text-align: right;
+    }
 
-function renderWorkspaces(statusMap){
-  const container = document.getElementById('workspaces');
-  container.innerHTML = VEHICLES.map((v,vi)=>{
-    const svcTabs = v.services.map((s,si)=>{
-      const st = statusMap[v.id+'::'+s.id];
-      return `<button class="s-tab ${si===0?'active':''}" data-target="${v.id}-${s.id}">
-        <span>${s.name}</span><span class="badge ${st.status}">${st.status==='overdue'?'OVERDUE':st.status==='soon'?'SOON':'OK'}</span>
-      </button>`;
-    }).join('');
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      background: #94a3b8;
+      border-radius: 50%;
+    }
 
-    const svcContents = v.services.map((s,si)=>{
-      const key = v.id+'::'+s.id;
-      const st = statusMap[key];
-      const rec = data.serviceState[key] || {};
-      return `
-      <div class="service-content ${si===0?'active':''}" id="${v.id}-${s.id}">
-        <div class="service-header">
-          <div><span class="cat-tag">${s.category}</span><h2>${s.name}</h2></div>
-          <span class="badge ${st.status}">${st.status==='overdue'?'OVERDUE':st.status==='soon'?'DUE SOON':'ON TRACK'}</span>
-        </div>
-        <div class="info-box">
-          <div class="info-item"><strong>What it does:</strong> ${s.whatItDoes || ''}</div>
-          <div class="info-item"><strong>Why it matters:</strong> ${s.whyItMatters || ''}</div>
-          <div class="info-item cost-line"><strong>Est. parts cost:</strong> <span class="cost-pill">${s.estCost || 'Varies'}</span></div>
-        </div>
-        <div class="grid-2">
-          <div class="card"><h3>🛠️ Tools Required</h3><ul class="tag-list">${s.tools.map(t=>`<li>${t}</li>`).join('')}</ul></div>
-          <div class="card"><h3>📦 Materials</h3><ul class="tag-list">${s.materials.map(m=>`<li>${m}</li>`).join('')}</ul></div>
-        </div>
-        <div class="procedure"><h3>Procedure</h3>
-          ${s.steps.map((txt,i)=>`<div class="step"><div class="step-num">${i+1}</div><div class="step-text">${txt}</div></div>`).join('')}
-        </div>
-        <div class="tips-box"><h4>💡 Pro-Tip / Real-World Trick</h4><p>${s.tips}</p></div>
-        <div class="delay-box"><h4>⚠️ If This Service Is Delayed</h4><p>${s.ifDelayed || ''}</p></div>
-        <div class="track-box">
-          <strong>Interval:</strong> every ${s.intervalMiles.toLocaleString()} mi / ${s.intervalMonths} mo
-          <div class="due-line ${st.status}">
-            ${st.status==='overdue' ? 'OVERDUE now' : (st.milesRemaining>0 ? st.milesRemaining.toLocaleString()+' mi remaining' : 'Due now')}
-            ${st.dueDate ? ' · Due by ' + fmtDate(st.dueDate) : ''}
-            · Last done: ${st.lastMiles ? st.lastMiles.toLocaleString()+' mi' : '—'} ${st.lastDate ? '('+fmtDate(st.lastDate)+')' : ''}
-          </div>
-          <div class="track-row">
-            <label>Mileage at service<br><input type="number" id="in-${key}-miles" value="${rec.lastMiles||''}" placeholder="e.g. 152300"></label>
-            <label>Date completed<br><input type="date" id="in-${key}-date" value="${rec.lastDate||new Date().toISOString().slice(0,10)}"></label>
-            <button class="btn" data-log="${key}">Log Service</button>
-          </div>
-          <div class="track-row">
-            <label style="width:100%">Notes (parts used, torque, observations)<br><textarea id="in-${key}-notes" placeholder="Optional notes for this service event"></textarea></label>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
+    .sync-dot.success { background: var(--green); }
+    .sync-dot.error { background: var(--red); }
+    .sync-dot.busy {
+      background: var(--primary);
+      animation: pulse 1.1s infinite;
+    }
 
-    return `<div class="workspace ${vi===0?'active':''}" id="${v.id}">
-      <div class="service-tabs">${svcTabs}</div>
-      <div class="service-container">${svcContents}</div>
-    </div>`;
-  }).join('');
+    .page-shell {
+      width: min(1240px, 100%);
+      margin: 0 auto;
+      padding: 1rem 1rem 4.5rem;
+    }
 
-  container.querySelectorAll('.s-tab').forEach(tab=>{
-    tab.addEventListener('click', ()=>{
-      const ws = tab.closest('.workspace');
-      ws.querySelectorAll('.s-tab').forEach(t=>t.classList.remove('active'));
-      ws.querySelectorAll('.service-content').forEach(c=>c.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById(tab.dataset.target).classList.add('active');
-    });
-  });
+    .topnav {
+      position: sticky;
+      top: 70px;
+      z-index: 50;
+      display: flex;
+      gap: .45rem;
+      overflow-x: auto;
+      margin: 0 -1rem 1.1rem;
+      padding: .75rem 1rem;
+      background: rgba(245, 247, 251, .90);
+      backdrop-filter: blur(10px);
+      scrollbar-width: none;
+    }
 
-  container.querySelectorAll('[data-log]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const key = btn.dataset.log;
-      const [vehicleId, serviceId] = key.split('::');
-      const vehicle = VEHICLES.find(v=>v.id===vehicleId);
-      const service = vehicle.services.find(s=>s.id===serviceId);
-      const miles = Number(document.getElementById('in-'+key+'-miles').value)||0;
-      const dateVal = document.getElementById('in-'+key+'-date').value || new Date().toISOString().slice(0,10);
-      const notes = document.getElementById('in-'+key+'-notes').value || '';
+    .topnav::-webkit-scrollbar {
+      display: none;
+    }
 
-      data.serviceState[key] = { lastMiles: miles, lastDate: dateVal };
-      data.history.push({
-        id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
-        vehicleId, vehicleName: vehicle.name, serviceId, serviceName: service.name,
-        miles, date: dateVal, notes, loggedAt: new Date().toISOString()
-      });
-      // Auto-bump odometer if this service mileage is higher than current recorded odometer
-      const currentOdo = (data.vehicles[vehicleId] && data.vehicles[vehicleId].odometer) || 0;
-      if(miles > currentOdo){
-        data.vehicles[vehicleId] = { odometer: miles, odometerDate: dateVal };
+    .nav-btn,
+    .vehicle-tab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      min-height: 40px;
+      padding: .55rem .85rem;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+      font-size: .84rem;
+      font-weight: 700;
+      transition: background .15s, border-color .15s, color .15s, transform .15s;
+    }
+
+    .nav-btn:hover,
+    .vehicle-tab:hover {
+      border-color: #bfdbfe;
+      color: var(--primary);
+    }
+
+    .nav-btn.active {
+      color: #fff;
+      border-color: var(--surface-dark);
+      background: var(--surface-dark);
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+      animation: fade-in .2s ease;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+      margin: 1.25rem 0 .65rem;
+    }
+
+    .section-heading h2,
+    .section-heading h3 {
+      margin: 0;
+      letter-spacing: -.025em;
+    }
+
+    .section-heading h2 {
+      font-size: 1.12rem;
+    }
+
+    .section-heading p {
+      margin: .15rem 0 0;
+      color: var(--text-muted);
+      font-size: .82rem;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .85rem;
+      margin-bottom: 1rem;
+    }
+
+    .summary-card {
+      display: flex;
+      align-items: center;
+      gap: .72rem;
+      min-width: 0;
+      padding: .85rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .summary-icon {
+      display: grid;
+      flex: 0 0 36px;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      place-items: center;
+    }
+
+    .summary-card.overdue .summary-icon { color: var(--red); background: var(--red-bg); }
+    .summary-card.soon .summary-icon { color: var(--amber); background: var(--amber-bg); }
+    .summary-card.ok .summary-icon { color: var(--green); background: var(--green-bg); }
+
+    .summary-card strong {
+      display: block;
+      font-size: 1.1rem;
+      line-height: 1.1;
+    }
+
+    .summary-card span {
+      display: block;
+      margin-top: .12rem;
+      color: var(--text-muted);
+      font-size: .74rem;
+      font-weight: 650;
+    }
+
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: .8rem;
+    }
+
+    .dash-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 136px;
+      padding: 1rem;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-left: 5px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dash-card.overdue { border-left-color: var(--red); }
+    .dash-card.soon { border-left-color: var(--amber); }
+    .dash-card.ok { border-left-color: var(--green); }
+
+    .dash-card .vehicle-label {
+      overflow: hidden;
+      color: var(--text-muted);
+      font-size: .75rem;
+      font-weight: 750;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dash-card .service-name {
+      margin: .18rem 0 .42rem;
+      overflow: hidden;
+      font-size: .94rem;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dash-card .due-copy {
+      margin-top: auto;
+      color: var(--text-muted);
+      font-size: .78rem;
+    }
+
+    .empty-state,
+    .notice {
+      padding: 1rem;
+      color: var(--text-muted);
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .65);
+      font-size: .87rem;
+    }
+
+    .panel {
+      padding: 1.05rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .odo-row {
+      display: grid;
+      grid-template-columns: minmax(175px, 1fr) minmax(140px, .72fr) minmax(140px, .72fr) auto;
+      align-items: end;
+      gap: .8rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .odo-row:first-child {
+      padding-top: 0;
+    }
+
+    .odo-row:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .vehicle-name {
+      min-width: 0;
+    }
+
+    .vehicle-name strong {
+      display: block;
+      overflow: hidden;
+      font-size: .92rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .vehicle-name span {
+      display: block;
+      margin-top: .17rem;
+      color: var(--text-muted);
+      font-size: .75rem;
+    }
+
+    .field {
+      min-width: 0;
+    }
+
+    .field label,
+    .settings-field > span {
+      display: block;
+      margin-bottom: .32rem;
+      color: var(--text-muted);
+      font-size: .76rem;
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: .55rem .85rem;
+      color: #fff;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      background: var(--primary);
+      font-size: .82rem;
+      font-weight: 800;
+      transition: background .15s, transform .15s, box-shadow .15s;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--primary-hover);
+      box-shadow: 0 5px 14px rgba(37, 99, 235, .18);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn.secondary {
+      color: var(--text);
+      border-color: var(--border-strong);
+      background: #fff;
+    }
+
+    .btn.secondary:hover:not(:disabled) {
+      color: var(--primary);
+      border-color: #93c5fd;
+      background: var(--primary-soft);
+      box-shadow: none;
+    }
+
+    .btn.danger {
+      background: var(--red);
+    }
+
+    .btn.danger:hover:not(:disabled) {
+      background: #b91c1c;
+      box-shadow: 0 5px 14px rgba(220, 38, 38, .17);
+    }
+
+    .btn.compact {
+      min-height: 32px;
+      padding: .3rem .55rem;
+      border-radius: 7px;
+      font-size: .72rem;
+    }
+
+    .services-toolbar {
+      display: flex;
+      gap: .5rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+      padding: .2rem 0 .45rem;
+      scrollbar-width: thin;
+    }
+
+    .vehicle-tab.active {
+      color: #fff;
+      border-color: var(--primary);
+      background: var(--primary);
+    }
+
+    .workspace {
+      display: none;
+      grid-template-columns: 242px minmax(0, 1fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .workspace.active {
+      display: grid;
+      animation: fade-in .2s ease;
+    }
+
+    .service-tabs {
+      position: sticky;
+      top: 130px;
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+      max-height: calc(100vh - 150px);
+      padding: .55rem;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .service-tab {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      gap: .5rem;
+      padding: .65rem .7rem;
+      color: var(--text);
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      font-size: .81rem;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    .service-tab:hover {
+      background: var(--surface-muted);
+    }
+
+    .service-tab.active {
+      color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .service-tab .service-tab-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .service-content {
+      display: none;
+    }
+
+    .service-content.active {
+      display: block;
+      animation: fade-in .18s ease;
+    }
+
+    .service-panel {
+      padding: clamp(1rem, 3vw, 1.45rem);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .service-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: .9rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .category {
+      color: var(--text-muted);
+      font-size: .68rem;
+      font-weight: 850;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+
+    .service-header h2 {
+      margin: .2rem 0 0;
+      font-size: clamp(1.18rem, 3vw, 1.45rem);
+      letter-spacing: -.03em;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      padding: .2rem .48rem;
+      border-radius: 999px;
+      font-size: .64rem;
+      font-weight: 850;
+      letter-spacing: .03em;
+      white-space: nowrap;
+    }
+
+    .badge.ok { color: var(--green); background: var(--green-bg); }
+    .badge.soon { color: var(--amber); background: var(--amber-bg); }
+    .badge.overdue { color: var(--red); background: var(--red-bg); }
+
+    .info-box {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: .58rem;
+      margin: 1rem 0;
+      padding: .9rem;
+      border: 1px solid #bae6fd;
+      border-radius: 11px;
+      background: var(--blue-bg);
+      font-size: .84rem;
+    }
+
+    .info-box strong {
+      color: #0c4a6e;
+    }
+
+    .cost-pill {
+      display: inline-flex;
+      padding: .12rem .48rem;
+      color: #166534;
+      border-radius: 999px;
+      background: #dcfce7;
+      font-size: .76rem;
+      font-weight: 800;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .85rem;
+    }
+
+    .detail-card {
+      padding: .9rem;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--surface-muted);
+    }
+
+    .detail-card h3,
+    .procedure h3 {
+      margin: 0 0 .62rem;
+      font-size: .88rem;
+    }
+
+    .simple-list {
+      display: grid;
+      gap: .4rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      font-size: .82rem;
+    }
+
+    .simple-list li {
+      position: relative;
+      padding-left: 1rem;
+    }
+
+    .simple-list li::before {
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+      content: "•";
+      font-weight: 900;
+    }
+
+    .procedure {
+      margin-top: 1.15rem;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: .7rem;
+      align-items: start;
+      margin: 0 0 .72rem;
+      font-size: .84rem;
+    }
+
+    .step-number {
+      display: grid;
+      width: 27px;
+      height: 27px;
+      color: #fff;
+      border-radius: 50%;
+      background: var(--primary);
+      place-items: center;
+      font-size: .75rem;
+      font-weight: 850;
+    }
+
+    .callout {
+      margin-top: 1rem;
+      padding: .85rem .95rem;
+      border-left: 4px solid;
+      border-radius: 0 10px 10px 0;
+      font-size: .83rem;
+    }
+
+    .callout h4 {
+      margin: 0 0 .28rem;
+      font-size: .82rem;
+    }
+
+    .callout p {
+      margin: 0;
+    }
+
+    .callout.tip {
+      border-left-color: var(--amber);
+      background: var(--amber-bg);
+    }
+
+    .callout.tip h4 { color: var(--amber); }
+
+    .callout.delay {
+      border-left-color: var(--red);
+      background: var(--red-bg);
+    }
+
+    .callout.delay h4 { color: var(--red); }
+
+    .tracking-box {
+      margin-top: 1rem;
+      padding: .95rem;
+      border: 1px solid #bfdbfe;
+      border-radius: 11px;
+      background: var(--primary-soft);
+    }
+
+    .tracking-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .45rem;
+      color: #1e3a8a;
+      font-size: .84rem;
+      font-weight: 800;
+    }
+
+    .due-line {
+      margin-top: .42rem;
+      font-size: .81rem;
+      font-weight: 750;
+    }
+
+    .due-line.ok { color: var(--green); }
+    .due-line.soon { color: var(--amber); }
+    .due-line.overdue { color: var(--red); }
+
+    .tracking-grid {
+      display: grid;
+      grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr) auto;
+      gap: .65rem;
+      align-items: end;
+      margin-top: .8rem;
+    }
+
+    .notes-row {
+      margin-top: .7rem;
+    }
+
+    .log-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      justify-content: space-between;
+      gap: .75rem;
+      margin-bottom: .8rem;
+    }
+
+    .filter-row,
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      align-items: center;
+    }
+
+    .filter-row select {
+      min-width: 190px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .log-table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      font-size: .81rem;
+    }
+
+    .log-table th,
+    .log-table td {
+      padding: .72rem .75rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .log-table th {
+      color: var(--text-muted);
+      background: var(--surface-muted);
+      font-size: .68rem;
+      font-weight: 850;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .log-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .notes-cell {
+      max-width: 340px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .settings-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+    }
+
+    .settings-panel {
+      padding: 1.1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .settings-panel h2 {
+      margin: 0;
+      font-size: 1.04rem;
+    }
+
+    .settings-panel > p {
+      margin: .38rem 0 1rem;
+      color: var(--text-muted);
+      font-size: .82rem;
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .8rem;
+    }
+
+    .settings-field {
+      min-width: 0;
+    }
+
+    .settings-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .settings-field input {
+      width: 100%;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: .58rem;
+      margin-top: .1rem;
+      color: var(--text);
+      font-size: .82rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .checkbox-row input {
+      width: 17px;
+      height: 17px;
+      margin: .08rem 0 0;
+      accent-color: var(--primary);
+    }
+
+    .settings-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+      margin-top: 1rem;
+    }
+
+    .sync-status {
+      min-height: 20px;
+      margin: .85rem 0 0;
+      color: var(--text-muted);
+      font-size: .78rem;
+    }
+
+    .sync-status.error { color: var(--red); }
+    .sync-status.success { color: var(--green); }
+
+    .data-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+      margin-top: .85rem;
+      padding-top: .85rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .disclaimer {
+      margin: 2rem auto 0;
+      color: var(--text-muted);
+      font-size: .73rem;
+      text-align: center;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: calc(18px + var(--safe-bottom));
+      left: 50%;
+      z-index: 150;
+      width: max-content;
+      max-width: calc(100% - 2rem);
+      padding: .7rem .9rem;
+      color: #fff;
+      border-radius: 10px;
+      background: var(--surface-dark);
+      box-shadow: 0 12px 25px rgba(15, 23, 42, .25);
+      font-size: .82rem;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 16px);
+      transition: opacity .2s, transform .2s;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .toast.error {
+      background: #991b1b;
+    }
+
+    .install-banner {
+      position: fixed;
+      right: 12px;
+      bottom: calc(12px + var(--safe-bottom));
+      left: 12px;
+      z-index: 120;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: .8rem;
+      max-width: 680px;
+      margin: auto;
+      padding: .8rem .85rem;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 12px;
+      background: var(--surface-dark);
+      box-shadow: var(--shadow);
+      font-size: .78rem;
+    }
+
+    .install-banner.show {
+      display: flex;
+    }
+
+    .install-banner p {
+      margin: 0;
+    }
+
+    .install-banner .button-row {
+      flex-wrap: nowrap;
+    }
+
+    .install-banner button {
+      min-height: 33px;
+      padding: .35rem .62rem;
+      color: #fff;
+      border: 0;
+      border-radius: 7px;
+      background: var(--primary);
+      font-size: .72rem;
+      font-weight: 800;
+    }
+
+    .install-banner button.dismiss {
+      color: #cbd5e1;
+      background: transparent;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 140;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(15, 23, 42, .55);
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      width: min(460px, 100%);
+      padding: 1.1rem;
+      border-radius: 15px;
+      background: #fff;
+      box-shadow: 0 22px 60px rgba(15, 23, 42, .30);
+    }
+
+    .modal h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .modal p {
+      margin: .45rem 0 1rem;
+      color: var(--text-muted);
+      font-size: .84rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: .55rem;
+    }
+
+    .loading {
+      display: grid;
+      min-height: 180px;
+      color: var(--text-muted);
+      place-items: center;
+      font-size: .88rem;
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      50% { opacity: .35; }
+    }
+
+    @media (max-width: 800px) {
+      .workspace.active {
+        grid-template-columns: 1fr;
       }
+
+      .service-tabs {
+        position: static;
+        flex-direction: row;
+        max-width: 100%;
+        max-height: none;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+
+      .service-tab {
+        width: auto;
+        min-width: max-content;
+      }
+
+      .service-tab .service-tab-label {
+        max-width: 185px;
+      }
+
+      .odo-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .odo-row .vehicle-name {
+        grid-column: 1 / -1;
+      }
+
+      .odo-row .btn {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .header-status {
+        display: none;
+      }
+
+      .summary-grid,
+      .detail-grid,
+      .settings-grid,
+      .tracking-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .odo-row {
+        grid-template-columns: 1fr;
+      }
+
+      .odo-row .vehicle-name {
+        grid-column: auto;
+      }
+
+      .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: .25rem;
+      }
+
+      .topnav {
+        top: 69px;
+      }
+
+      .install-banner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .install-banner .button-row {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip-link" href="#mainContent">Skip to content</a>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">⚙</div>
+        <div>
+          <h1>Garage Maintenance Hub</h1>
+          <p>Preventive maintenance · Reminder engine · Work log</p>
+        </div>
+      </div>
+
+      <div class="header-status" aria-live="polite">
+        <span class="sync-dot" id="headerSyncDot"></span>
+        <span id="headerSyncText">Local data ready</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell" id="mainContent">
+    <nav class="topnav" aria-label="Primary navigation">
+      <button class="nav-btn active" type="button" data-view="dashboardView">Dashboard</button>
+      <button class="nav-btn" type="button" data-view="odoView">Odometer</button>
+      <button class="nav-btn" type="button" data-view="servicesView">Services</button>
+      <button class="nav-btn" type="button" data-view="logView">Work Log</button>
+      <button class="nav-btn" type="button" data-view="settingsView">Sync & Data</button>
+    </nav>
+
+    <section class="view active" id="dashboardView" aria-labelledby="dashboardHeading">
+      <div class="section-heading">
+        <div>
+          <h2 id="dashboardHeading">Maintenance overview</h2>
+          <p id="dashboardSubtitle">Loading vehicle maintenance data…</p>
+        </div>
+      </div>
+
+      <div class="summary-grid" id="summaryGrid"></div>
+
+      <div class="section-heading">
+        <div>
+          <h3>Overdue</h3>
+          <p>Services requiring attention now.</p>
+        </div>
+      </div>
+      <div class="dash-grid" id="overdueGrid"></div>
+
+      <div class="section-heading">
+        <div>
+          <h3>Due soon</h3>
+          <p>Due within 1,000 miles or 21 days.</p>
+        </div>
+      </div>
+      <div class="dash-grid" id="dueSoonGrid"></div>
+
+      <div class="section-heading">
+        <div>
+          <h3>On track</h3>
+          <p>Upcoming preventive-maintenance items.</p>
+        </div>
+      </div>
+      <div class="dash-grid" id="okGrid"></div>
+    </section>
+
+    <section class="view" id="odoView" aria-labelledby="odoHeading">
+      <div class="section-heading">
+        <div>
+          <h2 id="odoHeading">Current odometer readings</h2>
+          <p>Update mileage whenever you fuel up, travel, or complete service.</p>
+        </div>
+      </div>
+      <div class="panel" id="odoPanel">
+        <div class="loading">Loading vehicles…</div>
+      </div>
+    </section>
+
+    <section class="view" id="servicesView" aria-labelledby="servicesHeading">
+      <div class="section-heading">
+        <div>
+          <h2 id="servicesHeading">Service library</h2>
+          <p>Procedures, tools, parts, risks, reminders, and service logging.</p>
+        </div>
+      </div>
+
+      <div class="services-toolbar" id="vehicleTabs" aria-label="Vehicle selection"></div>
+      <div id="workspaces">
+        <div class="loading">Loading service procedures…</div>
+      </div>
+    </section>
+
+    <section class="view" id="logView" aria-labelledby="logHeading">
+      <div class="section-heading">
+        <div>
+          <h2 id="logHeading">Work log</h2>
+          <p>Every completed service is retained locally and can be exported as CSV.</p>
+        </div>
+      </div>
+
+      <div class="log-controls">
+        <div class="filter-row">
+          <label class="field">
+            <span>Vehicle filter</span>
+            <select id="logFilterVehicle">
+              <option value="all">All vehicles</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="button-row">
+          <button class="btn secondary" type="button" id="exportLogBtn">Export CSV</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Vehicle</th>
+              <th scope="col">Service</th>
+              <th scope="col">Mileage</th>
+              <th scope="col">Notes</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="view" id="settingsView" aria-labelledby="settingsHeading">
+      <div class="settings-layout">
+        <div class="settings-panel">
+          <h2 id="settingsHeading">GitHub Sync</h2>
+          <p>
+            Optional sync writes only <strong>data.json</strong> in your repository. A fine-grained GitHub
+            Personal Access Token needs only <strong>Contents: Read and write</strong> access to this repository.
+            The token is retained in this browser’s localStorage.
+          </p>
+
+          <div class="settings-grid">
+            <label class="settings-field">
+              <span>GitHub username or organization</span>
+              <input type="text" id="ghOwner" autocomplete="username" placeholder="e.g. kevinsmith">
+            </label>
+
+            <label class="settings-field">
+              <span>Repository name</span>
+              <input type="text" id="ghRepo" placeholder="e.g. garage-maintenance-hub">
+            </label>
+
+            <label class="settings-field">
+              <span>Branch</span>
+              <input type="text" id="ghBranch" value="main" placeholder="main">
+            </label>
+
+            <label class="settings-field">
+              <span>Personal Access Token</span>
+              <input type="password" id="ghToken" autocomplete="off" spellcheck="false" placeholder="github_pat_...">
+            </label>
+
+            <label class="settings-field full checkbox-row">
+              <input type="checkbox" id="autoSyncToggle">
+              <span>Automatically pull when the app opens and push after mileage or service updates.</span>
+            </label>
+          </div>
+
+          <div class="settings-actions">
+            <button class="btn" type="button" id="saveSettingsBtn">Save Sync Settings</button>
+            <button class="btn secondary" type="button" id="pullBtn">Pull Latest</button>
+            <button class="btn" type="button" id="pushBtn">Push to GitHub</button>
+          </div>
+
+          <p class="sync-status" id="syncStatus" aria-live="polite">Not synced this session.</p>
+
+          <div class="data-tools">
+            <button class="btn secondary" type="button" id="exportBackupBtn">Export Full Backup</button>
+            <label class="btn secondary" for="importBackupInput">Import Backup</label>
+            <input type="file" id="importBackupInput" accept="application/json" hidden>
+            <button class="btn danger" type="button" id="clearLocalDataBtn">Clear Local Data</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p class="disclaimer">
+      Reference only—always use the factory service manual, current technical service information, and appropriate safety procedures for exact specifications.
+    </p>
+  </main>
+
+  <div class="install-banner" id="installBanner" role="region" aria-label="Install application">
+    <p id="installBannerText">Install GarageHub for a cleaner, app-like experience.</p>
+    <div class="button-row">
+      <button type="button" id="installBtn">Install</button>
+      <button type="button" class="dismiss" id="dismissInstallBtn">Not now</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal">
+      <h2 id="confirmTitle">Confirm action</h2>
+      <p id="confirmMessage"></p>
+      <div class="modal-actions">
+        <button class="btn secondary" type="button" id="confirmCancelBtn">Cancel</button>
+        <button class="btn danger" type="button" id="confirmActionBtn">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const STORAGE_KEY = "gmh_data_v3";
+    const LEGACY_STORAGE_KEY = "gmh_data_v2";
+    const SETTINGS_KEY = "gmh_gh_settings_v2";
+    const INSTALL_DISMISS_KEY = "gmh_install_dismissed_v1";
+    const DUE_SOON_MILES = 1000;
+    const DUE_SOON_DAYS = 21;
+    const MS_PER_DAY = 86400000;
+
+    let VEHICLES = [];
+    let data = createDefaultData();
+    let ghSettings = loadSettings();
+    let deferredInstallPrompt = null;
+    let toastTimer = null;
+    let syncTimer = null;
+    let currentStatusMap = {};
+    let syncBusy = false;
+    let confirmCallback = null;
+
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function isValidDateString(value) {
+      return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T12:00:00`).getTime());
+    }
+
+    function todayISO() {
+      const date = new Date();
+      const offset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+    }
+
+    function dateToTimestamp(dateString) {
+      return isValidDateString(dateString) ? new Date(`${dateString}T12:00:00`).getTime() : null;
+    }
+
+    function formatDate(value) {
+      const timestamp = typeof value === "number" ? value : dateToTimestamp(value);
+      if (!timestamp) return "—";
+      return new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }).format(new Date(timestamp));
+    }
+
+    function formatMiles(value) {
+      const miles = Number(value);
+      return Number.isFinite(miles) ? `${Math.round(miles).toLocaleString()} mi` : "—";
+    }
+
+    function serviceKey(vehicleId, serviceId) {
+      return `${vehicleId}::${serviceId}`;
+    }
+
+    function createDefaultData() {
+      return {
+        meta: {
+          schemaVersion: 3,
+          lastUpdated: null,
+          lastSyncedAt: null
+        },
+        vehicles: {},
+        serviceState: {},
+        history: []
+      };
+    }
+
+    function normalizeData(raw) {
+      const base = createDefaultData();
+      const candidate = raw && typeof raw === "object" ? raw : {};
+      const normalized = {
+        meta: {
+          ...base.meta,
+          ...(candidate.meta && typeof candidate.meta === "object" ? candidate.meta : {})
+        },
+        vehicles: {},
+        serviceState: {},
+        history: Array.isArray(candidate.history) ? candidate.history : []
+      };
+
+      if (candidate.vehicles && typeof candidate.vehicles === "object") {
+        Object.entries(candidate.vehicles).forEach(([id, record]) => {
+          const miles = Number(record?.odometer);
+          normalized.vehicles[id] = {
+            odometer: Number.isFinite(miles) && miles >= 0 ? Math.round(miles) : 0,
+            odometerDate: isValidDateString(record?.odometerDate) ? record.odometerDate : null
+          };
+        });
+      }
+
+      if (candidate.serviceState && typeof candidate.serviceState === "object") {
+        Object.entries(candidate.serviceState).forEach(([key, record]) => {
+          const miles = Number(record?.lastMiles);
+          normalized.serviceState[key] = {
+            lastMiles: Number.isFinite(miles) && miles >= 0 ? Math.round(miles) : 0,
+            lastDate: isValidDateString(record?.lastDate) ? record.lastDate : null
+          };
+        });
+      }
+
+      normalized.history = normalized.history
+        .filter(row => row && typeof row === "object")
+        .map(row => ({
+          id: String(row.id || createId()),
+          vehicleId: String(row.vehicleId || ""),
+          vehicleName: String(row.vehicleName || ""),
+          serviceId: String(row.serviceId || ""),
+          serviceName: String(row.serviceName || ""),
+          miles: Math.max(0, Math.round(Number(row.miles) || 0)),
+          date: isValidDateString(row.date) ? row.date : todayISO(),
+          notes: String(row.notes || ""),
+          loggedAt: row.loggedAt || new Date().toISOString()
+        }));
+
+      normalized.meta.schemaVersion = 3;
+      return normalized;
+    }
+
+    function ensureVehicleRecords() {
+      VEHICLES.forEach(vehicle => {
+        if (!data.vehicles[vehicle.id]) {
+          data.vehicles[vehicle.id] = { odometer: 0, odometerDate: null };
+        }
+      });
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+        return normalizeData(raw ? JSON.parse(raw) : createDefaultData());
+      } catch (error) {
+        console.warn("GarageHub data could not be read.", error);
+        return createDefaultData();
+      }
+    }
+
+    function saveData() {
       data.meta.lastUpdated = new Date().toISOString();
-      saveData();
-      showToast('Service logged to Work Log ✓');
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        updateHeaderSync("Local changes saved", "success");
+        return true;
+      } catch (error) {
+        console.error("Unable to save local data.", error);
+        showToast("Could not save local data. Browser storage may be full.", true);
+        updateHeaderSync("Local save failed", "error");
+        return false;
+      }
+    }
+
+    function loadSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+        return {
+          owner: String(saved.owner || ""),
+          repo: String(saved.repo || ""),
+          branch: String(saved.branch || "main"),
+          token: String(saved.token || ""),
+          autoSync: Boolean(saved.autoSync)
+        };
+      } catch {
+        return { owner: "", repo: "", branch: "main", token: "", autoSync: false };
+      }
+    }
+
+    function saveSettings() {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(ghSettings));
+    }
+
+    function createId() {
+      if (window.crypto?.randomUUID) return crypto.randomUUID();
+      return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    function showToast(message, isError = false) {
+      const toast = $("#toast");
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.toggle("error", isError);
+      toast.classList.add("show");
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
+    }
+
+    function updateHeaderSync(message, state = "") {
+      $("#headerSyncText").textContent = message;
+      $("#headerSyncDot").className = `sync-dot ${state}`.trim();
+    }
+
+    function setSyncStatus(message, state = "") {
+      const element = $("#syncStatus");
+      element.textContent = message;
+      element.className = `sync-status ${state}`.trim();
+      if (state === "error") updateHeaderSync("Sync needs attention", "error");
+      if (state === "success") updateHeaderSync("GitHub synced", "success");
+    }
+
+    function showConfirm({ title, message, actionLabel = "Continue", danger = true, onConfirm }) {
+      $("#confirmTitle").textContent = title;
+      $("#confirmMessage").textContent = message;
+      $("#confirmActionBtn").textContent = actionLabel;
+      $("#confirmActionBtn").className = `btn ${danger ? "danger" : ""}`.trim();
+      confirmCallback = onConfirm;
+      $("#confirmModal").classList.add("show");
+      document.body.classList.add("modal-open");
+      setTimeout(() => $("#confirmActionBtn").focus(), 0);
+    }
+
+    function closeConfirm() {
+      $("#confirmModal").classList.remove("show");
+      document.body.classList.remove("modal-open");
+      confirmCallback = null;
+    }
+
+    function calculateStatuses() {
+      const now = Date.now();
+      const results = [];
+
+      VEHICLES.forEach(vehicle => {
+        const vehicleRecord = data.vehicles[vehicle.id] || { odometer: 0 };
+        const currentMiles = Math.max(0, Number(vehicleRecord.odometer) || 0);
+
+        (vehicle.services || []).forEach(service => {
+          const key = serviceKey(vehicle.id, service.id);
+          const record = data.serviceState[key] || {};
+          const lastMiles = Math.max(0, Number(record.lastMiles) || 0);
+          const intervalMiles = Math.max(0, Number(service.intervalMiles) || 0);
+          const intervalMonths = Math.max(0, Number(service.intervalMonths) || 0);
+          const lastDateTimestamp = dateToTimestamp(record.lastDate);
+
+          const dueMiles = intervalMiles ? lastMiles + intervalMiles : null;
+          const dueDate = lastDateTimestamp && intervalMonths
+            ? lastDateTimestamp + (intervalMonths * 30 * MS_PER_DAY)
+            : null;
+
+          const milesRemaining = dueMiles === null ? null : dueMiles - currentMiles;
+          const daysRemaining = dueDate === null ? null : Math.ceil((dueDate - now) / MS_PER_DAY);
+
+          let status = "ok";
+          if (
+            (milesRemaining !== null && milesRemaining <= 0) ||
+            (daysRemaining !== null && daysRemaining <= 0)
+          ) {
+            status = "overdue";
+          } else if (
+            (milesRemaining !== null && milesRemaining <= DUE_SOON_MILES) ||
+            (daysRemaining !== null && daysRemaining <= DUE_SOON_DAYS)
+          ) {
+            status = "soon";
+          }
+
+          results.push({
+            vehicleId: vehicle.id,
+            vehicleName: vehicle.name || "Unnamed vehicle",
+            serviceId: service.id,
+            serviceName: service.name || "Unnamed service",
+            category: service.category || "Maintenance",
+            currentMiles,
+            lastMiles,
+            lastDate: record.lastDate || null,
+            dueMiles,
+            dueDate,
+            milesRemaining,
+            daysRemaining,
+            status
+          });
+        });
+      });
+
+      return results;
+    }
+
+    function getDueText(item) {
+      const parts = [];
+
+      if (item.status === "overdue") {
+        if (item.milesRemaining !== null && item.milesRemaining <= 0) {
+          parts.push(`${Math.abs(item.milesRemaining).toLocaleString()} mi overdue`);
+        }
+        if (item.daysRemaining !== null && item.daysRemaining <= 0) {
+          parts.push(`${Math.abs(item.daysRemaining).toLocaleString()} days overdue`);
+        }
+        return parts.length ? parts.join(" · ") : "Overdue now";
+      }
+
+      if (item.milesRemaining !== null) {
+        parts.push(`${item.milesRemaining.toLocaleString()} mi remaining`);
+      }
+
+      if (item.daysRemaining !== null) {
+        parts.push(`${item.daysRemaining.toLocaleString()} days remaining`);
+      }
+
+      return parts.length ? parts.join(" · ") : "No interval configured";
+    }
+
+    function renderDashboard(statuses) {
+      const overdue = statuses.filter(item => item.status === "overdue");
+      const soon = statuses.filter(item => item.status === "soon");
+      const ok = statuses.filter(item => item.status === "ok");
+
+      $("#dashboardSubtitle").textContent = `${VEHICLES.length} vehicle${VEHICLES.length === 1 ? "" : "s"} · ${statuses.length} tracked service${statuses.length === 1 ? "" : "s"}`;
+
+      $("#summaryGrid").innerHTML = `
+        <div class="summary-card overdue">
+          <div class="summary-icon" aria-hidden="true">!</div>
+          <div><strong>${overdue.length}</strong><span>Overdue services</span></div>
+        </div>
+        <div class="summary-card soon">
+          <div class="summary-icon" aria-hidden="true">◷</div>
+          <div><strong>${soon.length}</strong><span>Due soon</span></div>
+        </div>
+        <div class="summary-card ok">
+          <div class="summary-icon" aria-hidden="true">✓</div>
+          <div><strong>${ok.length}</strong><span>On track</span></div>
+        </div>
+      `;
+
+      const card = item => `
+        <article class="dash-card ${item.status}">
+          <div class="vehicle-label">${escapeHTML(item.vehicleName)}</div>
+          <div class="service-name">${escapeHTML(item.serviceName)}</div>
+          <div class="due-copy">
+            ${escapeHTML(getDueText(item))}
+            ${item.dueDate ? `<br>Target: ${escapeHTML(formatDate(item.dueDate))}` : ""}
+          </div>
+        </article>
+      `;
+
+      $("#overdueGrid").innerHTML = overdue.length
+        ? overdue.map(card).join("")
+        : `<div class="empty-state">Nothing is currently overdue. Nice work.</div>`;
+
+      $("#dueSoonGrid").innerHTML = soon.length
+        ? soon.map(card).join("")
+        : `<div class="empty-state">Nothing is due within ${DUE_SOON_MILES.toLocaleString()} miles or ${DUE_SOON_DAYS} days.</div>`;
+
+      $("#okGrid").innerHTML = ok.length
+        ? ok.map(card).join("")
+        : `<div class="empty-state">No on-track services are available yet. Check your vehicle data files.</div>`;
+    }
+
+    function renderOdometerPanel() {
+      const panel = $("#odoPanel");
+
+      if (!VEHICLES.length) {
+        panel.innerHTML = `<div class="empty-state">No vehicles were loaded.</div>`;
+        return;
+      }
+
+      panel.innerHTML = VEHICLES.map(vehicle => {
+        const record = data.vehicles[vehicle.id] || { odometer: 0, odometerDate: null };
+
+        return `
+          <div class="odo-row">
+            <div class="vehicle-name">
+              <strong>${escapeHTML(vehicle.name || "Unnamed vehicle")}</strong>
+              <span>Last recorded: ${record.odometerDate ? escapeHTML(formatDate(record.odometerDate)) : "No date recorded"}</span>
+            </div>
+
+            <div class="field">
+              <label for="odo-${escapeHTML(vehicle.id)}">Current mileage</label>
+              <input
+                id="odo-${escapeHTML(vehicle.id)}"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1"
+                value="${Number(record.odometer) || ""}"
+                placeholder="e.g. 155200">
+            </div>
+
+            <div class="field">
+              <label for="odo-date-${escapeHTML(vehicle.id)}">As-of date</label>
+              <input
+                id="odo-date-${escapeHTML(vehicle.id)}"
+                type="date"
+                value="${escapeHTML(record.odometerDate || todayISO())}">
+            </div>
+
+            <button class="btn" type="button" data-odo-save="${escapeHTML(vehicle.id)}">Update Mileage</button>
+          </div>
+        `;
+      }).join("");
+
+      $$("[data-odo-save]", panel).forEach(button => {
+        button.addEventListener("click", () => updateOdometer(button.dataset.odoSave));
+      });
+    }
+
+    function updateOdometer(vehicleId) {
+      const mileageInput = $(`#odo-${CSS.escape(vehicleId)}`);
+      const dateInput = $(`#odo-date-${CSS.escape(vehicleId)}`);
+      const miles = Number(mileageInput.value);
+      const date = dateInput.value;
+
+      if (!Number.isFinite(miles) || miles < 0 || !Number.isInteger(miles)) {
+        showToast("Enter a valid whole-number mileage.", true);
+        mileageInput.focus();
+        return;
+      }
+
+      if (!isValidDateString(date)) {
+        showToast("Choose a valid as-of date.", true);
+        dateInput.focus();
+        return;
+      }
+
+      const oldMiles = Number(data.vehicles[vehicleId]?.odometer) || 0;
+      const commit = () => {
+        data.vehicles[vehicleId] = { odometer: miles, odometerDate: date };
+        saveData();
+        refreshAll();
+        showToast("Mileage updated.");
+        scheduleAutoPush();
+      };
+
+      if (miles < oldMiles) {
+        showConfirm({
+          title: "Lower odometer reading?",
+          message: `This changes the stored reading from ${oldMiles.toLocaleString()} mi to ${miles.toLocaleString()} mi. Continue only if the previous reading was entered incorrectly.`,
+          actionLabel: "Save Lower Mileage",
+          onConfirm: commit
+        });
+      } else {
+        commit();
+      }
+    }
+
+    function renderVehicleTabs() {
+      const container = $("#vehicleTabs");
+
+      if (!VEHICLES.length) {
+        container.innerHTML = "";
+        return;
+      }
+
+      container.innerHTML = VEHICLES.map((vehicle, index) => `
+        <button
+          class="vehicle-tab ${index === 0 ? "active" : ""}"
+          type="button"
+          data-vehicle-tab="${escapeHTML(vehicle.id)}"
+          aria-pressed="${index === 0 ? "true" : "false"}">
+          ${escapeHTML(vehicle.name || "Unnamed vehicle")}
+        </button>
+      `).join("");
+
+      $$("[data-vehicle-tab]", container).forEach(button => {
+        button.addEventListener("click", () => activateVehicleWorkspace(button.dataset.vehicleTab));
+      });
+    }
+
+    function activateVehicleWorkspace(vehicleId) {
+      $$("[data-vehicle-tab]").forEach(button => {
+        const active = button.dataset.vehicleTab === vehicleId;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+
+      $$(".workspace").forEach(workspace => {
+        workspace.classList.toggle("active", workspace.id === `workspace-${vehicleId}`);
+      });
+    }
+
+    function renderWorkspaces(statusMap) {
+      const container = $("#workspaces");
+
+      if (!VEHICLES.length) {
+        container.innerHTML = `<div class="empty-state">Vehicle files could not be loaded. Confirm that <strong>data/index.json</strong> and the vehicle JSON files are in your repository.</div>`;
+        return;
+      }
+
+      container.innerHTML = VEHICLES.map((vehicle, vehicleIndex) => {
+        const services = Array.isArray(vehicle.services) ? vehicle.services : [];
+
+        if (!services.length) {
+          return `
+            <div class="workspace ${vehicleIndex === 0 ? "active" : ""}" id="workspace-${escapeHTML(vehicle.id)}">
+              <div class="empty-state">No services exist for ${escapeHTML(vehicle.name)}.</div>
+            </div>
+          `;
+        }
+
+        const serviceTabs = services.map((service, serviceIndex) => {
+          const status = statusMap[serviceKey(vehicle.id, service.id)] || { status: "ok" };
+
+          return `
+            <button
+              class="service-tab ${serviceIndex === 0 ? "active" : ""}"
+              type="button"
+              data-service-tab="${escapeHTML(vehicle.id)}--${escapeHTML(service.id)}">
+              <span class="service-tab-label">${escapeHTML(service.name || "Unnamed service")}</span>
+              <span class="badge ${status.status}">${status.status === "overdue" ? "OVERDUE" : status.status === "soon" ? "SOON" : "OK"}</span>
+            </button>
+          `;
+        }).join("");
+
+        const serviceContent = services.map((service, serviceIndex) => {
+          const key = serviceKey(vehicle.id, service.id);
+          const status = statusMap[key] || {
+            status: "ok",
+            milesRemaining: null,
+            dueDate: null,
+            lastMiles: 0,
+            lastDate: null
+          };
+          const record = data.serviceState[key] || {};
+          const tools = Array.isArray(service.tools) ? service.tools : [];
+          const materials = Array.isArray(service.materials) ? service.materials : [];
+          const steps = Array.isArray(service.steps) ? service.steps : [];
+
+          return `
+            <article class="service-content ${serviceIndex === 0 ? "active" : ""}" id="service-${escapeHTML(vehicle.id)}--${escapeHTML(service.id)}">
+              <div class="service-panel">
+                <div class="service-header">
+                  <div>
+                    <div class="category">${escapeHTML(service.category || "Maintenance")}</div>
+                    <h2>${escapeHTML(service.name || "Unnamed service")}</h2>
+                  </div>
+                  <span class="badge ${status.status}">
+                    ${status.status === "overdue" ? "OVERDUE" : status.status === "soon" ? "DUE SOON" : "ON TRACK"}
+                  </span>
+                </div>
+
+                <div class="info-box">
+                  <div><strong>What it does:</strong> ${escapeHTML(service.whatItDoes || "See factory service information.")}</div>
+                  <div><strong>Why it matters:</strong> ${escapeHTML(service.whyItMatters || "Helps maintain reliability and safety.")}</div>
+                  <div><strong>Estimated parts cost:</strong> <span class="cost-pill">${escapeHTML(service.estCost || "Varies")}</span></div>
+                </div>
+
+                <div class="detail-grid">
+                  <div class="detail-card">
+                    <h3>Tools required</h3>
+                    <ul class="simple-list">
+                      ${tools.length ? tools.map(item => `<li>${escapeHTML(item)}</li>`).join("") : "<li>Refer to service procedure</li>"}
+                    </ul>
+                  </div>
+
+                  <div class="detail-card">
+                    <h3>Materials</h3>
+                    <ul class="simple-list">
+                      ${materials.length ? materials.map(item => `<li>${escapeHTML(item)}</li>`).join("") : "<li>Refer to service procedure</li>"}
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="procedure">
+                  <h3>Procedure</h3>
+                  ${steps.length
+                    ? steps.map((step, index) => `
+                      <div class="step">
+                        <div class="step-number">${index + 1}</div>
+                        <div>${escapeHTML(step)}</div>
+                      </div>
+                    `).join("")
+                    : `<div class="notice">No procedure steps are included in this vehicle’s JSON file yet.</div>`
+                  }
+                </div>
+
+                <div class="callout tip">
+                  <h4>Pro tip / real-world trick</h4>
+                  <p>${escapeHTML(service.tips || "Use the factory service manual and confirm specifications for your exact vehicle.")}</p>
+                </div>
+
+                <div class="callout delay">
+                  <h4>If this service is delayed</h4>
+                  <p>${escapeHTML(service.ifDelayed || "Delayed maintenance can increase wear, reduce reliability, or create avoidable repair costs.")}</p>
+                </div>
+
+                <div class="tracking-box">
+                  <div class="tracking-title">
+                    <span>Service tracking</span>
+                    <span>·</span>
+                    <span>Every ${Number(service.intervalMiles || 0).toLocaleString()} mi / ${Number(service.intervalMonths || 0)} mo</span>
+                  </div>
+
+                  <div class="due-line ${status.status}">
+                    ${escapeHTML(getDueText(status))}
+                    ${status.dueDate ? ` · Target date: ${escapeHTML(formatDate(status.dueDate))}` : ""}
+                    <br>
+                    Last completed: ${status.lastMiles ? escapeHTML(formatMiles(status.lastMiles)) : "No mileage logged"}${status.lastDate ? ` on ${escapeHTML(formatDate(status.lastDate))}` : ""}
+                  </div>
+
+                  <div class="tracking-grid">
+                    <div class="field">
+                      <label for="service-miles-${escapeHTML(vehicle.id)}--${escapeHTML(service.id)}">Mileage at service</label>
+                      <input
+                        id="service-miles-${escapeHTML(vehicle.id)}--${escapeHTML(service.id)}"
+                        type="number"
+                        inputmode="numeric"
+                        min="0"
+                        step="1"
+                        value="${record.lastMiles || ""}"
+                        placeholder="e.g. 152300">
+                    </div>
+
+                    <div class="field">
+                      <label for="service-date-${escapeHTML(vehicle.id)}--${escapeHTML(service.id)}">Date completed</label>
+                      <input
+                        id="service-date-${escapeHTML(vehicle.id)}--${escapeHTML(service.id)}"
+                        type="date"
+                        value="${escapeHTML(record.lastDate || todayISO())}">
+                    </div>
+
+                    <button
+                      class="btn"
+                      type="button"
+                      data-log-service="${escapeHTML(vehicle.id)}::${escapeHTML(service.id)}">
+                      Log Service
+                    </button>
+                  </div>
+
+                  <div class="notes-row field">
+                    <label for="service-notes-${escapeHTML(vehicle.id)}--${escapeHTML(service.id)}">Notes</label>
+                    <textarea
+                      id="service-notes-${escapeHTML(vehicle.id)}--${escapeHTML(service.id)}"
+                      maxlength="2000"
+                      placeholder="Optional: part numbers, torque values, fluid used, observations, or shop details."></textarea>
+                  </div>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join("");
+
+        return `
+          <div class="workspace ${vehicleIndex === 0 ? "active" : ""}" id="workspace-${escapeHTML(vehicle.id)}">
+            <aside class="service-tabs" aria-label="${escapeHTML(vehicle.name)} services">
+              ${serviceTabs}
+            </aside>
+            <div>${serviceContent}</div>
+          </div>
+        `;
+      }).join("");
+
+      $$("[data-service-tab]", container).forEach(button => {
+        button.addEventListener("click", () => {
+          const workspace = button.closest(".workspace");
+          const target = button.dataset.serviceTab;
+
+          $$(".service-tab", workspace).forEach(tab => tab.classList.toggle("active", tab === button));
+          $$(".service-content", workspace).forEach(content => {
+            content.classList.toggle("active", content.id === `service-${target}`);
+          });
+        });
+      });
+
+      $$("[data-log-service]", container).forEach(button => {
+        button.addEventListener("click", () => logService(button.dataset.logService));
+      });
+    }
+
+    function logService(key) {
+      const [vehicleId, serviceId] = key.split("::");
+      const vehicle = VEHICLES.find(item => item.id === vehicleId);
+      const service = vehicle?.services?.find(item => item.id === serviceId);
+
+      if (!vehicle || !service) {
+        showToast("That vehicle or service could not be found.", true);
+        return;
+      }
+
+      const inputSuffix = `${vehicleId}--${serviceId}`;
+      const milesInput = $(`#service-miles-${CSS.escape(inputSuffix)}`);
+      const dateInput = $(`#service-date-${CSS.escape(inputSuffix)}`);
+      const notesInput = $(`#service-notes-${CSS.escape(inputSuffix)}`);
+
+      const miles = Number(milesInput.value);
+      const date = dateInput.value;
+      const notes = notesInput.value.trim();
+
+      if (!Number.isFinite(miles) || miles < 0 || !Number.isInteger(miles)) {
+        showToast("Enter a valid whole-number service mileage.", true);
+        milesInput.focus();
+        return;
+      }
+
+      if (!isValidDateString(date)) {
+        showToast("Choose a valid completion date.", true);
+        dateInput.focus();
+        return;
+      }
+
+      const existingLastMiles = Number(data.serviceState[key]?.lastMiles) || 0;
+      const commit = () => {
+        data.serviceState[key] = { lastMiles: miles, lastDate: date };
+        data.history.push({
+          id: createId(),
+          vehicleId,
+          vehicleName: vehicle.name || "Unnamed vehicle",
+          serviceId,
+          serviceName: service.name || "Unnamed service",
+          miles,
+          date,
+          notes,
+          loggedAt: new Date().toISOString()
+        });
+
+        const currentOdometer = Number(data.vehicles[vehicleId]?.odometer) || 0;
+        if (miles > currentOdometer) {
+          data.vehicles[vehicleId] = { odometer: miles, odometerDate: date };
+        }
+
+        saveData();
+        refreshAll();
+        showToast(`${service.name} logged to the work log.`);
+        scheduleAutoPush();
+      };
+
+      if (miles < existingLastMiles) {
+        showConfirm({
+          title: "Earlier service mileage?",
+          message: `This entry is lower than the currently recorded ${existingLastMiles.toLocaleString()} mi service mileage. Continue only if you are adding an older service record.`,
+          actionLabel: "Log Older Service",
+          onConfirm: commit
+        });
+      } else {
+        commit();
+      }
+    }
+
+    function populateLogFilter() {
+      const select = $("#logFilterVehicle");
+      const selected = select.value || "all";
+
+      select.innerHTML = `
+        <option value="all">All vehicles</option>
+        ${VEHICLES.map(vehicle => `<option value="${escapeHTML(vehicle.id)}">${escapeHTML(vehicle.name || "Unnamed vehicle")}</option>`).join("")}
+      `;
+
+      select.value = [...select.options].some(option => option.value === selected) ? selected : "all";
+    }
+
+    function renderLogTable() {
+      const filter = $("#logFilterVehicle").value;
+      const body = $("#logTableBody");
+
+      let rows = [...data.history]
+        .sort((a, b) => {
+          const dateDifference = dateToTimestamp(b.date) - dateToTimestamp(a.date);
+          return dateDifference || String(b.loggedAt).localeCompare(String(a.loggedAt));
+        });
+
+      if (filter !== "all") rows = rows.filter(row => row.vehicleId === filter);
+
+      if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="6" class="empty-state">No service history is logged for this selection yet.</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = rows.map(row => `
+        <tr>
+          <td>${escapeHTML(formatDate(row.date))}</td>
+          <td>${escapeHTML(row.vehicleName)}</td>
+          <td>${escapeHTML(row.serviceName)}</td>
+          <td>${escapeHTML(formatMiles(row.miles))}</td>
+          <td class="notes-cell">${row.notes ? escapeHTML(row.notes) : "—"}</td>
+          <td>
+            <button class="btn danger compact" type="button" data-delete-log="${escapeHTML(row.id)}" aria-label="Delete ${escapeHTML(row.serviceName)} log entry">Delete</button>
+          </td>
+        </tr>
+      `).join("");
+
+      $$("[data-delete-log]", body).forEach(button => {
+        button.addEventListener("click", () => deleteLogEntry(button.dataset.deleteLog));
+      });
+    }
+
+    function rebuildServiceStateForKey(key) {
+      const [vehicleId, serviceId] = key.split("::");
+      const remaining = data.history
+        .filter(row => row.vehicleId === vehicleId && row.serviceId === serviceId)
+        .sort((a, b) => {
+          const dateDiff = dateToTimestamp(b.date) - dateToTimestamp(a.date);
+          return dateDiff || Number(b.miles) - Number(a.miles);
+        });
+
+      if (!remaining.length) {
+        delete data.serviceState[key];
+        return;
+      }
+
+      data.serviceState[key] = {
+        lastMiles: Number(remaining[0].miles) || 0,
+        lastDate: remaining[0].date
+      };
+    }
+
+    function deleteLogEntry(logId) {
+      const row = data.history.find(item => item.id === logId);
+      if (!row) return;
+
+      showConfirm({
+        title: "Delete work-log entry?",
+        message: `Delete the ${row.serviceName} entry from ${formatDate(row.date)}? The tracked “last completed” service state will be recalculated from the remaining work log.`,
+        actionLabel: "Delete Entry",
+        onConfirm: () => {
+          const key = serviceKey(row.vehicleId, row.serviceId);
+          data.history = data.history.filter(item => item.id !== logId);
+          rebuildServiceStateForKey(key);
+          saveData();
+          refreshAll();
+          renderLogTable();
+          showToast("Work-log entry deleted.");
+          scheduleAutoPush();
+        }
+      });
+    }
+
+    function csvCell(value) {
+      return `"${String(value ?? "").replace(/"/g, "\"\"").replace(/\r?\n/g, " ")}"`;
+    }
+
+    function downloadFile(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function exportLog() {
+      const filter = $("#logFilterVehicle").value;
+      let rows = [...data.history];
+
+      if (filter !== "all") rows = rows.filter(row => row.vehicleId === filter);
+
+      rows.sort((a, b) => dateToTimestamp(b.date) - dateToTimestamp(a.date));
+
+      const csvRows = [
+        ["Date", "Vehicle", "Service", "Mileage", "Notes"],
+        ...rows.map(row => [row.date, row.vehicleName, row.serviceName, row.miles, row.notes])
+      ];
+
+      const csv = csvRows.map(row => row.map(csvCell).join(",")).join("\n");
+      downloadFile(csv, `garagehub-work-log-${todayISO()}.csv`, "text/csv;charset=utf-8");
+      showToast("CSV work log exported.");
+    }
+
+    function exportFullBackup() {
+      const backup = JSON.stringify(data, null, 2);
+      downloadFile(backup, `garagehub-backup-${todayISO()}.json`, "application/json;charset=utf-8");
+      showToast("Full GarageHub backup exported.");
+    }
+
+    async function importFullBackup(file) {
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        const imported = normalizeData(parsed);
+
+        showConfirm({
+          title: "Import backup?",
+          message: `This will replace all local GarageHub mileage, service history, and reminder data with the selected backup. Your vehicle procedure JSON files will not be changed.`,
+          actionLabel: "Import Backup",
+          onConfirm: () => {
+            data = imported;
+            ensureVehicleRecords();
+            saveData();
+            refreshAll();
+            renderLogTable();
+            showToast("Backup imported successfully.");
+            scheduleAutoPush();
+          }
+        });
+      } catch {
+        showToast("That file is not a valid GarageHub JSON backup.", true);
+      } finally {
+        $("#importBackupInput").value = "";
+      }
+    }
+
+    function populateSettingsForm() {
+      $("#ghOwner").value = ghSettings.owner || "";
+      $("#ghRepo").value = ghSettings.repo || "";
+      $("#ghBranch").value = ghSettings.branch || "main";
+      $("#ghToken").value = ghSettings.token || "";
+      $("#autoSyncToggle").checked = Boolean(ghSettings.autoSync);
+    }
+
+    function readAndSaveSettings() {
+      ghSettings = {
+        owner: $("#ghOwner").value.trim(),
+        repo: $("#ghRepo").value.trim(),
+        branch: $("#ghBranch").value.trim() || "main",
+        token: $("#ghToken").value.trim(),
+        autoSync: $("#autoSyncToggle").checked
+      };
+
+      saveSettings();
+      showToast("Sync settings saved.");
+    }
+
+    function githubContentsUrl() {
+      return `https://api.github.com/repos/${encodeURIComponent(ghSettings.owner)}/${encodeURIComponent(ghSettings.repo)}/contents/data.json`;
+    }
+
+    function githubHeaders(includeContentType = false) {
+      const headers = {
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+      };
+
+      if (ghSettings.token) headers.Authorization = `Bearer ${ghSettings.token}`;
+      if (includeContentType) headers["Content-Type"] = "application/json";
+      return headers;
+    }
+
+    function encodeBase64Utf8(text) {
+      const bytes = new TextEncoder().encode(text);
+      let binary = "";
+      bytes.forEach(byte => { binary += String.fromCharCode(byte); });
+      return btoa(binary);
+    }
+
+    function decodeBase64Utf8(encoded) {
+      const binary = atob(String(encoded).replace(/\n/g, ""));
+      const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    }
+
+    async function fetchRemoteData() {
+      if (!ghSettings.owner || !ghSettings.repo) {
+        throw new Error("Enter a GitHub owner and repository first.");
+      }
+
+      const branch = ghSettings.branch || "main";
+      const response = await fetch(`${githubContentsUrl()}?ref=${encodeURIComponent(branch)}`, {
+        headers: githubHeaders()
+      });
+
+      if (response.status === 404) {
+        throw new Error("data.json was not found on that branch.");
+      }
+
+      if (!response.ok) {
+        throw new Error(`GitHub returned HTTP ${response.status}.`);
+      }
+
+      const file = await response.json();
+
+      if (!file.content) {
+        throw new Error("GitHub returned data.json without file content.");
+      }
+
+      return {
+        sha: file.sha,
+        data: normalizeData(JSON.parse(decodeBase64Utf8(file.content)))
+      };
+    }
+
+    async function pullFromGitHub() {
+      if (syncBusy) return;
+
+      syncBusy = true;
+      $("#pullBtn").disabled = true;
+      $("#pushBtn").disabled = true;
+      setSyncStatus("Pulling the latest data.json from GitHub…");
+      updateHeaderSync("Syncing with GitHub", "busy");
+
+      try {
+        const remote = await fetchRemoteData();
+        data = remote.data;
+        data.meta.lastSyncedAt = new Date().toISOString();
+        ensureVehicleRecords();
+        saveData();
+        refreshAll();
+        renderLogTable();
+        setSyncStatus(`Pulled successfully at ${new Date().toLocaleTimeString()}.`, "success");
+        showToast("Latest GitHub data pulled.");
+      } catch (error) {
+        console.error(error);
+        setSyncStatus(`Pull failed: ${error.message}`, "error");
+        showToast(`Pull failed: ${error.message}`, true);
+      } finally {
+        syncBusy = false;
+        $("#pullBtn").disabled = false;
+        $("#pushBtn").disabled = false;
+      }
+    }
+
+    async function pushToGitHub() {
+      if (syncBusy) return;
+
+      if (!ghSettings.owner || !ghSettings.repo || !ghSettings.token) {
+        showToast("Enter the GitHub owner, repo, and token before pushing.", true);
+        return;
+      }
+
+      syncBusy = true;
+      $("#pullBtn").disabled = true;
+      $("#pushBtn").disabled = true;
+      setSyncStatus("Saving data.json to GitHub…");
+      updateHeaderSync("Syncing with GitHub", "busy");
+
+      try {
+        let existingSha = null;
+        const branch = ghSettings.branch || "main";
+
+        const getResponse = await fetch(`${githubContentsUrl()}?ref=${encodeURIComponent(branch)}`, {
+          headers: githubHeaders()
+        });
+
+        if (getResponse.ok) {
+          const existingFile = await getResponse.json();
+          existingSha = existingFile.sha;
+        } else if (getResponse.status !== 404) {
+          throw new Error(`Unable to check existing data.json (HTTP ${getResponse.status}).`);
+        }
+
+        data.meta.lastUpdated = new Date().toISOString();
+        const body = {
+          message: `Update GarageHub data (${new Date().toISOString()})`,
+          content: encodeBase64Utf8(JSON.stringify(data, null, 2)),
+          branch
+        };
+
+        if (existingSha) body.sha = existingSha;
+
+        const putResponse = await fetch(githubContentsUrl(), {
+          method: "PUT",
+          headers: githubHeaders(true),
+          body: JSON.stringify(body)
+        });
+
+        if (!putResponse.ok) {
+          const details = await putResponse.json().catch(() => ({}));
+
+          if (putResponse.status === 409) {
+            throw new Error("GitHub detected a newer remote version. Pull latest, review it, then push again.");
+          }
+
+          throw new Error(details.message || `GitHub returned HTTP ${putResponse.status}.`);
+        }
+
+        data.meta.lastSyncedAt = new Date().toISOString();
+        saveData();
+        setSyncStatus(`Pushed successfully at ${new Date().toLocaleTimeString()}.`, "success");
+        showToast("GarageHub data saved to GitHub.");
+      } catch (error) {
+        console.error(error);
+        setSyncStatus(`Push failed: ${error.message}`, "error");
+        showToast(`Push failed: ${error.message}`, true);
+      } finally {
+        syncBusy = false;
+        $("#pullBtn").disabled = false;
+        $("#pushBtn").disabled = false;
+      }
+    }
+
+    function scheduleAutoPush() {
+      if (!ghSettings.autoSync || !ghSettings.owner || !ghSettings.repo || !ghSettings.token) return;
+
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => {
+        pushToGitHub();
+      }, 900);
+    }
+
+    async function autoPullOnLoad() {
+      if (!ghSettings.autoSync || !ghSettings.owner || !ghSettings.repo) return;
+      await pullFromGitHub();
+    }
+
+    function refreshAll() {
+      ensureVehicleRecords();
+
+      const statuses = calculateStatuses();
+      currentStatusMap = Object.fromEntries(statuses.map(item => [serviceKey(item.vehicleId, item.serviceId), item]));
+
+      renderDashboard(statuses);
+      renderOdometerPanel();
+      renderVehicleTabs();
+      renderWorkspaces(currentStatusMap);
+      populateLogFilter();
+    }
+
+    async function loadVehicleData() {
+      const workspace = $("#workspaces");
+
+      try {
+        const response = await fetch(`data/index.json?v=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Could not load data/index.json (HTTP ${response.status}).`);
+
+        const index = await response.json();
+        if (!Array.isArray(index)) throw new Error("data/index.json must contain an array.");
+
+        const loadedVehicles = await Promise.all(index.map(async entry => {
+          if (!entry?.file) throw new Error("A vehicle index entry is missing its file property.");
+
+          const vehicleResponse = await fetch(`${entry.file}?v=${Date.now()}`, { cache: "no-store" });
+          if (!vehicleResponse.ok) throw new Error(`Could not load ${entry.file} (HTTP ${vehicleResponse.status}).`);
+
+          const vehicle = await vehicleResponse.json();
+
+          if (!vehicle?.id || !Array.isArray(vehicle.services)) {
+            throw new Error(`${entry.file} does not contain a valid vehicle id and services array.`);
+          }
+
+          return vehicle;
+        }));
+
+        VEHICLES = loadedVehicles;
+      } catch (error) {
+        console.error("Vehicle data loading failed.", error);
+        workspace.innerHTML = `
+          <div class="empty-state">
+            <strong>Vehicle data could not be loaded.</strong><br>
+            ${escapeHTML(error.message)}<br><br>
+            Confirm that this app is hosted through GitHub Pages or another web server—not opened directly as a local file—and that <strong>data/index.json</strong> and every referenced vehicle JSON file exist.
+          </div>
+        `;
+        $("#dashboardSubtitle").textContent = "Vehicle data unavailable.";
+        showToast("Vehicle procedure files could not be loaded.", true);
+      }
+    }
+
+    function bindEvents() {
+      $$(".nav-btn").forEach(button => {
+        button.addEventListener("click", () => {
+          const viewId = button.dataset.view;
+
+          $$(".nav-btn").forEach(nav => nav.classList.toggle("active", nav === button));
+          $$(".view").forEach(view => view.classList.toggle("active", view.id === viewId));
+
+          if (viewId === "logView") renderLogTable();
+          if (viewId === "settingsView") populateSettingsForm();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      });
+
+      $("#logFilterVehicle").addEventListener("change", renderLogTable);
+      $("#exportLogBtn").addEventListener("click", exportLog);
+
+      $("#saveSettingsBtn").addEventListener("click", readAndSaveSettings);
+      $("#pullBtn").addEventListener("click", pullFromGitHub);
+      $("#pushBtn").addEventListener("click", pushToGitHub);
+
+      $("#exportBackupBtn").addEventListener("click", exportFullBackup);
+      $("#importBackupInput").addEventListener("change", event => importFullBackup(event.target.files?.[0]));
+
+      $("#clearLocalDataBtn").addEventListener("click", () => {
+        showConfirm({
+          title: "Clear all local GarageHub data?",
+          message: "This permanently removes locally stored odometers, service status, and work-log history from this browser. It does not remove your GitHub data.json or vehicle procedure files.",
+          actionLabel: "Clear Local Data",
+          onConfirm: () => {
+            data = createDefaultData();
+            ensureVehicleRecords();
+            saveData();
+            refreshAll();
+            renderLogTable();
+            showToast("Local GarageHub data cleared.");
+          }
+        });
+      });
+
+      $("#confirmCancelBtn").addEventListener("click", closeConfirm);
+      $("#confirmActionBtn").addEventListener("click", () => {
+        const callback = confirmCallback;
+        closeConfirm();
+        if (typeof callback === "function") callback();
+      });
+
+      $("#confirmModal").addEventListener("click", event => {
+        if (event.target === $("#confirmModal")) closeConfirm();
+      });
+
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && $("#confirmModal").classList.contains("show")) {
+          closeConfirm();
+        }
+      });
+
+      $("#installBtn").addEventListener("click", async () => {
+        if (deferredInstallPrompt) {
+          deferredInstallPrompt.prompt();
+          await deferredInstallPrompt.userChoice;
+          deferredInstallPrompt = null;
+          $("#installBanner").classList.remove("show");
+        }
+      });
+
+      $("#dismissInstallBtn").addEventListener("click", () => {
+        localStorage.setItem(INSTALL_DISMISS_KEY, "true");
+        $("#installBanner").classList.remove("show");
+      });
+
+      window.addEventListener("beforeinstallprompt", event => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+
+        if (!localStorage.getItem(INSTALL_DISMISS_KEY)) {
+          $("#installBannerText").textContent = "Install GarageHub for a cleaner, app-like experience.";
+          $("#installBtn").style.display = "";
+          $("#installBanner").classList.add("show");
+        }
+      });
+
+      window.addEventListener("appinstalled", () => {
+        $("#installBanner").classList.remove("show");
+        deferredInstallPrompt = null;
+      });
+    }
+
+    function setupIOSInstallBanner() {
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+      if (isIOS && !isStandalone && !localStorage.getItem(INSTALL_DISMISS_KEY)) {
+        $("#installBannerText").textContent = "Install on iPhone or iPad: tap Share, then Add to Home Screen.";
+        $("#installBtn").style.display = "none";
+        $("#installBanner").classList.add("show");
+      }
+    }
+
+    function registerServiceWorker() {
+      if (!("serviceWorker" in navigator)) return;
+
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(error => {
+          console.warn("Service worker registration failed.", error);
+        });
+      });
+    }
+
+    async function init() {
+      bindEvents();
+      setupIOSInstallBanner();
+      registerServiceWorker();
+
+      updateHeaderSync("Loading GarageHub", "busy");
+      await loadVehicleData();
+
+      data = loadData();
+      ensureVehicleRecords();
+
+      populateSettingsForm();
+      populateLogFilter();
       refreshAll();
-      autoPushIfEnabled();
-    });
-  });
-}
-
-// ---------- Work Log ----------
-function populateLogFilter(){
-  const sel = document.getElementById('logFilterVehicle');
-  sel.innerHTML = '<option value="all">All Vehicles</option>' +
-    VEHICLES.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
-}
-function renderLogTable(){
-  const filter = document.getElementById('logFilterVehicle').value;
-  const tbody = document.getElementById('logTableBody');
-  let rows = [...data.history].sort((a,b)=> new Date(b.date) - new Date(a.date) || new Date(b.loggedAt) - new Date(a.loggedAt));
-  if(filter !== 'all') rows = rows.filter(r=>r.vehicleId === filter);
-  if(rows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="6" class="status-line">No service history logged yet.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = rows.map(r=>`
-    <tr>
-      <td>${fmtDate(new Date(r.date).getTime())}</td>
-      <td>${r.vehicleName}</td>
-      <td>${r.serviceName}</td>
-      <td>${r.miles.toLocaleString()} mi</td>
-      <td>${r.notes ? r.notes.replace(/</g,'&lt;') : '—'}</td>
-      <td><button class="btn danger" data-del-log="${r.id}" style="padding:.3rem .6rem;font-size:.75rem;">Delete</button></td>
-    </tr>`).join('');
-
-  tbody.querySelectorAll('[data-del-log]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      data.history = data.history.filter(r=>r.id !== btn.dataset.delLog);
-      saveData();
       renderLogTable();
-      showToast('Entry deleted');
-    });
-  });
-}
-document.getElementById('logFilterVehicle')?.addEventListener('change', renderLogTable);
-document.getElementById('exportLogBtn').addEventListener('click', ()=>{
-  const rows = [['Date','Vehicle','Service','Mileage','Notes']];
-  data.history.forEach(r=> rows.push([r.date, r.vehicleName, r.serviceName, r.miles, (r.notes||'').replace(/\n/g,' ')]));
-  const csv = rows.map(r=> r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'garagehub-work-log.csv';
-  a.click();
-});
 
-// ---------- GitHub Sync ----------
-function populateSettingsForm(){
-  document.getElementById('ghOwner').value = ghSettings.owner || '';
-  document.getElementById('ghRepo').value = ghSettings.repo || '';
-  document.getElementById('ghBranch').value = ghSettings.branch || 'main';
-  document.getElementById('ghToken').value = ghSettings.token || '';
-  document.getElementById('autoSyncToggle').checked = !!ghSettings.autoSync;
-}
-document.getElementById('saveSettingsBtn').addEventListener('click', ()=>{
-  ghSettings = {
-    owner: document.getElementById('ghOwner').value.trim(),
-    repo: document.getElementById('ghRepo').value.trim(),
-    branch: document.getElementById('ghBranch').value.trim() || 'main',
-    token: document.getElementById('ghToken').value.trim(),
-    autoSync: document.getElementById('autoSyncToggle').checked
-  };
-  saveSettings(ghSettings);
-  showToast('Settings saved ✓');
-});
+      updateHeaderSync("Local data ready", "success");
+      await autoPullOnLoad();
+    }
 
-function ghApiBase(){
-  return `https://api.github.com/repos/${ghSettings.owner}/${ghSettings.repo}/contents/data.json`;
-}
-
-async function pullFromGitHub(){
-  if(!ghSettings.owner || !ghSettings.repo){ showToast('Set GitHub owner/repo first'); return; }
-  const statusEl = document.getElementById('syncStatus');
-  statusEl.textContent = 'Pulling...';
-  try{
-    const url = `https://raw.githubusercontent.com/${ghSettings.owner}/${ghSettings.repo}/${ghSettings.branch||'main'}/data.json?t=${Date.now()}`;
-    const res = await fetch(url);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const remote = await res.json();
-    data = Object.assign(defaultData(), remote);
-    saveData();
-    refreshAll();
-    statusEl.textContent = 'Pulled latest data.json from GitHub at ' + new Date().toLocaleTimeString();
-    showToast('Pulled from GitHub ✓');
-  }catch(err){
-    statusEl.textContent = 'Pull failed: ' + err.message;
-    showToast('Pull failed — check repo/branch');
-  }
-}
-
-async function pushToGitHub(){
-  if(!ghSettings.owner || !ghSettings.repo || !ghSettings.token){
-    showToast('Fill in owner, repo, and token first'); return;
-  }
-  const statusEl = document.getElementById('syncStatus');
-  statusEl.textContent = 'Pushing...';
-  try{
-    let sha = null;
-    const getRes = await fetch(ghApiBase() + `?ref=${ghSettings.branch||'main'}`, {
-      headers: { 'Authorization': `Bearer ${ghSettings.token}`, 'Accept': 'application/vnd.github+json' }
-    });
-    if(getRes.ok){ const j = await getRes.json(); sha = j.sha; }
-    else if(getRes.status !== 404){ throw new Error('GET failed HTTP '+getRes.status); }
-
-    data.meta.lastUpdated = new Date().toISOString();
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
-    const body = {
-      message: `Update data.json via GarageHub PWA (${new Date().toISOString()})`,
-      content,
-      branch: ghSettings.branch || 'main'
-    };
-    if(sha) body.sha = sha;
-
-    const putRes = await fetch(ghApiBase(), {
-      method: 'PUT',
-      headers: { 'Authorization': `Bearer ${ghSettings.token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if(!putRes.ok){ const errJ = await putRes.json().catch(()=>({})); throw new Error(errJ.message || 'PUT failed HTTP '+putRes.status); }
-    statusEl.textContent = 'Pushed to GitHub successfully at ' + new Date().toLocaleTimeString();
-    showToast('Saved to GitHub repo ✓');
-  }catch(err){
-    statusEl.textContent = 'Push failed: ' + err.message;
-    showToast('Push failed — check token/permissions');
-  }
-}
-
-async function autoPushIfEnabled(){
-  if(ghSettings.autoSync && ghSettings.owner && ghSettings.repo && ghSettings.token){
-    try{ await pushToGitHub(); }catch(e){ console.warn('Auto-push failed', e); }
-  }
-}
-async function autoPullOnLoad(){
-  if(ghSettings.autoSync && ghSettings.owner && ghSettings.repo){
-    try{ await pullFromGitHub(); }catch(e){ console.warn('Auto-pull failed', e); }
-  }
-}
-
-document.getElementById('pullBtn').addEventListener('click', pullFromGitHub);
-document.getElementById('pushBtn').addEventListener('click', pushToGitHub);
-
-// ---------- Nav ----------
-document.querySelectorAll('.nav-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.view).classList.add('active');
-    if(btn.dataset.view === 'logView') renderLogTable();
-  });
-});
-
-// ---------- Orchestration ----------
-function refreshAll(){
-  computeStatuses(statusResults=>{
-    const map = {};
-    statusResults.forEach(r=> map[r.vehicleId+'::'+r.serviceId] = r);
-    renderDashboard(map);
-    renderWorkspaces(map);
-  });
-  renderOdoPanel();
-}
-
-async function loadVehicleData(){
-  try{
-    const idxRes = await fetch('data/index.json?v=' + Date.now());
-    const idx = await idxRes.json();
-    const vehicles = await Promise.all(idx.map(async entry=>{
-      const res = await fetch(entry.file + '?v=' + Date.now());
-      if(!res.ok) throw new Error('Failed to load ' + entry.file);
-      return res.json();
-    }));
-    VEHICLES = vehicles;
-  }catch(err){
-    console.error('Vehicle data load failed', err);
-    document.getElementById('workspaces').innerHTML =
-      '<p class="status-line">Could not load vehicle data files. Check that data/index.json and data/*.json exist alongside index.html.</p>';
-    throw err;
-  }
-}
-
-(async function init(){
-  await loadVehicleData();
-  data = loadData();
-  renderVehicleTabs();
-  populateLogFilter();
-  populateSettingsForm();
-  await autoPullOnLoad();
-  refreshAll();
-})();
-
-// iOS install banner
-if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone){
-  // already installed
-} else if(/iphone|ipad|ipod/i.test(navigator.userAgent)){
-  document.getElementById('installBanner').style.display = 'flex';
-}
-
-// Service Worker registration
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('sw.js').catch(err=>console.warn('SW registration failed', err));
-  });
-}
-</script>
+    init();
+  </script>
 </body>
 </html>
