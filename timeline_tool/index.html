@@ -285,6 +285,15 @@
 .zoom-pill-btn:hover { border-color: var(--primary); color: var(--primary); }
 .zoom-pill-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
 
+/* NEW: Pill-style zoom buttons */
+.zoom-pill-btn {
+    background: #ffffff; color: var(--text-muted); border: 1px solid #cbd5e1;
+    padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 999px;
+    cursor: pointer; transition: all 0.15s;
+}
+.zoom-pill-btn:hover { border-color: var(--primary); color: var(--primary); }
+.zoom-pill-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+
     </style>
 </head>
 <body>
@@ -559,6 +568,7 @@
 
             <div class="canvas-quick-controls" style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; background:var(--bg-subtle); border:1px solid var(--border-color); border-radius:8px; padding:12px 15px; margin-bottom:15px;">
                 <!-- AFTER -->
+<!-- AFTER -->
 <div class="control-item" style="min-width:320px;">
     <label>Live Workspace View Zoom</label>
     <div id="workspaceZoomPillGroup" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
@@ -1247,6 +1257,7 @@ function updateTimelineCrosshair(e) {
   line.style.display = 'block';
 
   // AFTER
+  // AFTER
   if (!badge) {
     badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     badge.id = 'timelineCrosshairBadge';
@@ -1398,7 +1409,11 @@ function stopGlobalDragAction(e) {
         document.getElementById('showAlignGrid').checked = state.showAlignGrid || false;
         document.getElementById('snapResolution').value = state.snapResolution || "0";
        // AFTER
+// AFTER
 document.getElementById('workspaceZoom').value = state.workspaceZoom || "1.0";
+document.querySelectorAll('.zoom-pill-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-zoom') === (state.workspaceZoom || "1.0"));
+});
 document.querySelectorAll('.zoom-pill-btn').forEach(b => {
     b.classList.toggle('active', b.getAttribute('data-zoom') === (state.workspaceZoom || "1.0"));
 });
@@ -3664,6 +3679,14 @@ function clearSidebarSearch() {
     toggleSearchClearBtn();
 }
 
+// NEW: Handles pill button clicks and keeps hidden input + visual state in sync
+function setZoomPill(btnEl) {
+    document.querySelectorAll('.zoom-pill-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+    const zoomValue = btnEl.getAttribute('data-zoom');
+    document.getElementById('workspaceZoom').value = zoomValue;
+    handleZoomFactorChange(zoomValue);
+}
 
 // NEW: Handles pill button clicks and keeps hidden input + visual state in sync
 function setZoomPill(btnEl) {
