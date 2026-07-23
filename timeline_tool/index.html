@@ -276,6 +276,15 @@
 .draggable-callout { cursor: text !important; }
 .draggable-leader { cursor: crosshair !important; }
 
+/* NEW: Pill-style zoom buttons */
+.zoom-pill-btn {
+    background: #ffffff; color: var(--text-muted); border: 1px solid #cbd5e1;
+    padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 999px;
+    cursor: pointer; transition: all 0.15s;
+}
+.zoom-pill-btn:hover { border-color: var(--primary); color: var(--primary); }
+.zoom-pill-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+
     </style>
 </head>
 <body>
@@ -390,26 +399,7 @@
                                 </div>
                             </div>
 
-                            <div class="control-item">
-                                <label>Quick-Focus Macro Horizons</label>
-                                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
-                                    <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3m')">3 Months</button>
-                                    <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('1y')">1 Year</button>
-                                    <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3y')">3 Years</button>
-                                </div>
-                            </div>
-
-                            <div class="control-item">
-                                <label>Live Workspace View Zoom</label>
-                                <select id="workspaceZoom" onchange="handleZoomFactorChange(this.value)">
-                                    <option value="1.0" selected>100% Standard View</option>
-                                    <option value="1.25">125% Magnified</option>
-                                    <option value="1.5">150% Intermediate</option>
-                                    <option value="2.0">200% High Detail</option>
-                                    <option value="2.5">250% Ultra Zoom</option>
-                                    <option value="3.0">300% Maximum Scale</option>
-                                </select>
-                            </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -457,14 +447,7 @@
                                 </div>
                             </div>
 
-                            <div class="control-item">
-    <label>Manual Width Control <span style="font-size:10px; color:var(--text-muted); font-weight:400;">(view zoom is set in Timeline Settings tab)</span></label>
-    <div style="display:flex; gap:4px; align-items:center;">
-        <button type="button" class="inner-action-btn" style="flex:1;" onclick="adjustCanvasZoomMultiplier(0.85)">− Narrower</button>
-        <button type="button" class="inner-action-btn" style="flex:1;" onclick="adjustCanvasZoomMultiplier(1.15)">+ Wider</button>
-    </div>
-    <input type="hidden" id="canvasWidth" value="806">
-</div>
+                           
                             
                             <div class="control-item">
                                 <label>Layout Snapping Steps</label>
@@ -568,11 +551,46 @@
                 Live Scalable Vector Workspace Canvas <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">(Right-click row track inside canvas to insert shapes; double-click elements to customize style)</span>
             </h2>
             
+           <!-- AFTER -->
             <div class="zoom-viewport-mask">
                 <div class="canvas-holder" id="svgContainer" onmousemove="handleGlobalDragMove(event); updateTimelineCrosshair(event)" onmouseup="stopGlobalDragAction(event)" onmouseleave="stopGlobalDragAction(event); hideTimelineCrosshair()">
                 </div>
             </div>
-            
+
+            <div class="canvas-quick-controls" style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; background:var(--bg-subtle); border:1px solid var(--border-color); border-radius:8px; padding:12px 15px; margin-bottom:15px;">
+                <!-- AFTER -->
+<div class="control-item" style="min-width:320px;">
+    <label>Live Workspace View Zoom</label>
+    <div id="workspaceZoomPillGroup" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+        <button type="button" class="zoom-pill-btn active" data-zoom="1.0" onclick="setZoomPill(this)">100%</button>
+        <button type="button" class="zoom-pill-btn" data-zoom="1.25" onclick="setZoomPill(this)">125%</button>
+        <button type="button" class="zoom-pill-btn" data-zoom="1.5" onclick="setZoomPill(this)">150%</button>
+        <button type="button" class="zoom-pill-btn" data-zoom="2.0" onclick="setZoomPill(this)">200%</button>
+        <button type="button" class="zoom-pill-btn" data-zoom="2.5" onclick="setZoomPill(this)">250%</button>
+        <button type="button" class="zoom-pill-btn" data-zoom="3.0" onclick="setZoomPill(this)">300%</button>
+    </div>
+    <input type="hidden" id="workspaceZoom" value="1.0">
+</div>
+
+                <div class="control-item" style="min-width:220px;">
+                    <label>Quick-Focus Macro Horizons</label>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                        <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3m')">3 Months</button>
+                        <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('1y')">1 Year</button>
+                        <button type="button" class="inner-action-btn" style="color: #1e40af;" onclick="applyDateHorizonMacro('3y')">3 Years</button>
+                    </div>
+                </div>
+
+                <div class="control-item" style="min-width:180px;">
+                    <label>Manual Width Control</label>
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <button type="button" class="inner-action-btn" style="flex:1;" onclick="adjustCanvasZoomMultiplier(0.85)">− Narrower</button>
+                        <button type="button" class="inner-action-btn" style="flex:1;" onclick="adjustCanvasZoomMultiplier(1.15)">+ Wider</button>
+                    </div>
+                    <input type="hidden" id="canvasWidth" value="806">
+                </div>
+            </div>
+
             <div class="export-button-group">
     <button class="download-btn" id="svgDownloadBtn" style="background: var(--primary);" onclick="downloadSVG()">Download Smart SVG Vector Layout</button>
     <button class="download-btn" id="pngDownloadBtn" style="background: var(--success);" onclick="downloadPNG()">Download High-Res Presentation PNG (2x)</button>
@@ -1187,16 +1205,17 @@ function normalizeDateString(val) {
         }
     }
 
-// === NEW: Vertical Crosshair showing the date under the mouse ===
+// AFTER
 function updateTimelineCrosshair(e) {
   if (scaleMinTime === null) return;
   const container = document.getElementById('svgContainer');
   const svgEl = container.querySelector('svg');
   if (!svgEl) return;
 
-  const rect = container.getBoundingClientRect();
-  const activeScaleFactor = parseFloat(document.getElementById('workspaceZoom').value) || 1.0;
-  const mouseX = (e.clientX - rect.left) / activeScaleFactor;
+  const rect = svgEl.getBoundingClientRect();
+  const intrinsicWidth = parseFloat(svgEl.getAttribute('width')) || rect.width;
+  const measuredScale = rect.width / intrinsicWidth;
+  const mouseX = (e.clientX - rect.left) / measuredScale;
 
   if (mouseX < scaleMarginLeft || mouseX > scaleMarginLeft + scaleChartWidth) {
     hideTimelineCrosshair();
@@ -1227,6 +1246,7 @@ function updateTimelineCrosshair(e) {
   line.setAttribute('y2', svgHeight);
   line.style.display = 'block';
 
+  // AFTER
   if (!badge) {
     badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     badge.id = 'timelineCrosshairBadge';
@@ -1238,7 +1258,7 @@ function updateTimelineCrosshair(e) {
   }
   const badgeX = Math.min(mouseX + 4, scaleMarginLeft + scaleChartWidth - 70);
   badge.setAttribute('x', badgeX);
-  badge.setAttribute('y', 14);
+  badge.setAttribute('y', svgHeight - 8);
   badge.textContent = dateLabel;
   badge.style.display = 'block';
 }
@@ -1377,7 +1397,11 @@ function stopGlobalDragAction(e) {
         document.getElementById('showVGrid').checked = state.showVGrid;
         document.getElementById('showAlignGrid').checked = state.showAlignGrid || false;
         document.getElementById('snapResolution').value = state.snapResolution || "0";
-        document.getElementById('workspaceZoom').value = state.workspaceZoom || "1.0";
+       // AFTER
+document.getElementById('workspaceZoom').value = state.workspaceZoom || "1.0";
+document.querySelectorAll('.zoom-pill-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-zoom') === (state.workspaceZoom || "1.0"));
+});
         document.querySelector(`input[name="todayLineToggle"][value="${state.todayLineToggle}"]`).checked = true;
         
         document.getElementById('showHeaderYear').checked = (state.showHeaderYear !== undefined) ? state.showHeaderYear : true;
@@ -1762,9 +1786,9 @@ function migrateSnapshotIfNeeded(state) {
             return;
         }
     } else {
-    projectData = [
+       projectData = [
     { id: 0, title: "Site Preparation", color: "#eff6ff", showSummary: true, rows: [
-        { id: 0, label: "Sitework & Earthwork", predecessor: "",
+        { id: 0, label: "Sitework & Earthwork", predecessor: "", showDateRange: true,
           bars: [
             { id: 5001, p6Id: "A1000", start: "05Jan2026", end: "20Feb2026", progress: 100, bgColor: "", color: "", pattern: "solid" }
           ],
@@ -1773,7 +1797,7 @@ function migrateSnapshotIfNeeded(state) {
         ]}
     ]},
     { id: 1, title: "Foundation", color: "#fff7ed", showSummary: true, rows: [
-        { id: 1, label: "Footings & Slab Pour", predecessor: "",
+        { id: 1, label: "Footings & Slab Pour", predecessor: "", showDateRange: true,
           bars: [
             { id: 5002, p6Id: "A1010", start: "23Feb2026", end: "10Apr2026", progress: 60, bgColor: "", color: "", pattern: "crosshatch" }
           ],
@@ -1782,32 +1806,50 @@ function migrateSnapshotIfNeeded(state) {
         ]}
     ]},
     { id: 2, title: "Structure & Envelope", color: "#f0fdf4", showSummary: true, rows: [
-        { id: 2, label: "Steel Erection", predecessor: "",
+        { id: 2, label: "Steel Erection", predecessor: "", showDateRange: true,
           bars: [
             { id: 5003, p6Id: "A1020", start: "13Apr2026", end: "15Jun2026", progress: 10, bgColor: "", color: "", pattern: "solid" }
           ],
           milestones: [
             { id: 1002, p6Id: "M2020", label: "Topping Out", date: "15Jun2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond", leaderEnabledText: false, leaderAnchorText: "center" }
         ]},
-        { id: 3, label: "Roofing & Exterior Skin", predecessor: "2",
+        { id: 3, label: "Roofing & Exterior Skin", predecessor: "2", showDateRange: true,
           bars: [
             { id: 5004, p6Id: "A1030", start: "16Jun2026", end: "10Aug2026", progress: 0, bgColor: "", color: "", pattern: "solid" }
         ], milestones: []}
+    ]},
+    { id: 3, title: "MEP Rough-In", color: "#fdf4ff", showSummary: true, rows: [
+        { id: 4, label: "Mechanical, Electrical, Plumbing", predecessor: "3", showDateRange: true,
+          bars: [
+            { id: 5005, p6Id: "A1040", start: "11Aug2026", end: "30Sep2026", progress: 0, bgColor: "", color: "", pattern: "diagonal" }
+          ],
+          milestones: [
+            { id: 1003, p6Id: "M2030", label: "MEP Rough-In Inspection", date: "30Sep2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle", leaderEnabledText: false, leaderAnchorText: "center" }
+        ]}
+    ]},
+    { id: 4, title: "Interior Finishes & Closeout", color: "#fef2f2", showSummary: true, rows: [
+        { id: 5, label: "Drywall, Paint & Trim", predecessor: "4", showDateRange: true,
+          bars: [
+            { id: 5006, p6Id: "A1050", start: "01Oct2026", end: "15Dec2026", progress: 0, bgColor: "", color: "", pattern: "solid" }
+          ],
+          milestones: [
+            { id: 1004, p6Id: "M2040", label: "Substantial Completion", date: "15Dec2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "#b71010", symbol: "diamond", leaderEnabledText: true, leaderEnabledDate: true, leaderAnchorText: "center" }
+        ]}
     ]}
 ];
     customTrackers = [
         { id: 7001, label: "Permit Renewal Deadline", date: "01May2026", thickness: 2, pattern: "dashed", color: "#e11d48", labelOffsetX: 0, labelOffsetY: 0 }
     ];
     calloutData = [
-        { id: generateUUID(), text: "Sample: double-click any element to edit, right-click a row to insert bars/milestones", x: 420, y: 40, leaderX: 380, leaderY: 90, bgColor: "#fffbeb", textColor: "#92400e", fontSize: 12, isBold: true, bgTransparent: false, leaderThickness: 2, leaderAttachment: "bottom" }
+        { id: generateUUID(), text: "Sample project: double-click any element to edit, right-click a row to insert bars/milestones", x: 420, y: 40, leaderX: 380, leaderY: 90, bgColor: "#fffbeb", textColor: "#92400e", fontSize: 12, isBold: true, bgTransparent: false, leaderThickness: 2, leaderAttachment: "bottom" }
     ];
-    nextRowId = 4; nextMsId = 1003; nextBarId = 5005; nextTrackerId = 7002;
+    nextRowId = 6; nextMsId = 1005; nextBarId = 5007; nextTrackerId = 7002;
     
             const seedSnapshot = {
                 data: projectData, trackers: customTrackers, nextRowId: nextRowId, nextMsId: nextMsId, nextBarId: nextBarId, nextTrackerId: nextTrackerId, rangeMode: 'manual', sizingMode: 'fixed',
-                customBoundaryMin: '01May2026', customBoundaryMax: '09Aug2028', fontFamily: "Tahoma, sans-serif",
-                fontSize: 10, swimlaneHeight: 30, canvasWidth: 806, rowHeight: 50, barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#000000', todayColor: '#b71010', masterLeaderColor: '#94a3b8', headerColor: '#000000',
-                showVGrid: true, showAlignGrid: false, snapResolution: "0", workspaceZoom: "1.0", todayLineToggle: 'show', showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: false, showHeaderDay: false
+                customBoundaryMin: '01Jan2026', customBoundaryMax: '01Feb2027', fontFamily: "Tahoma, sans-serif",
+                fontSize: 10, swimlaneHeight: 30, canvasWidth: 900, rowHeight: 50, barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#000000', todayColor: '#b71010', masterLeaderColor: '#94a3b8', headerColor: '#000000',
+                showVGrid: true, showAlignGrid: false, snapResolution: "0", workspaceZoom: "1.0", todayLineToggle: 'show', showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: true, showHeaderDay: false
             };
             actionUndoStack.push(JSON.stringify(seedSnapshot)); restoreStateFromSnapshot(seedSnapshot);
         }
@@ -3360,21 +3402,24 @@ svg += allLayerBarsBuffer
         svg += `</svg>`; container.innerHTML = svg;
     }
 
-    function downloadSVG() {
-        const svgElement = document.querySelector('#svgContainer svg'); if (!svgElement) return;
-        const clone = svgElement.cloneNode(true);
-        const hotspots = clone.querySelectorAll('.drag-hotspot'); hotspots.forEach(hotspot => hotspot.remove());
-        const interactiveNodes = clone.querySelectorAll('[onmousedown], [style*="cursor"]');
-        interactiveNodes.forEach(node => {
-            node.removeAttribute('onmousedown');
-            if (node.hasAttribute('style')) {
-                let cleanedStyle = node.getAttribute('style').replace(/cursor\s*:\s*[^;]+;?/g, '').trim();
-                if (cleanedStyle) node.setAttribute('style', cleanedStyle); else node.removeAttribute('style');
-            }
-        });
-        const blob = new Blob([clone.outerHTML], {type: 'image/svg+xml;charset=utf-8'});
-        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'presentation_gantt.svg'; link.click();
-    }
+  
+function downloadSVG() {
+    const svgElement = document.querySelector('#svgContainer svg'); if (!svgElement) return;
+    const clone = svgElement.cloneNode(true);
+    const hotspots = clone.querySelectorAll('.drag-hotspot'); hotspots.forEach(hotspot => hotspot.remove());
+    const interactiveNodes = clone.querySelectorAll('[onmousedown], [style*="cursor"]');
+    interactiveNodes.forEach(node => {
+        node.removeAttribute('onmousedown');
+        if (node.hasAttribute('style')) {
+            let cleanedStyle = node.getAttribute('style').replace(/cursor\s*:\s*[^;]+;?/g, '').trim();
+            if (cleanedStyle) node.setAttribute('style', cleanedStyle); else node.removeAttribute('style');
+        }
+    });
+    const blob = new Blob([clone.outerHTML], {type: 'image/svg+xml;charset=utf-8'});
+    const fileName = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.svg`;
+    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = fileName; link.click();
+    showToast(`Downloaded "${fileName}"`, "success");
+}
     
 function applyThemePalettePreset(paletteKey) {
         if (!paletteKey) return;
@@ -3617,6 +3662,16 @@ function clearSidebarSearch() {
     input.value = '';
     renderInputRows();
     toggleSearchClearBtn();
+}
+
+
+// NEW: Handles pill button clicks and keeps hidden input + visual state in sync
+function setZoomPill(btnEl) {
+    document.querySelectorAll('.zoom-pill-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+    const zoomValue = btnEl.getAttribute('data-zoom');
+    document.getElementById('workspaceZoom').value = zoomValue;
+    handleZoomFactorChange(zoomValue);
 }
 
 </script>
