@@ -1,0 +1,376 @@
+{
+  "schemaVersion": 2,
+  "data": [
+    {
+      "id": 1,
+      "title": "Preconstruction & Site Development",
+      "color": "#dbeafe",
+      "showSummary": true,
+      "rows": [
+        {
+          "id": 101,
+          "label": "Permitting, Mobilization & Site Logistics",
+          "predecessor": "",
+          "showDateRange": true,
+          "bars": [
+            {
+              "id": 5001,
+              "p6IdStart": "PRECON-1000",
+              "p6IdFinish": "PRECON-1000",
+              "start": "05Jan2026",
+              "end": "30Jan2026",
+              "progress": 100,
+              "bgColor": "",
+              "color": "",
+              "pattern": "solid"
+            }
+          ],
+          "milestones": [
+            {
+              "id": 1001,
+              "p6IdStart": "MS-1000",
+              "p6IdFinish": "MS-1000",
+              "label": "Notice to Proceed",
+              "date": "05Jan2026",
+              "showDate": true,
+              "manualLabel": false,
+              "labelOffsetX": 0,
+              "labelOffsetY": 0,
+              "manualDateLabel": false,
+              "dateOffsetX": 0,
+              "dateOffsetY": 0,
+              "color": "",
+              "symbol": "diamond",
+              "leaderEnabledText": true,
+              "leaderEnabledDate": false,
+              "leaderAnchorText": "center"
+            }
+          ]
+        },
+        {
+          "id": 102,
+          "label": "Mass Grading, Utilities & Building Pad",
+          "predecessor": "PRECON-1000",
+          "showDateRange": true,
+          "bars": [
+            {
+              "id": 5002,
+              "p6IdStart": "SITE-1100",
+              "p6IdFinish": "SITE-1100",
+              "start": "02Feb2026",
+              "end": "27Mar2026",
+              "progress": 70,
+              "bgColor": "",
+              "color": "",
+              "pattern": "crosshatch"
+            }
+          ],
+          "milestones": [
+            {
+              "id": 1002,
+              "p6IdStart": "MS-1100",
+              "p6IdFinish": "MS-1100",
+              "label": "Building Pad Released",
+              "date": "27Mar2026",
+              "showDate": true,
+              "manualLabel": false,
+              "labelOffsetX": 0,
+              "labelOffsetY": 0,
+              "manualDateLabel": false,
+              "dateOffsetX": 0,
+              "dateOffsetY": 0,
+              "color": "",
+              "symbol": "circle",
+              "leaderEnabledText": false,
+              "leaderEnabledDate": true,
+              "leaderAnchorText": "center"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Structure & Envelope",
+      "color": "#dcfce7",
+      "showSummary": true,
+      "rows": [
+        {
+          "id": 201,
+          "label": "Foundations and Underground MEP",
+          "predecessor": "SITE-1100",
+          "showDateRange": true,
+          "bars": [
+            {
+              "id": 5003,
+              "p6IdStart": "STR-2100",
+              "p6IdFinish": "STR-2100",
+              "start": "30Mar2026",
+              "end": "08May2026",
+              "progress": 35,
+              "bgColor": "",
+              "color": "",
+              "pattern": "solid"
+            }
+          ],
+          "milestones": [
+            {
+              "id": 1003,
+              "p6IdStart": "MS-2100",
+              "p6IdFinish": "MS-2100",
+              "label": "Foundation Complete",
+              "date": "08May2026",
+              "showDate": true,
+              "manualLabel": false,
+              "labelOffsetX": 0,
+              "labelOffsetY": 0,
+              "manualDateLabel": false,
+              "dateOffsetX": 0,
+              "dateOffsetY": 0,
+              "color": "",
+              "symbol": "diamond",
+              "leaderEnabledText": true,
+              "leaderEnabledDate": true,
+              "leaderAnchorText": "center"
+            }
+          ]
+        },
+        {
+          "id": 202,
+          "label": "Structural Steel, Decking & Concrete",
+          "predecessor": "STR-2100",
+          "showDateRange": true,
+          "bars": [
+            {
+              "id": 5004,
+              "p6IdStart": "STR-2200",
+              "p6IdFinish": "STR-2200",
+              "start": "11May2026",
+              "end": "17Jul2026",
+              "progress": 15,
+              "bgColor": "",
+              "color": "",
+              "pattern": "solid"
+            }
+          ],
+          "milestones": [
+            {
+              "id": 1004,
+              "p6IdStart": "MS-2200",
+              "p6IdFinish": "MS-2200",
+              "label": "Structure Topped Out",
+              "date": "17Jul2026",
+              "showDate": true,
+              "manualLabel": false,
+              "labelOffsetX": 0,
+              "labelOffsetY": 0,
+              "manualDateLabel": false,
+              "dateOffsetX": 0,
+              "dateOffsetY": 0,
+              "color": "",
+              "symbol": "diamond",
+              "leaderEnabledText": true,
+              "leaderEnabledDate": false,
+              "leaderAnchorText": "center"
+            }
+          ]
+        },
+        {
+          "id": 203,
+          "label": "Exterior Wall, Roofing & Dry-In",
+          "predecessor": "STR-2200",
+          "showDateRange": true,
+          "bars": [
+            {
+              "id": 5005,
+              "p6IdStart": "ENV-2300",
+              "p6IdFinish": "ENV-2300",
+              "start": "20Jul2026",
+              "end": "18Sep2026",
+              "progress": 0,
+              "bgColor": "",
+              "color": "",
+              "pattern": "diagonal"
+            }
+          ],
+          "milestones": [
+            {
+              "id": 1005,
+              "p6IdStart": "MS-2300",
+              "p6IdFinish": "MS-2300",
+              "label": "Building Dried In",
+              "date": "18Sep2026",
+              "showDate": true,
+              "manualLabel": false,
+              "labelOffsetX": 0,
+              "labelOffsetY": 0,
+              "manualDateLabel": false,
+              "dateOffsetX": 0,
+              "dateOffsetY": 0,
+              "color": "",
+              "symbol": "triangle",
+              "leaderEnabledText": true,
+              "leaderEnabledDate": true,
+              "leaderAnchorText": "center"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Interior Buildout & Commissioning",
+      "color": "#fef3c7",
+      "showSummary": true,
+      "rows": [
+        {
+          "id": 301,
+          "label": "MEP Rough-In and Equipment Setting",
+          "predecessor": "ENV-2300",
+          "showDateRange": true,
+          "bars": [
+            {
+              "id": 5006,
+              "p6IdStart": "MEP-3100",
+              "p6IdFinish": "MEP-3100",
+              "start": "21Sep2026",
+              "end": "20Nov2026",
+              "progress": 0,
+              "bgColor": "",
+              "color": "",
+              "pattern": "solid"
+            }
+          ],
+          "milestones": [
+            {
+              "id": 1006,
+              "p6IdStart": "MS-3100",
+              "p6IdFinish": "MS-3100",
+              "label": "Permanent Power Available",
+              "date": "30Oct2026",
+              "showDate": true,
+              "manualLabel": false,
+              "labelOffsetX": 0,
+              "labelOffsetY": 0,
+              "manualDateLabel": false,
+              "dateOffsetX": 0,
+              "dateOffsetY": 0,
+              "color": "",
+              "symbol": "circle",
+              "leaderEnabledText": true,
+              "leaderEnabledDate": false,
+              "leaderAnchorText": "center"
+            }
+          ]
+        },
+        {
+          "id": 302,
+          "label": "Architectural Finishes & Owner Turnover",
+          "predecessor": "MEP-3100",
+          "showDateRange": true,
+          "bars": [
+            {
+              "id": 5007,
+              "p6IdStart": "FIN-3200",
+              "p6IdFinish": "FIN-3200",
+              "start": "23Nov2026",
+              "end": "29Jan2027",
+              "progress": 0,
+              "bgColor": "",
+              "color": "",
+              "pattern": "solid"
+            }
+          ],
+          "milestones": [
+            {
+              "id": 1007,
+              "p6IdStart": "MS-3200",
+              "p6IdFinish": "MS-3200",
+              "label": "Substantial Completion",
+              "date": "29Jan2027",
+              "showDate": true,
+              "manualLabel": false,
+              "labelOffsetX": 0,
+              "labelOffsetY": 0,
+              "manualDateLabel": false,
+              "dateOffsetX": 0,
+              "dateOffsetY": 0,
+              "color": "",
+              "symbol": "diamond",
+              "leaderEnabledText": true,
+              "leaderEnabledDate": true,
+              "leaderAnchorText": "center"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "trackers": [
+    {
+      "id": 7001,
+      "label": "Schedule Data Date",
+      "date": "24Jul2026",
+      "thickness": 2,
+      "pattern": "solid",
+      "color": "#b71010",
+      "labelOffsetX": 8,
+      "labelOffsetY": 0
+    },
+    {
+      "id": 7002,
+      "label": "Owner Milestone Review",
+      "date": "18Sep2026",
+      "thickness": 2,
+      "pattern": "dashed",
+      "color": "#0369a1",
+      "labelOffsetX": 8,
+      "labelOffsetY": 0
+    }
+  ],
+  "callouts": [
+    {
+      "id": "example-callout-1",
+      "text": "Critical path transitions from structure to envelope at dry-in.",
+      "x": 650,
+      "y": 145,
+      "leaderX": 570,
+      "leaderY": 250,
+      "bgColor": "#eff6ff",
+      "textColor": "#1e3a8a",
+      "fontSize": 13,
+      "isBold": true,
+      "bgTransparent": false
+    }
+  ],
+  "nextRowId": 303,
+  "nextMsId": 1008,
+  "nextBarId": 5008,
+  "nextTrackerId": 7003,
+  "rangeMode": "auto",
+  "sizingMode": "fixed",
+  "customBoundaryMin": "01Jan2026",
+  "customBoundaryMax": "28Feb2027",
+  "fontFamily": "'Segoe UI', sans-serif",
+  "fontSize": "10",
+  "swimlaneHeight": "30",
+  "canvasWidth": "1150",
+  "rowLabelWidth": "280",
+  "rowHeight": "58",
+  "barBgColor": "#5c95be",
+  "barColor": "#2563eb",
+  "summaryColor": "#475569",
+  "msColor": "#000000",
+  "todayColor": "#b71010",
+  "masterLeaderColor": "#94a3b8",
+  "headerColor": "#000000",
+  "showVGrid": true,
+  "showAlignGrid": false,
+  "snapResolution": "5",
+  "workspaceZoom": "1.0",
+  "todayLineToggle": "show",
+  "showHeaderYear": true,
+  "showHeaderQuarter": true,
+  "showHeaderMonth": true,
+  "showHeaderDay": false
+}
