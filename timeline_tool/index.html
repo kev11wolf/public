@@ -833,10 +833,22 @@ function hydrateRowDefaults() {
 }
 
 function normalizeDateString(val) {
-    if (!val) return "";
-    let ts = parseAnyDateToTimestamp(val);
-    if (isNaN(ts)) return String(val).trim();
-    return formatDateToDDMMMYYYY(new Date(ts));
+    if (val === undefined || val === null || String(val).trim() === "") return "";
+
+    // Excel stores dates as serial day numbers. Accept both numeric values and
+    // numeric strings returned from formula cells / General-formatted cells.
+    const numericValue = typeof val === "number" ? val : Number(String(val).trim());
+    if (Number.isFinite(numericValue) && numericValue > 0 && numericValue < 100000) {
+        const parsed = XLSX.SSF.parse_date_code(numericValue);
+        if (parsed) {
+            return formatDateToDDMMMYYYY(
+                new Date(parsed.y, parsed.m - 1, parsed.d)
+            );
+        }
+    }
+
+    const ts = parseAnyDateToTimestamp(String(val).trim());
+    return isNaN(ts) ? "" : formatDateToDDMMMYYYY(new Date(ts));
 }
     function formatDateToDDMMMYYYY(d) {
         if (isNaN(d.getTime())) return "";
@@ -1693,20 +1705,28 @@ link.click();
                     ldrDt = rPieces[2] === "LdrDt";
                     if(rPieces[3]) anchorText = rPieces[3];
                 }
-               rowObject.milestones.push({
+              const milestoneSourceDate =
+    columns[11] !== undefined && String(columns[11]).trim() !== ""
+        ? columns[11]
+        : columns[12];
+
+const milestoneDate = normalizeDateString(milestoneSourceDate);
+
+if (!milestoneDate) {
+    showToast(
+        `Skipped milestone "${columns[10] || `ID ${mId}`}" because its date is blank, invalid, or has no saved formula result.`,
+        "error",
+        6500
+    );
+    continue;
+}
+
+rowObject.milestones.push({
     id: mId,
-    p6IdStart: columns[8] ? columns[8].trim() : "",
-    p6IdFinish: columns[9] ? columns[9].trim() : "",
-    label: columns[10] ? columns[10].trim() : "",
-
-    // Use Start Target Date first.
-    // If it is blank, use Finish Date instead.
-    date: normalizeDateString(
-        columns[11] && columns[11].trim() !== ""
-            ? columns[11].trim()
-            : (columns[12] ? columns[12].trim() : "")
-    ),
-
+    p6IdStart: columns[8] ? String(columns[8]).trim() : "",
+    p6IdFinish: columns[9] ? String(columns[9]).trim() : "",
+    label: columns[10] ? String(columns[10]).trim() : "",
+    date: milestoneDate,
     showDate: pinDt,
     manualLabel: true,
     labelOffsetX: parseFloat(columns[16]) || 0,
@@ -1714,8 +1734,8 @@ link.click();
     manualDateLabel: true,
     dateOffsetX: parseFloat(columns[18]) || 0,
     dateOffsetY: parseFloat(columns[19]) || 0,
-    symbol: columns[14] ? columns[14].trim() : "diamond",
-    color: columns[15] ? columns[15].trim() : "",
+    symbol: columns[14] ? String(columns[14]).trim() : "diamond",
+    color: columns[15] ? String(columns[15]).trim() : "",
     leaderEnabledText: ldrTxt,
     leaderEnabledDate: ldrDt,
     leaderAnchorText: anchorText
@@ -1739,17 +1759,58 @@ link.click();
 
     const fileName = file.name.toLowerCase();
     
-    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const csvText = XLSX.utils.sheet_to_csv(worksheet);
-            processDataPayload(csvText);
+   if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {
+            type: "array",
+            cellDates: true,
+            cellFormula: true,
+            cellNF: true,
+            cellText: true
+        });
+
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(worksheet, {
+            header: 1,
+            defval: "",
+            raw: true,
+            blankrows: false
+        });
+
+        if (rows.length <= 1) {
+            showToast("The selected workbook has no importable data rows.", "error", 4500);
+            return;
+        }
+
+        const getCellValue = (rowIndex, columnIndex) => {
+            const address = XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex });
+            const cell = worksheet[address];
+
+            if (!cell) return "";
+
+            // `v` is the stored/calculated value. `w` is Excel's displayed
+            // value, which is the preferred fallback for date-formatted formulas.
+            return cell.v ?? cell.w ?? "";
         };
-        reader.readAsArrayBuffer(file);
+
+        const csvRows = rows.map((row, rowIndex) => {
+            return row.map((value, columnIndex) => {
+                const resolvedValue = getCellValue(rowIndex, columnIndex);
+                const text = String(resolvedValue ?? value ?? "");
+                return /[",\r\n]/.test(text)
+                    ? `"${text.replace(/"/g, '""')}"`
+                    : text;
+            }).join(",");
+        });
+
+        processDataPayload(csvRows.join("\n"));
+    };
+
+    reader.readAsArrayBuffer(file);
+}
     } else {
         const reader = new FileReader();
         reader.onload = function(e) {
