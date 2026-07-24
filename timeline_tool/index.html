@@ -62,10 +62,87 @@
         h3 { margin: 15px 0 8px 0; color: #1e40af; border-bottom: 1px solid var(--border-color); padding-bottom: 3px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
         .control-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
         
-        .control-item label { margin-bottom: 3px; }
-        
-        input[type="text"], select, input[type="number"] { padding: 5px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; width: 100%; box-sizing: border-box; }
-        input[type="color"] { border: none; width: 100%; height: 34px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
+        .control-item label {
+    margin-bottom: 3px;
+}
+
+input[type="color"] {
+    border: none;
+    width: 100%;
+    height: 34px;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0;
+    background: none;
+}
+
+/* Compact, labeled global color controls */
+.global-color-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.global-color-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 32px;
+    padding: 4px 6px 4px 9px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.global-color-control:hover {
+    border-color: var(--primary);
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.15);
+}
+
+.global-color-control span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.global-color-control input[type="color"] {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    padding: 0;
+    border: 1px solid #94a3b8;
+    border-radius: 5px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.global-color-control input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 1px;
+}
+
+.global-color-control input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 3px;
+}
+
+.global-color-control input[type="color"]::-moz-color-swatch {
+    border: none;
+    border-radius: 3px;
+}
+
+@media (max-width: 500px) {
+    .global-color-grid {
+        grid-template-columns: 1fr;
+    }
+}
         
         /* Timeline Data Cards & Drag and Drop Styling */
                 .row-card { background: #ffffff; border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 4px; margin-bottom: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); position: relative; transition: transform 0.15s ease, background 0.15s ease; }
@@ -552,15 +629,42 @@
                             </select>
                         </div>
                         
-                        <div class="control-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <div class="control-item"><label>Unfilled Bar</label><input type="color" id="barBgColor" value="#5c95be" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
-                            <div class="control-item"><label>Progress Fill</label><input type="color" id="barColor" value="#2563eb" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
-                            <div class="control-item"><label>Summary Bar</label><input type="color" id="summaryColor" value="#475569" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
-                            <div class="control-item"><label>Milestone</label><input type="color" id="msColor" value="#000000" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
-                            <div class="control-item"><label>Today Line</label><input type="color" id="todayColor" value="#b71010" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
-                            <div class="control-item"><label>Master Leader</label><input type="color" id="masterLeaderColor" value="#94a3b8" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
-                            <div class="control-item"><label>Date Headers</label><input type="color" id="headerColor" value="#000000" onchange="recordStateChange(); updateChart();" style="width: 100%;"></div>
-                        </div>
+                        <div class="global-color-grid">
+    <label class="global-color-control" for="barBgColor">
+        <span>Unfilled Bar</span>
+        <input type="color" id="barBgColor" value="#5c95be" onchange="applyGlobalColorChange()">
+    </label>
+
+    <label class="global-color-control" for="barColor">
+        <span>Progress Fill</span>
+        <input type="color" id="barColor" value="#2563eb" onchange="applyGlobalColorChange()">
+    </label>
+
+    <label class="global-color-control" for="summaryColor">
+        <span>Summary Bar</span>
+        <input type="color" id="summaryColor" value="#475569" onchange="applyGlobalColorChange()">
+    </label>
+
+    <label class="global-color-control" for="msColor">
+        <span>Milestone</span>
+        <input type="color" id="msColor" value="#000000" onchange="applyGlobalColorChange()">
+    </label>
+
+    <label class="global-color-control" for="todayColor">
+        <span>Today Line</span>
+        <input type="color" id="todayColor" value="#b71010" onchange="applyGlobalColorChange()">
+    </label>
+
+    <label class="global-color-control" for="masterLeaderColor">
+        <span>Master Leader</span>
+        <input type="color" id="masterLeaderColor" value="#94a3b8" onchange="applyGlobalColorChange()">
+    </label>
+
+    <label class="global-color-control" for="headerColor">
+        <span>Date Headers</span>
+        <input type="color" id="headerColor" value="#000000" onchange="applyGlobalColorChange()">
+    </label>
+</div>
 
                         <div class="control-grid" style="grid-template-columns: 1fr; gap: 10px; margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
                             <div class="control-item">
@@ -929,9 +1033,54 @@ function normalizeImportedBoolean(value, defaultValue = true) {
 
 function hydrateRowDefaults() {
     projectData.forEach(lane => {
-        (lane.rows || []).forEach(row => {
-            if (typeof row.showDateRangeInRowName !== "boolean") {
-                row.showDateRangeInRowName = true;
+        /* Swimlane defaults for older JSON saves */
+        if (!lane.color) {
+            lane.color = '#f8fafc';
+        }
+
+        if (!['left', 'center', 'right'].includes(lane.titleAlign)) {
+            lane.titleAlign = 'left';
+        }
+
+        if (!Number.isFinite(Number(lane.titleFontSize))) {
+            lane.titleFontSize = null;
+        }
+
+        if (typeof lane.titleColor !== 'string') {
+            lane.titleColor = '';
+        }
+
+        if (typeof lane.titleBold !== 'boolean') {
+            lane.titleBold = true;
+        }
+
+        if (typeof lane.showSummary !== 'boolean') {
+            lane.showSummary = true;
+        }
+
+        if (!Array.isArray(lane.rows)) {
+            lane.rows = [];
+        }
+
+        lane.rows.forEach(row => {
+            /*
+             * Your current canvas uses row.showDateRange.
+             * Some old project files used showDateRangeInRowName instead.
+             * Copy the old value once, then use the current property.
+             */
+            if (typeof row.showDateRange !== 'boolean') {
+                row.showDateRange =
+                    typeof row.showDateRangeInRowName === 'boolean'
+                        ? row.showDateRangeInRowName
+                        : false;
+            }
+
+            if (!Array.isArray(row.bars)) {
+                row.bars = [];
+            }
+
+            if (!Array.isArray(row.milestones)) {
+                row.milestones = [];
             }
         });
     });
@@ -1667,35 +1816,34 @@ projectData.forEach(lane => {
     lane.rows.forEach(row => {
         row.bars.forEach(bar => {
             const barFields = [
-                "BAR",
-                `"${(lane.title || "").replace(/"/g, '""')}"`,
-                lane.color || "",
-                lane.showSummary ? "TRUE" : "FALSE",
-                row.id,
-                `"${(row.label || "").replace(/"/g, '""')}"`,
-                `"${(row.predecessor || "").replace(/"/g, '""')}"`,
-                bar.id,
-                `"${(bar.p6IdStart || "").replace(/"/g, '""')}"`,
-                `"${(bar.p6IdFinish || "").replace(/"/g, '""')}"`,
-                "",
-                bar.start || "",
-                bar.end || "",
-                bar.progress || 0,
-                bar.pattern || "solid",
-                bar.color || "",
-                "",
-                "",
-                "",
-                "",
-                bar.bgColor || "",
-                row.showDateRangeInRowName ? "TRUE" : "FALSE",
-                "",
-                "",
-                "",
-                "",
-                ""
-            ];
-
+    'BAR',
+    lane.title.replace(/,/g, ' '),
+    lane.color,
+    lane.showSummary ? 'TRUE' : 'FALSE',
+    row.id,
+    row.label.replace(/,/g, ' '),
+    row.predecessor.replace(/,/g, ' '),
+    bar.id,
+    bar.p6IdStart.replace(/,/g, ' '),
+    bar.p6IdFinish.replace(/,/g, ' '),
+    '',
+    bar.start,
+    bar.end,
+    bar.progress || 0,
+    bar.pattern || 'solid',
+    bar.color,
+    '',
+    '',
+    '',
+    '',
+    bar.bgColor,
+    row.showDateRange === true ? 'TRUE' : 'FALSE',
+    '',
+    '',
+    '',
+    '',
+    ''
+];
             csvRows.push(barFields.join(","));
         });
 
@@ -1708,34 +1856,34 @@ projectData.forEach(lane => {
             ].join("|");
 
             const milestoneFields = [
-                "MILESTONE",
-                `"${(lane.title || "").replace(/"/g, '""')}"`,
-                lane.color || "",
-                lane.showSummary ? "TRUE" : "FALSE",
-                row.id,
-                `"${(row.label || "").replace(/"/g, '""')}"`,
-                `"${(row.predecessor || "").replace(/"/g, '""')}"`,
-                milestone.id,
-                `"${(milestone.p6IdStart || "").replace(/"/g, '""')}"`,
-                `"${(milestone.p6IdFinish || "").replace(/"/g, '""')}"`,
-                `"${(milestone.label || "").replace(/"/g, '""')}"`,
-                milestone.date || "",
-                milestone.date || "",
-                "",
-                milestone.symbol || "diamond",
-                milestone.color || "",
-                milestone.labelOffsetX || 0,
-                milestone.labelOffsetY || 0,
-                milestone.dateOffsetX || 0,
-                milestone.dateOffsetY || 0,
-                `"${rulesMatrix}"`,
-                row.showDateRangeInRowName ? "TRUE" : "FALSE",
-                "",
-                "",
-                "",
-                "",
-                ""
-            ];
+    'MILESTONE',
+    lane.title.replace(/,/g, ' '),
+    lane.color,
+    lane.showSummary ? 'TRUE' : 'FALSE',
+    row.id,
+    row.label.replace(/,/g, ' '),
+    row.predecessor.replace(/,/g, ' '),
+    milestone.id,
+    milestone.p6IdStart.replace(/,/g, ' '),
+    milestone.p6IdFinish.replace(/,/g, ' '),
+    milestone.label.replace(/,/g, ' '),
+    milestone.date,
+    milestone.date,
+    '',
+    milestone.symbol || 'diamond',
+    milestone.color,
+    milestone.labelOffsetX || 0,
+    milestone.labelOffsetY || 0,
+    milestone.dateOffsetX || 0,
+    milestone.dateOffsetY || 0,
+    rulesMatrix,
+    row.showDateRange === true ? 'TRUE' : 'FALSE',
+    '',
+    '',
+    '',
+    '',
+    ''
+];
 
             csvRows.push(milestoneFields.join(","));
         });
@@ -1809,16 +1957,33 @@ link.click();
 }
 
    function exportConfigurationArchive() {
-    if (actionUndoStack.length === 0) { showToast("Nothing to export yet.", "error"); return; }
-    const archivePayload = { version: "2026.MultiBarPresentationState", schemaVersion: CURRENT_SCHEMA_VERSION, workspace: JSON.parse(actionUndoStack[actionUndoStack.length - 1]) };
-    const blob = new Blob([JSON.stringify(archivePayload, null, 2)], {type: 'application/json'});
+    recordStateChange();
+
+    if (actionUndoStack.length === 0) {
+        showToast('Nothing to export yet.', 'error');
+        return;
+    }
+
+    const archivePayload = {
+        version: '2026.MultiBarPresentationState',
+        schemaVersion: CURRENTSCHEMAVERSION,
+        workspace: JSON.parse(actionUndoStack[actionUndoStack.length - 1])
+    };
+
+    const blob = new Blob(
+        [JSON.stringify(archivePayload, null, 2)],
+        { type: 'application/json' }
+    );
+
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
+
     const fileName = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.json`;
     link.download = fileName;
     link.click();
+
     saveRecentFileName(getProjectTitle());
-    showToast(`Saved "${fileName}"`, "success");
+    showToast(`Saved ${fileName}`, 'success');
 }
 
     function parseRobustCSVLine(text) {
@@ -1930,20 +2095,24 @@ if (recordType === 'CALLOUT') {
             let rowPred = columns[6] ? columns[6].trim() : ""; if (rowPred.toUpperCase() === "NONE") rowPred = "";
 
             // ---> NEW: Read Show Date Range flag from column 21 (index 21)
-            let rowShowDateRange = columns[21] ? columns[21].trim() === "TRUE" : false;
+           const rowShowDateRange = normalizeImportedBoolean(columns[21], false);
 
-            let rowObject = lane.rows.find(r => r.id === explicitRowId);
-            if(!rowObject) {
-                rowObject = { 
-                    id: explicitRowId, 
-                    label: rowLabel, 
-                    predecessor: rowPred, 
-                    showDateRange: rowShowDateRange, // ---> SET FLAG HERE
-                    bars: [], 
-                    milestones: [] 
-                };
-                lane.rows.push(rowObject);
-            }
+let rowObject = lane.rows.find(r => r.id === explicitRowId);
+
+if (!rowObject) {
+    rowObject = {
+        id: explicitRowId,
+        label: rowLabel,
+        predecessor: rowPred,
+        showDateRange: rowShowDateRange,
+        bars: [],
+        milestones: []
+    };
+
+    lane.rows.push(rowObject);
+} else {
+    rowObject.showDateRange = rowShowDateRange;
+}
 
             if (recordType === "BAR") {
                 let bId = parseInt(columns[7].trim()) || bIdCounter++;
@@ -2307,16 +2476,156 @@ barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#
             dialog.remove();
         };
     }
+function escapeHtmlAttribute(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+    function editLaneLabelDirectly(event, laneIdx) {
+    event.stopPropagation();
 
-    function editLaneLabelDirectly(laneIdx) {
-        const lane = projectData[laneIdx];
-        if(lane) {
-            let newTitle = prompt("Edit Swimlane Group Title Name Directly:", lane.title);
-            if (newTitle !== null && newTitle.trim() !== "") {
-                lane.title = newTitle.trim(); recordStateChange(); renderInputRows(); updateChart();
-            }
+    const lane = projectData[laneIdx];
+    if (!lane) return;
+
+    const existingDialog = document.getElementById('floatingSwimlaneDialog');
+    if (existingDialog) existingDialog.remove();
+
+    const dialog = document.createElement('div');
+    dialog.id = 'floatingSwimlaneDialog';
+    dialog.className = 'floating-date-dialog';
+
+    const laneTitleColor = lane.titleColor || '#1e293b';
+    const laneTitleAlign = lane.titleAlign || 'left';
+    const laneTitleFontSize = Number(lane.titleFontSize) || 12;
+    const laneTitleBold = lane.titleBold !== false;
+
+    dialog.innerHTML = `
+        <h4>Swimlane Settings</h4>
+
+        <div class="modal-row">
+            <div class="modal-field">
+                <label>Swimlane Name</label>
+                <input
+                    type="text"
+                    id="modalLaneTitle"
+                    value="${escapeHtmlAttribute(lane.title || '')}"
+                    maxlength="100"
+                >
+            </div>
+        </div>
+
+        <div class="modal-row">
+            <div class="modal-field">
+                <label>Swimlane Background</label>
+                <input
+                    type="color"
+                    id="modalLaneColor"
+                    value="${lane.color || '#f8fafc'}"
+                >
+            </div>
+
+            <div class="modal-field">
+                <label>Title Text Color</label>
+                <input
+                    type="color"
+                    id="modalLaneTitleColor"
+                    value="${laneTitleColor}"
+                >
+            </div>
+        </div>
+
+        <div class="modal-row">
+            <div class="modal-field">
+                <label>Title Justification</label>
+                <select id="modalLaneTitleAlign">
+                    <option value="left" ${laneTitleAlign === 'left' ? 'selected' : ''}>Left</option>
+                    <option value="center" ${laneTitleAlign === 'center' ? 'selected' : ''}>Center</option>
+                    <option value="right" ${laneTitleAlign === 'right' ? 'selected' : ''}>Right</option>
+                </select>
+            </div>
+
+            <div class="modal-field">
+                <label>Title Font Size</label>
+                <input
+                    type="number"
+                    id="modalLaneTitleFontSize"
+                    value="${laneTitleFontSize}"
+                    min="8"
+                    max="30"
+                    step="1"
+                >
+            </div>
+        </div>
+
+        <div class="modal-row">
+            <div class="modal-field">
+                <label>Title Weight</label>
+                <select id="modalLaneTitleBold">
+                    <option value="true" ${laneTitleBold ? 'selected' : ''}>Bold</option>
+                    <option value="false" ${!laneTitleBold ? 'selected' : ''}>Regular</option>
+                </select>
+            </div>
+
+            <div class="modal-field">
+                <label>Summary Rollup Bar</label>
+                <select id="modalLaneShowSummary">
+                    <option value="true" ${lane.showSummary !== false ? 'selected' : ''}>Show</option>
+                    <option value="false" ${lane.showSummary === false ? 'selected' : ''}>Hide</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="primary-btn" id="saveSwimlaneSettingsBtn">Save</button>
+            <button
+                class="utility-btn"
+                type="button"
+                onclick="document.getElementById('floatingSwimlaneDialog').remove()"
+            >
+                Cancel
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(dialog);
+    positionFloatingDialogSmart(dialog, event);
+
+    document.getElementById('modalLaneTitle').focus();
+    document.getElementById('modalLaneTitle').select();
+
+    document.getElementById('saveSwimlaneSettingsBtn').onclick = function () {
+        const newTitle = document.getElementById('modalLaneTitle').value.trim();
+        const enteredFontSize = Number(
+            document.getElementById('modalLaneTitleFontSize').value
+        );
+
+        if (!newTitle) {
+            showToast('A swimlane name is required.', 'error');
+            document.getElementById('modalLaneTitle').focus();
+            return;
         }
-    }
+
+        lane.title = newTitle;
+        lane.color = document.getElementById('modalLaneColor').value;
+        lane.titleColor = document.getElementById('modalLaneTitleColor').value;
+        lane.titleAlign = document.getElementById('modalLaneTitleAlign').value;
+        lane.titleFontSize = Number.isFinite(enteredFontSize)
+            ? Math.max(8, Math.min(30, Math.round(enteredFontSize)))
+            : 12;
+        lane.titleBold =
+            document.getElementById('modalLaneTitleBold').value === 'true';
+        lane.showSummary =
+            document.getElementById('modalLaneShowSummary').value === 'true';
+
+        recordStateChange();
+        renderInputRows();
+        updateChart();
+        dialog.remove();
+    };
+}
 
     function editMilestoneLabelDirectlyGlobal(rowId, msId) {
     let row = findRowGlobally(rowId);
@@ -2699,19 +3008,43 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
         if (existingDialog) existingDialog.remove();
 
         let bodyHTML = `
-  <div class="modal-field"><label>Start Date</label><input type="date" id="modalStartPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}"></div>
-  <div class="modal-field"><label>Finish Date</label><input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}"></div>
-  <div class="modal-field"><label>Unfilled Color</label><input type="color" id="modalBarBgColor" value="${bar.bgColor || document.getElementById('barBgColor').value}"></div>
-  <div class="modal-field"><label>Progress Fill Color</label><input type="color" id="modalBarColor" value="${bar.color || document.getElementById('barColor').value}"></div>
-  <div class="modal-field"><label>Fill Pattern</label>
-    <select id="modalBarPattern">
-      <option value="solid" ${bar.pattern==='solid'?'selected':''}>Solid</option>
-      <option value="crosshatch" ${bar.pattern==='crosshatch'?'selected':''}>Cross Hatch</option>
-      <option value="grid" ${bar.pattern==='grid'?'selected':''}>Grid</option>
-      <option value="dashed" ${bar.pattern==='dashed'?'selected':''}>Dashed</option>
-      <option value="gingham" ${bar.pattern==='gingham'?'selected':''}>Gingham</option>
-    </select>
-  </div>
+    <div class="modal-field">
+        <label>Start Date</label>
+        <input type="date" id="modalStartPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}">
+    </div>
+    <div class="modal-field">
+        <label>Finish Date</label>
+        <input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}">
+    </div>
+    <div class="modal-field">
+        <label>Progress Complete (%)</label>
+        <input
+            type="number"
+            id="modalBarProgress"
+            value="${Number.isFinite(Number(bar.progress)) ? bar.progress : 0}"
+            min="0"
+            max="100"
+            step="1"
+        >
+    </div>
+    <div class="modal-field">
+        <label>Unfilled Color</label>
+        <input type="color" id="modalBarBgColor" value="${bar.bgColor || document.getElementById('barBgColor').value}">
+    </div>
+    <div class="modal-field">
+        <label>Progress Fill Color</label>
+        <input type="color" id="modalBarColor" value="${bar.color || document.getElementById('barColor').value}">
+    </div>
+    <div class="modal-field">
+        <label>Fill Pattern</label>
+        <select id="modalBarPattern">
+            <option value="solid" ${bar.pattern === 'solid' ? 'selected' : ''}>Solid</option>
+            <option value="crosshatch" ${bar.pattern === 'crosshatch' ? 'selected' : ''}>Cross Hatch</option>
+            <option value="grid" ${bar.pattern === 'grid' ? 'selected' : ''}>Grid</option>
+            <option value="dashed" ${bar.pattern === 'dashed' ? 'selected' : ''}>Dashed</option>
+            <option value="gingham" ${bar.pattern === 'gingham' ? 'selected' : ''}>Gingham</option>
+        </select>
+    </div>
 `;
 
 let buttonsHTML = `
@@ -2755,11 +3088,21 @@ positionFloatingDialogSmart(dialog, e);
 
             if (startTimestamp <= endTimestamp) {
                 bar.start = formatDateToDDMMMYYYY(new Date(startTimestamp));
-                bar.end = formatDateToDDMMMYYYY(new Date(endTimestamp));
-                bar.bgColor = document.getElementById('modalBarBgColor').value;
-                bar.color = document.getElementById('modalBarColor').value;
-                bar.pattern = document.getElementById('modalBarPattern').value;
-                recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
+bar.end = formatDateToDDMMMYYYY(new Date(endTimestamp));
+
+const enteredProgress = Number(document.getElementById('modalBarProgress').value);
+bar.progress = Number.isFinite(enteredProgress)
+    ? Math.max(0, Math.min(100, Math.round(enteredProgress)))
+    : 0;
+
+bar.bgColor = document.getElementById('modalBarBgColor').value;
+bar.color = document.getElementById('modalBarColor').value;
+bar.pattern = document.getElementById('modalBarPattern').value;
+
+recordStateChange();
+renderInputRows();
+updateChart();
+dialog.remove();
             } else {
                 alert("Chronological Paradox: Start boundary cannot stretch past the target finish date line.");
             }
@@ -2947,15 +3290,32 @@ document.addEventListener('dblclick', (e) => {
     }
 });
 
-    document.addEventListener('mousedown', function(e) {
-        ['floatingBarDateDialog', 'floatingMilestoneDialog', 'floatingLaneSummaryDialog', 'floatingTrackerDialog', 'floatingHelpDialog'].forEach(id => {
-            let box = document.getElementById(id);
-            if (box && !box.contains(e.target) && !e.target.classList.contains('drag-hotspot')) { box.remove(); }
-        });
-        
-        let menu = document.getElementById('rowWorkspaceContextMenu');
-        if(menu && !menu.contains(e.target)) dismissContextMenus();
+    document.addEventListener('mousedown', function (e) {
+    [
+        'floatingBarDateDialog',
+        'floatingMilestoneDialog',
+        'floatingLaneSummaryDialog',
+        'floatingTrackerDialog',
+        'floatingHelpDialog',
+        'floatingSwimlaneDialog' // NEW: closes Swimlane Settings when clicking outside it
+    ].forEach(id => {
+        let box = document.getElementById(id);
+
+        if (
+            box &&
+            !box.contains(e.target) &&
+            !e.target.classList.contains('drag-hotspot')
+        ) {
+            box.remove();
+        }
     });
+
+    let menu = document.getElementById('rowWorkspaceContextMenu');
+
+    if (menu && !menu.contains(e.target)) {
+        dismissContextMenus();
+    }
+});
 
     function updateRowFieldDirect(laneIdx, rowIdx, key, val) {
         projectData[laneIdx].rows[rowIdx][key] = val;
@@ -3234,21 +3594,21 @@ document.addEventListener('dblclick', (e) => {
 
     function addNewRowToLane(laneIdx) {
     projectData[laneIdx].rows.push({
-        id: nextRowId++,
-        label: "New Task Activity Track",
-        predecessor: "",
-        showDateRangeInRowName: true,
-        bars: [{
-            id: nextBarId++,
-            start: "01Mar2026",
-            end: "01Jun2026",
-            progress: 0,
-            bgColor: "",
-            color: "",
-            pattern: "solid"
-        }],
-        milestones: []
-    });
+    id: nextRowId++,
+    label: 'New Task Activity Track',
+    predecessor: '',
+    showDateRange: true,
+    bars: [{
+        id: nextBarId++,
+        start: '01Mar2026',
+        end: '01Jun2026',
+        progress: 0,
+        bgColor: '',
+        color: '',
+        pattern: 'solid'
+    }],
+    milestones: []
+});
     recordStateChange();
     renderInputRows();
     updateChart();
@@ -3559,9 +3919,56 @@ let allLayerHandlesBuffer = "";
                 });
             });
 
-            let laneBgColor = lane.color || "#f8fafc";
-            svg += `<rect x="10" y="${currentDrawY}" width="${endBoundaryXCoordinate - 10}" height="${swimlaneHeight}" fill="${laneBgColor}" rx="4"/>`;
-            svg += `<text x="20" y="${currentDrawY + (swimlaneHeight / 2)}" font-size="${fontSize + 2}" font-weight="bold" fill="${headerColor}" dominant-baseline="central" style="cursor:pointer;" ondblclick="editLaneLabelDirectly(${laneIdx})">${lane.title}</text>`;
+            let laneBgColor = lane.color || '#f8fafc';
+
+const laneTitleAlign = ['left', 'center', 'right'].includes(lane.titleAlign)
+    ? lane.titleAlign
+    : 'left';
+
+const laneTitleFontSize = Number.isFinite(Number(lane.titleFontSize))
+    ? Math.max(8, Math.min(30, Number(lane.titleFontSize)))
+    : fontSize + 2;
+
+const laneTitleColor = lane.titleColor || headerColor;
+const laneTitleWeight = lane.titleBold === false ? 'normal' : 'bold';
+
+const laneTitleX =
+    laneTitleAlign === 'left'
+        ? 20
+        : laneTitleAlign === 'center'
+            ? endBoundaryXCoordinate / 2
+            : endBoundaryXCoordinate - 15;
+
+const laneTitleAnchor =
+    laneTitleAlign === 'left'
+        ? 'start'
+        : laneTitleAlign === 'center'
+            ? 'middle'
+            : 'end';
+
+svg += `
+    <rect
+        x="10"
+        y="${currentDrawY}"
+        width="${endBoundaryXCoordinate - 10}"
+        height="${swimlaneHeight}"
+        fill="${laneBgColor}"
+        rx="4"
+    />
+    <text
+        x="${laneTitleX}"
+        y="${currentDrawY + swimlaneHeight / 2}"
+        font-size="${laneTitleFontSize}"
+        font-weight="${laneTitleWeight}"
+        fill="${laneTitleColor}"
+        text-anchor="${laneTitleAnchor}"
+        dominant-baseline="central"
+        style="cursor:pointer"
+        ondblclick="editLaneLabelDirectly(event, ${laneIdx})"
+    >
+        ${lane.title}
+    </text>
+`;
             
             if (lane.showSummary !== false && rollupMinTime !== Infinity && rollupMaxTime !== -Infinity && rollupMaxTime >= rollupMinTime) {
                 let rollupXStart = Math.max(scaleMarginLeft, Math.min(endBoundaryXCoordinate, getX(new Date(rollupMinTime))));
@@ -3886,44 +4293,128 @@ function downloadSVG() {
     showToast(`Downloaded "${fileName}"`, "success");
 }
     
-function applyThemePalettePreset(paletteKey) {
-        if (!paletteKey) return;
-        const choices = {
-            executive: { bg: '#cbd5e1', fill: '#1e3a8a', summary: '#475569', ms: '#0f172a', today: '#b71010', leader: '#94a3b8', laneBg: '#eff6ff' },
-            crimson: { bg: '#fca5a5', fill: '#991b1b', summary: '#7f1d1d', ms: '#450a0a', today: '#ef4444', leader: '#4b5563', laneBg: '#ffe4e6' },
-            amber: { bg: '#fcd34d', fill: '#d97706', summary: '#78350f', ms: '#451a03', today: '#dc2626', leader: '#4b5563', laneBg: '#fef3c7' },
-            monochrome: { bg: '#e2e8f0', fill: '#334155', summary: '#0f172a', ms: '#000000', today: '#000000', leader: '#94a3b8', laneBg: '#ffffff' },
-            darkNeutral: { bg: '#475569', fill: '#1e293b', summary: '#0f172a', ms: '#000000', today: '#dc2626', leader: '#475569', laneBg: '#cbd5e1' }
-        };
-        const theme = choices[paletteKey];
-        
-        // 1. Update global workspace control handles
-        document.getElementById('barBgColor').value = theme.bg;
-        document.getElementById('barColor').value = theme.fill;
-        document.getElementById('summaryColor').value = theme.summary;
-        document.getElementById('msColor').value = theme.ms;
-        document.getElementById('todayColor').value = theme.today;
-        document.getElementById('masterLeaderColor').value = theme.leader;
-        
-        // 2. Clear item overrides and force apply the swimlane theme look
-        projectData.forEach(lane => {
-            lane.color = theme.laneBg; // Automatically sets the new swimlane background color
-            lane.summaryColor = ""; 
-            lane.rows.forEach(row => {
-                row.bars.forEach(bar => {
-                    bar.color = ""; 
-                    bar.bgColor = ""; 
-                });
-                row.milestones.forEach(ms => {
-                    ms.color = ""; 
-                });
+function confirmGlobalColorOverwrite() {
+    return confirm(
+        'Global color changes will replace all custom bar, milestone, summary-bar, and milestone-leader colors in this project.\n\n' +
+        'This cannot be undone except with the Undo button.\n\n' +
+        'Continue?'
+    );
+}
+
+function forceApplyGlobalColors({ laneBackground = null } = {}) {
+    const globalBarBackground = document.getElementById('barBgColor').value;
+    const globalBarFill = document.getElementById('barColor').value;
+    const globalSummary = document.getElementById('summaryColor').value;
+    const globalMilestone = document.getElementById('msColor').value;
+
+    projectData.forEach(lane => {
+        if (laneBackground !== null) {
+            lane.color = laneBackground;
+        }
+
+        lane.summaryColor = globalSummary;
+
+        lane.rows.forEach(row => {
+            row.bars.forEach(bar => {
+                bar.bgColor = globalBarBackground;
+                bar.color = globalBarFill;
+            });
+
+            row.milestones.forEach(ms => {
+                ms.color = globalMilestone;
+                ms.leaderColor = '';
             });
         });
-        
-        recordStateChange();
-        renderInputRows(); // Forces sidebar color pickers to match the new theme look
-        updateChart();
+    });
+}
+
+function applyGlobalColorChange() {
+    if (!confirmGlobalColorOverwrite()) {
+        restoreStateFromSnapshot(
+            JSON.parse(actionUndoStack[actionUndoStack.length - 1])
+        );
+        return;
     }
+
+    forceApplyGlobalColors();
+
+    recordStateChange();
+    renderInputRows();
+    updateChart();
+}
+
+function applyThemePalettePreset(paletteKey) {
+    if (!paletteKey) return;
+
+    const choices = {
+        executive: {
+            bg: '#cbd5e1',
+            fill: '#1e3a8a',
+            summary: '#475569',
+            ms: '#0f172a',
+            today: '#b71010',
+            leader: '#94a3b8',
+            laneBg: '#eff6ff'
+        },
+        crimson: {
+            bg: '#fca5a5',
+            fill: '#991b1b',
+            summary: '#7f1d1d',
+            ms: '#450a0a',
+            today: '#ef4444',
+            leader: '#4b5563',
+            laneBg: '#ffe4e6'
+        },
+        amber: {
+            bg: '#fcd34d',
+            fill: '#d97706',
+            summary: '#78350f',
+            ms: '#451a03',
+            today: '#dc2626',
+            leader: '#4b5563',
+            laneBg: '#fef3c7'
+        },
+        monochrome: {
+            bg: '#e2e8f0',
+            fill: '#334155',
+            summary: '#0f172a',
+            ms: '#000000',
+            today: '#000000',
+            leader: '#94a3b8',
+            laneBg: '#ffffff'
+        },
+        darkNeutral: {
+            bg: '#475569',
+            fill: '#1e293b',
+            summary: '#0f172a',
+            ms: '#000000',
+            today: '#dc2626',
+            leader: '#475569',
+            laneBg: '#cbd5e1'
+        }
+    };
+
+    const theme = choices[paletteKey];
+    if (!theme) return;
+
+    if (!confirmGlobalColorOverwrite()) {
+        document.querySelector('#tab-colors select').value = '';
+        return;
+    }
+
+    document.getElementById('barBgColor').value = theme.bg;
+    document.getElementById('barColor').value = theme.fill;
+    document.getElementById('summaryColor').value = theme.summary;
+    document.getElementById('msColor').value = theme.ms;
+    document.getElementById('todayColor').value = theme.today;
+    document.getElementById('masterLeaderColor').value = theme.leader;
+
+    forceApplyGlobalColors({ laneBackground: theme.laneBg });
+
+    recordStateChange();
+    renderInputRows();
+    updateChart();
+}
     
     // --- NEW SWIMLANE REORDER FUNCTIONS ---
 function moveSwimlaneUp(laneIdx) {
