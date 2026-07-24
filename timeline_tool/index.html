@@ -1661,23 +1661,146 @@ document.querySelectorAll('.zoom-pill-btn').forEach(b => {
 
     csvRows.push(workspaceSettingsFields.join(','));
 
-    projectData.forEach(lane => {
+    // AFTER — paste this in its place:
 
-    customTrackers.forEach(trk => {
-        let fFields = [
-            "TRACKER", "", "", "", "", "", "", trk.id,
-            "", "",
-            `"${trk.label.replace(/"/g, '""')}"`, trk.date, "", trk.thickness || 2,
-            trk.pattern || "solid", `"${trk.color || ''}"`, trk.labelOffsetX || 0, trk.labelOffsetY || 0, "", "", "", "" // Added blank for new column
-        ];
-        csvRows.push(fFields.join(","));
-    });
+projectData.forEach(lane => {
+    lane.rows.forEach(row => {
+        row.bars.forEach(bar => {
+            const barFields = [
+                "BAR",
+                `"${(lane.title || "").replace(/"/g, '""')}"`,
+                lane.color || "",
+                lane.showSummary ? "TRUE" : "FALSE",
+                row.id,
+                `"${(row.label || "").replace(/"/g, '""')}"`,
+                `"${(row.predecessor || "").replace(/"/g, '""')}"`,
+                bar.id,
+                `"${(bar.p6IdStart || "").replace(/"/g, '""')}"`,
+                `"${(bar.p6IdFinish || "").replace(/"/g, '""')}"`,
+                "",
+                bar.start || "",
+                bar.end || "",
+                bar.progress || 0,
+                bar.pattern || "solid",
+                bar.color || "",
+                "",
+                "",
+                "",
+                "",
+                bar.bgColor || "",
+                row.showDateRangeInRowName ? "TRUE" : "FALSE",
+                "",
+                "",
+                "",
+                "",
+                ""
+            ];
 
-    calloutData.forEach(c => {
-        let fFields = ["CALLOUT", `"${c.text.replace(/"/g, '""')}"`, c.x, c.y, c.leaderX, c.leaderY, c.bgColor, c.textColor, c.fontSize, c.isBold ? "TRUE" : "FALSE", c.bgTransparent ? "TRUE" : "FALSE", "", "", "", "", "", "", "", "", "", "", ""]; // Added blank for new column
-        csvRows.push(fFields.join(","));
+            csvRows.push(barFields.join(","));
+        });
+
+        row.milestones.forEach(milestone => {
+            const rulesMatrix = [
+                milestone.showDate ? "PinDate" : "NoPinDate",
+                milestone.leaderEnabledText ? "LdrTxt" : "NoLdrTxt",
+                milestone.leaderEnabledDate ? "LdrDt" : "NoLdrDt",
+                milestone.leaderAnchorText || "center"
+            ].join("|");
+
+            const milestoneFields = [
+                "MILESTONE",
+                `"${(lane.title || "").replace(/"/g, '""')}"`,
+                lane.color || "",
+                lane.showSummary ? "TRUE" : "FALSE",
+                row.id,
+                `"${(row.label || "").replace(/"/g, '""')}"`,
+                `"${(row.predecessor || "").replace(/"/g, '""')}"`,
+                milestone.id,
+                `"${(milestone.p6IdStart || "").replace(/"/g, '""')}"`,
+                `"${(milestone.p6IdFinish || "").replace(/"/g, '""')}"`,
+                `"${(milestone.label || "").replace(/"/g, '""')}"`,
+                milestone.date || "",
+                milestone.date || "",
+                "",
+                milestone.symbol || "diamond",
+                milestone.color || "",
+                milestone.labelOffsetX || 0,
+                milestone.labelOffsetY || 0,
+                milestone.dateOffsetX || 0,
+                milestone.dateOffsetY || 0,
+                `"${rulesMatrix}"`,
+                row.showDateRangeInRowName ? "TRUE" : "FALSE",
+                "",
+                "",
+                "",
+                "",
+                ""
+            ];
+
+            csvRows.push(milestoneFields.join(","));
+        });
     });
- });
+});
+
+customTrackers.forEach(trk => {
+    const trackerFields = [
+        "TRACKER", "", "", "", "", "", "", trk.id,
+        "", "",
+        `"${(trk.label || "").replace(/"/g, '""')}"`,
+        trk.date || "",
+        "",
+        trk.thickness || 2,
+        trk.pattern || "solid",
+        trk.color || "",
+        trk.labelOffsetX || 0,
+        trk.labelOffsetY || 0,
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+    ];
+
+    csvRows.push(trackerFields.join(","));
+});
+
+calloutData.forEach(c => {
+    const calloutFields = [
+        "CALLOUT",
+        `"${(c.text || "").replace(/"/g, '""')}"`,
+        c.x || 0,
+        c.y || 0,
+        c.leaderX || 0,
+        c.leaderY || 0,
+        c.bgColor || "",
+        c.textColor || "",
+        c.fontSize || 14,
+        c.isBold ? "TRUE" : "FALSE",
+        c.bgTransparent ? "TRUE" : "FALSE",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+    ];
+
+    csvRows.push(calloutFields.join(","));
+});
     const blob = new Blob([csvRows.join("\n")], { type: 'text/csv' });
 const link = document.createElement('a');
 link.href = URL.createObjectURL(blob);
@@ -3200,6 +3323,7 @@ function updateProjectDashboard() {
     // GRAPHIC VECTOR GENERATION PIPELINE ENGINE (SVG DRAW LOOP)
     // =========================================================
             function updateChart() {
+                updateProjectDashboard();
         const totalElements = projectData.reduce((sum, lane) => sum + (lane.rows ? lane.rows.length : 0), 0);
         if (totalElements === 0) {
             document.getElementById('svgContainer').innerHTML = `
