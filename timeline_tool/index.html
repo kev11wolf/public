@@ -1559,7 +1559,7 @@ document.querySelectorAll('.zoom-pill-btn').forEach(b => {
     const blob = new Blob([csvRows.join("\n")], { type: 'text/csv' });
 const link = document.createElement('a');
 link.href = URL.createObjectURL(blob);
-link.download = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.csv`;
+link.download = getExportFilename("csv");
 link.click();
 }
 
@@ -1569,7 +1569,7 @@ link.click();
     const blob = new Blob([JSON.stringify(archivePayload, null, 2)], {type: 'application/json'});
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    const fileName = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.json`;
+    const fileName = getExportFilename("json");
     link.download = fileName;
     link.click();
     saveRecentFileName(getProjectTitle());
@@ -1693,25 +1693,33 @@ link.click();
                     ldrDt = rPieces[2] === "LdrDt";
                     if(rPieces[3]) anchorText = rPieces[3];
                 }
-                rowObject.milestones.push({
-                    id: mId,
-                    p6IdStart: columns[8] ? columns[8].trim() : "",
-                    p6IdFinish: columns[9] ? columns[9].trim() : "",
-                    label: columns[10] ? columns[10].trim() : "",
-                    date: normalizeDateString(columns[11] ? columns[11].trim() : ""),
-                    showDate: pinDt,
-                    manualLabel: true,
-                    labelOffsetX: parseFloat(columns[16]) || 0,
-                    labelOffsetY: parseFloat(columns[17]) || 0,
-                    manualDateLabel: true,
-                    dateOffsetX: parseFloat(columns[18]) || 0,
-                    dateOffsetY: parseFloat(columns[19]) || 0,
-                    symbol: columns[14] ? columns[14].trim() : "diamond",
-                    color: columns[15] ? columns[15].trim() : "",
-                    leaderEnabledText: ldrTxt,
-                    leaderEnabledDate: ldrDt,
-                    leaderAnchorText: anchorText
-                });
+               rowObject.milestones.push({
+    id: mId,
+    p6IdStart: columns[8] ? columns[8].trim() : "",
+    p6IdFinish: columns[9] ? columns[9].trim() : "",
+    label: columns[10] ? columns[10].trim() : "",
+
+    // Use Start Target Date first.
+    // If it is blank, use Finish Date instead.
+    date: normalizeDateString(
+        columns[11] && columns[11].trim() !== ""
+            ? columns[11].trim()
+            : (columns[12] ? columns[12].trim() : "")
+    ),
+
+    showDate: pinDt,
+    manualLabel: true,
+    labelOffsetX: parseFloat(columns[16]) || 0,
+    labelOffsetY: parseFloat(columns[17]) || 0,
+    manualDateLabel: true,
+    dateOffsetX: parseFloat(columns[18]) || 0,
+    dateOffsetY: parseFloat(columns[19]) || 0,
+    symbol: columns[14] ? columns[14].trim() : "diamond",
+    color: columns[15] ? columns[15].trim() : "",
+    leaderEnabledText: ldrTxt,
+    leaderEnabledDate: ldrDt,
+    leaderAnchorText: anchorText
+});
             }
         }
 
@@ -3431,7 +3439,7 @@ function downloadSVG() {
         }
     });
     const blob = new Blob([clone.outerHTML], {type: 'image/svg+xml;charset=utf-8'});
-    const fileName = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.svg`;
+    link.download = getExportFilename("svg");
     const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = fileName; link.click();
     showToast(`Downloaded "${fileName}"`, "success");
 }
@@ -3525,7 +3533,7 @@ function moveSwimlaneDown(laneIdx) {
                 const img = new Image();
         img.onload = function() {
             ctx.drawImage(img, 0, 0); URL.revokeObjectURL(blobUrl);
-            const fileName = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.png`;
+            link.download = getExportFilename("png");
             const link = document.createElement('a'); link.href = canvas.toDataURL('image/png'); link.download = fileName; link.click();
             if (btn) { btn.disabled = false; btn.innerText = "Download High-Res Presentation PNG (2x)"; }
             showToast(`Downloaded "${fileName}"`, "success");
@@ -3591,28 +3599,81 @@ if (badge) badge.innerText = `${projectData.length} row${projectData.length === 
         if(targetBtn) targetBtn.classList.add('active');
     }
     
-    function getDateStamp() {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+// Removes the file extension, such as .xlsx, .csv, .json, .svg, or .png.
+function stripFileExtension(fileName) {
+    return String(fileName || "")
+        .replace(/\.[^.]+$/, "")
+        .trim();
 }
 
-function sanitizeFilenamePart(str) {
-    return String(str || 'Untitled').trim().replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, '_') || 'Untitled';
+// Removes dates, version numbers, separators, and other non-title material.
+// Keeps the actual words that make up the project title.
+function cleanProjectName(fileName) {
+    let cleaned = stripFileExtension(fileName);
+
+    cleaned = cleaned
+        // Removes dates such as 2026-07-24, 2026_07_24, and 2026.07.24.
+        .replace(/\b\d{4}[-_. ]\d{1,2}[-_. ]\d{1,2}\b/g, " ")
+
+        // Removes dates such as 07-24-2026, 07_24_2026, and 07.24.2026.
+        .replace(/\b\d{1,2}[-_. ]\d{1,2}[-_. ]\d{2,4}\b/g, " ")
+
+        // Removes dates such as 20260724 or 07242026.
+        .replace(/\b\d{8}\b/g, " ")
+
+        // Removes dates such as 24Jul2026, 24-Jul-2026, or 24 Jul 2026.
+        .replace(/\b\d{1,2}[-_. ]?[A-Za-z]{3,9}[-_. ]?\d{2,4}\b/g, " ")
+
+        // Removes standalone numbers and version values such as v2, 3, or 1.4.
+        .replace(/\bv?\d+(?:\.\d+)*\b/gi, " ")
+
+        // Turns underscores and hyphens into normal spaces.
+        .replace(/[_-]+/g, " ")
+
+        // Removes filename characters that should not be retained in a title.
+        .replace(/[^\p{L}\p{N}\s]/gu, " ")
+
+        // Converts repeated spaces to one space.
+        .replace(/\s+/g, " ")
+        .trim();
+
+    return cleaned || "Untitled Gantt Project";
 }
 
+// Used after importing an Excel, CSV, or JSON file.
+function extractTitleFromFilename(fileName) {
+    return cleanProjectName(fileName);
+}
+
+// Used when creating a downloadable filename.
+function sanitizeFilenamePart(value) {
+    return cleanProjectName(value)
+        .replace(/\s+/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "");
+}
+
+// Gets the visible project title, removes dates from it, and returns clean text.
 function getProjectTitle() {
-    const el = document.getElementById('projectTitleInput');
-    return el ? el.value : 'Untitled Gantt Project';
+    const titleInput = document.getElementById("projectTitleInput");
+    const rawTitle = titleInput ? titleInput.value : "";
+
+    return cleanProjectName(rawTitle);
 }
 
-function extractTitleFromFilename(rawName) {
-    let name = rawName.replace(/\.(json|csv|xlsx|xls)$/i, '');
-    // Strip trailing _YYYY-MM-DD pattern if present
-    const stripped = name.replace(/_\d{4}-\d{2}-\d{2}$/, '');
-    return stripped.length > 0 ? stripped : name;
+// Creates today's date in YYYY-MM-DD format.
+function getDateStamp() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
+// Use this helper for every file download.
+function getExportFilename(extension) {
+    return `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.${extension}`;
 }
     
  function showToast(message, type = 'info', duration = 3000) {
