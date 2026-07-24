@@ -344,15 +344,7 @@
 
             <!-- Hidden File Inputs Moved Here -->
             <input type="file" id="archiveFileInput" accept=".json" style="display:none;" onchange="importConfigurationArchive(event)">
-           <!-- AFTER -->
-
-<input
-    type="file"
-    id="csvFileInput"
-    accept=".csv,.xlsx,.xls"
-    style="display:none"
-    onchange="importCSVFile(event)"
->
+            <input type="file" id="csvFileInput" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display:none;" onchange="importCSVFile(event)">
 
             <div class="sidebar-tabs">
                 <button class="sidebar-tab-btn active" onclick="openSidebarTab('tab-swimlanes')">Swimlanes & Data</button>
@@ -841,22 +833,10 @@ function hydrateRowDefaults() {
 }
 
 function normalizeDateString(val) {
-    if (val === undefined || val === null || String(val).trim() === "") return "";
-
-    // Excel stores dates as serial day numbers. Accept both numeric values and
-    // numeric strings returned from formula cells / General-formatted cells.
-    const numericValue = typeof val === "number" ? val : Number(String(val).trim());
-    if (Number.isFinite(numericValue) && numericValue > 0 && numericValue < 100000) {
-        const parsed = XLSX.SSF.parse_date_code(numericValue);
-        if (parsed) {
-            return formatDateToDDMMMYYYY(
-                new Date(parsed.y, parsed.m - 1, parsed.d)
-            );
-        }
-    }
-
-    const ts = parseAnyDateToTimestamp(String(val).trim());
-    return isNaN(ts) ? "" : formatDateToDDMMMYYYY(new Date(ts));
+    if (!val) return "";
+    let ts = parseAnyDateToTimestamp(val);
+    if (isNaN(ts)) return String(val).trim();
+    return formatDateToDDMMMYYYY(new Date(ts));
 }
     function formatDateToDDMMMYYYY(d) {
         if (isNaN(d.getTime())) return "";
@@ -1579,7 +1559,7 @@ document.querySelectorAll('.zoom-pill-btn').forEach(b => {
     const blob = new Blob([csvRows.join("\n")], { type: 'text/csv' });
 const link = document.createElement('a');
 link.href = URL.createObjectURL(blob);
-link.download = getExportFilename("csv");
+link.download = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.csv`;
 link.click();
 }
 
@@ -1589,7 +1569,7 @@ link.click();
     const blob = new Blob([JSON.stringify(archivePayload, null, 2)], {type: 'application/json'});
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    const fileName = getExportFilename("json");
+    const fileName = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.json`;
     link.download = fileName;
     link.click();
     saveRecentFileName(getProjectTitle());
@@ -1610,248 +1590,132 @@ link.click();
         fields.push(current); return fields;
     }
 
-    // AFTER — PASTE THIS COMPLETE FUNCTION IN ITS PLACE
-
-function importCSVFile(event) {
-    const file = event.target.files[0];
+    function importCSVFile(event) {
+    const file = event.target.files[0]; 
     if (!file) return;
 
-    const processDataPayload = function (csvText) {
-        const lines = csvText.split(/\r?\n/);
-        if (lines.length <= 1) return;
+    // Helper function to process the extracted text payload
+    const processDataPayload = function(csvText) {
+        const lines = csvText.split(/\r?\n/); if(lines.length <= 1) return;
+        let newImportData = []; let newTrackers = []; let newCallouts = [];
+        let rIdCounter = 1; let mIdCounter = 1001; let bIdCounter = 5001; let tIdCounter = 7001;
 
-        let newImportData = [];
-        let newTrackers = [];
-        let newCallouts = [];
-        let rIdCounter = 1;
-        let mIdCounter = 1001;
-        let bIdCounter = 5001;
-        let tIdCounter = 7001;
+        for(let i = 1; i < lines.length; i++) {
+            let line = lines[i].trim(); if(line === "") continue;
+            let columns = parseRobustCSVLine(line); if(columns.length < 8) continue;
 
-        for (let i = 1; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
-
-            const columns = parseRobustCSVLine(line);
-            if (columns.length < 8) continue;
-
-            const recordType = String(columns[0] || "").trim();
-
+            let recordType = columns[0].trim();
+            
             if (recordType === "CALLOUT") {
                 newCallouts.push({
-                    id: generateUUID(),
-                    text: columns[1] ? columns[1].replace(/""/g, '"').trim() : "Callout",
-                    x: parseFloat(columns[2]) || 350,
-                    y: parseFloat(columns[3]) || 100,
-                    leaderX: parseFloat(columns[4]) || 350,
+                    id: generateUUID(), 
+                    text: columns[1] ? columns[1].replace(/""/g, '"').trim() : "Callout", 
+                    x: parseFloat(columns[2]) || 350, 
+                    y: parseFloat(columns[3]) || 100, 
+                    leaderX: parseFloat(columns[4]) || 350, 
                     leaderY: parseFloat(columns[5]) || 150,
-                    bgColor: columns[6] ? columns[6].trim() : "#ffffff",
-                    textColor: columns[7] ? columns[7].trim() : "#000000",
-                    fontSize: parseInt(columns[8], 10) || 14,
-                    isBold: columns[9] ? columns[9].trim() === "TRUE" : false,
+                    bgColor: columns[6] ? columns[6].trim() : "#ffffff", 
+                    textColor: columns[7] ? columns[7].trim() : "#000000", 
+                    fontSize: parseInt(columns[8]) || 14, 
+                    isBold: columns[9] ? columns[9].trim() === "TRUE" : false, 
                     bgTransparent: columns[10] ? columns[10].trim() === "TRUE" : false
                 });
                 continue;
             }
 
+            let laneTitle = columns[1].trim();
+            let laneColor = columns[2].trim();
+            let laneSummary = columns[3].trim() === "TRUE";
+            
             if (recordType === "TRACKER") {
-                const tId = parseInt(columns[7], 10) || tIdCounter++;
-
-                if (tId >= tIdCounter) tIdCounter = tId + 1;
-
+                let tId = parseInt(columns[7].trim()) || tIdCounter++;
+                if(tId >= tIdCounter) tIdCounter = tId + 1;
                 newTrackers.push({
-                    id: tId,
-                    label: columns[10] ? String(columns[10]).trim() : "",
-                    date: normalizeDateString(columns[11] || ""),
-                    thickness: parseInt(columns[13], 10) || 2,
-                    pattern: columns[14] ? String(columns[14]).trim() : "solid",
-                    color: columns[15] ? String(columns[15]).trim() : "",
-                    labelOffsetX: parseFloat(columns[16]) || 0,
-                    labelOffsetY: parseFloat(columns[17]) || 0
+                    id: tId, label: columns[10] ? columns[10].trim() : "", date: normalizeDateString(columns[11] ? columns[11].trim() : ""),
+                    thickness: parseInt(columns[13] ? columns[13].trim() : "") || 2, pattern: columns[14] ? columns[14].trim() : "solid",
+                    color: columns[15] ? columns[15].trim() : "", labelOffsetX: parseFloat(columns[16]) || 0, labelOffsetY: parseFloat(columns[17]) || 0
                 });
                 continue;
             }
 
-            const laneTitle = columns[1] ? String(columns[1]).trim() : "";
-            const laneColor = columns[2] ? String(columns[2]).trim() : "";
-            const laneSummary = columns[3] ? String(columns[3]).trim() === "TRUE" : false;
-
-            let lane = newImportData.find(item => item.title === laneTitle);
-
-            if (!lane && laneTitle) {
-                lane = {
-                    id: newImportData.length,
-                    title: laneTitle,
-                    color: laneColor,
-                    showSummary: laneSummary,
-                    rows: []
-                };
+            let lane = newImportData.find(l => l.title === laneTitle);
+            if(!lane && laneTitle !== "") {
+                lane = { id: newImportData.length, title: laneTitle, color: laneColor, showSummary: laneSummary, rows: [] };
                 newImportData.push(lane);
             }
 
-            if (!lane) continue;
-
-            const rowIdText = columns[4] ? String(columns[4]).trim() : "";
-            if (!rowIdText) continue;
-
-            const explicitRowId = parseInt(rowIdText, 10);
-            if (!Number.isFinite(explicitRowId)) continue;
-
+            let rowIdStr = columns[4] ? columns[4].trim() : ""; if(rowIdStr === "") continue;
+            let explicitRowId = parseInt(rowIdStr, 10);
             if (explicitRowId >= rIdCounter) rIdCounter = explicitRowId + 1;
 
-            const rowLabel = columns[5] ? String(columns[5]).trim() : "";
-            let rowPred = columns[6] ? String(columns[6]).trim() : "";
+            let rowLabel = columns[5] ? columns[5].trim() : "";
+            let rowPred = columns[6] ? columns[6].trim() : ""; if (rowPred.toUpperCase() === "NONE") rowPred = "";
 
-            if (rowPred.toUpperCase() === "NONE") rowPred = "";
+            // ---> NEW: Read Show Date Range flag from column 21 (index 21)
+            let rowShowDateRange = columns[21] ? columns[21].trim() === "TRUE" : false;
 
-            const rowShowDateRange =
-                columns[21] ? String(columns[21]).trim() === "TRUE" : false;
-
-            let rowObject = lane.rows.find(row => row.id === explicitRowId);
-
-            if (!rowObject) {
-                rowObject = {
-                    id: explicitRowId,
-                    label: rowLabel,
-                    predecessor: rowPred,
-                    showDateRange: rowShowDateRange,
-                    bars: [],
-                    milestones: []
+            let rowObject = lane.rows.find(r => r.id === explicitRowId);
+            if(!rowObject) {
+                rowObject = { 
+                    id: explicitRowId, 
+                    label: rowLabel, 
+                    predecessor: rowPred, 
+                    showDateRange: rowShowDateRange, // ---> SET FLAG HERE
+                    bars: [], 
+                    milestones: [] 
                 };
                 lane.rows.push(rowObject);
             }
 
             if (recordType === "BAR") {
-                const bId = parseInt(columns[7], 10) || bIdCounter++;
-
+                let bId = parseInt(columns[7].trim()) || bIdCounter++;
                 if (bId >= bIdCounter) bIdCounter = bId + 1;
-
                 rowObject.bars.push({
                     id: bId,
-                    p6IdStart: columns[8] ? String(columns[8]).trim() : "",
-                    p6IdFinish: columns[9] ? String(columns[9]).trim() : "",
-                    start: normalizeDateString(columns[11] || ""),
-                    end: normalizeDateString(columns[12] || ""),
-                    progress: parseInt(columns[13], 10) || 0,
-                    pattern: columns[14] ? String(columns[14]).trim() : "solid",
-                    color: columns[15] ? String(columns[15]).trim() : "",
-                    bgColor: columns[20] ? String(columns[20]).trim() : ""
+                    p6IdStart: columns[8] ? columns[8].trim() : "",
+                    p6IdFinish: columns[9] ? columns[9].trim() : "",
+                    start: normalizeDateString(columns[11] ? columns[11].trim() : ""),
+                    end: normalizeDateString(columns[12] ? columns[12].trim() : ""),
+                    progress: parseInt(columns[13] ? columns[13].trim() : "") || 0,
+                    pattern: columns[14] ? columns[14].trim() : "solid",
+                    color: columns[15] ? columns[15].trim() : "",
+                    bgColor: columns[20] ? columns[20].trim() : ""
                 });
-            }
-
-            if (recordType === "MILESTONE") {
-                const mId = parseInt(columns[7], 10) || mIdCounter++;
-
+            } else if (recordType === "MILESTONE") {
+                let mId = parseInt(columns[7].trim()) || mIdCounter++;
                 if (mId >= mIdCounter) mIdCounter = mId + 1;
-
-                const ruleStr = columns[20] ? String(columns[20]).trim() : "";
-                const ruleParts = ruleStr ? ruleStr.split("|") : [];
-
-                const milestoneDate = normalizeDateString(
-                    columns[11] !== undefined && String(columns[11]).trim() !== ""
-                        ? columns[11]
-                        : columns[12]
-                );
-
-                if (!milestoneDate) continue;
-
+                let ruleStr = columns[20] ? columns[20].trim() : "";
+                let pinDt = true, ldrTxt = false, ldrDt = false, anchorText = "center";
+                if (ruleStr) {
+                    let rPieces = ruleStr.split('|');
+                    pinDt = rPieces[0] === "PinDate";
+                    ldrTxt = rPieces[1] === "LdrTxt";
+                    ldrDt = rPieces[2] === "LdrDt";
+                    if(rPieces[3]) anchorText = rPieces[3];
+                }
                 rowObject.milestones.push({
                     id: mId,
-                    p6IdStart: columns[8] ? String(columns[8]).trim() : "",
-                    p6IdFinish: columns[9] ? String(columns[9]).trim() : "",
-                    label: columns[10] ? String(columns[10]).trim() : "",
-                    date: milestoneDate,
-                    showDate: ruleParts[0] !== "HideDate",
+                    p6IdStart: columns[8] ? columns[8].trim() : "",
+                    p6IdFinish: columns[9] ? columns[9].trim() : "",
+                    label: columns[10] ? columns[10].trim() : "",
+                    date: normalizeDateString(
+    columns[11] && columns[11].trim()
+        ? columns[11].trim()
+        : (columns[12] && columns[12].trim() ? columns[12].trim() : '')
+),
+                    showDate: pinDt,
                     manualLabel: true,
                     labelOffsetX: parseFloat(columns[16]) || 0,
                     labelOffsetY: parseFloat(columns[17]) || 0,
                     manualDateLabel: true,
                     dateOffsetX: parseFloat(columns[18]) || 0,
                     dateOffsetY: parseFloat(columns[19]) || 0,
-                    symbol: columns[14] ? String(columns[14]).trim() : "diamond",
-                    color: columns[15] ? String(columns[15]).trim() : "",
-                    leaderEnabledText: ruleParts[1] === "LdrTxt",
-                    leaderEnabledDate: ruleParts[2] === "LdrDt",
-                    leaderAnchorText: ruleParts[3] || "center"
+                    symbol: columns[14] ? columns[14].trim() : "diamond",
+                    color: columns[15] ? columns[15].trim() : "",
+                    leaderEnabledText: ldrTxt,
+                    leaderEnabledDate: ldrDt,
+                    leaderAnchorText: anchorText
                 });
-            }
-        }
-
-        if (
-            newImportData.length === 0 &&
-            newTrackers.length === 0 &&
-            newCallouts.length === 0
-        ) {
-            showToast("No importable records were found.", "error", 4500);
-            return;
-        }
-
-        projectData = newImportData;
-        customTrackers = newTrackers;
-        calloutData = newCallouts;
-        nextRowId = rIdCounter;
-        nextMsId = mIdCounter;
-        nextBarId = bIdCounter;
-        nextTrackerId = tIdCounter;
-
-        const titleEl = document.getElementById("projectTitleInput");
-        if (titleEl) titleEl.value = extractTitleFromFilename(file.name);
-
-        renderCalloutControls();
-        recordStateChange();
-        renderInputRows();
-        populateTrackerDashboardMatrix();
-        updateChart();
-    };
-
-    const fileName = file.name.toLowerCase();
-
-    if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: "array" });
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            const csvText = XLSX.utils.sheet_to_csv(worksheet);
-
-            processDataPayload(csvText);
-        };
-
-        reader.readAsArrayBuffer(file);
-    } else {
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-            processDataPayload(e.target.result);
-        };
-
-        reader.readAsText(file);
-    }
-
-    event.target.value = "";
-}
-
-
-rowObject.milestones.push({
-    id: mId,
-    p6IdStart: columns[8] ? String(columns[8]).trim() : "",
-    p6IdFinish: columns[9] ? String(columns[9]).trim() : "",
-    label: columns[10] ? String(columns[10]).trim() : "",
-    date: milestoneDate,
-    showDate: pinDt,
-    manualLabel: true,
-    labelOffsetX: parseFloat(columns[16]) || 0,
-    labelOffsetY: parseFloat(columns[17]) || 0,
-    manualDateLabel: true,
-    dateOffsetX: parseFloat(columns[18]) || 0,
-    dateOffsetY: parseFloat(columns[19]) || 0,
-    symbol: columns[14] ? String(columns[14]).trim() : "diamond",
-    color: columns[15] ? String(columns[15]).trim() : "",
-    leaderEnabledText: ldrTxt,
-    leaderEnabledDate: ldrDt,
-    leaderAnchorText: anchorText
-});
             }
         }
 
@@ -1871,58 +1735,17 @@ rowObject.milestones.push({
 
     const fileName = file.name.toLowerCase();
     
-   if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
-    const reader = new FileReader();
-
-    reader.onload = function (e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, {
-            type: "array",
-            cellDates: true,
-            cellFormula: true,
-            cellNF: true,
-            cellText: true
-        });
-
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(worksheet, {
-            header: 1,
-            defval: "",
-            raw: true,
-            blankrows: false
-        });
-
-        if (rows.length <= 1) {
-            showToast("The selected workbook has no importable data rows.", "error", 4500);
-            return;
-        }
-
-        const getCellValue = (rowIndex, columnIndex) => {
-            const address = XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex });
-            const cell = worksheet[address];
-
-            if (!cell) return "";
-
-            // `v` is the stored/calculated value. `w` is Excel's displayed
-            // value, which is the preferred fallback for date-formatted formulas.
-            return cell.v ?? cell.w ?? "";
+    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const csvText = XLSX.utils.sheet_to_csv(worksheet);
+            processDataPayload(csvText);
         };
-
-        const csvRows = rows.map((row, rowIndex) => {
-            return row.map((value, columnIndex) => {
-                const resolvedValue = getCellValue(rowIndex, columnIndex);
-                const text = String(resolvedValue ?? value ?? "");
-                return /[",\r\n]/.test(text)
-                    ? `"${text.replace(/"/g, '""')}"`
-                    : text;
-            }).join(",");
-        });
-
-        processDataPayload(csvRows.join("\n"));
-    };
-
-    reader.readAsArrayBuffer(file);
-}
+        reader.readAsArrayBuffer(file);
     } else {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -1934,452 +1757,27 @@ rowObject.milestones.push({
     event.target.value = '';
 }
 
-      async function clearAllStoredData() {
-    const typedValue = prompt(
-        "This will erase your locally saved project and reload the construction example. Type RESET to confirm."
-    );
-
-    if (typedValue !== "RESET") {
-        if (typedValue !== null) {
+      function clearAllStoredData() {
+        const typedValue = prompt("This will permanently erase all swimlanes, bars, milestones, and settings.\n\nType RESET to confirm:");
+        if (typedValue === "RESET") {
+            localStorage.removeItem('gantt_v8_master_snapshot');
+            localStorage.removeItem('gantt_seen_welcome');
+            actionUndoStack = []; actionRedoStack = []; customTrackers = []; calloutData = [];
+            loadApplicationState();
+            showToast("Workspace reset to blank state.", "success");
+        } else if (typedValue !== null) {
             showToast("Reset cancelled.", "info", 1800);
         }
-
-        return;
     }
-
-    localStorage.removeItem(LOCAL_PROJECT_CACHE_KEY);
-
-    actionUndoStack = [];
-    actionRedoStack = [];
-    projectData = [];
-    customTrackers = [];
-    calloutData = [];
-
-    await loadApplicationState();
-
-    showToast(
-        "Your local project was reset. The construction example is now loaded.",
-        "success",
-        3500
-    );
-}
 
 function saveApplicationState() {
-    // Do not overwrite a good saved project with an empty undo stack.
-    if (actionUndoStack.length === 0) return;
-
-    try {
-        // Save the newest full project snapshot after every change.
-        localStorage.setItem(
-            LOCAL_PROJECT_CACHE_KEY,
-            actionUndoStack[actionUndoStack.length - 1]
-        );
-
-        markSavedState();
-    } catch (error) {
-        console.warn("Could not save the project in browser storage:", error);
-        showToast(
-            "Your changes are visible, but browser storage could not save them. Export a JSON backup.",
-            "error",
-            6000
-        );
+    if (actionUndoStack.length > 0) {
+        localStorage.setItem('gantt_v8_master_snapshot', actionUndoStack[actionUndoStack.length - 1]);
     }
+    markSavedState();
 }
 
-function getBuiltInExampleProjectSnapshot() {
-    return {
-        schemaVersion: CURRENTSCHEMAVERSION,
-
-        data: [
-            {
-                id: 1,
-                title: "Preconstruction & Site Development",
-                color: "#dbeafe",
-                showSummary: true,
-                rows: [
-                    {
-                        id: 101,
-                        label: "Permitting, Mobilization & Site Logistics",
-                        predecessor: "",
-                        showDateRange: true,
-                        bars: [
-                            {
-                                id: 5001,
-                                p6IdStart: "PRECON-1000",
-                                p6IdFinish: "PRECON-1000",
-                                start: "05Jan2026",
-                                end: "30Jan2026",
-                                progress: 100,
-                                bgColor: "",
-                                color: "",
-                                pattern: "solid"
-                            }
-                        ],
-                        milestones: [
-                            {
-                                id: 1001,
-                                p6IdStart: "MS-1000",
-                                p6IdFinish: "MS-1000",
-                                label: "Notice to Proceed",
-                                date: "05Jan2026",
-                                showDate: true,
-                                manualLabel: false,
-                                labelOffsetX: 0,
-                                labelOffsetY: 0,
-                                manualDateLabel: false,
-                                dateOffsetX: 0,
-                                dateOffsetY: 0,
-                                color: "",
-                                symbol: "diamond",
-                                leaderEnabledText: true,
-                                leaderEnabledDate: false,
-                                leaderAnchorText: "center"
-                            }
-                        ]
-                    },
-                    {
-                        id: 102,
-                        label: "Mass Grading, Utilities & Building Pad",
-                        predecessor: "PRECON-1000",
-                        showDateRange: true,
-                        bars: [
-                            {
-                                id: 5002,
-                                p6IdStart: "SITE-1100",
-                                p6IdFinish: "SITE-1100",
-                                start: "02Feb2026",
-                                end: "27Mar2026",
-                                progress: 70,
-                                bgColor: "",
-                                color: "",
-                                pattern: "crosshatch"
-                            }
-                        ],
-                        milestones: [
-                            {
-                                id: 1002,
-                                p6IdStart: "MS-1100",
-                                p6IdFinish: "MS-1100",
-                                label: "Building Pad Released",
-                                date: "27Mar2026",
-                                showDate: true,
-                                manualLabel: false,
-                                labelOffsetX: 0,
-                                labelOffsetY: 0,
-                                manualDateLabel: false,
-                                dateOffsetX: 0,
-                                dateOffsetY: 0,
-                                color: "",
-                                symbol: "circle",
-                                leaderEnabledText: false,
-                                leaderEnabledDate: true,
-                                leaderAnchorText: "center"
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 2,
-                title: "Structure & Envelope",
-                color: "#dcfce7",
-                showSummary: true,
-                rows: [
-                    {
-                        id: 201,
-                        label: "Foundations and Underground MEP",
-                        predecessor: "SITE-1100",
-                        showDateRange: true,
-                        bars: [
-                            {
-                                id: 5003,
-                                p6IdStart: "STR-2100",
-                                p6IdFinish: "STR-2100",
-                                start: "30Mar2026",
-                                end: "08May2026",
-                                progress: 35,
-                                bgColor: "",
-                                color: "",
-                                pattern: "solid"
-                            }
-                        ],
-                        milestones: [
-                            {
-                                id: 1003,
-                                p6IdStart: "MS-2100",
-                                p6IdFinish: "MS-2100",
-                                label: "Foundation Complete",
-                                date: "08May2026",
-                                showDate: true,
-                                manualLabel: false,
-                                labelOffsetX: 0,
-                                labelOffsetY: 0,
-                                manualDateLabel: false,
-                                dateOffsetX: 0,
-                                dateOffsetY: 0,
-                                color: "",
-                                symbol: "diamond",
-                                leaderEnabledText: true,
-                                leaderEnabledDate: true,
-                                leaderAnchorText: "center"
-                            }
-                        ]
-                    },
-                    {
-                        id: 202,
-                        label: "Structural Steel, Decking & Concrete",
-                        predecessor: "STR-2100",
-                        showDateRange: true,
-                        bars: [
-                            {
-                                id: 5004,
-                                p6IdStart: "STR-2200",
-                                p6IdFinish: "STR-2200",
-                                start: "11May2026",
-                                end: "17Jul2026",
-                                progress: 15,
-                                bgColor: "",
-                                color: "",
-                                pattern: "solid"
-                            }
-                        ],
-                        milestones: [
-                            {
-                                id: 1004,
-                                p6IdStart: "MS-2200",
-                                p6IdFinish: "MS-2200",
-                                label: "Structure Topped Out",
-                                date: "17Jul2026",
-                                showDate: true,
-                                manualLabel: false,
-                                labelOffsetX: 0,
-                                labelOffsetY: 0,
-                                manualDateLabel: false,
-                                dateOffsetX: 0,
-                                dateOffsetY: 0,
-                                color: "",
-                                symbol: "diamond",
-                                leaderEnabledText: true,
-                                leaderEnabledDate: false,
-                                leaderAnchorText: "center"
-                            }
-                        ]
-                    },
-                    {
-                        id: 203,
-                        label: "Exterior Wall, Roofing & Dry-In",
-                        predecessor: "STR-2200",
-                        showDateRange: true,
-                        bars: [
-                            {
-                                id: 5005,
-                                p6IdStart: "ENV-2300",
-                                p6IdFinish: "ENV-2300",
-                                start: "20Jul2026",
-                                end: "18Sep2026",
-                                progress: 0,
-                                bgColor: "",
-                                color: "",
-                                pattern: "diagonal"
-                            }
-                        ],
-                        milestones: [
-                            {
-                                id: 1005,
-                                p6IdStart: "MS-2300",
-                                p6IdFinish: "MS-2300",
-                                label: "Building Dried In",
-                                date: "18Sep2026",
-                                showDate: true,
-                                manualLabel: false,
-                                labelOffsetX: 0,
-                                labelOffsetY: 0,
-                                manualDateLabel: false,
-                                dateOffsetX: 0,
-                                dateOffsetY: 0,
-                                color: "",
-                                symbol: "triangle",
-                                leaderEnabledText: true,
-                                leaderEnabledDate: true,
-                                leaderAnchorText: "center"
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 3,
-                title: "Interior Buildout & Commissioning",
-                color: "#fef3c7",
-                showSummary: true,
-                rows: [
-                    {
-                        id: 301,
-                        label: "MEP Rough-In and Equipment Setting",
-                        predecessor: "ENV-2300",
-                        showDateRange: true,
-                        bars: [
-                            {
-                                id: 5006,
-                                p6IdStart: "MEP-3100",
-                                p6IdFinish: "MEP-3100",
-                                start: "21Sep2026",
-                                end: "20Nov2026",
-                                progress: 0,
-                                bgColor: "",
-                                color: "",
-                                pattern: "solid"
-                            }
-                        ],
-                        milestones: [
-                            {
-                                id: 1006,
-                                p6IdStart: "MS-3100",
-                                p6IdFinish: "MS-3100",
-                                label: "Permanent Power Available",
-                                date: "30Oct2026",
-                                showDate: true,
-                                manualLabel: false,
-                                labelOffsetX: 0,
-                                labelOffsetY: 0,
-                                manualDateLabel: false,
-                                dateOffsetX: 0,
-                                dateOffsetY: 0,
-                                color: "",
-                                symbol: "circle",
-                                leaderEnabledText: true,
-                                leaderEnabledDate: false,
-                                leaderAnchorText: "center"
-                            }
-                        ]
-                    },
-                    {
-                        id: 302,
-                        label: "Architectural Finishes & Owner Turnover",
-                        predecessor: "MEP-3100",
-                        showDateRange: true,
-                        bars: [
-                            {
-                                id: 5007,
-                                p6IdStart: "FIN-3200",
-                                p6IdFinish: "FIN-3200",
-                                start: "23Nov2026",
-                                end: "29Jan2027",
-                                progress: 0,
-                                bgColor: "",
-                                color: "",
-                                pattern: "solid"
-                            }
-                        ],
-                        milestones: [
-                            {
-                                id: 1007,
-                                p6IdStart: "MS-3200",
-                                p6IdFinish: "MS-3200",
-                                label: "Substantial Completion",
-                                date: "29Jan2027",
-                                showDate: true,
-                                manualLabel: false,
-                                labelOffsetX: 0,
-                                labelOffsetY: 0,
-                                manualDateLabel: false,
-                                dateOffsetX: 0,
-                                dateOffsetY: 0,
-                                color: "",
-                                symbol: "diamond",
-                                leaderEnabledText: true,
-                                leaderEnabledDate: true,
-                                leaderAnchorText: "center"
-                            }
-                        ]
-                    }
-                ]
-            }
-        ],
-
-        trackers: [
-            {
-                id: 7001,
-                label: "Schedule Data Date",
-                date: "24Jul2026",
-                thickness: 2,
-                pattern: "solid",
-                color: "#b71010",
-                labelOffsetX: 8,
-                labelOffsetY: 0
-            },
-            {
-                id: 7002,
-                label: "Owner Milestone Review",
-                date: "18Sep2026",
-                thickness: 2,
-                pattern: "dashed",
-                color: "#0369a1",
-                labelOffsetX: 8,
-                labelOffsetY: 0
-            }
-        ],
-
-        callouts: [
-            {
-                id: "example-callout-1",
-                text: "Critical path transitions from structure to envelope at dry-in.",
-                x: 650,
-                y: 145,
-                leaderX: 570,
-                leaderY: 250,
-                bgColor: "#eff6ff",
-                textColor: "#1e3a8a",
-                fontSize: 13,
-                isBold: true,
-                bgTransparent: false
-            }
-        ],
-
-        nextRowId: 303,
-        nextMsId: 1008,
-        nextBarId: 5008,
-        nextTrackerId: 7003,
-
-        rangeMode: "auto",
-        sizingMode: "fixed",
-        customBoundaryMin: "01Jan2026",
-        customBoundaryMax: "28Feb2027",
-
-        fontFamily: "'Segoe UI', sans-serif",
-        fontSize: "10",
-        swimlaneHeight: "30",
-        canvasWidth: "1150",
-        rowLabelWidth: "280",
-        rowHeight: "58",
-
-        barBgColor: "#5c95be",
-        barColor: "#2563eb",
-        summaryColor: "#475569",
-        msColor: "#000000",
-        todayColor: "#b71010",
-        masterLeaderColor: "#94a3b8",
-        headerColor: "#000000",
-
-        showVGrid: true,
-        showAlignGrid: false,
-        snapResolution: "5",
-        workspaceZoom: "1.0",
-        todayLineToggle: "show",
-
-        showHeaderYear: true,
-        showHeaderQuarter: true,
-        showHeaderMonth: true,
-        showHeaderDay: false
-    };
-}
 const CURRENT_SCHEMA_VERSION = 2;
-
-// Browser storage key for the user's most recently saved workspace.
-const LOCAL_PROJECT_CACHE_KEY = "ganttv8mastersnapshot";
-
-// First-time-user backup project stored in your GitHub repository.
-const EXAMPLE_PROJECT_URL = "data/example_project.json";
 function migrateSnapshotIfNeeded(state) {
     if (!state.schemaVersion) { state.schemaVersion = 1; }
     if (state.schemaVersion < 2) {
@@ -2389,88 +1787,92 @@ function migrateSnapshotIfNeeded(state) {
     return state;
 }
 
-    async function loadApplicationState() {
-    const cachedProjectText = localStorage.getItem(LOCAL_PROJECT_CACHE_KEY);
-
-    // PRIORITY 1:
-    // Reopen the most recently saved project from this browser.
-    if (cachedProjectText) {
+    function loadApplicationState() {
+    const structuralBackupCache = localStorage.getItem('gantt_v8_master_snapshot');
+    if (!structuralBackupCache && !localStorage.getItem('gantt_seen_welcome')) {
+        const overlayEl = document.getElementById('welcomeOverlay');
+        if (overlayEl) overlayEl.style.display = 'flex';
+    }
+    if (structuralBackupCache) {
         try {
-            const cachedProject = migrateSnapshotIfNeeded(
-                JSON.parse(cachedProjectText)
-            );
-
-            actionUndoStack = [JSON.stringify(cachedProject)];
-            actionRedoStack = [];
-
-            restoreStateFromSnapshot(cachedProject);
-
-            showToast("Restored your most recent saved project.", "success", 1800);
+            let parsedState = migrateSnapshotIfNeeded(JSON.parse(structuralBackupCache));
+            actionUndoStack.push(JSON.stringify(parsedState));
+            restoreStateFromSnapshot(parsedState);
+        } catch (err) {
+            showToast("Saved data was corrupted or from an incompatible version. Loading sample project instead.", "error", 5000);
+            localStorage.removeItem('gantt_v8_master_snapshot');
+            loadApplicationState();
             return;
-        } catch (error) {
-            console.warn("Saved local project could not be loaded:", error);
-
-            localStorage.removeItem(LOCAL_PROJECT_CACHE_KEY);
-
-            showToast(
-                "Your saved local project was unreadable. Loading the construction example instead.",
-                "error",
-                4500
-            );
+        }
+    } else {
+       projectData = [
+    { id: 0, title: "Site Preparation", color: "#eff6ff", showSummary: true, rows: [
+        { id: 0, label: "Sitework & Earthwork", predecessor: "", showDateRange: true,
+          bars: [
+            { id: 5001, p6Id: "A1000", start: "05Jan2026", end: "20Feb2026", progress: 100, bgColor: "", color: "", pattern: "solid" }
+          ],
+          milestones: [
+            { id: 1000, p6Id: "M2000", label: "Site Cleared & Graded", date: "20Feb2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle", leaderEnabledText: false, leaderAnchorText: "center" }
+        ]}
+    ]},
+    { id: 1, title: "Foundation", color: "#fff7ed", showSummary: true, rows: [
+        { id: 1, label: "Footings & Slab Pour", predecessor: "", showDateRange: true,
+          bars: [
+            { id: 5002, p6Id: "A1010", start: "23Feb2026", end: "10Apr2026", progress: 60, bgColor: "", color: "", pattern: "crosshatch" }
+          ],
+          milestones: [
+            { id: 1001, p6Id: "M2010", label: "Foundation Inspection Passed", date: "10Apr2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond", leaderEnabledText: true, leaderAnchorText: "center" }
+        ]}
+    ]},
+    { id: 2, title: "Structure & Envelope", color: "#f0fdf4", showSummary: true, rows: [
+        { id: 2, label: "Steel Erection", predecessor: "", showDateRange: true,
+          bars: [
+            { id: 5003, p6Id: "A1020", start: "13Apr2026", end: "15Jun2026", progress: 10, bgColor: "", color: "", pattern: "solid" }
+          ],
+          milestones: [
+            { id: 1002, p6Id: "M2020", label: "Topping Out", date: "15Jun2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond", leaderEnabledText: false, leaderAnchorText: "center" }
+        ]},
+        { id: 3, label: "Roofing & Exterior Skin", predecessor: "2", showDateRange: true,
+          bars: [
+            { id: 5004, p6Id: "A1030", start: "16Jun2026", end: "10Aug2026", progress: 0, bgColor: "", color: "", pattern: "solid" }
+        ], milestones: []}
+    ]},
+    { id: 3, title: "MEP Rough-In", color: "#fdf4ff", showSummary: true, rows: [
+        { id: 4, label: "Mechanical, Electrical, Plumbing", predecessor: "3", showDateRange: true,
+          bars: [
+            { id: 5005, p6Id: "A1040", start: "11Aug2026", end: "30Sep2026", progress: 0, bgColor: "", color: "", pattern: "diagonal" }
+          ],
+          milestones: [
+            { id: 1003, p6Id: "M2030", label: "MEP Rough-In Inspection", date: "30Sep2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle", leaderEnabledText: false, leaderAnchorText: "center" }
+        ]}
+    ]},
+    { id: 4, title: "Interior Finishes & Closeout", color: "#fef2f2", showSummary: true, rows: [
+        { id: 5, label: "Drywall, Paint & Trim", predecessor: "4", showDateRange: true,
+          bars: [
+            { id: 5006, p6Id: "A1050", start: "01Oct2026", end: "15Dec2026", progress: 0, bgColor: "", color: "", pattern: "solid" }
+          ],
+          milestones: [
+            { id: 1004, p6Id: "M2040", label: "Substantial Completion", date: "15Dec2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "#b71010", symbol: "diamond", leaderEnabledText: true, leaderEnabledDate: true, leaderAnchorText: "center" }
+        ]}
+    ]}
+];
+    customTrackers = [
+        { id: 7001, label: "Permit Renewal Deadline", date: "01May2026", thickness: 2, pattern: "dashed", color: "#e11d48", labelOffsetX: 0, labelOffsetY: 0 }
+    ];
+    calloutData = [
+        { id: generateUUID(), text: "Sample project: double-click any element to edit, right-click a row to insert bars/milestones", x: 420, y: 40, leaderX: 380, leaderY: 90, bgColor: "#fffbeb", textColor: "#92400e", fontSize: 12, isBold: true, bgTransparent: false, leaderThickness: 2, leaderAttachment: "bottom" }
+    ];
+    nextRowId = 6; nextMsId = 1005; nextBarId = 5007; nextTrackerId = 7002;
+    
+            const seedSnapshot = {
+                data: projectData, trackers: customTrackers, nextRowId: nextRowId, nextMsId: nextMsId, nextBarId: nextBarId, nextTrackerId: nextTrackerId, rangeMode: 'manual', sizingMode: 'fixed',
+                customBoundaryMin: '01Jan2026', customBoundaryMax: '01Feb2027', fontFamily: "Tahoma, sans-serif",
+                fontSize: 10, swimlaneHeight: 30, canvasWidth: 900, rowHeight: 50, barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#000000', todayColor: '#b71010', masterLeaderColor: '#94a3b8', headerColor: '#000000',
+                showVGrid: true, showAlignGrid: false, snapResolution: "0", workspaceZoom: "1.0", todayLineToggle: 'show', showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: true, showHeaderDay: false
+            };
+            actionUndoStack.push(JSON.stringify(seedSnapshot)); restoreStateFromSnapshot(seedSnapshot);
         }
     }
-
-    // PRIORITY 2:
-    // First-time user: load data/example_project.json from the repository.
-    try {
-        const response = await fetch(EXAMPLE_PROJECT_URL, {
-            cache: "no-store"
-        });
-
-        if (!response.ok) {
-            throw new Error(`Example project request failed: ${response.status}`);
-        }
-
-        const exampleProject = migrateSnapshotIfNeeded(
-            await response.json()
-        );
-
-        actionUndoStack = [JSON.stringify(exampleProject)];
-        actionRedoStack = [];
-
-        restoreStateFromSnapshot(exampleProject);
-
-        // Store the example locally immediately.
-        // The user now has a visible, editable canvas even after refresh.
-        saveApplicationState();
-
-        showToast(
-            "Loaded the construction example project. Your edits will now save locally.",
-            "success",
-            4000
-        );
-
-        return;
-    } catch (error) {
-        console.warn("Could not load data/example_project.json:", error);
-    }
-
-    // PRIORITY 3:
-    // Final safety net for file:// launches, offline use, or missing JSON files.
-    const builtInExample = getBuiltInExampleProjectSnapshot();
-
-    actionUndoStack = [JSON.stringify(builtInExample)];
-    actionRedoStack = [];
-
-    restoreStateFromSnapshot(builtInExample);
-    saveApplicationState();
-
-    showToast(
-        "Loaded the built-in construction example. Add data/example_project.json for your preferred starter project.",
-        "info",
-        5500
-    );
-}
 
     function updateLaneSummary(laneIdx, val) { 
         projectData[laneIdx].showSummary = val; 
@@ -4033,7 +3435,7 @@ function downloadSVG() {
         }
     });
     const blob = new Blob([clone.outerHTML], {type: 'image/svg+xml;charset=utf-8'});
-    link.download = getExportFilename("svg");
+    const fileName = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.svg`;
     const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = fileName; link.click();
     showToast(`Downloaded "${fileName}"`, "success");
 }
@@ -4127,7 +3529,7 @@ function moveSwimlaneDown(laneIdx) {
                 const img = new Image();
         img.onload = function() {
             ctx.drawImage(img, 0, 0); URL.revokeObjectURL(blobUrl);
-            link.download = getExportFilename("png");
+            const fileName = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.png`;
             const link = document.createElement('a'); link.href = canvas.toDataURL('image/png'); link.download = fileName; link.click();
             if (btn) { btn.disabled = false; btn.innerText = "Download High-Res Presentation PNG (2x)"; }
             showToast(`Downloaded "${fileName}"`, "success");
@@ -4193,81 +3595,28 @@ if (badge) badge.innerText = `${projectData.length} row${projectData.length === 
         if(targetBtn) targetBtn.classList.add('active');
     }
     
-// Removes the file extension, such as .xlsx, .csv, .json, .svg, or .png.
-function stripFileExtension(fileName) {
-    return String(fileName || "")
-        .replace(/\.[^.]+$/, "")
-        .trim();
+    function getDateStamp() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
 }
 
-// Removes dates, version numbers, separators, and other non-title material.
-// Keeps the actual words that make up the project title.
-function cleanProjectName(fileName) {
-    let cleaned = stripFileExtension(fileName);
-
-    cleaned = cleaned
-        // Removes dates such as 2026-07-24, 2026_07_24, and 2026.07.24.
-        .replace(/\b\d{4}[-_. ]\d{1,2}[-_. ]\d{1,2}\b/g, " ")
-
-        // Removes dates such as 07-24-2026, 07_24_2026, and 07.24.2026.
-        .replace(/\b\d{1,2}[-_. ]\d{1,2}[-_. ]\d{2,4}\b/g, " ")
-
-        // Removes dates such as 20260724 or 07242026.
-        .replace(/\b\d{8}\b/g, " ")
-
-        // Removes dates such as 24Jul2026, 24-Jul-2026, or 24 Jul 2026.
-        .replace(/\b\d{1,2}[-_. ]?[A-Za-z]{3,9}[-_. ]?\d{2,4}\b/g, " ")
-
-        // Removes standalone numbers and version values such as v2, 3, or 1.4.
-        .replace(/\bv?\d+(?:\.\d+)*\b/gi, " ")
-
-        // Turns underscores and hyphens into normal spaces.
-        .replace(/[_-]+/g, " ")
-
-        // Removes filename characters that should not be retained in a title.
-        .replace(/[^\p{L}\p{N}\s]/gu, " ")
-
-        // Converts repeated spaces to one space.
-        .replace(/\s+/g, " ")
-        .trim();
-
-    return cleaned || "Untitled Gantt Project";
+function sanitizeFilenamePart(str) {
+    return String(str || 'Untitled').trim().replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, '_') || 'Untitled';
 }
 
-// Used after importing an Excel, CSV, or JSON file.
-function extractTitleFromFilename(fileName) {
-    return cleanProjectName(fileName);
-}
-
-// Used when creating a downloadable filename.
-function sanitizeFilenamePart(value) {
-    return cleanProjectName(value)
-        .replace(/\s+/g, "_")
-        .replace(/_+/g, "_")
-        .replace(/^_+|_+$/g, "");
-}
-
-// Gets the visible project title, removes dates from it, and returns clean text.
 function getProjectTitle() {
-    const titleInput = document.getElementById("projectTitleInput");
-    const rawTitle = titleInput ? titleInput.value : "";
-
-    return cleanProjectName(rawTitle);
+    const el = document.getElementById('projectTitleInput');
+    return el ? el.value : 'Untitled Gantt Project';
 }
 
-// Creates today's date in YYYY-MM-DD format.
-function getDateStamp() {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-}
-
-// Use this helper for every file download.
-function getExportFilename(extension) {
-    return `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.${extension}`;
+function extractTitleFromFilename(rawName) {
+    let name = rawName.replace(/\.(json|csv|xlsx|xls)$/i, '');
+    // Strip trailing _YYYY-MM-DD pattern if present
+    const stripped = name.replace(/_\d{4}-\d{2}-\d{2}$/, '');
+    return stripped.length > 0 ? stripped : name;
 }
     
  function showToast(message, type = 'info', duration = 3000) {
