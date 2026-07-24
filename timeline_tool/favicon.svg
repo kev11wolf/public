@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Rounded navy app tile -->
+  <rect width="64" height="64" rx="14" fill="#0f2f5f"/>
+
+  <!-- Timeline grid -->
+  <path
+    d="M14 18H52M14 32H52M14 46H52"
+    stroke="#93c5fd"
+    stroke-width="2"
+    stroke-linecap="round"
+    opacity="0.8"
+  />
+
+  <!-- Three Gantt activity bars -->
+  <rect x="16" y="13" width="23" height="10" rx="3" fill="#60a5fa"/>
+  <rect x="25" y="27" width="25" height="10" rx="3" fill="#3b82f6"/>
+  <rect x="16" y="41" width="31" height="10" rx="3" fill="#2563eb"/>
+
+  <!-- Milestone diamond -->
+  <path d="M48 10L54 16L48 22L42 16Z" fill="#fbbf24"/>
+
+  <!-- Today / status line -->
+  <path
+    d="M44 8V55"
+    stroke="#fbbf24"
+    stroke-width="2.5"
+    stroke-linecap="round"
+  />
+</svg>
