@@ -1761,27 +1761,452 @@ link.click();
     event.target.value = '';
 }
 
-      function clearAllStoredData() {
-        const typedValue = prompt("This will permanently erase all swimlanes, bars, milestones, and settings.\n\nType RESET to confirm:");
-        if (typedValue === "RESET") {
-            localStorage.removeItem('gantt_v8_master_snapshot');
-            localStorage.removeItem('gantt_seen_welcome');
-            actionUndoStack = []; actionRedoStack = []; customTrackers = []; calloutData = [];
-            loadApplicationState();
-            showToast("Workspace reset to blank state.", "success");
-        } else if (typedValue !== null) {
+      async function clearAllStoredData() {
+    const typedValue = prompt(
+        "This will erase your locally saved project and reload the construction example. Type RESET to confirm."
+    );
+
+    if (typedValue !== "RESET") {
+        if (typedValue !== null) {
             showToast("Reset cancelled.", "info", 1800);
         }
+
+        return;
     }
 
-function saveApplicationState() {
-    if (actionUndoStack.length > 0) {
-        localStorage.setItem('gantt_v8_master_snapshot', actionUndoStack[actionUndoStack.length - 1]);
-    }
-    markSavedState();
+    localStorage.removeItem(LOCAL_PROJECT_CACHE_KEY);
+
+    actionUndoStack = [];
+    actionRedoStack = [];
+    projectData = [];
+    customTrackers = [];
+    calloutData = [];
+
+    await loadApplicationState();
+
+    showToast(
+        "Your local project was reset. The construction example is now loaded.",
+        "success",
+        3500
+    );
 }
 
+function saveApplicationState() {
+    // Do not overwrite a good saved project with an empty undo stack.
+    if (actionUndoStack.length === 0) return;
+
+    try {
+        // Save the newest full project snapshot after every change.
+        localStorage.setItem(
+            LOCAL_PROJECT_CACHE_KEY,
+            actionUndoStack[actionUndoStack.length - 1]
+        );
+
+        markSavedState();
+    } catch (error) {
+        console.warn("Could not save the project in browser storage:", error);
+        showToast(
+            "Your changes are visible, but browser storage could not save them. Export a JSON backup.",
+            "error",
+            6000
+        );
+    }
+}
+
+function getBuiltInExampleProjectSnapshot() {
+    return {
+        schemaVersion: CURRENTSCHEMAVERSION,
+
+        data: [
+            {
+                id: 1,
+                title: "Preconstruction & Site Development",
+                color: "#dbeafe",
+                showSummary: true,
+                rows: [
+                    {
+                        id: 101,
+                        label: "Permitting, Mobilization & Site Logistics",
+                        predecessor: "",
+                        showDateRange: true,
+                        bars: [
+                            {
+                                id: 5001,
+                                p6IdStart: "PRECON-1000",
+                                p6IdFinish: "PRECON-1000",
+                                start: "05Jan2026",
+                                end: "30Jan2026",
+                                progress: 100,
+                                bgColor: "",
+                                color: "",
+                                pattern: "solid"
+                            }
+                        ],
+                        milestones: [
+                            {
+                                id: 1001,
+                                p6IdStart: "MS-1000",
+                                p6IdFinish: "MS-1000",
+                                label: "Notice to Proceed",
+                                date: "05Jan2026",
+                                showDate: true,
+                                manualLabel: false,
+                                labelOffsetX: 0,
+                                labelOffsetY: 0,
+                                manualDateLabel: false,
+                                dateOffsetX: 0,
+                                dateOffsetY: 0,
+                                color: "",
+                                symbol: "diamond",
+                                leaderEnabledText: true,
+                                leaderEnabledDate: false,
+                                leaderAnchorText: "center"
+                            }
+                        ]
+                    },
+                    {
+                        id: 102,
+                        label: "Mass Grading, Utilities & Building Pad",
+                        predecessor: "PRECON-1000",
+                        showDateRange: true,
+                        bars: [
+                            {
+                                id: 5002,
+                                p6IdStart: "SITE-1100",
+                                p6IdFinish: "SITE-1100",
+                                start: "02Feb2026",
+                                end: "27Mar2026",
+                                progress: 70,
+                                bgColor: "",
+                                color: "",
+                                pattern: "crosshatch"
+                            }
+                        ],
+                        milestones: [
+                            {
+                                id: 1002,
+                                p6IdStart: "MS-1100",
+                                p6IdFinish: "MS-1100",
+                                label: "Building Pad Released",
+                                date: "27Mar2026",
+                                showDate: true,
+                                manualLabel: false,
+                                labelOffsetX: 0,
+                                labelOffsetY: 0,
+                                manualDateLabel: false,
+                                dateOffsetX: 0,
+                                dateOffsetY: 0,
+                                color: "",
+                                symbol: "circle",
+                                leaderEnabledText: false,
+                                leaderEnabledDate: true,
+                                leaderAnchorText: "center"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "Structure & Envelope",
+                color: "#dcfce7",
+                showSummary: true,
+                rows: [
+                    {
+                        id: 201,
+                        label: "Foundations and Underground MEP",
+                        predecessor: "SITE-1100",
+                        showDateRange: true,
+                        bars: [
+                            {
+                                id: 5003,
+                                p6IdStart: "STR-2100",
+                                p6IdFinish: "STR-2100",
+                                start: "30Mar2026",
+                                end: "08May2026",
+                                progress: 35,
+                                bgColor: "",
+                                color: "",
+                                pattern: "solid"
+                            }
+                        ],
+                        milestones: [
+                            {
+                                id: 1003,
+                                p6IdStart: "MS-2100",
+                                p6IdFinish: "MS-2100",
+                                label: "Foundation Complete",
+                                date: "08May2026",
+                                showDate: true,
+                                manualLabel: false,
+                                labelOffsetX: 0,
+                                labelOffsetY: 0,
+                                manualDateLabel: false,
+                                dateOffsetX: 0,
+                                dateOffsetY: 0,
+                                color: "",
+                                symbol: "diamond",
+                                leaderEnabledText: true,
+                                leaderEnabledDate: true,
+                                leaderAnchorText: "center"
+                            }
+                        ]
+                    },
+                    {
+                        id: 202,
+                        label: "Structural Steel, Decking & Concrete",
+                        predecessor: "STR-2100",
+                        showDateRange: true,
+                        bars: [
+                            {
+                                id: 5004,
+                                p6IdStart: "STR-2200",
+                                p6IdFinish: "STR-2200",
+                                start: "11May2026",
+                                end: "17Jul2026",
+                                progress: 15,
+                                bgColor: "",
+                                color: "",
+                                pattern: "solid"
+                            }
+                        ],
+                        milestones: [
+                            {
+                                id: 1004,
+                                p6IdStart: "MS-2200",
+                                p6IdFinish: "MS-2200",
+                                label: "Structure Topped Out",
+                                date: "17Jul2026",
+                                showDate: true,
+                                manualLabel: false,
+                                labelOffsetX: 0,
+                                labelOffsetY: 0,
+                                manualDateLabel: false,
+                                dateOffsetX: 0,
+                                dateOffsetY: 0,
+                                color: "",
+                                symbol: "diamond",
+                                leaderEnabledText: true,
+                                leaderEnabledDate: false,
+                                leaderAnchorText: "center"
+                            }
+                        ]
+                    },
+                    {
+                        id: 203,
+                        label: "Exterior Wall, Roofing & Dry-In",
+                        predecessor: "STR-2200",
+                        showDateRange: true,
+                        bars: [
+                            {
+                                id: 5005,
+                                p6IdStart: "ENV-2300",
+                                p6IdFinish: "ENV-2300",
+                                start: "20Jul2026",
+                                end: "18Sep2026",
+                                progress: 0,
+                                bgColor: "",
+                                color: "",
+                                pattern: "diagonal"
+                            }
+                        ],
+                        milestones: [
+                            {
+                                id: 1005,
+                                p6IdStart: "MS-2300",
+                                p6IdFinish: "MS-2300",
+                                label: "Building Dried In",
+                                date: "18Sep2026",
+                                showDate: true,
+                                manualLabel: false,
+                                labelOffsetX: 0,
+                                labelOffsetY: 0,
+                                manualDateLabel: false,
+                                dateOffsetX: 0,
+                                dateOffsetY: 0,
+                                color: "",
+                                symbol: "triangle",
+                                leaderEnabledText: true,
+                                leaderEnabledDate: true,
+                                leaderAnchorText: "center"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "Interior Buildout & Commissioning",
+                color: "#fef3c7",
+                showSummary: true,
+                rows: [
+                    {
+                        id: 301,
+                        label: "MEP Rough-In and Equipment Setting",
+                        predecessor: "ENV-2300",
+                        showDateRange: true,
+                        bars: [
+                            {
+                                id: 5006,
+                                p6IdStart: "MEP-3100",
+                                p6IdFinish: "MEP-3100",
+                                start: "21Sep2026",
+                                end: "20Nov2026",
+                                progress: 0,
+                                bgColor: "",
+                                color: "",
+                                pattern: "solid"
+                            }
+                        ],
+                        milestones: [
+                            {
+                                id: 1006,
+                                p6IdStart: "MS-3100",
+                                p6IdFinish: "MS-3100",
+                                label: "Permanent Power Available",
+                                date: "30Oct2026",
+                                showDate: true,
+                                manualLabel: false,
+                                labelOffsetX: 0,
+                                labelOffsetY: 0,
+                                manualDateLabel: false,
+                                dateOffsetX: 0,
+                                dateOffsetY: 0,
+                                color: "",
+                                symbol: "circle",
+                                leaderEnabledText: true,
+                                leaderEnabledDate: false,
+                                leaderAnchorText: "center"
+                            }
+                        ]
+                    },
+                    {
+                        id: 302,
+                        label: "Architectural Finishes & Owner Turnover",
+                        predecessor: "MEP-3100",
+                        showDateRange: true,
+                        bars: [
+                            {
+                                id: 5007,
+                                p6IdStart: "FIN-3200",
+                                p6IdFinish: "FIN-3200",
+                                start: "23Nov2026",
+                                end: "29Jan2027",
+                                progress: 0,
+                                bgColor: "",
+                                color: "",
+                                pattern: "solid"
+                            }
+                        ],
+                        milestones: [
+                            {
+                                id: 1007,
+                                p6IdStart: "MS-3200",
+                                p6IdFinish: "MS-3200",
+                                label: "Substantial Completion",
+                                date: "29Jan2027",
+                                showDate: true,
+                                manualLabel: false,
+                                labelOffsetX: 0,
+                                labelOffsetY: 0,
+                                manualDateLabel: false,
+                                dateOffsetX: 0,
+                                dateOffsetY: 0,
+                                color: "",
+                                symbol: "diamond",
+                                leaderEnabledText: true,
+                                leaderEnabledDate: true,
+                                leaderAnchorText: "center"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+
+        trackers: [
+            {
+                id: 7001,
+                label: "Schedule Data Date",
+                date: "24Jul2026",
+                thickness: 2,
+                pattern: "solid",
+                color: "#b71010",
+                labelOffsetX: 8,
+                labelOffsetY: 0
+            },
+            {
+                id: 7002,
+                label: "Owner Milestone Review",
+                date: "18Sep2026",
+                thickness: 2,
+                pattern: "dashed",
+                color: "#0369a1",
+                labelOffsetX: 8,
+                labelOffsetY: 0
+            }
+        ],
+
+        callouts: [
+            {
+                id: "example-callout-1",
+                text: "Critical path transitions from structure to envelope at dry-in.",
+                x: 650,
+                y: 145,
+                leaderX: 570,
+                leaderY: 250,
+                bgColor: "#eff6ff",
+                textColor: "#1e3a8a",
+                fontSize: 13,
+                isBold: true,
+                bgTransparent: false
+            }
+        ],
+
+        nextRowId: 303,
+        nextMsId: 1008,
+        nextBarId: 5008,
+        nextTrackerId: 7003,
+
+        rangeMode: "auto",
+        sizingMode: "fixed",
+        customBoundaryMin: "01Jan2026",
+        customBoundaryMax: "28Feb2027",
+
+        fontFamily: "'Segoe UI', sans-serif",
+        fontSize: "10",
+        swimlaneHeight: "30",
+        canvasWidth: "1150",
+        rowLabelWidth: "280",
+        rowHeight: "58",
+
+        barBgColor: "#5c95be",
+        barColor: "#2563eb",
+        summaryColor: "#475569",
+        msColor: "#000000",
+        todayColor: "#b71010",
+        masterLeaderColor: "#94a3b8",
+        headerColor: "#000000",
+
+        showVGrid: true,
+        showAlignGrid: false,
+        snapResolution: "5",
+        workspaceZoom: "1.0",
+        todayLineToggle: "show",
+
+        showHeaderYear: true,
+        showHeaderQuarter: true,
+        showHeaderMonth: true,
+        showHeaderDay: false
+    };
+}
 const CURRENT_SCHEMA_VERSION = 2;
+
+// Browser storage key for the user's most recently saved workspace.
+const LOCAL_PROJECT_CACHE_KEY = "ganttv8mastersnapshot";
+
+// First-time-user backup project stored in your GitHub repository.
+const EXAMPLE_PROJECT_URL = "data/example_project.json";
 function migrateSnapshotIfNeeded(state) {
     if (!state.schemaVersion) { state.schemaVersion = 1; }
     if (state.schemaVersion < 2) {
@@ -1791,92 +2216,88 @@ function migrateSnapshotIfNeeded(state) {
     return state;
 }
 
-    function loadApplicationState() {
-    const structuralBackupCache = localStorage.getItem('gantt_v8_master_snapshot');
-    if (!structuralBackupCache && !localStorage.getItem('gantt_seen_welcome')) {
-        const overlayEl = document.getElementById('welcomeOverlay');
-        if (overlayEl) overlayEl.style.display = 'flex';
-    }
-    if (structuralBackupCache) {
+    async function loadApplicationState() {
+    const cachedProjectText = localStorage.getItem(LOCAL_PROJECT_CACHE_KEY);
+
+    // PRIORITY 1:
+    // Reopen the most recently saved project from this browser.
+    if (cachedProjectText) {
         try {
-            let parsedState = migrateSnapshotIfNeeded(JSON.parse(structuralBackupCache));
-            actionUndoStack.push(JSON.stringify(parsedState));
-            restoreStateFromSnapshot(parsedState);
-        } catch (err) {
-            showToast("Saved data was corrupted or from an incompatible version. Loading sample project instead.", "error", 5000);
-            localStorage.removeItem('gantt_v8_master_snapshot');
-            loadApplicationState();
+            const cachedProject = migrateSnapshotIfNeeded(
+                JSON.parse(cachedProjectText)
+            );
+
+            actionUndoStack = [JSON.stringify(cachedProject)];
+            actionRedoStack = [];
+
+            restoreStateFromSnapshot(cachedProject);
+
+            showToast("Restored your most recent saved project.", "success", 1800);
             return;
-        }
-    } else {
-       projectData = [
-    { id: 0, title: "Site Preparation", color: "#eff6ff", showSummary: true, rows: [
-        { id: 0, label: "Sitework & Earthwork", predecessor: "", showDateRange: true,
-          bars: [
-            { id: 5001, p6Id: "A1000", start: "05Jan2026", end: "20Feb2026", progress: 100, bgColor: "", color: "", pattern: "solid" }
-          ],
-          milestones: [
-            { id: 1000, p6Id: "M2000", label: "Site Cleared & Graded", date: "20Feb2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle", leaderEnabledText: false, leaderAnchorText: "center" }
-        ]}
-    ]},
-    { id: 1, title: "Foundation", color: "#fff7ed", showSummary: true, rows: [
-        { id: 1, label: "Footings & Slab Pour", predecessor: "", showDateRange: true,
-          bars: [
-            { id: 5002, p6Id: "A1010", start: "23Feb2026", end: "10Apr2026", progress: 60, bgColor: "", color: "", pattern: "crosshatch" }
-          ],
-          milestones: [
-            { id: 1001, p6Id: "M2010", label: "Foundation Inspection Passed", date: "10Apr2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond", leaderEnabledText: true, leaderAnchorText: "center" }
-        ]}
-    ]},
-    { id: 2, title: "Structure & Envelope", color: "#f0fdf4", showSummary: true, rows: [
-        { id: 2, label: "Steel Erection", predecessor: "", showDateRange: true,
-          bars: [
-            { id: 5003, p6Id: "A1020", start: "13Apr2026", end: "15Jun2026", progress: 10, bgColor: "", color: "", pattern: "solid" }
-          ],
-          milestones: [
-            { id: 1002, p6Id: "M2020", label: "Topping Out", date: "15Jun2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond", leaderEnabledText: false, leaderAnchorText: "center" }
-        ]},
-        { id: 3, label: "Roofing & Exterior Skin", predecessor: "2", showDateRange: true,
-          bars: [
-            { id: 5004, p6Id: "A1030", start: "16Jun2026", end: "10Aug2026", progress: 0, bgColor: "", color: "", pattern: "solid" }
-        ], milestones: []}
-    ]},
-    { id: 3, title: "MEP Rough-In", color: "#fdf4ff", showSummary: true, rows: [
-        { id: 4, label: "Mechanical, Electrical, Plumbing", predecessor: "3", showDateRange: true,
-          bars: [
-            { id: 5005, p6Id: "A1040", start: "11Aug2026", end: "30Sep2026", progress: 0, bgColor: "", color: "", pattern: "diagonal" }
-          ],
-          milestones: [
-            { id: 1003, p6Id: "M2030", label: "MEP Rough-In Inspection", date: "30Sep2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle", leaderEnabledText: false, leaderAnchorText: "center" }
-        ]}
-    ]},
-    { id: 4, title: "Interior Finishes & Closeout", color: "#fef2f2", showSummary: true, rows: [
-        { id: 5, label: "Drywall, Paint & Trim", predecessor: "4", showDateRange: true,
-          bars: [
-            { id: 5006, p6Id: "A1050", start: "01Oct2026", end: "15Dec2026", progress: 0, bgColor: "", color: "", pattern: "solid" }
-          ],
-          milestones: [
-            { id: 1004, p6Id: "M2040", label: "Substantial Completion", date: "15Dec2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "#b71010", symbol: "diamond", leaderEnabledText: true, leaderEnabledDate: true, leaderAnchorText: "center" }
-        ]}
-    ]}
-];
-    customTrackers = [
-        { id: 7001, label: "Permit Renewal Deadline", date: "01May2026", thickness: 2, pattern: "dashed", color: "#e11d48", labelOffsetX: 0, labelOffsetY: 0 }
-    ];
-    calloutData = [
-        { id: generateUUID(), text: "Sample project: double-click any element to edit, right-click a row to insert bars/milestones", x: 420, y: 40, leaderX: 380, leaderY: 90, bgColor: "#fffbeb", textColor: "#92400e", fontSize: 12, isBold: true, bgTransparent: false, leaderThickness: 2, leaderAttachment: "bottom" }
-    ];
-    nextRowId = 6; nextMsId = 1005; nextBarId = 5007; nextTrackerId = 7002;
-    
-            const seedSnapshot = {
-                data: projectData, trackers: customTrackers, nextRowId: nextRowId, nextMsId: nextMsId, nextBarId: nextBarId, nextTrackerId: nextTrackerId, rangeMode: 'manual', sizingMode: 'fixed',
-                customBoundaryMin: '01Jan2026', customBoundaryMax: '01Feb2027', fontFamily: "Tahoma, sans-serif",
-                fontSize: 10, swimlaneHeight: 30, canvasWidth: 900, rowHeight: 50, barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#000000', todayColor: '#b71010', masterLeaderColor: '#94a3b8', headerColor: '#000000',
-                showVGrid: true, showAlignGrid: false, snapResolution: "0", workspaceZoom: "1.0", todayLineToggle: 'show', showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: true, showHeaderDay: false
-            };
-            actionUndoStack.push(JSON.stringify(seedSnapshot)); restoreStateFromSnapshot(seedSnapshot);
+        } catch (error) {
+            console.warn("Saved local project could not be loaded:", error);
+
+            localStorage.removeItem(LOCAL_PROJECT_CACHE_KEY);
+
+            showToast(
+                "Your saved local project was unreadable. Loading the construction example instead.",
+                "error",
+                4500
+            );
         }
     }
+
+    // PRIORITY 2:
+    // First-time user: load data/example_project.json from the repository.
+    try {
+        const response = await fetch(EXAMPLE_PROJECT_URL, {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error(`Example project request failed: ${response.status}`);
+        }
+
+        const exampleProject = migrateSnapshotIfNeeded(
+            await response.json()
+        );
+
+        actionUndoStack = [JSON.stringify(exampleProject)];
+        actionRedoStack = [];
+
+        restoreStateFromSnapshot(exampleProject);
+
+        // Store the example locally immediately.
+        // The user now has a visible, editable canvas even after refresh.
+        saveApplicationState();
+
+        showToast(
+            "Loaded the construction example project. Your edits will now save locally.",
+            "success",
+            4000
+        );
+
+        return;
+    } catch (error) {
+        console.warn("Could not load data/example_project.json:", error);
+    }
+
+    // PRIORITY 3:
+    // Final safety net for file:// launches, offline use, or missing JSON files.
+    const builtInExample = getBuiltInExampleProjectSnapshot();
+
+    actionUndoStack = [JSON.stringify(builtInExample)];
+    actionRedoStack = [];
+
+    restoreStateFromSnapshot(builtInExample);
+    saveApplicationState();
+
+    showToast(
+        "Loaded the built-in construction example. Add data/example_project.json for your preferred starter project.",
+        "info",
+        5500
+    );
+}
 
     function updateLaneSummary(laneIdx, val) { 
         projectData[laneIdx].showSummary = val; 
