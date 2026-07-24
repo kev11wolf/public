@@ -2,29 +2,7 @@
   "id": "rav4",
   "name": "2020 Toyota RAV4 XLE AWD",
   "engine": "2.5L Dynamic Force I4 (A25A-FKS)",
-  "transmission": "Direct Shift 8-speed automatic",
-  "drivetrain": "Standard AWD; non-Torque-Vectoring AWD",
-  "vehicleProfile": {
-    "year": 2020,
-    "make": "Toyota",
-    "model": "RAV4",
-    "trim": "XLE AWD",
-    "licensePlate": "HLW5374",
-    "plateState": "NC",
-    "vin": "2T3P1RFV7LW130750",
-    "notes": "Standard mechanical AWD configuration. This is not Adventure, TRD Off-Road, or Torque Vectoring AWD."
-  },
-  "components": {
-    "engine": "A25A-FKS 2.5L Dynamic Force four-cylinder",
-    "transmission": "UA80E/Direct Shift 8-speed automatic",
-    "oilSpecification": "SAE 0W-16 full synthetic; Toyota permits 0W-20 only when 0W-16 is unavailable, then return to 0W-16 at the next change",
-    "engineOilCapacityWithFilter": "Approximately 4.8 qt; verify final level on dipstick after warm-up and drain-back",
-    "oilFilter": "Toyota cartridge-style filter element; confirm exact current OE part number by VIN at purchase",
-    "coolant": "Toyota Super Long Life Coolant, pink premixed 50/50",
-    "brakeFluid": "DOT 3 brake fluid",
-    "awdSystem": "Front transfer assembly plus rear differential; no Haldex service and no torque-vectoring rear clutch bleed procedure",
-    "tireLugNutTorque": "76 lb-ft; verify with current owner's manual or service information"
-  },
+  "drivetrain": "Standard AWD (non-Torque-Vectoring)",
   "services": [
     {
       "id": "oil",
@@ -33,31 +11,29 @@
       "intervalMiles": 5000,
       "intervalMonths": 6,
       "tools": [
-        "14 mm socket or wrench",
-        "Oil filter housing wrench sized for installed cartridge cap",
-        "Drain pan",
-        "Torque wrench",
-        "10 mm socket for lower splash-shield access panel"
+        "14mm socket/wrench",
+        "64mm/14-flute filter wrench (if tight)",
+        "10mm socket (splash shield)"
       ],
       "materials": [
-        "Approximately 4.8 qt SAE 0W-16 full-synthetic engine oil",
-        "VIN-confirmed Toyota cartridge oil-filter element with new O-rings",
-        "New drain-plug crush washer"
+        "4.8 Qts 0W-16 Full Synthetic",
+        "Toyota 90915-YZZN1 spin-on filter",
+        "Crush washer (replace every time)"
       ],
       "steps": [
-        "Bring the engine near operating temperature, park level, set the parking brake, and let hot oil cool enough to work safely.",
-        "Remove the lower splash-shield access panel as needed and position a drain pan.",
-        "Remove the drain plug and old crush washer; allow oil to drain completely.",
-        "Remove the cartridge housing carefully, replace the filter element and both supplied O-rings in their correct grooves, and lubricate O-rings with clean oil.",
-        "Install a new crush washer and torque the drain plug to the factory specification.",
-        "Refill with approximately 4.8 qt of 0W-16, start briefly, inspect for leaks, shut off, allow drain-back, and set the final dipstick level.",
-        "Reset the maintenance reminder through the instrument-cluster vehicle settings."
+        "Remove splash shield access panel underneath.",
+        "Position drain pan, remove 14mm drain plug, drain oil, remove old washer.",
+        "Remove spin-on filter next to pan, confirm old gasket removed.",
+        "Oil new filter's rubber seal, spin on hand-tight.",
+        "Install new crush washer on drain plug, torque to 30 lb-ft.",
+        "Fill exactly 4.8 qts 0W-16, start, check leaks, check dipstick.",
+        "Reset maintenance light via steering controls: Settings > Vehicle Settings > Scheduled Maintenance > Reset Data."
       ],
-      "tips": "Use 0W-16 as the normal fill. Do not substitute high-mileage 5W-30 simply because the vehicle has mileage; it is not the specified viscosity for this engine.",
-      "whatItDoes": "Replaces degraded engine oil and the filter element that remove contaminants from the lubrication system.",
-      "whyItMatters": "Clean oil protects the timing-chain system, variable valve timing hardware, bearings, and the variable-displacement oil-pump system.",
-      "estCost": "$40-$70 DIY",
-      "ifDelayed": "Old oil oxidizes and deposits sludge in small oil passages, increasing timing-system, bearing, and oil-consumption risk."
+      "tips": "Do NOT use 5W-30 High Mileage - tight VVT clearances and variable pump create drag/codes. Stick to 0W-16 (0W-20 max).",
+      "whatItDoes": "Removes old, contaminated oil and replaces it along with the filter, restoring clean lubrication and cooling to all moving engine parts.",
+      "whyItMatters": "Oil breaks down and picks up metal particles, soot, and acids over time. Skipping this accelerates engine wear, can cause sludge buildup, and is the single most impactful thing you can do for engine longevity.",
+      "estCost": "$40-$60 (0W-16 synthetic + Toyota filter)",
+      "ifDelayed": "Old oil thickens/oxidizes into sludge that clogs oil passages and the pickup screen, causing accelerated bearing and cam wear; in severe cases this leads to a spun rod bearing knock and a full engine rebuild costing $4,000-$8,000+ versus a $50 service."
     },
     {
       "id": "engine-air",
@@ -66,23 +42,23 @@
       "intervalMiles": 20000,
       "intervalMonths": 24,
       "tools": [
-        "None; air-box clips are tool-less"
+        "None (tool-less)"
       ],
       "materials": [
-        "Toyota 17801-F0050 or VIN-confirmed equivalent engine air filter"
+        "Toyota 17801-F0050 filter"
       ],
       "steps": [
-        "Locate the engine air box on the driver side of the engine bay.",
-        "Release the metal retaining clips and lift the cover from its rear locating tabs.",
-        "Remove the old element and vacuum loose debris from the lower housing without pushing debris into the intake tube.",
-        "Install the new filter with its sealing edge fully seated.",
-        "Re-engage rear tabs and clips, then verify that the air-box cover sits flat."
+        "Locate airbox, driver side of engine bay.",
+        "Pop the two metal spring clips.",
+        "Lift lid, unhinge rear tabs.",
+        "Remove old filter noting flat-corner orientation.",
+        "Install new filter flat, reseat lid tabs, close clips."
       ],
-      "tips": "Replace early after travel on gravel roads, construction sites, or dusty camping roads. A visually loaded filter is more meaningful than blindly stretching an interval.",
-      "whatItDoes": "Filters incoming air before it enters the intake manifold and cylinders.",
-      "whyItMatters": "An improperly seated or dirty filter can reduce airflow and allow abrasive dirt into the engine.",
-      "estCost": "$15-$30",
-      "ifDelayed": "Restriction can reduce performance and fuel economy; a poor seal can allow unfiltered dirt to accelerate cylinder and intake wear."
+      "tips": "Hybrid/AWD variants share the same tool-less design - very quick DIY job.",
+      "whatItDoes": "Replaces the paper/foam filter that cleans air before it enters the engine's intake.",
+      "whyItMatters": "A clogged filter restricts airflow, hurting fuel economy and power, and on turbo engines can increase strain on the turbocharger. Cheap insurance against long-term intake wear.",
+      "estCost": "$15-$25",
+      "ifDelayed": "Restricted airflow richens the fuel mixture, cutting fuel economy 5-10% and causing soot buildup on injectors/spark plugs; on turbo engines it can also increase intake vacuum and pull more debris past the filter edges over time."
     },
     {
       "id": "cabin-air",
@@ -94,188 +70,343 @@
         "None"
       ],
       "materials": [
-        "Toyota 87139-series cabin filter or VIN-confirmed equivalent"
+        "Toyota 87139-YZZ82"
       ],
       "steps": [
-        "Empty and open the glove box.",
-        "Release the glove-box damper arm and squeeze the box sides inward to lower it.",
-        "Remove the rectangular cabin-filter cover behind the glove box.",
-        "Remove the old filter and observe the airflow or UP arrow printed on it.",
-        "Install the new filter in the same orientation, reinstall the cover, raise the glove box, and reconnect the damper."
+        "Open glovebox, remove dampener rod (squeeze tips, slide off peg).",
+        "Squeeze top corners inward, lower glovebox to floorboard.",
+        "Locate white rectangular cover, pinch tab, remove.",
+        "Pull old filter; note arrow direction (usually UP).",
+        "Insert new filter, replace cover, lift glovebox, reattach dampener."
       ],
-      "tips": "Follow the arrow printed on the new filter. Some filters label airflow direction while others label the physical UP direction.",
-      "whatItDoes": "Filters air entering the passenger compartment through the HVAC system.",
-      "whyItMatters": "A clean filter improves A/C and defrost airflow while reducing dust, pollen, and musty odors.",
-      "estCost": "$15-$30",
-      "ifDelayed": "Reduced HVAC airflow can compromise defrost performance and make the blower motor work harder."
+      "tips": "Check the printed arrow carefully - Toyota filters vary between 'UP' and 'Air Flow' markings by model year.",
+      "whatItDoes": "Replaces the filter that cleans air blown through the HVAC system into the passenger cabin.",
+      "whyItMatters": "A clogged cabin filter reduces airflow from vents, causes musty odors, and lets more dust/allergens into the cabin. Not safety-critical but affects comfort and HVAC blower motor lifespan.",
+      "estCost": "$15-$25",
+      "ifDelayed": "A clogged filter starves the HVAC blower, reducing defrost/AC output (a safety issue in fog/rain) and can let the blower motor overheat from working harder against the blockage, shortening motor life."
     },
     {
-      "id": "transmission",
-      "name": "8-Speed Automatic Transmission Fluid Drain & Fill",
+      "id": "trans",
+      "name": "Transmission Service (Direct Shift 8-Speed)",
       "category": "Powertrain",
-      "intervalMiles": 60000,
-      "intervalMonths": 60,
+      "intervalMiles": 40000,
+      "intervalMonths": 36,
       "tools": [
-        "Vehicle scan tool capable of reading transmission-fluid temperature",
+        "24mm socket (fill plug)",
+        "6mm hex (drain/overflow)",
         "Fluid transfer pump",
-        "Correct fill and drain tools for the installed transmission",
-        "Four level support points or a level lift",
-        "Torque wrench"
+        "OBD jumper/scan tool"
       ],
       "materials": [
-        "Toyota Genuine ATF WS only",
-        "VIN-confirmed replacement sealing washers or O-rings"
+        "Toyota Genuine ATF WS, ~3-4 Qts",
+        "New crush washers x3"
       ],
       "steps": [
-        "Confirm the vehicle is level and identify the fill plug before opening any drain or overflow plug.",
-        "Remove lower shields as required and drain the measured amount of fluid.",
-        "Reinstall the drain hardware with the required new seal and pump in the approximate measured quantity of Toyota ATF WS.",
-        "Use a scan tool to monitor transmission-fluid temperature and perform the factory-level-setting procedure within its specified temperature range.",
-        "With the engine running and transmission at the required temperature, open the level/overflow point and allow excess fluid to reduce to a thin controlled stream.",
-        "Install all plugs to factory torque, reinstall shields, road-test, and inspect for leaks."
+        "Vehicle cold and level. Loosen 24mm fill plug behind driver front wheel first.",
+        "Remove 6mm drain plug, drain, reinstall.",
+        "Pump new ATF WS into fill plug until slight overflow; reinstall loosely.",
+        "Jump pins 4 & 13 on OBD port, start engine, shift P-R-N-D-N-R-P then rapid N-D cycling 6 sec until 'D' stays lit 2 sec (temp check mode).",
+        "Idle until 'D' light solid = 104-113F (40-45C); leave engine running.",
+        "Remove 6mm overflow plug quickly, drain until thin trickle.",
+        "Add more fluid via fill hole if nothing trickles from overflow.",
+        "Reinstall overflow plug, turn off engine, torque all plugs w/ new washers."
       ],
-      "tips": "This transmission level is temperature-sensitive. Do not rely on a generic internet jumper-wire procedure when a scan tool can show actual transmission-fluid temperature.",
-      "whatItDoes": "Refreshes a portion of the automatic transmission fluid that lubricates, cools, and hydraulically applies internal clutches.",
-      "whyItMatters": "Fresh ATF helps preserve shift quality and valve-body/clutch durability.",
-      "estCost": "$80-$160 DIY",
-      "ifDelayed": "Degraded fluid can contribute to harsh shifts, delayed engagement, heat damage, and expensive internal transmission wear."
+      "tips": "Missing the exact temp window under/overfills the transmission - use a reliable OBD scanner for this step.",
+      "whatItDoes": "Drains old automatic transmission fluid and replaces the filter (where applicable), refilling with fresh ATF to the correct level.",
+      "whyItMatters": "Transmission fluid lubricates and cools internal clutches and gears while also transmitting hydraulic pressure. Degraded fluid causes harsh shifting, overheating, and expensive internal damage \u2014 this is one of the costliest repairs to neglect.",
+      "estCost": "$60-$90 (3-4 qts Toyota ATF WS)",
+      "ifDelayed": "Old ATF loses its friction modifiers, causing harsh/delayed shifts and torque converter shudder; contaminated fluid clogs the filter and starves the valve body, and can escalate from a $100 fluid/filter service into a $3,000-$4,500 transmission rebuild if ignored long-term."
     },
     {
-      "id": "awd-fluids",
-      "name": "AWD Transfer Assembly & Rear Differential Fluid",
+      "id": "diff",
+      "name": "Standard AWD Transfer Assembly & Rear Differential Fluid",
       "category": "Drivetrain",
       "intervalMiles": 50000,
       "intervalMonths": 48,
       "tools": [
-        "10 mm hex socket",
-        "Fluid transfer pump with hose",
-        "Drain pan",
-        "Torque wrench"
+        "10mm hex (Allen) socket x2",
+        "Fluid pump"
       ],
       "materials": [
-        "Toyota-approved gear oil meeting the exact viscosity/specification listed for this VIN",
-        "New aluminum crush washers for fill and drain plugs"
+        "Toyota-approved gear oil meeting the exact VIN-specific factory specification",
+        "4 new Toyota aluminum crush washers"
       ],
       "steps": [
-        "Raise and support the RAV4 level; remove underbody shielding only as needed.",
-        "Loosen the fill plug first on the front transfer assembly and the rear differential.",
-        "Drain each unit separately and inspect magnetic drain plugs for fine metallic paste; fine fuzz is normal, chunks are not.",
-        "Install drain plugs with new crush washers and torque them to the applicable factory specification.",
-        "Pump in the correct gear oil until it reaches the bottom of each fill opening and begins a slow weep.",
-        "Install fill plugs with new washers, clean both housings, and inspect later for seepage."
+        "REAL-WORLD TRICK: On RAV4 AWD, the rear differential fill plug is accessed from underneath but is partially shielded by the rear sway bar link - a slight left/right wiggle of a long-handled hex key (not a stubby) clears it without removing the sway bar.",
+        "Support vehicle on ramps or stands, remove rear underbody shield if equipped (a few plastic push-pins/bolts).",
+        "Transfer case (passenger side, near front axle): remove the 10mm hex fill plug FIRST to confirm you can refill, then remove the drain plug and drain into a pan.",
+        "Rear differential: same order - fill plug first, then drain plug; drain fully and inspect the magnetic drain plug for metal debris (fine fuzz normal, chunks are not).",
+        "Reinstall both drain plugs with NEW aluminum crush washers, torque to 29 lb-ft - reused washers are a common source of slow gear-oil leaks later.",
+        "Refill each unit with 75W-85 GL-5 via the fill hole using a hand pump with a long hose (the fill holes are tight to access) until fluid begins to weep out steadily.",
+        "Reinstall fill plugs with new washers, torque to 29 lb-ft, and wipe the housings clean so any future leak is easy to spot on your next inspection."
       ],
-      "tips": "Your XLE AWD uses standard AWD hardware. Do not add torque-vectoring-clutch or Adventure/TRD scan-tool bleed steps; they do not apply to this configuration.",
-      "whatItDoes": "Replaces the gear lubricant in the front transfer assembly and rear differential.",
-      "whyItMatters": "Gear oil protects hypoid gears, bearings, and AWD components under high contact pressure.",
-      "estCost": "$60-$110 DIY",
-      "ifDelayed": "Worn gear oil can lead to whining, bearing wear, gear damage, and costly AWD driveline repairs."
+      "tips": "This XLE has standard non-torque-vectoring AWD. Do not use Adventure/TRD torque-vectoring rear-clutch or scan-tool bleed procedures. Always remove each fill plug before draining its case.",
+      "whatItDoes": "Drains and replaces gear oil in the differential(s) and transfer case that split power between wheels/axles.",
+      "whyItMatters": "Gear oil breaks down under the extreme pressure of meshing gears. Old fluid loses viscosity and lets metal-on-metal contact increase, leading to premature gear and bearing failure \u2014 especially costly to repair on AWD/4WD systems.",
+      "estCost": "$50-$80 (transfer case + rear diff)",
+      "ifDelayed": "Degraded gear oil loses film strength under load, letting metal-on-metal contact wear gear teeth and bearings; this often shows up first as whining/howling noise and can require a full differential rebuild ($800-$1,500) instead of a $70 fluid service."
+    },
+    {
+      "id": "coolant",
+      "name": "Coolant Flush (Toyota Red/Pink)",
+      "category": "Cooling",
+      "intervalMiles": 100000,
+      "intervalMonths": 60,
+      "tools": [
+        "Drain pan",
+        "Funnel"
+      ],
+      "materials": [
+        "Toyota Super Long Life Coolant (pink), 50/50 premix"
+      ],
+      "steps": [
+        "Cool engine, open radiator drain petcock, drain into pan.",
+        "Close drain, refill via radiator/reservoir with premix.",
+        "Run engine w/ heater on max to purge air; top off when cool."
+      ],
+      "tips": "Toyota's factory coolant is rated for 10 years/100k miles under normal use - don't over-service unnecessarily.",
+      "whatItDoes": "Drains old antifreeze/coolant and refills the cooling system with fresh coolant at the correct concentration.",
+      "whyItMatters": "Coolant additives that prevent corrosion and control boiling/freezing points deplete over time. Old coolant can corrode the radiator, head gasket sealing surfaces, and water pump \u2014 a failure here can strand you and cause engine overheating damage.",
+      "estCost": "$40-$60 (Toyota Super Long Life coolant)",
+      "ifDelayed": "Old coolant loses corrosion inhibitors, allowing internal rust/scale buildup that clogs the radiator and heater core and can eat through the water pump seal or head gasket - an overheating failure on the road can crack a head or warp the block, a $2,000-$5,000+ repair."
     },
     {
       "id": "brake-fluid",
       "name": "Brake Fluid Flush",
       "category": "Brakes",
       "intervalMiles": 30000,
-      "intervalMonths": 36,
+      "intervalMonths": 24,
       "tools": [
-        "Pressure bleeder or helper",
-        "Correct bleeder wrench",
-        "Clear tubing and catch bottle"
+        "Bleeder kit",
+        "10mm bleeder wrench"
       ],
       "materials": [
-        "Fresh DOT 3 brake fluid"
+        "DOT 3 brake fluid"
       ],
       "steps": [
-        "Protect painted surfaces and keep the master-cylinder reservoir from running low.",
-        "Use the factory bleed sequence for this vehicle and flush each caliper until new, clear fluid is visible.",
-        "Close each bleeder before releasing brake-pedal pressure.",
-        "Top off to the proper reservoir mark and verify a firm brake pedal before driving."
+        "Top off reservoir.",
+        "Bleed sequence: RR, LF, RF, LR (typical Toyota diagonal split, verify manual).",
+        "Pump/hold, open, close, release, repeat until clear fluid.",
+        "Top off, verify firm pedal."
       ],
-      "tips": "If the pedal is soft or the ABS system has been opened, use the correct Toyota scan-tool ABS bleed procedure instead of assuming a normal manual bleed is sufficient.",
-      "whatItDoes": "Replaces moisture-contaminated hydraulic brake fluid.",
-      "whyItMatters": "Brake fluid absorbs moisture, lowering its boiling point and promoting internal corrosion.",
-      "estCost": "$15-$30 DIY",
-      "ifDelayed": "Moisture can cause brake fade under repeated braking and damage expensive ABS hydraulic components."
+      "tips": "RAV4 AWD models add slightly more brake line volume - budget extra fluid.",
+      "whatItDoes": "Bleeds old, moisture-contaminated brake fluid out of the lines and calipers and replaces it with fresh fluid.",
+      "whyItMatters": "Brake fluid absorbs moisture from the air over time (it's hygroscopic), which lowers its boiling point and can cause a spongy pedal or corrosion inside the ABS module and calipers. This is a direct safety item.",
+      "estCost": "$15-$25 (DOT 3)",
+      "ifDelayed": "Moisture-saturated brake fluid lowers the boiling point, risking brake fade under hard/repeated braking (e.g. mountain descents or towing), and corrodes ABS module and caliper internals from the inside out - ABS module replacement alone can run $600-$1,200."
     },
     {
-      "id": "coolant",
-      "name": "Engine Coolant Renewal",
-      "category": "Cooling",
-      "intervalMiles": 100000,
-      "intervalMonths": 120,
+      "id": "spark-plugs",
+      "name": "Spark Plugs (2.5L Dynamic Force)",
+      "category": "Ignition",
+      "intervalMiles": 120000,
+      "intervalMonths": 96,
       "tools": [
-        "Drain pan",
-        "Funnel",
-        "Coolant spill-free funnel"
+        "Spark plug socket",
+        "Extension",
+        "Torque wrench"
       ],
       "materials": [
-        "Toyota Super Long Life Coolant, pink premixed 50/50"
+        "Toyota/Denso iridium plugs x4"
       ],
       "steps": [
-        "Work only on a completely cold engine.",
-        "Drain coolant through the designated radiator drain point into a suitable container.",
-        "Close the drain and refill with Toyota pink premixed coolant.",
-        "Bleed air using the factory procedure, operate the heater, allow the engine to cool fully, and recheck the reservoir level."
+        "Remove engine cover.",
+        "Disconnect coils, remove bracket if present.",
+        "Remove old plugs, inspect wear.",
+        "Install new plugs, torque to 18 lb-ft.",
+        "Reinstall coils and cover."
       ],
-      "tips": "Toyota pink Super Long Life Coolant is intended for long intervals. Do not mix coolant chemistries or use universal coolant without confirming compatibility.",
-      "whatItDoes": "Renews coolant corrosion inhibitors and maintains freeze, boil, and heat-transfer protection.",
-      "whyItMatters": "Cooling-system corrosion and degraded coolant can affect the water pump, radiator, heater core, and engine temperature control.",
-      "estCost": "$45-$90 DIY",
-      "ifDelayed": "Depleted corrosion inhibitors can contribute to water-pump, radiator, heater-core, and overheating problems."
+      "tips": "Long 120k interval is standard for this engine - no need to service early unless misfire codes appear.",
+      "whatItDoes": "Removes worn spark plugs and installs new ones that ignite the air/fuel mixture in each cylinder.",
+      "whyItMatters": "Worn plugs cause misfires, rough idle, poor fuel economy, and can eventually damage the ignition coils or catalytic converter if left too long.",
+      "estCost": "$40-$70 (4 iridium plugs)",
+      "ifDelayed": "Worn plugs misfire under load, which can wash cylinder walls with unburned fuel, damage the catalytic converter (a $1,000-$2,500 repair), and in some cases foul or damage ignition coils that then also need replacement."
     },
     {
-      "id": "brake-inspection",
-      "name": "Brake, Tire & Suspension Inspection",
-      "category": "Chassis",
-      "intervalMiles": 7500,
-      "intervalMonths": 6,
+      "id": "belts",
+      "name": "Accessory Belt Inspection",
+      "category": "Accessory Drive",
+      "intervalMiles": 90000,
+      "intervalMonths": 72,
       "tools": [
-        "Floor jack and stands",
-        "Torque wrench",
-        "Tire-pressure gauge",
-        "Tread-depth gauge"
+        "Flashlight",
+        "Belt tension gauge (optional)"
       ],
       "materials": [
-        "None unless pads, rotors, tires, or suspension components are due"
+        "OE serpentine belt if worn"
       ],
       "steps": [
-        "Rotate tires using the rotation pattern appropriate for the tire type and tread design.",
-        "Torque all lug nuts to 76 lb-ft in a star pattern.",
-        "Measure pad thickness, inspect rotors, inspect caliper-slide boots, and check flexible brake hoses.",
-        "Inspect CV boots, front and rear suspension bushings, shocks, and wheel bearings.",
-        "Record tread depth at inner, center, and outer tread positions and schedule alignment if wear is uneven."
+        "Inspect belt for cracking/glazing.",
+        "Check tensioner pulley for play/noise.",
+        "Replace belt and/or tensioner if worn."
       ],
-      "tips": "Electric power steering can hide gradual alignment drift. Tread-depth measurements catch alignment or suspension problems before tires are ruined.",
-      "whatItDoes": "Tracks brake wear, tire condition, alignment evidence, and common chassis wear points.",
-      "whyItMatters": "These components directly affect traction, braking distance, steering response, and tire life.",
-      "estCost": "$0 DIY inspection; $90-$150 alignment if needed",
-      "ifDelayed": "Ignoring uneven tire wear or low pads can turn inexpensive maintenance into tire, rotor, caliper, or suspension replacement."
+      "tips": "2.5L Dynamic Force uses a single accessory belt - inspection is quick each oil change.",
+      "whatItDoes": "Inspects and replaces the serpentine belt (and/or tensioner) that drives the alternator, power steering pump, and A/C compressor.",
+      "whyItMatters": "A snapped belt instantly kills your alternator charging, power steering, and A/C \u2014 often stranding you on the roadside. Cracked or glazed belts are a warning sign that failure is near.",
+      "estCost": "$20-$50",
+      "ifDelayed": "A cracked/glazed belt can snap without warning, instantly killing the alternator (dead battery within minutes), power steering (very heavy steering effort), and A/C - often stranding you and, on some engines, can also drive the water pump, causing sudden overheating."
     },
     {
       "id": "battery",
-      "name": "Battery, Charging System & Terminal Inspection",
+      "name": "Battery Test & Terminal Service",
       "category": "Electrical",
       "intervalMiles": 15000,
       "intervalMonths": 12,
       "tools": [
-        "Digital multimeter",
-        "Battery load tester",
-        "10 mm wrench"
+        "Multimeter/load tester",
+        "10mm wrench"
       ],
       "materials": [
-        "Terminal protectant",
-        "Replacement battery only if test results justify it"
+        "Terminal protectant, dielectric grease"
       ],
       "steps": [
-        "Inspect battery case, hold-down, terminals, and cable ends for corrosion or looseness.",
-        "Measure resting voltage after the vehicle has been off long enough to stabilize.",
-        "Perform a load or conductance test and verify charging voltage with the engine running.",
-        "Disconnect negative first and positive second if cleaning is required; reconnect positive first and negative last."
+        "Test resting voltage and load/CCA.",
+        "Clean terminals and posts.",
+        "Reconnect (positive first, negative last), apply protectant."
       ],
-      "tips": "A replacement battery must match the correct physical group size, terminal layout, and original capacity requirement. Confirm by VIN and existing label before purchase.",
-      "whatItDoes": "Checks battery health, cable condition, and alternator charging performance.",
-      "whyItMatters": "Modern vehicles can generate multiple warning lights and driveability complaints from low system voltage.",
-      "estCost": "$0-$20 test/clean; battery cost varies",
-      "ifDelayed": "A weak battery can leave you stranded and cause misleading electrical or communication fault codes."
+      "tips": "Confirm replacement battery group size, terminal layout, and CCA from the installed battery/VIN catalog. This vehicle does not require generic VW-style battery registration.",
+      "whatItDoes": "Tests battery voltage/capacity and cleans corrosion off the terminals and cable clamps.",
+      "whyItMatters": "Corroded terminals cause hard starts and charging issues, and a weak battery can fail without warning \u2014 usually at the worst possible time (cold mornings, after sitting).",
+      "estCost": "$0 (test) or $150-$230 (replacement)",
+      "ifDelayed": "A weak, un-tested battery can fail without warning in cold weather or after the vehicle sits, leaving you stranded; corroded terminals also cause intermittent electrical gremlins (dash warning lights, hard starts) that are hard to diagnose after the fact."
+    },
+    {
+      "id": "wipers",
+      "name": "Wiper Blades",
+      "category": "Exterior",
+      "intervalMiles": 10000,
+      "intervalMonths": 12,
+      "tools": [
+        "None"
+      ],
+      "materials": [
+        "26\" driver / 16\" passenger blade set (verify size)"
+      ],
+      "steps": [
+        "Lift arm off glass.",
+        "Release tab, slide old blade off hook.",
+        "Slide new blade on until click.",
+        "Lower arm gently."
+      ],
+      "tips": "RAV4 uses a hybrid-style hook adapter - confirm compatibility when purchasing aftermarket blades.",
+      "whatItDoes": "Replaces the rubber wiper blade inserts that clear rain/debris from the windshield.",
+      "whyItMatters": "Worn blades streak and skip, reducing visibility in rain right when you need it most \u2014 a low-cost item with outsized safety impact.",
+      "estCost": "$20-$35 (pair)",
+      "ifDelayed": "Streaking/skipping blades reduce visibility in exactly the conditions where you need it most (rain, road spray), which is a direct safety risk, and can also scratch the windshield glass over extended use."
+    },
+    {
+      "id": "brakes-pads",
+      "name": "Brake Pads & Rotors Inspection",
+      "category": "Brakes",
+      "intervalMiles": 15000,
+      "intervalMonths": 12,
+      "tools": [
+        "Jack/stands",
+        "Caliper tool"
+      ],
+      "materials": [
+        "OE-spec pads/rotors when due"
+      ],
+      "steps": [
+        "Remove wheel, inspect pad thickness through caliper window.",
+        "Check rotor thickness/grooving.",
+        "Inspect slide pins/boots, regrease as needed."
+      ],
+      "tips": "RAV4 pads generally last 40-50k miles under normal driving - inspect visually each rotation.",
+      "whatItDoes": "Inspects pad thickness and rotor condition, replacing pads/rotors once they're worn past minimum spec.",
+      "whyItMatters": "Worn-out pads dramatically increase stopping distance and can damage rotors (and eventually calipers) if metal-to-metal contact occurs \u2014 a core safety system.",
+      "estCost": "$0 (inspect) or $110-$200 per axle",
+      "ifDelayed": "Pads worn to metal backing plates damage rotors (turning a $30 pad job into a $150-$250 pad+rotor job) and dramatically increase stopping distance - continuing to drive on metal-to-metal contact is a direct safety hazard."
+    },
+    {
+      "id": "pcv",
+      "name": "PCV Valve",
+      "category": "Emissions",
+      "intervalMiles": 60000,
+      "intervalMonths": 48,
+      "tools": [
+        "Pliers"
+      ],
+      "materials": [
+        "OE PCV valve"
+      ],
+      "steps": [
+        "Locate PCV valve on valve cover.",
+        "Detach hose, remove old valve.",
+        "Install new valve, reseat hose."
+      ],
+      "tips": "Rough idle at startup can indicate a clogged PCV - inexpensive part to replace proactively.",
+      "whatItDoes": "Replaces the valve that vents crankcase pressure/vapors back into the intake for combustion.",
+      "whyItMatters": "A stuck or clogged PCV valve can cause oil consumption, rough idle, and increased crankcase pressure that can blow out seals/gaskets over time.",
+      "estCost": "$15-$25",
+      "ifDelayed": "A stuck-closed PCV valve builds excess crankcase pressure that can blow out gaskets/seals (valve cover, front/rear main) leading to oil leaks; a stuck-open valve causes oil to be sucked into the intake, fouling plugs and increasing oil consumption."
+    },
+    {
+      "id": "driveline",
+      "name": "CV Axles & Rear Driveshaft Inspection",
+      "category": "Drivetrain",
+      "intervalMiles": 30000,
+      "intervalMonths": 24,
+      "tools": [
+        "Flashlight"
+      ],
+      "materials": [
+        "N/A"
+      ],
+      "steps": [
+        "Support vehicle, inspect CV boots for cracks/grease leaks.",
+        "Check rear driveshaft/coupling for leaks (AWD models).",
+        "Inspect diff mounts for wear."
+      ],
+      "tips": "Clicking noise while turning usually indicates a worn outer CV joint - address quickly to avoid stranding.",
+      "whatItDoes": "Inspects (and greases, where applicable) U-joints, CV joints, and driveshaft components that transmit power to the wheels.",
+      "whyItMatters": "Worn driveline components cause vibration, clunking, and can fail completely while driving \u2014 catching wear early avoids more expensive driveshaft or axle replacement.",
+      "estCost": "$0 (inspect) or $120-$250 (CV axle replacement)",
+      "ifDelayed": "Worn U-joints/CV joints that go unaddressed can seize or separate while driving, causing loss of drive power or a dropped driveshaft - a safety hazard and a much larger repair (driveshaft/axle replacement) than the original grease/inspection."
+    },
+    {
+      "id": "alignment",
+      "name": "Wheel Alignment & Tire Rotation",
+      "category": "Suspension",
+      "intervalMiles": 7500,
+      "intervalMonths": 6,
+      "tools": [
+        "Alignment rack",
+        "Torque wrench"
+      ],
+      "materials": [
+        "N/A"
+      ],
+      "steps": [
+        "Rotate tires front-to-back same side.",
+        "Torque lug nuts to 97 lb-ft.",
+        "Full alignment if uneven wear noted."
+      ],
+      "tips": "RAV4's electric power steering can mask alignment issues - rotate tires consistently to catch wear early.",
+      "whatItDoes": "Rotates tires to even out wear and, when needed, adjusts suspension angles so all four wheels track correctly.",
+      "whyItMatters": "Uneven wear from skipped rotations shortens tire life significantly, and poor alignment causes pulling, vibration, and accelerated tire wear \u2014 both cost you money in tires over time.",
+      "estCost": "$0 (rotation) or $80-$120 (shop alignment)",
+      "ifDelayed": "Skipped rotations cause uneven tread wear that shortens tire life by thousands of miles, and unresolved alignment issues cause pulling/vibration and accelerate wear on tie rods and bushings, compounding into a larger suspension repair."
     }
-  ]
+  ],
+  "transmission": "Direct Shift 8-speed automatic",
+  "vehicleProfile": {
+    "year": 2020,
+    "make": "Toyota",
+    "model": "RAV4",
+    "trim": "XLE AWD",
+    "licensePlate": "HLW5374",
+    "plateState": "NC",
+    "vin": "2T3P1RFV7LW130750",
+    "notes": "Standard mechanical AWD; not an Adventure, TRD Off-Road, or Torque Vectoring AWD model."
+  },
+  "components": {
+    "engine": "A25A-FKS 2.5L Dynamic Force I4",
+    "transmission": "Direct Shift 8-speed automatic",
+    "oilSpecification": "SAE 0W-16 full synthetic; 0W-20 only if 0W-16 is unavailable, then return to 0W-16 at the next change",
+    "coolant": "Toyota Super Long Life Coolant, pink premixed 50/50",
+    "brakeFluid": "DOT 3",
+    "awdSystem": "Standard AWD transfer assembly and rear differential; no torque-vectoring rear clutch service applies",
+    "tireLugNutTorque": "76 lb-ft; verify with current owner manual"
+  }
 }
