@@ -344,7 +344,15 @@
 
             <!-- Hidden File Inputs Moved Here -->
             <input type="file" id="archiveFileInput" accept=".json" style="display:none;" onchange="importConfigurationArchive(event)">
-            <input type="file" id="csvFileInput" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display:none;" onchange="importCSVFile(event)">
+           <!-- AFTER -->
+
+<input
+    type="file"
+    id="csvFileInput"
+    accept=".csv,.xlsx,.xls"
+    style="display:none"
+    onchange="importCSVFile(event)"
+>
 
             <div class="sidebar-tabs">
                 <button class="sidebar-tab-btn active" onclick="openSidebarTab('tab-swimlanes')">Swimlanes & Data</button>
@@ -1602,124 +1610,228 @@ link.click();
         fields.push(current); return fields;
     }
 
-    function importCSVFile(event) {
-    const file = event.target.files[0]; 
+    // AFTER — PASTE THIS COMPLETE FUNCTION IN ITS PLACE
+
+function importCSVFile(event) {
+    const file = event.target.files[0];
     if (!file) return;
 
-    // Helper function to process the extracted text payload
-    const processDataPayload = function(csvText) {
-        const lines = csvText.split(/\r?\n/); if(lines.length <= 1) return;
-        let newImportData = []; let newTrackers = []; let newCallouts = [];
-        let rIdCounter = 1; let mIdCounter = 1001; let bIdCounter = 5001; let tIdCounter = 7001;
+    const processDataPayload = function (csvText) {
+        const lines = csvText.split(/\r?\n/);
+        if (lines.length <= 1) return;
 
-        for(let i = 1; i < lines.length; i++) {
-            let line = lines[i].trim(); if(line === "") continue;
-            let columns = parseRobustCSVLine(line); if(columns.length < 8) continue;
+        let newImportData = [];
+        let newTrackers = [];
+        let newCallouts = [];
+        let rIdCounter = 1;
+        let mIdCounter = 1001;
+        let bIdCounter = 5001;
+        let tIdCounter = 7001;
 
-            let recordType = columns[0].trim();
-            
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            const columns = parseRobustCSVLine(line);
+            if (columns.length < 8) continue;
+
+            const recordType = String(columns[0] || "").trim();
+
             if (recordType === "CALLOUT") {
                 newCallouts.push({
-                    id: generateUUID(), 
-                    text: columns[1] ? columns[1].replace(/""/g, '"').trim() : "Callout", 
-                    x: parseFloat(columns[2]) || 350, 
-                    y: parseFloat(columns[3]) || 100, 
-                    leaderX: parseFloat(columns[4]) || 350, 
+                    id: generateUUID(),
+                    text: columns[1] ? columns[1].replace(/""/g, '"').trim() : "Callout",
+                    x: parseFloat(columns[2]) || 350,
+                    y: parseFloat(columns[3]) || 100,
+                    leaderX: parseFloat(columns[4]) || 350,
                     leaderY: parseFloat(columns[5]) || 150,
-                    bgColor: columns[6] ? columns[6].trim() : "#ffffff", 
-                    textColor: columns[7] ? columns[7].trim() : "#000000", 
-                    fontSize: parseInt(columns[8]) || 14, 
-                    isBold: columns[9] ? columns[9].trim() === "TRUE" : false, 
+                    bgColor: columns[6] ? columns[6].trim() : "#ffffff",
+                    textColor: columns[7] ? columns[7].trim() : "#000000",
+                    fontSize: parseInt(columns[8], 10) || 14,
+                    isBold: columns[9] ? columns[9].trim() === "TRUE" : false,
                     bgTransparent: columns[10] ? columns[10].trim() === "TRUE" : false
                 });
                 continue;
             }
 
-            let laneTitle = columns[1].trim();
-            let laneColor = columns[2].trim();
-            let laneSummary = columns[3].trim() === "TRUE";
-            
             if (recordType === "TRACKER") {
-                let tId = parseInt(columns[7].trim()) || tIdCounter++;
-                if(tId >= tIdCounter) tIdCounter = tId + 1;
+                const tId = parseInt(columns[7], 10) || tIdCounter++;
+
+                if (tId >= tIdCounter) tIdCounter = tId + 1;
+
                 newTrackers.push({
-                    id: tId, label: columns[10] ? columns[10].trim() : "", date: normalizeDateString(columns[11] ? columns[11].trim() : ""),
-                    thickness: parseInt(columns[13] ? columns[13].trim() : "") || 2, pattern: columns[14] ? columns[14].trim() : "solid",
-                    color: columns[15] ? columns[15].trim() : "", labelOffsetX: parseFloat(columns[16]) || 0, labelOffsetY: parseFloat(columns[17]) || 0
+                    id: tId,
+                    label: columns[10] ? String(columns[10]).trim() : "",
+                    date: normalizeDateString(columns[11] || ""),
+                    thickness: parseInt(columns[13], 10) || 2,
+                    pattern: columns[14] ? String(columns[14]).trim() : "solid",
+                    color: columns[15] ? String(columns[15]).trim() : "",
+                    labelOffsetX: parseFloat(columns[16]) || 0,
+                    labelOffsetY: parseFloat(columns[17]) || 0
                 });
                 continue;
             }
 
-            let lane = newImportData.find(l => l.title === laneTitle);
-            if(!lane && laneTitle !== "") {
-                lane = { id: newImportData.length, title: laneTitle, color: laneColor, showSummary: laneSummary, rows: [] };
+            const laneTitle = columns[1] ? String(columns[1]).trim() : "";
+            const laneColor = columns[2] ? String(columns[2]).trim() : "";
+            const laneSummary = columns[3] ? String(columns[3]).trim() === "TRUE" : false;
+
+            let lane = newImportData.find(item => item.title === laneTitle);
+
+            if (!lane && laneTitle) {
+                lane = {
+                    id: newImportData.length,
+                    title: laneTitle,
+                    color: laneColor,
+                    showSummary: laneSummary,
+                    rows: []
+                };
                 newImportData.push(lane);
             }
 
-            let rowIdStr = columns[4] ? columns[4].trim() : ""; if(rowIdStr === "") continue;
-            let explicitRowId = parseInt(rowIdStr, 10);
+            if (!lane) continue;
+
+            const rowIdText = columns[4] ? String(columns[4]).trim() : "";
+            if (!rowIdText) continue;
+
+            const explicitRowId = parseInt(rowIdText, 10);
+            if (!Number.isFinite(explicitRowId)) continue;
+
             if (explicitRowId >= rIdCounter) rIdCounter = explicitRowId + 1;
 
-            let rowLabel = columns[5] ? columns[5].trim() : "";
-            let rowPred = columns[6] ? columns[6].trim() : ""; if (rowPred.toUpperCase() === "NONE") rowPred = "";
+            const rowLabel = columns[5] ? String(columns[5]).trim() : "";
+            let rowPred = columns[6] ? String(columns[6]).trim() : "";
 
-            // ---> NEW: Read Show Date Range flag from column 21 (index 21)
-            let rowShowDateRange = columns[21] ? columns[21].trim() === "TRUE" : false;
+            if (rowPred.toUpperCase() === "NONE") rowPred = "";
 
-            let rowObject = lane.rows.find(r => r.id === explicitRowId);
-            if(!rowObject) {
-                rowObject = { 
-                    id: explicitRowId, 
-                    label: rowLabel, 
-                    predecessor: rowPred, 
-                    showDateRange: rowShowDateRange, // ---> SET FLAG HERE
-                    bars: [], 
-                    milestones: [] 
+            const rowShowDateRange =
+                columns[21] ? String(columns[21]).trim() === "TRUE" : false;
+
+            let rowObject = lane.rows.find(row => row.id === explicitRowId);
+
+            if (!rowObject) {
+                rowObject = {
+                    id: explicitRowId,
+                    label: rowLabel,
+                    predecessor: rowPred,
+                    showDateRange: rowShowDateRange,
+                    bars: [],
+                    milestones: []
                 };
                 lane.rows.push(rowObject);
             }
 
             if (recordType === "BAR") {
-                let bId = parseInt(columns[7].trim()) || bIdCounter++;
+                const bId = parseInt(columns[7], 10) || bIdCounter++;
+
                 if (bId >= bIdCounter) bIdCounter = bId + 1;
+
                 rowObject.bars.push({
                     id: bId,
-                    p6IdStart: columns[8] ? columns[8].trim() : "",
-                    p6IdFinish: columns[9] ? columns[9].trim() : "",
-                    start: normalizeDateString(columns[11] ? columns[11].trim() : ""),
-                    end: normalizeDateString(columns[12] ? columns[12].trim() : ""),
-                    progress: parseInt(columns[13] ? columns[13].trim() : "") || 0,
-                    pattern: columns[14] ? columns[14].trim() : "solid",
-                    color: columns[15] ? columns[15].trim() : "",
-                    bgColor: columns[20] ? columns[20].trim() : ""
+                    p6IdStart: columns[8] ? String(columns[8]).trim() : "",
+                    p6IdFinish: columns[9] ? String(columns[9]).trim() : "",
+                    start: normalizeDateString(columns[11] || ""),
+                    end: normalizeDateString(columns[12] || ""),
+                    progress: parseInt(columns[13], 10) || 0,
+                    pattern: columns[14] ? String(columns[14]).trim() : "solid",
+                    color: columns[15] ? String(columns[15]).trim() : "",
+                    bgColor: columns[20] ? String(columns[20]).trim() : ""
                 });
-            } else if (recordType === "MILESTONE") {
-                let mId = parseInt(columns[7].trim()) || mIdCounter++;
+            }
+
+            if (recordType === "MILESTONE") {
+                const mId = parseInt(columns[7], 10) || mIdCounter++;
+
                 if (mId >= mIdCounter) mIdCounter = mId + 1;
-                let ruleStr = columns[20] ? columns[20].trim() : "";
-                let pinDt = true, ldrTxt = false, ldrDt = false, anchorText = "center";
-                if (ruleStr) {
-                    let rPieces = ruleStr.split('|');
-                    pinDt = rPieces[0] === "PinDate";
-                    ldrTxt = rPieces[1] === "LdrTxt";
-                    ldrDt = rPieces[2] === "LdrDt";
-                    if(rPieces[3]) anchorText = rPieces[3];
-                }
-              const milestoneSourceDate =
-    columns[11] !== undefined && String(columns[11]).trim() !== ""
-        ? columns[11]
-        : columns[12];
 
-const milestoneDate = normalizeDateString(milestoneSourceDate);
+                const ruleStr = columns[20] ? String(columns[20]).trim() : "";
+                const ruleParts = ruleStr ? ruleStr.split("|") : [];
 
-if (!milestoneDate) {
-    showToast(
-        `Skipped milestone "${columns[10] || `ID ${mId}`}" because its date is blank, invalid, or has no saved formula result.`,
-        "error",
-        6500
-    );
-    continue;
+                const milestoneDate = normalizeDateString(
+                    columns[11] !== undefined && String(columns[11]).trim() !== ""
+                        ? columns[11]
+                        : columns[12]
+                );
+
+                if (!milestoneDate) continue;
+
+                rowObject.milestones.push({
+                    id: mId,
+                    p6IdStart: columns[8] ? String(columns[8]).trim() : "",
+                    p6IdFinish: columns[9] ? String(columns[9]).trim() : "",
+                    label: columns[10] ? String(columns[10]).trim() : "",
+                    date: milestoneDate,
+                    showDate: ruleParts[0] !== "HideDate",
+                    manualLabel: true,
+                    labelOffsetX: parseFloat(columns[16]) || 0,
+                    labelOffsetY: parseFloat(columns[17]) || 0,
+                    manualDateLabel: true,
+                    dateOffsetX: parseFloat(columns[18]) || 0,
+                    dateOffsetY: parseFloat(columns[19]) || 0,
+                    symbol: columns[14] ? String(columns[14]).trim() : "diamond",
+                    color: columns[15] ? String(columns[15]).trim() : "",
+                    leaderEnabledText: ruleParts[1] === "LdrTxt",
+                    leaderEnabledDate: ruleParts[2] === "LdrDt",
+                    leaderAnchorText: ruleParts[3] || "center"
+                });
+            }
+        }
+
+        if (
+            newImportData.length === 0 &&
+            newTrackers.length === 0 &&
+            newCallouts.length === 0
+        ) {
+            showToast("No importable records were found.", "error", 4500);
+            return;
+        }
+
+        projectData = newImportData;
+        customTrackers = newTrackers;
+        calloutData = newCallouts;
+        nextRowId = rIdCounter;
+        nextMsId = mIdCounter;
+        nextBarId = bIdCounter;
+        nextTrackerId = tIdCounter;
+
+        const titleEl = document.getElementById("projectTitleInput");
+        if (titleEl) titleEl.value = extractTitleFromFilename(file.name);
+
+        renderCalloutControls();
+        recordStateChange();
+        renderInputRows();
+        populateTrackerDashboardMatrix();
+        updateChart();
+    };
+
+    const fileName = file.name.toLowerCase();
+
+    if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: "array" });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const csvText = XLSX.utils.sheet_to_csv(worksheet);
+
+            processDataPayload(csvText);
+        };
+
+        reader.readAsArrayBuffer(file);
+    } else {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            processDataPayload(e.target.result);
+        };
+
+        reader.readAsText(file);
+    }
+
+    event.target.value = "";
 }
+
 
 rowObject.milestones.push({
     id: mId,
