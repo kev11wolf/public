@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Enterprise Presentation Gantt Workspace Suite</title>
-    <!-- SheetJS Library for reading Excel files -->
-        <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563eb">
+  <meta charset="UTF-8">
+  <title>Enterprise Presentation Gantt Workspace Suite</title>
+
+  <!-- Browser-tab favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- SheetJS Library for reading Excel files -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
     <script src="xlsx.full.min.js"></script>
     <style>
         :root {
@@ -1741,12 +1745,27 @@ document.querySelectorAll('.zoom-pill-btn').forEach(b => {
     };
     reader.readAsText(file);
 }
-
+// Converts missing values to a safe blank string before CSV export.
+function csvText(value) {
+    return String(value ?? '')
+        .replace(/"/g, '""')   // Keeps quotation marks valid in CSV
+        .replace(/\r?\n/g, ' ') // Keeps each item on one Excel row
+        .replace(/,/g, ' ');   // Matches your current comma-removal approach
+}
     // =========================================================================
     // OVERHAULED ARCHITECTURE: FLATTENED EXCEL CSV AUTOMATION ENGINE
     // =========================================================================
     function exportExcelCSV() {
-    let headers = [
+    // Makes every exported value safe:
+    // undefined, null, numbers, and text all become valid CSV cells.
+    function csvCell(value) {
+        const safeValue = String(value ?? '');
+
+        // CSV uses two double-quotes to represent one literal double-quote.
+        return `"${safeValue.replace(/"/g, '""')}"`;
+    }
+
+    const headers = [
         'Record Type',
         'Swimlane Title',
         'Swimlane Color',
@@ -1776,18 +1795,19 @@ document.querySelectorAll('.zoom-pill-btn').forEach(b => {
         'Graphic Setting 5'
     ];
 
-    let csvRows = [headers.join(',')];
+    const csvRows = [headers.map(csvCell).join(',')];
 
+    // Export application-level settings as the first data row.
     const workspaceSettingsFields = [
         'SETTINGS',
-        document.getElementById('fontFamily').value.replace(/,/g, '|'),
+        document.getElementById('fontFamily').value,
         document.getElementById('fontSize').value,
         document.getElementById('swimlaneHeight').value,
         document.getElementById('rowHeight').value,
         document.getElementById('rowLabelWidth').value,
         document.getElementById('canvasWidth').value,
-        document.querySelector('input[name="rangeMode"]:checked').value,
-        document.querySelector('input[name="sizingMode"]:checked')?.value || 'fixed',
+        document.querySelector('input[name="rangeMode"]:checked')?.value ?? 'manual',
+        document.querySelector('input[name="sizingMode"]:checked')?.value ?? 'fixed',
         manualBoundaryMin,
         manualBoundaryMax,
         document.getElementById('showHeaderYear').checked ? 'TRUE' : 'FALSE',
@@ -1798,7 +1818,7 @@ document.querySelectorAll('.zoom-pill-btn').forEach(b => {
         document.getElementById('showAlignGrid').checked ? 'TRUE' : 'FALSE',
         document.getElementById('snapResolution').value,
         document.getElementById('workspaceZoom').value,
-        document.querySelector('input[name="todayLineToggle"]:checked').value,
+        document.querySelector('input[name="todayLineToggle"]:checked')?.value ?? 'show',
         document.getElementById('barBgColor').value,
         document.getElementById('barColor').value,
         document.getElementById('summaryColor').value,
@@ -1808,152 +1828,180 @@ document.querySelectorAll('.zoom-pill-btn').forEach(b => {
         document.getElementById('headerColor').value
     ];
 
-    csvRows.push(workspaceSettingsFields.join(','));
+    csvRows.push(workspaceSettingsFields.map(csvCell).join(','));
 
-    // AFTER — paste this in its place:
+    // Export every bar and milestone in every row of every swimlane.
+    projectData.forEach(lane => {
+        (lane.rows ?? []).forEach(row => {
+            (row.bars ?? []).forEach(bar => {
+                const barFields = [
+                    'BAR',
+                    lane.title,
+                    lane.color,
+                    lane.showSummary ? 'TRUE' : 'FALSE',
+                    row.id,
+                    row.label,
+                    row.predecessor,
+                    bar.id,
 
-projectData.forEach(lane => {
-    lane.rows.forEach(row => {
-        row.bars.forEach(bar => {
-            const barFields = [
-    'BAR',
-    lane.title.replace(/,/g, ' '),
-    lane.color,
-    lane.showSummary ? 'TRUE' : 'FALSE',
-    row.id,
-    row.label.replace(/,/g, ' '),
-    row.predecessor.replace(/,/g, ' '),
-    bar.id,
-    bar.p6IdStart.replace(/,/g, ' '),
-    bar.p6IdFinish.replace(/,/g, ' '),
-    '',
-    bar.start,
-    bar.end,
-    bar.progress || 0,
-    bar.pattern || 'solid',
-    bar.color,
-    '',
-    '',
-    '',
-    '',
-    bar.bgColor,
-    row.showDateRange === true ? 'TRUE' : 'FALSE',
-    '',
-    '',
-    '',
-    '',
-    ''
-];
-            csvRows.push(barFields.join(","));
-        });
+                    // Supports old data using p6Id and newer data using p6IdStart.
+                    bar.p6IdStart ?? bar.p6Id ?? '',
+                    bar.p6IdFinish ?? bar.p6Id ?? '',
 
-        row.milestones.forEach(milestone => {
-            const rulesMatrix = [
-                milestone.showDate ? "PinDate" : "NoPinDate",
-                milestone.leaderEnabledText ? "LdrTxt" : "NoLdrTxt",
-                milestone.leaderEnabledDate ? "LdrDt" : "NoLdrDt",
-                milestone.leaderAnchorText || "center"
-            ].join("|");
+                    '',
+                    bar.start,
+                    bar.end,
+                    bar.progress ?? 0,
+                    bar.pattern ?? 'solid',
+                    bar.color,
+                    '',
+                    '',
+                    '',
+                    '',
+                    bar.bgColor,
+                    row.showDateRange === true ? 'TRUE' : 'FALSE',
+                    '',
+                    '',
+                    '',
+                    '',
+                    ''
+                ];
 
-            const milestoneFields = [
-    'MILESTONE',
-    lane.title.replace(/,/g, ' '),
-    lane.color,
-    lane.showSummary ? 'TRUE' : 'FALSE',
-    row.id,
-    row.label.replace(/,/g, ' '),
-    row.predecessor.replace(/,/g, ' '),
-    milestone.id,
-    milestone.p6IdStart.replace(/,/g, ' '),
-    milestone.p6IdFinish.replace(/,/g, ' '),
-    milestone.label.replace(/,/g, ' '),
-    milestone.date,
-    milestone.date,
-    '',
-    milestone.symbol || 'diamond',
-    milestone.color,
-    milestone.labelOffsetX || 0,
-    milestone.labelOffsetY || 0,
-    milestone.dateOffsetX || 0,
-    milestone.dateOffsetY || 0,
-    rulesMatrix,
-    row.showDateRange === true ? 'TRUE' : 'FALSE',
-    '',
-    '',
-    '',
-    '',
-    ''
-];
+                csvRows.push(barFields.map(csvCell).join(','));
+            });
 
-            csvRows.push(milestoneFields.join(","));
+            (row.milestones ?? []).forEach(milestone => {
+                const rulesMatrix = [
+                    milestone.showDate !== false ? 'PinDate' : 'NoPinDate',
+                    milestone.leaderEnabledText ? 'LdrTxt' : 'NoLdrTxt',
+                    milestone.leaderEnabledDate ? 'LdrDt' : 'NoLdrDt',
+                    milestone.leaderAnchorText ?? 'center'
+                ].join('|');
+
+                const milestoneFields = [
+                    'MILESTONE',
+                    lane.title,
+                    lane.color,
+                    lane.showSummary ? 'TRUE' : 'FALSE',
+                    row.id,
+                    row.label,
+                    row.predecessor,
+                    milestone.id,
+
+                    // Supports old data using p6Id and newer data using two P6 fields.
+                    milestone.p6IdStart ?? milestone.p6Id ?? '',
+                    milestone.p6IdFinish ?? milestone.p6Id ?? '',
+
+                    milestone.label,
+                    milestone.date,
+                    milestone.date,
+                    '',
+                    milestone.symbol ?? 'diamond',
+                    milestone.color,
+                    milestone.labelOffsetX ?? 0,
+                    milestone.labelOffsetY ?? 0,
+                    milestone.dateOffsetX ?? 0,
+                    milestone.dateOffsetY ?? 0,
+                    rulesMatrix,
+                    row.showDateRange === true ? 'TRUE' : 'FALSE',
+                    '',
+                    '',
+                    '',
+                    '',
+                    ''
+                ];
+
+                csvRows.push(milestoneFields.map(csvCell).join(','));
+            });
         });
     });
-});
 
-customTrackers.forEach(trk => {
-    const trackerFields = [
-        "TRACKER", "", "", "", "", "", "", trk.id,
-        "", "",
-        `"${(trk.label || "").replace(/"/g, '""')}"`,
-        trk.date || "",
-        "",
-        trk.thickness || 2,
-        trk.pattern || "solid",
-        trk.color || "",
-        trk.labelOffsetX || 0,
-        trk.labelOffsetY || 0,
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        ""
-    ];
+    // Export custom vertical tracker lines.
+    (customTrackers ?? []).forEach(tracker => {
+        const trackerFields = [
+            'TRACKER',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            tracker.id,
+            '',
+            '',
+            tracker.label,
+            tracker.date,
+            '',
+            tracker.thickness ?? 2,
+            tracker.pattern ?? 'solid',
+            tracker.color,
+            tracker.labelOffsetX ?? 0,
+            tracker.labelOffsetY ?? 0,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            ''
+        ];
 
-    csvRows.push(trackerFields.join(","));
-});
+        csvRows.push(trackerFields.map(csvCell).join(','));
+    });
 
-calloutData.forEach(c => {
-    const calloutFields = [
-        "CALLOUT",
-        `"${(c.text || "").replace(/"/g, '""')}"`,
-        c.x || 0,
-        c.y || 0,
-        c.leaderX || 0,
-        c.leaderY || 0,
-        c.bgColor || "",
-        c.textColor || "",
-        c.fontSize || 14,
-        c.isBold ? "TRUE" : "FALSE",
-        c.bgTransparent ? "TRUE" : "FALSE",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        ""
-    ];
+    // Export custom text callouts.
+    (calloutData ?? []).forEach(callout => {
+        const calloutFields = [
+            'CALLOUT',
+            callout.text,
+            callout.x ?? 0,
+            callout.y ?? 0,
+            callout.leaderX ?? 0,
+            callout.leaderY ?? 0,
+            callout.bgColor,
+            callout.textColor,
+            callout.fontSize ?? 14,
+            callout.isBold ? 'TRUE' : 'FALSE',
+            callout.bgTransparent ? 'TRUE' : 'FALSE',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            ''
+        ];
 
-    csvRows.push(calloutFields.join(","));
-});
-    const blob = new Blob([csvRows.join("\n")], { type: 'text/csv' });
-const link = document.createElement('a');
-link.href = URL.createObjectURL(blob);
-link.download = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.csv`;
-link.click();
+        csvRows.push(calloutFields.map(csvCell).join(','));
+    });
+
+    const blob = new Blob(
+        [csvRows.join('\n')],
+        { type: 'text/csv;charset=utf-8;' }
+    );
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(link.href);
+
+    showToast('CSV export created successfully.', 'success');
 }
 
    function exportConfigurationArchive() {
