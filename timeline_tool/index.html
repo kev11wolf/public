@@ -360,7 +360,112 @@ input[type="color"] {
         .floating-date-dialog .modal-field input, .floating-date-dialog .modal-field select { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; width:100%; box-sizing:border-box; }
         .floating-date-dialog .modal-actions { display: flex; justify-content: space-between; gap: 6px; align-items: center; margin-top: 10px; }
         .floating-date-dialog button { padding: 6px 12px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; }
+/* =========================================================
+   COMPACT DOUBLE-CLICK EDITOR LAYOUT
+   ========================================================= */
 
+.floating-date-dialog.compact-editor {
+    width: min(420px, calc(100vw - 24px));
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+.floating-date-dialog.compact-editor h4 {
+    margin: 0 0 10px;
+    padding-bottom: 8px;
+    font-size: 14px;
+    color: #1e3a8a;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.compact-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.compact-modal-grid .modal-field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #475569;
+}
+
+.compact-modal-grid .modal-field.full-width {
+    grid-column: 1 / -1;
+}
+
+.compact-modal-grid input,
+.compact-modal-grid select {
+    width: 100%;
+    min-height: 30px;
+    padding: 5px 7px;
+    box-sizing: border-box;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 12px;
+}
+
+.compact-modal-grid input[type="color"] {
+    padding: 2px;
+    cursor: pointer;
+}
+
+.compact-modal-grid .checkbox-field {
+    flex-direction: row;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 2px;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.compact-modal-grid .checkbox-field input {
+    width: 15px;
+    min-height: 15px;
+    margin: 0;
+}
+
+.standard-modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.standard-modal-actions .action-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.standard-modal-actions button {
+    min-height: 30px;
+    padding: 5px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+@media (max-width: 460px) {
+    .compact-modal-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .compact-modal-grid .modal-field.full-width {
+        grid-column: auto;
+    }
+}
         /* Right Click Workspace Context Menu */
         .workspace-context-menu {
             position: fixed; display: none; background: #ffffff; border: 1px solid #94a3b8; border-radius: 6px;
@@ -889,23 +994,26 @@ function positionFloatingDialogSmart(dialog, e) {
 
 // === NEW: Shared Modal Shell (makes Milestone and Bar editors look identical) ===
 function buildStandardModal(dialogId, titleText, bodyHTML, buttonsHTML) {
-  let existing = document.getElementById(dialogId);
-  if (existing) existing.remove();
+    const existing = document.getElementById(dialogId);
+    if (existing) existing.remove();
 
-  let dialog = document.createElement('div');
-  dialog.id = dialogId;
-  dialog.className = 'floating-date-dialog';
-  dialog.style.width = '340px';
-  dialog.innerHTML = `
-    <h4 style="margin:0 0 12px 0; font-size:13px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">${titleText}</h4>
-    <div class="standard-modal-body" style="display:flex; flex-direction:column; gap:10px;">
-      ${bodyHTML}
-    </div>
-    <div class="standard-modal-actions" style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:10px; border-top:1px solid #e2e8f0;">
-      ${buttonsHTML}
-    </div>
-  `;
-  return dialog;
+    const dialog = document.createElement("div");
+    dialog.id = dialogId;
+    dialog.className = "floating-date-dialog compact-editor";
+
+    dialog.innerHTML = `
+        <h4>${titleText}</h4>
+
+        <div class="compact-modal-grid">
+            ${bodyHTML}
+        </div>
+
+        <div class="standard-modal-actions">
+            ${buttonsHTML}
+        </div>
+    `;
+
+    return dialog;
 }
 
    function markUnsavedState() {
@@ -1466,77 +1574,183 @@ function normalizeDateString(val) {
             needsUpdate = true;
         }
 
-                if (needsUpdate) {
-            activeDragState.hasMoved = true; // Mark that a true element translation happened
-            markUnsavedState();
-            updateChart();
-        }
+               if (needsUpdate) {
+    activeDragState.hasMoved = true;
+    markUnsavedState();
+    updateChart();
+
+    // Re-add the date helper after updateChart rebuilds the SVG.
+    updateTimelineCrosshair(e);
+}
     }
 
-// AFTER
+function getTimelineDateFromPointer(e) {
+    const container = document.getElementById("svgContainer");
+    const svgEl = container ? container.querySelector("svg") : null;
+
+    if (!svgEl || scaleMinTime === null || scaleMaxTime === null || !scaleChartWidth) {
+        return null;
+    }
+
+    const rect = svgEl.getBoundingClientRect();
+    const svgWidth = Number(svgEl.getAttribute("width")) || rect.width;
+    const screenToSvgScale = rect.width / svgWidth;
+
+    const canvasX = (e.clientX - rect.left) / screenToSvgScale;
+    const timelineStartX = scaleMarginLeft;
+    const timelineEndX = scaleMarginLeft + scaleChartWidth;
+
+    if (canvasX < timelineStartX || canvasX > timelineEndX) {
+        return null;
+    }
+
+    const totalDuration = scaleMaxTime - scaleMinTime;
+
+    let timestamp = scaleMinTime +
+        ((canvasX - timelineStartX) / scaleChartWidth) * totalDuration;
+
+    timestamp = Math.max(scaleMinTime, Math.min(scaleMaxTime, timestamp));
+
+    return {
+        canvasX,
+        timestamp,
+        dateText: formatDateToDDMMMYYYY(new Date(timestamp))
+    };
+}
+
+function getDragDateHelperText(mode, dateText) {
+    const labels = {
+        "bar-resize-start": "Start",
+        "bar-resize-end": "Finish",
+        "bar-move": "Move bar",
+        "ms": "Milestone",
+        "timeline-pan": "Timeline",
+        "timeline-resize-start": "Timeline start",
+        "timeline-resize-end": "Timeline finish",
+        "tracker-line-move": "Tracker"
+    };
+
+    const action = labels[mode] || "Date";
+    return `${action}: ${dateText}`;
+}
+
 function updateTimelineCrosshair(e) {
-  if (scaleMinTime === null) return;
-  const container = document.getElementById('svgContainer');
-  const svgEl = container.querySelector('svg');
-  if (!svgEl) return;
+    const pointerDate = getTimelineDateFromPointer(e);
 
-  const rect = svgEl.getBoundingClientRect();
-  const intrinsicWidth = parseFloat(svgEl.getAttribute('width')) || rect.width;
-  const measuredScale = rect.width / intrinsicWidth;
-  const mouseX = (e.clientX - rect.left) / measuredScale;
+    if (!pointerDate) {
+        hideTimelineCrosshair();
+        return;
+    }
 
-  if (mouseX < scaleMarginLeft || mouseX > scaleMarginLeft + scaleChartWidth) {
-    hideTimelineCrosshair();
-    return;
-  }
+    const svgEl = document.querySelector("#svgContainer svg");
+    if (!svgEl) return;
 
-  const totalDuration = scaleMaxTime - scaleMinTime;
-  let evaluatedTime = scaleMinTime + ((mouseX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
-  evaluatedTime = Math.max(scaleMinTime, Math.min(scaleMaxTime, evaluatedTime));
-  const dateLabel = formatDateToDDMMMYYYY(new Date(evaluatedTime));
+    const svgHeight = Number(svgEl.getAttribute("height")) || 600;
+    const isDragging = Boolean(activeDragState);
 
-  let line = document.getElementById('timelineCrosshairLine');
-  let badge = document.getElementById('timelineCrosshairBadge');
-  const svgHeight = parseInt(svgEl.getAttribute('height')) || 600;
+    let line = document.getElementById("timelineCrosshairLine");
+    let badge = document.getElementById("timelineCrosshairBadge");
+    let badgeBackground = document.getElementById("timelineCrosshairBadgeBg");
 
-  if (!line) {
-    line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.id = 'timelineCrosshairLine';
-    line.setAttribute('stroke', '#0369a1');
-    line.setAttribute('stroke-width', '1');
-    line.setAttribute('stroke-dasharray', '4,3');
-    line.style.pointerEvents = 'none';
-    svgEl.appendChild(line);
-  }
-  line.setAttribute('x1', mouseX);
-  line.setAttribute('x2', mouseX);
-  line.setAttribute('y1', 0);
-  line.setAttribute('y2', svgHeight);
-  line.style.display = 'block';
+    /* 1. Create the vertical date line */
+    if (!line) {
+        line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.id = "timelineCrosshairLine";
+        line.setAttribute("stroke", "#0369a1");
+        line.setAttribute("stroke-width", "1");
+        line.setAttribute("stroke-dasharray", "4,3");
+        line.style.pointerEvents = "none";
+        svgEl.appendChild(line);
+    }
 
-  // AFTER
-  // AFTER
-  if (!badge) {
-    badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    badge.id = 'timelineCrosshairBadge';
-    badge.setAttribute('fill', '#0369a1');
-    badge.setAttribute('font-size', '11');
-    badge.setAttribute('font-weight', 'bold');
-    badge.style.pointerEvents = 'none';
-    svgEl.appendChild(badge);
-  }
-  const badgeX = Math.min(mouseX + 4, scaleMarginLeft + scaleChartWidth - 70);
-  badge.setAttribute('x', badgeX);
-  badge.setAttribute('y', svgHeight - 8);
-  badge.textContent = dateLabel;
-  badge.style.display = 'block';
+    /*
+       2. Create the BACKGROUND first.
+       It must be behind the text in SVG painter order.
+    */
+    if (!badgeBackground) {
+        badgeBackground = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "rect"
+        );
+
+        badgeBackground.id = "timelineCrosshairBadgeBg";
+        badgeBackground.setAttribute("rx", "4");
+        badgeBackground.style.pointerEvents = "none";
+        svgEl.appendChild(badgeBackground);
+    }
+
+    /*
+       3. Create the TEXT after the background.
+       Because it is appended later, it appears above the blue box.
+    */
+    if (!badge) {
+        badge = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+        );
+
+        badge.id = "timelineCrosshairBadge";
+        badge.setAttribute("fill", "#ffffff");
+        badge.setAttribute("font-size", "11");
+        badge.setAttribute("font-weight", "700");
+        badge.setAttribute("text-anchor", "middle");
+        badge.setAttribute("dominant-baseline", "middle");
+        badge.style.pointerEvents = "none";
+        svgEl.appendChild(badge);
+    }
+
+    const helperText = isDragging
+        ? getDragDateHelperText(activeDragState.mode, pointerDate.dateText)
+        : pointerDate.dateText;
+
+    const badgeWidth = Math.max(82, helperText.length * 6.4 + 16);
+    const badgeHeight = 22;
+
+    const badgeX = Math.max(
+        scaleMarginLeft + badgeWidth / 2,
+        Math.min(
+            pointerDate.canvasX,
+            scaleMarginLeft + scaleChartWidth - badgeWidth / 2
+        )
+    );
+
+    /*
+       Places the badge near the bottom of the SVG.
+       The text y-coordinate is the vertical center of the rectangle.
+    */
+    const badgeTopY = Math.max(4, svgHeight - badgeHeight - 6);
+    const badgeTextY = badgeTopY + badgeHeight / 2;
+
+    line.setAttribute("x1", pointerDate.canvasX);
+    line.setAttribute("x2", pointerDate.canvasX);
+    line.setAttribute("y1", "0");
+    line.setAttribute("y2", svgHeight);
+    line.style.display = "block";
+
+    badgeBackground.setAttribute("x", badgeX - badgeWidth / 2);
+    badgeBackground.setAttribute("y", badgeTopY);
+    badgeBackground.setAttribute("width", badgeWidth);
+    badgeBackground.setAttribute("height", badgeHeight);
+    badgeBackground.setAttribute(
+        "fill",
+        isDragging ? "#1d4ed8" : "#0369a1"
+    );
+    badgeBackground.style.display = "block";
+
+    badge.setAttribute("x", badgeX);
+    badge.setAttribute("y", badgeTextY);
+    badge.textContent = helperText;
+    badge.style.display = "block";
 }
 
 function hideTimelineCrosshair() {
-  const line = document.getElementById('timelineCrosshairLine');
-  const badge = document.getElementById('timelineCrosshairBadge');
-  if (line) line.style.display = 'none';
-  if (badge) badge.style.display = 'none';
+    const line = document.getElementById("timelineCrosshairLine");
+    const badge = document.getElementById("timelineCrosshairBadge");
+    const badgeBackground = document.getElementById("timelineCrosshairBadgeBg");
+
+    if (line) line.style.display = "none";
+    if (badge) badge.style.display = "none";
+    if (badgeBackground) badgeBackground.style.display = "none";
 }
 
 function stopGlobalDragAction(e) {
@@ -2941,56 +3155,107 @@ function escapeHtmlAttribute(value) {
     let existingDialog = document.getElementById('floatingMilestoneDialog');
     if (existingDialog) existingDialog.remove();
 
-    let bodyHTML = `
-      <div class="modal-field"><label>Label</label><input type="text" id="modalMsLabel" value="${ms.label || ''}"></div>
-      <div class="modal-field"><label>Date</label><input type="date" id="modalMsDatePicker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}"></div>
-      <div class="modal-field"><label>Symbol</label>
-        <select id="modalMsSymbol">
-          <option value="diamond" ${ms.symbol==='diamond'?'selected':''}>Diamond</option>
-          <option value="circle" ${ms.symbol==='circle'?'selected':''}>Circle</option>
-          <option value="triangle" ${ms.symbol==='triangle'?'selected':''}>Triangle</option>
-          <option value="star" ${ms.symbol==='star'?'selected':''}>Star</option>
-        </select>
-      </div>
-      <div class="modal-field">
-        <label><input type="checkbox" id="modalMsOverrideColor" ${ms.color?'checked':''}> Override Color</label>
-        <input type="color" id="modalMsColor" value="${ms.color || document.getElementById('msColor').value}">
-      </div>
-      <div class="modal-field"><label><input type="checkbox" id="modalMsLdrText" ${ms.leaderEnabledText?'checked':''}> Leader to Text</label></div>
-      <div class="modal-field"><label><input type="checkbox" id="modalMsLdrDate" ${ms.leaderEnabledDate?'checked':''}> Leader to Date</label></div>
-      <div class="modal-field"><label>Leader Anchor</label>
-        <select id="modalMsLdrAnchor">
-          <option value="center" ${ms.leaderAnchorText==='center'?'selected':''}>Center</option>
-          <option value="top" ${ms.leaderAnchorText==='top'?'selected':''}>Top</option>
-          <option value="bottom" ${ms.leaderAnchorText==='bottom'?'selected':''}>Bottom</option>
-        </select>
-      </div>
-      <div class="modal-field"><label>Leader Weight</label><input type="number" id="modalMsLdrWeight" min="1" max="10" value="${ms.leaderWeight || 1}"></div>
-      <div class="modal-field"><label>Leader Pattern</label>
-        <select id="modalMsLdrPattern">
-          <option value="solid" ${ms.leaderPattern==='solid'?'selected':''}>Solid</option>
-          <option value="dashed" ${ms.leaderPattern==='dashed'?'selected':''}>Dashed</option>
-          <option value="dotted" ${ms.leaderPattern==='dotted'?'selected':''}>Dotted</option>
-        </select>
-      </div>
-      <div class="modal-field"><label>Show Date</label>
-        <div class="radio-group">
-          <label class="radio-option"><input type="radio" name="modalMsShowDate" value="true" ${ms.showDate!==false?'checked':''}> Yes</label>
-          <label class="radio-option"><input type="radio" name="modalMsShowDate" value="false" ${ms.showDate===false?'checked':''}> No</label>
-        </div>
-      </div>
-    `;
+   let bodyHTML = `
+    <div class="modal-field full-width">
+        <label for="modalMsLabel">Milestone Label</label>
+        <input type="text" id="modalMsLabel" value="${ms.label || ""}">
+    </div>
 
-    let buttonsHTML = `
-      <div style="display:flex; gap:6px;">
-        <button id="modalMsDeleteBtn" style="background:#fff1f2; color:#e11d48; border-color:#fca5a5; font-weight:bold;">Delete</button>
-        <button id="modalMsResetPosBtn" style="background:#f1f5f9; color:#475569;">Reset Position</button>
-      </div>
-      <div style="display:flex; gap:6px;">
-        <button id="modalMsCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
-        <button id="modalMsSaveBtn" style="background:var(--primary); color:#fff; border-color:var(--primary);">Apply</button>
-      </div>
-    `;
+    <div class="modal-field">
+        <label for="modalMsDatePicker">Date</label>
+        <input type="date" id="modalMsDatePicker"
+            value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}">
+    </div>
+
+    <div class="modal-field">
+        <label for="modalMsSymbol">Symbol</label>
+        <select id="modalMsSymbol">
+            <option value="diamond" ${ms.symbol === "diamond" ? "selected" : ""}>Diamond</option>
+            <option value="circle" ${ms.symbol === "circle" ? "selected" : ""}>Circle</option>
+            <option value="triangle" ${ms.symbol === "triangle" ? "selected" : ""}>Triangle</option>
+            <option value="star" ${ms.symbol === "star" ? "selected" : ""}>Star</option>
+        </select>
+    </div>
+
+    <label class="modal-field checkbox-field">
+        <input type="checkbox" id="modalMsOverrideColor" ${ms.color ? "checked" : ""}>
+        Override color
+    </label>
+
+    <div class="modal-field">
+        <label for="modalMsColor">Milestone Color</label>
+        <input type="color" id="modalMsColor"
+            value="${ms.color || document.getElementById('msColor').value}">
+    </div>
+
+    <label class="modal-field checkbox-field">
+        <input type="checkbox" id="modalMsLdrText" ${ms.leaderEnabledText ? "checked" : ""}>
+        Leader to text
+    </label>
+
+    <label class="modal-field checkbox-field">
+        <input type="checkbox" id="modalMsLdrDate" ${ms.leaderEnabledDate ? "checked" : ""}>
+        Leader to date
+    </label>
+
+    <div class="modal-field">
+        <label for="modalMsLdrAnchor">Leader Anchor</label>
+        <select id="modalMsLdrAnchor">
+            <option value="center" ${ms.leaderAnchorText === "center" ? "selected" : ""}>Center</option>
+            <option value="top" ${ms.leaderAnchorText === "top" ? "selected" : ""}>Top</option>
+            <option value="bottom" ${ms.leaderAnchorText === "bottom" ? "selected" : ""}>Bottom</option>
+            <option value="left" ${ms.leaderAnchorText === "left" ? "selected" : ""}>Left</option>
+            <option value="right" ${ms.leaderAnchorText === "right" ? "selected" : ""}>Right</option>
+        </select>
+    </div>
+
+    <div class="modal-field">
+        <label for="modalMsLdrWeight">Leader Weight</label>
+        <input type="number" id="modalMsLdrWeight"
+            min="1" max="10" value="${ms.leaderWeight || 1}">
+    </div>
+
+    <div class="modal-field">
+        <label for="modalMsLdrPattern">Leader Pattern</label>
+        <select id="modalMsLdrPattern">
+            <option value="solid" ${ms.leaderPattern === "solid" ? "selected" : ""}>Solid</option>
+            <option value="dashed" ${ms.leaderPattern === "dashed" ? "selected" : ""}>Dashed</option>
+            <option value="dotted" ${ms.leaderPattern === "dotted" ? "selected" : ""}>Dotted</option>
+        </select>
+    </div>
+
+    <div class="modal-field">
+        <label>Show Date</label>
+        <select id="modalMsShowDate">
+            <option value="true" ${ms.showDate !== false ? "selected" : ""}>Yes</option>
+            <option value="false" ${ms.showDate === false ? "selected" : ""}>No</option>
+        </select>
+    </div>
+`;
+
+let buttonsHTML = `
+    <div class="action-group">
+        <button id="modalMsDeleteBtn"
+            style="background:#fff1f2; color:#e11d48; border-color:#fca5a5">
+            Delete
+        </button>
+        <button id="modalMsResetPosBtn"
+            style="background:#f1f5f9; color:#475569">
+            Reset Position
+        </button>
+    </div>
+
+    <div class="action-group">
+        <button id="modalMsCancelBtn"
+            style="background:#f1f5f9; color:#475569">
+            Cancel
+        </button>
+        <button id="modalMsSaveBtn"
+            style="background:var(--primary); color:#ffffff; border-color:var(--primary)">
+            Apply
+        </button>
+    </div>
+`;
 
     let dialog = buildStandardModal('floatingMilestoneDialog', 'Milestone Settings', bodyHTML, buttonsHTML);
     positionFloatingDialogSmart(dialog, e);
@@ -3041,7 +3306,7 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
             ms.leaderWeight = parseInt(document.getElementById('modalMsLdrWeight').value) || 1;
             ms.leaderPattern = document.getElementById('modalMsLdrPattern').value;
 
-            ms.showDate = document.querySelector('input[name="modalMsShowDate"]:checked').value === "true";
+           ms.showDate = document.getElementById("modalMsShowDate").value === "true";
 
             recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
         });
@@ -3055,54 +3320,68 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
         let existingDialog = document.getElementById('floatingBarDateDialog');
         if (existingDialog) existingDialog.remove();
 
-        let bodyHTML = `
+       let bodyHTML = `
     <div class="modal-field">
-        <label>Start Date</label>
-        <input type="date" id="modalStartPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}">
+        <label for="modalStartPicker">Start</label>
+        <input type="date" id="modalStartPicker"
+            value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}">
     </div>
+
     <div class="modal-field">
-        <label>Finish Date</label>
-        <input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}">
+        <label for="modalEndPicker">Finish</label>
+        <input type="date" id="modalEndPicker"
+            value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}">
     </div>
+
     <div class="modal-field">
-        <label>Progress Complete (%)</label>
-        <input
-            type="number"
-            id="modalBarProgress"
-            value="${Number.isFinite(Number(bar.progress)) ? bar.progress : 0}"
-            min="0"
-            max="100"
-            step="1"
-        >
+        <label for="modalBarProgress">Progress (%)</label>
+        <input type="number" id="modalBarProgress"
+            value="${Number.isFinite(bar.progress) ? bar.progress : 0}"
+            min="0" max="100" step="1">
     </div>
+
     <div class="modal-field">
-        <label>Unfilled Color</label>
-        <input type="color" id="modalBarBgColor" value="${bar.bgColor || document.getElementById('barBgColor').value}">
-    </div>
-    <div class="modal-field">
-        <label>Progress Fill Color</label>
-        <input type="color" id="modalBarColor" value="${bar.color || document.getElementById('barColor').value}">
-    </div>
-    <div class="modal-field">
-        <label>Fill Pattern</label>
+        <label for="modalBarPattern">Pattern</label>
         <select id="modalBarPattern">
-            <option value="solid" ${bar.pattern === 'solid' ? 'selected' : ''}>Solid</option>
-            <option value="crosshatch" ${bar.pattern === 'crosshatch' ? 'selected' : ''}>Cross Hatch</option>
-            <option value="grid" ${bar.pattern === 'grid' ? 'selected' : ''}>Grid</option>
-            <option value="dashed" ${bar.pattern === 'dashed' ? 'selected' : ''}>Dashed</option>
-            <option value="gingham" ${bar.pattern === 'gingham' ? 'selected' : ''}>Gingham</option>
+            <option value="solid" ${bar.pattern === "solid" ? "selected" : ""}>Solid</option>
+            <option value="crosshatch" ${bar.pattern === "crosshatch" ? "selected" : ""}>Cross Hatch</option>
+            <option value="grid" ${bar.pattern === "grid" ? "selected" : ""}>Grid</option>
+            <option value="dashed" ${bar.pattern === "dashed" ? "selected" : ""}>Dashed</option>
+            <option value="gingham" ${bar.pattern === "gingham" ? "selected" : ""}>Gingham</option>
         </select>
+    </div>
+
+    <div class="modal-field">
+        <label for="modalBarBgColor">Bar Background</label>
+        <input type="color" id="modalBarBgColor"
+            value="${bar.bgColor || document.getElementById('barBgColor').value}">
+    </div>
+
+    <div class="modal-field">
+        <label for="modalBarColor">Progress Fill</label>
+        <input type="color" id="modalBarColor"
+            value="${bar.color || document.getElementById('barColor').value}">
     </div>
 `;
 
 let buttonsHTML = `
-  <div style="display:flex; gap:6px;">
-    <button id="modalBarDeleteBtn" style="background:#fff1f2; color:#e11d48; border-color:#fca5a5; font-weight:bold;">Delete</button>
-  </div>
-  <div style="display:flex; gap:6px;">
-    <button id="modalCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
-    <button id="modalSaveBtn" style="background:var(--primary); color:#fff; border-color:var(--primary);">Apply</button>
-  </div>
+    <div class="action-group">
+        <button id="modalBarDeleteBtn"
+            style="background:#fff1f2; color:#e11d48; border-color:#fca5a5">
+            Delete
+        </button>
+    </div>
+
+    <div class="action-group">
+        <button id="modalCancelBtn"
+            style="background:#f1f5f9; color:#475569">
+            Cancel
+        </button>
+        <button id="modalSaveBtn"
+            style="background:var(--primary); color:#ffffff; border-color:var(--primary)">
+            Apply
+        </button>
+    </div>
 `;
 
 let dialog = buildStandardModal('floatingBarDateDialog', 'Activity Bar Settings', bodyHTML, buttonsHTML);
@@ -3853,9 +4132,41 @@ function updateProjectDashboard() {
             svg += `<rect x="10" y="${axisLineY}" width="${width - 20}" height="${dynamicTotalRowsHeight}" fill="url(#pat-aligngrid)" style="pointer-events:none;"/>`;
         }
 
-        const halfWidth = chartWidth / 2;
-        svg += `<rect x="${scaleMarginLeft}" y="0" width="${halfWidth}" height="${axisLineY}" fill="#f8fafc" fill-opacity="0.9" style="cursor:w-resize;" onmousedown="initiateDragInteraction(event, 'timeline-resize-start', null)"/>`;
-        svg += `<rect x="${scaleMarginLeft + halfWidth}" y="0" width="${halfWidth}" height="${axisLineY}" fill="#f8fafc" fill-opacity="0.9" style="cursor:e-resize;" onmousedown="initiateDragInteraction(event, 'timeline-resize-end', null)"/>`;
+        const timelineHeaderHeight = axisLineY;
+const resizeHandleWidth = 14;
+const timelinePanWidth = chartWidth - (resizeHandleWidth * 2);
+
+svg += `
+    <!-- Left edge: changes the displayed timeline start date -->
+    <rect x="${scaleMarginLeft}" y="0"
+        width="${resizeHandleWidth}"
+        height="${timelineHeaderHeight}"
+        fill="transparent"
+        style="cursor:w-resize"
+        onmousedown="initiateDragInteraction(event, 'timeline-resize-start', null)">
+        <title>Drag to change timeline start date</title>
+    </rect>
+
+    <!-- Center: moves the whole timeline window left/right -->
+    <rect x="${scaleMarginLeft + resizeHandleWidth}" y="0"
+        width="${timelinePanWidth}"
+        height="${timelineHeaderHeight}"
+        fill="transparent"
+        style="cursor:grab"
+        onmousedown="initiateDragInteraction(event, 'timeline-pan', null)">
+        <title>Drag to pan the timeline</title>
+    </rect>
+
+    <!-- Right edge: changes the displayed timeline finish date -->
+    <rect x="${scaleMarginLeft + chartWidth - resizeHandleWidth}" y="0"
+        width="${resizeHandleWidth}"
+        height="${timelineHeaderHeight}"
+        fill="transparent"
+        style="cursor:e-resize"
+        onmousedown="initiateDragInteraction(event, 'timeline-resize-end', null)">
+        <title>Drag to change timeline finish date</title>
+    </rect>
+`;
 
         svg += `<line x1="${scaleMarginLeft}" y1="${axisLineY}" x2="${endBoundaryXCoordinate}" y2="${axisLineY}" stroke="${headerColor}" stroke-width="2"/>`;
 
