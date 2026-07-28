@@ -1,0 +1,820 @@
+{
+  "meta": {
+    "title": "Trader Joe's Family Dinner Planner",
+    "updated": "2026-07-28",
+    "storeNote": "Trader Joe's product names and stock can vary by location. Verify availability before shopping.",
+    "rules": [
+      "No turkey",
+      "No refrigerated heat-and-eat meals",
+      "Frozen ingredients are allowed only when cooked as part of the dish",
+      "Recipes are mild by default and can be adjusted for adults"
+    ]
+  },
+  "recipes": [
+    {
+      "id": "garlic-lime-shrimp-tacos",
+      "title": "Garlic-Lime Shrimp Tacos",
+      "bucket": "under30",
+      "totalMinutes": 25,
+      "servings": 4,
+      "description": "Cooked shrimp tacos with cabbage, avocado, lime, cilantro, and warm corn tortillas.",
+      "tags": ["Stovetop", "Mexican", "Seafood"],
+      "ingredients": [
+        { "section": "Frozen", "product": "Trader Joe's Argentinian Red Shrimp", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Corn Tortillas", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Shredded Green & Red Cabbage", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Avocados", "amount": "2" },
+        { "section": "Produce", "product": "Trader Joe's Limes", "amount": "3" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Cilantro", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Dairy", "product": "Trader Joe's Mexican Style Shredded Cheese Blend", "amount": "1 bag" }
+      ],
+      "steps": [
+        "Thaw shrimp under cold running water, pat dry, and season lightly with salt and pepper.",
+        "Sauté shrimp in olive oil with minced garlic for 2 to 3 minutes per side, until opaque and cooked through.",
+        "Warm tortillas in a dry skillet.",
+        "Fill tortillas with shrimp, cabbage, avocado, cheese, cilantro, and lime."
+      ],
+      "toddlerTip": "Serve chopped shrimp, avocado, cheese, and soft tortilla separately. Keep cabbage and lime optional."
+    },
+    {
+      "id": "beef-black-bean-quesadillas",
+      "title": "Beef & Black Bean Quesadillas",
+      "bucket": "under30",
+      "totalMinutes": 25,
+      "servings": 4,
+      "description": "Crisp flour tortillas filled with cooked ground beef, black beans, and melted cheese.",
+      "tags": ["Stovetop", "Mexican", "One Pan"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's 85% Lean Ground Beef", "amount": "1 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Cuban Style Black Beans", "amount": "1 can" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Flour Tortillas", "amount": "1 package" },
+        { "section": "Dairy", "product": "Trader Joe's Mexican Style Shredded Cheese Blend", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" },
+        { "section": "Produce", "product": "Trader Joe's Avocados", "amount": "2" },
+        { "section": "Pantry", "product": "Trader Joe's Taco Seasoning Mix", "amount": "1 packet" }
+      ],
+      "steps": [
+        "Brown beef and diced onion in a large skillet.",
+        "Add taco seasoning, black beans, and 1/4 cup water; simmer until thickened.",
+        "Fill tortillas with beef mixture and cheese.",
+        "Cook in a lightly oiled skillet until crisp on both sides and cheese melts."
+      ],
+      "toddlerTip": "Serve soft tortilla strips with beef, beans, cheese, and avocado. Use minimal taco seasoning in their portion."
+    },
+    {
+      "id": "garlic-pork-noodles",
+      "title": "Garlic Pork Noodles with Broccoli",
+      "bucket": "under30",
+      "totalMinutes": 25,
+      "servings": 4,
+      "description": "Ground pork, noodles, broccoli, garlic, ginger, and a mild soy-sesame finish.",
+      "tags": ["Stovetop", "Asian-Inspired", "One Pan"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Ground Pork", "amount": "1 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Thai Wheat Noodles", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Organic Broccoli Florets", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Ginger", "amount": "1 piece" },
+        { "section": "Produce", "product": "Trader Joe's Green Onions", "amount": "1 bunch" },
+        { "section": "Pantry", "product": "Trader Joe's Soy Sauce", "amount": "1 bottle" },
+        { "section": "Pantry", "product": "Trader Joe's Toasted Sesame Oil", "amount": "1 bottle" }
+      ],
+      "steps": [
+        "Cook noodles according to package directions; drain.",
+        "Brown pork with minced garlic and ginger.",
+        "Add broccoli and 1/4 cup water; cover until broccoli is tender.",
+        "Add noodles, soy sauce, sesame oil, and green onions; toss until hot."
+      ],
+      "toddlerTip": "Reserve noodles, pork, and broccoli before adding soy sauce. Cut noodles shorter with kitchen shears."
+    },
+    {
+      "id": "chicken-caesar-wraps",
+      "title": "Warm Chicken Caesar Wraps",
+      "bucket": "under30",
+      "totalMinutes": 25,
+      "servings": 4,
+      "description": "Freshly cooked chicken breast, romaine, Parmesan, and warm tortillas.",
+      "tags": ["Stovetop", "American", "Quick"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Organic Free Range Boneless Skinless Thin Sliced Chicken Breast Fillets", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Hearts of Romaine", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Flour Tortillas", "amount": "1 package" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Caesar Salad Dressing", "amount": "1 bottle" },
+        { "section": "Pantry", "product": "Trader Joe's Garlic & Butter Croutons", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Lemons", "amount": "1" }
+      ],
+      "steps": [
+        "Season chicken with salt, pepper, and olive oil; cook in a skillet until it reaches 165°F.",
+        "Rest chicken for 3 minutes, then slice.",
+        "Toss chopped romaine with a small amount of Caesar dressing, Parmesan, and crushed croutons.",
+        "Warm tortillas and fill with chicken and salad."
+      ],
+      "toddlerTip": "Serve plain chicken strips, tortilla, finely cut romaine, and Parmesan. Skip dressing and croutons."
+    },
+    {
+      "id": "smash-burgers-green-beans",
+      "title": "Smash Burgers with Green Beans",
+      "bucket": "under30",
+      "totalMinutes": 27,
+      "servings": 4,
+      "description": "Thin beef patties with cheddar, brioche buns, and sautéed French green beans.",
+      "tags": ["Stovetop", "American", "Family Favorite"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's 80% Lean Ground Beef", "amount": "1.5 lb" },
+        { "section": "Bakery", "product": "Trader Joe's Brioche Buns", "amount": "1 package" },
+        { "section": "Dairy", "product": "Trader Joe's Sliced Sharp Cheddar Cheese", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's French Green Beans", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Ketchup", "amount": "1 bottle" },
+        { "section": "Pantry", "product": "Trader Joe's Dill Pickle Mustard", "amount": "1 jar" }
+      ],
+      "steps": [
+        "Sauté green beans with olive oil and a splash of water until tender.",
+        "Form beef into 8 loose balls and season with salt and pepper.",
+        "Smash on a very hot skillet; cook 2 minutes, flip, add cheese, and cook 1 more minute.",
+        "Toast buns and serve with onion, ketchup, and mustard."
+      ],
+      "toddlerTip": "Serve a deconstructed plate with small burger pieces, soft green beans, and bun."
+    },
+    {
+      "id": "lemon-shrimp-orzo",
+      "title": "Lemon Shrimp Orzo",
+      "bucket": "under30",
+      "totalMinutes": 28,
+      "servings": 4,
+      "description": "Orzo with garlic shrimp, spinach, lemon, chicken broth, and Parmesan.",
+      "tags": ["Stovetop", "Mediterranean", "Seafood"],
+      "ingredients": [
+        { "section": "Frozen", "product": "Trader Joe's Argentinian Red Shrimp", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Orzo Pasta", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Baby Spinach", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Lemons", "amount": "2" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Chicken Bone Broth", "amount": "1 carton" }
+      ],
+      "steps": [
+        "Boil orzo until tender; reserve 1/2 cup cooking water and drain.",
+        "Cook thawed shrimp with garlic in olive oil until opaque.",
+        "Add spinach and cook until wilted.",
+        "Toss in orzo, Parmesan, lemon zest, lemon juice, and enough pasta water to make a light sauce."
+      ],
+      "toddlerTip": "Set aside plain orzo, spinach, and small shrimp pieces before adding lemon."
+    },
+    {
+      "id": "chicken-caprese-pasta",
+      "title": "Chicken Caprese Pasta",
+      "bucket": "under30",
+      "totalMinutes": 28,
+      "servings": 4,
+      "description": "Chicken, cavatappi, cherry tomatoes, mozzarella pearls, basil, and balsamic glaze.",
+      "tags": ["Stovetop", "Italian", "Family Friendly"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Organic Free Range Boneless Skinless Thin Sliced Chicken Breast Fillets", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Cavatappi Pasta", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Cherry Tomatoes", "amount": "1 package" },
+        { "section": "Dairy", "product": "Trader Joe's Fresh Mozzarella Pearls", "amount": "1 container" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Basil", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Balsamic Glaze", "amount": "1 bottle" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" }
+      ],
+      "steps": [
+        "Boil cavatappi until al dente; reserve 1/2 cup pasta water.",
+        "Sear seasoned chicken 3 to 4 minutes per side until 165°F; slice.",
+        "Cook garlic and tomatoes until tomatoes soften.",
+        "Toss pasta with chicken, tomatoes, mozzarella, basil, pasta water, and balsamic glaze."
+      ],
+      "toddlerTip": "Serve pasta, chicken, and soft tomatoes separately. Cut mozzarella pearls into quarters."
+    },
+    {
+      "id": "chicken-fried-rice",
+      "title": "Chicken Fried Rice",
+      "bucket": "under30",
+      "totalMinutes": 29,
+      "servings": 4,
+      "description": "Chicken thighs, jasmine rice, egg, peas, carrots, ginger, garlic, and green onions.",
+      "tags": ["Stovetop", "Asian-Inspired", "One Pan"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Boneless Skinless Chicken Thighs", "amount": "1.25 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Jasmine Rice", "amount": "1 bag" },
+        { "section": "Frozen", "product": "Trader Joe's Organic Peas & Carrots", "amount": "1 bag" },
+        { "section": "Dairy", "product": "Trader Joe's Large Brown Eggs", "amount": "1 dozen" },
+        { "section": "Produce", "product": "Trader Joe's Green Onions", "amount": "1 bunch" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Ginger", "amount": "1 piece" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Pantry", "product": "Trader Joe's Soyaki Sauce", "amount": "1 bottle" }
+      ],
+      "steps": [
+        "Cook jasmine rice according to package directions, then spread it out briefly to release steam.",
+        "Cook diced chicken thighs in a large braising pan until browned and 165°F; remove.",
+        "Scramble 3 eggs, then add peas, carrots, ginger, garlic, rice, chicken, green onions, and Soyaki.",
+        "Stir-fry until hot and evenly coated."
+      ],
+      "toddlerTip": "Set aside chicken, egg, rice, peas, and carrots before adding Soyaki."
+    },
+    {
+      "id": "loco-moco-bowls",
+      "title": "Loco Moco Beef Bowls",
+      "bucket": "under30",
+      "totalMinutes": 29,
+      "servings": 4,
+      "description": "Beef patties over rice with mushroom-onion gravy and optional fried eggs.",
+      "tags": ["Stovetop", "Hawaiian-Inspired", "Family Favorite"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's 80% Lean Ground Beef", "amount": "1.25 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Jasmine Rice", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Baby Bella Mushrooms", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" },
+        { "section": "Dairy", "product": "Trader Joe's Large Brown Eggs", "amount": "1 dozen" },
+        { "section": "Pantry", "product": "Trader Joe's Beef Bone Broth", "amount": "1 carton" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Cornstarch", "amount": "1 box" },
+        { "section": "Pantry", "product": "Trader Joe's Worcestershire Sauce", "amount": "1 bottle" }
+      ],
+      "steps": [
+        "Cook rice according to package directions.",
+        "Mix beef with a small splash of Worcestershire, form 4 patties, and sear until cooked through.",
+        "Cook mushrooms and onion in the same pan; add broth and thicken with a cornstarch slurry.",
+        "Serve patties and gravy over rice. Add fried eggs for adults if desired."
+      ],
+      "toddlerTip": "Serve chopped beef, rice, and soft mushrooms with only a small amount of gravy."
+    },
+    {
+      "id": "sausage-gnocchi-skillet",
+      "title": "Sausage, Gnocchi & Broccoli Skillet",
+      "bucket": "under30",
+      "totalMinutes": 30,
+      "servings": 4,
+      "description": "Sweet Italian chicken sausage, potato gnocchi, broccoli, marinara, and mozzarella.",
+      "tags": ["Stovetop", "Italian", "One Pan"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Sweet Italian Chicken Sausage", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Potato Gnocchi", "amount": "2 packages" },
+        { "section": "Produce", "product": "Trader Joe's Organic Broccoli Florets", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Basil Marinara Sauce", "amount": "1 jar" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Lite Mozzarella Cheese", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" }
+      ],
+      "steps": [
+        "Slice sausage and brown in a large covered skillet; transfer to a plate.",
+        "Cook onion, garlic, and broccoli with a splash of water until broccoli is tender-crisp.",
+        "Add gnocchi, marinara, 1/2 cup water, and sausage; cover and simmer 6 to 8 minutes.",
+        "Top with mozzarella, cover until melted, and serve."
+      ],
+      "toddlerTip": "Cut gnocchi and sausage into small pieces. Cook broccoli until soft."
+    },
+
+    {
+      "id": "tuscan-chicken-penne",
+      "title": "Tuscan Chicken Penne",
+      "bucket": "under60",
+      "totalMinutes": 35,
+      "servings": 4,
+      "description": "Seared chicken thighs, spinach, sun-dried tomatoes, Parmesan, and penne in creamy garlic sauce.",
+      "tags": ["Italian", "Stovetop", "Braising Pan"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Boneless Skinless Chicken Thighs", "amount": "1.5 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Penne Pasta", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Baby Spinach", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Sun-Dried Tomatoes in Olive Oil", "amount": "1 jar" },
+        { "section": "Dairy", "product": "Trader Joe's Heavy Whipping Cream", "amount": "1 pint" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Pantry", "product": "Trader Joe's Chicken Bone Broth", "amount": "1 carton" }
+      ],
+      "steps": [
+        "Boil penne until just shy of tender; reserve 1 cup pasta water.",
+        "Season and sear chicken in an 8-quart braising pan until 165°F; remove and slice.",
+        "Cook garlic and sun-dried tomatoes. Add 3/4 cup broth and 3/4 cup cream; simmer 3 minutes.",
+        "Add spinach, Parmesan, chicken, and penne. Use pasta water to loosen the sauce."
+      ],
+      "toddlerTip": "Set aside plain penne, soft chicken pieces, and spinach before extra seasoning."
+    },
+    {
+      "id": "beef-enchilada-skillet",
+      "title": "Beef & Black Bean Enchilada Skillet",
+      "bucket": "under60",
+      "totalMinutes": 35,
+      "servings": 4,
+      "description": "Ground beef, black beans, corn tortillas, enchilada sauce, corn, and melted cheese.",
+      "tags": ["Mexican", "One Pan", "Stovetop"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's 85% Lean Ground Beef", "amount": "1 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Traditional Style Refried Beans", "amount": "1 can" },
+        { "section": "Pantry", "product": "Trader Joe's Cuban Style Black Beans", "amount": "1 can" },
+        { "section": "Pantry", "product": "Trader Joe's Enchilada Sauce", "amount": "1 jar" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Corn Tortillas", "amount": "1 package" },
+        { "section": "Frozen", "product": "Trader Joe's Roasted Corn", "amount": "1 bag" },
+        { "section": "Dairy", "product": "Trader Joe's Mexican Style Shredded Cheese Blend", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" }
+      ],
+      "steps": [
+        "Brown beef and onion in an oven-safe skillet.",
+        "Add black beans, frozen corn, and enchilada sauce; simmer 5 minutes.",
+        "Warm refried beans with a splash of water.",
+        "Layer torn tortillas, beans, beef mixture, and cheese. Cover 10 minutes, then broil until bubbling."
+      ],
+      "toddlerTip": "Serve soft tortilla, beans, beef, and cheese before any hot toppings."
+    },
+    {
+      "id": "lemon-chicken-orzo",
+      "title": "Lemon Chicken Orzo with Green Beans",
+      "bucket": "under60",
+      "totalMinutes": 38,
+      "servings": 4,
+      "description": "Chicken thighs, orzo, green beans, lemon, Parmesan, and feta in one braising pan.",
+      "tags": ["Mediterranean", "One Pan", "Braising Pan"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Boneless Skinless Chicken Thighs", "amount": "1.5 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Orzo Pasta", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's French Green Beans", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Chicken Bone Broth", "amount": "1 carton" },
+        { "section": "Produce", "product": "Trader Joe's Lemons", "amount": "2" },
+        { "section": "Dairy", "product": "Trader Joe's Crumbled Feta Cheese", "amount": "1 container" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" }
+      ],
+      "steps": [
+        "Season and sear chicken in a braising pan; remove temporarily.",
+        "Cook garlic and orzo for 1 minute, then add 3 cups broth.",
+        "Nestle chicken and green beans into the orzo. Cover and simmer until chicken reaches 165°F and orzo is tender.",
+        "Finish with lemon zest, juice, Parmesan, and feta."
+      ],
+      "toddlerTip": "Reserve plain orzo, chicken, and soft green beans before lemon and feta."
+    },
+    {
+      "id": "sheet-pan-salmon-potatoes",
+      "title": "Sheet-Pan Salmon, Potatoes & Broccoli",
+      "bucket": "under60",
+      "totalMinutes": 40,
+      "servings": 4,
+      "description": "Roasted salmon with baby potatoes, broccoli, lemon, olive oil, and Dijon.",
+      "tags": ["Sheet Pan", "Seafood", "American"],
+      "ingredients": [
+        { "section": "Seafood", "product": "Trader Joe's Fresh Atlantic Salmon", "amount": "1.5 lb" },
+        { "section": "Produce", "product": "Trader Joe's Baby Potatoes", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Organic Broccoli Florets", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Lemons", "amount": "2" },
+        { "section": "Pantry", "product": "Trader Joe's Dijon Mustard", "amount": "1 jar" },
+        { "section": "Pantry", "product": "Trader Joe's Extra Virgin Olive Oil", "amount": "1 bottle" }
+      ],
+      "steps": [
+        "Heat oven to 425°F. Halve potatoes, toss with olive oil, salt, and pepper, then roast 20 minutes.",
+        "Add broccoli and salmon to the sheet pan.",
+        "Brush salmon with Dijon and lemon juice.",
+        "Roast 12 to 15 minutes more, until salmon flakes and potatoes are tender."
+      ],
+      "toddlerTip": "Flake salmon carefully and check for bones. Serve with soft potato and broccoli pieces."
+    },
+    {
+      "id": "coconut-shrimp-curry",
+      "title": "Coconut Shrimp Curry with Sweet Potatoes",
+      "bucket": "under60",
+      "totalMinutes": 40,
+      "servings": 4,
+      "description": "Shrimp, sweet potatoes, spinach, coconut milk, yellow curry sauce, and jasmine rice.",
+      "tags": ["Asian-Inspired", "Stovetop", "Seafood"],
+      "ingredients": [
+        { "section": "Frozen", "product": "Trader Joe's Argentinian Red Shrimp", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Sweet Potatoes", "amount": "2 large" },
+        { "section": "Produce", "product": "Trader Joe's Baby Spinach", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Jasmine Rice", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Coconut Milk", "amount": "2 cans" },
+        { "section": "Pantry", "product": "Trader Joe's Thai Yellow Curry Sauce", "amount": "1 bottle" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" },
+        { "section": "Produce", "product": "Trader Joe's Limes", "amount": "2" }
+      ],
+      "steps": [
+        "Cook jasmine rice according to package directions.",
+        "Sauté diced sweet potato and onion for 6 minutes.",
+        "Add coconut milk and curry sauce. Cover and simmer until potatoes are tender.",
+        "Add shrimp and cook until opaque. Stir in spinach and finish with lime."
+      ],
+      "toddlerTip": "Reserve sweet potato, rice, spinach, and shrimp before adding much curry sauce."
+    },
+    {
+      "id": "beef-bolognese-spaghetti",
+      "title": "Beef Bolognese with Thin Spaghetti",
+      "bucket": "under60",
+      "totalMinutes": 45,
+      "servings": 4,
+      "description": "Ground beef, mirepoix, garlic, tomato basil marinara, broth, and Parmesan.",
+      "tags": ["Italian", "Stovetop", "Pasta"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's 85% Lean Ground Beef", "amount": "1.5 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Thin Spaghetti", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Mirepoix", "amount": "1 container" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Basil Marinara Sauce", "amount": "1 jar" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Paste", "amount": "1 tube" },
+        { "section": "Pantry", "product": "Trader Joe's Beef Bone Broth", "amount": "1 carton" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" }
+      ],
+      "steps": [
+        "Boil spaghetti until al dente; reserve 1 cup pasta water.",
+        "Brown ground beef, then cook with mirepoix and garlic until soft.",
+        "Stir in tomato paste, marinara, and 1/2 cup broth; simmer 15 to 20 minutes.",
+        "Toss with pasta and Parmesan, adding pasta water as needed."
+      ],
+      "toddlerTip": "Cut spaghetti short and serve with finely crumbled beef sauce."
+    },
+    {
+      "id": "pork-chops-apples-sweet-potatoes",
+      "title": "Pork Chops with Apples & Sweet Potatoes",
+      "bucket": "under60",
+      "totalMinutes": 48,
+      "servings": 4,
+      "description": "Pan-seared pork chops with roasted sweet potatoes, apples, onion, and green beans.",
+      "tags": ["American", "Sheet Pan", "Stovetop"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Bone-In Pork Chops", "amount": "4 chops" },
+        { "section": "Produce", "product": "Trader Joe's Sweet Potatoes", "amount": "2 large" },
+        { "section": "Produce", "product": "Trader Joe's Honeycrisp Apples", "amount": "2" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" },
+        { "section": "Produce", "product": "Trader Joe's French Green Beans", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Dijon Mustard", "amount": "1 jar" },
+        { "section": "Pantry", "product": "Trader Joe's Apple Cider Vinegar", "amount": "1 bottle" }
+      ],
+      "steps": [
+        "Heat oven to 425°F. Roast cubed sweet potatoes with olive oil for 25 to 30 minutes.",
+        "Sear pork chops until browned, then finish in the oven until they reach 145°F. Rest 5 minutes.",
+        "Cook apples, onion, and green beans in the pork skillet with Dijon and a splash of cider vinegar.",
+        "Serve pork with roasted sweet potatoes and apple-green bean mixture."
+      ],
+      "toddlerTip": "Serve finely cut pork, very soft sweet potato, peeled cooked apple, and tender green beans."
+    },
+    {
+      "id": "baked-ziti-beef-spinach",
+      "title": "Baked Ziti with Beef & Spinach",
+      "bucket": "under60",
+      "totalMinutes": 50,
+      "servings": 6,
+      "description": "Beef, ricotta, spinach, mozzarella, Parmesan, marinara, and baked ziti.",
+      "tags": ["Italian", "Baked", "Leftovers"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's 85% Lean Ground Beef", "amount": "1 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Ziti Pasta", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Basil Marinara Sauce", "amount": "2 jars" },
+        { "section": "Dairy", "product": "Trader Joe's Whole Milk Ricotta Cheese", "amount": "1 container" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Mozzarella Cheese", "amount": "1 bag" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Baby Spinach", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" }
+      ],
+      "steps": [
+        "Heat oven to 375°F. Boil ziti until 2 minutes under package directions.",
+        "Brown beef and onion, add marinara and spinach, and cook until spinach wilts.",
+        "Mix ziti with sauce and ricotta. Transfer to baking dish and top with mozzarella and Parmesan.",
+        "Bake uncovered 20 to 25 minutes until bubbling."
+      ],
+      "toddlerTip": "Cool well and cut ziti into small, soft bites."
+    },
+    {
+      "id": "chicken-parmesan-spaghetti",
+      "title": "Chicken Parmesan with Spaghetti",
+      "bucket": "under60",
+      "totalMinutes": 55,
+      "servings": 4,
+      "description": "Scratch-breaded chicken breast, marinara, mozzarella, Parmesan, and spaghetti.",
+      "tags": ["Italian", "Baked", "Family Favorite"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Organic Free Range Boneless Skinless Thin Sliced Chicken Breast Fillets", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Thin Spaghetti", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Panko Breadcrumbs", "amount": "1 canister" },
+        { "section": "Dairy", "product": "Trader Joe's Large Brown Eggs", "amount": "1 dozen" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Mozzarella Cheese", "amount": "1 bag" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Basil Marinara Sauce", "amount": "1 jar" }
+      ],
+      "steps": [
+        "Heat oven to 400°F and boil spaghetti until al dente.",
+        "Dip chicken in beaten egg, then panko mixed with Parmesan, salt, and pepper.",
+        "Pan-fry until golden, top with marinara and mozzarella, and bake until chicken reaches 165°F.",
+        "Serve over spaghetti with additional warmed marinara."
+      ],
+      "toddlerTip": "Cut chicken into very small pieces and serve with plain spaghetti and mild sauce."
+    },
+    {
+      "id": "meatballs-creamy-polenta",
+      "title": "Beef Meatballs with Creamy Polenta",
+      "bucket": "under60",
+      "totalMinutes": 58,
+      "servings": 4,
+      "description": "Scratch-made beef meatballs in marinara over creamy Parmesan polenta.",
+      "tags": ["Italian", "Stovetop", "Comfort Food"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's 85% Lean Ground Beef", "amount": "1.5 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Polenta", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Basil Marinara Sauce", "amount": "2 jars" },
+        { "section": "Dairy", "product": "Trader Joe's Large Brown Eggs", "amount": "1 dozen" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Panko Breadcrumbs", "amount": "1 canister" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Italian Parsley", "amount": "1 package" }
+      ],
+      "steps": [
+        "Combine beef, egg, panko, Parmesan, garlic, parsley, salt, and pepper. Form 16 small meatballs.",
+        "Brown meatballs in a large skillet. Add marinara, cover, and simmer until meatballs reach 160°F.",
+        "Prepare polenta according to package directions and stir in Parmesan.",
+        "Serve meatballs and sauce over creamy polenta."
+      ],
+      "toddlerTip": "Cut meatballs into tiny pieces and serve with soft polenta."
+    },
+
+    {
+      "id": "classic-beef-spinach-lasagna",
+      "title": "Classic Beef & Spinach Lasagna",
+      "bucket": "over60",
+      "totalMinutes": 95,
+      "servings": 8,
+      "description": "Layered baked lasagna with beef, spinach, ricotta, marinara, mozzarella, and Parmesan.",
+      "tags": ["Italian", "Baked", "Leftovers"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's 85% Lean Ground Beef", "amount": "1.5 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Oven-Ready Lasagna Noodles", "amount": "1 box" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Basil Marinara Sauce", "amount": "3 jars" },
+        { "section": "Dairy", "product": "Trader Joe's Whole Milk Ricotta Cheese", "amount": "1 container" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Mozzarella Cheese", "amount": "2 bags" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Baby Spinach", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" }
+      ],
+      "steps": [
+        "Heat oven to 375°F. Brown beef and onion, then add marinara and spinach.",
+        "Layer sauce, oven-ready noodles, ricotta, mozzarella, and Parmesan in a baking dish.",
+        "Repeat layers, cover with foil, and bake 45 minutes.",
+        "Uncover and bake 10 to 15 minutes more. Rest 15 minutes before slicing."
+      ],
+      "toddlerTip": "Let cool well, then cut into small soft squares."
+    },
+    {
+      "id": "chicken-cacciatore-polenta",
+      "title": "Chicken Cacciatore with Polenta",
+      "bucket": "over60",
+      "totalMinutes": 85,
+      "servings": 6,
+      "description": "Bone-in chicken thighs braised with tomatoes, mushrooms, peppers, onion, and herbs.",
+      "tags": ["Italian", "Braising Pan", "One Pot"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Bone-In Skin-On Chicken Thighs", "amount": "2.5–3 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Polenta", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Fire Roasted Diced Tomatoes", "amount": "2 cans" },
+        { "section": "Produce", "product": "Trader Joe's Baby Bella Mushrooms", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Bell Peppers", "amount": "2" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Pantry", "product": "Trader Joe's Chicken Bone Broth", "amount": "1 carton" }
+      ],
+      "steps": [
+        "Season chicken and brown skin-side down in an 8-quart braising pan; remove.",
+        "Cook mushrooms, peppers, onion, and garlic.",
+        "Add tomatoes and broth, return chicken, cover, and braise at 350°F for 50 to 60 minutes.",
+        "Cook polenta according to package directions and serve under the chicken."
+      ],
+      "toddlerTip": "Remove chicken from bone and skin, then serve shredded chicken with soft polenta and vegetables."
+    },
+    {
+      "id": "beef-shepherds-pie",
+      "title": "Beef Shepherd's Pie",
+      "bucket": "over60",
+      "totalMinutes": 80,
+      "servings": 6,
+      "description": "Ground beef and vegetables beneath scratch-made mashed potatoes, baked until golden.",
+      "tags": ["Baked", "Comfort Food", "Family Friendly"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's 85% Lean Ground Beef", "amount": "1.5 lb" },
+        { "section": "Produce", "product": "Trader Joe's Russet Potatoes", "amount": "3 lb" },
+        { "section": "Produce", "product": "Trader Joe's Mirepoix", "amount": "1 container" },
+        { "section": "Frozen", "product": "Trader Joe's Organic Peas & Carrots", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Beef Bone Broth", "amount": "1 carton" },
+        { "section": "Dairy", "product": "Trader Joe's Salted Butter", "amount": "1 package" },
+        { "section": "Dairy", "product": "Trader Joe's Whole Milk", "amount": "1 carton" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Paste", "amount": "1 tube" },
+        { "section": "Pantry", "product": "Trader Joe's Worcestershire Sauce", "amount": "1 bottle" }
+      ],
+      "steps": [
+        "Boil peeled potatoes until tender, then mash with butter and milk.",
+        "Brown beef with mirepoix. Add tomato paste, Worcestershire, peas, carrots, and broth; simmer until thick.",
+        "Transfer beef mixture to a baking dish and top with mashed potatoes.",
+        "Bake at 400°F for 25 minutes until the potatoes are golden."
+      ],
+      "toddlerTip": "Serve a cooled portion with mashed potato, finely crumbled beef, and soft vegetables."
+    },
+    {
+      "id": "pulled-pork-sandwiches",
+      "title": "Pulled Pork Sandwiches with Slaw",
+      "bucket": "over60",
+      "totalMinutes": 315,
+      "servings": 8,
+      "description": "Slow-roasted pork shoulder with onion and apple cider vinegar, shredded for sandwiches.",
+      "tags": ["Slow Roast", "American", "Leftovers"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Boneless Pork Shoulder", "amount": "4 lb" },
+        { "section": "Bakery", "product": "Trader Joe's Brioche Buns", "amount": "2 packages" },
+        { "section": "Produce", "product": "Trader Joe's Shredded Green & Red Cabbage", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onions", "amount": "2" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Ketchup", "amount": "1 bottle" },
+        { "section": "Pantry", "product": "Trader Joe's Apple Cider Vinegar", "amount": "1 bottle" },
+        { "section": "Pantry", "product": "Trader Joe's Dijon Mustard", "amount": "1 jar" },
+        { "section": "Pantry", "product": "Trader Joe's Brown Sugar", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Smoked Paprika", "amount": "1 jar" }
+      ],
+      "steps": [
+        "Rub pork with brown sugar, smoked paprika, salt, and pepper.",
+        "Place pork in a covered roasting pan with onion, vinegar, ketchup, Dijon, and 1/2 cup water.",
+        "Roast covered at 300°F for about 5 hours, until pork shreds easily.",
+        "Shred pork into its juices. Toss cabbage with vinegar and Dijon, then serve on toasted buns."
+      ],
+      "toddlerTip": "Serve tender pulled pork and bun without slaw or sauce."
+    },
+    {
+      "id": "crispy-carnitas-tacos",
+      "title": "Crispy Carnitas Tacos",
+      "bucket": "over60",
+      "totalMinutes": 200,
+      "servings": 6,
+      "description": "Pork shoulder braised until tender, shredded, and oven-crisped for tacos.",
+      "tags": ["Mexican", "Braising Pan", "Weekend"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Boneless Pork Shoulder", "amount": "3.5–4 lb" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onions", "amount": "2" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Produce", "product": "Trader Joe's Limes", "amount": "4" },
+        { "section": "Pantry", "product": "Trader Joe's Chicken Bone Broth", "amount": "1 carton" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Corn Tortillas", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Shredded Green & Red Cabbage", "amount": "1 bag" },
+        { "section": "Dairy", "product": "Trader Joe's Mexican Style Shredded Cheese Blend", "amount": "1 bag" },
+        { "section": "Pantry", "product": "Trader Joe's Ground Cumin", "amount": "1 jar" }
+      ],
+      "steps": [
+        "Cut pork into 3-inch chunks and season with cumin, salt, and pepper.",
+        "Add pork, onion, garlic, lime juice, and broth to an 8-quart braising pan.",
+        "Cover and gently braise at 300°F for 2 1/2 to 3 hours, until fork-tender.",
+        "Shred pork on a sheet pan, spoon over reduced cooking liquid, and broil until crisp at the edges."
+      ],
+      "toddlerTip": "Serve tender shredded pork, cheese, and soft tortilla. Keep cabbage and stronger seasonings off their plate."
+    },
+    {
+      "id": "mild-beef-birria",
+      "title": "Mild Beef Birria Tacos",
+      "bucket": "over60",
+      "totalMinutes": 210,
+      "servings": 6,
+      "description": "Chuck roast braised with seeded dried chiles, tomato, onion, garlic, and broth for mild, rich tacos.",
+      "tags": ["Mexican", "Braising Pan", "Weekend"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Beef Chuck Roast", "amount": "3 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Dried Guajillo Chiles", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Dried Ancho Chiles", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Fire Roasted Diced Tomatoes", "amount": "1 can" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onions", "amount": "2" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Pantry", "product": "Trader Joe's Beef Bone Broth", "amount": "2 cartons" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Corn Tortillas", "amount": "1 package" },
+        { "section": "Dairy", "product": "Trader Joe's Mexican Style Shredded Cheese Blend", "amount": "1 bag" }
+      ],
+      "steps": [
+        "Remove seeds from dried chiles for a mild result. Soften chiles in hot water.",
+        "Blend chiles with tomatoes, onion, garlic, and broth.",
+        "Sear chuck roast, add blended sauce and remaining broth, cover, and braise at 300°F for about 3 hours.",
+        "Shred beef. Dip tortillas lightly in cooking liquid, fill with beef and cheese, then crisp in a skillet."
+      ],
+      "toddlerTip": "Serve plain shredded beef, cheese, and soft tortilla. Do not use chile broth for the toddler portion."
+    },
+    {
+      "id": "sunday-beef-ragu",
+      "title": "Sunday Beef Ragù with Pappardelle",
+      "bucket": "over60",
+      "totalMinutes": 150,
+      "servings": 6,
+      "description": "Chuck roast slowly braised in tomato sauce until it becomes a rich shredded-beef pasta sauce.",
+      "tags": ["Italian", "Braising Pan", "Pasta"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Beef Chuck Roast", "amount": "2.5–3 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Pappardelle Pasta", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Mirepoix", "amount": "1 container" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Basil Marinara Sauce", "amount": "2 jars" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Paste", "amount": "1 tube" },
+        { "section": "Pantry", "product": "Trader Joe's Beef Bone Broth", "amount": "1 carton" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" }
+      ],
+      "steps": [
+        "Sear chuck roast in a Dutch oven or braising pan; remove temporarily.",
+        "Cook mirepoix, garlic, and tomato paste. Add marinara and broth.",
+        "Return beef, cover, and braise at 300°F for about 2 hours.",
+        "Shred beef into sauce. Cook pappardelle and finish with Parmesan."
+      ],
+      "toddlerTip": "Serve short-cut pasta with finely shredded beef and a modest amount of sauce."
+    },
+    {
+      "id": "slow-pork-ragu",
+      "title": "Slow-Braised Pork Ragù",
+      "bucket": "over60",
+      "totalMinutes": 180,
+      "servings": 6,
+      "description": "Pork shoulder, fennel, tomato marinara, garlic, and rigatoni.",
+      "tags": ["Italian", "Braising Pan", "Pasta"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Boneless Pork Shoulder", "amount": "3 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Rigatoni Pasta", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Fennel Bulb", "amount": "1" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Basil Marinara Sauce", "amount": "2 jars" },
+        { "section": "Pantry", "product": "Trader Joe's Chicken Bone Broth", "amount": "1 carton" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" }
+      ],
+      "steps": [
+        "Sear pork shoulder in a braising pan; remove temporarily.",
+        "Cook sliced fennel, onion, and garlic.",
+        "Add marinara and broth, return pork, cover, and braise at 300°F for 2 1/2 to 3 hours.",
+        "Shred pork, toss with cooked rigatoni, and finish with Parmesan."
+      ],
+      "toddlerTip": "Serve finely shredded pork with cut rigatoni and mild sauce."
+    },
+    {
+      "id": "beef-barbacoa-rice-bowls",
+      "title": "Beef Barbacoa Rice Bowls",
+      "bucket": "over60",
+      "totalMinutes": 195,
+      "servings": 6,
+      "description": "Chuck roast braised with citrus, cumin, onion, garlic, and broth, served over rice.",
+      "tags": ["Mexican", "Braising Pan", "Rice Bowls"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Beef Chuck Roast", "amount": "3 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Jasmine Rice", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onions", "amount": "2" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Produce", "product": "Trader Joe's Limes", "amount": "3" },
+        { "section": "Produce", "product": "Trader Joe's Oranges", "amount": "2" },
+        { "section": "Pantry", "product": "Trader Joe's Beef Bone Broth", "amount": "2 cartons" },
+        { "section": "Pantry", "product": "Trader Joe's Ground Cumin", "amount": "1 jar" },
+        { "section": "Dairy", "product": "Trader Joe's Mexican Style Shredded Cheese Blend", "amount": "1 bag" }
+      ],
+      "steps": [
+        "Season and sear chuck roast with cumin, salt, and pepper.",
+        "Add onion, garlic, orange juice, lime juice, and broth.",
+        "Cover and braise at 300°F for about 3 hours until the beef shreds easily.",
+        "Cook rice and serve shredded beef with cheese."
+      ],
+      "toddlerTip": "Serve shredded beef and rice with cheese; keep citrus-heavy juices off the toddler plate if preferred."
+    },
+    {
+      "id": "red-wine-pot-roast",
+      "title": "Red Wine Pot Roast with Potatoes",
+      "bucket": "over60",
+      "totalMinutes": 210,
+      "servings": 6,
+      "description": "Chuck roast braised with baby potatoes, carrots, onion, mushrooms, broth, and red wine.",
+      "tags": ["American", "Braising Pan", "Sunday Dinner"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Beef Chuck Roast", "amount": "3.5 lb" },
+        { "section": "Produce", "product": "Trader Joe's Baby Potatoes", "amount": "1.5 lb" },
+        { "section": "Produce", "product": "Trader Joe's Organic Carrots", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onions", "amount": "2" },
+        { "section": "Produce", "product": "Trader Joe's Baby Bella Mushrooms", "amount": "1 package" },
+        { "section": "Pantry", "product": "Trader Joe's Beef Bone Broth", "amount": "2 cartons" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Cabernet Sauvignon", "amount": "1 bottle" },
+        { "section": "Pantry", "product": "Trader Joe's Tomato Paste", "amount": "1 tube" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Thyme", "amount": "1 package" }
+      ],
+      "steps": [
+        "Sear chuck roast well in a Dutch oven or braising pan; remove temporarily.",
+        "Cook onion, mushrooms, and tomato paste. Add wine and broth.",
+        "Return beef with potatoes, carrots, and thyme.",
+        "Cover and braise at 300°F for 3 to 3 1/2 hours until fork-tender."
+      ],
+      "toddlerTip": "Serve shredded beef with very soft carrots and potatoes. Use little or no wine-heavy sauce."
+    },
+    {
+      "id": "braised-short-ribs-polenta",
+      "title": "Braised Short Ribs with Parmesan Polenta",
+      "bucket": "over60",
+      "totalMinutes": 195,
+      "servings": 6,
+      "description": "Beef short ribs braised in tomato, broth, red wine, onion, carrot, and herbs.",
+      "tags": ["Italian-Inspired", "Braising Pan", "Weekend"],
+      "ingredients": [
+        { "section": "Meat", "product": "Trader Joe's Beef Short Ribs", "amount": "4 lb" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Polenta", "amount": "1 package" },
+        { "section": "Produce", "product": "Trader Joe's Organic Carrots", "amount": "1 bag" },
+        { "section": "Produce", "product": "Trader Joe's Yellow Onion", "amount": "1" },
+        { "section": "Produce", "product": "Trader Joe's Fresh Garlic", "amount": "1 bulb" },
+        { "section": "Pantry", "product": "Trader Joe's Fire Roasted Diced Tomatoes", "amount": "1 can" },
+        { "section": "Pantry", "product": "Trader Joe's Beef Bone Broth", "amount": "2 cartons" },
+        { "section": "Pantry", "product": "Trader Joe's Organic Cabernet Sauvignon", "amount": "1 bottle" },
+        { "section": "Dairy", "product": "Trader Joe's Shredded Parmesan Cheese", "amount": "1 bag" }
+      ],
+      "steps": [
+        "Season and sear short ribs in a braising pan; remove.",
+        "Cook carrot, onion, and garlic. Add tomatoes, wine, and broth.",
+        "Return ribs, cover, and braise at 300°F for about 3 hours until meat falls from the bone.",
+        "Prepare polenta and stir in Parmesan. Serve ribs over polenta."
+      ],
+      "toddlerTip": "Remove all bones and connective tissue. Serve finely shredded short rib over soft polenta."
+    }
+  ]
+}
