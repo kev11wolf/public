@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <meta name="theme-color" content="#102c46" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+
+  <title>Trader Joe's Dinner Planner</title>
+
+  <style>
+    :root {
+      --navy: #102c46;
+      --navy-2: #173d5d;
+      --green: #1f6b62;
+      --green-soft: #e8f4f0;
+      --cream: #f6f3ed;
+      --paper: #ffffff;
+      --ink: #19242d;
+      --muted: #65727c;
+      --border: #dce3e4;
+      --orange: #de7032;
+      --orange-soft: #fff0e6;
+      --danger: #ad3232;
+      --shadow: 0 10px 30px rgba(16, 44, 70, 0.10);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      padding-bottom: var(--safe-bottom);
+      color: var(--ink);
+      background: var(--cream);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      text-rendering: optimizeLegibility;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      min-height: 44px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.65rem 0.85rem;
+      color: var(--navy);
+      background: var(--paper);
+      font-weight: 750;
+      touch-action: manipulation;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(222, 112, 50, 0.42);
+      outline-offset: 2px;
+    }
+
+    button:hover {
+      border-color: var(--green);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1,
+    h2,
+    h3 {
+      line-height: 1.16;
+    }
+
+    .container {
+      width: min(1220px, calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    header {
+      padding: calc(2rem + var(--safe-top)) 1rem 1.75rem;
+      color: #fff;
+      background:
+        radial-gradient(circle at 85% 10%, rgba(87, 171, 144, 0.3), transparent 32%),
+        linear-gradient(135deg, var(--navy), var(--green));
+    }
+
+    h1 {
+      margin-bottom: 0.65rem;
+      font-size: clamp(2rem, 7vw, 3.6rem);
+      letter-spacing: -0.045em;
+    }
+
+    .subtitle {
+      max-width: 820px;
+      margin-bottom: 0;
+      font-size: clamp(1rem, 3.8vw, 1.14rem);
+      opacity: 0.94;
+    }
+
+    .rules-note {
+      max-width: 950px;
+      margin-top: 1rem;
+      padding: 0.8rem 0.95rem;
+      border-left: 4px solid #f4c66b;
+      border-radius: 0 9px 9px 0;
+      background: rgba(255, 255, 255, 0.12);
+      font-size: 0.9rem;
+    }
+
+    main {
+      padding: 1rem 0 2.75rem;
+    }
+
+    .tabs {
+      position: sticky;
+      z-index: 5;
+      top: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding: 0.8rem 0;
+      background: var(--cream);
+    }
+
+    .tab-button {
+      min-height: 54px;
+      padding: 0.55rem 0.4rem;
+      font-size: 0.88rem;
+      line-height: 1.15;
+      text-align: center;
+    }
+
+    .tab-button.active {
+      color: #fff;
+      border-color: var(--green);
+      background: var(--green);
+      box-shadow: 0 5px 14px rgba(31, 107, 98, 0.24);
+    }
+
+    .planner-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    .sheet-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      justify-content: space-between;
+      gap: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .sheet-header h2 {
+      margin-bottom: 0.3rem;
+      color: var(--navy);
+      font-size: clamp(1.5rem, 5vw, 2rem);
+      letter-spacing: -0.025em;
+    }
+
+    .sheet-header p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .primary {
+      color: #fff;
+      border-color: var(--green);
+      background: var(--green);
+    }
+
+    .danger {
+      color: var(--danger);
+    }
+
+    .recipe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .recipe-card,
+    .grocery-panel {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .recipe-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 282px;
+    }
+
+    .card-body {
+      padding: 1rem;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .badge {
+      padding: 0.24rem 0.55rem;
+      border-radius: 999px;
+      color: #16594f;
+      background: var(--green-soft);
+      font-size: 0.74rem;
+      font-weight: 800;
+    }
+
+    .badge.time {
+      color: #9a4616;
+      background: var(--orange-soft);
+    }
+
+    .recipe-card h3 {
+      margin-bottom: 0.55rem;
+      color: var(--navy);
+      font-size: 1.15rem;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    .description {
+      margin-bottom: 0;
+      color: #45535e;
+      font-size: 0.93rem;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      margin-top: auto;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border);
+      background: #fcfdfd;
+    }
+
+    .details-button {
+      min-height: 40px;
+      padding: 0.45rem 0.72rem;
+      font-size: 0.86rem;
+    }
+
+    .select-label {
+      display: flex;
+      align-items: center;
+      gap: 0.42rem;
+      color: var(--navy);
+      font-size: 0.84rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    input[type="checkbox"] {
+      width: 1.15rem;
+      height: 1.15rem;
+      margin: 0;
+      accent-color: var(--green);
+    }
+
+    .grocery-panel {
+      position: sticky;
+      top: 4.75rem;
+      padding: 1rem;
+    }
+
+    .grocery-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .grocery-heading h2 {
+      margin-bottom: 0;
+      color: var(--navy);
+      font-size: 1.35rem;
+    }
+
+    .selection-count {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .grocery-section {
+      margin-top: 0.9rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .grocery-section h3 {
+      margin-bottom: 0.45rem;
+      color: var(--green);
+      font-size: 0.92rem;
+    }
+
+    .grocery-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .grocery-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.43rem 0;
+      font-size: 0.88rem;
+    }
+
+    .grocery-list label {
+      cursor: pointer;
+    }
+
+    .grocery-list input:checked + label {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .product-name {
+      display: block;
+      color: var(--navy);
+      font-weight: 800;
+    }
+
+    .amount {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .loading,
+    .error {
+      padding: 2rem 1rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .error {
+      color: var(--danger);
+    }
+
+    dialog {
+      width: min(800px, calc(100% - 1.25rem));
+      max-height: min(88vh, 840px);
+      max-height: min(88dvh, 840px);
+      padding: 0;
+      border: 0;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.32);
+    }
+
+    dialog::backdrop {
+      background: rgba(7, 22, 35, 0.68);
+    }
+
+    .modal-content {
+      overflow-y: auto;
+      max-height: min(88vh, 840px);
+      max-height: min(88dvh, 840px);
+      padding: 1.15rem;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.8rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h2 {
+      margin: 0.2rem 0 0.45rem;
+      color: var(--navy);
+      font-size: clamp(1.5rem, 5.5vw, 2.1rem);
+      letter-spacing: -0.03em;
+    }
+
+    .close-button {
+      flex: 0 0 auto;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0;
+      font-size: 1.55rem;
+      line-height: 1;
+    }
+
+    .modal-columns {
+      display: grid;
+      grid-template-columns: 1fr 1.18fr;
+      gap: 1.4rem;
+      padding-top: 1rem;
+    }
+
+    .modal-columns h3 {
+      margin-bottom: 0.65rem;
+      color: var(--green);
+      font-size: 1rem;
+    }
+
+    .modal-columns ul,
+    .modal-columns ol {
+      margin: 0;
+      padding-left: 1.15rem;
+    }
+
+    .modal-columns li {
+      margin-bottom: 0.68rem;
+    }
+
+    .tip {
+      margin-top: 1.15rem;
+      padding: 0.85rem;
+      border-radius: 11px;
+      background: #fff3de;
+      font-size: 0.91rem;
+    }
+
+    .safety-note {
+      margin-top: 0.75rem;
+      padding: 0.85rem;
+      border-radius: 11px;
+      color: #15564f;
+      background: var(--green-soft);
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 900px) {
+      .planner-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .grocery-panel {
+        position: static;
+        order: -1;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        width: min(100% - 1rem, 1220px);
+      }
+
+      header {
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
+      }
+
+      .tabs {
+        margin-right: -0.5rem;
+        margin-left: -0.5rem;
+        padding: 0.6rem 0.5rem;
+      }
+
+      .tab-button {
+        min-height: 59px;
+        padding: 0.45rem 0.2rem;
+        font-size: 0.78rem;
+      }
+
+      .sheet-header {
+        align-items: stretch;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+      }
+
+      .actions .danger {
+        grid-column: span 2;
+      }
+
+      .recipe-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+      }
+
+      .recipe-card {
+        min-height: auto;
+      }
+
+      .modal-content {
+        padding: 1rem;
+      }
+
+      .modal-columns {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      header {
+        padding: 0.5rem;
+        color: #000;
+        background: #fff;
+      }
+
+      .rules-note,
+      .tabs,
+      .sheet-header,
+      .recipe-grid,
+      dialog {
+        display: none !important;
+      }
+
+      .planner-layout {
+        display: block;
+      }
+
+      .grocery-panel {
+        position: static;
+        border: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container">
+      <h1 id="siteTitle">Trader Joe's Dinner Planner</h1>
+      <p class="subtitle">
+        Cook-from-scratch family meals with exact Trader Joe's product names, recipe-time sorting, and a combined grocery list.
+      </p>
+      <div class="rules-note" id="rulesNote"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <nav class="tabs" aria-label="Recipe time filters">
+      <button class="tab-button active" data-bucket="under30" aria-pressed="true">
+        Under 30 Min
+      </button>
+      <button class="tab-button" data-bucket="under60" aria-pressed="false">
+        30–60 Min
+      </button>
+      <button class="tab-button" data-bucket="over60" aria-pressed="false">
+        Over 1 Hour
+      </button>
+    </nav>
+
+    <div class="planner-layout">
+      <section>
+        <div class="sheet-header">
+          <div>
+            <h2 id="sheetTitle">Under 30 Minutes</h2>
+            <p id="sheetDescription"></p>
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="addSheetButton">Add This Sheet</button>
+            <button id="printButton">Print List</button>
+            <button class="danger" id="clearButton">Clear Menu</button>
+          </div>
+        </div>
+
+        <div class="recipe-grid" id="recipeGrid" aria-live="polite">
+          <p class="loading">Loading recipes…</p>
+        </div>
+      </section>
+
+      <aside class="grocery-panel" aria-label="Combined grocery list">
+        <div class="grocery-heading">
+          <h2>Shopping List</h2>
+          <span class="selection-count" id="selectionCount">0 dinners</span>
+        </div>
+
+        <p class="empty-state" id="emptyState">
+          Add recipes from any time sheet to build your combined Trader Joe's shopping list.
+        </p>
+
+        <div id="groceryList"></div>
+      </aside>
+    </div>
+  </main>
+
+  <dialog id="recipeDialog" aria-label="Recipe details">
+    <div class="modal-content" id="modalContent"></div>
+  </dialog>
+
+  <script>
+    const BUCKETS = {
+      under30: {
+        title: "Under 30 Minutes",
+        description: "10 fast weeknight dinners, sorted from shortest total time to longest."
+      },
+      under60: {
+        title: "30–60 Minutes",
+        description: "10 complete dinners that take more than 30 minutes but finish within one hour."
+      },
+      over60: {
+        title: "Over 1 Hour",
+        description: "10 slower weekend, baked, and braised dinners—also sorted by total recipe time."
+      }
+    };
+
+    const SECTION_ORDER = [
+      "Meat",
+      "Seafood",
+      "Frozen",
+      "Produce",
+      "Dairy",
+      "Bakery",
+      "Pantry"
+    ];
+
+    const state = {
+      data: null,
+      activeBucket: "under30",
+      selectedRecipeIds: new Set()
+    };
+
+    const recipeGrid = document.getElementById("recipeGrid");
+    const groceryList = document.getElementById("groceryList");
+    const emptyState = document.getElementById("emptyState");
+    const selectionCount = document.getElementById("selectionCount");
+    const sheetTitle = document.getElementById("sheetTitle");
+    const sheetDescription = document.getElementById("sheetDescription");
+    const dialog = document.getElementById("recipeDialog");
+    const modalContent = document.getElementById("modalContent");
+
+    async function loadRecipes() {
+      try {
+        const response = await fetch("./recipes.json");
+
+        if (!response.ok) {
+          throw new Error(`Could not load recipes.json (${response.status})`);
+        }
+
+        state.data = await response.json();
+
+        document.title = state.data.meta.title;
+        document.getElementById("siteTitle").textContent = state.data.meta.title;
+
+        document.getElementById("rulesNote").textContent =
+          `${state.data.meta.rules.join(" · ")}. ${state.data.meta.storeNote}`;
+
+        renderRecipes();
+        renderGroceryList();
+      } catch (error) {
+        recipeGrid.innerHTML = `
+          <div class="error">
+            <strong>Could not load recipes.json.</strong><br />
+            Make sure recipes.json is in the same folder as index.html and that the site is being served through GitHub Pages or a local web server.
+          </div>
+        `;
+        console.error(error);
+      }
+    }
+
+    function formatMinutes(totalMinutes) {
+      if (totalMinutes < 60) {
+        return `${totalMinutes} min`;
+      }
+
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+
+      if (minutes === 0) {
+        return `${hours} hr`;
+      }
+
+      return `${hours} hr ${minutes} min`;
+    }
+
+    function getRecipeById(recipeId) {
+      return state.data.recipes.find(recipe => recipe.id === recipeId);
+    }
+
+    function getActiveRecipes() {
+      return state.data.recipes
+        .filter(recipe => recipe.bucket === state.activeBucket)
+        .sort((a, b) => a.totalMinutes - b.totalMinutes);
+    }
+
+    function renderRecipes() {
+      const bucketInfo = BUCKETS[state.activeBucket];
+      const recipes = getActiveRecipes();
+
+      sheetTitle.textContent = bucketInfo.title;
+      sheetDescription.textContent = bucketInfo.description;
+
+      recipeGrid.innerHTML = recipes.map(recipe => `
+        <article class="recipe-card">
+          <div class="card-body">
+            <div class="badges">
+              <span class="badge time">⏱ ${formatMinutes(recipe.totalMinutes)}</span>
+              <span class="badge">${recipe.tags[0]}</span>
+            </div>
+
+            <h3>${recipe.title}</h3>
+
+            <div class="meta">
+              <span>🍽 ${recipe.servings} servings</span>
+              <span>🛒 ${recipe.ingredients.length} items</span>
+            </div>
+
+            <p class="description">${recipe.description}</p>
+          </div>
+
+          <div class="card-footer">
+            <button class="details-button" data-details="${recipe.id}">
+              View Recipe
+            </button>
+
+            <label class="select-label">
+              <input
+                type="checkbox"
+                data-select="${recipe.id}"
+                ${state.selectedRecipeIds.has(recipe.id) ? "checked" : ""}
+              />
+              Add to list
+            </label>
+          </div>
+        </article>
+      `).join("");
+
+      document.querySelectorAll("[data-select]").forEach(input => {
+        input.addEventListener("change", event => {
+          const recipeId = event.target.dataset.select;
+
+          if (event.target.checked) {
+            state.selectedRecipeIds.add(recipeId);
+          } else {
+            state.selectedRecipeIds.delete(recipeId);
+          }
+
+          renderGroceryList();
+        });
+      });
+
+      document.querySelectorAll("[data-details]").forEach(button => {
+        button.addEventListener("click", () => {
+          openRecipe(button.dataset.details);
+        });
+      });
+    }
+
+    function openRecipe(recipeId) {
+      const recipe = getRecipeById(recipeId);
+
+      modalContent.innerHTML = `
+        <div class="modal-header">
+          <div>
+            <div class="badges">
+              <span class="badge time">⏱ ${formatMinutes(recipe.totalMinutes)}</span>
+              ${recipe.tags.map(tag => `<span class="badge">${tag}</span>`).join("")}
+            </div>
+
+            <h2>${recipe.title}</h2>
+
+            <div class="meta">
+              <span>🍽 ${recipe.servings} servings</span>
+              <span>${BUCKETS[recipe.bucket].title}</span>
+            </div>
+          </div>
+
+          <button class="close-button" aria-label="Close recipe">×</button>
+        </div>
+
+        <div class="modal-columns">
+          <section>
+            <h3>Trader Joe's Shopping List</h3>
+            <ul>
+              ${recipe.ingredients.map(ingredient => `
+                <li>
+                  <span class="product-name">${ingredient.product}</span>
+                  <span class="amount">${ingredient.amount} · ${ingredient.section}</span>
+                </li>
+              `).join("")}
+            </ul>
+          </section>
+
+          <section>
+            <h3>Directions</h3>
+            <ol>
+              ${recipe.steps.map(step => `<li>${step}</li>`).join("")}
+            </ol>
+          </section>
+        </div>
+
+        <div class="tip">
+          <strong>For the little one:</strong> ${recipe.toddlerTip}
+        </div>
+
+        <div class="safety-note">
+          <strong>Safe-cooking reminder:</strong> Cook chicken to 165°F, ground beef to 160°F, whole-cut pork to 145°F followed by rest time, and shrimp until opaque and fully cooked.
+        </div>
+      `;
+
+      dialog.showModal();
+      modalContent.querySelector(".close-button").focus();
+    }
+
+    function renderGroceryList() {
+      if (!state.data) {
+        return;
+      }
+
+      const selectedRecipes = [...state.selectedRecipeIds]
+        .map(getRecipeById)
+        .filter(Boolean);
+
+      const count = selectedRecipes.length;
+      selectionCount.textContent = `${count} dinner${count === 1 ? "" : "s"}`;
+
+      if (count === 0) {
+        emptyState.hidden = false;
+        groceryList.innerHTML = "";
+        return;
+      }
+
+      emptyState.hidden = true;
+
+      const groupedIngredients = {};
+
+      selectedRecipes.forEach(recipe => {
+        recipe.ingredients.forEach(ingredient => {
+          const { section, product, amount } = ingredient;
+
+          if (!groupedIngredients[section]) {
+            groupedIngredients[section] = {};
+          }
+
+          if (!groupedIngredients[section][product]) {
+            groupedIngredients[section][product] = [];
+          }
+
+          groupedIngredients[section][product].push(amount);
+        });
+      });
+
+      groceryList.innerHTML = SECTION_ORDER
+        .filter(section => groupedIngredients[section])
+        .map(section => `
+          <section class="grocery-section">
+            <h3>${section}</h3>
+            <ul class="grocery-list">
+              ${Object.entries(groupedIngredients[section]).map(([product, amounts], index) => {
+                const uniqueAmounts = [...new Set(amounts)].join("; ");
+                const checkId = `item-${section.replace(/\s+/g, "-")}-${index}`;
+
+                return `
+                  <li>
+                    <input type="checkbox" id="${checkId}" />
+                    <label for="${checkId}">
+                      <span class="product-name">${product}</span>
+                      <span class="amount">${uniqueAmounts}</span>
+                    </label>
+                  </li>
+                `;
+              }).join("")}
+            </ul>
+          </section>
+        `).join("");
+    }
+
+    function setActiveBucket(bucket) {
+      state.activeBucket = bucket;
+
+      document.querySelectorAll("[data-bucket]").forEach(button => {
+        const isActive = button.dataset.bucket === bucket;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
+      });
+
+      renderRecipes();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.querySelectorAll("[data-bucket]").forEach(button => {
+      button.addEventListener("click", () => {
+        setActiveBucket(button.dataset.bucket);
+      });
+    });
+
+    document.getElementById("addSheetButton").addEventListener("click", () => {
+      getActiveRecipes().forEach(recipe => {
+        state.selectedRecipeIds.add(recipe.id);
+      });
+
+      renderRecipes();
+      renderGroceryList();
+    });
+
+    document.getElementById("clearButton").addEventListener("click", () => {
+      state.selectedRecipeIds.clear();
+      renderRecipes();
+      renderGroceryList();
+    });
+
+    document.getElementById("printButton").addEventListener("click", () => {
+      window.print();
+    });
+
+    dialog.addEventListener("click", event => {
+      if (event.target === dialog) {
+        dialog.close();
+      }
+    });
+
+    document.addEventListener("click", event => {
+      if (event.target.classList.contains("close-button")) {
+        dialog.close();
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && dialog.open) {
+        dialog.close();
+      }
+    });
+
+    loadRecipes();
+  </script>
+</body>
+</html>
