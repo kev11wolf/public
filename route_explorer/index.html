@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="theme-color" content="#0f172a">
+<meta name="format-detection" content="telephone=no">
+
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon-180.png">
     
     <title>High-Performance Hybrid Route Explorer</title>
     
@@ -147,6 +153,86 @@ select:focus-visible {
         animation-iteration-count: 1 !important;
     }
 }
+/* ── iOS / iPadOS app-shell hardening ─────────────────────────────── */
+
+:root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+}
+
+html,
+body {
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+}
+
+#app-shell {
+    min-height: 100svh;
+    height: 100dvh;
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
+}
+
+#bottom-controls-shell {
+    padding-bottom: max(8px, var(--safe-bottom));
+}
+
+#persistent-fab-shell {
+    padding-top: max(8px, var(--safe-top));
+}
+
+#master-filter-bar,
+#sub-filter-bar {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+}
+
+.master-pill,
+.sub-pill {
+    scroll-snap-align: start;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input,
+select {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+#search-container input {
+    font-size: 16px;
+}
+
+/* Prevent iOS Safari from zooming on input focus. */
+
+@media (max-width: 390px) {
+    #master-header-panel {
+        border-radius: 20px;
+    }
+
+    #search-container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+</style>
+
 </style>
 </head>
 <body class="text-zinc-955 selection:bg-blue-500 selection:text-white overflow-hidden">
@@ -379,7 +465,7 @@ select:focus-visible {
                 <!-- POI Master Filter -->
                 <div id="master-filter-bar" class="flex gap-1.5 overflow-x-auto no-scrollbar px-3 py-2 bg-white">
                     <button data-cat="playground" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">🛝 Playgrounds</button>
-                   <button
+                  <button
     data-cat="gas"
     type="button"
     aria-pressed="false"
@@ -387,7 +473,24 @@ select:focus-visible {
 >
     ⛽ Gas
 </button>
-                    <button data-cat="food" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">🍔 Food</button>
+
+<button
+    data-cat="ev"
+    type="button"
+    aria-pressed="false"
+    class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap"
+>
+    ⚡ EV
+</button>
+
+<button
+    data-cat="food"
+    type="button"
+    aria-pressed="false"
+    class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap"
+>
+    🍔 Food
+</button>
                     <button data-cat="shopping" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">🛒 Shopping</button>
                     <button data-cat="parks" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">🌲 Parks</button>
                     <button data-cat="campground" class="master-pill bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap min-h-[32px]">⛺ Camp</button>
@@ -510,8 +613,27 @@ select:focus-visible {
             highway_rest: { label: '🪑', bg: 'bg-blue-600 border-blue-200 text-white', name: 'Rest Area', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80' },
             highway_toilets: { label: '🚻', bg: 'bg-indigo-600 border-indigo-200 text-white', name: 'Public Restroom', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
             tourism_viewpoint: { label: '📷', bg: 'bg-sky-500 border-sky-200 text-white', name: 'Scenic Viewpoint', img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=300&q=80' },
-            tourism_dogpark: { label: '🐕', bg: 'bg-violet-600 border-violet-200 text-white', name: 'Dog Park', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=300&q=80' }
-        };
+            tourism_dogpark: {
+    label: '🐕',
+    bg: 'bg-violet-600 border-violet-200 text-white',
+    name: 'Dog Park',
+    img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=300&q=80'
+},
+
+ev: {
+    label: '⚡',
+    bg: 'bg-cyan-600 border-cyan-200 text-white',
+    name: 'EV Charging',
+    img: 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=300&q=80'
+},
+
+ev_charging: {
+    label: '⚡',
+    bg: 'bg-cyan-600 border-cyan-200 text-white',
+    name: 'EV Charging Station',
+    img: 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=300&q=80'
+}
+};
 
         const cleanBrandNames = {
             "sheetz": "Sheetz", "bucees": "Buc-ee's", "wawa": "Wawa", "circlek": "Circle K",
@@ -526,43 +648,118 @@ select:focus-visible {
         };
 
         const subMenuDefinitions = {
-            playground: [{ id: 'playground', label: '🛝 Public Playgrounds' }],
-            gas: [
-                { id: 'sheetz', label: 'Sheetz' },
-                { id: 'wawa', label: 'Wawa' },
-                { id: 'bucees', label: "Buc-ee's" },
-                { id: 'circlek', label: 'Circle K' },
-                { id: 'unl87', label: '⛽ UNL 87' }, 
-                { id: 'unl88', label: '⚡ UNL 88 / E15' }
-            ],
-            food: [
-                { id: 'starbucks', label: '☕ Starbucks' },
-                { id: 'chipotle', label: 'Chipotle' }, 
-                { id: 'raisingcanes', label: "Raising Cane's" }, 
-                { id: 'chickfila', label: 'Chick-fil-A' }, 
-                { id: 'mcdonalds', label: "McDonald's" }, 
-                { id: 'wendys', label: "Wendy's" },
-                { id: 'jerseymikes', label: "Jersey Mike's" },
-                { id: 'culvers', label: "Culver's" },
-                { id: 'shakeshack', label: "Shake Shack" },
-                { id: 'innout', label: "In-N-Out" },
-                { id: 'potbelly', label: "Potbelly" }
-            ],
-            shopping: [
-                { id: 'walmart', label: 'Walmart Supercenters' },
-                { id: 'target', label: 'Target Hubs' },
-                { id: 'costco', label: 'Costco Warehouse' },
-                { id: 'dollartree', label: 'Dollar Tree Discounts' },
-                { id: 'staples', label: 'Staples Office' },
-                { id: 'upsstore', label: 'UPS Store Shipping' },
-                { id: 'basspro', label: "Bass Pro / Cabela's" }
-            ],
-            parks: [{ id: 'national_park', label: '🏞️ National Parks' }, { id: 'nature_reserve', label: '🌲 Nature Reserves' }, { id: 'attraction', label: '🎡 Attractions' }],
-            campground: [{ id: 'campground', label: '⛺ Campgrounds & RV Parks' }],
-            medical: [{ id: 'hospital', label: '🏥 Major Hospitals' }, { id: 'veterinary', label: '🐕 Vet Clinics' }],
-            highway: [{ id: 'highway_rest', label: '🪑 Highway Rest Areas' }, { id: 'highway_toilets', label: '🚻 Standalone Restrooms' }],
-            tourism: [{ id: 'tourism_viewpoint', label: 'Scenic Overlooks' }, { id: 'tourism_dogpark', label: 'Fenced Dog Parks' }]
-        };
+    playground: [
+        { id: 'playground', label: '🛝 Playgrounds' },
+        { id: 'splash_pad', label: '💦 Splash Pads' }
+    ],
+
+    gas: [
+        { id: 'sheetz', label: 'Sheetz' },
+        { id: 'wawa', label: 'Wawa' },
+        { id: 'bucees', label: "Buc-ee's" },
+        { id: 'circlek', label: 'Circle K' },
+        { id: 'quiktrip', label: 'QuikTrip' },
+        { id: 'racetrac', label: 'RaceTrac' },
+        { id: 'speedway', label: 'Speedway' },
+        { id: 'pilotflyingj', label: 'Pilot / Flying J' },
+        { id: 'loves', label: "Love's" },
+        { id: 'travelcenters', label: 'TA' },
+        { id: 'petro', label: 'Petro' },
+        { id: 'murphyusa', label: 'Murphy USA' },
+        { id: 'costcogas', label: 'Costco Gas' },
+        { id: 'unl87', label: '⛽ Regular 87' },
+        { id: 'unl88', label: '⚡ E15 / 88' }
+    ],
+
+    ev: [
+        { id: 'ev_charging', label: '⚡ All Chargers' }
+    ],
+
+    food: [
+        { id: 'smithfieldsbbq', label: "Smithfield's BBQ" },
+        { id: 'baskinrobbins', label: 'Baskin-Robbins' },
+        { id: 'bojangles', label: 'Bojangles' },
+        { id: 'cookout', label: 'Cook Out' },
+        { id: 'zaxbys', label: "Zaxby's" },
+        { id: 'wafflehouse', label: 'Waffle House' },
+        { id: 'crackerbarrel', label: 'Cracker Barrel' },
+        { id: 'panera', label: 'Panera' },
+        { id: 'fiveguys', label: 'Five Guys' },
+        { id: 'dunkin', label: "Dunkin'" },
+        { id: 'krispykreme', label: 'Krispy Kreme' },
+        { id: 'whataburger', label: 'Whataburger' },
+        { id: 'starbucks', label: 'Starbucks' },
+        { id: 'chipotle', label: 'Chipotle' },
+        { id: 'raisingcanes', label: "Raising Cane's" },
+        { id: 'chickfila', label: 'Chick-fil-A' },
+        { id: 'mcdonalds', label: "McDonald's" },
+        { id: 'wendys', label: "Wendy's" },
+        { id: 'jerseymikes', label: "Jersey Mike's" },
+        { id: 'culvers', label: "Culver's" }
+    ],
+
+    shopping: [
+        { id: 'lowes', label: "Lowe's" },
+        { id: 'homedepot', label: 'Home Depot' },
+        { id: 'publix', label: 'Publix' },
+        { id: 'foodlion', label: 'Food Lion' },
+        { id: 'harristeeter', label: 'Harris Teeter' },
+        { id: 'aldi', label: 'ALDI' },
+        { id: 'lidl', label: 'Lidl' },
+        { id: 'kroger', label: 'Kroger' },
+        { id: 'costco', label: 'Costco' },
+        { id: 'samsclub', label: "Sam's Club" },
+        { id: 'bjs', label: "BJ's" },
+        { id: 'traderjoes', label: "Trader Joe's" },
+        { id: 'acehardware', label: 'Ace Hardware' },
+        { id: 'tractorsupply', label: 'Tractor Supply' },
+        { id: 'harborfreight', label: 'Harbor Freight' },
+        { id: 'rei', label: 'REI' },
+        { id: 'academy', label: 'Academy Sports' },
+        { id: 'campingworld', label: 'Camping World' },
+        { id: 'walmart', label: 'Walmart' },
+        { id: 'target', label: 'Target' }
+    ],
+
+    parks: [
+        { id: 'national_park', label: '🏞️ Protected Areas' },
+        { id: 'nature_reserve', label: '🌲 Nature Reserves' },
+        { id: 'parks', label: '🌳 Public Parks' },
+        { id: 'zoo', label: '🦁 Zoos' },
+        { id: 'museum', label: '🏛️ Museums' },
+        { id: 'attraction', label: '🎡 Attractions' }
+    ],
+
+    campground: [
+        { id: 'campground', label: '⛺ Campgrounds' },
+        { id: 'rv_dump', label: '🚾 RV Dump Stations' }
+    ],
+
+    medical: [
+        { id: 'cvs', label: 'CVS' },
+        { id: 'walgreens', label: 'Walgreens' },
+        { id: 'pharmacy', label: '💊 Pharmacies' },
+        { id: 'hospital', label: '🏥 Hospitals' },
+        { id: 'emergency', label: '🚑 Emergency Care' },
+        { id: 'clinic', label: '🩺 Clinics / Urgent Care' },
+        { id: 'dentist', label: '🦷 Dental Care' },
+        { id: 'veterinary', label: '🐕 Vet Clinics' }
+    ],
+
+    highway: [
+        { id: 'highway_rest', label: '🪑 Rest Areas' },
+        { id: 'highway_services', label: '🛣️ Service Areas' },
+        { id: 'highway_toilets', label: '🚻 Restrooms' },
+        { id: 'truck_parking', label: '🚛 Truck Parking' },
+        { id: 'visitor_center', label: 'ℹ️ Visitor Centers' }
+    ],
+
+    tourism: [
+        { id: 'tourism_viewpoint', label: '📷 Scenic Views' },
+        { id: 'tourism_dogpark', label: '🐕 Dog Parks' },
+        { id: 'boat_ramp', label: '🛶 Boat Ramps' }
+    ]
+};
 
         let allPoiMarkersMemoryMap = [];
         let globalFavoritesMarkers = []; 
@@ -1544,50 +1741,68 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
         }
 
         function buildAndRenderPoiMarker(poi) {
-    const visualCategory = categoryConfigs[poi.brand]
+    const visualKey = categoryConfigs[poi.brand]
         ? poi.brand
         : poi.category;
 
     const visualConfig =
-        categoryConfigs[visualCategory] ||
-        categoryConfigs.food;
+        categoryConfigs[visualKey] ||
+        categoryConfigs.shopping;
 
-    const routeDistanceMiles = (
-        poi.distanceFromRouteMeters * 0.000621371
+    const distanceFromRouteMiles = (
+        (poi.distanceFromRouteMeters || 0) * 0.000621371
     ).toFixed(1);
 
-    const appleMapsUrl =
-        `https://maps.apple.com/?daddr=${encodeURIComponent(
-            `${poi.name}, ${poi.address}`
-        )}&ll=${poi.lat},${poi.lon}`;
+    const safeName = escapeHTML(poi.name || 'Unnamed location');
 
-    const phoneHtml = poi.phone
+    const safeAddress = escapeHTML(
+        poi.address || 'Address not mapped in OpenStreetMap'
+    );
+
+    const safeHours = escapeHTML(
+        poi.hours || 'Hours not listed'
+    );
+
+    const safeDescription = escapeHTML(
+        poi.description || poi.desc || ''
+    );
+    const appleMapsDestination = encodeURIComponent(
+        poi.address
+            ? `${poi.name}, ${poi.address}`
+            : `${poi.lat},${poi.lon}`
+    );
+
+    const appleMapsUrl =
+        `https://maps.apple.com/?daddr=${appleMapsDestination}` +
+        `&ll=${poi.lat},${poi.lon}&dirflg=d`;
+
+    const phoneButton = poi.phone
         ? `
             <a
                 href="tel:${escapeHTML(poi.phone)}"
-                class="block rounded-lg bg-slate-700 px-3 py-2 text-center text-[11px] font-bold text-white hover:bg-slate-800"
+                class="block rounded-xl bg-slate-800 px-3 py-2.5 text-center text-[12px] font-bold text-white"
             >
                 Call ${escapeHTML(poi.phone)}
             </a>
         `
         : '';
 
-    const websiteHtml = poi.website
+    const websiteButton = poi.website
         ? `
             <a
                 href="${escapeHTML(poi.website)}"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="block rounded-lg bg-slate-100 px-3 py-2 text-center text-[11px] font-bold text-slate-700 hover:bg-slate-200"
+                class="block rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-[12px] font-bold text-slate-700"
             >
-                Visit website
+                Visit Website
             </a>
         `
         : '';
 
-    const fuelHtml = poi.category === 'gas'
+    const fuelDetails = poi.category === 'gas'
         ? `
-            <div class="rounded-lg border border-slate-200 bg-slate-50 p-2 text-[10px] font-semibold text-slate-700">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-2 text-[11px] font-semibold text-slate-700">
                 <div>Regular 87: ${poi.g87 === 1 ? 'Available' : 'Not confirmed'}</div>
                 <div>E15 / 88: ${poi.g88 === 1 ? 'Available' : 'Not confirmed'}</div>
             </div>
@@ -1595,49 +1810,51 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
         : '';
 
     const popupHtml = `
-        <div class="w-[220px] font-sans text-slate-900">
+        <div class="w-[236px] font-sans text-slate-900">
             <div class="mb-2">
                 <p class="text-[10px] font-bold uppercase tracking-wide text-blue-600">
                     ${escapeHTML(cleanBrandNames[poi.brand] || poi.category || 'Location')}
                 </p>
 
-                <h3 class="mt-0.5 text-sm font-black leading-tight">
-                    ${escapeHTML(poi.name)}
+                <h3 class="mt-0.5 text-[15px] font-black leading-tight">
+                    ${safeName}
                 </h3>
             </div>
 
-            <div class="space-y-1 border-y border-slate-200 py-2 text-[11px]">
-                <p class="font-medium text-slate-700">
-                    📍 ${escapeHTML(poi.address)}
+            <div class="space-y-1.5 border-y border-slate-200 py-2.5 text-[12px]">
+                <p class="font-medium leading-snug text-slate-700">
+                    📍 ${safeAddress}
                 </p>
 
                 <p class="text-slate-600">
-                    ↔ ${routeDistanceMiles} mi from route
+                    ↔ ${distanceFromRouteMiles} mi from route
                 </p>
 
                 <p class="text-slate-600">
-                    🕒 ${escapeHTML(poi.hours)}
+                    🕒 ${safeHours}
                 </p>
             </div>
 
-            ${poi.description
-                ? `<p class="mt-2 text-[11px] leading-snug text-slate-600">${escapeHTML(poi.description)}</p>`
-                : ''}
+            ${
+                safeDescription
+                    ? `<p class="mt-2 text-[11px] leading-snug text-slate-600">${safeDescription}</p>`
+                    : ''
+            }
 
             <div class="mt-3 grid gap-2">
-                ${fuelHtml}
+                ${fuelDetails}
 
                 <a
                     href="${appleMapsUrl}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="block rounded-lg bg-blue-600 px-3 py-2 text-center text-[11px] font-bold text-white hover:bg-blue-700"
+                    class="block rounded-xl bg-blue-600 px-3 py-3 text-center text-[13px] font-black text-white"
                 >
                     Open in Apple Maps
                 </a>
 
-                ${phoneHtml}
-                ${websiteHtml}
+                ${phoneButton}
+                ${websiteButton}
             </div>
         </div>
     `;
@@ -1654,20 +1871,19 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
     ).bindPopup(popupHtml, {
         className: 'custom-popup',
         autoPan: true,
-        autoPanPaddingTopLeft: L.point(15, 180),
-        autoPanPaddingBottomRight: L.point(15, 110),
-        maxWidth: 240
+        autoPanPaddingTopLeft: L.point(15, 160),
+        autoPanPaddingBottomRight: L.point(15, 130),
+        maxWidth: 250
     });
 
     allPoiMarkersMemoryMap.push({
         marker,
-        visualKey: visualCategory,
+        visualKey,
         poi
     });
 
     poiClusterGroup.addLayer(marker);
 }
-
         // =====================================================================
         // --- PHASE 6: NOMINATIM GEOLOCATION AUTOCOMPLETE ENGINE -----------
         // =====================================================================
@@ -1773,7 +1989,19 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
 
     setLoadingStatus(`Finding ${element.innerText.trim().toLowerCase()} near your route...`);
 }
+function escapeHTML(value = '') {
+    return String(value).replace(/[&<>"']/g, (character) => {
+        const entities = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        };
 
+        return entities[character];
+    });
+}
         // =====================================================================
         // --- PHASE 8: REFINED CORE INTERACTION EVENT REGISTRIES -------------
         // =====================================================================
@@ -2057,36 +2285,58 @@ map.on('dragstart', triggerAutoCenterDelay);
             
            localJsonMemory = [];
 
-await Promise.all(activeCrossedStates.map(async (stateName) => {
-    try {
-        const response = await fetch(
-            `https://raw.githubusercontent.com/kev11wolf/public/main/data/${stateName}_brands.json`
-        );
+setLoadingStatus('Loading locations near your route...');
 
-        if (response.ok) {
+const statePoiResults = await Promise.all(
+    activeCrossedStates.map(async (stateName) => {
+        try {
+            const response = await fetch(
+                `https://raw.githubusercontent.com/kev11wolf/public/main/data/${stateName}_brands.json`,
+                { cache: 'no-store' }
+            );
+
+            if (!response.ok) {
+                showPoiDataWarning(stateName);
+                return [];
+            }
+
             const stateData = await response.json();
-            localJsonMemory = localJsonMemory.concat(stateData);
-        } else {
-            const generatedMocks = await requestAlternateStateJsonShardFallback(stateName);
-            localJsonMemory = localJsonMemory.concat(generatedMocks);
-        }
-    } catch (err) {
-        console.warn(`Shard loop pass error for state variable: ${stateName}`, err);
 
-        const generatedMocks = await requestAlternateStateJsonShardFallback(stateName);
-        localJsonMemory = localJsonMemory.concat(generatedMocks);
-    }
-}));
+            if (!Array.isArray(stateData)) {
+                console.warn(`Invalid POI JSON format for: ${stateName}`);
+                showPoiDataWarning(stateName);
+                return [];
+            }
+
+            return stateData
+                .map(normalizePoi)
+                .filter(Boolean);
+
+        } catch (error) {
+            console.warn(`Could not load POI data for: ${stateName}`, error);
+            showPoiDataWarning(stateName);
+            return [];
+        }
+    })
+);
+
+localJsonMemory = statePoiResults.flat();
+
+renderGlobalPermanentStars();
 
 if (localJsonMemory.length === 0) {
-    const generatedMocks = await requestAlternateStateJsonShardFallback("national");
-    localJsonMemory = localJsonMemory.concat(generatedMocks);
+    setReadyStatus(
+        'No POI data was available for this route. Try again later.'
+    );
+} else if (currentMasterCat) {
+    dispatchOffThreadAnalysis();
+} else {
+    setReadyStatus(
+        'Route ready. Choose a category to see nearby locations.'
+    );
 }
 
-            renderGlobalPermanentStars(); 
-            if (currentMasterCat) runDataExecutionLayer(currentMasterCat);
-            
-            maintainMapViewportOnRouteFound = false; 
+maintainMapViewportOnRouteFound = false;
         });
 
         map.on('popupopen', function(e) {
