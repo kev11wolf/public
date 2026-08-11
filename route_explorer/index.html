@@ -95,24 +95,28 @@
     }
 
     .custom-popup .leaflet-popup-content-wrapper {
-        border-radius: 14px;
-        padding: 1px;
-        max-width: 210px !important;
-        overflow: hidden;
-        background-color: #ffffff;
-        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
-    }
+    max-width: 330px !important;
+    overflow: hidden;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 18px 40px rgb(15 23 42 / 0.24);
+}
 
-    .custom-popup .leaflet-popup-content {
-        margin: 6px !important;
-        max-width: 198px !important;
-    }
+.custom-popup .leaflet-popup-content {
+    width: 300px !important;
+    max-width: calc(100vw - 48px) !important;
+    margin: 0 !important;
+}
 
-    .custom-popup .leaflet-popup-content a,
-    .custom-popup .leaflet-popup-content button {
-        color: #ffffff !important;
-        text-decoration: none !important;
-    }
+.custom-popup .leaflet-popup-tip {
+    background: #ffffff;
+}
+
+.custom-popup .leaflet-popup-content a,
+.custom-popup .leaflet-popup-content button {
+    color: #ffffff !important;
+    text-decoration: none;
+}
 
     .route-callout-marker {
         transition: transform 0.2s ease-in-out;
@@ -231,8 +235,6 @@ select {
         transition-duration: 0.01ms !important;
     }
 }
-</style>
-
 </style>
 </head>
 <body class="text-zinc-955 selection:bg-blue-500 selection:text-white overflow-hidden">
@@ -964,6 +966,216 @@ function escapeHTML(value = '') {
 
         return entities[character];
     });
+}
+
+function getLogicalPoiName(poi) {
+    const rawName = String(poi.name || '').trim();
+    const brandName = cleanBrandNames[poi.brand] || '';
+
+    const genericNames = new Set([
+        '',
+        'unnamed location',
+        'location',
+        'public facility',
+        'gas station',
+        'fast food',
+        'shopping & services',
+        'parks & attractions',
+        'emergency medical'
+    ]);
+
+    if (!genericNames.has(rawName.toLowerCase())) {
+        return rawName;
+    }
+
+    if (brandName) {
+        return brandName;
+    }
+
+    if (categoryConfigs[poi.category]?.name) {
+        return categoryConfigs[poi.category].name;
+    }
+
+    return 'Unnamed location';
+}
+
+function getSafeWebsiteUrl(website) {
+    if (!website) {
+        return '';
+    }
+
+    const possibleUrl = String(website).trim();
+
+    try {
+        const url = new URL(
+            possibleUrl.startsWith('http')
+                ? possibleUrl
+                : `https://${possibleUrl}`
+        );
+
+        return ['http:', 'https:'].includes(url.protocol)
+            ? url.href
+            : '';
+    } catch {
+        return '';
+    }
+}
+
+function buildPoiPopupContent(poi, options = {}) {
+    const logicalName = getLogicalPoiName(poi);
+
+    const categoryName =
+        cleanBrandNames[poi.brand] ||
+        categoryConfigs[poi.category]?.name ||
+        poi.category ||
+        'Location';
+
+    const address = poi.address || 'Address not available';
+    const hours = poi.hours || 'Hours not available';
+    const phone = poi.phone || '';
+    const description = poi.description || poi.desc || '';
+    const websiteUrl = getSafeWebsiteUrl(poi.website);
+
+    const routeDistance = Number.isFinite(poi.distanceFromRouteMeters)
+        ? `${(poi.distanceFromRouteMeters * 0.000621371).toFixed(1)} mi from route`
+        : '';
+
+    const googleMapsUrl =
+        `https://www.google.com/maps/search/?api=1&query=` +
+        encodeURIComponent(`${logicalName} ${address}`);
+
+    const googleStreetViewUrl =
+        `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=` +
+        `${poi.lat},${poi.lon}`;
+
+    const appleMapsUrl =
+        `https://maps.apple.com/?daddr=` +
+        encodeURIComponent(`${logicalName}, ${address}`) +
+        `&ll=${poi.lat},${poi.lon}&dirflg=d`;
+
+    const fuelDetails = poi.category === 'gas'
+        ? `
+            <div class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-950">
+                <div>Regular 87: ${poi.g87 === 1 ? 'Available' : 'Not confirmed'}</div>
+                <div>E15 / 88: ${poi.g88 === 1 ? 'Available' : 'Not confirmed'}</div>
+            </div>
+        `
+        : '';
+
+    const descriptionBlock = description
+        ? `
+            <div class="rounded-xl bg-slate-50 px-3 py-2 text-[11px] leading-relaxed text-slate-600">
+                ${escapeHTML(description)}
+            </div>
+        `
+        : '';
+
+    const phoneBlock = phone
+        ? `
+            <a
+                href="tel:${escapeHTML(phone)}"
+                class="flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+                Call ${escapeHTML(phone)}
+            </a>
+        `
+        : '';
+
+    const websiteBlock = websiteUrl
+        ? `
+            <a
+                href="${escapeHTML(websiteUrl)}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+                Visit Website
+            </a>
+        `
+        : `
+            <span
+                class="flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-[12px] font-semibold text-slate-400"
+            >
+                Website unavailable
+            </span>
+        `;
+
+    const favoriteAction = options.favoriteActionHtml || '';
+
+    return `
+        <div class="w-[300px] font-sans text-slate-900">
+            <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                <p class="text-[10px] font-black uppercase tracking-[0.12em] text-blue-600">
+                    ${escapeHTML(categoryName)}
+                </p>
+
+                <h3 class="mt-1 text-[16px] font-black leading-tight text-slate-950">
+                    ${escapeHTML(logicalName)}
+                </h3>
+
+                ${
+                    routeDistance
+                        ? `
+                            <p class="mt-1 text-[11px] font-semibold text-emerald-700">
+                                ${escapeHTML(routeDistance)}
+                            </p>
+                        `
+                        : ''
+                }
+            </div>
+
+            <div class="space-y-3 px-4 py-3">
+                <div class="space-y-1.5 text-[12px] leading-snug">
+                    <p class="font-medium text-slate-700">
+                        <span aria-hidden="true">📍</span>
+                        ${escapeHTML(address)}
+                    </p>
+
+                    <p class="text-slate-600">
+                        <span aria-hidden="true">🕒</span>
+                        ${escapeHTML(hours)}
+                    </p>
+                </div>
+
+                ${descriptionBlock}
+                ${fuelDetails}
+
+                <div class="grid grid-cols-2 gap-2">
+                    <a
+                        href="${escapeHTML(googleMapsUrl)}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex min-h-10 items-center justify-center rounded-xl bg-blue-600 px-3 text-center text-[12px] font-black text-white transition-colors hover:bg-blue-700"
+                    >
+                        Google Maps
+                    </a>
+
+                    <a
+                        href="${escapeHTML(appleMapsUrl)}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex min-h-10 items-center justify-center rounded-xl bg-slate-900 px-3 text-center text-[12px] font-black text-white transition-colors hover:bg-slate-800"
+                    >
+                        Apple Maps
+                    </a>
+
+                    <a
+                        href="${escapeHTML(googleStreetViewUrl)}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-center text-[12px] font-bold text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                        Street View
+                    </a>
+
+                    ${websiteBlock}
+                </div>
+
+                ${phoneBlock}
+                ${favoriteAction}
+            </div>
+        </div>
+    `;
 }
 
 function getPoiAddress(poi) {
@@ -1844,112 +2056,166 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
         categoryConfigs[visualKey] ||
         categoryConfigs.shopping;
 
-    const distanceFromRouteMiles = (
-        (poi.distanceFromRouteMeters || 0) * 0.000621371
-    ).toFixed(1);
+    const logicalNameRaw = (poi.name || '').trim();
+    const brandName = cleanBrandNames[poi.brand] || '';
+    const categoryName =
+        categoryConfigs[poi.category]?.name ||
+        poi.category ||
+        'Location';
 
-    const safeName = escapeHTML(poi.name || 'Unnamed location');
+    const nameCandidates = [
+        logicalNameRaw,
+        brandName,
+        categoryName
+    ].filter(Boolean);
 
-    const safeAddress = escapeHTML(
-        poi.address || 'Address not mapped in OpenStreetMap'
-    );
+    const popupHeadingName =
+        nameCandidates.find((candidate) =>
+            candidate.toLowerCase() !== 'unnamed location'
+        ) || 'Unnamed location';
 
-    const safeHours = escapeHTML(
-        poi.hours || 'Hours not listed'
-    );
+    const popupAddress =
+        poi.address ||
+        'Address not mapped in OpenStreetMap';
 
-    const safeDescription = escapeHTML(
-        poi.description || poi.desc || ''
-    );
-    const appleMapsDestination = encodeURIComponent(
-        poi.address
-            ? `${poi.name}, ${poi.address}`
-            : `${poi.lat},${poi.lon}`
-    );
+    const popupHours =
+        poi.hours || 'Hours not available';
+
+    const popupDesc =
+        poi.description ||
+        poi.desc ||
+        '';
+
+    const distanceFromRouteMiles = Number.isFinite(
+        poi.distanceFromRouteMeters
+    )
+        ? (poi.distanceFromRouteMeters * 0.000621371).toFixed(1)
+        : null;
+
+    const googleMapsUniversalDeepLinkUrl =
+        `https://www.google.com/maps/search/?api=1&query=` +
+        encodeURIComponent(`${popupHeadingName} ${popupAddress}`);
+
+    const googleStreetViewUrl =
+        `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=` +
+        `${poi.lat},${poi.lon}`;
 
     const appleMapsUrl =
-        `https://maps.apple.com/?daddr=${appleMapsDestination}` +
+        `https://maps.apple.com/?daddr=` +
+        encodeURIComponent(`${popupHeadingName}, ${popupAddress}`) +
         `&ll=${poi.lat},${poi.lon}&dirflg=d`;
+
+    const safeWebsite = (poi.website || poi.url || '').trim();
+    const websiteUrl = safeWebsite
+        ? (safeWebsite.startsWith('http')
+            ? safeWebsite
+            : `https://${safeWebsite}`)
+        : '';
+
+    let fuelBadgeHtml = '';
+
+    if (poi.category === 'gas' || visualKey === 'gas') {
+        fuelBadgeHtml = `
+            <div class="text-[10px] bg-zinc-100 p-1.5 rounded-lg border border-zinc-200 font-bold text-zinc-900 my-1">
+                <p>⛽ <b>UNL 87:</b> ${poi.g87 === 1 ? '✅ Yes' : '❌ No'}</p>
+                <p>⚡ <b>UNL 88 (E15):</b> ${poi.g88 === 1 ? '✅ Yes' : '❌ No'}</p>
+            </div>
+        `;
+    }
+
+    const routeLine = distanceFromRouteMiles
+        ? `<div class="text-[11px] font-semibold text-emerald-700">
+                ↔ ${distanceFromRouteMiles} mi from route
+           </div>`
+        : '';
+
+    const descriptionLine = popupDesc
+        ? escapeHTML(popupDesc)
+        : escapeHTML(popupAddress);
+
+    const googleSection = `
+        <a
+            href="${googleMapsUniversalDeepLinkUrl}"
+            target="_blank"
+            class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-[10px] py-1.5 rounded-xl border border-blue-800 shadow-sm text-white font-black flex items-center justify-center"
+        >
+            🗺️ Open in Google Maps
+        </a>
+
+        <a
+            href="${googleStreetViewUrl}"
+            target="_blank"
+            class="block w-full text-center bg-zinc-800 hover:bg-zinc-900 text-[10px] py-1.5 rounded-xl border border-zinc-950 shadow-sm text-white font-black flex items-center justify-center"
+        >
+            👁️ Google Street View
+        </a>
+
+        <a
+            href="${appleMapsUrl}"
+            target="_blank"
+            class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-[10px] py-1.5 rounded-xl border border-emerald-900 shadow-sm text-white font-black flex items-center justify-center"
+        >
+            🍎 Open in Apple Maps
+        </a>
+    `;
+
+   const websiteButton = websiteUrl
+    ? `
+        <a
+            href="${escapeHTML(websiteUrl)}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="block w-full text-center bg-violet-700 hover:bg-violet-800 text-[10px] py-1.5 rounded-xl border border-violet-900 shadow-sm text-white font-black flex items-center justify-center"
+        >
+            🔗 Open Website
+        </a>
+    `
+    : '';
 
     const phoneButton = poi.phone
         ? `
             <a
                 href="tel:${escapeHTML(poi.phone)}"
-                class="block rounded-xl bg-slate-800 px-3 py-2.5 text-center text-[12px] font-bold text-white"
+                class="block w-full text-center bg-slate-900 hover:bg-slate-800 text-[10px] py-1.5 rounded-xl border border-slate-950 shadow-sm text-white font-bold flex items-center justify-center"
             >
-                Call ${escapeHTML(poi.phone)}
+                📞 Call ${escapeHTML(poi.phone)}
             </a>
-        `
-        : '';
-
-    const websiteButton = poi.website
-        ? `
-            <a
-                href="${escapeHTML(poi.website)}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="block rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-[12px] font-bold text-slate-700"
-            >
-                Visit Website
-            </a>
-        `
-        : '';
-
-    const fuelDetails = poi.category === 'gas'
-        ? `
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-2 text-[11px] font-semibold text-slate-700">
-                <div>Regular 87: ${poi.g87 === 1 ? 'Available' : 'Not confirmed'}</div>
-                <div>E15 / 88: ${poi.g88 === 1 ? 'Available' : 'Not confirmed'}</div>
-            </div>
         `
         : '';
 
     const popupHtml = `
-        <div class="w-[236px] font-sans text-slate-900">
-            <div class="mb-2">
-                <p class="text-[10px] font-bold uppercase tracking-wide text-blue-600">
-                    ${escapeHTML(cleanBrandNames[poi.brand] || poi.category || 'Location')}
-                </p>
+        <div class="w-full font-sans p-0.5 text-zinc-950">
+            <img
+                src="${visualConfig.img}"
+                class="w-full h-16 object-cover rounded-lg mb-1.5 shadow-sm"
+                onerror="this.style.display='none'"
+            >
 
-                <h3 class="mt-0.5 text-[15px] font-black leading-tight">
-                    ${safeName}
-                </h3>
+            <h3 class="text-xs font-black text-black leading-tight truncate">
+                ${escapeHTML(popupHeadingName)}
+            </h3>
+
+            <div class="text-[11px] text-zinc-800 font-medium leading-tight my-1">
+                ${descriptionLine}
             </div>
 
-            <div class="space-y-1.5 border-y border-slate-200 py-2.5 text-[12px]">
-                <p class="font-medium leading-snug text-slate-700">
-                    📍 ${safeAddress}
-                </p>
+            ${routeLine}
+            ${fuelBadgeHtml}
 
-                <p class="text-slate-600">
-                    ↔ ${distanceFromRouteMiles} mi from route
-                </p>
+            <div class="border-t border-zinc-200 pt-1 mt-1">
+                <span class="text-[9px] uppercase font-black text-zinc-500 block tracking-wider">
+                    Hours
+                </span>
 
-                <p class="text-slate-600">
-                    🕒 ${safeHours}
+                <p class="text-xs text-zinc-900 italic font-bold truncate leading-none mt-0.5">
+                    ${escapeHTML(popupHours)}
                 </p>
             </div>
 
-            ${
-                safeDescription
-                    ? `<p class="mt-2 text-[11px] leading-snug text-slate-600">${safeDescription}</p>`
-                    : ''
-            }
-
-            <div class="mt-3 grid gap-2">
-                ${fuelDetails}
-
-                <a
-                    href="${appleMapsUrl}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="block rounded-xl bg-blue-600 px-3 py-3 text-center text-[13px] font-black text-white"
-                >
-                    Open in Apple Maps
-                </a>
-
-                ${phoneButton}
+            <div class="mt-2.5 flex flex-col gap-1 text-white font-black drop-shadow-sm">
+                ${googleSection}
                 ${websiteButton}
+                ${phoneButton}
             </div>
         </div>
     `;
@@ -1966,9 +2232,9 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
     ).bindPopup(popupHtml, {
         className: 'custom-popup',
         autoPan: true,
-        autoPanPaddingTopLeft: L.point(15, 160),
-        autoPanPaddingBottomRight: L.point(15, 130),
-        maxWidth: 250
+        autoPanPaddingTopLeft: L.point(15, 170),
+        autoPanPaddingBottomRight: L.point(15, 150),
+        maxWidth: 330
     });
 
     allPoiMarkersMemoryMap.push({
@@ -2238,19 +2504,7 @@ const googleStreetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano
 
     setLoadingStatus(`Finding ${element.innerText.trim().toLowerCase()} near your route...`);
 }
-function escapeHTML(value = '') {
-    return String(value).replace(/[&<>"']/g, (character) => {
-        const entities = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;'
-        };
 
-        return entities[character];
-    });
-}
         // =====================================================================
         // --- PHASE 8: REFINED CORE INTERACTION EVENT REGISTRIES -------------
         // =====================================================================
