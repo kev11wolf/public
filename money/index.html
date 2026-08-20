@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#2563eb">
+<title>Household Finance Review</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--ink:#15233a;--muted:#667085;--line:#e4e7ec;--bg:#f5f7fb;--card:#fff;--blue:#2563eb;--green:#07855c;--red:#d92d20;--amber-bg:#fffaeb;--green-bg:#ecfdf5;--purple:#7c3aed;
+--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px);--safe-right:env(safe-area-inset-right,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);padding-left:var(--safe-left);padding-right:var(--safe-right)}
+.app{max-width:1560px;margin:auto;padding:20px}
+h1{margin:0;font-size:26px;letter-spacing:-.03em}h2{margin:0 0 8px;font-size:16px}p{margin:4px 0;color:var(--muted)}
+header{display:flex;justify-content:space-between;gap:24px;margin-bottom:14px;flex-wrap:wrap}
+.privacy{max-width:420px;color:var(--green);font-size:12px}
+.card{margin:14px 0;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.sticky-bar{position:sticky;top:0;z-index:6;background:var(--bg);padding-top:6px;padding-bottom:6px}
+.filters-toggle{display:none}
+.controls,.tabs{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.field{display:grid;gap:4px;min-width:120px}
+.field label{color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+input,select,button,textarea{height:44px;border:1px solid #d0d5dd;border-radius:8px;background:#fff;color:var(--ink);padding:0 10px;font-size:16px;font-family:inherit;touch-action:manipulation}
+input[type=file]{width:270px;padding:7px;font-size:14px}
+textarea{width:100%;height:120px;padding:9px;resize:vertical;font-size:14px}
+button{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:750;cursor:pointer;min-height:44px}
+button.secondary{border-color:#d0d5dd;background:#fff;color:var(--ink)}
+button.ghost{border-color:transparent;background:transparent;color:var(--blue);height:auto;min-height:0;padding:2px 6px;font-size:12px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.status{border-left:4px solid #fdb022;border-radius:5px;background:var(--amber-bg);color:#7a2e0e;padding:11px 13px;white-space:pre-wrap}
+.status.ok{border-color:#32d583;background:var(--green-bg);color:#05603a}.hidden{display:none!important}
+.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:10px 0}
+.metric{cursor:pointer;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;touch-action:manipulation}
+.metric:hover,.metric:active{background:#eff6ff}
+.metric label{color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.metric strong{display:block;margin-top:4px;font-size:21px;letter-spacing:-.03em}.green{color:var(--green)}.red{color:var(--red)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:5px 10px 5px 12px;font-size:12px;font-weight:600}
+.chip button{background:transparent;border:0;color:#1d4ed8;font-size:14px;padding:0;min-height:0;height:auto;cursor:pointer;line-height:1}
+.charts{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}.chart{position:relative;height:320px}
+.chart.tall{height:340px}.chart svg{width:100%;height:100%;overflow:visible}.axis{stroke:#d9e0eb}
+.axis-text{fill:var(--muted);font-size:11px}
+.bar{cursor:pointer;fill:var(--blue);transition:opacity .15s}.bar:hover,.bar:active{fill:#1d4ed8}
+.avg-line{stroke:#b54708;stroke-width:2;stroke-dasharray:7 5;pointer-events:none}
+.avg-hit{fill:transparent;cursor:pointer}
+.in-bar{cursor:pointer;fill:var(--green)}.in-bar:hover,.in-bar:active{fill:#05603a}
+.out-bar{cursor:pointer;fill:var(--red)}.out-bar:hover,.out-bar:active{fill:#a91c11}
+.cum-line{fill:none;stroke:var(--purple);stroke-width:2.5}.cum-dot{fill:var(--purple);cursor:pointer}
+.slice{cursor:pointer;stroke:#fff;stroke-width:2}.slice:hover,.slice:active{opacity:.78}
+.tooltip{display:none;position:absolute;z-index:5;pointer-events:none;border-radius:7px;background:#101828;color:#fff;padding:7px 9px;font-size:12px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}.dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+.tab{border-color:#d0d5dd;background:#fff;color:var(--ink);min-height:40px}.tab.active{border-color:var(--blue);background:var(--blue);color:#fff}
+.scroll{max-height:620px;overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}th,td{border-bottom:1px solid var(--line);padding:9px 8px;text-align:left;vertical-align:top}
+th{position:sticky;top:0;z-index:1;cursor:pointer;background:#f9fafb;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;touch-action:manipulation}
+th:hover,.clickable:hover{background:#eff6ff}.num{text-align:right;font-variant-numeric:tabular-nums}.clickable{cursor:pointer}
+.matched{background:var(--green-bg)}.warning{background:var(--amber-bg)}
+.pill{display:inline-block;border-radius:999px;background:#eff6ff;color:#1d4ed8;padding:3px 7px;font-size:10px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.small{color:var(--muted);font-size:12px}
+.modal-backdrop{position:fixed;inset:0;display:none;align-items:flex-end;justify-content:center;z-index:10;padding:0;background:rgba(15,23,42,.58)}
+.modal{display:flex;flex-direction:column;max-height:92vh;width:100%;max-width:1150px;border-radius:16px 16px 0 0;background:#fff;padding:18px;padding-bottom:calc(18px + var(--safe-bottom))}
+.modal-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.modal .scroll{max-height:65vh;margin-top:14px}
+.close-button{border:0;background:#fff;color:var(--ink);font-size:26px;min-height:44px;min-width:44px}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;color:var(--muted);text-align:center;gap:6px}
+.empty-state svg{opacity:.35}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+footer{text-align:center;color:var(--muted);font-size:11px;margin:24px 0 8px}
+@media(min-width:641px){
+  @media(hover:none){.modal{max-width:1150px}}
+}
+@media(max-width:900px){
+  .app{padding:12px}header{display:block}.metrics{grid-template-columns:repeat(2,1fr)}.charts,.grid{grid-template-columns:1fr}
+  .filters-toggle{display:inline-flex}
+  .controls{display:none}
+  .controls.open{display:flex}
+}
+@media(max-width:480px){.metrics{grid-template-columns:1fr 1fr}.metric strong{font-size:18px}}
+</style>
+</head>
+<body>
+<main class="app">
+<header>
+<div><h1>Household Finance Review</h1><p>Multi-bank spending, cash flow, budgets, recurring charges, refunds, and duplicate review.</p></div>
+<p class="privacy">Your statement files are processed locally in this browser. Filters, budgets, and category rules are saved only in local browser storage. Raw transaction data is not saved after you close or refresh the page.</p>
+</header>
+
+<section class="card">
+<div class="controls" style="margin-bottom:8px">
+<button id="filtersToggle" class="filters-toggle secondary" aria-expanded="false" aria-controls="controlsGroup">Show filters</button>
+</div>
+<div id="controlsGroup" class="controls">
+<div class="field"><label>Statements</label><input id="files" type="file" multiple accept=".csv,.xlsx,.xls" aria-label="Upload bank statement files"></div>
+<div class="field"><label>File</label><select id="fileFilter" aria-label="Filter by file"><option value="">All files</option></select></div>
+<div class="field"><label>Account</label><select id="accountFilter" aria-label="Filter by account"><option value="">All accounts</option></select></div>
+<div class="field"><label>Category</label><select id="categoryFilter" aria-label="Filter by category"><option value="">All categories</option></select></div>
+<div class="field"><label>Vendor</label><select id="vendorFilter" aria-label="Filter by vendor"><option value="">All vendors</option></select></div>
+<div class="field"><label>From month</label><select id="monthFromFilter" aria-label="Filter from month"><option value="">Earliest</option></select></div>
+<div class="field"><label>To month</label><select id="monthToFilter" aria-label="Filter to month"><option value="">Latest</option></select></div>
+<div class="field"><label>Refund pairs</label><select id="pairFilter" aria-label="Filter refund pairs"><option value="all">All transactions</option><option value="hide">Hide matched pairs</option><option value="only">Only matched pairs</option></select></div>
+<div class="field"><label>Search</label><input id="searchFilter" placeholder="vendor, category, description" aria-label="Search transactions"></div>
+<button id="analyzeButton">Analyze</button>
+<button id="sampleDataButton" class="secondary">Try sample data</button>
+<button id="resetFiltersButton" class="secondary">Reset filters</button>
+<button id="exportButton" class="secondary" disabled>Export filtered CSV</button>
+</div>
+<div id="activeChips" class="chips" aria-live="polite"></div>
+</section>
+
+<div id="status" class="status">Load your Wells Fargo, Chase, and Citi/Costco raw exports and click <strong>Analyze</strong>, or select <strong>Try sample data</strong> to explore the app first. Hover or tap any chart bar, dot, or the amber average line for exact values.</div>
+
+<section id="dashboard" class="hidden">
+<div class="sticky-bar">
+<section class="metrics">
+<div id="metricNetSpend" class="metric" tabindex="0" role="button" aria-label="Net card spending, double-tap for detail"><label>Net card spending</label><strong id="netCardSpend">—</strong></div>
+<div id="metricCashFlow" class="metric" tabindex="0" role="button" aria-label="Average monthly cash flow, double-tap for detail"><label>Average monthly cash flow</label><strong id="averageCashFlow">—</strong></div>
+<div id="metricRefundPairs" class="metric" tabindex="0" role="button" aria-label="Matched refund pairs, double-tap for detail"><label>Matched refund pairs</label><strong id="refundPairCount" class="green">—</strong></div>
+<div id="metricDuplicates" class="metric" tabindex="0" role="button" aria-label="Potential duplicates, double-tap for detail"><label>Potential duplicates</label><strong id="duplicateCount" class="red">—</strong></div>
+<div id="metricRecurring" class="metric" tabindex="0" role="button" aria-label="Recurring merchants, double-tap for detail"><label>Recurring merchants</label><strong id="recurringCount">—</strong></div>
+</section>
+</div>
+
+<section class="charts">
+<section class="card"><h2>Monthly net spending</h2><p class="small">Hover/tap a bar or the dashed average line for the exact amount.</p>
+<div class="chart"><div id="barTooltip" class="tooltip"></div><svg id="barChart" viewBox="0 0 800 330" role="img" aria-label="Monthly net spending chart"></svg></div></section>
+<section class="card"><h2>Top vendors</h2><p class="small">Hover/tap a slice for dollar value and percentage.</p>
+<div class="chart"><div id="pieTooltip" class="tooltip"></div><svg id="pieChart" viewBox="0 0 510 330" role="img" aria-label="Top vendors chart"></svg></div></section>
+</section>
+
+<section class="tabs" role="tablist">
+<button class="tab active" data-panel="spendingPanel" role="tab" aria-selected="true">Spending</button>
+<button class="tab" data-panel="cashFlowPanel" role="tab" aria-selected="false">Cash flow</button>
+<button class="tab" data-panel="budgetPanel" role="tab" aria-selected="false">Budgets</button>
+<button class="tab" data-panel="recurringPanel" role="tab" aria-selected="false">Recurring</button>
+<button class="tab" data-panel="reviewPanel" role="tab" aria-selected="false">Refunds & duplicates</button>
+<button class="tab" data-panel="settingsPanel" role="tab" aria-selected="false">Settings</button>
+</section>
+
+<section id="spendingPanel" class="card panel">
+<h2>Category spending by source file</h2>
+<div class="scroll"><table id="categoryFileTable"></table></div>
+<h2 style="margin-top:18px">Filtered transactions</h2>
+<div class="scroll"><table id="transactionTable"></table></div>
+</section>
+
+<section id="cashFlowPanel" class="card panel hidden">
+<h2>Cash flow — money in vs. money out</h2>
+<p class="small">Green = money in. Red = money out. Purple line = cumulative net cash flow. Hover/tap for exact values; tap a bar or dot for the underlying transactions.</p>
+<div class="controls" style="margin-bottom:10px">
+<div class="field"><label>Scope</label><select id="cashFlowScope" aria-label="Cash flow account scope"><option value="__all__">All accounts (combined)</option></select></div>
+</div>
+<div class="chart tall"><div id="cashFlowTooltip" class="tooltip"></div><svg id="cashFlowChart" viewBox="0 0 1040 360" role="img" aria-label="Cash flow chart"></svg></div>
+<div class="legend">
+<span><i class="dot" style="background:#07855c"></i>Money in</span>
+<span><i class="dot" style="background:#d92d20"></i>Money out</span>
+<span><i class="dot" style="background:#7c3aed"></i>Cumulative net</span>
+</div>
+<h2 style="margin-top:20px">Cash flow totals by account</h2>
+<p class="small">Double-click/tap a row to review that account's transactions. Ignores the Account filter so every account can be compared at once.</p>
+<div class="scroll"><table id="accountFlowTable"></table></div>
+<h2 style="margin-top:20px">Monthly cash flow (classified view)</h2>
+<div class="scroll"><table id="cashFlowTable"></table></div>
+</section>
+
+<section id="budgetPanel" class="card panel hidden">
+<h2>Monthly budgets</h2>
+<div class="scroll"><table id="budgetTable"></table></div>
+<button id="saveBudgetsButton">Save budgets locally</button>
+</section>
+
+<section id="recurringPanel" class="card panel hidden">
+<h2>Recurring-charge detection</h2>
+<p class="small">Requires at least three positive charges and average payment spacing of 20–45 days. Double-click/tap a row to review every transaction that caused this vendor to be flagged.</p>
+<div class="scroll"><table id="recurringTable"></table></div>
+</section>
+
+<section id="reviewPanel" class="card panel hidden">
+<div class="grid">
+<section><h2>Matched refund pairs</h2><div class="scroll"><table id="refundPairTable"></table></div></section>
+<section><h2>Potential duplicates</h2><div class="scroll"><table id="duplicateTable"></table></div></section>
+</div>
+</section>
+
+<section id="settingsPanel" class="card panel hidden">
+<h2>Vendor category overrides</h2>
+<p class="small">One rule per line: <code>Amazon = Household</code></p>
+<textarea id="categoryRules"></textarea>
+<button id="saveRulesButton">Save overrides locally</button>
+<h2 style="margin-top:18px">Detected import mapping</h2>
+<div class="scroll"><table id="mappingTable"></table></div>
+<h2 style="margin-top:18px">Skipped rows</h2>
+<div class="scroll"><table id="skippedTable"></table></div>
+</section>
+</section>
+
+<footer>Household Finance Review · v1.4.0 · Runs locally in your browser</footer>
+</main>
+
+<div id="modalBackdrop" class="modal-backdrop">
+<section class="modal">
+<div class="modal-header"><div><h2 id="modalTitle">Transaction detail</h2><p id="modalMeta"></p></div><button id="closeModalButton" class="close-button" aria-label="Close">×</button></div>
+<div class="scroll"><table id="modalTable"></table></div>
+</section>
+</div>
+
+<script>
+"use strict";
+const state={transactions:[],mappings:[],duplicates:[],skippedRows:[],sorts:{}};
+const $=(id)=>document.getElementById(id);
+const money=(v)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number.isFinite(v)?v:0);
+const compact=(v)=>{const n=Math.round(v);const abs=Math.abs(n);if(abs>=1e6){return "$"+(n/1e6).toFixed(1)+"M"}if(abs>=1e3){return "$"+(n/1e3).toFixed(1)+"K"}return "$"+n.toLocaleString()};
+const escapeHtml=(v)=>String(v??"").replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let budgets=JSON.parse(localStorage.getItem("financeBudgets")||"{}");
+let categoryOverrides=JSON.parse(localStorage.getItem("financeCategoryOverrides")||"{}");
+let savedFilters=JSON.parse(localStorage.getItem("financeFilters")||"{}");
+
+function logIssue(prefix,error){
+  console.error(prefix,error);
+  const box=$("status");
+  box.className="status";
+  box.textContent=prefix+": "+(error&&error.message?error.message:String(error));
+}
+
+function parseCsv(text){
+  const rows=[];let row=[];let cell="";let quoted=false;
+  for(let i=0;i<text.length;i+=1){
+    const c=text[i];const n=text[i+1];
+    if(c==='"'){if(quoted&&n==='"'){cell+='"';i+=1}else{quoted=!quoted}}
+    else if(c===","&&!quoted){row.push(cell);cell=""}
+    else if((c==="\n"||c==="\r")&&!quoted){if(c==="\r"&&n==="\n")i+=1;row.push(cell);if(row.some(v=>v.trim()!=="")){rows.push(row)}row=[];cell=""}
+    else{cell+=c}
+  }
+  if(cell!==""||row.length>0){row.push(cell);rows.push(row)}
+  const headers=(rows.shift()||[]).map(h=>h.trim());
+  return rows.map(values=>{const o={};headers.forEach((h,i)=>{o[h]=values[i]||""});return o});
+}
+
+function readFile(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error("Cannot read "+file.name));
+    reader.onload=(event)=>{
+      try{
+        if(/\.csv$/i.test(file.name)){resolve(parseCsv(new TextDecoder().decode(event.target.result)));return}
+        if(!window.XLSX){throw new Error("XLSX support did not load. Use CSV files or serve the page through localhost with internet access.")}
+        const workbook=XLSX.read(event.target.result,{type:"array",cellDates:true});
+        const worksheet=workbook.Sheets[workbook.SheetNames[0]];
+        resolve(XLSX.utils.sheet_to_json(worksheet,{defval:"",raw:true}));
+      }catch(error){reject(error)}
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function getColumn(row,aliases){for(const key of Object.keys(row)){if(aliases.includes(key.trim().toUpperCase())){return row[key]}}return ""}
+function hasColumns(row,required){const avail=Object.keys(row).map(k=>k.trim().toUpperCase());return required.every(r=>avail.includes(r.toUpperCase()))}
+
+function safeNumber(value,fallback=0){
+  if(typeof value==="number"){return Number.isFinite(value)?value:fallback}
+  const text=String(value??"").trim().replace(/\$/g,"").replace(/,/g,"").replace(/—|–|N\/A|NULL/gi,"").replace(/[()]/g,"");
+  if(text===""){return fallback}
+  const parsed=Number(text);
+  return Number.isFinite(parsed)?parsed:fallback;
+}
+
+function safeSignedAmount(value,fallback=NaN){
+  if(typeof value==="number"){return Number.isFinite(value)?value:fallback}
+  const raw=String(value??"").trim();
+  if(raw===""){return fallback}
+  const isNeg=raw.startsWith("(")&&raw.endsWith(")");
+  const clean=raw.replace(/\$/g,"").replace(/,/g,"").replace(/[()]/g,"");
+  const parsed=Number(clean);
+  if(!Number.isFinite(parsed)){return fallback}
+  return isNeg?-Math.abs(parsed):parsed;
+}
+
+function parseDate(value){
+  if(value instanceof Date&&!Number.isNaN(value.getTime())){return value}
+  if(typeof value==="number"&&window.XLSX){const p=XLSX.SSF.parse_date_code(value);if(p){return new Date(p.y,p.m-1,p.d)}}
+  const raw=String(value??"").trim();
+  if(!raw){return null}
+  const shortUs=raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if(shortUs){return new Date(2000+Number(shortUs[3]),Number(shortUs[1])-1,Number(shortUs[2]))}
+  const parsed=new Date(raw);
+  return Number.isNaN(parsed.getTime())?null:parsed;
+}
+
+function monthKey(date){return date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0")}
+function normalizedText(value){return String(value||"").toUpperCase().replace(/\s+/g," ").trim()}
+
+function detectBankSchema(rows,fileName){
+  const firstRow=rows[0]||{};const file=fileName.toLowerCase();
+  if(hasColumns(firstRow,["STATUS","DATE","DESCRIPTION","DEBIT","CREDIT"])){return "citi-card"}
+  if(hasColumns(firstRow,["TRANSACTION DATE","POST DATE","DESCRIPTION","CATEGORY","TYPE","AMOUNT"])){return "chase-card"}
+  if(hasColumns(firstRow,["DETAILS","POSTING DATE","DESCRIPTION","AMOUNT","TYPE"])){return "chase-checking"}
+  if(hasColumns(firstRow,["DATE","DESCRIPTION","AMOUNT"])){return file.includes("checking")?"wells-fargo-checking":"wells-fargo-card"}
+  return "unknown";
+}
+
+function accountLabelForSchema(schema,fileName){
+  const base=fileName.replace(/\.(csv|xlsx|xls)$/i,"");
+  if(schema==="wells-fargo-checking"){return base+" · Wells Fargo Checking"}
+  if(schema==="wells-fargo-card"){return base+" · Wells Fargo Credit Card"}
+  if(schema==="chase-checking"){return base+" · Chase Checking"}
+  if(schema==="chase-card"){return base+" · Chase Credit Card"}
+  if(schema==="citi-card"){return base+" · Citi / Costco Credit Card"}
+  return base+" · Unknown Account";
+}
+
+function normalizeRow(row,fileName,schema){
+  const account=accountLabelForSchema(schema,fileName);
+  const isChecking=/Checking/.test(account);
+  if(schema==="wells-fargo-checking"||schema==="wells-fargo-card"){
+    const date=parseDate(getColumn(row,["DATE"]));
+    const description=String(getColumn(row,["DESCRIPTION"])).trim();
+    const rawAmount=safeSignedAmount(getColumn(row,["AMOUNT"]));
+    if(!date||!description||!Number.isFinite(rawAmount)){return null}
+    return{date,description,rawAmount,account,isChecking,schema};
+  }
+  if(schema==="chase-checking"){
+    const date=parseDate(getColumn(row,["POSTING DATE"]));
+    const description=String(getColumn(row,["DESCRIPTION"])).trim();
+    const rawAmount=safeSignedAmount(getColumn(row,["AMOUNT"]));
+    const sourceType=String(getColumn(row,["TYPE"])).trim();
+    if(!date||!description||!Number.isFinite(rawAmount)){return null}
+    return{date,description,rawAmount,account,isChecking:true,schema,sourceType};
+  }
+  if(schema==="chase-card"){
+    const date=parseDate(getColumn(row,["TRANSACTION DATE","POST DATE"]));
+    const description=String(getColumn(row,["DESCRIPTION"])).trim();
+    const rawAmount=safeSignedAmount(getColumn(row,["AMOUNT"]));
+    const sourceType=String(getColumn(row,["TYPE"])).trim();
+    const sourceCategory=String(getColumn(row,["CATEGORY"])).trim();
+    if(!date||!description||!Number.isFinite(rawAmount)){return null}
+    return{date,description,rawAmount,account,isChecking:false,schema,sourceType,sourceCategory};
+  }
+  if(schema==="citi-card"){
+    const date=parseDate(getColumn(row,["DATE"]));
+    const description=String(getColumn(row,["DESCRIPTION"])).trim();
+    const debit=safeNumber(getColumn(row,["DEBIT"]),0);
+    const credit=safeSignedAmount(getColumn(row,["CREDIT"]),0);
+    const rawAmount=debit+credit;
+    if(!date||!description||!Number.isFinite(rawAmount)||rawAmount===0){return null}
+    const sourceType=String(getColumn(row,["STATUS"])).trim();
+    return{date,description,rawAmount,account,isChecking:false,schema,sourceType};
+  }
+  return null;
+}
+
+function vendorFromDescription(description){
+  const text=normalizedText(description);
+  const rules=[
+    [/AMAZON|AMZN/,"Amazon"],[/WALMART|WAL-MART|WM SUPERCENTER/,"Walmart"],[/TARGET/,"Target"],[/COSTCO/,"Costco"],
+    [/LOWES|LOWE'S/,"Lowe's"],[/HOME DEPOT/,"Home Depot"],[/FOOD LION/,"Food Lion"],[/PUBLIX/,"Publix"],
+    [/TRADER JOE/,"Trader Joe's"],[/INSTACART/,"Instacart"],[/WHOLEFDS|WHOLE FOODS/,"Whole Foods"],[/HARRIS.?TEETER/,"Harris Teeter"],
+    [/REI/,"REI"],[/DICKS|DICK'S/,"Dick's Sporting Goods"],[/CHIPOTLE/,"Chipotle"],[/CHICK-FIL-A/,"Chick-fil-A"],
+    [/SHEETZ/,"Sheetz"],[/STARBUCKS/,"Starbucks"],[/KINDERVILLAGE/,"Kindervillage Music"],[/LITTLE GYM/,"Little Gym"],
+    [/FID BKG|FIDELITY/,"Fidelity"],[/ROBINHOOD/,"Robinhood"],[/TRUMP ACCOUNT/,"Trump Account"],[/FCMC.*LOAN|LOAN PYMT/,"Mortgage servicer"],
+    [/DUKEENERGY/,"Duke Energy"],[/AQUA /,"Aqua water"],[/FARM BUREAU|NCFB/,"Farm Bureau"],[/TIRES\.COM|DISCOUNT TIRE/,"Tires"],
+    [/AUTOZONE/,"AutoZone"],[/ROCK AUTO/,"RockAuto"],[/NC QUICK PASS/,"NC Quick Pass"],[/PAYROLL/,"Payroll"],
+    [/IRS |USATAX|NCDOR/,"Tax authority"],[/CIT BANK|WOHLFARTH KEVIN TRANSFER|TRANSFER TO JOINT|ACCT_XFER/,"Internal transfer"],
+    [/ATM /,"ATM cash"],[/AUTOMATIC PAYMENT|PAYMENT THANK YOU|AUTOPAY|AUTO-PMT|CREDIT CRD AUTOPAY|CREDIT CARD.*PAY|CARD PAYMENT|TARGET CARD SRVC PAYMENT/,"Card payment"]
+  ];
+  for(const pair of rules){if(pair[0].test(text)){return pair[1]}}
+  return String(description).replace(/\s+/g," ").trim();
+}
+
+function categoryForVendor(vendor){
+  if(categoryOverrides[vendor]){return categoryOverrides[vendor]}
+  if(["Food Lion","Publix","Trader Joe's","Instacart","Whole Foods","Harris Teeter","Costco"].indexOf(vendor)>-1){return "Groceries"}
+  if(["Chipotle","Chick-fil-A","Sheetz","Starbucks"].indexOf(vendor)>-1){return "Dining / coffee"}
+  if(["Lowe's","Home Depot"].indexOf(vendor)>-1){return "Home maintenance"}
+  if(["Tires","AutoZone","RockAuto","NC Quick Pass"].indexOf(vendor)>-1){return "Vehicle / transport"}
+  if(["Kindervillage Music","Little Gym"].indexOf(vendor)>-1){return "Child / family"}
+  if(["REI","Dick's Sporting Goods"].indexOf(vendor)>-1){return "Recreation / outdoors"}
+  if(["Amazon","Walmart","Target"].indexOf(vendor)>-1){return "General retail — review"}
+  if(["Duke Energy","Aqua water"].indexOf(vendor)>-1){return "Utilities"}
+  if(vendor==="Farm Bureau"){return "Insurance"}
+  return "Other / review";
+}
+
+function isCardPaymentTransaction(description,sourceType){
+  const text=normalizedText(description);const type=normalizedText(sourceType);
+  return /AUTOMATIC PAYMENT|AUTOPAY|AUTO-PMT|PAYMENT THANK|CARD PAYMENT|CREDIT CRD AUTOPAY|TARGET CARD SRVC PAYMENT/.test(text)||type==="PAYMENT";
+}
+
+function isRefundOrCredit(description,sourceType,amount){
+  const text=normalizedText(description);const type=normalizedText(sourceType);
+  return amount<0&&(/RETURN|REFUND|CASH BACK|STATEMENT CREDIT|CONDITIONAL CREDIT|CREDIT FOR DISPUTE|ADJUSTMENT|REWARDS/.test(text)||type==="RETURN"||type==="ADJUSTMENT");
+}
+
+function classifyTransaction(normalized){
+  const text=normalizedText(normalized.description);const type=normalizedText(normalized.sourceType);
+  if(normalized.isChecking){
+    if(normalized.rawAmount>0&&(/PAYROLL|DIRECT DEP|SALARY/.test(text)||type==="ACH_CREDIT")){return{type:"Income",netSpend:0}}
+    if(/CIT BANK|WOHLFARTH KEVIN TRANSFER|VENMO CASHOUT|TRANSFER TO JOINT|ACCT_XFER/.test(text)||type==="ACCT_XFER"){return{type:"Internal transfer",netSpend:0}}
+    if(isCardPaymentTransaction(normalized.description,normalized.sourceType)){return{type:"Card payment",netSpend:0}}
+    if(/ROBINHOOD|FID BKG|FIDELITY|TRUMP ACCOUNT/.test(text)){return{type:"Savings transfer",netSpend:0}}
+    if(/FCMC.*LOAN|LOAN PYMT|MORTGAGE/.test(text)){return{type:"Mortgage",netSpend:0}}
+    if(/IRS |USATAX|NCDOR/.test(text)){return{type:"Tax event",netSpend:0}}
+    return{type:"Checking expense",netSpend:0};
+  }
+  if(isCardPaymentTransaction(normalized.description,normalized.sourceType)){return{type:"Card payment",netSpend:0}}
+  if(normalized.schema==="citi-card"){
+    const netSpend=normalized.rawAmount;
+    return{type:isRefundOrCredit(normalized.description,normalized.sourceType,netSpend)?"Card refund / credit":"Card purchase",netSpend};
+  }
+  const netSpend=-normalized.rawAmount;
+  return{type:isRefundOrCredit(normalized.description,normalized.sourceType,netSpend)?"Card refund / credit":"Card purchase",netSpend};
+}
+
+function computeCashDirection(normalized){
+  if(normalized.isChecking){return{cashIn:Math.max(normalized.rawAmount,0),cashOut:Math.max(-normalized.rawAmount,0)}}
+  if(normalized.schema==="citi-card"){return{cashIn:Math.max(-normalized.rawAmount,0),cashOut:Math.max(normalized.rawAmount,0)}}
+  return{cashIn:Math.max(normalized.rawAmount,0),cashOut:Math.max(-normalized.rawAmount,0)};
+}
+
+function matchRefundPairs(){
+  const purchases=state.transactions.filter(t=>t.netSpend>0).sort((a,b)=>a.date-b.date);
+  const refunds=state.transactions.filter(t=>t.netSpend<0).sort((a,b)=>a.date-b.date);
+  const used=new Set();let pairNumber=0;
+  refunds.forEach(refund=>{
+    const candidates=purchases.filter(c=>!used.has(c.id)&&c.vendor===refund.vendor&&Math.round(c.netSpend*100)===Math.round(Math.abs(refund.netSpend)*100)&&c.date<=refund.date&&refund.date-c.date<=180*864e5);
+    candidates.sort((a,b)=>b.date-a.date);
+    const purchase=candidates[0];
+    if(!purchase){return}
+    pairNumber+=1;purchase.refundPair=pairNumber;purchase.pairRole="Purchase";refund.refundPair=pairNumber;refund.pairRole="Refund";used.add(purchase.id);
+  });
+}
+
+function detectDuplicates(){
+  state.duplicates=[];
+  const purchases=state.transactions.filter(t=>t.netSpend>0&&!t.refundPair);
+  for(let i=0;i<purchases.length;i+=1){
+    for(let j=i+1;j<purchases.length;j+=1){
+      const a=purchases[i];const b=purchases[j];
+      if(a.account===b.account&&a.vendor===b.vendor&&Math.round(a.netSpend*100)===Math.round(b.netSpend*100)&&Math.abs(a.date-b.date)<=3*864e5){
+        state.duplicates.push([a,b]);
+      }
+    }
+  }
+}
+
+function buildSampleTransactions(){
+  const vendors=[["Food Lion","Groceries",42],["Amazon","General retail — review",38],["Chipotle","Dining / coffee",18],
+    ["Sheetz","Vehicle / transport",22],["Lowe's","Home maintenance",6],["Netflix","Other / review",6],["Duke Energy","Utilities",6]];
+  const accounts=["sample-checking.csv · Wells Fargo Checking","sample-card.csv · Wells Fargo Credit Card"];
+  const out=[];let idCounter=0;
+  const today=new Date();
+  for(let m=5;m>=0;m-=1){
+    const monthDate=new Date(today.getFullYear(),today.getMonth()-m,1);
+    out.push({id:"sample-"+(idCounter++),file:"sample-checking.csv",bankSchema:"wells-fargo-checking",account:accounts[0],date:new Date(monthDate.getFullYear(),monthDate.getMonth(),1),month:monthKey(monthDate),description:"THE SPEAR GROUP PAYROLL",rawAmount:4500,vendor:"Payroll",category:"Other / review",type:"Income",netSpend:0,cashIn:4500,cashOut:0,refundPair:null,pairRole:null});
+    out.push({id:"sample-"+(idCounter++),file:"sample-checking.csv",bankSchema:"wells-fargo-checking",account:accounts[0],date:new Date(monthDate.getFullYear(),monthDate.getMonth(),15),month:monthKey(monthDate),description:"FCMC LOAN PYMT",rawAmount:-2400,vendor:"Mortgage servicer",category:"Other / review",type:"Mortgage",netSpend:0,cashIn:0,cashOut:2400,refundPair:null,pairRole:null});
+    vendors.forEach(v=>{
+      const count=v[2]%3===0?4:2+Math.round(Math.random()*2);
+      for(let i=0;i<count;i+=1){
+        const day=Math.min(27,3+Math.floor(Math.random()*24));
+        const amount=Math.round((v[0]==="Amazon"?(15+Math.random()*80):v[0]==="Netflix"?15.49:(8+Math.random()*45))*100)/100;
+        out.push({id:"sample-"+(idCounter++),file:"sample-card.csv",bankSchema:"wells-fargo-card",account:accounts[1],date:new Date(monthDate.getFullYear(),monthDate.getMonth(),day),month:monthKey(monthDate),description:v[0].toUpperCase()+" PURCHASE",rawAmount:-amount,vendor:v[0],category:v[1],type:"Card purchase",netSpend:amount,cashIn:0,cashOut:amount,refundPair:null,pairRole:null});
+      }
+    });
+  }
+  return out.sort((a,b)=>b.date-a.date);
+}
+
+function loadSampleData(){
+  state.transactions=buildSampleTransactions();
+  state.mappings=[{file:"sample-checking.csv",schema:"wells-fargo-checking",columns:"DATE, DESCRIPTION, AMOUNT"},{file:"sample-card.csv",schema:"wells-fargo-card",columns:"DATE, DESCRIPTION, AMOUNT"}];
+  state.duplicates=[];state.skippedRows=[];
+  matchRefundPairs();detectDuplicates();populateFilters();applySavedFilters();renderAll();
+  $("dashboard").classList.remove("hidden");$("exportButton").disabled=false;
+  $("status").className="status ok";
+  $("status").textContent="Loaded sample data with "+state.transactions.length+" synthetic transactions across 6 months so you can explore the app before uploading real statements.";
+}
+
+async function importStatements(){
+  const files=[...$("files").files];
+  if(!files.length){$("status").className="status";$("status").textContent="Select at least one raw bank export first, or try the sample data.";return}
+  const analyzeButton=$("analyzeButton");
+  const originalLabel=analyzeButton.textContent;
+  analyzeButton.disabled=true;
+  analyzeButton.innerHTML='<span class="spinner"></span>Analyzing…';
+  try{
+    state.transactions=[];state.mappings=[];state.duplicates=[];state.skippedRows=[];
+    for(const file of files){
+      const rows=await readFile(file);
+      if(!rows.length){state.skippedRows.push({file:file.name,row:"—",description:"",reason:"No rows found in export"});continue}
+      const schema=detectBankSchema(rows,file.name);
+      state.mappings.push({file:file.name,schema,columns:Object.keys(rows[0]).join(", ")});
+      if(schema==="unknown"){state.skippedRows.push({file:file.name,row:"—",description:"",reason:"Unsupported statement structure"});continue}
+      rows.forEach((row,index)=>{
+        const normalized=normalizeRow(row,file.name,schema);
+        if(!normalized){state.skippedRows.push({file:file.name,row:index+2,description:String(getColumn(row,["DESCRIPTION"])||""),reason:"Could not parse a valid date, description, or amount"});return}
+        const vendor=vendorFromDescription(normalized.description);
+        const classification=classifyTransaction(normalized);
+        if(!Number.isFinite(classification.netSpend)){state.skippedRows.push({file:file.name,row:index+2,description:normalized.description,reason:"Net spending calculation was not a finite number"});return}
+        const direction=computeCashDirection(normalized);
+        state.transactions.push({
+          id:file.name+"-"+index,file:file.name,bankSchema:schema,account:normalized.account,date:normalized.date,month:monthKey(normalized.date),
+          description:normalized.description,rawAmount:normalized.rawAmount,vendor,category:categoryForVendor(vendor),
+          type:classification.type,netSpend:safeNumber(classification.netSpend,0),cashIn:safeNumber(direction.cashIn,0),cashOut:safeNumber(direction.cashOut,0),
+          refundPair:null,pairRole:null
+        });
+      });
+    }
+    state.transactions.sort((a,b)=>b.date-a.date);
+    matchRefundPairs();detectDuplicates();populateFilters();applySavedFilters();renderAll();
+    $("dashboard").classList.remove("hidden");$("exportButton").disabled=false;
+    $("status").className="status ok";
+    $("status").textContent="Imported "+state.transactions.length+" transactions from "+state.mappings.length+" file(s). "+state.skippedRows.length+" row(s) were skipped — see Settings → Skipped rows.";
+  }catch(error){logIssue("Import error",error)}
+  finally{analyzeButton.disabled=false;analyzeButton.textContent=originalLabel}
+}
+
+function populateFilters(){
+  const files=[...new Set(state.transactions.map(t=>t.file))].sort();
+  const accounts=[...new Set(state.transactions.map(t=>t.account))].sort();
+  const categories=[...new Set(state.transactions.map(t=>t.category))].sort();
+  const vendors=[...new Set(state.transactions.map(t=>t.vendor))].sort();
+  const months=[...new Set(state.transactions.map(t=>t.month))].sort();
+
+  $("fileFilter").innerHTML='<option value="">All files</option>'+files.map(f=>'<option value="'+escapeHtml(f)+'">'+escapeHtml(f)+'</option>').join("");
+  $("accountFilter").innerHTML='<option value="">All accounts</option>'+accounts.map(a=>'<option value="'+escapeHtml(a)+'">'+escapeHtml(a)+'</option>').join("");
+  $("categoryFilter").innerHTML='<option value="">All categories</option>'+categories.map(c=>'<option value="'+escapeHtml(c)+'">'+escapeHtml(c)+'</option>').join("");
+  $("vendorFilter").innerHTML='<option value="">All vendors</option>'+vendors.map(v=>'<option value="'+escapeHtml(v)+'">'+escapeHtml(v)+'</option>').join("");
+  $("monthFromFilter").innerHTML='<option value="">Earliest</option>'+months.map(m=>'<option value="'+m+'">'+m+'</option>').join("");
+  $("monthToFilter").innerHTML='<option value="">Latest</option>'+months.map(m=>'<option value="'+m+'">'+m+'</option>').join("");
+  $("cashFlowScope").innerHTML='<option value="__all__">All accounts (combined)</option>'+accounts.map(a=>'<option value="'+escapeHtml(a)+'">'+escapeHtml(a)+'</option>').join("");
+  $("categoryRules").value=Object.keys(categoryOverrides).map(v=>v+" = "+categoryOverrides[v]).join("\n");
+}
+
+function currentFilterState(){
+  return{
+    file:$("fileFilter").value,account:$("accountFilter").value,category:$("categoryFilter").value,vendor:$("vendorFilter").value,
+    monthFrom:$("monthFromFilter").value,monthTo:$("monthToFilter").value,pair:$("pairFilter").value,search:$("searchFilter").value
+  };
+}
+
+function persistFilters(){localStorage.setItem("financeFilters",JSON.stringify(currentFilterState()))}
+
+function applySavedFilters(){
+  if(!savedFilters){return}
+  const setIfExists=(id,value)=>{const el=$(id);if(!el||!value){return}if([...el.options].some(o=>o.value===value)){el.value=value}};
+  setIfExists("fileFilter",savedFilters.file);setIfExists("accountFilter",savedFilters.account);
+  setIfExists("categoryFilter",savedFilters.category);setIfExists("vendorFilter",savedFilters.vendor);
+  setIfExists("monthFromFilter",savedFilters.monthFrom);setIfExists("monthToFilter",savedFilters.monthTo);
+  if(savedFilters.pair){$("pairFilter").value=savedFilters.pair}
+  if(savedFilters.search){$("searchFilter").value=savedFilters.search}
+}
+
+function hasActiveFilters(){
+  const f=currentFilterState();
+  return !!(f.file||f.account||f.category||f.vendor||f.monthFrom||f.monthTo||(f.pair&&f.pair!=="all")||f.search);
+}
+
+function resetFilters(){
+  if(hasActiveFilters()&&!confirm("Clear all active filters?")){return}
+  $("fileFilter").value="";$("accountFilter").value="";$("categoryFilter").value="";$("vendorFilter").value="";
+  $("monthFromFilter").value="";$("monthToFilter").value="";$("pairFilter").value="all";$("searchFilter").value="";
+  persistFilters();renderAll();
+}
+
+function renderActiveChips(){
+  const f=currentFilterState();
+  const chips=[];
+  if(f.file){chips.push(["File: "+f.file,"fileFilter"])}
+  if(f.account){chips.push(["Account: "+f.account,"accountFilter"])}
+  if(f.category){chips.push(["Category: "+f.category,"categoryFilter"])}
+  if(f.vendor){chips.push(["Vendor: "+f.vendor,"vendorFilter"])}
+  if(f.monthFrom){chips.push(["From: "+f.monthFrom,"monthFromFilter"])}
+  if(f.monthTo){chips.push(["To: "+f.monthTo,"monthToFilter"])}
+  if(f.pair&&f.pair!=="all"){chips.push(["Pairs: "+(f.pair==="hide"?"hide matched":"only matched"),"pairFilter"])}
+  if(f.search){chips.push(['Search: "'+f.search+'"',"searchFilter"])}
+
+  $("activeChips").innerHTML=chips.map(pair=>'<span class="chip">'+escapeHtml(pair[0])+'<button data-clear="'+pair[1]+'" aria-label="Clear filter">×</button></span>').join("");
+  $("activeChips").querySelectorAll("[data-clear]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const id=btn.dataset.clear;
+      if(id==="pairFilter"){$(id).value="all"}else{$(id).value=""}
+      persistFilters();renderAll();
+    });
+  });
+}
+
+function applyCommonFilters(transaction,opts){
+  const file=$("fileFilter").value;
+  const category=$("categoryFilter").value;
+  const vendor=$("vendorFilter").value;
+  const monthFrom=$("monthFromFilter").value;
+  const monthTo=$("monthToFilter").value;
+  const pairMode=$("pairFilter").value;
+  const search=normalizedText($("searchFilter").value);
+
+  if(file&&transaction.file!==file){return false}
+  if(category&&transaction.category!==category){return false}
+  if(vendor&&transaction.vendor!==vendor){return false}
+  if(monthFrom&&transaction.month<monthFrom){return false}
+  if(monthTo&&transaction.month>monthTo){return false}
+  if(pairMode==="hide"&&transaction.refundPair){return false}
+  if(pairMode==="only"&&!transaction.refundPair){return false}
+  if(search&&!normalizedText(transaction.vendor+" "+transaction.category+" "+transaction.description).includes(search)){return false}
+  if(!opts||!opts.skipAccount){
+    const account=$("accountFilter").value;
+    if(account&&transaction.account!==account){return false}
+  }
+  return true;
+}
+
+function filteredTransactions(){return state.transactions.filter(t=>applyCommonFilters(t,{skipAccount:false}))}
+function cashFlowBaseTransactions(){return state.transactions.filter(t=>applyCommonFilters(t,{skipAccount:true}))}
+
+function calculateCashFlow(transactions){
+  const months=[...new Set(transactions.map(t=>t.month))].sort();
+  return months.map(month=>{
+    const rows=transactions.filter(t=>t.month===month);
+    const income=rows.filter(t=>t.type==="Income").reduce((s,t)=>s+t.rawAmount,0);
+    const cards=rows.reduce((s,t)=>s+t.netSpend,0);
+    const checking=rows.filter(t=>t.type==="Checking expense").reduce((s,t)=>s-t.rawAmount,0);
+    const mortgage=rows.filter(t=>t.type==="Mortgage").reduce((s,t)=>s-t.rawAmount,0);
+    const savings=rows.filter(t=>t.type==="Savings transfer").reduce((s,t)=>s-t.rawAmount,0);
+    return{month,income,cards,checking,mortgage,savings,net:income-cards-checking-mortgage-savings};
+  });
+}
+
+function computeMonthlyDirectionalFlow(transactions){
+  const months=[...new Set(transactions.map(t=>t.month))].sort();
+  let cumulative=0;
+  return months.map(month=>{
+    const rows=transactions.filter(t=>t.month===month);
+    const cashIn=rows.reduce((s,t)=>s+t.cashIn,0);
+    const cashOut=rows.reduce((s,t)=>s+t.cashOut,0);
+    const net=cashIn-cashOut;
+    cumulative+=net;
+    return{month,cashIn,cashOut,net,cumulative};
+  });
+}
+
+function recurringMerchants(cardTransactions){
+  const vendors=[...new Set(cardTransactions.map(t=>t.vendor))];const results=[];
+  vendors.forEach(vendor=>{
+    const charges=cardTransactions.filter(t=>t.vendor===vendor&&t.netSpend>0).sort((a,b)=>a.date-b.date);
+    if(charges.length<3){return}
+    const gaps=charges.slice(1).map((c,i)=>(c.date-charges[i].date)/864e5);
+    const averageGap=gaps.reduce((s,g)=>s+g,0)/gaps.length;
+    if(averageGap>=20&&averageGap<=45){results.push({vendor,count:charges.length,averageGap,lastCharge:charges[charges.length-1],charges})}
+  });
+  return results.sort((a,b)=>b.count-a.count);
+}
+
+function safeRender(name,fn){try{fn()}catch(error){logIssue("Render error in "+name,error)}}
+
+function emptyState(message){
+  return '<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg><p class="small">'+escapeHtml(message)+'</p></div>';
+}
+
+let latestRecurring=[];
+
+function renderAll(){
+  const transactions=filteredTransactions();
+  const cardTransactions=transactions.filter(t=>t.netSpend!==0);
+  const netCardSpend=cardTransactions.reduce((s,t)=>s+t.netSpend,0);
+  const refundPairCount=new Set(transactions.filter(t=>t.refundPair).map(t=>t.refundPair)).size;
+  const cashFlow=calculateCashFlow(transactions);
+  const averageCashFlow=cashFlow.reduce((s,r)=>s+r.net,0)/Math.max(1,cashFlow.length);
+  const recurring=recurringMerchants(cardTransactions);
+  latestRecurring=recurring;
+
+  $("netCardSpend").textContent=money(netCardSpend);
+  $("averageCashFlow").textContent=money(averageCashFlow);
+  $("refundPairCount").textContent=refundPairCount;
+  $("duplicateCount").textContent=state.duplicates.length;
+  $("recurringCount").textContent=recurring.length;
+
+  persistFilters();
+  safeRender("active filter chips",()=>renderActiveChips());
+  safeRender("bar chart",()=>renderBarChart(cardTransactions));
+  safeRender("pie chart",()=>renderPieChart(cardTransactions));
+  safeRender("category/file table",()=>renderCategoryFileTable(cardTransactions));
+  safeRender("transaction table",()=>renderTransactionTable(transactions,"transactionTable"));
+  safeRender("cash flow chart section",()=>renderCashFlowChartSection());
+  safeRender("cash flow table",()=>renderCashFlowTable(cashFlow));
+  safeRender("budget table",()=>renderBudgetTable(cardTransactions));
+  safeRender("recurring table",()=>renderRecurringTable(recurring));
+  safeRender("refund pair table",()=>renderRefundPairTable(transactions));
+  safeRender("duplicate table",()=>renderDuplicateTable());
+  safeRender("mapping table",()=>renderMappingTable());
+  safeRender("skipped table",()=>renderSkippedTable());
+  safeRender("sorting",()=>enableSortingForAllTables());
+  safeRender("metric drilldowns",()=>attachMetricDrilldowns(transactions,cardTransactions,recurring));
+}
+
+function positionTooltip(tooltip,event){
+  const bounds=tooltip.parentElement.getBoundingClientRect();
+  const clientX=event.touches?event.touches[0].clientX:event.clientX;
+  const clientY=event.touches?event.touches[0].clientY:event.clientY;
+  tooltip.style.left=(clientX-bounds.left+12)+"px";
+  tooltip.style.top=(clientY-bounds.top+12)+"px";
+  tooltip.style.display="block";
+}
+
+function bindHoverAndTap(el,onMove,onLeave,onActivate){
+  el.addEventListener("mousemove",onMove);
+  el.addEventListener("mouseleave",onLeave);
+  el.addEventListener("touchstart",(e)=>{onMove(e)},{passive:true});
+  el.addEventListener("click",()=>{if(onActivate){onActivate()}});
+}
+
+function renderBarChart(cardTransactions){
+  const svg=$("barChart");const tooltip=$("barTooltip");
+  const months=[...new Set(cardTransactions.map(t=>t.month))].sort();
+  const values=months.map(m=>cardTransactions.filter(t=>t.month===m).reduce((s,t)=>s+t.netSpend,0));
+  const average=values.reduce((s,v)=>s+v,0)/Math.max(1,values.length);
+  const maximum=Math.max(1,...values.map(Math.abs),Math.abs(average));
+  const width=800,height=330,left=55,top=18,right=16,bottom=42;
+  const innerWidth=width-left-right,innerHeight=height-top-bottom;
+
+  if(!months.length){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" class="axis-text">No transactions match the current filters.</text>';return}
+
+  let html='<line class="axis" x1="'+left+'" y1="'+(height-bottom)+'" x2="'+(width-right)+'" y2="'+(height-bottom)+'"></line>';
+  [0,.5,1].forEach(f=>{
+    const y=top+innerHeight*(1-f);
+    html+='<line class="axis" x1="'+left+'" y1="'+y+'" x2="'+(width-right)+'" y2="'+y+'"></line><text class="axis-text" x="2" y="'+(y+4)+'">'+compact(maximum*f)+'</text>';
+  });
+
+  const averageY=height-bottom-(average/maximum*innerHeight);
+  html+='<line class="avg-line" x1="'+left+'" y1="'+averageY+'" x2="'+(width-right)+'" y2="'+averageY+'"></line>';
+  html+='<text class="axis-text" x="'+(width-right-2)+'" y="'+(averageY-6)+'" text-anchor="end">Avg. '+money(average)+'</text>';
+  html+='<rect class="avg-hit" data-average="'+average+'" x="'+left+'" y="'+(averageY-10)+'" width="'+(width-right-left)+'" height="20"></rect>';
+
+  const step=innerWidth/Math.max(months.length,1);const barWidth=Math.max(12,step*.62);
+  months.forEach((m,i)=>{
+    const value=values[i];const barHeight=Math.abs(value)/maximum*innerHeight;const x=left+i*step+(step-barWidth)/2;const y=height-bottom-barHeight;
+    html+='<rect class="bar" data-month="'+m+'" data-value="'+value+'" x="'+x+'" y="'+y+'" width="'+barWidth+'" height="'+Math.max(barHeight,1)+'" rx="4"></rect><text class="axis-text" text-anchor="middle" x="'+(x+barWidth/2)+'" y="'+(height-17)+'">'+m.slice(5)+'</text>';
+  });
+  svg.innerHTML=html;
+
+  svg.querySelectorAll(".bar").forEach(bar=>{
+    bindHoverAndTap(bar,
+      (event)=>{tooltip.innerHTML="<strong>"+bar.dataset.month+"</strong><br>Net spending: "+money(Number(bar.dataset.value));positionTooltip(tooltip,event)},
+      ()=>{tooltip.style.display="none"},
+      ()=>{const m=bar.dataset.month;openDrilldown(cardTransactions.filter(t=>t.month===m),"Month: "+m)}
+    );
+  });
+
+  const avgHit=svg.querySelector(".avg-hit");
+  if(avgHit){
+    bindHoverAndTap(avgHit,
+      (event)=>{tooltip.innerHTML="<strong>Average across "+months.length+" month(s)</strong><br>"+money(Number(avgHit.dataset.average));positionTooltip(tooltip,event)},
+      ()=>{tooltip.style.display="none"},
+      null
+    );
+  }
+}
+
+function renderPieChart(cardTransactions){
+  const svg=$("pieChart");const tooltip=$("pieTooltip");
+  const totals={};cardTransactions.forEach(t=>{totals[t.vendor]=(totals[t.vendor]||0)+t.netSpend});
+  const top=Object.keys(totals).map(k=>[k,totals[k]]).filter(pair=>pair[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const total=top.reduce((s,pair)=>s+pair[1],0)||1;
+
+  if(!top.length){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" class="axis-text">No vendor spending matches the current filters.</text>';return}
+
+  const colors=["#2563eb","#059669","#7c3aed","#d97706","#dc2626","#0891b2","#db2777","#64748b"];
+  const cx=150,cy=160,r=105;let angle=-Math.PI/2;
+  let html='<circle cx="'+cx+'" cy="'+cy+'" r="62" fill="white"></circle><text class="axis-text" x="'+cx+'" y="155" text-anchor="middle">Top vendors</text><text x="'+cx+'" y="178" text-anchor="middle" font-size="18" font-weight="700">'+money(total)+'</text>';
+
+  top.forEach((pair,i)=>{
+    const vendor=pair[0];const value=pair[1];
+    const sliceAngle=value/total*Math.PI*2;const next=angle+sliceAngle;
+    const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle),x2=cx+r*Math.cos(next),y2=cy+r*Math.sin(next);
+    const large=sliceAngle>Math.PI?1:0;
+    html+='<path class="slice" data-vendor="'+escapeHtml(vendor)+'" data-total="'+value+'" d="M '+cx+' '+cy+' L '+x1+' '+y1+' A '+r+' '+r+' 0 '+large+' 1 '+x2+' '+y2+' Z" fill="'+colors[i]+'"></path><rect x="290" y="'+(35+i*33)+'" width="10" height="10" rx="2" fill="'+colors[i]+'"></rect><text class="axis-text" x="306" y="'+(44+i*33)+'">'+escapeHtml(vendor.length>23?vendor.slice(0,22)+"…":vendor)+'</text>';
+    angle=next;
+  });
+  svg.innerHTML=html;
+
+  svg.querySelectorAll(".slice").forEach(slice=>{
+    bindHoverAndTap(slice,
+      (event)=>{const vendor=slice.dataset.vendor;const value=Number(slice.dataset.total);const pct=value/total*100;tooltip.innerHTML="<strong>"+escapeHtml(vendor)+"</strong><br>"+money(value)+" · "+pct.toFixed(1)+"%";positionTooltip(tooltip,event)},
+      ()=>{tooltip.style.display="none"},
+      ()=>{const vendor=slice.dataset.vendor;openDrilldown(cardTransactions.filter(t=>t.vendor===vendor),"Vendor: "+vendor)}
+    );
+  });
+}
+
+function renderCashFlowChartSection(){
+  const base=cashFlowBaseTransactions();
+  const scopeSelect=$("cashFlowScope");
+  const scope=scopeSelect&&scopeSelect.value?scopeSelect.value:"__all__";
+  const scoped=scope==="__all__"?base:base.filter(t=>t.account===scope);
+  renderCashFlowChart(scoped);
+  renderAccountFlowTable(base);
+}
+
+function renderCashFlowChart(scoped){
+  const svg=$("cashFlowChart");const tooltip=$("cashFlowTooltip");
+  const rows=computeMonthlyDirectionalFlow(scoped);
+
+  if(!rows.length){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" class="axis-text">No cash-flow data available for this scope.</text>';return}
+
+  const width=1040,height=360,left=64,top=20,right=64,bottom=46;
+  const innerWidth=width-left-right,innerHeight=height-top-bottom;
+  const maxBar=Math.max(1,...rows.map(r=>Math.max(r.cashIn,r.cashOut)));
+  const maxCum=Math.max(1,...rows.map(r=>Math.abs(r.cumulative)));
+  const groupWidth=innerWidth/Math.max(rows.length,1);
+  const barWidth=Math.max(9,groupWidth*.26);
+
+  let html='<line class="axis" x1="'+left+'" y1="'+(height-bottom)+'" x2="'+(width-right)+'" y2="'+(height-bottom)+'"></line>';
+  [0,.5,1].forEach(f=>{
+    const y=top+innerHeight*(1-f);
+    html+='<line class="axis" x1="'+left+'" y1="'+y+'" x2="'+(width-right)+'" y2="'+y+'"></line><text class="axis-text" x="2" y="'+(y+4)+'">'+compact(maxBar*f)+'</text><text class="axis-text" x="'+(width-right+6)+'" y="'+(y+4)+'">'+compact(maxCum*f)+'</text>';
+  });
+
+  const points=[];
+  rows.forEach((row,i)=>{
+    const centerX=left+i*groupWidth+groupWidth/2;
+    const inHeight=row.cashIn/maxBar*innerHeight;
+    const outHeight=row.cashOut/maxBar*innerHeight;
+    const inX=centerX-barWidth-2,outX=centerX+2;
+    const inY=height-bottom-inHeight,outY=height-bottom-outHeight;
+    const cumY=height-bottom-((row.cumulative+maxCum)/(maxCum*2)*innerHeight);
+    points.push([centerX,cumY]);
+    html+='<rect class="in-bar" data-month="'+row.month+'" data-kind="in" data-value="'+row.cashIn+'" x="'+inX+'" y="'+inY+'" width="'+barWidth+'" height="'+Math.max(inHeight,1)+'" rx="3"></rect>';
+    html+='<rect class="out-bar" data-month="'+row.month+'" data-kind="out" data-value="'+row.cashOut+'" x="'+outX+'" y="'+outY+'" width="'+barWidth+'" height="'+Math.max(outHeight,1)+'" rx="3"></rect>';
+    html+='<text class="axis-text" text-anchor="middle" x="'+centerX+'" y="'+(height-bottom+18)+'">'+row.month.slice(5)+'</text>';
+  });
+
+  html+='<polyline class="cum-line" points="'+points.map(p=>p[0]+","+p[1]).join(" ")+'"></polyline>';
+  points.forEach((p,i)=>{const row=rows[i];html+='<circle class="cum-dot" data-month="'+row.month+'" data-kind="cum" data-value="'+row.cumulative+'" cx="'+p[0]+'" cy="'+p[1]+'" r="5"></circle>'});
+
+  svg.innerHTML=html;
+
+  const rowsByMonth={};rows.forEach(r=>{rowsByMonth[r.month]=r});
+
+  svg.querySelectorAll("[data-month]").forEach(el=>{
+    bindHoverAndTap(el,
+      (event)=>{const row=rowsByMonth[el.dataset.month];if(!row){return}tooltip.innerHTML="<strong>"+row.month+"</strong><br>In: "+money(row.cashIn)+"<br>Out: "+money(row.cashOut)+"<br>Net: "+money(row.net)+"<br>Cumulative: "+money(row.cumulative);positionTooltip(tooltip,event)},
+      ()=>{tooltip.style.display="none"},
+      ()=>{
+        const m=el.dataset.month;const kind=el.dataset.kind;
+        let monthTx;
+        if(kind==="in"){monthTx=scoped.filter(t=>t.month===m&&t.cashIn>0)}
+        else if(kind==="out"){monthTx=scoped.filter(t=>t.month===m&&t.cashOut>0)}
+        else{monthTx=scoped.filter(t=>t.month===m)}
+        const label=kind==="in"?" (money in)":kind==="out"?" (money out)":"";
+        openDrilldown(monthTx,"Cash flow: "+m+label);
+      }
+    );
+  });
+}
+
+function renderAccountFlowTable(base){
+  const accounts=[...new Set(base.map(t=>t.account))].sort();
+  const rows=accounts.map(account=>{
+    const rowsFor=base.filter(t=>t.account===account);
+    const cashIn=rowsFor.reduce((s,t)=>s+t.cashIn,0);
+    const cashOut=rowsFor.reduce((s,t)=>s+t.cashOut,0);
+    return{account,cashIn,cashOut,net:cashIn-cashOut,count:rowsFor.length};
+  });
+  const totalIn=rows.reduce((s,r)=>s+r.cashIn,0);
+  const totalOut=rows.reduce((s,r)=>s+r.cashOut,0);
+
+  if(!rows.length){$("accountFlowTable").innerHTML=emptyState("No transactions match the current filters.");return}
+
+  let html='<thead><tr><th>Account</th><th class="num">Money in</th><th class="num">Money out</th><th class="num">Net</th><th class="num">Transactions</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    html+='<tr class="clickable" data-account="'+escapeHtml(r.account)+'"><td>'+escapeHtml(r.account)+'</td><td class="num green">'+money(r.cashIn)+'</td><td class="num red">'+money(r.cashOut)+'</td><td class="num '+(r.net>=0?"green":"red")+'">'+money(r.net)+'</td><td class="num">'+r.count+'</td></tr>';
+  });
+  html+='<tr style="font-weight:750"><td>All accounts (total)</td><td class="num green">'+money(totalIn)+'</td><td class="num red">'+money(totalOut)+'</td><td class="num '+(totalIn-totalOut>=0?"green":"red")+'">'+money(totalIn-totalOut)+'</td><td class="num">'+base.length+'</td></tr>';
+  html+='</tbody>';
+  $("accountFlowTable").innerHTML=html;
+
+  $("accountFlowTable").querySelectorAll("[data-account]").forEach(row=>{
+    row.addEventListener("dblclick",()=>{const account=row.dataset.account;openDrilldown(base.filter(t=>t.account===account),"Account: "+account)});
+  });
+}
+
+function renderCategoryFileTable(cardTransactions){
+  const files=[...new Set(cardTransactions.map(t=>t.file))].sort();
+  const matrix={};
+  cardTransactions.forEach(t=>{if(!matrix[t.category]){matrix[t.category]={}}matrix[t.category][t.file]=(matrix[t.category][t.file]||0)+t.netSpend});
+  const categories=Object.keys(matrix).sort((a,b)=>files.reduce((s,f)=>s+(matrix[b][f]||0),0)-files.reduce((s,f)=>s+(matrix[a][f]||0),0));
+
+  if(!categories.length){$("categoryFileTable").innerHTML=emptyState("No card spending matches the current filters.");return}
+
+  let html='<thead><tr><th>Category</th>'+files.map(f=>'<th class="num">'+escapeHtml(f)+'</th>').join("")+'<th class="num">Total</th></tr></thead><tbody>';
+  categories.forEach(category=>{
+    const total=files.reduce((s,f)=>s+(matrix[category][f]||0),0);
+    html+='<tr><td class="clickable" data-category="'+escapeHtml(category)+'">'+escapeHtml(category)+'</td>'+files.map(f=>'<td class="num clickable" data-category="'+escapeHtml(category)+'" data-file="'+escapeHtml(f)+'">'+(matrix[category][f]?money(matrix[category][f]):"—")+'</td>').join("")+'<td class="num clickable" data-category="'+escapeHtml(category)+'">'+money(total)+'</td></tr>';
+  });
+  html+="</tbody>";
+  $("categoryFileTable").innerHTML=html;
+
+  $("categoryFileTable").querySelectorAll(".clickable").forEach(cell=>{
+    cell.addEventListener("dblclick",()=>{
+      const category=cell.dataset.category;const file=cell.dataset.file;
+      openDrilldown(cardTransactions.filter(t=>t.category===category&&(!file||t.file===file)),category+(file?" · "+file:""));
+    });
+  });
+}
+
+function renderCashFlowTable(cashFlow){
+  if(!cashFlow.length){$("cashFlowTable").innerHTML=emptyState("No transactions match the current filters.");return}
+  let html='<thead><tr><th>Month</th><th class="num">Income</th><th class="num">Cards</th><th class="num">Direct checking</th><th class="num">Mortgage</th><th class="num">Savings</th><th class="num">Net</th></tr></thead><tbody>';
+  cashFlow.forEach(r=>{
+    html+='<tr><td>'+r.month+'</td><td class="num">'+money(r.income)+'</td><td class="num">'+money(r.cards)+'</td><td class="num">'+money(r.checking)+'</td><td class="num">'+money(r.mortgage)+'</td><td class="num">'+money(r.savings)+'</td><td class="num '+(r.net>=0?"green":"red")+'">'+money(r.net)+'</td></tr>';
+  });
+  html+="</tbody>";
+  $("cashFlowTable").innerHTML=html;
+}
+
+function renderBudgetTable(cardTransactions){
+  const categories=[...new Set(cardTransactions.map(t=>t.category))].sort();
+  const monthCount=Math.max(1,new Set(cardTransactions.map(t=>t.month)).size);
+  if(!categories.length){$("budgetTable").innerHTML=emptyState("No card spending matches the current filters.");return}
+  let html='<thead><tr><th>Category</th><th class="num">Monthly actual</th><th class="num">Budget</th><th class="num">Variance</th></tr></thead><tbody>';
+  categories.forEach(category=>{
+    const actual=cardTransactions.filter(t=>t.category===category).reduce((s,t)=>s+t.netSpend,0)/monthCount;
+    const budget=safeNumber(budgets[category]);
+    html+='<tr><td>'+escapeHtml(category)+'</td><td class="num">'+money(actual)+'</td><td class="num"><input data-budget="'+escapeHtml(category)+'" type="number" value="'+budget+'" style="width:110px"></td><td class="num '+(budget-actual>=0?"green":"red")+'">'+money(budget-actual)+'</td></tr>';
+  });
+  html+="</tbody>";
+  $("budgetTable").innerHTML=html;
+}
+
+function renderRecurringTable(recurring){
+  if(!recurring.length){$("recurringTable").innerHTML=emptyState("No recurring merchants detected yet.");return}
+  let html='<thead><tr><th>Vendor</th><th class="num">Charges</th><th class="num">Average interval</th><th>Last charge</th><th class="num">Last amount</th></tr></thead><tbody>';
+  recurring.forEach((item,index)=>{
+    html+='<tr class="clickable" data-recurring="'+index+'"><td>'+escapeHtml(item.vendor)+'</td><td class="num">'+item.count+'</td><td class="num">'+item.averageGap.toFixed(1)+' days</td><td>'+item.lastCharge.date.toLocaleDateString()+'</td><td class="num">'+money(item.lastCharge.netSpend)+'</td></tr>';
+  });
+  html+="</tbody>";
+  $("recurringTable").innerHTML=html;
+  $("recurringTable").querySelectorAll("[data-recurring]").forEach(row=>{
+    row.addEventListener("dblclick",()=>{
+      const item=latestRecurring[Number(row.dataset.recurring)];
+      if(!item){return}
+      openDrilldown(item.charges,"Recurring vendor: "+item.vendor+" ("+item.count+" charges, avg "+item.averageGap.toFixed(1)+" days apart)");
+    });
+  });
+}
+
+function renderRefundPairTable(transactions){
+  const pairNumbers=[...new Set(transactions.filter(t=>t.refundPair).map(t=>t.refundPair))];
+  if(!pairNumbers.length){$("refundPairTable").innerHTML=emptyState("No matched refund pairs found.");return}
+  let html='<thead><tr><th>Pair</th><th>Vendor</th><th>Purchase date</th><th class="num">Purchase</th><th>Refund date</th><th class="num">Refund</th></tr></thead><tbody>';
+  pairNumbers.forEach(p=>{
+    const pair=transactions.filter(t=>t.refundPair===p);
+    const purchase=pair.filter(t=>t.pairRole==="Purchase")[0];
+    const refund=pair.filter(t=>t.pairRole==="Refund")[0];
+    if(!purchase||!refund){return}
+    html+='<tr class="clickable" data-pair="'+p+'"><td>#'+p+'</td><td>'+escapeHtml(purchase.vendor)+'</td><td>'+purchase.date.toLocaleDateString()+'</td><td class="num">'+money(purchase.netSpend)+'</td><td>'+refund.date.toLocaleDateString()+'</td><td class="num green">'+money(refund.netSpend)+'</td></tr>';
+  });
+  html+="</tbody>";
+  $("refundPairTable").innerHTML=html;
+  $("refundPairTable").querySelectorAll("[data-pair]").forEach(row=>{
+    row.addEventListener("dblclick",()=>{const p=Number(row.dataset.pair);openDrilldown(transactions.filter(t=>t.refundPair===p),"Refund pair #"+p)});
+  });
+}
+
+function renderDuplicateTable(){
+  if(!state.duplicates.length){$("duplicateTable").innerHTML=emptyState("No potential duplicate charges found.");return}
+  let html='<thead><tr><th>Vendor</th><th>Account</th><th>Date A</th><th>Date B</th><th class="num">Amount</th></tr></thead><tbody>';
+  state.duplicates.forEach((pair,i)=>{
+    const a=pair[0];const b=pair[1];
+    html+='<tr class="warning clickable" data-duplicate="'+i+'"><td>'+escapeHtml(a.vendor)+'</td><td>'+escapeHtml(a.account)+'</td><td>'+a.date.toLocaleDateString()+'</td><td>'+b.date.toLocaleDateString()+'</td><td class="num">'+money(a.netSpend)+'</td></tr>';
+  });
+  html+="</tbody>";
+  $("duplicateTable").innerHTML=html;
+  $("duplicateTable").querySelectorAll("[data-duplicate]").forEach(row=>{
+    row.addEventListener("dblclick",()=>{openDrilldown(state.duplicates[Number(row.dataset.duplicate)],"Potential duplicate charges")});
+  });
+}
+
+function renderTransactionTable(transactions,tableId){
+  if(!transactions.length){$(tableId).innerHTML=emptyState("No transactions match the current filters.");return}
+  let html='<thead><tr><th>Date</th><th>File</th><th>Account</th><th>Category</th><th>Vendor</th><th>Description</th><th>Pair</th><th class="num">Amount</th></tr></thead><tbody>';
+  transactions.slice(0,1500).forEach(t=>{
+    html+='<tr class="clickable '+(t.refundPair?"matched":"")+'" data-transaction="'+escapeHtml(t.id)+'"><td>'+t.date.toLocaleDateString()+'</td><td>'+escapeHtml(t.file)+'</td><td>'+escapeHtml(t.account)+'</td><td><span class="pill">'+escapeHtml(t.category)+'</span></td><td>'+escapeHtml(t.vendor)+'</td><td>'+escapeHtml(t.description)+'</td><td>'+(t.refundPair?"#"+t.refundPair+" "+t.pairRole:"—")+'</td><td class="num '+((t.netSpend||t.rawAmount)<0?"green":"")+'">'+money(t.netSpend||t.rawAmount)+'</td></tr>';
+  });
+  html+="</tbody>";
+  $(tableId).innerHTML=html;
+  $(tableId).querySelectorAll("[data-transaction]").forEach(row=>{
+    row.addEventListener("dblclick",()=>{const id=row.dataset.transaction;openDrilldown(transactions.filter(t=>t.id===id),"Transaction detail")});
+  });
+}
+
+function renderMappingTable(){
+  if(!state.mappings.length){$("mappingTable").innerHTML=emptyState("No files imported yet.");return}
+  let html='<thead><tr><th>File</th><th>Detected schema</th><th>Available columns</th></tr></thead><tbody>';
+  state.mappings.forEach(m=>{html+='<tr><td>'+escapeHtml(m.file)+'</td><td><span class="pill">'+escapeHtml(m.schema)+'</span></td><td>'+escapeHtml(m.columns)+'</td></tr>'});
+  html+="</tbody>";
+  $("mappingTable").innerHTML=html;
+}
+
+function renderSkippedTable(){
+  if(!state.skippedRows.length){$("skippedTable").innerHTML=emptyState("No rows were skipped.");return}
+  let html='<thead><tr><th>File</th><th>Row</th><th>Description</th><th>Reason</th></tr></thead><tbody>';
+  state.skippedRows.forEach(r=>{html+='<tr class="warning"><td>'+escapeHtml(r.file)+'</td><td>'+escapeHtml(r.row)+'</td><td>'+escapeHtml(r.description)+'</td><td>'+escapeHtml(r.reason)+'</td></tr>'});
+  html+="</tbody>";
+  $("skippedTable").innerHTML=html;
+}
+
+function sortableValue(value){
+  const text=String(value||"").trim();
+  if(text===""||text==="—"){return{type:"empty",value:0}}
+  const numeric=text.replace(/[$,]/g,"");
+  if(/^-?\d+(\.\d+)?$/.test(numeric)){return{type:"number",value:Number(numeric)}}
+  const parsedDate=Date.parse(text);
+  if(!Number.isNaN(parsedDate)&&/[/-]/.test(text)){return{type:"number",value:parsedDate}}
+  return{type:"text",value:text.toLowerCase()};
+}
+
+function enableSorting(tableId){
+  const table=$(tableId);if(!table){return}
+  table.querySelectorAll("th").forEach((header,columnIndex)=>{
+    if(header.dataset.sortBound==="true"){return}
+    header.dataset.sortBound="true";header.dataset.originalLabel=header.textContent.trim();
+    header.addEventListener("click",()=>{
+      const prior=state.sorts[tableId]||{column:-1,direction:"asc"};
+      const direction=prior.column===columnIndex&&prior.direction==="asc"?"desc":"asc";
+      state.sorts[tableId]={column:columnIndex,direction};
+      const body=table.querySelector("tbody");if(!body){return}
+      const rows=[...body.querySelectorAll("tr")];
+      rows.sort((r1,r2)=>{
+        const a=sortableValue(r1.children[columnIndex]?r1.children[columnIndex].textContent:"");
+        const b=sortableValue(r2.children[columnIndex]?r2.children[columnIndex].textContent:"");
+        let cmp=0;
+        if(a.type==="empty"&&b.type!=="empty"){cmp=1}
+        else if(b.type==="empty"&&a.type!=="empty"){cmp=-1}
+        else if(a.type==="number"&&b.type==="number"){cmp=a.value-b.value}
+        else{cmp=String(a.value).localeCompare(String(b.value),undefined,{numeric:true,sensitivity:"base"})}
+        return direction==="asc"?cmp:-cmp;
+      });
+      rows.forEach(r=>body.appendChild(r));
+      table.querySelectorAll("th").forEach(h=>{h.textContent=h.dataset.originalLabel});
+      header.textContent=header.dataset.originalLabel+" "+(direction==="asc"?"▲":"▼");
+    });
+  });
+}
+
+function enableSortingForAllTables(){
+  ["categoryFileTable","transactionTable","accountFlowTable","cashFlowTable","budgetTable","recurringTable","refundPairTable","duplicateTable","mappingTable","skippedTable","modalTable"].forEach(enableSorting);
+}
+
+function attachMetricDrilldowns(transactions,cardTransactions,recurring){
+  const bindMetric=(id,handler)=>{const el=$(id);el.ondblclick=handler;el.onkeydown=(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();handler()}}};
+  bindMetric("metricNetSpend",()=>openDrilldown(cardTransactions,"All filtered card purchases and refunds"));
+  bindMetric("metricCashFlow",()=>openDrilldown(transactions.filter(t=>["Income","Card purchase","Card refund / credit","Checking expense","Mortgage","Savings transfer"].indexOf(t.type)>-1),"Cash-flow contributing transactions"));
+  bindMetric("metricRefundPairs",()=>openDrilldown(transactions.filter(t=>t.refundPair),"Matched refund pairs"));
+  bindMetric("metricDuplicates",()=>{const flat=[];state.duplicates.forEach(pair=>{flat.push(pair[0]);flat.push(pair[1])});openDrilldown(flat,"Potential duplicate transactions")});
+  bindMetric("metricRecurring",()=>{const vendors=new Set(recurring.map(r=>r.vendor));openDrilldown(cardTransactions.filter(t=>vendors.has(t.vendor)),"Recurring merchant transactions")});
+}
+
+function openDrilldown(transactions,title){
+  $("modalTitle").textContent=title;
+  const total=transactions.reduce((s,t)=>s+(t.netSpend||t.rawAmount),0);
+  $("modalMeta").textContent=transactions.length+" transaction(s) · net "+money(total);
+  renderTransactionTable(transactions,"modalTable");enableSorting("modalTable");
+  $("modalBackdrop").style.display="flex";
+}
+
+function saveBudgets(){
+  document.querySelectorAll("[data-budget]").forEach(input=>{budgets[input.dataset.budget]=safeNumber(input.value)});
+  localStorage.setItem("financeBudgets",JSON.stringify(budgets));renderAll();
+}
+
+function saveCategoryRules(){
+  const output={};
+  $("categoryRules").value.split("\n").forEach(line=>{
+    const parts=line.split("=");if(parts.length<2){return}
+    const vendor=parts[0].trim();const category=parts.slice(1).join("=").trim();
+    if(vendor&&category){output[vendor]=category}
+  });
+  categoryOverrides=output;
+  localStorage.setItem("financeCategoryOverrides",JSON.stringify(categoryOverrides));
+  $("status").className="status ok";
+  $("status").textContent="Category rules saved locally. Re-import your files to apply the revised categories.";
+}
+
+function exportFilteredTransactions(){
+  const transactions=filteredTransactions();
+  const rows=[["Date","File","Account","Category","Vendor","Description","Type","Raw Amount","Net Spend","Refund Pair"]];
+  transactions.forEach(t=>{rows.push([t.date.toISOString().slice(0,10),t.file,t.account,t.category,t.vendor,t.description,t.type,t.rawAmount,t.netSpend,t.refundPair||""])});
+  const csv=rows.map(row=>row.map(v=>'"'+String(v??"").replaceAll('"','""')+'"').join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const link=document.createElement("a");
+  link.href=url;link.download="household_finance_filtered_transactions.csv";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+$("analyzeButton").addEventListener("click",importStatements);
+$("sampleDataButton").addEventListener("click",loadSampleData);
+$("resetFiltersButton").addEventListener("click",resetFilters);
+$("exportButton").addEventListener("click",exportFilteredTransactions);
+["fileFilter","accountFilter","categoryFilter","vendorFilter","monthFromFilter","monthToFilter","pairFilter"].forEach(id=>{$(id).addEventListener("change",renderAll)});
+$("searchFilter").addEventListener("input",renderAll);
+$("cashFlowScope").addEventListener("change",renderCashFlowChartSection);
+$("saveBudgetsButton").addEventListener("click",saveBudgets);
+$("saveRulesButton").addEventListener("click",saveCategoryRules);
+
+$("filtersToggle").addEventListener("click",()=>{
+  const group=$("controlsGroup");
+  const open=group.classList.toggle("open");
+  $("filtersToggle").setAttribute("aria-expanded",open?"true":"false");
+  $("filtersToggle").textContent=open?"Hide filters":"Show filters";
+});
+
+document.querySelectorAll(".tab").forEach(button=>{
+  button.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(tab=>{tab.classList.remove("active");tab.setAttribute("aria-selected","false")});
+    document.querySelectorAll(".panel").forEach(panel=>{panel.classList.add("hidden")});
+    button.classList.add("active");button.setAttribute("aria-selected","true");
+    $(button.dataset.panel).classList.remove("hidden");
+  });
+});
+
+$("closeModalButton").addEventListener("click",()=>{$("modalBackdrop").style.display="none"});
+$("modalBackdrop").addEventListener("click",(event)=>{if(event.target===$("modalBackdrop")){$("modalBackdrop").style.display="none"}});
+
+window.addEventListener("error",(event)=>{logIssue("Unexpected script error",event.error||event.message)});
+</script>
+</body>
+</html>
