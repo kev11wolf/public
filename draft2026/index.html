@@ -24,6 +24,7 @@ header{position:sticky;top:0;z-index:5;padding-top:calc(14px + var(--safe-t));di
 .live{color:#56d99e;font-weight:bold}
 .error{color:#ff9baa;font-weight:bold}
 .warn{color:#ffd166;font-weight:bold}
+.offline{color:#ff9baa;font-weight:bold}
 button,input{padding:10px;border-radius:8px;border:1px solid #294866;background:#0a192a;color:#edf5ff;font-size:16px;min-height:44px}
 button{background:#193251;font-weight:bold;cursor:pointer}
 button.active{background:#58a9ff;color:#07111f}
@@ -34,6 +35,8 @@ button.small{min-height:36px;padding:6px 10px;font-size:13px}
 .why{font-size:12px;line-height:1.5;margin-top:6px}
 .yes{color:#56d99e}
 .no{color:#ffd166}
+.outlook{font-size:12.5px;line-height:1.55;margin-top:8px;padding-top:8px;border-top:1px dashed #294866;color:#cfe0f2}
+.outlook b{color:#58a9ff;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:3px}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:left;padding:8px 6px;border-bottom:1px solid #294866}
 tbody tr{cursor:pointer}
@@ -69,6 +72,7 @@ dialog::backdrop{background:#000c}
 .stat{background:#0a192a;border:1px solid #294866;border-radius:8px;padding:8px}
 .stat b{display:block;font-size:11px;color:#58a9ff;text-transform:uppercase}
 .source-note{font-size:11px;color:#6f84a0;margin-top:14px;border-top:1px solid #294866;padding-top:10px}
+.empty-state{padding:20px;text-align:center;color:#6f84a0}
 @media(max-width:750px){.grid,.recs,.main{grid-template-columns:1fr}.main{display:block}header h1,header b{font-size:16px}}
 </style>
 </head>
@@ -128,7 +132,7 @@ dialog::backdrop{background:#000c}
 </main>
 
 <dialog id="playerModal">
-<div class="modal-head"><h2 id="modalName" style="margin:0"></h2><button class="modal-close" onclick="document.getElementById('playerModal').close()">&times;</button></div>
+<div class="modal-head"><h2 id="modalName" style="margin:0"></h2><button class="modal-close" onclick="document.getElementById('playerModal').close()" aria-label="Close">&times;</button></div>
 <div class="modal-body" id="modalBody"></div>
 </dialog>
 
@@ -139,27 +143,43 @@ const BYE_WEEKS={'ARI':14,'ATL':11,'BAL':13,'BUF':7,'CAR':5,'CHI':10,'CIN':6,'CL
 const ADP_DATA={'jahmyr gibbs':1.4,'bijan robinson':2.4,'puka nacua':2.8,'jamarr chase':3.8,'jaxon smithnjigba':5.5,'christian mccaffrey':6.1,'amonra st brown':6.7,'jonathan taylor':7.4,'devon achane':9.7,'ceedee lamb':10.4,'james cook':11.4,'justin jefferson':11.6,'chase brown':13.0,'drake london':13.5,'derrick henry':15.9,'aj brown':16.6,'rashee rice':17.0,'saquon barkley':18.4,'chris olave':19.5,'george pickens':19.7,'nico collins':20.7,'ashton jeanty':21.1,'kenneth walker':21.1,'omarion hampton':22.4,'zay flowers':24.4,'malik nabers':26.8,'garrett wilson':26.9,'jeremiyah love':28.0,'devonta smith':29.2,'trey mcbride':30.1,'kyren williams':31.6,'breece hall':31.7,'tetairoa mcmillan':32.0,'josh allen':32.9,'javonte williams':34.1,'brock bowers':34.3,'emeka egbuka':35.6,'tee higgins':36.0,'travis etienne':37.3,'ladd mcconkey':38.4,'cam skattebo':39.5,'davante adams':41.5,'dandre swift':43.6,'jaylen waddle':44.2,'jameson williams':45.6,'bucky irving':46.2,'dj moore':47.0,'terry mclaurin':48.5,'quinshon judkins':50.1,'drake maye':51.9,'luther burden':52.2,'david montgomery':53.9,'bhayshul tuten':54.0,'colston loveland':54.4,'rome odunze':54.8,'joe burrow':55.2,'mike evans':56.0,'lamar jackson':56.2,'christian watson':57.2,'courtland sutton':61.1,'rhamondre stevenson':61.7,'parker washington':62.5,'jaylen warren':62.6,'treveyon henderson':64.0,'marvin harrison':64.5,'dak prescott':65.1,'dk metcalf':65.8,'tyler warren':66.0,'tony pollard':69.0,'alec pierce':69.6,'jadarian price':70.4,'brian thomas':73.3,'harold fannin':73.3,'jayden daniels':73.9,'matthew stafford':74.6,'rico dowdle':74.7,'michael wilson':75.2,'michael pittman':77.0,'josh jacobs':77.0,'jalen hurts':77.9,'chris godwin':78.0,'carnell tate':79.6,'kyle pitts':81.2,'chuba hubbard':81.2,'brock purdy':85.1,'caleb williams':86.6,'wandale robinson':86.6,'jk dobbins':87.1,'jakobi meyers':87.7,'george kittle':90.1,'jayden reed':90.2,'jonathon brooks':91.7,'kenny gainwell':91.7,'trevor lawrence':92.1,'josh downs':92.1,'quentin johnston':93.2,'stefon diggs':94.6,'rj harvey':95.3,'jordan addison':96.5,'khalil shakir':100.6,'tucker kraft':102.9,'jared goff':103.1,'justin herbert':104.2,'patrick mahomes':104.4,'matthew golden':104.6,'xavier worthy':105.8,'aaron jones':106.3,'sam laporta':106.7,'travis kelce':108.4,'romeo doubs':108.6,'kyle monangai':109.9,'bo nix':111.8,'jordan mason':112.9,'deebo samuel':113.6,'jacory croskeymerritt':114.9,'dallas goedert':116.5,'kc concepcion':117.8,'jaxson dart':118.7,'marshawn lloyd':119.2,'jalen coker':120.1,'rachaad white':120.4,'blake corum':122.9,'dezhaun stribling':124.3,'rashid shaheed':127.9,'tyjae spears':128.8,'baker mayfield':129.5,'jerry jeudy':129.6,'tre tucker':131.2,'mark andrews':131.5,'kyler murray':131.7,'makai lemon':131.7,'jake ferguson':133.3,'keenan allen':135.8,'denzel boston':136.1,'isaiah likely':136.2,'brandon aiyuk':136.8,'tyler shough':137.1,'jalen mcmillan':139.5,'zach charbonnet':139.5,'woody marks':140.7,'jordan love':141.2,'jauan jennings':144.4,'sam darnold':145.3,'najee harris':145.5,'dalton kincaid':147.1,'emmett johnson':149.0,'mike washington':150.8,'malik washington':151.9,'alvin kamara':151.9,'calvin ridley':153.5,'tyler allgeier':153.5,'juwan johnson':154.8,'jalen nailor':156.7,'rashod bateman':156.7,'isiah pacheco':157.0,'daniel jones':157.4,'braelon allen':157.7,'jordyn tyson':157.7,'hunter henry':157.9,'cj stroud':158.1,'cooper kupp':158.3,'kayshon boutte':159.5,'tyrone tracy':160.7,'adonai mitchell':161.6,'malik willis':161.8,'jakobi lane':162.6,'odell beckham':163.7,'justice hill':163.8,'tank dell':164.0,'brian robinson':164.2,'devaughn vele':165.0,'bryce young':165.0,'chris bell':166.3,'ryan flournoy':167.5,'travis hunter':168.8,'tj hockenson':169.0,'cam ward':170.2,'dalton schultz':170.4,'jacoby brissett':171.3,'chig okonkwo':173.4,'aaron rodgers':174.5,'omar cooper':175.7,'darius slayton':178.0,'troy franklin':180.2,'xavier legette':180.6};
 const ADP_SOURCE_LABEL='FantasyFootballCalculator.com, 7,430 human PPR mock drafts, Aug 29\u2013Sep 5 2026';
 const FLEX_SLOTS=2;
-let P={},X=[],D,R=[],M,T,posFilter='',tags={};
+let P={},X=[],D,R=[],M,T,posFilter='',tags={},ticking=false,lastPickCount=-1;
 
 const $=x=>document.querySelector(x);
 const api=async x=>{let r=await fetch(A+x);if(!r.ok)throw Error(x+' returned HTTP '+r.status);return r.json()};
-const name=p=>p?((p.first_name+' '+p.last_name).trim()||p.full_name||'Unknown'):'Unknown';
+function name(p){
+  if(!p)return 'Unknown';
+  let fn=p.first_name,ln=p.last_name;
+  if(fn && ln)return (fn+' '+ln).trim();
+  if(fn)return fn;
+  if(p.full_name)return p.full_name;
+  if(p.team)return p.team+' Defense';
+  return 'Unknown';
+}
 const normName=n=>n.toLowerCase().replace(/\b(jr\.?|sr\.?|iii|iv|ii)\b/g,'').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
 const adpFor=p=>{let k=normName(name(p));return ADP_DATA[k]!=null?ADP_DATA[k]:null};
 const rank=p=>+(p.search_rank||p.search_rank_half_ppr||p.search_rank_ppr||p.search_rank_ecr||99999);
-const sortKey=p=>{let a=adpFor(p);return a!=null?a:1000+Math.min(rank(p),9000)/1000};
+const sortKey=p=>{let a=adpFor(p);if(a!=null)return a;if(p.position==='K'||p.position==='DEF')return 500+Math.min(rank(p),9000)/10000;return 1000+Math.min(rank(p),9000)/1000};
 const pos=x=>P[x.player_id]?.position||x.metadata?.position||'';
-const depth=p=>{if(p.depth_chart_position&&p.depth_chart_order)return p.depth_chart_position+p.depth_chart_order;if(p.depth_chart_position)return p.depth_chart_position;return '&mdash;'};
+const depth=p=>{if(p.depth_chart_position&&p.depth_chart_order!=null)return p.depth_chart_position+p.depth_chart_order;if(p.depth_chart_position)return p.depth_chart_position;return '&mdash;'};
 const bye=p=>BYE_WEEKS[p.team]||null;
-let displayRankMap={};
+let displayRankMap={},availableCache=null;
 function tierFromRank(dr){return dr<=18?1:dr<=42?2:dr<=72?3:dr<=110?4:dr<=160?5:6}
 const tier=p=>tierFromRank(displayRankMap[p.player_id]||999);
 const my=()=>X.filter(x=>x.roster_id===M);
 const draftedSet=()=>new Set(X.map(x=>x.player_id));
 function available(){
-  let list=Object.values(P).filter(p=>['QB','RB','WR','TE','K','DEF'].includes(p.position)&&!draftedSet().has(p.player_id)&&(adpFor(p)!=null||rank(p)<99999));
+  if(availableCache)return availableCache;
+  let ds=draftedSet();
+  let list=Object.values(P).filter(p=>{
+    if(!['QB','RB','WR','TE','K','DEF'].includes(p.position))return false;
+    if(ds.has(p.player_id))return false;
+    if(p.position==='K'||p.position==='DEF')return true;
+    return adpFor(p)!=null||rank(p)<99999;
+  });
   list.sort((a,b)=>sortKey(a)-sortKey(b)||name(a).localeCompare(name(b)));
   list.forEach((p,i)=>displayRankMap[p.player_id]=i+1);
+  availableCache=list;
   return list;
 }
 const team=id=>{let r=R.find(x=>x.roster_id===id),u=D.users.find(x=>x.user_id===r?.owner_id);return u?.metadata?.team_name||u?.display_name||'Roster '+id};
@@ -334,6 +354,38 @@ function reasons(p){
   return [a,b];
 }
 
+function ordinal(n){let s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+
+function outlookFor(p){
+  let z=p.position,r=displayRankMap[p.player_id]||null,adp=adpFor(p),t=tier(p),d=depth(p),by=bye(p),inj=p.injury_status;
+  let good,bad;
+  if(z==='K'||z==='DEF'){
+    good=name(p)+' is treated as a late-round streaming or roster-filler piece rather than a weekly building block.';
+    bad=inj?('Current Sleeper status ('+inj+') adds uncertainty even for a low-cost roster spot.'):'There is little differentiating him from replacement-level options at this position.';
+    return good+' '+bad;
+  }
+  let roleBit=d!=='&mdash;'?('currently slotted as the '+d+' on '+(p.team||'his team')+'\'s depth chart'):('with an unclear depth-chart role on '+(p.team||'his team'));
+  if(r&&r<=24){
+    good=name(p)+' is being valued as an early-round cornerstone (unique rank #'+r+(adp!=null?', ADP '+adp.toFixed(1):'')+'), '+roleBit+'.';
+  } else if(t<=2){
+    good=name(p)+' grades as a strong Tier '+t+' '+z+' '+roleBit+', giving him a real path to weekly starter value.';
+  } else if(adp!=null && r && adp<r-10){
+    good=name(p)+' is falling later than his market ADP of '+adp.toFixed(1)+' suggests, '+roleBit+', which points to possible value at this range.';
+  } else {
+    good=name(p)+' profiles as a depth-tier '+z+' '+roleBit+'.';
+  }
+  if(inj){
+    bad='The bad news: Sleeper currently lists his status as '+inj+(p.injury_body_part?' ('+p.injury_body_part+')':'')+', which is the main risk to monitor before drafting him.';
+  } else if(t>=5){
+    bad='The catch: he sits in a deep, lower tier where several comparable '+z+'s remain, so there is little urgency to reach.';
+  } else if(by){
+    bad='Worth noting: his Week '+by+' bye could create a lineup gap if you already have other key starters off that same week.';
+  } else {
+    bad='No major red flags stand out from the available Sleeper and ADP data, though situations can shift quickly as the season approaches.';
+  }
+  return good+' '+bad;
+}
+
 function verdictFor(p,idx){
   let z=p.position,adp=adpFor(p),curPick=X.length+1;
   if(idx===0)return {cls:'top',label:'Top target'};
@@ -346,13 +398,14 @@ function verdictFor(p,idx){
 
 function categoryBreakdown(z){
   let list=available().filter(p=>p.position===z).slice(0,6);
-  if(!list.length)return '<p class="muted">No ranked '+z+'s remain available.</p>';
+  if(!list.length)return '<p class="empty-state">No ranked '+z+'s remain available.</p>';
   return list.map((p,i)=>{
     let r=reasons(p),v=verdictFor(p,i);
     return '<div class="catcard"><b>'+(i+1)+'. '+name(p)+'</b><span class="verdict '+v.cls+'">'+v.label+'</span>'+
       '<div class="muted">'+(p.team||'FA')+(bye(p)?(' &bull; Bye '+bye(p)):'')+' &bull; Depth '+depth(p)+' &bull; Tier '+tier(p)+' &bull; Rank #'+displayRankMap[p.player_id]+'</div>'+
       '<div class="why"><span class="yes">Pros</span><br>'+r[0].join('<br>')+'</div>'+
-      '<div class="why"><span class="no">Cons</span><br>'+r[1].join('<br>')+'</div></div>';
+      '<div class="why"><span class="no">Cons</span><br>'+r[1].join('<br>')+'</div>'+
+      '<div class="outlook"><b>Draft Outlook</b>'+outlookFor(p)+'</div></div>';
   }).join('');
 }
 
@@ -402,11 +455,13 @@ function openPlayerModal(pid){
     '<div class="statgrid">'+stats.map(([k,v])=>'<div class="stat"><b>'+k+'</b>'+v+'</div>').join('')+'</div>'+
     '<div class="why"><span class="yes">Why consider</span><br>'+r[0].join('<br>')+'</div>'+
     '<div class="why"><span class="no">Why hesitate</span><br>'+r[1].join('<br>')+'</div>'+
-    '<div class="source-note">Live player/status/depth-chart data: Sleeper (api.sleeper.app/v1/players/nfl). Consensus ADP: '+ADP_SOURCE_LABEL+', baked in as a static reference snapshot (not live). Bye week: static 2026 NFL schedule.</div>';
+    '<div class="outlook"><b>Draft Outlook</b>'+outlookFor(p)+'</div>'+
+    '<div class="source-note">Live player/status/depth-chart data: Sleeper (api.sleeper.app/v1/players/nfl). Consensus ADP: '+ADP_SOURCE_LABEL+', baked in as a static reference snapshot (not live). Bye week: static 2026 NFL schedule. Draft Outlook is generated from these data points only \u2014 it is not based on prior-season box-score statistics.</div>';
   $('#playerModal').showModal();
 }
 
 function render(){
+  availableCache=null;
   let z=available(),last=X.at(-1),q=$('#q').value.toLowerCase(),nx=nextMyPick();
   $('#ds').textContent=D.status==='drafting'?'LIVE DRAFT':D.status;
   $('#np').textContent=nx?'Overall '+nx:'&mdash;';
@@ -425,14 +480,15 @@ function render(){
   renderCategory();
 
   let rec=z.slice(0,3);
-  $('#recs').innerHTML=rec.map((p,i)=>{
+  $('#recs').innerHTML=rec.length?rec.map((p,i)=>{
     let r=reasons(p),tg=tags[p.player_id];
     return '<div class="rec"><button class="star '+(tg==='target'?'target':'')+'" onclick="toggleTag(\''+p.player_id+'\',\'target\',event)" title="Target">&#9733;</button>'+
     '<button class="star '+(tg==='fade'?'fade':'')+'" onclick="toggleTag(\''+p.player_id+'\',\'fade\',event)" title="Fade">&#10005;</button>'+
     '<b onclick="openPlayerModal(\''+p.player_id+'\')" style="cursor:pointer">'+(i+1)+'. '+name(p)+'</b><div class="muted">'+p.position+' &bull; '+(p.team||'FA')+(bye(p)?(' &bull; Bye '+bye(p)):'')+' &bull; Depth '+depth(p)+' &bull; Tier '+tier(p)+'</div>'+
     '<div class="why"><span class="yes">Why consider</span><br>'+r[0].join('<br>')+'</div>'+
-    '<div class="why"><span class="no">Why hesitate</span><br>'+r[1].join('<br>')+'</div></div>';
-  }).join('');
+    '<div class="why"><span class="no">Why hesitate</span><br>'+r[1].join('<br>')+'</div>'+
+    '<div class="outlook"><b>Draft Outlook</b>'+outlookFor(p)+'</div></div>';
+  }).join(''):'<p class="empty-state">No ranked available players found.</p>';
 
   $('#tb').innerHTML=z.filter(p=>(!posFilter||p.position===posFilter)&&name(p).toLowerCase().includes(q)).slice(0,250).map(p=>{
     let tg=tags[p.player_id],adp=adpFor(p);
@@ -466,7 +522,15 @@ function setupPosBar(){
   });
 }
 
-async function tick(){X=await api('/draft/'+D.draft_id+'/picks');render()}
+async function tick(){
+  if(ticking)return;
+  ticking=true;
+  try{
+    let picks=await api('/draft/'+D.draft_id+'/picks');
+    X=picks;
+    render();
+  } finally { ticking=false; }
+}
 
 async function go(){
   clearInterval(T);$('#state').className='live';$('#state').textContent='CONNECTING';$('#err').textContent='';
@@ -481,12 +545,18 @@ async function go(){
     await loadPlayers();
     setupPosBar();
     await tick();
-    T=setInterval(()=>tick().catch(e=>{$('#state').className='error';$('#state').textContent='REFRESH ERROR';$('#err').textContent=e.message}),3000);
+    T=setInterval(()=>{
+      if(document.hidden)return;
+      tick().catch(e=>{$('#state').className='error';$('#state').textContent='REFRESH ERROR';$('#err').textContent=e.message});
+    },3000);
     $('#state').innerHTML=D.status==='drafting'?'LIVE &bull; 3 SEC':'CONNECTED';
   }catch(e){
     $('#state').className='error';$('#state').textContent='CONNECTION ERROR';$('#ds').textContent='Unable to load Sleeper';$('#err').textContent=e.message;
   }
 }
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&D)tick().catch(()=>{})});
+window.addEventListener('offline',()=>{$('#state').className='offline';$('#state').textContent='OFFLINE'});
+window.addEventListener('online',()=>go());
 if('serviceWorker'in navigator){
   navigator.serviceWorker.register('service-worker.js');
   navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload());
