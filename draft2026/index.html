@@ -1,1 +1,249 @@
-<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07111f"><link rel="manifest" href="manifest.webmanifest"><title>Draft Command 2026</title><style>body{margin:0;background:#07111f;color:#edf5ff;font:15px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}header,main{max-width:1300px;margin:auto;padding:16px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #294866}.card{background:#10233a;border:1px solid #294866;border-radius:12px;padding:15px;margin:12px 0}.grid,.recs,.main{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.main{grid-template-columns:1fr 320px}.label{font-size:11px;color:#58a9ff;font-weight:bold;letter-spacing:.1em}.big{font-size:20px;font-weight:bold}.muted{color:#9eb2ca;font-size:13px}.live{color:#56d99e;font-weight:bold}.error{color:#ff9baa;font-weight:bold}button,input,select{padding:8px;border-radius:7px;border:1px solid #294866;background:#0a192a;color:#edf5ff}button{background:#58a9ff;color:#07111f;font-weight:bold}.rec{border:1px solid #35648c;border-radius:9px;padding:12px}.why{font-size:12px;line-height:1.5}.yes{color:#56d99e}.no{color:#ffd166}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:8px;border-bottom:1px solid #294866}#board{max-height:600px;overflow:auto}.row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #294866}.pos{color:#58a9ff;font-weight:bold}@media(max-width:750px){.grid,.recs,.main{grid-template-columns:1fr}.main{display:block}}</style><header><div><b>Draft Command 2026</b><div class="muted">Matter of Fak • Sleeper live companion</div></div><div><span id="state" class="live">CONNECTING</span> <button onclick="go()">Reconnect</button></div></header><main><section class="grid"><div class="card"><div class="label">DRAFT STATUS</div><div id="ds" class="big">Loading</div><div id="err" class="muted"></div></div><div class="card"><div class="label">YOUR NEXT PICK</div><div id="np" class="big">—</div><div id="nm" class="muted">Slot 1.11</div></div><div class="card"><div class="label">LATEST PICK</div><div id="lp" class="big">—</div><div id="lm" class="muted"></div></div></section><section class="card"><div class="label">BALANCED RECOMMENDATIONS</div><h2>Best players now</h2><div id="recs" class="recs"></div></section><section class="main"><div class="card"><div class="label">AVAILABLE PLAYERS</div><input id="q" placeholder="Search player" oninput="render()"> <select id="f" onchange="render()"><option value="">All positions</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DEF</option></select><div id="board"><table><thead><tr><th>Rank</th><th>Player</th><th>Pos</th><th>Team</th><th>Status</th><th>Tier</th></tr></thead><tbody id="tb"></tbody></table></div></div><aside><div class="card"><div class="label">MATTER OF FAK</div><div id="roster"></div></div><div class="card"><div class="label">GUIDANCE</div><div id="guide" class="muted"></div></div><div class="card"><div class="label">RECENT PICKS</div><div id="log"></div></div></aside></section></main><script>const A='https://api.sleeper.app/v1',L='1389359304355610624',U='biggojohnson';let P={},X=[],D,R=[],M,T;const $=x=>document.querySelector(x),api=async x=>{let r=await fetch(A+x);if(!r.ok)throw Error(x+' returned HTTP '+r.status);return r.json()},name=p=>p?((p.first_name+' '+p.last_name).trim()||p.full_name||'Unknown'):'Unknown',rank=p=>+(p.search_rank||p.search_rank_half_ppr||p.search_rank_ppr||p.search_rank_ecr||99999),pos=x=>P[x.player_id]?.position||x.metadata?.position||'',my=()=>X.filter(x=>x.roster_id===M),need=z=>my().filter(x=>pos(x)===z).length<({QB:1,RB:2,WR:2,TE:1}[z]||0)?18:['RB','WR','TE'].includes(z)?4:0,tier=p=>rank(p)<18?1:rank(p)<42?2:rank(p)<72?3:rank(p)<110?4:rank(p)<160?5:6,available=()=>Object.values(P).filter(p=>['QB','RB','WR','TE','K','DEF'].includes(p.position)&&!new Set(X.map(x=>x.player_id)).has(p.player_id)&&rank(p)<99999).sort((a,b)=>rank(a)-rank(b)),team=id=>{let r=R.find(x=>x.roster_id===id),u=D.users.find(x=>x.user_id===r?.owner_id);return u?.metadata?.team_name||u?.display_name||'Roster '+id};function render(){let z=available(),last=X.at(-1),q=$('#q').value.toLowerCase(),f=$('#f').value;$('#ds').textContent=D.status==='drafting'?'LIVE DRAFT':D.status;$('#lp').textContent=last?last.pick_no+'. '+name(P[last.player_id]):'No picks yet';$('#lm').textContent=last?team(last.roster_id):'';let rec=z.slice(0,3);$('#recs').innerHTML=rec.map((p,i)=>{let a=['Sleeper rank #'+rank(p),need(p.position)>=18?'Fills unfilled '+p.position+' starter need':'Can fit roster construction',tier(p)<=3?'Still in Tier '+tier(p):''],b=[p.injury_status?'Sleeper status: '+p.injury_status:'No listed injury designation',need(p.position)<10?'Roster does not force '+p.position+' now':''];return '<div class="rec"><b>'+(i+1)+'. '+name(p)+'</b><div class="muted">'+p.position+' • '+(p.team||'FA')+' • Tier '+tier(p)+'</div><div class="why"><span class="yes">Why consider</span><br>'+a.filter(Boolean).join('<br>')+'</div><div class="why"><span class="no">Why hesitate</span><br>'+b.filter(Boolean).join('<br>')+'</div></div>'}).join('');$('#tb').innerHTML=z.filter(p=>(!f||p.position===f)&&name(p).toLowerCase().includes(q)).slice(0,250).map(p=>'<tr><td>'+rank(p)+'</td><td>'+name(p)+'</td><td class="pos">'+p.position+'</td><td>'+(p.team||'FA')+'</td><td class="muted">'+(p.injury_status||p.status||'Active')+'</td><td>'+tier(p)+'</td></tr>').join('');$('#roster').innerHTML=my().map(x=>'<div class="row"><span>'+name(P[x.player_id])+'</span><span class="pos">'+pos(x)+'</span></div>').join('')||'<span class="muted">No picks yet</span>';let miss=['QB','RB','WR','TE'].filter(v=>my().filter(x=>pos(x)===v).length<({QB:1,RB:2,WR:2,TE:1}[v]));$('#guide').innerHTML=miss.length?'Prioritize <b>'+miss.join(' / ')+'</b> when values are close.':'Core starters covered; prioritize RB/WR/TE flex value.';$('#log').innerHTML=X.slice(-8).reverse().map(x=>'<div class="row">'+x.pick_no+'. '+name(P[x.player_id])+' <span class="muted">'+team(x.roster_id)+'</span></div>').join('')}async function tick(){X=await api('/draft/'+D.draft_id+'/picks');render()}async function go(){clearInterval(T);$('#state').className='live';$('#state').textContent='CONNECTING';$('#err').textContent='';try{let[l,u,r,ds,me]=await Promise.all([api('/league/'+L),api('/league/'+L+'/users'),api('/league/'+L+'/rosters'),api('/league/'+L+'/drafts'),api('/user/'+U)]);D=ds.find(x=>x.status==='drafting')||ds.find(x=>x.draft_id===l.draft_id)||ds.at(-1);if(!D)throw Error('No draft found for this league');D.users=u;R=r;M=r.find(x=>x.owner_id===me.user_id)?.roster_id;if(!M)throw Error('Could not match Sleeper username to a roster');P=await api('/players/nfl');await tick();T=setInterval(()=>tick().catch(e=>{$('#state').className='error';$('#state').textContent='REFRESH ERROR';$('#err').textContent=e.message}),3000);$('#state').textContent=D.status==='drafting'?'LIVE • 3 SEC':'CONNECTED'}catch(e){$('#state').className='error';$('#state').textContent='CONNECTION ERROR';$('#ds').textContent='Unable to load Sleeper';$('#err').textContent=e.message}}if('serviceWorker'in navigator)navigator.serviceWorker.register('service-worker.js');go()</script>
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07111f">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Draft Command 2026</title>
+<style>
+body{margin:0;background:#07111f;color:#edf5ff;font:15px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}
+header,main{max-width:1300px;margin:auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #294866;flex-wrap:wrap;gap:8px}
+.card{background:#10233a;border:1px solid #294866;border-radius:12px;padding:15px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.main{display:grid;grid-template-columns:1fr 320px;gap:12px}
+.label{font-size:11px;color:#58a9ff;font-weight:bold;letter-spacing:.1em}
+.big{font-size:20px;font-weight:bold}
+.muted{color:#9eb2ca;font-size:13px}
+.live{color:#56d99e;font-weight:bold}
+.error{color:#ff9baa;font-weight:bold}
+button,input{padding:8px;border-radius:7px;border:1px solid #294866;background:#0a192a;color:#edf5ff}
+button{background:#193251;font-weight:bold;cursor:pointer}
+button.active{background:#58a9ff;color:#07111f}
+.posbar{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.rec{border:1px solid #35648c;border-radius:9px;padding:12px}
+.recs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.why{font-size:12px;line-height:1.5;margin-top:6px}
+.yes{color:#56d99e}
+.no{color:#ffd166}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid #294866}
+#board{max-height:560px;overflow:auto}
+.row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #294866}
+.pos{color:#58a9ff;font-weight:bold}
+.posrec{border:1px solid #3d6f47;background:#122a1b;border-radius:10px;padding:14px;margin:12px 0}
+.posrec h2{margin:0 0 6px;color:#7be8a4}
+.posrec .fallback{color:#ffd166;font-size:13px}
+.needbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.needchip{font-size:12px;padding:4px 8px;border-radius:99px;background:#193251;border:1px solid #294866}
+.needchip.short{background:#4b2730;border-color:#7a3b47}
+@media(max-width:750px){.grid,.recs,.main{grid-template-columns:1fr}.main{display:block}}
+</style>
+</head>
+<body>
+<header>
+<div><b>Draft Command 2026</b><div class="muted">Matter of Fak • Sleeper live companion</div></div>
+<div><span id="state" class="live">CONNECTING</span> <button onclick="go()">Reconnect</button></div>
+</header>
+<main>
+
+<section class="grid">
+<div class="card"><div class="label">DRAFT STATUS</div><div id="ds" class="big">Loading</div><div id="err" class="muted"></div></div>
+<div class="card"><div class="label">YOUR NEXT PICK</div><div id="np" class="big">—</div><div id="nm" class="muted">Slot 1.11</div></div>
+<div class="card"><div class="label">LATEST PICK</div><div id="lp" class="big">—</div><div id="lm" class="muted"></div></div>
+</section>
+
+<section class="posrec">
+<div class="label">RECOMMENDED POSITION</div>
+<h2 id="recPos">Calculating…</h2>
+<div id="recWhy" class="muted"></div>
+<div id="recFallback" class="fallback"></div>
+<div id="needBar" class="needbar"></div>
+</section>
+
+<section class="card">
+<div class="label">BALANCED RECOMMENDATIONS</div>
+<h2>Best players now</h2>
+<div id="recs" class="recs"></div>
+</section>
+
+<section class="main">
+<div class="card">
+<div class="label">AVAILABLE PLAYERS</div>
+<div class="posbar" id="posbar"></div>
+<input id="q" placeholder="Search player" oninput="render()" style="width:100%;margin-bottom:8px">
+<div id="board"><table><thead><tr><th>Rank</th><th>Player</th><th>Pos</th><th>Team</th><th>Depth</th><th>Status</th><th>Tier</th></tr></thead><tbody id="tb"></tbody></table></div>
+</div>
+<aside>
+<div class="card"><div class="label">MATTER OF FAK</div><div id="roster"></div></div>
+<div class="card"><div class="label">GUIDANCE</div><div id="guide" class="muted"></div></div>
+<div class="card"><div class="label">RECENT PICKS</div><div id="log"></div></div>
+</aside>
+</section>
+
+</main>
+<script>
+const A='https://api.sleeper.app/v1',L='1389359304355610624',U='biggojohnson';
+const STARTER_REQ={QB:1,RB:2,WR:2,TE:1};
+const FLEX_SLOTS=2;
+let P={},X=[],D,R=[],M,T,posFilter='';
+
+const $=x=>document.querySelector(x);
+const api=async x=>{let r=await fetch(A+x);if(!r.ok)throw Error(x+' returned HTTP '+r.status);return r.json()};
+const name=p=>p?((p.first_name+' '+p.last_name).trim()||p.full_name||'Unknown'):'Unknown';
+const rank=p=>+(p.search_rank||p.search_rank_half_ppr||p.search_rank_ppr||p.search_rank_ecr||99999);
+const pos=x=>P[x.player_id]?.position||x.metadata?.position||'';
+const depth=p=>{if(p.depth_chart_position&&p.depth_chart_order)return p.depth_chart_position+p.depth_chart_order;if(p.depth_chart_position)return p.depth_chart_position;return '—'};
+const tier=p=>rank(p)<18?1:rank(p)<42?2:rank(p)<72?3:rank(p)<110?4:rank(p)<160?5:6;
+const my=()=>X.filter(x=>x.roster_id===M);
+const draftedSet=()=>new Set(X.map(x=>x.player_id));
+const available=()=>Object.values(P).filter(p=>['QB','RB','WR','TE','K','DEF'].includes(p.position)&&!draftedSet().has(p.player_id)&&rank(p)<99999).sort((a,b)=>rank(a)-rank(b));
+const team=id=>{let r=R.find(x=>x.roster_id===id),u=D.users.find(x=>x.user_id===r?.owner_id);return u?.metadata?.team_name||u?.display_name||'Roster '+id};
+const countMine=z=>my().filter(x=>pos(x)===z).length;
+const bestAt=z=>available().find(p=>p.position===z);
+
+function flexFilled(){
+  let usedRB=Math.min(countMine('RB'),STARTER_REQ.RB),usedWR=Math.min(countMine('WR'),STARTER_REQ.WR),usedTE=Math.min(countMine('TE'),STARTER_REQ.TE);
+  let leftoverRB=countMine('RB')-usedRB,leftoverWR=countMine('WR')-usedWR,leftoverTE=countMine('TE')-usedTE;
+  return Math.min(FLEX_SLOTS,leftoverRB+leftoverWR+leftoverTE);
+}
+
+function positionScore(z){
+  let count=countMine(z),req=STARTER_REQ[z]||0,score=0;
+  if(count<req)score+=20;
+  else if(['RB','WR','TE'].includes(z)&&flexFilled()<FLEX_SLOTS)score+=8;
+  let rb=countMine('RB'),wr=countMine('WR');
+  if(z==='RB'){
+    if(rb===0)score+=28;
+    else if(rb===1)score+=16;
+    else if(rb===2)score+=4;
+    else if(rb>=3&&wr===0)score-=20;
+    else if(rb>=4)score-=15;
+  }
+  if(z==='WR'){
+    if(wr===0&&rb>=3)score+=32;
+    else if(wr===0&&rb===2)score+=18;
+    else if(wr<req)score+=10;
+    else score+=2;
+  }
+  if(z==='QB'||z==='TE'){
+    if(count<req)score+=6;
+  }
+  if(z==='K'||z==='DEF'){
+    score-=my().length<10?40:-10;
+  }
+  let best=bestAt(z);
+  if(best)score+=(7-tier(best))*3;
+  else score-=50;
+  return score;
+}
+
+function recommendedPositions(){
+  let list=['QB','RB','WR','TE'].map(z=>({z,s:positionScore(z)})).sort((a,b)=>b.s-a.s);
+  return list;
+}
+
+function needBarHtml(){
+  return ['QB','RB','WR','TE'].map(z=>{
+    let count=countMine(z),req=STARTER_REQ[z]||0,short=count<req;
+    return '<span class="needchip'+(short?' short':'')+'">'+z+' '+count+'/'+req+'</span>';
+  }).join('')+'<span class="needchip">Flex '+flexFilled()+'/'+FLEX_SLOTS+'</span>';
+}
+
+function reasons(p){
+  let a=['Sleeper default rank #'+rank(p)],b=[];
+  let z=p.position,rb=countMine('RB'),wr=countMine('WR');
+  if(z==='RB'){
+    if(rb===0)a.push('You have zero RBs — matches your RB-first draft strategy');
+    else if(rb===1)a.push('Second RB keeps pace with your RB-heavy approach');
+    else if(rb>=3&&wr===0)b.push('You already have '+rb+' RBs and zero WR starters');
+    else if(rb>=4)b.push('RB depth is now heavy; bench/handcuff value only');
+  }
+  if(z==='WR'){
+    if(wr===0&&rb>=2)a.push('Balances a roster that is currently RB-heavy');
+    else if(wr===0)a.push('Fills your first WR starter slot');
+  }
+  if(countMine(z)<(STARTER_REQ[z]||0))a.push('Fills an unfilled '+z+' starter need');
+  else if(['RB','WR','TE'].includes(z)&&flexFilled()<FLEX_SLOTS)a.push('Eligible for an open WRT flex slot');
+  if(tier(p)<=3)a.push('Still available in Tier '+tier(p));
+  let d=depth(p);
+  if(d!=='—')a.push('Sleeper depth chart: '+d);
+  if(!p.injury_status)a.push('No listed Sleeper injury designation');
+  if(p.injury_status)b.push('Sleeper status: '+p.injury_status);
+  if(tier(p)>=5)b.push('Later tier; comparable options may remain');
+  if(z==='K'||z==='DEF')b.push('Early to spend a pick here given open starter needs');
+  if(!b.length)b.push('Sleeper-only model — no outside projections or ADP used');
+  return [a,b];
+}
+
+function render(){
+  let z=available(),last=X.at(-1),q=$('#q').value.toLowerCase();
+  $('#ds').textContent=D.status==='drafting'?'LIVE DRAFT':D.status;
+  $('#lp').textContent=last?last.pick_no+'. '+name(P[last.player_id]):'No picks yet';
+  $('#lm').textContent=last?team(last.roster_id):'';
+
+  let recPos=recommendedPositions();
+  let top=recPos[0],second=recPos[1];
+  $('#recPos').textContent=top.z+(top.s>=25?' — high priority':top.s>=10?' — good value':' — situational');
+  let topBest=bestAt(top.z);
+  $('#recWhy').textContent=topBest?('Best available: '+name(topBest)+' (Sleeper rank #'+rank(topBest)+', Tier '+tier(topBest)+')'):'No ranked players remain at this position.';
+  $('#recFallback').textContent='If the '+top.z+' tier is gone, pivot to: '+second.z;
+  $('#needBar').innerHTML=needBarHtml();
+
+  let rec=z.slice(0,3);
+  $('#recs').innerHTML=rec.map((p,i)=>{
+    let r=reasons(p);
+    return '<div class="rec"><b>'+(i+1)+'. '+name(p)+'</b><div class="muted">'+p.position+' • '+(p.team||'FA')+' • Depth '+depth(p)+' • Tier '+tier(p)+'</div><div class="why"><span class="yes">Why consider</span><br>'+r[0].join('<br>')+'</div><div class="why"><span class="no">Why hesitate</span><br>'+r[1].join('<br>')+'</div></div>';
+  }).join('');
+
+  $('#tb').innerHTML=z.filter(p=>(!posFilter||p.position===posFilter)&&name(p).toLowerCase().includes(q)).slice(0,250).map(p=>
+    '<tr><td>'+rank(p)+'</td><td>'+name(p)+'</td><td class="pos">'+p.position+'</td><td>'+(p.team||'FA')+'</td><td>'+depth(p)+'</td><td class="muted">'+(p.injury_status||p.status||'Active')+'</td><td>'+tier(p)+'</td></tr>'
+  ).join('');
+
+  $('#roster').innerHTML=my().map(x=>'<div class="row"><span>'+name(P[x.player_id])+'</span><span class="pos">'+pos(x)+'</span></div>').join('')||'<span class="muted">No picks yet</span>';
+
+  let miss=['QB','RB','WR','TE'].filter(v=>countMine(v)<STARTER_REQ[v]);
+  let guideMsg=miss.length?('Prioritize <b>'+miss.join(' / ')+'</b> when values are close.'):'Core starters covered; prioritize best RB/WR/TE flex value.';
+  if(countMine('RB')>=3&&countMine('WR')===0)guideMsg='RB depth is strong — shift priority to WR before adding more RBs.';
+  $('#guide').innerHTML=guideMsg;
+
+  $('#log').innerHTML=X.slice(-8).reverse().map(x=>'<div class="row">'+x.pick_no+'. '+name(P[x.player_id])+' <span class="muted">'+team(x.roster_id)+'</span></div>').join('');
+}
+
+function setupPosBar(){
+  let opts=['All','QB','RB','WR','TE','K','DEF'];
+  $('#posbar').innerHTML=opts.map(o=>'<button data-p="'+(o==='All'?'':o)+'" class="'+(o==='All'?'active':'')+'">'+o+'</button>').join('');
+  document.querySelectorAll('#posbar button').forEach(b=>b.onclick=()=>{
+    posFilter=b.dataset.p;
+    document.querySelectorAll('#posbar button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    render();
+  });
+}
+
+async function tick(){X=await api('/draft/'+D.draft_id+'/picks');render()}
+
+async function go(){
+  clearInterval(T);$('#state').className='live';$('#state').textContent='CONNECTING';$('#err').textContent='';
+  try{
+    let[l,u,r,ds,me]=await Promise.all([api('/league/'+L),api('/league/'+L+'/users'),api('/league/'+L+'/rosters'),api('/league/'+L+'/drafts'),api('/user/'+U)]);
+    D=ds.find(x=>x.status==='drafting')||ds.find(x=>x.draft_id===l.draft_id)||ds.at(-1);
+    if(!D)throw Error('No draft found for this league');
+    D.users=u;R=r;
+    M=r.find(x=>x.owner_id===me.user_id)?.roster_id;
+    if(!M)throw Error('Could not match Sleeper username to a roster');
+    P=await api('/players/nfl');
+    setupPosBar();
+    await tick();
+    T=setInterval(()=>tick().catch(e=>{$('#state').className='error';$('#state').textContent='REFRESH ERROR';$('#err').textContent=e.message}),3000);
+    $('#state').textContent=D.status==='drafting'?'LIVE • 3 SEC':'CONNECTED';
+  }catch(e){
+    $('#state').className='error';$('#state').textContent='CONNECTION ERROR';$('#ds').textContent='Unable to load Sleeper';$('#err').textContent=e.message;
+  }
+}
+if('serviceWorker'in navigator)navigator.serviceWorker.register('service-worker.js');
+go();
+</script>
+</body>
+</html>
