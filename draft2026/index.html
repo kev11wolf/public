@@ -14,7 +14,11 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:#07111f;color:#edf5ff;font:15px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding-bottom:calc(20px + var(--safe-b))}
 header,main{max-width:1300px;margin:auto;padding:14px 16px}
-header{position:sticky;top:0;z-index:5;padding-top:calc(14px + var(--safe-t));display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #294866;flex-wrap:wrap;gap:8px;background:#07111fee;backdrop-filter:blur(8px)}
+header{position:sticky;top:0;z-index:20;padding-top:calc(14px + var(--safe-t));display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #294866;flex-wrap:wrap;gap:8px;background:#07111fee;backdrop-filter:blur(8px)}
+.strip{position:sticky;top:0;z-index:19;margin-top:0}
+.strip-inner{max-width:1300px;margin:auto;padding:8px 16px;font-size:13px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;background:#0d2a45;border-bottom:1px solid #2c4d70}
+.strip-inner.onclock{background:#1d5c3a;border-color:#3d9163}
+.strip-inner b{font-weight:800}
 .card{background:#10233a;border:1px solid #294866;border-radius:12px;padding:15px;margin:12px 0}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .main{display:grid;grid-template-columns:1fr 320px;gap:12px}
@@ -73,44 +77,63 @@ dialog::backdrop{background:#000c}
 .stat b{display:block;font-size:11px;color:#58a9ff;text-transform:uppercase}
 .source-note{font-size:11px;color:#6f84a0;margin-top:14px;border-top:1px solid #294866;padding-top:10px}
 .empty-state{padding:20px;text-align:center;color:#6f84a0}
-@media(max-width:750px){.grid,.recs,.main{grid-template-columns:1fr}.main{display:block}header h1,header b{font-size:16px}}
+.card-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.card-header .chev{color:#58a9ff;font-size:14px;transition:transform .15s}
+.card-body.collapsed{display:none}
+#toastRoot{position:fixed;top:calc(96px + var(--safe-t));left:0;right:0;z-index:50;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 12px}
+.toast{pointer-events:auto;max-width:420px;width:100%;background:#132a44;border:1px solid #35648c;border-radius:10px;padding:10px 14px;font-size:13px;box-shadow:0 8px 24px #0007;animation:toastin .2s ease-out}
+.toast.you{background:#1d3a5c;border-color:#4a8fd8}
+.toast.target{background:#123d2c;border-color:#3d9163}
+.toast.fade{background:#3d2530;border-color:#8a4256}
+.toast.onclock{background:#5c3a12;border-color:#c98a35}
+.toast button{background:none;border:none;color:#9eb2ca;float:right;min-height:auto;padding:0;font-size:16px;cursor:pointer}
+@keyframes toastin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:750px){.grid,.recs,.main{grid-template-columns:1fr}.main{display:block}header h1,header b{font-size:16px}#toastRoot{top:calc(120px + var(--safe-t))}}
 </style>
 </head>
 <body>
 <header>
-<div><b>Draft Command 2026</b><div class="muted">Matter of Fak &bull; Sleeper live companion</div></div>
+<div><b>Draft Command 2026</b><div class="muted">Matter of Fak &middot; Sleeper live companion</div></div>
 <div style="display:flex;gap:8px;align-items:center"><span id="state" class="live">CONNECTING</span> <button class="small" onclick="go()">Reconnect</button></div>
 </header>
+<div class="strip"><div id="liveStrip" class="strip-inner">Connecting to Sleeper&hellip;</div></div>
+<div id="toastRoot"></div>
+
 <main>
 
 <section class="grid">
 <div class="card"><div class="label">DRAFT STATUS</div><div id="ds" class="big">Loading</div><div id="err" class="muted"></div></div>
-<div class="card"><div class="label">YOUR NEXT PICK</div><div id="np" class="big">&mdash;</div><div id="nm" class="muted">Slot 1.11</div></div>
-<div class="card"><div class="label">LATEST PICK</div><div id="lp" class="big">&mdash;</div><div id="lm" class="muted"></div></div>
+<div class="card"><div class="label">YOUR NEXT PICK</div><div id="np" class="big">—</div><div id="nm" class="muted">Slot 1.11</div></div>
+<div class="card"><div class="label">LATEST PICK</div><div id="lp" class="big">—</div><div id="lm" class="muted"></div></div>
 </section>
 
-<div class="card timerbox"><span class="label">PICK TIMER</span><div id="timer">Checking Sleeper draft settings&hellip;</div></div>
+<div class="card timerbox">
+<div class="card-header" onclick="toggleCollapse('timer')" id="timerHeader"><div><span class="label">PICK TIMER</span></div><span class="chev" id="timerChevron">&#9662;</span></div>
+<div class="card-body" id="timerBody"><div id="timer">Checking Sleeper draft settings&hellip;</div></div>
+</div>
 
 <section class="posrec">
-<div class="label">RECOMMENDED POSITION</div>
+<div class="card-header" onclick="toggleCollapse('recpos')" id="recposHeader"><div><span class="label">RECOMMENDED POSITION</span></div><span class="chev" id="recposChevron">&#9662;</span></div>
+<div class="card-body" id="recposBody">
 <h2 id="recPos">Calculating&hellip;</h2>
 <div id="recWhy" class="muted"></div>
 <div id="recFallback" class="fallback"></div>
 <div id="needBar" class="needbar"></div>
 <div id="tierWarn"></div>
+</div>
 </section>
 
 <section class="card" id="categorySection" style="display:none">
-<div class="label">CATEGORY BREAKDOWN</div>
-<h2 id="catTitle">Position</h2>
+<div class="card-header" onclick="toggleCollapse('category')" id="categoryHeader"><div><span class="label">CATEGORY BREAKDOWN</span><h2 id="catTitle" style="margin:2px 0 0">Position</h2></div><span class="chev" id="categoryChevron">&#9662;</span></div>
+<div class="card-body" id="categoryBody">
 <p id="catSub" class="muted"></p>
 <div id="catList"></div>
+</div>
 </section>
 
 <section class="card">
-<div class="label">BALANCED RECOMMENDATIONS</div>
-<h2>Best players now</h2>
-<div id="recs" class="recs"></div>
+<div class="card-header" onclick="toggleCollapse('recs')" id="recsHeader"><div><span class="label">BALANCED RECOMMENDATIONS</span><h2 style="margin:2px 0 0">Best players now</h2></div><span class="chev" id="recsChevron">&#9662;</span></div>
+<div class="card-body" id="recsBody"><div id="recs" class="recs"></div></div>
 </section>
 
 <section class="main">
@@ -122,10 +145,22 @@ dialog::backdrop{background:#000c}
 <p class="muted" style="margin-top:8px">Tap any row to open its full profile. Rank is a unique sequential value based on Consensus ADP (when known) falling back to Sleeper rank.</p>
 </div>
 <aside>
-<div class="card"><div class="label">MATTER OF FAK</div><div id="roster"></div></div>
-<div class="card"><div class="label">OPPONENTS UP NEXT</div><div id="oppo" class="oppo"></div></div>
-<div class="card"><div class="label">GUIDANCE</div><div id="guide" class="muted"></div></div>
-<div class="card"><div class="label">RECENT PICKS</div><div id="log"></div></div>
+<div class="card">
+<div class="card-header" onclick="toggleCollapse('roster')" id="rosterHeader"><div><span class="label">MATTER OF FAK</span></div><span class="chev" id="rosterChevron">&#9662;</span></div>
+<div class="card-body" id="rosterBody"><div id="roster"></div></div>
+</div>
+<div class="card">
+<div class="card-header" onclick="toggleCollapse('oppo')" id="oppoHeader"><div><span class="label">OPPONENTS UP NEXT</span></div><span class="chev" id="oppoChevron">&#9656;</span></div>
+<div class="card-body collapsed" id="oppoBody"><div id="oppo" class="oppo"></div></div>
+</div>
+<div class="card">
+<div class="card-header" onclick="toggleCollapse('guide')" id="guideHeader"><div><span class="label">GUIDANCE</span></div><span class="chev" id="guideChevron">&#9656;</span></div>
+<div class="card-body collapsed" id="guideBody"><div id="guide" class="muted"></div></div>
+</div>
+<div class="card">
+<div class="card-header" onclick="toggleCollapse('log')" id="logHeader"><div><span class="label">RECENT PICKS</span></div><span class="chev" id="logChevron">&#9656;</span></div>
+<div class="card-body collapsed" id="logBody"><div id="log"></div></div>
+</div>
 </aside>
 </section>
 
@@ -143,7 +178,7 @@ const BYE_WEEKS={'ARI':14,'ATL':11,'BAL':13,'BUF':7,'CAR':5,'CHI':10,'CIN':6,'CL
 const ADP_DATA={'jahmyr gibbs':1.4,'bijan robinson':2.4,'puka nacua':2.8,'jamarr chase':3.8,'jaxon smithnjigba':5.5,'christian mccaffrey':6.1,'amonra st brown':6.7,'jonathan taylor':7.4,'devon achane':9.7,'ceedee lamb':10.4,'james cook':11.4,'justin jefferson':11.6,'chase brown':13.0,'drake london':13.5,'derrick henry':15.9,'aj brown':16.6,'rashee rice':17.0,'saquon barkley':18.4,'chris olave':19.5,'george pickens':19.7,'nico collins':20.7,'ashton jeanty':21.1,'kenneth walker':21.1,'omarion hampton':22.4,'zay flowers':24.4,'malik nabers':26.8,'garrett wilson':26.9,'jeremiyah love':28.0,'devonta smith':29.2,'trey mcbride':30.1,'kyren williams':31.6,'breece hall':31.7,'tetairoa mcmillan':32.0,'josh allen':32.9,'javonte williams':34.1,'brock bowers':34.3,'emeka egbuka':35.6,'tee higgins':36.0,'travis etienne':37.3,'ladd mcconkey':38.4,'cam skattebo':39.5,'davante adams':41.5,'dandre swift':43.6,'jaylen waddle':44.2,'jameson williams':45.6,'bucky irving':46.2,'dj moore':47.0,'terry mclaurin':48.5,'quinshon judkins':50.1,'drake maye':51.9,'luther burden':52.2,'david montgomery':53.9,'bhayshul tuten':54.0,'colston loveland':54.4,'rome odunze':54.8,'joe burrow':55.2,'mike evans':56.0,'lamar jackson':56.2,'christian watson':57.2,'courtland sutton':61.1,'rhamondre stevenson':61.7,'parker washington':62.5,'jaylen warren':62.6,'treveyon henderson':64.0,'marvin harrison':64.5,'dak prescott':65.1,'dk metcalf':65.8,'tyler warren':66.0,'tony pollard':69.0,'alec pierce':69.6,'jadarian price':70.4,'brian thomas':73.3,'harold fannin':73.3,'jayden daniels':73.9,'matthew stafford':74.6,'rico dowdle':74.7,'michael wilson':75.2,'michael pittman':77.0,'josh jacobs':77.0,'jalen hurts':77.9,'chris godwin':78.0,'carnell tate':79.6,'kyle pitts':81.2,'chuba hubbard':81.2,'brock purdy':85.1,'caleb williams':86.6,'wandale robinson':86.6,'jk dobbins':87.1,'jakobi meyers':87.7,'george kittle':90.1,'jayden reed':90.2,'jonathon brooks':91.7,'kenny gainwell':91.7,'trevor lawrence':92.1,'josh downs':92.1,'quentin johnston':93.2,'stefon diggs':94.6,'rj harvey':95.3,'jordan addison':96.5,'khalil shakir':100.6,'tucker kraft':102.9,'jared goff':103.1,'justin herbert':104.2,'patrick mahomes':104.4,'matthew golden':104.6,'xavier worthy':105.8,'aaron jones':106.3,'sam laporta':106.7,'travis kelce':108.4,'romeo doubs':108.6,'kyle monangai':109.9,'bo nix':111.8,'jordan mason':112.9,'deebo samuel':113.6,'jacory croskeymerritt':114.9,'dallas goedert':116.5,'kc concepcion':117.8,'jaxson dart':118.7,'marshawn lloyd':119.2,'jalen coker':120.1,'rachaad white':120.4,'blake corum':122.9,'dezhaun stribling':124.3,'rashid shaheed':127.9,'tyjae spears':128.8,'baker mayfield':129.5,'jerry jeudy':129.6,'tre tucker':131.2,'mark andrews':131.5,'kyler murray':131.7,'makai lemon':131.7,'jake ferguson':133.3,'keenan allen':135.8,'denzel boston':136.1,'isaiah likely':136.2,'brandon aiyuk':136.8,'tyler shough':137.1,'jalen mcmillan':139.5,'zach charbonnet':139.5,'woody marks':140.7,'jordan love':141.2,'jauan jennings':144.4,'sam darnold':145.3,'najee harris':145.5,'dalton kincaid':147.1,'emmett johnson':149.0,'mike washington':150.8,'malik washington':151.9,'alvin kamara':151.9,'calvin ridley':153.5,'tyler allgeier':153.5,'juwan johnson':154.8,'jalen nailor':156.7,'rashod bateman':156.7,'isiah pacheco':157.0,'daniel jones':157.4,'braelon allen':157.7,'jordyn tyson':157.7,'hunter henry':157.9,'cj stroud':158.1,'cooper kupp':158.3,'kayshon boutte':159.5,'tyrone tracy':160.7,'adonai mitchell':161.6,'malik willis':161.8,'jakobi lane':162.6,'odell beckham':163.7,'justice hill':163.8,'tank dell':164.0,'brian robinson':164.2,'devaughn vele':165.0,'bryce young':165.0,'chris bell':166.3,'ryan flournoy':167.5,'travis hunter':168.8,'tj hockenson':169.0,'cam ward':170.2,'dalton schultz':170.4,'jacoby brissett':171.3,'chig okonkwo':173.4,'aaron rodgers':174.5,'omar cooper':175.7,'darius slayton':178.0,'troy franklin':180.2,'xavier legette':180.6};
 const ADP_SOURCE_LABEL='FantasyFootballCalculator.com, 7,430 human PPR mock drafts, Aug 29\u2013Sep 5 2026';
 const FLEX_SLOTS=2;
-let P={},X=[],D,R=[],M,T,posFilter='',tags={},ticking=false,lastPickCount=-1;
+let P={},X=[],D,R=[],M,T,posFilter='',tags={},ticking=false,lastPickCount=-1,collapseState={};
 
 const $=x=>document.querySelector(x);
 const api=async x=>{let r=await fetch(A+x);if(!r.ok)throw Error(x+' returned HTTP '+r.status);return r.json()};
@@ -161,7 +196,7 @@ const adpFor=p=>{let k=normName(name(p));return ADP_DATA[k]!=null?ADP_DATA[k]:nu
 const rank=p=>+(p.search_rank||p.search_rank_half_ppr||p.search_rank_ppr||p.search_rank_ecr||99999);
 const sortKey=p=>{let a=adpFor(p);if(a!=null)return a;if(p.position==='K'||p.position==='DEF')return 500+Math.min(rank(p),9000)/10000;return 1000+Math.min(rank(p),9000)/1000};
 const pos=x=>P[x.player_id]?.position||x.metadata?.position||'';
-const depth=p=>{if(p.depth_chart_position&&p.depth_chart_order!=null)return p.depth_chart_position+p.depth_chart_order;if(p.depth_chart_position)return p.depth_chart_position;return '&mdash;'};
+const depth=p=>{if(p.depth_chart_position&&p.depth_chart_order!=null)return p.depth_chart_position+p.depth_chart_order;if(p.depth_chart_position)return p.depth_chart_position;return '—'};
 const bye=p=>BYE_WEEKS[p.team]||null;
 let displayRankMap={},availableCache=null;
 function tierFromRank(dr){return dr<=18?1:dr<=42?2:dr<=72?3:dr<=110?4:dr<=160?5:6}
@@ -194,6 +229,37 @@ function toggleTag(id,kind,ev){
   if(ev)ev.stopPropagation();
   if(tags[id]===kind)delete tags[id];else tags[id]=kind;
   saveTags();render();
+}
+
+function loadCollapse(){try{collapseState=JSON.parse(localStorage.getItem('dc_collapse')||'{}')}catch{collapseState={}}}
+function saveCollapse(){localStorage.setItem('dc_collapse',JSON.stringify(collapseState))}
+function applyCollapse(id){
+  let body=document.getElementById(id+'Body'),chev=document.getElementById(id+'Chevron');
+  let collapsed=!!collapseState[id];
+  if(body)body.classList.toggle('collapsed',collapsed);
+  if(chev)chev.innerHTML=collapsed?'&#9656;':'&#9662;';
+  let header=document.getElementById(id+'Header');
+  if(header)header.setAttribute('aria-expanded',collapsed?'false':'true');
+}
+function initCollapsible(id,defaultCollapsed){
+  if(collapseState[id]===undefined)collapseState[id]=defaultCollapsed;
+  applyCollapse(id);
+}
+function toggleCollapse(id){
+  collapseState[id]=!collapseState[id];
+  saveCollapse();
+  applyCollapse(id);
+}
+function setupCollapsibles(){
+  loadCollapse();
+  initCollapsible('timer',true);
+  initCollapsible('recpos',false);
+  initCollapsible('category',false);
+  initCollapsible('recs',false);
+  initCollapsible('roster',false);
+  initCollapsible('oppo',true);
+  initCollapsible('guide',true);
+  initCollapsible('log',true);
 }
 
 function openIDB(){
@@ -287,6 +353,7 @@ function rosterForSlot(slot){
   if(D.slot_to_roster_id && D.slot_to_roster_id[slot])return D.slot_to_roster_id[slot];
   return null;
 }
+function formatPick(overall){let r=Math.ceil(overall/12),s=slotForPick(overall);return r+'.'+String(s).padStart(2,'0')}
 function nextMyPick(){
   for(let i=X.length+1;i<181;i++){
     let s=slotForPick(i);
@@ -314,7 +381,32 @@ function timerHtml(){
   if(!lastPicked)return 'Pick timer: '+pt+'s per pick (no active pick timestamp yet).';
   let elapsed=Math.floor((Date.now()-lastPicked)/1000);
   let remaining=Math.max(0,pt-elapsed);
-  return 'Pick timer: '+pt+'s &bull; ~'+remaining+'s remaining on current pick (estimate)';
+  return 'Pick timer: '+pt+'s • ~'+remaining+'s remaining on current pick (estimate)';
+}
+
+function renderStrip(){
+  let overall=X.length+1,slot=slotForPick(overall),rid=rosterForSlot(slot);
+  let onClockName=rid?team(rid):'Unknown team';
+  let nx=nextMyPick();
+  let el=$('#liveStrip');
+  if(nx===overall){
+    el.className='strip-inner onclock';
+    el.innerHTML='<b>YOU ARE ON THE CLOCK</b> • Pick '+formatPick(overall);
+  } else {
+    let turns=nx?Math.max(0,nx-overall):null;
+    el.className='strip-inner';
+    el.innerHTML='<span>Pick '+formatPick(overall)+' • <b>'+onClockName+'</b> is on the clock</span>'+
+      (turns!=null?'<span>Your pick in '+turns+' turn'+(turns===1?'':'s')+'</span>':'');
+  }
+}
+
+function showToast(html,kind){
+  let root=$('#toastRoot');
+  let el=document.createElement('div');
+  el.className='toast'+(kind?' '+kind:'');
+  el.innerHTML='<button onclick="this.parentElement.remove()" aria-label="Dismiss">&times;</button>'+html;
+  root.appendChild(el);
+  setTimeout(()=>{if(el.parentElement)el.remove()},6000);
 }
 
 function reasons(p){
@@ -322,13 +414,13 @@ function reasons(p){
   let z=p.position,rb=countMine('RB'),wr=countMine('WR'),adp=adpFor(p),curPick=X.length+1;
   if(adp!=null){
     a.push('Consensus ADP '+adp.toFixed(1)+' ('+ADP_SOURCE_LABEL+')');
-    if(adp<curPick-3)a.push('Falling well past consensus ADP &mdash; likely value');
-    else if(adp>curPick+24)b.push('Being drafted well ahead of consensus ADP &mdash; possible reach');
+    if(adp<curPick-3)a.push('Falling well past consensus ADP — likely value');
+    else if(adp>curPick+24)b.push('Being drafted well ahead of consensus ADP — possible reach');
   } else {
     a.push('No outside consensus ADP found; ranked by Sleeper data only');
   }
   if(z==='RB'){
-    if(rb===0)a.push('You have zero RBs &mdash; matches your RB-first draft strategy');
+    if(rb===0)a.push('You have zero RBs — matches your RB-first draft strategy');
     else if(rb===1)a.push('Second RB keeps pace with your RB-heavy approach');
     else if(rb>=3&&wr===0)b.push('You already have '+rb+' RBs and zero WR starters');
     else if(rb>=4)b.push('RB depth is now heavy; bench/handcuff value only');
@@ -341,7 +433,7 @@ function reasons(p){
   else if(['RB','WR','TE'].includes(z)&&flexFilled()<FLEX_SLOTS)a.push('Eligible for an open WRT flex slot');
   if(tier(p)<=3)a.push('Still available in Tier '+tier(p));
   let d=depth(p);
-  if(d!=='&mdash;')a.push('Sleeper depth chart: '+d);
+  if(d!=='—')a.push('Sleeper depth chart: '+d);
   let by=bye(p);
   if(by)a.push('Bye week: '+by);
   if(!p.injury_status)a.push('No listed Sleeper injury designation');
@@ -354,8 +446,6 @@ function reasons(p){
   return [a,b];
 }
 
-function ordinal(n){let s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
-
 function outlookFor(p){
   let z=p.position,r=displayRankMap[p.player_id]||null,adp=adpFor(p),t=tier(p),d=depth(p),by=bye(p),inj=p.injury_status;
   let good,bad;
@@ -364,7 +454,7 @@ function outlookFor(p){
     bad=inj?('Current Sleeper status ('+inj+') adds uncertainty even for a low-cost roster spot.'):'There is little differentiating him from replacement-level options at this position.';
     return good+' '+bad;
   }
-  let roleBit=d!=='&mdash;'?('currently slotted as the '+d+' on '+(p.team||'his team')+'\'s depth chart'):('with an unclear depth-chart role on '+(p.team||'his team'));
+  let roleBit=d!=='—'?('currently slotted as the '+d+' on '+(p.team||'his team')+"'s depth chart"):('with an unclear depth-chart role on '+(p.team||'his team'));
   if(r&&r<=24){
     good=name(p)+' is being valued as an early-round cornerstone (unique rank #'+r+(adp!=null?', ADP '+adp.toFixed(1):'')+'), '+roleBit+'.';
   } else if(t<=2){
@@ -402,7 +492,7 @@ function categoryBreakdown(z){
   return list.map((p,i)=>{
     let r=reasons(p),v=verdictFor(p,i);
     return '<div class="catcard"><b>'+(i+1)+'. '+name(p)+'</b><span class="verdict '+v.cls+'">'+v.label+'</span>'+
-      '<div class="muted">'+(p.team||'FA')+(bye(p)?(' &bull; Bye '+bye(p)):'')+' &bull; Depth '+depth(p)+' &bull; Tier '+tier(p)+' &bull; Rank #'+displayRankMap[p.player_id]+'</div>'+
+      '<div class="muted">'+(p.team||'FA')+(bye(p)?(' • Bye '+bye(p)):'')+' • Depth '+depth(p)+' • Tier '+tier(p)+' • Rank #'+displayRankMap[p.player_id]+'</div>'+
       '<div class="why"><span class="yes">Pros</span><br>'+r[0].join('<br>')+'</div>'+
       '<div class="why"><span class="no">Cons</span><br>'+r[1].join('<br>')+'</div>'+
       '<div class="outlook"><b>Draft Outlook</b>'+outlookFor(p)+'</div></div>';
@@ -417,6 +507,7 @@ function renderCategory(){
   let list=available().filter(p=>p.position===posFilter);
   $('#catSub').textContent=list.length+' '+posFilter+'s remain available, ranked by unique consensus rank with your roster context applied.';
   $('#catList').innerHTML=categoryBreakdown(posFilter);
+  initCollapsible('category',false);
 }
 
 function fmtIn(hIn){
@@ -430,33 +521,33 @@ function openPlayerModal(pid){
   let p=P[pid];
   if(!p)return;
   let r=reasons(p),tg=tags[pid],adp=adpFor(p);
-  $('#modalName').innerHTML=name(p)+' <span class="muted" style="font-size:14px">'+p.position+' &bull; '+(p.team||'FA')+'</span>';
+  $('#modalName').innerHTML=name(p)+' <span class="muted" style="font-size:14px">'+p.position+' • '+(p.team||'FA')+'</span>';
   let stats=[
-    ['Unique Rank','#'+(displayRankMap[pid]||'&mdash;')],
+    ['Unique Rank','#'+(displayRankMap[pid]||'—')],
     ['Consensus ADP',adp!=null?adp.toFixed(1):'Not found'],
     ['Sleeper Rank','#'+rank(p)],
     ['Tier','Tier '+tier(p)],
     ['Depth Chart',depth(p)],
-    ['Bye Week',bye(p)||'&mdash;'],
-    ['Status',p.status||'&mdash;'],
+    ['Bye Week',bye(p)||'—'],
+    ['Status',p.status||'—'],
     ['Injury',p.injury_status?(p.injury_status+(p.injury_body_part?' ('+p.injury_body_part+')':'')):'None listed'],
-    ['Age',p.age||'&mdash;'],
-    ['Height',fmtIn(p.height)||'&mdash;'],
-    ['Weight',p.weight?(p.weight+' lbs'):'&mdash;'],
-    ['Experience',(p.years_exp!=null?(p.years_exp+' yrs'):'&mdash;')],
-    ['College',p.college||'&mdash;'],
-    ['Jersey #',p.number||'&mdash;']
+    ['Age',p.age||'—'],
+    ['Height',fmtIn(p.height)||'—'],
+    ['Weight',p.weight?(p.weight+' lbs'):'—'],
+    ['Experience',(p.years_exp!=null?(p.years_exp+' yrs'):'—')],
+    ['College',p.college||'—'],
+    ['Jersey #',p.number||'—']
   ];
   $('#modalBody').innerHTML=
     '<div style="display:flex;gap:8px;margin-bottom:10px">'+
-      '<button class="star '+(tg==='target'?'target':'')+'" onclick="toggleTag(\''+pid+'\',\'target\')">&#9733; Target</button>'+
-      '<button class="star '+(tg==='fade'?'fade':'')+'" onclick="toggleTag(\''+pid+'\',\'fade\')">&#10005; Fade</button>'+
+      '<button class="star '+(tg==='target'?'target':'')+'" onclick="toggleTag(\''+pid+'\',\'target\')">★ Target</button>'+
+      '<button class="star '+(tg==='fade'?'fade':'')+'" onclick="toggleTag(\''+pid+'\',\'fade\')">✕ Fade</button>'+
     '</div>'+
     '<div class="statgrid">'+stats.map(([k,v])=>'<div class="stat"><b>'+k+'</b>'+v+'</div>').join('')+'</div>'+
     '<div class="why"><span class="yes">Why consider</span><br>'+r[0].join('<br>')+'</div>'+
     '<div class="why"><span class="no">Why hesitate</span><br>'+r[1].join('<br>')+'</div>'+
     '<div class="outlook"><b>Draft Outlook</b>'+outlookFor(p)+'</div>'+
-    '<div class="source-note">Live player/status/depth-chart data: Sleeper (api.sleeper.app/v1/players/nfl). Consensus ADP: '+ADP_SOURCE_LABEL+', baked in as a static reference snapshot (not live). Bye week: static 2026 NFL schedule. Draft Outlook is generated from these data points only \u2014 it is not based on prior-season box-score statistics.</div>';
+    '<div class="source-note">Live player/status/depth-chart data: Sleeper (api.sleeper.app/v1/players/nfl). Consensus ADP: '+ADP_SOURCE_LABEL+', baked in as a static reference snapshot (not live). Bye week: static 2026 NFL schedule. Draft Outlook is generated from these data points only — it is not based on prior-season box-score statistics.</div>';
   $('#playerModal').showModal();
 }
 
@@ -464,14 +555,15 @@ function render(){
   availableCache=null;
   let z=available(),last=X.at(-1),q=$('#q').value.toLowerCase(),nx=nextMyPick();
   $('#ds').textContent=D.status==='drafting'?'LIVE DRAFT':D.status;
-  $('#np').textContent=nx?'Overall '+nx:'&mdash;';
+  $('#np').textContent=nx?'Overall '+nx:'—';
   $('#nm').textContent=nx?(nx-X.length-1)+' picks before you':'Slot 1.11';
   $('#lp').textContent=last?last.pick_no+'. '+name(P[last.player_id]):'No picks yet';
   $('#lm').textContent=last?team(last.roster_id):'';
   $('#timer').innerHTML=timerHtml();
+  renderStrip();
 
   let recPos=recommendedPositions(),top=recPos[0],second=recPos[1];
-  $('#recPos').textContent=top.z+(top.s>=25?' &mdash; high priority':top.s>=10?' &mdash; good value':' &mdash; situational');
+  $('#recPos').textContent=top.z+(top.s>=25?' — high priority':top.s>=10?' — good value':' — situational');
   let topBest=bestAt(top.z);
   $('#recWhy').textContent=topBest?('Best available: '+name(topBest)+' (Rank #'+displayRankMap[topBest.player_id]+', Tier '+tier(topBest)+')'):'No ranked players remain at this position.';
   $('#recFallback').textContent='If the '+top.z+' tier is gone, pivot to: '+second.z;
@@ -482,9 +574,9 @@ function render(){
   let rec=z.slice(0,3);
   $('#recs').innerHTML=rec.length?rec.map((p,i)=>{
     let r=reasons(p),tg=tags[p.player_id];
-    return '<div class="rec"><button class="star '+(tg==='target'?'target':'')+'" onclick="toggleTag(\''+p.player_id+'\',\'target\',event)" title="Target">&#9733;</button>'+
-    '<button class="star '+(tg==='fade'?'fade':'')+'" onclick="toggleTag(\''+p.player_id+'\',\'fade\',event)" title="Fade">&#10005;</button>'+
-    '<b onclick="openPlayerModal(\''+p.player_id+'\')" style="cursor:pointer">'+(i+1)+'. '+name(p)+'</b><div class="muted">'+p.position+' &bull; '+(p.team||'FA')+(bye(p)?(' &bull; Bye '+bye(p)):'')+' &bull; Depth '+depth(p)+' &bull; Tier '+tier(p)+'</div>'+
+    return '<div class="rec"><button class="star '+(tg==='target'?'target':'')+'" onclick="toggleTag(\''+p.player_id+'\',\'target\',event)" title="Target">★</button>'+
+    '<button class="star '+(tg==='fade'?'fade':'')+'" onclick="toggleTag(\''+p.player_id+'\',\'fade\',event)" title="Fade">✕</button>'+
+    '<b onclick="openPlayerModal(\''+p.player_id+'\')" style="cursor:pointer">'+(i+1)+'. '+name(p)+'</b><div class="muted">'+p.position+' • '+(p.team||'FA')+(bye(p)?(' • Bye '+bye(p)):'')+' • Depth '+depth(p)+' • Tier '+tier(p)+'</div>'+
     '<div class="why"><span class="yes">Why consider</span><br>'+r[0].join('<br>')+'</div>'+
     '<div class="why"><span class="no">Why hesitate</span><br>'+r[1].join('<br>')+'</div>'+
     '<div class="outlook"><b>Draft Outlook</b>'+outlookFor(p)+'</div></div>';
@@ -492,20 +584,20 @@ function render(){
 
   $('#tb').innerHTML=z.filter(p=>(!posFilter||p.position===posFilter)&&name(p).toLowerCase().includes(q)).slice(0,250).map(p=>{
     let tg=tags[p.player_id],adp=adpFor(p);
-    return '<tr onclick="openPlayerModal(\''+p.player_id+'\')"><td>'+displayRankMap[p.player_id]+'</td><td>'+name(p)+'</td><td class="pos">'+p.position+'</td><td>'+(p.team||'FA')+'</td><td>'+(adp!=null?adp.toFixed(1):'&mdash;')+'</td><td>'+(bye(p)||'&mdash;')+'</td><td>'+depth(p)+'</td><td class="muted">'+(p.injury_status||p.status||'Active')+'</td><td>'+tier(p)+'</td><td><button class="star '+(tg==='target'?'target':'')+'" onclick="toggleTag(\''+p.player_id+'\',\'target\',event)">&#9733;</button></td></tr>';
+    return '<tr onclick="openPlayerModal(\''+p.player_id+'\')"><td>'+displayRankMap[p.player_id]+'</td><td>'+name(p)+'</td><td class="pos">'+p.position+'</td><td>'+(p.team||'FA')+'</td><td>'+(adp!=null?adp.toFixed(1):'—')+'</td><td>'+(bye(p)||'—')+'</td><td>'+depth(p)+'</td><td class="muted">'+(p.injury_status||p.status||'Active')+'</td><td>'+tier(p)+'</td><td><button class="star '+(tg==='target'?'target':'')+'" onclick="toggleTag(\''+p.player_id+'\',\'target\',event)">★</button></td></tr>';
   }).join('');
 
   $('#roster').innerHTML=my().map(x=>'<div class="row"><span>'+name(P[x.player_id])+'</span><span class="pos">'+pos(x)+'</span></div>').join('')||'<span class="muted">No picks yet</span>';
 
-  $('#oppo').innerHTML=opponentsUpNext().map(o=>'<div class="row"><span>Pick '+o.pick+' &bull; '+team(o.rid)+'</span><span class="muted">'+(o.miss.length?'Needs '+o.miss.join('/'):'Starters filled')+'</span></div>').join('')||'<span class="muted">No upcoming opponent data yet</span>';
+  $('#oppo').innerHTML=opponentsUpNext().map(o=>'<div class="row"><span>Pick '+o.pick+' • '+team(o.rid)+'</span><span class="muted">'+(o.miss.length?'Needs '+o.miss.join('/'):'Starters filled')+'</span></div>').join('')||'<span class="muted">No upcoming opponent data yet</span>';
 
   let miss=['QB','RB','WR','TE'].filter(v=>countMine(v)<STARTER_REQ[v]);
   let guideMsg=miss.length?('Prioritize <b>'+miss.join(' / ')+'</b> when values are close.'):'Core starters covered; prioritize best RB/WR/TE flex value.';
-  if(countMine('RB')>=3&&countMine('WR')===0)guideMsg='RB depth is strong &mdash; shift priority to WR before adding more RBs.';
+  if(countMine('RB')>=3&&countMine('WR')===0)guideMsg='RB depth is strong — shift priority to WR before adding more RBs.';
   let byeCounts={};
   my().forEach(x=>{let b=bye(P[x.player_id]);if(b)byeCounts[b]=(byeCounts[b]||0)+1});
   let heavyBye=Object.entries(byeCounts).filter(([w,c])=>c>=3);
-  if(heavyBye.length)guideMsg+=' &nbsp;&bull;&nbsp; Bye alert: '+heavyBye.map(([w,c])=>c+' starters on bye Week '+w).join(', ')+'.';
+  if(heavyBye.length)guideMsg+=' • Bye alert: '+heavyBye.map(([w,c])=>c+' starters on bye Week '+w).join(', ')+'.';
   $('#guide').innerHTML=guideMsg;
 
   $('#log').innerHTML=X.slice(-8).reverse().map(x=>'<div class="row">'+x.pick_no+'. '+name(P[x.player_id])+' <span class="muted">'+team(x.roster_id)+'</span></div>').join('');
@@ -522,19 +614,40 @@ function setupPosBar(){
   });
 }
 
+function announceNewPicks(newPicks){
+  newPicks.forEach(pk=>{
+    let p=P[pk.player_id],tg=tags[pk.player_id];
+    let isMe=pk.roster_id===M;
+    let managerName=team(pk.roster_id);
+    let kind=isMe?'you':(tg==='target'?'target':(tg==='fade'?'fade':''));
+    let label=isMe?'<b>You selected</b>':('<b>'+managerName+'</b> selected');
+    let tagNote=tg==='target'?' ⭐ One of your targets':(tg==='fade'?' ⚠️ One of your fades':'');
+    showToast(label+': '+name(p)+' ('+(p?.position||'')+(p?.team?(' - '+p.team):'')+')'+tagNote,kind);
+  });
+  let nx=nextMyPick();
+  if(nx===X.length+1){
+    showToast('<b>YOU ARE ON THE CLOCK</b> — Pick '+formatPick(nx),'onclock');
+  }
+}
+
 async function tick(){
   if(ticking)return;
   ticking=true;
   try{
     let picks=await api('/draft/'+D.draft_id+'/picks');
+    let isFirstLoad=lastPickCount<0;
+    let newPicks=(!isFirstLoad && picks.length>lastPickCount)?picks.slice(lastPickCount):[];
     X=picks;
+    lastPickCount=picks.length;
     render();
+    if(newPicks.length)announceNewPicks(newPicks);
   } finally { ticking=false; }
 }
 
 async function go(){
   clearInterval(T);$('#state').className='live';$('#state').textContent='CONNECTING';$('#err').textContent='';
   loadTags();
+  setupCollapsibles();
   try{
     let[l,u,r,ds,me]=await Promise.all([api('/league/'+L),api('/league/'+L+'/users'),api('/league/'+L+'/rosters'),api('/league/'+L+'/drafts'),api('/user/'+U)]);
     D=ds.find(x=>x.status==='drafting')||ds.find(x=>x.draft_id===l.draft_id)||ds.at(-1);
@@ -549,7 +662,7 @@ async function go(){
       if(document.hidden)return;
       tick().catch(e=>{$('#state').className='error';$('#state').textContent='REFRESH ERROR';$('#err').textContent=e.message});
     },3000);
-    $('#state').innerHTML=D.status==='drafting'?'LIVE &bull; 3 SEC':'CONNECTED';
+    $('#state').innerHTML=D.status==='drafting'?'LIVE • 3 SEC':'CONNECTED';
   }catch(e){
     $('#state').className='error';$('#state').textContent='CONNECTION ERROR';$('#ds').textContent='Unable to load Sleeper';$('#err').textContent=e.message;
   }

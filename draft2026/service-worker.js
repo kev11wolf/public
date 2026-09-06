@@ -1,4 +1,4 @@
-const CACHE='draft-command-2026-v5';
+const CACHE='draft-command-2026-v6';
 const ASSETS=['./','./index.html','./manifest.webmanifest'];
 self.addEventListener('install',e=>{
   self.skipWaiting();
