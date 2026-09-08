@@ -12,20 +12,19 @@ REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(REPO_ROOT, "nav.config.json")
 OUTPUT_PATH = os.path.join(REPO_ROOT, "index.html")
 
-# Always ignored, no matter what nav.config.json says
 HARD_EXCLUDES = {".git", ".github", "node_modules", ".DS_Store"}
 SELF_EXCLUDES = {"index.html", "nav.config.json", "build_index.py", "README.md", "LICENSE"}
 
 ICONS = {
-    ".html": "📄", ".htm": "📄", ".txt": "📝", ".json": "🧩",
-    ".jpg": "🖼️", ".jpeg": "🖼️", ".png": "🖼️", ".gif": "🖼️", ".svg": "🖼️",
-    ".xlsx": "📊", ".xls": "📊", ".csv": "📊",
-    ".mp3": "🎵", ".wav": "🎵",
-    ".py": "🐍", ".js": "📜", ".css": "🎨",
-    ".pdf": "📕", ".zip": "🗜️",
+    ".html": "\U0001F4C4", ".htm": "\U0001F4C4", ".txt": "\U0001F4DD", ".json": "\U0001F9E9",
+    ".jpg": "\U0001F5BC\uFE0F", ".jpeg": "\U0001F5BC\uFE0F", ".png": "\U0001F5BC\uFE0F", ".gif": "\U0001F5BC\uFE0F", ".svg": "\U0001F5BC\uFE0F",
+    ".xlsx": "\U0001F4CA", ".xls": "\U0001F4CA", ".csv": "\U0001F4CA",
+    ".mp3": "\U0001F3B5", ".wav": "\U0001F3B5",
+    ".py": "\U0001F40D", ".js": "\U0001F4DC", ".css": "\U0001F3A8",
+    ".pdf": "\U0001F4D5", ".zip": "\U0001F5DC\uFE0F",
 }
-DEFAULT_FILE_ICON = "📄"
-FOLDER_ICON = "📁"
+DEFAULT_FILE_ICON = "\U0001F4C4"
+FOLDER_ICON = "\U0001F4C1"
 
 
 def load_config():
@@ -62,7 +61,6 @@ def icon_for(name):
 
 
 def build_tree(cur_dir, rel_path, exclude_list):
-    """Returns list of ('dir', name, rel, [children]) or ('file', name, rel, None), sorted dirs-first."""
     entries = []
     try:
         names = sorted(os.listdir(cur_dir), key=lambda s: s.lower())
@@ -80,12 +78,11 @@ def build_tree(cur_dir, rel_path, exclude_list):
             continue
         if os.path.isdir(full):
             children = build_tree(full, rel, exclude_list)
-            if children:  # skip empty folders
+            if children:
                 entries.append(("dir", name, rel, children))
         else:
             entries.append(("file", name, rel, None))
 
-    # dirs first, then files, alphabetical within each group
     dirs = [e for e in entries if e[0] == "dir"]
     files = [e for e in entries if e[0] == "file"]
     return dirs + files
@@ -127,6 +124,13 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kevin's Public Projects</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1d1d1f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KP Projects">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <style>
   :root{{
     --bg:#f5f5f7; --panel:#ffffff; --border:#d8d8dc; --text:#1d1d1f;
@@ -209,6 +213,11 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('collapseAll').addEventListener('click', () => {{
     document.querySelectorAll('details').forEach(d => d.open = false);
   }});
+  if ('serviceWorker' in navigator) {{
+    window.addEventListener('load', () => {{
+      navigator.serviceWorker.register('sw.js').catch(console.error);
+    }});
+  }}
 </script>
 </body>
 </html>
