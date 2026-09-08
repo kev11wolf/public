@@ -179,13 +179,15 @@
 
     
 
+   /* AFTER */
     .quick-nav {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       gap: 10px;
-      overflow-x: auto;
+      overflow-x: visible;
       padding: 4px 0 14px 0;
       margin: 0 auto 16px auto;
-      scrollbar-width: thin;
     }
 
     .quick-nav a {
@@ -231,8 +233,39 @@
       background: var(--masters-light-bg);
     }
 
+   /* AFTER */
     .view-btn {
       font: inherit;
+      flex: 0 0 auto;
+      text-decoration: none;
+      background: var(--masters-light-bg);
+      color: var(--masters-text);
+      border: 1px solid rgba(0, 53, 37, 0.2);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 0.85em;
+      line-height: 1;
+      box-shadow: 0 1px 4px var(--shadow-light);
+      transition: all 0.3s ease;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      font-weight: 700;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .view-btn:hover {
+      background: var(--masters-hover);
+    }
+
+    .view-btn.active {
+      background: var(--masters-green);
+      color: var(--card-bg);
+      border-color: var(--masters-green);
     }
 
     .explore-nav a {
@@ -244,12 +277,12 @@
       background: var(--masters-hover);
     }
 
+  /* AFTER — keep the rule, just remove the background gradient since #top-nav-wrapper now handles its own background */
     .sticky-jump-bar {
       position: sticky;
       top: 0;
       z-index: 850;
       padding: 12px 0 14px 0;
-      background: linear-gradient(180deg, var(--masters-light-bg) 0%, var(--masters-light-bg) 78%, rgba(247,245,239,0) 100%);
     }
 
     
@@ -1239,6 +1272,11 @@
       display: none;
     }
 
+ /* AFTER */
+    #top-nav-wrapper {
+      background: var(--masters-light-bg);
+    }
+
     #back-banner {
       display: none;
       justify-content: center;
@@ -1247,9 +1285,12 @@
     }
 
     #back-banner.visible {
-      display: flex;
+      display: flex !important;
     }
 
+    #explore-nav.hidden {
+      display: none !important;
+    }
     #back-banner button {
       background: var(--card-bg);
       color: var(--masters-green);
@@ -1359,25 +1400,21 @@
   </header>
 
   <main>
-    <!-- AFTER — trim quick-nav to leaderboards only, add a second row for everything else -->
-   <!-- AFTER -->
-    <nav class="quick-nav" aria-label="Jump to leaderboards">
-      <a href="#pool-leaderboard">Pool Leaderboard</a>
-      <a href="#golf-leaderboard">Golf Leaderboard</a>
-    </nav>
+   <!-- AFTER — delete the Pool/Golf nav entirely, combine banner + explore nav into one sticky wrapper -->
+    <div class="sticky-jump-bar" id="top-nav-wrapper">
+      <div id="back-banner">
+        <button id="back-to-leaderboards-btn">⬅ Back to Leaderboards</button>
+      </div>
 
-    <!-- AFTER — add the banner right above the explore nav -->
-    <div id="back-banner" class="sticky-jump-bar">
-      <button id="back-to-leaderboards-btn">⬅ Back to Leaderboards</button>
-    </div>
-
-    <nav class="quick-nav explore-nav sticky-jump-bar" aria-label="Browse other pages">
+      <!-- AFTER — delete the old stray nav tag -->
+    <nav class="quick-nav explore-nav" id="explore-nav" aria-label="Browse other pages">
       <button class="view-btn" data-view="group-announcements">📰 Updates</button>
       <button class="view-btn" data-view="group-gallery">🖼️ Gallery</button>
       <button class="view-btn" data-view="group-history">🎖️ History</button>
       <button class="view-btn" data-view="group-weather">🌤️ Weather</button>
       <button class="view-btn" data-view="group-registration">✍️ Register</button>
     </nav>
+    </div>
 
       <!-- AFTER -->
     <div id="leaderboards-view">
@@ -1944,15 +1981,18 @@ const audio = new Audio("Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Master
     /* AFTER — also un-hide #secondary-content first */
     /* AFTER — replace it with a direct page-switch function */
     /* AFTER */
+    /* AFTER — add the explore-nav toggle to both functions */
     function switchToView(viewId) {
       const secondaryContent = document.getElementById('secondary-content');
       const leaderboardsView = document.getElementById('leaderboards-view');
       const backBanner = document.getElementById('back-banner');
+      const exploreNav = document.getElementById('explore-nav');
       if (!secondaryContent) return;
 
       secondaryContent.classList.add('revealed');
       if (leaderboardsView) leaderboardsView.classList.add('hidden');
       if (backBanner) backBanner.classList.add('visible');
+      if (exploreNav) exploreNav.classList.add('hidden');
 
       document.querySelectorAll('.content-view').forEach(view => {
         view.classList.toggle('active', view.id === viewId);
@@ -1965,18 +2005,18 @@ const audio = new Audio("Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Master
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+   /* AFTER — add the missing line back in, right before the backBtn code */
     function showLeaderboards() {
       const secondaryContent = document.getElementById('secondary-content');
       const leaderboardsView = document.getElementById('leaderboards-view');
       const backBanner = document.getElementById('back-banner');
-
+      const exploreNav = document.getElementById('explore-nav');
       if (secondaryContent) secondaryContent.classList.remove('revealed');
       if (leaderboardsView) leaderboardsView.classList.remove('hidden');
       if (backBanner) backBanner.classList.remove('visible');
-
+      if (exploreNav) exploreNav.classList.remove('hidden');
       document.querySelectorAll('.content-view').forEach(view => view.classList.remove('active'));
       document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
