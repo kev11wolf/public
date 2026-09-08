@@ -1230,10 +1230,41 @@
       justify-content: space-between;
       color: var(--text-primary);
     }
-/* AFTER — add this anywhere in your <style> block, e.g. right after .collapsible-group rules */
 /* AFTER */
     #secondary-content {
       display: none;
+    }
+
+    #leaderboards-view.hidden {
+      display: none;
+    }
+
+    #back-banner {
+      display: none;
+      justify-content: center;
+      padding: 12px 0;
+      background: var(--masters-green);
+    }
+
+    #back-banner.visible {
+      display: flex;
+    }
+
+    #back-banner button {
+      background: var(--card-bg);
+      color: var(--masters-green);
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 0.85em;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      min-height: 44px;
+    }
+
+    #back-banner button:hover {
+      background: var(--masters-hover);
     }
 
     #secondary-content.revealed {
@@ -1335,6 +1366,11 @@
       <a href="#golf-leaderboard">Golf Leaderboard</a>
     </nav>
 
+    <!-- AFTER — add the banner right above the explore nav -->
+    <div id="back-banner" class="sticky-jump-bar">
+      <button id="back-to-leaderboards-btn">⬅ Back to Leaderboards</button>
+    </div>
+
     <nav class="quick-nav explore-nav sticky-jump-bar" aria-label="Browse other pages">
       <button class="view-btn" data-view="group-announcements">📰 Updates</button>
       <button class="view-btn" data-view="group-gallery">🖼️ Gallery</button>
@@ -1343,6 +1379,8 @@
       <button class="view-btn" data-view="group-registration">✍️ Register</button>
     </nav>
 
+      <!-- AFTER -->
+    <div id="leaderboards-view">
         <section class="timer card" id="countdown-timer">
       <div class="card-header">
         <h2>⏰ Countdown to 2027 Masters</h2>
@@ -1396,7 +1434,9 @@
             <li style="justify-content:center; cursor:default;"><span class="spinner"></span>&nbsp;Loading scores…</li>
           </ul>
         </div>
+     <!-- AFTER — close the new wrapper div right before secondary-content -->
       </section>
+    </div>
     </div>
 
     <section id="secondary-content" aria-label="Additional tournament content">
@@ -1903,11 +1943,16 @@ const audio = new Audio("Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Master
 
     /* AFTER — also un-hide #secondary-content first */
     /* AFTER — replace it with a direct page-switch function */
+    /* AFTER */
     function switchToView(viewId) {
       const secondaryContent = document.getElementById('secondary-content');
+      const leaderboardsView = document.getElementById('leaderboards-view');
+      const backBanner = document.getElementById('back-banner');
       if (!secondaryContent) return;
 
       secondaryContent.classList.add('revealed');
+      if (leaderboardsView) leaderboardsView.classList.add('hidden');
+      if (backBanner) backBanner.classList.add('visible');
 
       document.querySelectorAll('.content-view').forEach(view => {
         view.classList.toggle('active', view.id === viewId);
@@ -1917,12 +1962,30 @@ const audio = new Audio("Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Master
         btn.classList.toggle('active', btn.dataset.view === viewId);
       });
 
-      secondaryContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showLeaderboards() {
+      const secondaryContent = document.getElementById('secondary-content');
+      const leaderboardsView = document.getElementById('leaderboards-view');
+      const backBanner = document.getElementById('back-banner');
+
+      if (secondaryContent) secondaryContent.classList.remove('revealed');
+      if (leaderboardsView) leaderboardsView.classList.remove('hidden');
+      if (backBanner) backBanner.classList.remove('visible');
+
+      document.querySelectorAll('.content-view').forEach(view => view.classList.remove('active'));
+      document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     document.querySelectorAll('.view-btn').forEach(btn => {
       btn.addEventListener('click', () => switchToView(btn.dataset.view));
     });
+
+    const backBtn = document.getElementById('back-to-leaderboards-btn');
+    if (backBtn) backBtn.addEventListener('click', showLeaderboards);
 
  
 
@@ -2288,7 +2351,7 @@ const poolRows = parseCSV(poolText);
       }
 
       loadLeaderboards();
-      revealHashTarget();
+      
 
       if (!localStorage.getItem('tutorialComplete')) {
         setTimeout(() => {
