@@ -217,10 +217,25 @@
       box-shadow: 0 3px 8px var(--shadow-light);
     }
 
+   /* AFTER — add this right after it */
     .quick-nav a.active {
       background: var(--masters-green);
       color: var(--card-bg);
       border-color: var(--masters-green);
+    }
+
+    .explore-nav {
+      justify-content: center;
+      margin: 0 auto 20px auto;
+    }
+
+    .explore-nav a {
+      background: var(--masters-light-bg);
+      border-color: rgba(0, 53, 37, 0.2);
+    }
+
+    .explore-nav a:hover {
+      background: var(--masters-hover);
     }
 
     .sticky-jump-bar {
@@ -1209,7 +1224,58 @@
       justify-content: space-between;
       color: var(--text-primary);
     }
+/* AFTER — add this anywhere in your <style> block, e.g. right after .collapsible-group rules */
+#secondary-content {
+  display: none;
+}
 
+#secondary-content.revealed {
+  display: block;
+}
+
+/* AFTER — add this as its own new block, right after your existing "@media screen and (max-width: 480px) { ... }" block */
+@media screen and (max-width: 480px) {
+  .leaderboard-grid {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .leaderboard-grid > .card,
+  .leaderboard-grid > section.card {
+    width: calc(50% - 4px);
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 calc(50% - 4px);
+    padding: 8px;
+    margin: 0;
+  }
+
+  .leaderboard-grid .card-header h2 {
+    font-size: 0.78em;
+  }
+
+  .leaderboard-grid .card-content {
+    margin-top: 8px;
+  }
+
+  .leaderboard-grid li {
+    font-size: 0.68em;
+    padding: 6px;
+    min-height: 34px;
+    gap: 4px;
+  }
+
+  .leaderboard-grid .collapse-btn {
+    font-size: 0.68em;
+    padding: 6px 8px;
+    min-width: 70px;
+    min-height: 32px;
+  }
+
+  .leaderboard-grid .last-updated-text {
+    font-size: 0.6em;
+  }
+}
   </style>
 </head>
 
@@ -1234,11 +1300,18 @@
   </header>
 
   <main>
-    <nav class="quick-nav sticky-jump-bar" aria-label="Jump to scoring and content">
+    <!-- AFTER — trim quick-nav to leaderboards only, add a second row for everything else -->
+    <nav class="quick-nav sticky-jump-bar" aria-label="Jump to leaderboards">
       <a href="#pool-leaderboard">Pool Leaderboard</a>
       <a href="#golf-leaderboard">Golf Leaderboard</a>
-      <a href="#news-updates">Updates</a>
-      <a href="#weather-widget">Weather</a>
+    </nav>
+
+    <nav class="quick-nav explore-nav" aria-label="Explore more content">
+      <a href="#group-announcements">📰 Updates</a>
+      <a href="#group-gallery">🖼️ Gallery</a>
+      <a href="#group-history">🎖️ History</a>
+      <a href="#group-weather">🌤️ Weather</a>
+      <a href="#group-registration">✍️ Register</a>
     </nav>
 
         <section class="timer card" id="countdown-timer">
@@ -1803,8 +1876,13 @@ const audio = new Audio("Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Master
     setInterval(updateCountdown, 1000);
     updateCountdown();
 
+    /* AFTER — also un-hide #secondary-content first */
     function openParentDetailsForTarget(target) {
       if (!target) return;
+      const secondaryContent = document.getElementById('secondary-content');
+      if (secondaryContent && secondaryContent.contains(target)) {
+        secondaryContent.classList.add('revealed');
+      }
       const parentDetails = target.closest('details');
       if (parentDetails) parentDetails.open = true;
     }
