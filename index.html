@@ -1,660 +1,307 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A collection of scheduling, visualization, and personal web tools.">
-  <meta name="theme-color" content="#0f172a">
-  <title>Kevin's Tool Hub</title>
-
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q667P6PD31"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag("js", new Date());
-    gtag("config", "G-Q667P6PD31");
-  </script>
-
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-    crossorigin="anonymous"
-  >
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-  >
-
-  <style>
-    :root {
-      --app-bg: #f4f7fb;
-      --surface: #ffffff;
-      --surface-muted: #f8fafc;
-      --text: #172033;
-      --muted: #64748b;
-      --border: #dce4ef;
-      --accent: #2563eb;
-      --accent-soft: #eff6ff;
-      --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
-    }
-
-    [data-theme="dark"] {
-      --app-bg: #0b1120;
-      --surface: #111827;
-      --surface-muted: #182235;
-      --text: #e5edf8;
-      --muted: #a8b5c8;
-      --border: #29364a;
-      --accent: #60a5fa;
-      --accent-soft: #172a46;
-      --shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      min-height: 100vh;
-      color: var(--text);
-      background: var(--app-bg);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-        "Segoe UI", sans-serif;
-    }
-
-    .site-header {
-      background: color-mix(in srgb, var(--surface) 92%, transparent);
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(12px);
-    }
-
-    .brand-mark {
-      display: grid;
-      width: 2.5rem;
-      height: 2.5rem;
-      place-items: center;
-      color: #fff;
-      background: linear-gradient(135deg, #2563eb, #7c3aed);
-      border-radius: 0.75rem;
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.28);
-    }
-
-    .hero {
-      padding: 4.5rem 0 2.75rem;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      padding: 0.4rem 0.7rem;
-      margin-bottom: 1rem;
-      color: var(--accent);
-      background: var(--accent-soft);
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .hero h1 {
-      max-width: 760px;
-      margin-bottom: 0.9rem;
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      font-weight: 800;
-      letter-spacing: -0.04em;
-    }
-
-    .hero-copy {
-      max-width: 660px;
-      color: var(--muted);
-      font-size: 1.1rem;
-    }
-
-    .search-wrap {
-      position: relative;
-      max-width: 530px;
-    }
-
-    .search-wrap .bi-search {
-      position: absolute;
-      top: 50%;
-      left: 1rem;
-      color: var(--muted);
-      transform: translateY(-50%);
-    }
-
-    .search-input {
-      height: 3.3rem;
-      padding-left: 2.8rem;
-      color: var(--text);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 0.85rem;
-      box-shadow: var(--shadow);
-    }
-
-    .search-input:focus {
-      color: var(--text);
-      background: var(--surface);
-      border-color: var(--accent);
-      box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--accent) 20%, transparent);
-    }
-
-    .search-input::placeholder {
-      color: var(--muted);
-    }
-
-    .section-heading {
-      font-size: 1.1rem;
-      font-weight: 750;
-    }
-
-    .tool-card {
-      height: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 1rem;
-      box-shadow: 0 2px 5px rgba(15, 23, 42, 0.03);
-      overflow: hidden;
-      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-    }
-
-    .tool-card:hover {
-      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-      box-shadow: var(--shadow);
-      transform: translateY(-4px);
-    }
-
-    .tool-card-header {
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-      padding: 1.5rem 1.5rem 0.75rem;
-    }
-
-    .category-icon {
-      display: grid;
-      flex: 0 0 auto;
-      width: 2.7rem;
-      height: 2.7rem;
-      place-items: center;
-      border-radius: 0.8rem;
-      font-size: 1.25rem;
-    }
-
-    .icon-primary { color: #1d4ed8; background: #dbeafe; }
-    .icon-success { color: #047857; background: #d1fae5; }
-    .icon-purple { color: #7e22ce; background: #f3e8ff; }
-
-    [data-theme="dark"] .icon-primary { color: #93c5fd; background: #17365d; }
-    [data-theme="dark"] .icon-success { color: #6ee7b7; background: #163b35; }
-    [data-theme="dark"] .icon-purple { color: #d8b4fe; background: #3c2259; }
-
-    .tool-card-title {
-      margin: 0;
-      color: var(--text);
-      font-size: 1.05rem;
-      font-weight: 750;
-    }
-
-    .tool-card-description {
-      min-height: 3rem;
-      padding: 0 1.5rem 1.25rem;
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .tool-list {
-      display: grid;
-      gap: 0.55rem;
-      padding: 0 1rem 1rem;
-    }
-
-    .tool-link {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 0.82rem 0.9rem;
-      color: var(--text);
-      text-decoration: none;
-      background: var(--surface-muted);
-      border: 1px solid transparent;
-      border-radius: 0.7rem;
-      font-size: 0.92rem;
-      font-weight: 600;
-      transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
-    }
-
-    .tool-link:hover,
-    .tool-link:focus-visible {
-      color: var(--accent);
-      background: var(--accent-soft);
-      border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-      transform: translateX(3px);
-    }
-
-    .tool-link .bi {
-      flex: 0 0 auto;
-      transition: transform 160ms ease;
-    }
-
-    .tool-link:hover .bi,
-    .tool-link:focus-visible .bi {
-      transform: translateX(3px);
-    }
-
-    .restricted-card {
-      position: relative;
-    }
-
-    .restricted-content[hidden] {
-      display: none;
-    }
-
-    .lock-panel {
-      padding: 1.25rem;
-      margin: 0 1rem 1rem;
-      background: var(--surface-muted);
-      border: 1px solid var(--border);
-      border-radius: 0.8rem;
-    }
-
-    .lock-status {
-      min-height: 1.3rem;
-      margin-top: 0.65rem;
-      font-size: 0.82rem;
-    }
-
-    .empty-state {
-      padding: 3.5rem 1.5rem;
-      color: var(--muted);
-      text-align: center;
-      background: var(--surface);
-      border: 1px dashed var(--border);
-      border-radius: 1rem;
-    }
-
-    .footer {
-      margin-top: 5rem;
-      color: var(--muted);
-      border-top: 1px solid var(--border);
-      font-size: 0.88rem;
-    }
-
-    .theme-toggle {
-      width: 2.5rem;
-      height: 2.5rem;
-      color: var(--text);
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 0.65rem;
-    }
-
-    .theme-toggle:hover,
-    .theme-toggle:focus-visible {
-      color: var(--accent);
-      background: var(--accent-soft);
-    }
-
-    .skip-link {
-      position: fixed;
-      top: 0.75rem;
-      left: 0.75rem;
-      z-index: 1000;
-      padding: 0.6rem 0.9rem;
-      color: #fff;
-      background: #111827;
-      border-radius: 0.5rem;
-      transform: translateY(-200%);
-    }
-
-    .skip-link:focus {
-      transform: translateY(0);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kevin's Public Projects</title>
+<style>
+  :root{
+    --bg:#f5f5f7; --panel:#ffffff; --border:#d8d8dc; --text:#1d1d1f;
+    --muted:#6e6e73; --accent:#0071e3; --row-hover:#eef4ff; --folder:#5b9bd5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:2rem 1rem 4rem; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  h1{font-size:1.5rem; font-weight:600; text-align:center; margin:0 0 .25rem;}
+  p.sub{text-align:center; color:var(--muted); margin:0 0 1.75rem; font-size:.9rem;}
+  .finder{
+    max-width:720px; margin:0 auto; background:var(--panel);
+    border:1px solid var(--border); border-radius:12px; overflow:hidden;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .toolbar{
+    display:flex; justify-content:flex-end; gap:.5rem; padding:.6rem .9rem;
+    border-bottom:1px solid var(--border); background:#fafafa;
+  }
+  .toolbar button{
+    font-size:.78rem; padding:.35rem .7rem; border-radius:6px; border:1px solid var(--border);
+    background:#fff; color:var(--text); cursor:pointer;
+  }
+  .toolbar button:hover{background:var(--row-hover);}
+  details{border-bottom:1px solid #ececec;}
+  details:last-child{border-bottom:none;}
+  details > details, details > .file-row{border-bottom:none;}
+  summary{
+    list-style:none; cursor:pointer; padding:.55rem .9rem;
+    display:flex; align-items:center; gap:.5rem; user-select:none;
+    font-size:.92rem; font-weight:500;
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary:hover{background:var(--row-hover);}
+  summary .chev{
+    display:inline-block; width:.7rem; transition:transform .15s ease;
+    color:var(--muted); font-size:.75rem; flex-shrink:0;
+  }
+  details[open] > summary .chev{transform:rotate(90deg);}
+  summary .icon{flex-shrink:0; font-size:1rem;}
+  .indent-1 > summary{padding-left:1.6rem;}
+  .indent-2 > summary, .indent-2.file-row{padding-left:2.3rem;}
+  .indent-3 > summary, .indent-3.file-row{padding-left:3rem;}
+  .body-wrap{
+    display:grid; grid-template-rows:0fr; transition:grid-template-rows .18s ease;
+  }
+  details[open] > .body-wrap{grid-template-rows:1fr;}
+  .body-inner{overflow:hidden;}
+  .file-row{
+    display:flex; align-items:center; gap:.5rem; padding:.5rem .9rem .5rem 1.6rem;
+    font-size:.88rem; text-decoration:none; color:var(--text);
+    border-bottom:1px solid #f2f2f2;
+  }
+  .file-row:hover{background:var(--row-hover); color:var(--accent);}
+  .file-row .icon{flex-shrink:0; font-size:.95rem;}
+  .file-row .note{color:var(--muted); font-size:.78rem; margin-left:auto; white-space:nowrap;}
+  .footer-note{
+    max-width:720px; margin:1.25rem auto 0; font-size:.8rem; color:var(--muted); text-align:center;
+  }
+</style>
 </head>
-
 <body>
-  <a class="skip-link" href="#tools">Skip to tools</a>
 
-  <header class="site-header sticky-top">
-    <nav class="container d-flex align-items-center justify-content-between py-3" aria-label="Primary navigation">
-      <a href="index.html" class="d-flex align-items-center gap-2 text-decoration-none">
-        <span class="brand-mark" aria-hidden="true"><i class="bi bi-grid-1x2-fill"></i></span>
-        <span class="fw-bold fs-5" style="color: var(--text)">Kevin's Tool Hub</span>
-      </a>
+<h1>Kevin's Public Projects</h1>
+<p class="sub">Click any folder to expand it, click a file to open it in a new tab.</p>
 
-      <div class="d-flex align-items-center gap-2">
-        <a class="btn btn-sm" href="about.html" style="color: var(--text)">About</a>
-        <button
-          id="themeToggle"
-          class="theme-toggle"
-          type="button"
-          aria-label="Switch to dark theme"
-          title="Toggle color theme"
-        >
-          <i class="bi bi-moon-stars" aria-hidden="true"></i>
-        </button>
-      </div>
-    </nav>
-  </header>
+<div class="finder">
+  <div class="toolbar">
+    <button id="expandAll">Expand All</button>
+    <button id="collapseAll">Collapse All</button>
+  </div>
 
-  <main>
-    <section class="hero">
-      <div class="container">
-        <span class="eyebrow"><i class="bi bi-lightning-charge-fill"></i> Project tools</span>
-        <h1>Practical tools for planning, visualization, and everyday projects.</h1>
-        <p class="hero-copy">
-          A focused collection of browser-based utilities. Select a category or search to find a tool quickly.
-        </p>
+  <!-- Timeline Tool -->
+  <details class="folder">
+    <summary><span class="chev">▶</span><span class="icon">📁</span>Timeline Tool</summary>
+    <div class="body-wrap"><div class="body-inner">
+      <a class="file-row" target="_blank" href="timeline_tool/index.html"><span class="icon">📄</span>index.html</a>
+    </div></div>
+  </details>
 
-        <div class="search-wrap mt-4">
-          <i class="bi bi-search" aria-hidden="true"></i>
-          <label class="visually-hidden" for="toolSearch">Search tools</label>
-          <input
-            id="toolSearch"
-            class="form-control search-input"
-            type="search"
-            placeholder="Search tools, such as P6, dashboard, or chart..."
-            autocomplete="off"
-          >
-        </div>
-      </div>
-    </section>
+  <!-- Progress Curve Generator -->
+  <details class="folder">
+    <summary><span class="chev">▶</span><span class="icon">📁</span>Progress Curve Generator</summary>
+    <div class="body-wrap"><div class="body-inner">
+      <a class="file-row" target="_blank" href="progress_repo/curve_generator.html"><span class="icon">📄</span>curve_generator.html</a>
+    </div></div>
+  </details>
 
-    <section id="tools" class="container pb-5" aria-labelledby="toolHeading">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 id="toolHeading" class="section-heading mb-0">Available tools</h2>
-        <span id="toolCount" class="small" style="color: var(--muted)"></span>
-      </div>
+  <!-- Fantasy Football Draft Tool -->
+  <details class="folder">
+    <summary><span class="chev">▶</span><span class="icon">📁</span>Fantasy Football Draft Tool</summary>
+    <div class="body-wrap"><div class="body-inner">
+      <a class="file-row" target="_blank" href="draft2026/index.html"><span class="icon">📄</span>index.html</a>
+      <a class="file-row" target="_blank" href="draft2026/draft-report.html"><span class="icon">📄</span>draft-report.html</a>
+    </div></div>
+  </details>
 
-      <div id="toolGrid" class="row g-4"></div>
+  <!-- Brand Route Explorer -->
+  <details class="folder">
+    <summary><span class="chev">▶</span><span class="icon">📁</span>Brand Route Explorer</summary>
+    <div class="body-wrap"><div class="body-inner">
+      <a class="file-row" target="_blank" href="route_explorer/index.html"><span class="icon">📄</span>index.html</a>
+    </div></div>
+  </details>
 
-      <div id="emptyState" class="empty-state mt-4" hidden>
-        <i class="bi bi-search fs-3 d-block mb-2" aria-hidden="true"></i>
-        No tools match that search.
-      </div>
-    </section>
-  </main>
+  <!-- Masters Pool -->
+  <details class="folder">
+    <summary><span class="chev">▶</span><span class="icon">📁</span>Masters Pool</summary>
+    <div class="body-wrap"><div class="body-inner">
+      <a class="file-row" target="_blank" href="masters/smp.html"><span class="icon">📄</span>smp.html</a>
 
-  <footer class="footer">
-    <div class="container d-flex flex-wrap justify-content-between gap-2 py-4">
-      <span>&copy; <span id="year"></span> Kevin Wolf</span>
-      <span>Built as a static, client-side tool hub.</span>
-    </div>
-  </footer>
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>2026 Season</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="masters/2026/smp_07apr2026.html"><span class="icon">📄</span>smp_07apr2026.html</a>
+          <a class="file-row indent-2" target="_blank" href="masters/2026/smp_09apr2026.html"><span class="icon">📄</span>smp_09apr2026.html</a>
+          <a class="file-row indent-2" target="_blank" href="masters/2026/smp_10apr2026.html"><span class="icon">📄</span>smp_10apr2026.html</a>
+          <a class="file-row indent-2" target="_blank" href="masters/2026/smp_11apr2026.html"><span class="icon">📄</span>smp_11apr2026.html</a>
+          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_1week.html"><span class="icon">📄</span>email_template_1week.html</a>
+          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_2week.html"><span class="icon">📄</span>email_template_2week.html</a>
+          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_3week.html"><span class="icon">📄</span>email_template_3week.html</a>
+          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_thursdsay.html"><span class="icon">📄</span>email_template_thursdsay.html</a>
+          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_post%20round%201.html"><span class="icon">📄</span>email_template_post round 1.html</a>
+          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_post%20round%202.html"><span class="icon">📄</span>email_template_post round 2.html</a>
+          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_post%20round%203.html"><span class="icon">📄</span>email_template_post round 3.html</a>
+          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_post%20round%204.html"><span class="icon">📄</span>email_template_post round 4.html</a>
+        </div></div>
+      </details>
 
-  <script>
-    const categories = [
-      {
-        id: "p6",
-        title: "P6 Tools",
-        description: "Utilities that work with P6 exports to streamline scheduling and reporting tasks.",
-        icon: "bi-calendar3",
-        iconClass: "icon-primary",
-        tools: [
-          {
-            name: "P6 Tracer",
-            url: "https://kev11wolf.github.io/public/p6tracer.html",
-            keywords: "p6 tracer schedule primavera logic"
-          },
-          {
-            name: "Offline P6",
-            url: "https://kev11wolf.github.io/public/offlinep6.html",
-            keywords: "p6 primavera offline schedule"
-          },
-          {
-            name: "Timeline Generator",
-            subtitle: "Think-cell alternative",
-            url: "https://kev11wolf.github.io/public/timeline_tool/index.html",
-            keywords: "timeline generator thinkcell think cell presentation"
-          }
-        ]
-      },
-      {
-        id: "visualizers",
-        title: "Visualizer Tools",
-        description: "Standalone browser tools for turning data and inputs into useful visual layouts.",
-        icon: "bi-bar-chart-line",
-        iconClass: "icon-success",
-        tools: [
-          {
-            name: "Resource Gantt Visualizer",
-            url: "https://kev11wolf.github.io/public/gannt%20visualizer/gantt.html",
-            keywords: "resource gantt visualizer schedule labor"
-          },
-          {
-            name: "Org Chart Generator",
-            url: "https://kev11wolf.github.io/public/orgchart/orgchart.html",
-            keywords: "organization org chart generator hierarchy"
-          }
-        ]
-      },
-      {
-        id: "personal",
-        title: "Personal & Misc.",
-        description: "Personal dashboards, trip planners, and small experimental projects.",
-        icon: "bi-shield-lock",
-        iconClass: "icon-purple",
-        restricted: true,
-        tools: [
-          {
-            name: "Harmonia Chord Progressions",
-            url: "https://kev11wolf.github.io/public/personal/harmonia.html",
-            keywords: "harmonia chord progression music"
-          },
-          {
-            name: "Guitar Lick Tab Generator",
-            url: "https://kev11wolf.github.io/public/music/tabgen.html",
-            keywords: "guitar lick tab generator music"
-          },
-          {
-            name: "Cali 2025 Cooking Schedule",
-            url: "https://kev11wolf.github.io/public/food/cali.html",
-            keywords: "cali cooking schedule food"
-          },
-          {
-            name: "Sommerville Masters Pool",
-            url: "https://kev11wolf.github.io/public/smp-main/smp-main/smp.html",
-            keywords: "sommerville masters pool golf"
-          },
-          {
-            name: "Asheville Map",
-            url: "https://kev11wolf.github.io/public/route_explorer/index.html",
-            keywords: "asheville map route explorer travel"
-          },
-          {
-            name: "Playground Blueprint",
-            url: "https://kev11wolf.github.io/public/playground.html",
-            keywords: "playground blueprint construction"
-          },
-          {
-            name: "Salary, Income & Expense Dashboard",
-            url: "https://kev11wolf.github.io/public/cost/index.html",
-            keywords: "salary income expense budget financial dashboard"
-          },
-          {
-            name: "Car Maintenance Dashboard",
-            url: "https://kev11wolf.github.io/public/carpm/index.html",
-            keywords: "car maintenance vehicle dashboard service"
-          },
-          {
-            name: "TJ Recipes",
-            url: "https://kev11wolf.github.io/public/tj/index.html",
-            keywords: "tj food recipe"
-          }
-        ]
-      }
-    ];
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Archive</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="masters/archive/smp.html"><span class="icon">📄</span>smp.html <span class="note">old version</span></a>
+        </div></div>
+      </details>
+    </div></div>
+  </details>
 
-    const grid = document.getElementById("toolGrid");
-    const searchInput = document.getElementById("toolSearch");
-    const emptyState = document.getElementById("emptyState");
-    const toolCount = document.getElementById("toolCount");
-    const themeToggle = document.getElementById("themeToggle");
-    const personalUnlocked = sessionStorage.getItem("personalToolsUnlocked") === "true";
+  <!-- Archive & Legacy Projects (everything your cleanup consolidated here) -->
+  <details class="folder">
+    <summary><span class="chev">▶</span><span class="icon">📦</span>Archive &amp; Legacy Projects</summary>
+    <div class="body-wrap"><div class="body-inner">
 
-    function toolLink(tool) {
-      const label = tool.subtitle
-        ? `${tool.name} <span class="small fw-normal opacity-75">— ${tool.subtitle}</span>`
-        : tool.name;
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>P6 Comparison Tool</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/P6%20comparison%20tool/comp.html"><span class="icon">📄</span>comp.html</a>
+        </div></div>
+      </details>
 
-      return `
-        <a class="tool-link" href="${tool.url}">
-          <span>${label}</span>
-          <i class="bi bi-arrow-right" aria-hidden="true"></i>
-        </a>
-      `;
-    }
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Gantt Visualizer</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/gannt%20visualizer/gantt.html"><span class="icon">📄</span>gantt.html</a>
+          <details class="folder indent-2">
+            <summary><span class="chev">▶</span><span class="icon">📁</span>Archive (15 old versions)</summary>
+            <div class="body-wrap"><div class="body-inner">
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/gantta.html"><span class="icon">📄</span>gantta.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttb.html"><span class="icon">📄</span>ganttb.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttc.html"><span class="icon">📄</span>ganttc.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttd.html"><span class="icon">📄</span>ganttd.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/gantte.html"><span class="icon">📄</span>gantte.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttf.html"><span class="icon">📄</span>ganttf.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttg.html"><span class="icon">📄</span>ganttg.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/gantth.html"><span class="icon">📄</span>gantth.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/gantti.html"><span class="icon">📄</span>gantti.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttj.html"><span class="icon">📄</span>ganttj.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttk.html"><span class="icon">📄</span>ganttk.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttl.html"><span class="icon">📄</span>ganttl.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttm.html"><span class="icon">📄</span>ganttm.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttn.html"><span class="icon">📄</span>ganttn.html</a>
+              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/gantto.html"><span class="icon">📄</span>gantto.html</a>
+            </div></div>
+          </details>
+        </div></div>
+      </details>
 
-    function categoryCard(category, visibleTools) {
-      const isPersonalUnlocked = category.restricted && personalUnlocked;
-      const links = visibleTools.map(toolLink).join("");
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Org Chart</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/orgchart/orgchart.html"><span class="icon">📄</span>orgchart.html</a>
+        </div></div>
+      </details>
 
-      const restrictedArea = category.restricted && !isPersonalUnlocked
-        ? `
-          <div class="lock-panel">
-            <div class="d-flex gap-2 align-items-start">
-              <i class="bi bi-info-circle mt-1" aria-hidden="true"></i>
-              <p class="small mb-3" style="color: var(--muted)">
-                This is a visual client-side gate only. It does not make files private.
-              </p>
-            </div>
-            <label class="visually-hidden" for="personalPassword">Access key</label>
-            <input
-              class="form-control form-control-sm mb-2"
-              id="personalPassword"
-              type="password"
-              placeholder="Access key"
-              autocomplete="current-password"
-            >
-            <button id="unlockButton" class="btn btn-dark btn-sm w-100" type="button">
-              <i class="bi bi-unlock me-1" aria-hidden="true"></i> Unlock this session
-            </button>
-            <div id="lockStatus" class="lock-status" aria-live="polite"></div>
-          </div>
-        `
-        : `
-          <div class="tool-list restricted-content">
-            ${links}
-          </div>
-        `;
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Misc (Gantt/Orgchart leftovers)</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/misc/gantt_org.html"><span class="icon">📄</span>gantt_org.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/misc/orgchart.html"><span class="icon">📄</span>orgchart.html <span class="note">duplicate</span></a>
+        </div></div>
+      </details>
 
-      return `
-        <div class="col-12 col-md-6 col-xl-4">
-          <article class="tool-card ${category.restricted ? "restricted-card" : ""}">
-            <div class="tool-card-header">
-              <span class="category-icon ${category.iconClass}" aria-hidden="true">
-                <i class="bi ${category.icon}"></i>
-              </span>
-              <h3 class="tool-card-title">${category.title}</h3>
-            </div>
-            <p class="tool-card-description">${category.description}</p>
-            ${category.restricted ? restrictedArea : `<div class="tool-list">${links}</div>`}
-          </article>
-        </div>
-      `;
-    }
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Cost Tracker</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/cost/index.html"><span class="icon">📄</span>index.html</a>
+        </div></div>
+      </details>
 
-    function renderTools(query = "") {
-      const normalizedQuery = query.trim().toLowerCase();
-      let visibleToolTotal = 0;
-      let html = "";
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Car PM</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/carpm/index.html"><span class="icon">📄</span>index.html</a>
+        </div></div>
+      </details>
 
-      categories.forEach(category => {
-        const matchingTools = category.tools.filter(tool => {
-          const searchableText = `${tool.name} ${tool.subtitle || ""} ${tool.keywords}`.toLowerCase();
-          return searchableText.includes(normalizedQuery);
-        });
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Money Tracker</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/money/index.html"><span class="icon">📄</span>index.html</a>
+        </div></div>
+      </details>
 
-        if (matchingTools.length) {
-          visibleToolTotal += matchingTools.length;
-          html += categoryCard(category, matchingTools);
-        }
-      });
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Food &amp; Recipes</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/food/recipes.html"><span class="icon">📄</span>recipes.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/food/cali.html"><span class="icon">📄</span>cali.html</a>
+        </div></div>
+      </details>
 
-      grid.innerHTML = html;
-      emptyState.hidden = visibleToolTotal !== 0;
-      toolCount.textContent = `${visibleToolTotal} ${visibleToolTotal === 1 ? "tool" : "tools"}`;
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>TJ Recipes</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/tj/index.html"><span class="icon">📄</span>index.html</a>
+        </div></div>
+      </details>
 
-      const unlockButton = document.getElementById("unlockButton");
-      const passwordInput = document.getElementById("personalPassword");
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Music Tools</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/music/tabgena.html"><span class="icon">📄</span>tabgena.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/music/tabgenb.html"><span class="icon">📄</span>tabgenb.html</a>
+        </div></div>
+      </details>
 
-      if (unlockButton && passwordInput) {
-        unlockButton.addEventListener("click", unlockPersonalTools);
-        passwordInput.addEventListener("keydown", event => {
-          if (event.key === "Enter") unlockPersonalTools();
-        });
-      }
-    }
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Coding Sandbox</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/coding/coding.html"><span class="icon">📄</span>coding.html</a>
+        </div></div>
+      </details>
 
-    function unlockPersonalTools() {
-      const passwordInput = document.getElementById("personalPassword");
-      const lockStatus = document.getElementById("lockStatus");
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Art</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/art/index.html"><span class="icon">📄</span>index.html</a>
+        </div></div>
+      </details>
 
-      /*
-        IMPORTANT:
-        This is intentionally only a UI gate. Do not store a real password,
-        API key, or sensitive data in static client-side code.
-      */
-      if (passwordInput.value === "Kevin") {
-        sessionStorage.setItem("personalToolsUnlocked", "true");
-        window.location.reload();
-        return;
-      }
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>Phil</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/phil/phil.html"><span class="icon">📄</span>phil.html</a>
+        </div></div>
+      </details>
 
-      lockStatus.textContent = "Incorrect access key.";
-      lockStatus.className = "lock-status text-danger";
-      passwordInput.select();
-    }
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>P6 Legacy Versions</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/offlinep6a.html"><span class="icon">📄</span>offlinep6a.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/offlinep6b.html"><span class="icon">📄</span>offlinep6b.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/offlinep6c.html"><span class="icon">📄</span>offlinep6c.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/p6forensica.html"><span class="icon">📄</span>p6forensica.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/p6forensicb.html"><span class="icon">📄</span>p6forensicb.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/p6tracer.html"><span class="icon">📄</span>p6tracer.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/p6visualizer.html"><span class="icon">📄</span>p6visualizer.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/variancep6.html"><span class="icon">📄</span>variancep6.html</a>
+        </div></div>
+      </details>
 
-    function applyTheme(theme) {
-      document.documentElement.dataset.theme = theme;
-      localStorage.setItem("theme", theme);
+      <details class="folder indent-1">
+        <summary><span class="chev">▶</span><span class="icon">📁</span>One-off Pages</summary>
+        <div class="body-wrap"><div class="body-inner">
+          <a class="file-row indent-2" target="_blank" href="archive/bend.html"><span class="icon">📄</span>bend.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/harmonia.html"><span class="icon">📄</span>harmonia.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/kerr.html"><span class="icon">📄</span>kerr.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/nursery.html"><span class="icon">📄</span>nursery.html</a>
+          <a class="file-row indent-2" target="_blank" href="archive/playground.html"><span class="icon">📄</span>playground.html</a>
+        </div></div>
+      </details>
 
-      const icon = themeToggle.querySelector("i");
-      const isDark = theme === "dark";
+    </div></div>
+  </details>
 
-      icon.className = `bi ${isDark ? "bi-sun" : "bi-moon-stars"}`;
-      themeToggle.setAttribute(
-        "aria-label",
-        `Switch to ${isDark ? "light" : "dark"} theme`
-      );
-    }
+</div>
 
-    const savedTheme = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    applyTheme(savedTheme || (prefersDark ? "dark" : "light"));
+<p class="footer-note">Data files powering Route Explorer live in <code>/data</code> and are not directly linked here.</p>
 
-    themeToggle.addEventListener("click", () => {
-      applyTheme(
-        document.documentElement.dataset.theme === "dark" ? "light" : "dark"
-      );
-    });
-
-    searchInput.addEventListener("input", event => renderTools(event.target.value));
-
-    document.getElementById("year").textContent = new Date().getFullYear();
-    renderTools();
-  </script>
+<script>
+  document.getElementById('expandAll').addEventListener('click', () => {
+    document.querySelectorAll('details').forEach(d => d.open = true);
+  });
+  document.getElementById('collapseAll').addEventListener('click', () => {
+    document.querySelectorAll('details').forEach(d => d.open = false);
+  });
+</script>
 </body>
 </html>
