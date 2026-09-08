@@ -33,7 +33,7 @@
       --gold: #FFD700;
       /* AFTER: relative path, no GitHub redirect dependency */
 --azalea-photo: url('azalea_background.jpg');
-
+}
     
 
     * {
@@ -200,7 +200,7 @@
       line-height: 1;
       box-shadow: 0 1px 4px var(--shadow-light);
       transition: all 0.3s ease;
-      min-height: 40px;
+      min-height: 44px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -210,10 +210,17 @@
       overflow: hidden;
     }
 
+    /* AFTER — add right after it */
     .quick-nav a:hover {
       background: var(--masters-hover);
       transform: translateY(-1px);
       box-shadow: 0 3px 8px var(--shadow-light);
+    }
+
+    .quick-nav a.active {
+      background: var(--masters-green);
+      color: var(--card-bg);
+      border-color: var(--masters-green);
     }
 
     .sticky-jump-bar {
@@ -235,6 +242,7 @@
       flex-wrap: wrap;
     }
 
+    /* AFTER — add the desktop override right after it */
     .leaderboard-grid > .card,
     .leaderboard-grid > section.card {
       width: 300px;
@@ -242,6 +250,16 @@
       max-width: 300px;
       flex: 0 0 300px;
       margin: 0;
+    }
+
+    @media screen and (min-width: 900px) {
+      .leaderboard-grid > .card,
+      .leaderboard-grid > section.card {
+        width: 420px;
+        min-width: 380px;
+        max-width: 480px;
+        flex: 1 1 420px;
+      }
     }
 
     .collapsible-group {
@@ -992,15 +1010,7 @@
       .player-grid { grid-template-columns: 1fr; }
     }
 
-    @media screen and (max-width: 680px) {
-      .leaderboard-grid > .card,
-      .leaderboard-grid > section.card {
-        width: 300px;
-        min-width: 300px;
-        max-width: 300px;
-        flex: 0 0 300px;
-      }
-    }
+
 
     @media screen and (max-width: 480px) {
       body { font-size: 14px; }
@@ -1266,7 +1276,10 @@
 
           <p id="pool-last-updated" class="last-updated-text">Last updated: —</p>
           <button id="toggle-pool-button" class="collapse-btn" aria-expanded="true" style="display:none;">Collapse</button>
-          <ul id="pool-list" role="list"></ul>
+         <!-- AFTER -->
+          <ul id="pool-list" role="list">
+            <li style="justify-content:center; cursor:default;"><span class="spinner"></span>&nbsp;Loading standings…</li>
+          </ul>
         </div>
       </section>
 
@@ -1276,7 +1289,10 @@
         </div>
         <div class="card-content">
           <button id="toggle-button" class="collapse-btn" aria-expanded="false">Show More</button>
-          <ul id="golf-list" role="list"></ul>
+          <!-- AFTER -->
+          <ul id="golf-list" role="list">
+            <li style="justify-content:center; cursor:default;"><span class="spinner"></span>&nbsp;Loading scores…</li>
+          </ul>
         </div>
       </section>
     </div>
@@ -2158,7 +2174,7 @@ const poolRows = parseCSV(poolText);
           }
 
           updateLeaderboard('golf-list', golfLeaderboardData, 'score', 10, 'toggle-button');
-          updateLeaderboard('pool-list', filteredPool, 'points', null, 'toggle-pool-button');
+          updateLeaderboard('pool-list', filteredPool, 'points', 8, 'toggle-pool-button');
         } catch (err) {
           console.error('Leaderboard error:', err);
           showLBError('golf-list', 'Could not load golf scores — check back soon.');
@@ -2257,6 +2273,23 @@ const poolRows = parseCSV(poolText);
         toast.error('Connection Error', 'Could not load weather data', 4000);
       }
     })();
+    
+   
+const navLinks = document.querySelectorAll('.quick-nav a');
+const spySections = [...navLinks].map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+function updateActiveNav() {
+  let current = spySections[0];
+  spySections.forEach(sec => {
+    if (sec.getBoundingClientRect().top <= 120) current = sec;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current.id);
+  });
+}
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+updateActiveNav();
+    
   </script>
 </body>
 </html>
