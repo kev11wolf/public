@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#f5f5f7; --panel:#ffffff; --border:#d8d8dc; --text:#1d1d1f;
-    --muted:#6e6e73; --accent:#0071e3; --row-hover:#eef4ff; --folder:#5b9bd5;
+    --muted:#6e6e73; --accent:#0071e3; --row-hover:#eef4ff;
   }
   *{box-sizing:border-box;}
   body{
@@ -15,7 +15,8 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
   }
   h1{font-size:1.5rem; font-weight:600; text-align:center; margin:0 0 .25rem;}
-  p.sub{text-align:center; color:var(--muted); margin:0 0 1.75rem; font-size:.9rem;}
+  p.sub{text-align:center; color:var(--muted); margin:0 0 .35rem; font-size:.9rem;}
+  p.updated{text-align:center; color:var(--muted); margin:0 0 1.5rem; font-size:.75rem;}
   .finder{
     max-width:720px; margin:0 auto; background:var(--panel);
     border:1px solid var(--border); border-radius:12px; overflow:hidden;
@@ -32,7 +33,6 @@
   .toolbar button:hover{background:var(--row-hover);}
   details{border-bottom:1px solid #ececec;}
   details:last-child{border-bottom:none;}
-  details > details, details > .file-row{border-bottom:none;}
   summary{
     list-style:none; cursor:pointer; padding:.55rem .9rem;
     display:flex; align-items:center; gap:.5rem; user-select:none;
@@ -46,9 +46,6 @@
   }
   details[open] > summary .chev{transform:rotate(90deg);}
   summary .icon{flex-shrink:0; font-size:1rem;}
-  .indent-1 > summary{padding-left:1.6rem;}
-  .indent-2 > summary, .indent-2.file-row{padding-left:2.3rem;}
-  .indent-3 > summary, .indent-3.file-row{padding-left:3rem;}
   .body-wrap{
     display:grid; grid-template-rows:0fr; transition:grid-template-rows .18s ease;
   }
@@ -61,7 +58,6 @@
   }
   .file-row:hover{background:var(--row-hover); color:var(--accent);}
   .file-row .icon{flex-shrink:0; font-size:.95rem;}
-  .file-row .note{color:var(--muted); font-size:.78rem; margin-left:auto; white-space:nowrap;}
   .footer-note{
     max-width:720px; margin:1.25rem auto 0; font-size:.8rem; color:var(--muted); text-align:center;
   }
@@ -71,229 +67,206 @@
 
 <h1>Kevin's Public Projects</h1>
 <p class="sub">Click any folder to expand it, click a file to open it in a new tab.</p>
+<p class="updated">Auto-generated from the repo file structure &mdash; always in sync with the latest commit.</p>
 
 <div class="finder">
   <div class="toolbar">
     <button id="expandAll">Expand All</button>
     <button id="collapseAll">Collapse All</button>
   </div>
-
-  <!-- Timeline Tool -->
-  <details class="folder">
-    <summary><span class="chev">▶</span><span class="icon">📁</span>Timeline Tool</summary>
-    <div class="body-wrap"><div class="body-inner">
-      <a class="file-row" target="_blank" href="timeline_tool/index.html"><span class="icon">📄</span>index.html</a>
-    </div></div>
-  </details>
-
-  <!-- Progress Curve Generator -->
-  <details class="folder">
-    <summary><span class="chev">▶</span><span class="icon">📁</span>Progress Curve Generator</summary>
-    <div class="body-wrap"><div class="body-inner">
-      <a class="file-row" target="_blank" href="progress_repo/curve_generator.html"><span class="icon">📄</span>curve_generator.html</a>
-    </div></div>
-  </details>
-
-  <!-- Fantasy Football Draft Tool -->
-  <details class="folder">
-    <summary><span class="chev">▶</span><span class="icon">📁</span>Fantasy Football Draft Tool</summary>
-    <div class="body-wrap"><div class="body-inner">
-      <a class="file-row" target="_blank" href="draft2026/index.html"><span class="icon">📄</span>index.html</a>
-      <a class="file-row" target="_blank" href="draft2026/draft-report.html"><span class="icon">📄</span>draft-report.html</a>
-    </div></div>
-  </details>
-
-  <!-- Brand Route Explorer -->
-  <details class="folder">
-    <summary><span class="chev">▶</span><span class="icon">📁</span>Brand Route Explorer</summary>
-    <div class="body-wrap"><div class="body-inner">
-      <a class="file-row" target="_blank" href="route_explorer/index.html"><span class="icon">📄</span>index.html</a>
-    </div></div>
-  </details>
-
-  <!-- Masters Pool -->
-  <details class="folder">
-    <summary><span class="chev">▶</span><span class="icon">📁</span>Masters Pool</summary>
-    <div class="body-wrap"><div class="body-inner">
-      <a class="file-row" target="_blank" href="masters/smp.html"><span class="icon">📄</span>smp.html</a>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>2026 Season</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="masters/2026/smp_07apr2026.html"><span class="icon">📄</span>smp_07apr2026.html</a>
-          <a class="file-row indent-2" target="_blank" href="masters/2026/smp_09apr2026.html"><span class="icon">📄</span>smp_09apr2026.html</a>
-          <a class="file-row indent-2" target="_blank" href="masters/2026/smp_10apr2026.html"><span class="icon">📄</span>smp_10apr2026.html</a>
-          <a class="file-row indent-2" target="_blank" href="masters/2026/smp_11apr2026.html"><span class="icon">📄</span>smp_11apr2026.html</a>
-          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_1week.html"><span class="icon">📄</span>email_template_1week.html</a>
-          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_2week.html"><span class="icon">📄</span>email_template_2week.html</a>
-          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_3week.html"><span class="icon">📄</span>email_template_3week.html</a>
-          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_thursdsay.html"><span class="icon">📄</span>email_template_thursdsay.html</a>
-          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_post%20round%201.html"><span class="icon">📄</span>email_template_post round 1.html</a>
-          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_post%20round%202.html"><span class="icon">📄</span>email_template_post round 2.html</a>
-          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_post%20round%203.html"><span class="icon">📄</span>email_template_post round 3.html</a>
-          <a class="file-row indent-2" target="_blank" href="masters/2026/email_template_post%20round%204.html"><span class="icon">📄</span>email_template_post round 4.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Archive</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="masters/archive/smp.html"><span class="icon">📄</span>smp.html <span class="note">old version</span></a>
-        </div></div>
-      </details>
-    </div></div>
-  </details>
-
-  <!-- Archive & Legacy Projects (everything your cleanup consolidated here) -->
-  <details class="folder">
-    <summary><span class="chev">▶</span><span class="icon">📦</span>Archive &amp; Legacy Projects</summary>
-    <div class="body-wrap"><div class="body-inner">
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>P6 Comparison Tool</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/P6%20comparison%20tool/comp.html"><span class="icon">📄</span>comp.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Gantt Visualizer</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/gannt%20visualizer/gantt.html"><span class="icon">📄</span>gantt.html</a>
-          <details class="folder indent-2">
-            <summary><span class="chev">▶</span><span class="icon">📁</span>Archive (15 old versions)</summary>
-            <div class="body-wrap"><div class="body-inner">
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/gantta.html"><span class="icon">📄</span>gantta.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttb.html"><span class="icon">📄</span>ganttb.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttc.html"><span class="icon">📄</span>ganttc.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttd.html"><span class="icon">📄</span>ganttd.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/gantte.html"><span class="icon">📄</span>gantte.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttf.html"><span class="icon">📄</span>ganttf.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttg.html"><span class="icon">📄</span>ganttg.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/gantth.html"><span class="icon">📄</span>gantth.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/gantti.html"><span class="icon">📄</span>gantti.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttj.html"><span class="icon">📄</span>ganttj.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttk.html"><span class="icon">📄</span>ganttk.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttl.html"><span class="icon">📄</span>ganttl.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttm.html"><span class="icon">📄</span>ganttm.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/ganttn.html"><span class="icon">📄</span>ganttn.html</a>
-              <a class="file-row indent-3" target="_blank" href="archive/gannt%20visualizer/archive/gantto.html"><span class="icon">📄</span>gantto.html</a>
-            </div></div>
-          </details>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Org Chart</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/orgchart/orgchart.html"><span class="icon">📄</span>orgchart.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Misc (Gantt/Orgchart leftovers)</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/misc/gantt_org.html"><span class="icon">📄</span>gantt_org.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/misc/orgchart.html"><span class="icon">📄</span>orgchart.html <span class="note">duplicate</span></a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Cost Tracker</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/cost/index.html"><span class="icon">📄</span>index.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Car PM</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/carpm/index.html"><span class="icon">📄</span>index.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Money Tracker</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/money/index.html"><span class="icon">📄</span>index.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Food &amp; Recipes</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/food/recipes.html"><span class="icon">📄</span>recipes.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/food/cali.html"><span class="icon">📄</span>cali.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>TJ Recipes</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/tj/index.html"><span class="icon">📄</span>index.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Music Tools</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/music/tabgena.html"><span class="icon">📄</span>tabgena.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/music/tabgenb.html"><span class="icon">📄</span>tabgenb.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Coding Sandbox</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/coding/coding.html"><span class="icon">📄</span>coding.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Art</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/art/index.html"><span class="icon">📄</span>index.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>Phil</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/phil/phil.html"><span class="icon">📄</span>phil.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>P6 Legacy Versions</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/offlinep6a.html"><span class="icon">📄</span>offlinep6a.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/offlinep6b.html"><span class="icon">📄</span>offlinep6b.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/offlinep6c.html"><span class="icon">📄</span>offlinep6c.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/p6forensica.html"><span class="icon">📄</span>p6forensica.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/p6forensicb.html"><span class="icon">📄</span>p6forensicb.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/p6tracer.html"><span class="icon">📄</span>p6tracer.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/p6visualizer.html"><span class="icon">📄</span>p6visualizer.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/variancep6.html"><span class="icon">📄</span>variancep6.html</a>
-        </div></div>
-      </details>
-
-      <details class="folder indent-1">
-        <summary><span class="chev">▶</span><span class="icon">📁</span>One-off Pages</summary>
-        <div class="body-wrap"><div class="body-inner">
-          <a class="file-row indent-2" target="_blank" href="archive/bend.html"><span class="icon">📄</span>bend.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/harmonia.html"><span class="icon">📄</span>harmonia.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/kerr.html"><span class="icon">📄</span>kerr.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/nursery.html"><span class="icon">📄</span>nursery.html</a>
-          <a class="file-row indent-2" target="_blank" href="archive/playground.html"><span class="icon">📄</span>playground.html</a>
-        </div></div>
-      </details>
-
-    </div></div>
-  </details>
-
+<details class="folder">
+<summary style="padding-left:1.6rem"><span class="chev">▶</span><span class="icon">📁</span>Archive & Legacy Projects</summary>
+<div class="body-wrap"><div class="body-inner">
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>Car PM</summary>
+<div class="body-wrap"><div class="body-inner">
+<details class="folder">
+<summary style="padding-left:2.9999999999999996rem"><span class="chev">▶</span><span class="icon">📁</span>Data</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/carpm/data/index.json"><span class="icon">🧩</span>index.json</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/carpm/data/rav4.json"><span class="icon">🧩</span>rav4.json</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/carpm/data/text.txt"><span class="icon">📝</span>text.txt</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/carpm/data/tiguan.json"><span class="icon">🧩</span>tiguan.json</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/carpm/data/yukon.json"><span class="icon">🧩</span>yukon.json</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.9999999999999996rem"><span class="chev">▶</span><span class="icon">📁</span>Icons</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/carpm/icons/icon-192.png"><span class="icon">🖼️</span>icon-192.png</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/carpm/icons/icon-512.png"><span class="icon">🖼️</span>icon-512.png</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/carpm/icons/test.png"><span class="icon">🖼️</span>test.png</a>
+</div></div></details>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/carpm/data.json"><span class="icon">🧩</span>data.json</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/carpm/manifest.json"><span class="icon">🧩</span>manifest.json</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/carpm/sw.js"><span class="icon">📜</span>sw.js</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>Coding Sandbox</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/coding/coding.html"><span class="icon">📄</span>coding.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/coding/prompt.txt"><span class="icon">📝</span>prompt.txt</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>Cost Tracker</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/cost/icon-192.png"><span class="icon">🖼️</span>icon-192.png</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/cost/icon-512.png"><span class="icon">🖼️</span>icon-512.png</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/cost/manifest.json"><span class="icon">🧩</span>manifest.json</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>Food & Recipes</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/food/cali.html"><span class="icon">📄</span>cali.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/food/cali.txt"><span class="icon">📝</span>cali.txt</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/food/recipes.html"><span class="icon">📄</span>recipes.html</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>Gantt Visualizer</summary>
+<div class="body-wrap"><div class="body-inner">
+<details class="folder">
+<summary style="padding-left:2.9999999999999996rem"><span class="chev">▶</span><span class="icon">📁</span>Archive (old versions)</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/gantta.html"><span class="icon">📄</span>gantta.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/ganttb.html"><span class="icon">📄</span>ganttb.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/ganttc.html"><span class="icon">📄</span>ganttc.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/ganttd.html"><span class="icon">📄</span>ganttd.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/gantte.html"><span class="icon">📄</span>gantte.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/ganttf.html"><span class="icon">📄</span>ganttf.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/ganttg.html"><span class="icon">📄</span>ganttg.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/gantth.html"><span class="icon">📄</span>gantth.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/gantti.html"><span class="icon">📄</span>gantti.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/ganttj.html"><span class="icon">📄</span>ganttj.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/ganttk.html"><span class="icon">📄</span>ganttk.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/ganttl.html"><span class="icon">📄</span>ganttl.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/ganttm.html"><span class="icon">📄</span>ganttm.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/ganttn.html"><span class="icon">📄</span>ganttn.html</a>
+<a class="file-row" style="padding-left:3.6999999999999997rem" target="_blank" href="archive/gannt%20visualizer/archive/gantto.html"><span class="icon">📄</span>gantto.html</a>
+</div></div></details>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/gannt%20visualizer/gantt.html"><span class="icon">📄</span>gantt.html</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>Misc (Gantt/Orgchart leftovers)</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/misc/gantt_org.html"><span class="icon">📄</span>gantt_org.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/misc/orgchart.html"><span class="icon">📄</span>orgchart.html</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>Music Tools</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/music/lickgenprompt.txt"><span class="icon">📝</span>lickgenprompt.txt</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/music/tabgena.html"><span class="icon">📄</span>tabgena.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/music/tabgenb.html"><span class="icon">📄</span>tabgenb.html</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>Org Chart</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/orgchart/orgchart.html"><span class="icon">📄</span>orgchart.html</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>P6 Comparison Tool</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/P6%20comparison%20tool/comp.html"><span class="icon">📄</span>comp.html</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>Phil</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/phil/phil.html"><span class="icon">📄</span>phil.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/phil/prompt.txt"><span class="icon">📝</span>prompt.txt</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>TJ Recipes</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="archive/tj/recipes.json"><span class="icon">🧩</span>recipes.json</a>
+</div></div></details>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/bend.html"><span class="icon">📄</span>bend.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/harmonia.html"><span class="icon">📄</span>harmonia.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/kerr.html"><span class="icon">📄</span>kerr.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/nursery.html"><span class="icon">📄</span>nursery.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/offlinep6a.html"><span class="icon">📄</span>offlinep6a.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/offlinep6b.html"><span class="icon">📄</span>offlinep6b.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/offlinep6c.html"><span class="icon">📄</span>offlinep6c.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/p6forensica.html"><span class="icon">📄</span>p6forensica.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/p6forensicb.html"><span class="icon">📄</span>p6forensicb.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/p6tracer.html"><span class="icon">📄</span>p6tracer.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/p6visualizer.html"><span class="icon">📄</span>p6visualizer.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/playground.html"><span class="icon">📄</span>playground.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="archive/variancep6.html"><span class="icon">📄</span>variancep6.html</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:1.6rem"><span class="chev">▶</span><span class="icon">📁</span>Fantasy Football Draft Tool</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="draft2026/draft-report.html"><span class="icon">📄</span>draft-report.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="draft2026/manifest.webmanifest"><span class="icon">📄</span>manifest.webmanifest</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="draft2026/service-worker.js"><span class="icon">📜</span>service-worker.js</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:1.6rem"><span class="chev">▶</span><span class="icon">📁</span>Masters Pool</summary>
+<div class="body-wrap"><div class="body-inner">
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>2026 Season</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/cole_pool.jpg"><span class="icon">🖼️</span>cole_pool.jpg</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/email_template_1week.html"><span class="icon">📄</span>email_template_1week.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/email_template_2week.html"><span class="icon">📄</span>email_template_2week.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/email_template_3week.html"><span class="icon">📄</span>email_template_3week.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/email_template_post%20round%201.html"><span class="icon">📄</span>email_template_post round 1.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/email_template_post%20round%202.html"><span class="icon">📄</span>email_template_post round 2.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/email_template_post%20round%203.html"><span class="icon">📄</span>email_template_post round 3.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/email_template_post%20round%204.html"><span class="icon">📄</span>email_template_post round 4.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/email_template_thursdsay.html"><span class="icon">📄</span>email_template_thursdsay.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/smp_07apr2026.html"><span class="icon">📄</span>smp_07apr2026.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/smp_09apr2026.html"><span class="icon">📄</span>smp_09apr2026.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/smp_10apr2026.html"><span class="icon">📄</span>smp_10apr2026.html</a>
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/2026/smp_11apr2026.html"><span class="icon">📄</span>smp_11apr2026.html</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>Archive</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="masters/archive/smp.html"><span class="icon">📄</span>smp.html</a>
+</div></div></details>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="masters/azalea_background.jpg"><span class="icon">🖼️</span>azalea_background.jpg</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="masters/Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Masters%20Theme%20Song%20On%20Repeat%281%29.mp3"><span class="icon">🎵</span>Enjoy the Sound Of _Augusta_ _ The Masters Theme Song On Repeat(1).mp3</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="masters/jim_nantz_masters.jpg"><span class="icon">🖼️</span>jim_nantz_masters.jpg</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="masters/masters2.txt"><span class="icon">📝</span>masters2.txt</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="masters/pool%20player%20leadeboard.xlsx"><span class="icon">📊</span>pool player leadeboard.xlsx</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="masters/smp.html"><span class="icon">📄</span>smp.html</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="masters/style.css"><span class="icon">🎨</span>style.css</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="masters/weather.txt"><span class="icon">📝</span>weather.txt</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="masters/winner_2026.JPG"><span class="icon">🖼️</span>winner_2026.JPG</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:1.6rem"><span class="chev">▶</span><span class="icon">📁</span>Progress Curve Generator</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="progress_repo/curve_generator.html"><span class="icon">📄</span>curve_generator.html</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:1.6rem"><span class="chev">▶</span><span class="icon">📁</span>Brand Route Explorer</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="route_explorer/favorites.json"><span class="icon">🧩</span>favorites.json</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="route_explorer/manifest.json"><span class="icon">🧩</span>manifest.json</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="route_explorer/sw.js"><span class="icon">📜</span>sw.js</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="route_explorer/test.txt"><span class="icon">📝</span>test.txt</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="route_explorer/us_brands.json"><span class="icon">🧩</span>us_brands.json</a>
+</div></div></details>
+<details class="folder">
+<summary style="padding-left:1.6rem"><span class="chev">▶</span><span class="icon">📁</span>Timeline Tool</summary>
+<div class="body-wrap"><div class="body-inner">
+<details class="folder">
+<summary style="padding-left:2.3rem"><span class="chev">▶</span><span class="icon">📁</span>Data</summary>
+<div class="body-wrap"><div class="body-inner">
+<a class="file-row" style="padding-left:3.0rem" target="_blank" href="timeline_tool/data/example_project.json"><span class="icon">🧩</span>example_project.json</a>
+</div></div></details>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="timeline_tool/favicon.svg"><span class="icon">🖼️</span>favicon.svg</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="timeline_tool/icon-192.png"><span class="icon">🖼️</span>icon-192.png</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="timeline_tool/icon-512.png"><span class="icon">🖼️</span>icon-512.png</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="timeline_tool/manifest.json"><span class="icon">🧩</span>manifest.json</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="timeline_tool/sw.js"><span class="icon">📜</span>sw.js</a>
+<a class="file-row" style="padding-left:2.3rem" target="_blank" href="timeline_tool/xlsx.full.min.js"><span class="icon">📜</span>xlsx.full.min.js</a>
+</div></div></details>
+<a class="file-row" style="padding-left:1.6rem" target="_blank" href="fetch_data_pbf.py"><span class="icon">🐍</span>fetch_data_pbf.py</a>
 </div>
 
-<p class="footer-note">Data files powering Route Explorer live in <code>/data</code> and are not directly linked here.</p>
+<p class="footer-note">Excluded from this listing: <code>/data</code> and repo housekeeping files. Edit <code>nav.config.json</code> to change what's shown or how it's labeled.</p>
 
 <script>
   document.getElementById('expandAll').addEventListener('click', () => {
