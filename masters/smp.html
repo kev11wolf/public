@@ -224,9 +224,15 @@
       border-color: var(--masters-green);
     }
 
+   /* AFTER */
     .explore-nav {
       justify-content: center;
       margin: 0 auto 20px auto;
+      background: var(--masters-light-bg);
+    }
+
+    .view-btn {
+      font: inherit;
     }
 
     .explore-nav a {
@@ -1225,19 +1231,41 @@
       color: var(--text-primary);
     }
 /* AFTER — add this anywhere in your <style> block, e.g. right after .collapsible-group rules */
-#secondary-content {
-  display: none;
-}
+/* AFTER */
+    #secondary-content {
+      display: none;
+    }
 
-#secondary-content.revealed {
-  display: block;
-}
+    #secondary-content.revealed {
+      display: block;
+    }
+
+    .content-view {
+      display: none;
+    }
+
+    .content-view.active {
+      display: block;
+    }
 
 /* AFTER — add this as its own new block, right after your existing "@media screen and (max-width: 480px) { ... }" block */
+/* AFTER — add these new rules inside that same media query block */
 @media screen and (max-width: 480px) {
   .leaderboard-grid {
     flex-wrap: nowrap;
     gap: 8px;
+  }
+
+  .leaderboard-grid.focus-pool #golf-leaderboard,
+  .leaderboard-grid.focus-golf #pool-leaderboard {
+    display: none;
+  }
+
+  .leaderboard-grid.focus-pool #pool-leaderboard,
+  .leaderboard-grid.focus-golf #golf-leaderboard {
+    width: 100%;
+    max-width: 100%;
+    flex: 1 1 100%;
   }
 
   .leaderboard-grid > .card,
@@ -1301,17 +1329,18 @@
 
   <main>
     <!-- AFTER — trim quick-nav to leaderboards only, add a second row for everything else -->
-    <nav class="quick-nav sticky-jump-bar" aria-label="Jump to leaderboards">
+   <!-- AFTER -->
+    <nav class="quick-nav" aria-label="Jump to leaderboards">
       <a href="#pool-leaderboard">Pool Leaderboard</a>
       <a href="#golf-leaderboard">Golf Leaderboard</a>
     </nav>
 
-    <nav class="quick-nav explore-nav" aria-label="Explore more content">
-      <a href="#group-announcements">📰 Updates</a>
-      <a href="#group-gallery">🖼️ Gallery</a>
-      <a href="#group-history">🎖️ History</a>
-      <a href="#group-weather">🌤️ Weather</a>
-      <a href="#group-registration">✍️ Register</a>
+    <nav class="quick-nav explore-nav sticky-jump-bar" aria-label="Browse other pages">
+      <button class="view-btn" data-view="group-announcements">📰 Updates</button>
+      <button class="view-btn" data-view="group-gallery">🖼️ Gallery</button>
+      <button class="view-btn" data-view="group-history">🎖️ History</button>
+      <button class="view-btn" data-view="group-weather">🌤️ Weather</button>
+      <button class="view-btn" data-view="group-registration">✍️ Register</button>
     </nav>
 
         <section class="timer card" id="countdown-timer">
@@ -1371,8 +1400,7 @@
     </div>
 
     <section id="secondary-content" aria-label="Additional tournament content">
-      <details class="collapsible-group" id="group-announcements" open>
-        <summary>Announcements</summary>
+      <div class="content-view" id="group-announcements">
         <div class="group-body">
           <section class="updates card" id="news-updates">
   <div class="card-header"><h2>📰 News &amp; Updates</h2></div>
@@ -1509,11 +1537,11 @@
             </div>
           </section>
         </div>
-      </details>
+        </div>
 
-      <details class="collapsible-group" id="group-gallery" open>
-        <summary>Gallery</summary>
+     <div class="content-view" id="group-gallery">
         <div class="group-body">
+        
           <section class="slideshow card" id="augusta-gallery">
             <div class="card-header">
               <h2>🖼️ Augusta Gallery</h2>
@@ -1526,10 +1554,9 @@
             </div>
           </section>
         </div>
-      </details>
+        </div>
 
-      <details class="collapsible-group" id="group-history">
-        <summary>History</summary>
+        <div class="content-view" id="group-history">
         <div class="group-body">
           <section id="historical-winners" class="card">
             <div class="card-header">
@@ -1555,10 +1582,9 @@
             </div>
           </section>
         </div>
-      </details>
+       </div>
 
-      <details class="collapsible-group" id="group-weather">
-        <summary>Weather</summary>
+           <div class="content-view" id="group-weather">
         <div class="group-body">
           <section id="weather-widget" class="card">
             <div class="card-header">
@@ -1573,10 +1599,9 @@
             </div>
           </section>
         </div>
-      </details>
+       </div>
 
-      <details class="collapsible-group" id="group-registration">
-        <summary>Registration</summary>
+           <div class="content-view" id="group-registration">
         <div class="group-body">
           <section id="sommerville-registration" class="card">
             <div class="card-header">
@@ -1592,7 +1617,7 @@
             </div>
           </section>
         </div>
-      </details>
+       </div>
     </section>
 
     <div id="chatango-container">
@@ -1877,35 +1902,29 @@ const audio = new Audio("Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Master
     updateCountdown();
 
     /* AFTER — also un-hide #secondary-content first */
-    function openParentDetailsForTarget(target) {
-      if (!target) return;
+    /* AFTER — replace it with a direct page-switch function */
+    function switchToView(viewId) {
       const secondaryContent = document.getElementById('secondary-content');
-      if (secondaryContent && secondaryContent.contains(target)) {
-        secondaryContent.classList.add('revealed');
-      }
-      const parentDetails = target.closest('details');
-      if (parentDetails) parentDetails.open = true;
+      if (!secondaryContent) return;
+
+      secondaryContent.classList.add('revealed');
+
+      document.querySelectorAll('.content-view').forEach(view => {
+        view.classList.toggle('active', view.id === viewId);
+      });
+
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === viewId);
+      });
+
+      secondaryContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function revealHashTarget() {
-      const hash = window.location.hash;
-      if (!hash) return;
-      const target = document.querySelector(hash);
-      if (!target) return;
-      openParentDetailsForTarget(target);
-    }
-
-    document.addEventListener('click', function(e) {
-      const jumpLink = e.target.closest('a[href^="#"]');
-      if (!jumpLink) return;
-      const targetId = jumpLink.getAttribute('href');
-      if (!targetId || targetId === '#') return;
-      const target = document.querySelector(targetId);
-      if (!target) return;
-      openParentDetailsForTarget(target);
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchToView(btn.dataset.view));
     });
 
-    window.addEventListener('hashchange', revealHashTarget);
+ 
 
     document.addEventListener('DOMContentLoaded', function() {
       document.querySelectorAll('button, .collapse-btn, .quick-nav a, summary').forEach(btn => addRippleEffect(btn));
@@ -2085,11 +2104,13 @@ const audio = new Audio("Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Master
         });
       }
 
-      function updateLeaderboard(listId, data, scoreType, limit, btnId) {
-        const list = document.getElementById(listId);
-        list.innerHTML = '';
-        const btn = btnId ? document.getElementById(btnId) : null;
-        const showAll = !limit;
+     /* AFTER — add the new parameter and grid reference */
+function updateLeaderboard(listId, data, scoreType, limit, btnId, focusClass) {
+  const list = document.getElementById(listId);
+  list.innerHTML = '';
+  const btn = btnId ? document.getElementById(btnId) : null;
+  const grid = document.querySelector('.leaderboard-grid');
+  const showAll = !limit;
 
         if (showAll) {
           data.forEach((item, index) => createListItem(list, item, scoreType, index));
@@ -2106,23 +2127,26 @@ const audio = new Audio("Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Master
         btn.style.display = 'block';
         btn.setAttribute('aria-expanded', 'false');
 
-        let expanded = false;
-        btn.onclick = function() {
-          expanded = !expanded;
-          list.innerHTML = '';
+       /* AFTER — toggle the focus class alongside everything else */
+    let expanded = false;
+    btn.onclick = function() {
+      expanded = !expanded;
+      list.innerHTML = '';
 
-          if (expanded) {
-            data.forEach((item, index) => createListItem(list, item, scoreType, index));
-            btn.textContent = 'Show Less';
-            btn.setAttribute('aria-expanded', 'true');
-            toast.info('Leaderboard', `Showing all ${data.length} players`, 1500);
-          } else {
-            topPlayers.forEach((item, index) => createListItem(list, item, scoreType, index));
-            btn.textContent = 'Show More';
-            btn.setAttribute('aria-expanded', 'false');
-            toast.info('Leaderboard', `Showing top ${topPlayers.length}`, 1500);
-          }
-        };
+      if (expanded) {
+        data.forEach((item, index) => createListItem(list, item, scoreType, index));
+        btn.textContent = 'Show Less';
+        btn.setAttribute('aria-expanded', 'true');
+        if (grid && focusClass) grid.classList.add(focusClass);
+        toast.info('Leaderboard', `Showing all ${data.length} players`, 1500);
+      } else {
+        topPlayers.forEach((item, index) => createListItem(list, item, scoreType, index));
+        btn.textContent = 'Show More';
+        btn.setAttribute('aria-expanded', 'false');
+        if (grid && focusClass) grid.classList.remove(focusClass);
+        toast.info('Leaderboard', `Showing top ${topPlayers.length}`, 1500);
+      }
+    };
       }
 
       async function loadLeaderboards() {
@@ -2251,8 +2275,9 @@ const poolRows = parseCSV(poolText);
             poolLastUpdatedEl.textContent = 'Last updated: ' + now.toLocaleString('en-US', opts);
           }
 
-          updateLeaderboard('golf-list', golfLeaderboardData, 'score', 10, 'toggle-button');
-          updateLeaderboard('pool-list', filteredPool, 'points', 8, 'toggle-pool-button');
+          /* AFTER */
+      updateLeaderboard('golf-list', golfLeaderboardData, 'score', 10, 'toggle-button', 'focus-golf');
+      updateLeaderboard('pool-list', filteredPool, 'points', 8, 'toggle-pool-button', 'focus-pool');
         } catch (err) {
           console.error('Leaderboard error:', err);
           showLBError('golf-list', 'Could not load golf scores — check back soon.');
