@@ -31,8 +31,8 @@
       --text-primary: #1a1a1a;
       --text-secondary: #666;
       --gold: #FFD700;
-      --azalea-photo: url('https://github.com/kev11wolf/public/blob/main/azalea_background.jpg?raw=true');
-    }
+      /* AFTER: relative path, no GitHub redirect dependency */
+--azalea-photo: url('azalea_background.jpg');
 
     
 
@@ -1215,10 +1215,11 @@
     <div id="audio-status" role="status" aria-live="polite"></div>
   </div>
 
-  <header>
-    <a href="https://kev11wolf.github.io/smp/" aria-label="Sommerville Masters Pool Home">
-      <img src="https://esagcs.org/wp-content/uploads/2023/03/The-Masters.jpg" alt="The Masters Tournament Logo" class="logo">
-    </a>
+  <!-- AFTER: points at the real deployed page (adjust if your live URL differs) -->
+<header>
+  <a href="https://kev11wolf.github.io/public/masters/smp.html" aria-label="Sommerville Masters Pool Home">
+    <img src="https://esagcs.org/wp-content/uploads/2023/03/The-Masters.jpg" alt="The Masters Tournament Logo" class="logo">
+  </a>
     <h1>Sommerville Masters Pool</h1>
   </header>
 
@@ -1313,13 +1314,14 @@
 
     <hr class="news-gold-divider">
 
-    <img
-        src="https://github.com/kev11wolf/public/blob/main/smp-main/smp-main/winner_2026.JPG?raw=true"
-        alt="2026 Sommerville Masters Pool Winner — Justin E."
-        class="announcement-photo"
-        style="max-height:500px;width:auto;max-width:100%;display:block;margin:0 auto 14px auto;border-radius:8px;object-fit:contain;"
-        onerror="this.style.display='none'"
-      >
+   <!-- AFTER: relative path — the file already lives in the same "masters" folder as this page -->
+<img
+    src="winner_2026.JPG"
+    alt="2026 Sommerville Masters Pool Winner — Justin E."
+    class="announcement-photo"
+    style="max-height:500px;width:auto;max-width:100%;display:block;margin:0 auto 14px auto;border-radius:8px;object-fit:contain;"
+    onerror="this.style.display='none'"
+>
 
       <div class="news-item news-item--charcoal">
       <div class="news-tag">🎉 Pool Report — Justin E. Takes the Crown</div>
@@ -1474,7 +1476,10 @@
               <h2>🌤️ Augusta Weather</h2>
             </div>
             <div class="card-content">
-              <div id="weather-current" style="margin-bottom: 15px;" aria-live="polite">Loading current weather…</div>
+              <!-- AFTER -->
+<div id="weather-current" style="margin-bottom: 15px;" aria-live="polite">
+  <span class="spinner" aria-hidden="true"></span> Loading current weather…
+</div>
               <div id="weather-forecast" aria-live="polite">Loading 7-day forecast…</div>
             </div>
           </section>
@@ -1697,7 +1702,8 @@
       });
     }
 
-    const audio = new Audio("https://github.com/kev11wolf/public/raw/refs/heads/main/smp-main/smp-main/Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Masters%20Theme%20Song%20On%20Repeat(1).mp3");
+    // AFTER: relative path, URL-encode only the spaces/parens, no folder guessing needed
+const audio = new Audio("Enjoy%20the%20Sound%20Of%20_Augusta_%20_%20The%20Masters%20Theme%20Song%20On%20Repeat(1).mp3");
     audio.loop = true;
     audio.volume = 0.5;
 
@@ -2032,10 +2038,15 @@
             fetch(csvUrl(POOL_SHEET_NAME))
           ]);
 
-          if (!golfResp.ok || !poolResp.ok) throw new Error('fetch failed');
-
-          const golfRows = parseCSV(await golfResp.text());
-          const poolRows = parseCSV(await poolResp.text());
+         // AFTER: reject HTML error pages that Google can return with a 200 status
+if (!golfResp.ok || !poolResp.ok) throw new Error('fetch failed');
+const golfText = await golfResp.text();
+const poolText = await poolResp.text();
+if (golfText.trim().startsWith('<') || poolText.trim().startsWith('<')) {
+  throw new Error('Sheet returned HTML instead of CSV — check sharing permissions');
+}
+const golfRows = parseCSV(golfText);
+const poolRows = parseCSV(poolText);
 
           const gh = golfRows[0].map(h => h.toLowerCase().trim());
           const gNameC = gh.indexOf('name');
