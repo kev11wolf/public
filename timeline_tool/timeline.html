@@ -3736,24 +3736,16 @@ document.addEventListener('dblclick', (e) => {
                     <option value="bottom" ${callout.leaderAttachment === 'bottom' || !callout.leaderAttachment ? 'selected' : ''}>Bottom Center</option>
                 </select>
             </div>
-                        <div class="dialog-row" style="margin-top: 5px;">
-                <label><input type="checkbox" ${callout.isBold ? 'checked' : ''} onchange="updateCalloutProperty('${id}', 'isBold', this.checked); renderCalloutControls();"> Bold Text</label>
-                <label><input type="checkbox" ${callout.bgTransparent ? 'checked' : ''} onchange="updateCalloutProperty('${id}', 'bgTransparent', this.checked); renderCalloutControls();"> Clear BG</label>
-            </div>
-            <div class="dialog-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); justify-content: space-between;">
-                <div style="display:flex; flex-direction:column; align-items:center;">
-                    <span style="font-size:10px;">Text</span>
-                    <input type="color" value="${callout.textColor}" onchange="updateCalloutProperty('${id}', 'textColor', this.value); renderCalloutControls();" style="cursor: pointer;">
-                </div>
-                <div style="display:flex; flex-direction:column; align-items:center;">
-                    <span style="font-size:10px;">Leader</span>
-                    <input type="color" value="${callout.leaderColor || callout.textColor}" onchange="updateCalloutProperty('${id}', 'leaderColor', this.value); renderCalloutControls();" style="cursor: pointer;">
-                </div>
-                <div style="display:flex; flex-direction:column; align-items:center;">
-                    <span style="font-size:10px;">Back</span>
-                    <input type="color" value="${callout.bgColor}" onchange="updateCalloutProperty('${id}', 'bgColor', this.value); renderCalloutControls();" ${callout.bgTransparent ? 'disabled' : ''} style="cursor: pointer;">
-                </div>
-            </div>
+                        <div class="dialog-row" style="margin-top:5px;">
+    <label><input type="checkbox" ${callout.isBold ? 'checked' : ''} onchange="updateCalloutProperty(id, 'isBold', this.checked); renderCalloutControls();">Bold Text</label>
+    <label><input type="checkbox" ${callout.bgTransparent ? 'checked' : ''} onchange="updateCalloutProperty(id, 'bgTransparent', this.checked); renderCalloutControls();">Clear BG</label>
+    <label><input type="checkbox" ${callout.showLeader === false ? '' : 'checked'} onchange="updateCalloutProperty(id, 'showLeader', this.checked); renderCalloutControls();">Show Leader</label>
+</div>
+           <div class="dialog-row" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-color); justify-content:flex-start; gap:16px;">
+    <div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Text</span><input type="color" value="${callout.textColor}" onchange="updateCalloutProperty(id, 'textColor', this.value); renderCalloutControls();" style="cursor:pointer;"></div>
+    <div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Leader</span><input type="color" value="${callout.leaderColor || callout.textColor}" onchange="updateCalloutProperty(id, 'leaderColor', this.value); renderCalloutControls();" style="cursor:pointer;"></div>
+    <div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Back</span><input type="color" value="${callout.bgColor}" onchange="updateCalloutProperty(id, 'bgColor', this.value); renderCalloutControls();" ${callout.bgTransparent ? 'disabled' : ''} style="cursor:pointer;"></div>
+</div>
             <div class="dialog-actions" style="margin-top: 15px;">
                 <button class="primary-btn" onclick="document.getElementById('floatingCalloutDialog').remove()">Done</button>
                 <button class="utility-btn" onclick="removeCallout('${id}')" style="color: var(--danger); border-color: #fca5a5;">Delete</button>
@@ -4059,7 +4051,12 @@ document.addEventListener('dblclick', (e) => {
     }
     function updateLaneColor(laneIdx, val) { projectData[laneIdx].color = val; recordStateChange(); updateChart(); }
     function updateLaneTitle(laneIdx, val) { projectData[laneIdx].title = val; recordStateChange(); updateChart(); }
-    function addNewSwimlane() { projectData.push({ id: projectData.length, title: "New Building Workstream", color: "#f8fafc", showSummary: true, rows: [] }); recordStateChange(); renderInputRows(); updateChart(); }
+    function addNewSwimlane() {
+    projectData.push({ id: projectData.length, title: 'New Building Workstream', color: '#f8fafc', showSummary: true, collapsed: true, rows: [] });
+    recordStateChange();
+    renderInputRows();
+    updateChart();
+}
     function deleteSwimlane(laneIdx) { projectData.splice(laneIdx, 1); recordStateChange(); renderInputRows(); updateChart(); }
 
     function addNewRowToLane(laneIdx) {
@@ -4752,13 +4749,10 @@ svg += allLayerBarsBuffer
                 lBaseY = callout.y;
             }
 
-            // Draw Leader Line
-            svg += `<line x1="${lBaseX}" y1="${lBaseY}" x2="${callout.leaderX}" y2="${callout.leaderY}" 
-                    stroke="${strokeColor}" stroke-width="${lThick}" style="pointer-events: none;" />`;
-            
-            // Draw Interactive Target Handle (End)
-            svg += `<circle class="draggable-leader" data-id="${callout.id}" cx="${callout.leaderX}" cy="${callout.leaderY}" r="5" 
-                    fill="transparent" stroke="transparent" stroke-width="6" cursor="crosshair" />`;
+            if (callout.showLeader !== false) {
+    svg += `<line x1="${lBaseX}" y1="${lBaseY}" x2="${callout.leaderX}" y2="${callout.leaderY}" stroke="${strokeColor}" stroke-width="${lThick}" style="pointer-events:none;" />`;
+    svg += `<circle class="draggable-leader" data-id="${callout.id}" cx="${callout.leaderX}" cy="${callout.leaderY}" r="5" fill="transparent" stroke="transparent" stroke-width="6" style="cursor:crosshair;" />`;
+}
 
             // Draw Callout Box
             svg += `<rect class="draggable-callout" data-id="${callout.id}" 
@@ -5121,18 +5115,7 @@ function clearSidebarSearch() {
     renderInputRows();
     toggleSearchClearBtn();
 }
-    function applyCalloutLeaderVisibility() {
-        calloutData.forEach(callout => {
-            const handle = document.querySelector(`.draggable-leader[data-id="${callout.id}"]`);
-            if (!handle) return;
-            const leaderLine = handle.previousElementSibling;
-            const shouldShow = callout.showLeader !== false;
-            handle.style.display = shouldShow ? "" : "none";
-            if (leaderLine && leaderLine.tagName === "line") {
-                leaderLine.style.display = shouldShow ? "" : "none";
-            }
-        });
-    }
+   
 function toggleRowCardDetails(btn) {
     const card = btn.closest('.row-card');
     if (!card) return;
@@ -5140,18 +5123,25 @@ function toggleRowCardDetails(btn) {
     btn.textContent = card.classList.contains('details-expanded') ? '▲ Hide' : '▼ Details';
 }
    
-        function applyCalloutLeaderVisibility() {
-        calloutData.forEach(callout => {
-            const handle = document.querySelector(`.draggable-leader[data-id="${callout.id}"]`);
-            if (!handle) return;
-            const leaderLine = handle.previousElementSibling;
-            const shouldShow = callout.showLeader !== false;
-            handle.style.display = shouldShow ? "" : "none";
-            if (leaderLine && leaderLine.tagName === "line") {
-                leaderLine.style.display = shouldShow ? "" : "none";
+       function applyCalloutLeaderVisibility() {
+    calloutData.forEach(callout => {
+        const handle = document.querySelector(`.draggable-leader[data-id="${callout.id}"]`);
+        if (!handle) return;
+        const shouldShow = callout.showLeader !== false;
+        handle.style.display = shouldShow ? "" : "none";
+
+        const cx = handle.getAttribute("cx");
+        const cy = handle.getAttribute("cy");
+        const svgRoot = handle.ownerSVGElement || handle.closest("svg");
+        if (!svgRoot) return;
+
+        svgRoot.querySelectorAll("line").forEach(line => {
+            if (line.getAttribute("x2") === cx && line.getAttribute("y2") === cy) {
+                line.style.display = shouldShow ? "" : "none";
             }
         });
-    }
+    });
+}
 
     const originalUpdateChart = updateChart;
     updateChart = function () {
