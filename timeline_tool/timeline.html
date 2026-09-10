@@ -3583,14 +3583,31 @@ function generateUUID() { return Math.random().toString(36).substring(2) + Date.
 
 function addNewCallout(targetX = 350, targetY = 100) {
     calloutData.push({
-        id: generateUUID(), text: "New Callout",
-        x: targetX, y: targetY - 50, 
-        leaderX: targetX, leaderY: targetY, 
-        leaderAttachment: 'center', 
-        bgColor: "#ffffff", textColor: "#ef4444", leaderColor: "#ef4444",
-        fontSize: 14, isBold: true, bgTransparent: false, leaderThickness: 2
+        id: generateUUID(),
+        text: "New Callout",
+        x: targetX,
+        y: targetY - 50,
+
+        // Leader endpoint position on the SVG.
+        leaderX: targetX,
+        leaderY: targetY,
+
+        // Explicitly set this so every callout has the same data structure.
+        showLeader: true,
+
+        leaderAttachment: "center",
+        bgColor: "#ffffff",
+        textColor: "#ef4444",
+        leaderColor: "#ef4444",
+        fontSize: 14,
+        isBold: true,
+        bgTransparent: false,
+        leaderThickness: 2
     });
-    renderCalloutControls(); updateChart();
+
+    recordStateChange();
+    renderCalloutControls();
+    updateChart();
 }
 
 function removeCallout(id) {
@@ -3600,16 +3617,21 @@ function removeCallout(id) {
     if (dlg) dlg.remove();
 }
 
-function updateCalloutProperty(id, property, value) {
+function setCalloutLeaderVisibility(id, shouldShowLeader) {
     const callout = calloutData.find(c => c.id === id);
-    if (callout) {
-        if (property === 'fontSize' || property === 'leaderThickness') {
-            callout[property] = parseInt(value) || 2;
-        } else {
-            callout[property] = value;
-        }
-        updateChart();
+
+    if (!callout) {
+        console.warn('Could not find callout with id:', id);
+        return;
     }
+
+    // This one boolean is the official on/off switch for the leader line.
+    callout.showLeader = Boolean(shouldShowLeader);
+
+    // Save the data first, then refresh both user interfaces.
+    recordStateChange();
+    renderCalloutControls();
+    updateChart();
 }
 
 function renderCalloutControls() {
@@ -3619,10 +3641,12 @@ function renderCalloutControls() {
         <div style="border: 1px solid var(--border-color); padding: 6px; margin-top: 6px; border-radius: 4px; background: #f8fafc;">
             <div style="display: flex; gap: 4px; margin-bottom: 4px;">
                 <input type="text" value="${c.text}" oninput="updateCalloutProperty('${c.id}', 'text', this.value)" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
-                <button onclick="removeCallout('${c.id}')" style="background: var(--danger); color: white; border: none; border-radius: 3px; cursor: pointer; padding: 2px 8px;">X</button><label style="font-size:10px; display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
-    <input type="checkbox" ${c.showLeader === false ? "" : "checked"}
-        onchange="updateCalloutProperty(c.id, 'showLeader', this.checked)">
-    Leader
+                <button onclick="removeCallout('${c.id}')" style="background: var(--danger); color: white; border: none; border-radius: 3px; cursor: pointer; padding: 2px 8px;">X</button>
+                <label style="font-size:10px; display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+    <input type="checkbox"
+           ${c.showLeader !== false ? 'checked' : ''}
+           onchange="setCalloutLeaderVisibility('${c.id}', this.checked);">
+    Show Leader
 </label>
             </div>
             <div style="display: flex; gap: 6px; align-items: center; font-size: 11px; flex-wrap: wrap;">
@@ -3739,7 +3763,12 @@ document.addEventListener('dblclick', (e) => {
                         <div class="dialog-row" style="margin-top:5px;">
     <label><input type="checkbox" ${callout.isBold ? 'checked' : ''} onchange="updateCalloutProperty(id, 'isBold', this.checked); renderCalloutControls();">Bold Text</label>
     <label><input type="checkbox" ${callout.bgTransparent ? 'checked' : ''} onchange="updateCalloutProperty(id, 'bgTransparent', this.checked); renderCalloutControls();">Clear BG</label>
-    <label><input type="checkbox" ${callout.showLeader === false ? '' : 'checked'} onchange="updateCalloutProperty(id, 'showLeader', this.checked); renderCalloutControls();">Show Leader</label>
+   <label>
+    <input type="checkbox"
+           ${callout.showLeader !== false ? 'checked' : ''}
+           onchange="setCalloutLeaderVisibility('${id}', this.checked);">
+    Show Leader
+</label>
 </div>
            <div class="dialog-row" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-color); justify-content:flex-start; gap:16px;">
     <div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Text</span><input type="color" value="${callout.textColor}" onchange="updateCalloutProperty(id, 'textColor', this.value); renderCalloutControls();" style="cursor:pointer;"></div>
