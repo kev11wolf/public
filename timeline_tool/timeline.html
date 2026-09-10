@@ -5157,11 +5157,7 @@ function clearSidebarSearch() {
         });
     }
 
-    const originalUpdateChart = updateChart;
-    updateChart = function () {
-        originalUpdateChart();
-        applyCalloutLeaderVisibility();
-    };
+   
         function applyCalloutLeaderVisibility() {
         calloutData.forEach(callout => {
             const handle = document.querySelector(`.draggable-leader[data-id="${callout.id}"]`);
