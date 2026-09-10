@@ -2100,10 +2100,10 @@ function csvText(value) {
             return input;
         }
 
-                gridTableInstance = new Tabulator("#dataGridContainer", {
+                     gridTableInstance = new Tabulator("#dataGridContainer", {
             data: rows,
             layout: "fitColumns",
-            height: "500px",
+            height: "calc(100vh - 220px)",
             columns: [
                 { title: "Type", field: "type", editable: false, headerFilter: "input", width: 100 },
                 { title: "Swimlane", field: "swimlane", editable: false, headerFilter: "input" },
@@ -2758,95 +2758,48 @@ function migrateSnapshotIfNeeded(state) {
     return state;
 }
 
-    function loadApplicationState() {
-    const structuralBackupCache = localStorage.getItem('gantt_v8_master_snapshot');
-    if (!structuralBackupCache && !localStorage.getItem('gantt_seen_welcome')) {
-        const overlayEl = document.getElementById('welcomeOverlay');
-        if (overlayEl) overlayEl.style.display = 'flex';
-    }
-    if (structuralBackupCache) {
-        try {
-            let parsedState = migrateSnapshotIfNeeded(JSON.parse(structuralBackupCache));
-            actionUndoStack.push(JSON.stringify(parsedState));
-            restoreStateFromSnapshot(parsedState);
-        } catch (err) {
-            showToast("Saved data was corrupted or from an incompatible version. Loading sample project instead.", "error", 5000);
-            localStorage.removeItem('gantt_v8_master_snapshot');
-            loadApplicationState();
-            return;
-        }
-    } else {
-       projectData = [
-    { id: 0, title: "Site Preparation", color: "#eff6ff", showSummary: true, rows: [
-        { id: 0, label: "Sitework & Earthwork", predecessor: "", showDateRange: true,
-          bars: [
-            { id: 5001, p6Id: "A1000", start: "05Jan2026", end: "20Feb2026", progress: 100, bgColor: "", color: "", pattern: "solid" }
-          ],
-          milestones: [
-            { id: 1000, p6Id: "M2000", label: "Site Cleared & Graded", date: "20Feb2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle", leaderEnabledText: false, leaderAnchorText: "center" }
-        ]}
-    ]},
-    { id: 1, title: "Foundation", color: "#fff7ed", showSummary: true, rows: [
-        { id: 1, label: "Footings & Slab Pour", predecessor: "", showDateRange: true,
-          bars: [
-            { id: 5002, p6Id: "A1010", start: "23Feb2026", end: "10Apr2026", progress: 60, bgColor: "", color: "", pattern: "crosshatch" }
-          ],
-          milestones: [
-            { id: 1001, p6Id: "M2010", label: "Foundation Inspection Passed", date: "10Apr2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: "", symbol: "diamond", leaderEnabledText: true, leaderAnchorText: "center" }
-        ]}
-    ]},
-    { id: 2, title: "Structure & Envelope", color: "#f0fdf4", showSummary: true, rows: [
-        { id: 2, label: "Steel Erection", predecessor: "", showDateRange: true,
-          bars: [
-            { id: 5003, p6Id: "A1020", start: "13Apr2026", end: "15Jun2026", progress: 10, bgColor: "", color: "", pattern: "solid" }
-          ],
-          milestones: [
-            { id: 1002, p6Id: "M2020", label: "Topping Out", date: "15Jun2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "diamond", leaderEnabledText: false, leaderAnchorText: "center" }
+ function loadApplicationState() {
+    localStorage.removeItem('gantt_v8_master_snapshot');
+
+    projectData = [
+        { id: 0, title: 'Site Preparation', color: '#eff6ff', showSummary: true, rows: [
+            { id: 0, label: 'Sitework & Earthwork', predecessor: '', showDateRange: true,
+              bars: [{ id: 5001, p6Id: 'A1000', start: '05Jan2026', end: '20Feb2026', progress: 100, bgColor: '', color: '', pattern: 'solid' }],
+              milestones: [{ id: 1000, p6Id: 'M2000', label: 'Site Cleared & Graded', date: '20Feb2026', showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: '', symbol: 'circle', leaderEnabledText: false, leaderAnchorText: 'center' }]
+            }
         ]},
-        { id: 3, label: "Roofing & Exterior Skin", predecessor: "2", showDateRange: true,
-          bars: [
-            { id: 5004, p6Id: "A1030", start: "16Jun2026", end: "10Aug2026", progress: 0, bgColor: "", color: "", pattern: "solid" }
-        ], milestones: []}
-    ]},
-    { id: 3, title: "MEP Rough-In", color: "#fdf4ff", showSummary: true, rows: [
-        { id: 4, label: "Mechanical, Electrical, Plumbing", predecessor: "3", showDateRange: true,
-          bars: [
-            { id: 5005, p6Id: "A1040", start: "11Aug2026", end: "30Sep2026", progress: 0, bgColor: "", color: "", pattern: "diagonal" }
-          ],
-          milestones: [
-            { id: 1003, p6Id: "M2030", label: "MEP Rough-In Inspection", date: "30Sep2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "", symbol: "circle", leaderEnabledText: false, leaderAnchorText: "center" }
+        { id: 1, title: 'Foundation', color: '#fff7ed', showSummary: true, rows: [
+            { id: 1, label: 'Footings & Slab Pour', predecessor: '', showDateRange: true,
+              bars: [{ id: 5002, p6Id: 'A1010', start: '23Feb2026', end: '10Apr2026', progress: 60, bgColor: '', color: '', pattern: 'crosshatch' }],
+              milestones: [{ id: 1001, p6Id: 'M2010', label: 'Foundation Inspection Passed', date: '10Apr2026', showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, color: '', symbol: 'diamond', leaderEnabledText: true, leaderAnchorText: 'center' }]
+            }
+        ]},
+        { id: 2, title: 'Structure & Envelope', color: '#f0fdf4', showSummary: true, rows: [
+            { id: 2, label: 'Steel Erection', predecessor: '', showDateRange: true,
+              bars: [{ id: 5003, p6Id: 'A1020', start: '13Apr2026', end: '15Jun2026', progress: 10, bgColor: '', color: '', pattern: 'solid' }],
+              milestones: [{ id: 1002, p6Id: 'M2020', label: 'Topping Out', date: '15Jun2026', showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: '', symbol: 'diamond', leaderEnabledText: false, leaderAnchorText: 'center' }]
+            },
+            { id: 3, label: 'Roofing & Exterior Skin', predecessor: 2, showDateRange: true,
+              bars: [{ id: 5004, p6Id: 'A1030', start: '16Jun2026', end: '10Aug2026', progress: 0, bgColor: '', color: '', pattern: 'solid' }],
+              milestones: []
+            }
+        ]},
+        { id: 3, title: 'MEP Rough-In', color: '#fdf4ff', showSummary: true, rows: [
+            { id: 4, label: 'Mechanical, Electrical, Plumbing', predecessor: 3, showDateRange: true,
+              bars: [{ id: 5005, p6Id: 'A1040', start: '11Aug2026', end: '30Sep2026', progress: 0, bgColor: '', color: '', pattern: 'diagonal' }],
+              milestones: [{ id: 1003, p6Id: 'M2030', label: 'MEP Rough-In Inspection', date: '30Sep2026', showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: '', symbol: 'circle', leaderEnabledText: false, leaderAnchorText: 'center' }]
+            }
+        ]},
+        { id: 4, title: 'Interior Finishes & Closeout', color: '#fef2f2', showSummary: true, rows: [
+            { id: 5, label: 'Drywall, Paint & Trim', predecessor: 4, showDateRange: true,
+              bars: [{ id: 5006, p6Id: 'A1050', start: '01Oct2026', end: '15Dec2026', progress: 0, bgColor: '', color: '', pattern: 'solid' }],
+              milestones: [{ id: 1004, p6Id: 'M2040', label: 'Substantial Completion', date: '15Dec2026', showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: '#b71010', symbol: 'diamond', leaderEnabledText: true, leaderEnabledDate: true, leaderAnchorText: 'center' }]
+            }
         ]}
-    ]},
-    { id: 4, title: "Interior Finishes & Closeout", color: "#fef2f2", showSummary: true, rows: [
-        { id: 5, label: "Drywall, Paint & Trim", predecessor: "4", showDateRange: true,
-          bars: [
-            { id: 5006, p6Id: "A1050", start: "01Oct2026", end: "15Dec2026", progress: 0, bgColor: "", color: "", pattern: "solid" }
-          ],
-          milestones: [
-            { id: 1004, p6Id: "M2040", label: "Substantial Completion", date: "15Dec2026", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0, color: "#b71010", symbol: "diamond", leaderEnabledText: true, leaderEnabledDate: true, leaderAnchorText: "center" }
-        ]}
-    ]}
-];
+    ];
+
     customTrackers = [
-        { id: 7001, label: "Permit Renewal Deadline", date: "01May2026", thickness: 2, pattern: "dashed", color: "#e11d48", labelOffsetX: 0, labelOffsetY: 0 }
-    ];
-    calloutData = [
-        { id: generateUUID(), text: "Sample project: double-click any element to edit, right-click a row to insert bars/milestones", x: 420, y: 40, leaderX: 380, leaderY: 90, bgColor: "#fffbeb", textColor: "#92400e", fontSize: 12, isBold: true, bgTransparent: false, leaderThickness: 2, leaderAttachment: "bottom" }
-    ];
-    nextRowId = 6; nextMsId = 1005; nextBarId = 5007; nextTrackerId = 7002;
-    
-            const seedSnapshot = {
-                data: projectData, trackers: customTrackers, nextRowId: nextRowId, nextMsId: nextMsId, nextBarId: nextBarId, nextTrackerId: nextTrackerId, rangeMode: 'manual', sizingMode: 'fixed',
-                customBoundaryMin: '01Jan2026', customBoundaryMax: '01Feb2027', fontFamily: "Tahoma, sans-serif",
-                fontSize: 10, swimlaneHeight: 30, canvasWidth: 900,
-rowLabelWidth: 240,
-rowHeight: 50,
-barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#000000', todayColor: '#b71010', masterLeaderColor: '#94a3b8', headerColor: '#000000',
-                showVGrid: true, showAlignGrid: false, snapResolution: "0", workspaceZoom: "1.0", todayLineToggle: 'show', showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: true, showHeaderDay: false
-            };
-            actionUndoStack.push(JSON.stringify(seedSnapshot)); restoreStateFromSnapshot(seedSnapshot);
-        }
-    }
+        { id: 7001, label: 'Permit Renewal Deadline', date: '01May2026',
 
     function updateLaneSummary(laneIdx, val) { 
         projectData[laneIdx].showSummary = val; 
