@@ -10,7 +10,9 @@
   <!-- SheetJS Library for reading Excel files -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2563eb">
-    <script src="xlsx.full.min.js"></script>
+      <script src="xlsx.full.min.js"></script>
+  <script src="tabulator.min.js"></script>
+  <link rel="stylesheet" href="tabulator.min.css">
     <style>
         :root {
     --bg-main: #f4f6f9;
@@ -542,6 +544,14 @@ input[type="color"] {
 .zoom-pill-btn:hover { border-color: var(--primary); color: var(--primary); }
 .zoom-pill-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
 
+.view-toggle-group { display: flex; gap: 6px; margin-bottom: 12px; }
+.view-toggle-btn {
+    background: #ffffff; color: var(--text-muted); border: 1px solid #cbd5e1;
+    padding: 8px 16px; font-size: 13px; font-weight: 700; border-radius: 6px; cursor: pointer;
+}
+.view-toggle-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+#dataGridContainer { display: none; background: #ffffff; border-radius: 8px; padding: 5px; }
+
     </style>
 </head>
 <body>
@@ -834,11 +844,16 @@ input[type="color"] {
     <button type="button" class="utility-btn" onclick="toggleSidebarLayout()" style="display:inline-flex; align-items:center; float:left; margin-right:12px; margin-top:-3px; padding:4px 8px;">
         Presentation Mode
     </button>
-    Live Scalable Vector Workspace Canvas
+       Live Scalable Vector Workspace Canvas
     <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:10px;">
         Right-click row track inside canvas to insert shapes; double-click elements to customize
     </span>
 </h2>
+
+<div class="view-toggle-group">
+    <button type="button" id="timelineViewBtn" class="view-toggle-btn active" onclick="switchMainView('timeline')">📊 Timeline View</button>
+    <button type="button" id="gridViewBtn" class="view-toggle-btn" onclick="switchMainView('grid')">📋 Data Grid View</button>
+</div>
 
 <!-- LIVE PROJECT DASHBOARD -->
 <div id="projectDashboard" class="project-dashboard">
@@ -879,6 +894,7 @@ input[type="color"] {
     </div>
 </div>
 
+<div id="svgViewWrapper">
 <div class="zoom-viewport-mask">
                 <div class="canvas-holder" id="svgContainer" onmousemove="handleGlobalDragMove(event); updateTimelineCrosshair(event)" onmouseup="stopGlobalDragAction(event)" onmouseleave="stopGlobalDragAction(event); hideTimelineCrosshair()">
                 </div>
@@ -919,10 +935,13 @@ input[type="color"] {
                 </div>
             </div>
 
-            <div class="export-button-group">
+                       <div class="export-button-group">
     <button class="download-btn" id="svgDownloadBtn" style="background: var(--primary);" onclick="downloadSVG()">Download Smart SVG Vector Layout</button>
     <button class="download-btn" id="pngDownloadBtn" style="background: var(--success);" onclick="downloadPNG()">Download High-Res Presentation PNG (2x)</button>
 </div>
+</div> <!-- closes svgViewWrapper -->
+
+<div id="dataGridContainer"></div>
         </div>
     </div>
 
@@ -951,6 +970,18 @@ let nextRowId = 4;
     let nextMsId = 1008;
     let nextBarId = 5001;
     let nextTrackerId = 7001;
+
+let currentMainView = "timeline";
+let gridTableInstance = null;
+
+function switchMainView(mode) {
+    currentMainView = mode;
+    document.getElementById("svgViewWrapper").style.display = (mode === "timeline") ? "block" : "none";
+    document.getElementById("dataGridContainer").style.display = (mode === "grid") ? "block" : "none";
+    document.getElementById("timelineViewBtn").classList.toggle("active", mode === "timeline");
+    document.getElementById("gridViewBtn").classList.toggle("active", mode === "grid");
+    if (mode === "grid") { initDataGrid(); }
+}
 
     let actionUndoStack = [];
     let actionRedoStack = [];
@@ -1966,6 +1997,85 @@ function csvText(value) {
         .replace(/\r?\n/g, ' ') // Keeps each item on one Excel row
         .replace(/,/g, ' ');   // Matches your current comma-removal approach
 }
+    // =========================================================================
+    // LIVE DATA GRID (edits go straight into projectData — no file needed)
+    // =========================================================================
+    function flattenProjectDataForGrid() {
+        let gridRows = [];
+        projectData.forEach((lane, laneIdx) => {
+            (lane.rows || []).forEach((row, rowIdx) => {
+                (row.bars || []).forEach((bar, barIdx) => {
+                    gridRows.push({
+                        _laneIdx: laneIdx, _rowIdx: rowIdx, _barIdx: barIdx, _msIdx: null,
+                        type: "Bar", swimlane: lane.title, task: row.label,
+                        start: bar.start, end: bar.end,
+                        progress: bar.progress ?? 0,
+                        color: bar.color || "", pattern: bar.pattern || "solid"
+                    });
+                });
+                (row.milestones || []).forEach((ms, msIdx) => {
+                    gridRows.push({
+                        _laneIdx: laneIdx, _rowIdx: rowIdx, _barIdx: null, _msIdx: msIdx,
+                        type: "Milestone", swimlane: lane.title, task: row.label,
+                        start: ms.date, end: ms.date, progress: "",
+                        color: ms.color || "", pattern: ms.symbol || "diamond"
+                    });
+                });
+            });
+        });
+        return gridRows;
+    }
+
+    function applyGridEditToProjectData(rowData, field, value) {
+        const lane = projectData[rowData._laneIdx];
+        if (!lane) return;
+        const row = lane.rows[rowData._rowIdx];
+        if (!row) return;
+
+        if (rowData._barIdx !== null) {
+            const bar = row.bars[rowData._barIdx];
+            if (!bar) return;
+            if (field === "start") bar.start = normalizeDateString(value);
+            else if (field === "end") bar.end = normalizeDateString(value);
+            else if (field === "progress") bar.progress = Math.max(0, Math.min(100, parseInt(value, 10) || 0));
+            else if (field === "color") bar.color = value;
+            else if (field === "pattern") bar.pattern = value;
+        } else if (rowData._msIdx !== null) {
+            const ms = row.milestones[rowData._msIdx];
+            if (!ms) return;
+            if (field === "start" || field === "end") ms.date = normalizeDateString(value);
+            else if (field === "color") ms.color = value;
+            else if (field === "pattern") ms.symbol = value;
+        }
+
+        recordStateChange();
+        updateChart();
+    }
+
+    function initDataGrid() {
+        const rows = flattenProjectDataForGrid();
+        if (gridTableInstance) { gridTableInstance.setData(rows); return; }
+
+        gridTableInstance = new Tabulator("#dataGridContainer", {
+            data: rows,
+            layout: "fitColumns",
+            columns: [
+                { title: "Type", field: "type", editable: false, width: 100 },
+                { title: "Swimlane", field: "swimlane", editable: false },
+                { title: "Task", field: "task", editable: false },
+                { title: "Start / Date", field: "start", editor: "input" },
+                { title: "End", field: "end", editor: "input" },
+                { title: "Progress %", field: "progress", editor: "number", editorParams: { min: 0, max: 100 } },
+                { title: "Color", field: "color", editor: "input" },
+                { title: "Pattern / Symbol", field: "pattern", editor: "input" }
+            ]
+        });
+
+        gridTableInstance.on("cellEdited", function (cell) {
+            applyGridEditToProjectData(cell.getRow().getData(), cell.getField(), cell.getValue());
+        });
+    }
+
     // =========================================================================
     // OVERHAULED ARCHITECTURE: FLATTENED EXCEL CSV AUTOMATION ENGINE
     // =========================================================================
