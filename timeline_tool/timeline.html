@@ -2000,7 +2000,7 @@ function csvText(value) {
     // =========================================================================
     // LIVE DATA GRID (edits go straight into projectData — no file needed)
     // =========================================================================
-       function flattenProjectDataForGrid() {
+           function flattenProjectDataForGrid() {
         let gridRows = [];
         projectData.forEach((lane, laneIdx) => {
             (lane.rows || []).forEach((row, rowIdx) => {
@@ -2008,6 +2008,7 @@ function csvText(value) {
                     gridRows.push({
                         _laneIdx: laneIdx, _rowIdx: rowIdx, _barIdx: barIdx, _msIdx: null,
                         type: "Bar", swimlane: lane.title, task: row.label,
+                        labelName: "",
                         predecessor: row.predecessor || "",
                         p6IdStart: bar.p6IdStart || "", p6IdFinish: bar.p6IdFinish || "",
                         start: bar.start, end: bar.end,
@@ -2020,6 +2021,7 @@ function csvText(value) {
                     gridRows.push({
                         _laneIdx: laneIdx, _rowIdx: rowIdx, _barIdx: null, _msIdx: msIdx,
                         type: "Milestone", swimlane: lane.title, task: row.label,
+                        labelName: ms.label || "",
                         predecessor: row.predecessor || "",
                         p6IdStart: ms.p6IdStart || "", p6IdFinish: ms.p6IdFinish || "",
                         start: ms.date, end: ms.date, progress: "",
@@ -2032,7 +2034,7 @@ function csvText(value) {
         return gridRows;
     }
 
-        function applyGridEditToProjectData(rowData, field, value) {
+           function applyGridEditToProjectData(rowData, field, value) {
         const lane = projectData[rowData._laneIdx];
         if (!lane) return;
         const row = lane.rows[rowData._rowIdx];
@@ -2043,6 +2045,17 @@ function csvText(value) {
             recordStateChange();
             renderInputRows();
             updateChart();
+            return;
+        }
+
+        if (field === "labelName" && rowData._msIdx !== null) {
+            const ms = row.milestones[rowData._msIdx];
+            if (ms) {
+                ms.label = value;
+                recordStateChange();
+                renderInputRows();
+                updateChart();
+            }
             return;
         }
 
@@ -2087,16 +2100,15 @@ function csvText(value) {
             return input;
         }
 
-        gridTableInstance = new Tabulator("#dataGridContainer", {
+                gridTableInstance = new Tabulator("#dataGridContainer", {
             data: rows,
             layout: "fitColumns",
             height: "500px",
             columns: [
-                { title: "Type", field: "type", editable: false, width: 100,
-                  headerFilter: "list", headerFilterParams: { valuesLookup: true, clearable: true } },
-                { title: "Swimlane", field: "swimlane", editable: false,
-                  headerFilter: "list", headerFilterParams: { valuesLookup: true, clearable: true } },
+                { title: "Type", field: "type", editable: false, headerFilter: "input", width: 100 },
+                { title: "Swimlane", field: "swimlane", editable: false, headerFilter: "input" },
                 { title: "Task", field: "task", editable: false, headerFilter: "input" },
+                { title: "Label Name", field: "labelName", editor: "input", headerFilter: "input" },
                 { title: "Predecessor", field: "predecessor", editor: "input", headerFilter: "input" },
                 { title: "P6 ID Start", field: "p6IdStart", editor: "input", headerFilter: "input" },
                 { title: "P6 ID Finish", field: "p6IdFinish", editor: "input", headerFilter: "input" },
@@ -2104,22 +2116,10 @@ function csvText(value) {
                 { title: "End", field: "end", editor: "input", headerFilter: "input" },
                 { title: "Progress %", field: "progress", editor: "number",
                   editorParams: { min: 0, max: 100 } },
-                { title: "Fill Color", field: "color", editor: colorPickerEditor, width: 90 },
-                { title: "BG Color", field: "bgColor",
-                  editable: (cell) => cell.getData().type === "Bar",
-                  editor: colorPickerEditor, width: 90 },
-                { title: "Bar Pattern", field: "pattern",
-                  editable: (cell) => cell.getData().type === "Bar",
-                  editor: "list",
-                  editorParams: { values: ["solid", "dashed", "dotted", "crosshatch", "diagonal"] },
-                  headerFilter: "list",
-                  headerFilterParams: { values: ["solid", "dashed", "dotted", "crosshatch", "diagonal"], clearable: true } },
-                { title: "Milestone Symbol", field: "symbol",
-                  editable: (cell) => cell.getData().type === "Milestone",
-                  editor: "list",
-                  editorParams: { values: ["diamond", "circle", "square"] },
-                  headerFilter: "list",
-                  headerFilterParams: { values: ["diamond", "circle", "square"], clearable: true } }
+                { title: "Fill Color", field: "color", editor: "input" },
+                { title: "BG Color", field: "bgColor", editor: "input" },
+                { title: "Pattern", field: "pattern", editor: "input" },
+                { title: "Symbol", field: "symbol", editor: "input" }
             ]
         });
 
