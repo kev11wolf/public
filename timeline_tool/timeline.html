@@ -213,7 +213,10 @@ input[type="color"] {
         .mini-delete-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; font-weight: bold; padding: 0 4px; }
 
         .archive-tools { background: #f0fdf4; border: 1px dashed #bbf7d0; padding: 12px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;}
-
+.bars-section, .milestones-section { display: none; }
+.row-card.details-expanded .bars-section,
+.row-card.details-expanded .milestones-section { display: block; }
+.details-toggle-btn { background: #f8fafc; border: 1px solid #cbd5e1; color: var(--text-muted); font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; cursor: pointer; margin-left: 4px; }
         /* ==============================
             RIGHT PANEL: LIVE WORKSPACE
            ============================== */
@@ -2758,7 +2761,7 @@ function migrateSnapshotIfNeeded(state) {
     return state;
 }
 
- function loadApplicationState() {
+function loadApplicationState() {
     localStorage.removeItem('gantt_v8_master_snapshot');
 
     projectData = [
@@ -2799,7 +2802,31 @@ function migrateSnapshotIfNeeded(state) {
     ];
 
     customTrackers = [
-        { id: 7001, label: 'Permit Renewal Deadline', date: '01May2026',
+        { id: 7001, label: 'Permit Renewal Deadline', date: '01May2026', thickness: 2, pattern: 'dashed', color: '#e11d48', labelOffsetX: 0, labelOffsetY: 0 }
+    ];
+
+    calloutData = [
+        { id: generateUUID(), text: 'Sample project — double-click any element to edit, right-click a row to insert bars/milestones', x: 420, y: 40, leaderX: 380, leaderY: 90, bgColor: '#fffbeb', textColor: '#92400e', fontSize: 12, isBold: true, bgTransparent: false, leaderThickness: 2, leaderAttachment: 'bottom' }
+    ];
+
+    nextRowId = 6; nextMsId = 1005; nextBarId = 5007; nextTrackerId = 7002;
+
+    const seedSnapshot = {
+        data: projectData, trackers: customTrackers,
+        nextRowId: nextRowId, nextMsId: nextMsId, nextBarId: nextBarId, nextTrackerId: nextTrackerId,
+        rangeMode: 'manual', sizingMode: 'fixed',
+        customBoundaryMin: '01Jan2026', customBoundaryMax: '01Feb2027',
+        fontFamily: 'Tahoma, sans-serif', fontSize: 10, swimlaneHeight: 30, canvasWidth: 900,
+        rowLabelWidth: 240, rowHeight: 50,
+        barBgColor: '#5c95be', barColor: '#2563eb', summaryColor: '#475569', msColor: '#000000',
+        todayColor: '#b71010', masterLeaderColor: '#94a3b8', headerColor: '#000000',
+        showVGrid: true, showAlignGrid: false, snapResolution: 0, workspaceZoom: '1.0', todayLineToggle: 'show',
+        showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: true, showHeaderDay: false
+    };
+
+    actionUndoStack.push(JSON.stringify(seedSnapshot));
+    restoreStateFromSnapshot(seedSnapshot);
+}
 
     function updateLaneSummary(laneIdx, val) { 
         projectData[laneIdx].showSummary = val; 
@@ -3838,17 +3865,13 @@ document.addEventListener('dblclick', (e) => {
                         </button>
                         <input type="text" value="${lane.title}" style="font-weight:bold; color:#1e3a8a; font-size:13px; padding:4px;" onchange="updateLaneTitle(${laneIdx}, this.value)">
                         <input type="color" value="${lane.color || '#f8fafc'}" style="width:34px; height:28px; padding:0; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer; flex-shrink:0;" onchange="updateLaneColor(${laneIdx}, this.value)">
-                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; margin-left:10px; background:#ffffff; padding:2px 6px; border:1px solid #cbd5e1; border-radius:4px; white-space:nowrap;">
-                            <span style="font-weight:bold; color:var(--text-muted);">Summary:</span>
-                            <label style="display:flex; align-items:center; gap:2px; cursor:pointer;"><input type="radio" name=\"summaryToggle-${laneIdx}\" value="on" ${lane.showSummary !== false ? 'checked' : ''} onchange="updateLaneSummary(${laneIdx}, true)">On</label>
-                            <label style="display:flex; align-items:center; gap:2px; cursor:pointer;"><input type="radio" name=\"summaryToggle-${laneIdx}\" value="off" ${lane.showSummary === false ? 'checked' : ''} onchange="updateLaneSummary(${laneIdx}, false)">Off</label>
-                        </div>
+                       
                     </div>
-                    <div style="display:flex; gap: 4px;">
-                        <button type="button" class="inner-action-btn" style="padding:2px 6px; font-size:11px;" onclick="moveSwimlaneUp(${laneIdx})" ${laneIdx === 0 ? 'disabled' : ''}>▲ Up</button>
-                        <button type="button" class="inner-action-btn" style="padding:2px 6px; font-size:11px;" onclick="moveSwimlaneDown(${laneIdx})" ${laneIdx === projectData.length - 1 ? 'disabled' : ''}>▼ Down</button>
-                        <button class="delete-btn" style="padding:2px 6px;" onclick="deleteSwimlane(${laneIdx})">Delete Lane</button>
-                    </div>
+                    <div style="display:flex; gap:4px;">
+    <button type="button" class="inner-action-btn" style="padding:2px 6px; font-size:11px;" title="Move swimlane up" onclick="moveSwimlaneUp(${laneIdx})" ${laneIdx === 0 ? 'disabled' : ''}>▲</button>
+    <button type="button" class="inner-action-btn" style="padding:2px 6px; font-size:11px;" title="Move swimlane down" onclick="moveSwimlaneDown(${laneIdx})" ${laneIdx === projectData.length - 1 ? 'disabled' : ''}>▼</button>
+    <button class="delete-btn" style="padding:2px 6px;" title="Delete swimlane" onclick="deleteSwimlane(${laneIdx})">🗑</button>
+</div>
                 </div>
                 <div id="lane-toggle-wrapper-${laneIdx}">
                     <div class="lane-rows-slots" id="lane-rows-box-${laneIdx}"></div>
@@ -3921,6 +3944,7 @@ document.addEventListener('dblclick', (e) => {
                             ${predecessorOptions}
                         </select>
                         <button class="delete-btn" style="padding:4px 6px; margin:0; font-size:11px;" title="Delete Row" onclick="deleteRowFromLane(${laneIdx}, ${rowIdx})">✕</button>
+                        <button type="button" class="details-toggle-btn" onclick="toggleRowCardDetails(this)">▼ Details</button>
                     </div>
                     
                     ${isConflicted ? `<div style="margin-bottom:4px;"><span class="conflict-badge" style="margin-left:0;">CROSS-ROW OVERLAP DETECTED</span></div>` : ''}
@@ -5109,7 +5133,12 @@ function clearSidebarSearch() {
             }
         });
     }
-
+function toggleRowCardDetails(btn) {
+    const card = btn.closest('.row-card');
+    if (!card) return;
+    card.classList.toggle('details-expanded');
+    btn.textContent = card.classList.contains('details-expanded') ? '▲ Hide' : '▼ Details';
+}
    
         function applyCalloutLeaderVisibility() {
         calloutData.forEach(callout => {
