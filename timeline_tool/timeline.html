@@ -959,12 +959,7 @@ input[type="color"] {
 <script>
     // --- Custom Callout State ---
     let calloutData = []; 
-    let isDraggingCallout = false;
-    let isDraggingLeader = false;
-    let activeCalloutId = null;
-    let dragStartX, dragStartY;
-    let initialCalloutX, initialCalloutY;
-    let initialLeaderX, initialLeaderY;
+   
 // ---------------------------
 
 let projectData = [];
@@ -1394,23 +1389,25 @@ function normalizeDateString(val) {
     // GRAPHIC WORKSPACE CANVAS DRAG ENGINE & DIALOG CORE HOOKS
     // =========================================================
     function initiateDragInteraction(e, mode, rowId, subId = null) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (mode === 'timeline-pan' || mode === 'timeline-resize-start' || mode === 'timeline-resize-end') {
-            const manualRadio = document.querySelector('input[name="rangeMode"][value="manual"]');
-            if (manualRadio && !manualRadio.checked) {
-                manualRadio.checked = true;
-                toggleRangeScopeFieldsVisibility('manual');
-            }
-            activeDragState = {
-                mode: mode,
-                startX: e.clientX,
-                origMinTime: scaleMinTime,
-                origMaxTime: scaleMaxTime
-            };
-            return;
-        }
+    e.preventDefault();
+    e.stopPropagation();
+
+    // NEW: Callout box + leader-line dragging
+    if (mode === 'callout-move' || mode === 'callout-leader-move') {
+        const callout = (calloutData || []).find(c => c.id === rowId);
+        if (!callout) return;
+        activeDragState = {
+            mode: mode,
+            callout: callout,
+            startX: e.clientX,
+            startY: e.clientY,
+            origX: callout.x || 0,
+            origY: callout.y || 0,
+            origLeaderX: callout.leaderX || 0,
+            origLeaderY: callout.leaderY || 0
+        };
+        return;
+    }
 
         if (mode === 'tracker-line-move' || mode === 'tracker-label-move') {
             let trk = customTrackers.find(t => t.id === rowId);
@@ -1585,10 +1582,9 @@ function normalizeDateString(val) {
                 needsUpdate = true;
             }
         }
-        else if (activeDragState.mode === 'tracker-label-move' && activeDragState.tracker) {
+               else if (activeDragState.mode === 'tracker-label-move' && activeDragState.tracker) {
             let targetRawX = activeDragState.origOffsetX + deltaX;
             let targetRawY = activeDragState.origOffsetY + deltaY;
-            
             if (alignmentSnapResolution > 0) {
                 targetRawX = Math.round(targetRawX / alignmentSnapResolution) * alignmentSnapResolution;
                 targetRawY = Math.round(targetRawY / alignmentSnapResolution) * alignmentSnapResolution;
@@ -1597,18 +1593,26 @@ function normalizeDateString(val) {
             activeDragState.tracker.labelOffsetY = targetRawY;
             needsUpdate = true;
         }
-        else if (activeDragState.mode === 'leader-text-end-drag' && activeDragState.milestone) {
-            activeDragState.milestone.leaderTextEndX = activeDragState.origLeaderTextEndX + deltaX;
-            activeDragState.milestone.leaderTextEndY = activeDragState.origLeaderTextEndY + deltaY;
+        // NEW: Move the callout text box itself
+        else if (activeDragState.mode === 'callout-move' && activeDragState.callout) {
+            let targetX = activeDragState.origX + deltaX;
+            let targetY = activeDragState.origY + deltaY;
+            if (alignmentSnapResolution > 0) {
+                targetX = Math.round(targetX / alignmentSnapResolution) * alignmentSnapResolution;
+                targetY = Math.round(targetY / alignmentSnapResolution) * alignmentSnapResolution;
+            }
+            activeDragState.callout.x = targetX;
+            activeDragState.callout.y = targetY;
             needsUpdate = true;
         }
-        else if (activeDragState.mode === 'leader-date-end-drag' && activeDragState.milestone) {
-            activeDragState.milestone.leaderDateEndX = activeDragState.origLeaderDateEndX + deltaX;
-            activeDragState.milestone.leaderDateEndY = activeDragState.origLeaderDateEndY + deltaY;
+        // NEW: Move the callout's leader-line anchor point
+        else if (activeDragState.mode === 'callout-leader-move' && activeDragState.callout) {
+            activeDragState.callout.leaderX = activeDragState.origLeaderX + deltaX;
+            activeDragState.callout.leaderY = activeDragState.origLeaderY + deltaY;
             needsUpdate = true;
         }
 
-               if (needsUpdate) {
+        if (needsUpdate) {
     activeDragState.hasMoved = true;
     markUnsavedState();
     updateChart();
@@ -3634,6 +3638,61 @@ function setCalloutLeaderVisibility(id, shouldShowLeader) {
     updateChart();
 }
 
+// ============================================================
+// CALLOUT PROPERTY UPDATE ENGINE
+// This function was missing from the current script.
+// The sidebar and popup already call it.
+// ============================================================
+function updateCalloutProperty(id, propertyName, newValue) {
+    const callout = calloutData.find(c => c.id === id);
+
+    if (!callout) {
+        console.warn(
+            'Could not update callout. No callout found with id:',
+            id
+        );
+        return;
+    }
+
+    // Text stays as text.
+    if (propertyName === 'text') {
+        callout.text = String(newValue);
+    }
+
+    // These must be saved as usable numbers, not text strings.
+    else if (propertyName === 'fontSize') {
+        const fontSize = Number(newValue);
+        callout.fontSize = Number.isFinite(fontSize)
+            ? Math.max(8, Math.min(72, fontSize))
+            : 14;
+    }
+
+    else if (propertyName === 'leaderThickness') {
+        const lineWeight = Number(newValue);
+        callout.leaderThickness = Number.isFinite(lineWeight)
+            ? Math.max(1, Math.min(10, lineWeight))
+            : 2;
+    }
+
+    // Checkbox values must remain true/false.
+    else if (
+        propertyName === 'isBold' ||
+        propertyName === 'bgTransparent' ||
+        propertyName === 'showLeader'
+    ) {
+        callout[propertyName] = Boolean(newValue);
+    }
+
+    // Colors and leader attachment are normal text values.
+    else {
+        callout[propertyName] = newValue;
+    }
+
+    // Save state for autosave and Undo/Redo, then redraw the SVG.
+    recordStateChange();
+    updateChart();
+}
+
 function renderCalloutControls() {
     const container = document.getElementById('calloutListContainer');
     if (!container) return;
@@ -3680,46 +3739,23 @@ function getMouseCoords(e) {
     return { x: svgPt.x, y: svgPt.y };
 }
 
+// Callout dragging is handled by the shared activeDragState engine.
+// The SVG elements call initiateDragInteraction(...), and #svgContainer
+// already calls handleGlobalDragMove(...) and stopGlobalDragAction(...).
+
 document.addEventListener('mousedown', (e) => {
-        // Close floating dialog if clicking outside
-    let dlg = document.getElementById('floatingCalloutDialog');
-    if (dlg && !dlg.contains(e.target)) dlg.remove();
-    
-    let rowDlg = document.getElementById('floatingRowLabelDialog');
-    if (rowDlg && !rowDlg.contains(e.target)) rowDlg.remove();
+    const dialog = document.getElementById('floatingCalloutDialog');
 
-    const target = e.target;
-    if (target.classList && (target.classList.contains('draggable-callout') || target.classList.contains('draggable-leader'))) {
-        activeCalloutId = target.getAttribute('data-id');
-        const coords = getMouseCoords(e);
-        dragStartX = coords.x; dragStartY = coords.y;
-        const callout = calloutData.find(c => c.id === activeCalloutId);
-        if (!callout) return;
-        
-        if (target.classList.contains('draggable-leader')) {
-            isDraggingLeader = true; initialLeaderX = callout.leaderX; initialLeaderY = callout.leaderY;
-        } else {
-            isDraggingCallout = true; initialCalloutX = callout.x; initialCalloutY = callout.y;
-        }
+    if (dialog && !dialog.contains(e.target)) {
+        dialog.remove();
+    }
+
+    const rowDialog = document.getElementById('floatingRowLabelDialog');
+
+    if (rowDialog && !rowDialog.contains(e.target)) {
+        rowDialog.remove();
     }
 });
-
-document.addEventListener('mousemove', (e) => {
-    if (!isDraggingCallout && !isDraggingLeader) return;
-    const callout = calloutData.find(c => c.id === activeCalloutId);
-    if (!callout) return;
-    const coords = getMouseCoords(e);
-    const dx = coords.x - dragStartX; const dy = coords.y - dragStartY;
-    
-    if (isDraggingCallout) {
-        callout.x = initialCalloutX + dx; callout.y = initialCalloutY + dy;
-    } else if (isDraggingLeader) {
-        callout.leaderX = initialLeaderX + dx; callout.leaderY = initialLeaderY + dy;
-    }
-    updateChart();
-});
-
-document.addEventListener('mouseup', () => { isDraggingCallout = false; isDraggingLeader = false; activeCalloutId = null; });
 
 // Double Click Popup Logic
 // Double Click Popup Logic
@@ -3771,10 +3807,9 @@ document.addEventListener('dblclick', (e) => {
 </label>
 </div>
            <div class="dialog-row" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-color); justify-content:flex-start; gap:16px;">
-    <div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Text</span><input type="color" value="${callout.textColor}" onchange="updateCalloutProperty(id, 'textColor', this.value); renderCalloutControls();" style="cursor:pointer;"></div>
-    <div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Leader</span><input type="color" value="${callout.leaderColor || callout.textColor}" onchange="updateCalloutProperty(id, 'leaderColor', this.value); renderCalloutControls();" style="cursor:pointer;"></div>
-    <div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Back</span><input type="color" value="${callout.bgColor}" onchange="updateCalloutProperty(id, 'bgColor', this.value); renderCalloutControls();" ${callout.bgTransparent ? 'disabled' : ''} style="cursor:pointer;"></div>
-</div>
+   <div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Text</span><input type="color" value="${callout.textColor}" onchange="updateCalloutProperty('${id}', 'textColor', this.value); renderCalloutControls();" style="cursor:pointer;"></div>
+<div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Leader</span><input type="color" value="${callout.leaderColor || callout.textColor}" onchange="updateCalloutProperty('${id}', 'leaderColor', this.value); renderCalloutControls();" style="cursor:pointer;"></div>
+<div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Back</span><input type="color" value="${callout.bgColor}" onchange="updateCalloutProperty('${id}', 'bgColor', this.value); renderCalloutControls();" ${callout.bgTransparent ? 'disabled' : ''} style="cursor:pointer;"></div>
             <div class="dialog-actions" style="margin-top: 15px;">
                 <button class="primary-btn" onclick="document.getElementById('floatingCalloutDialog').remove()">Done</button>
                 <button class="utility-btn" onclick="removeCallout('${id}')" style="color: var(--danger); border-color: #fca5a5;">Delete</button>
@@ -4780,19 +4815,49 @@ svg += allLayerBarsBuffer
 
             if (callout.showLeader !== false) {
     svg += `<line x1="${lBaseX}" y1="${lBaseY}" x2="${callout.leaderX}" y2="${callout.leaderY}" stroke="${strokeColor}" stroke-width="${lThick}" style="pointer-events:none;" />`;
-    svg += `<circle class="draggable-leader" data-id="${callout.id}" cx="${callout.leaderX}" cy="${callout.leaderY}" r="5" fill="transparent" stroke="transparent" stroke-width="6" style="cursor:crosshair;" />`;
+   svg += `<circle
+    class="draggable-leader"
+    data-id="${callout.id}"
+    cx="${callout.leaderX}"
+    cy="${callout.leaderY}"
+    r="5"
+    fill="transparent"
+    stroke="transparent"
+    stroke-width="6"
+    style="cursor:crosshair;"
+    onmousedown="initiateDragInteraction(event, 'callout-leader-move', '${callout.id}')"
+    />`;
 }
 
             // Draw Callout Box
-            svg += `<rect class="draggable-callout" data-id="${callout.id}" 
-                    x="${callout.x - halfBoxWidth}" y="${callout.y}" width="${estWidth}" height="${boxHeight}" rx="4" 
-                    fill="${fillStyle}" cursor="move" />`;
+            svg += `<rect
+    class="draggable-callout"
+    data-id="${callout.id}"
+    x="${callout.x - halfBoxWidth}"
+    y="${callout.y}"
+    width="${estWidth}"
+    height="${boxHeight}"
+    rx="4"
+    fill="${fillStyle}"
+    cursor="move"
+    onmousedown="initiateDragInteraction(event, 'callout-move', '${callout.id}')"
+    />`;
             
             // Draw Callout Text
             // Note: We use ${fontFamily} from the main visual settings engine instead of sans-serif
-            svg += `<text class="draggable-callout" data-id="${callout.id}" 
-                    x="${callout.x}" y="${callout.y + (boxHeight/2) + (callout.fontSize/3)}" 
-                    text-anchor="middle" font-family="${fontFamily}" font-size="${callout.fontSize}px" font-weight="${fontWeight}" fill="${callout.textColor}" cursor="move">${callout.text}</text>`;
+          svg += `<text
+    class="draggable-callout"
+    data-id="${callout.id}"
+    x="${callout.x}"
+    y="${callout.y + (boxHeight / 2) + (callout.fontSize / 3)}"
+    text-anchor="middle"
+    font-family="${fontFamily}"
+    font-size="${callout.fontSize}px"
+    font-weight="${fontWeight}"
+    fill="${callout.textColor}"
+    cursor="move"
+    onmousedown="initiateDragInteraction(event, 'callout-move', '${callout.id}')"
+    >${callout.text}</text>`;
         });
         // ---------------------------
 
