@@ -555,6 +555,102 @@ input[type="color"] {
 .view-toggle-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
 #dataGridContainer { display: none; background: #ffffff; border-radius: 8px; padding: 5px; }
 
+/* =========================================================
+   LIVE DATA GRID: EDITING AND READ-ONLY STATES
+   ========================================================= */
+
+#dataGridContainer {
+    display: none;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#dataGridContainer .tabulator {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+#dataGridContainer .tabulator-header {
+    background: #1e3a8a;
+    color: #ffffff;
+    border-bottom: 1px solid #1e40af;
+}
+
+#dataGridContainer .tabulator-col {
+    background: #1e3a8a;
+    color: #ffffff;
+    border-right-color: rgba(255, 255, 255, 0.18);
+}
+
+#dataGridContainer .tabulator-col-title {
+    font-size: 11px;
+    font-weight: 800;
+}
+
+#dataGridContainer .tabulator-cell {
+    border-right-color: #e2e8f0;
+    border-bottom-color: #e2e8f0;
+}
+
+#dataGridContainer .tabulator-row:hover {
+    background: #eff6ff;
+}
+
+#dataGridContainer .tabulator-row.grid-row-bar {
+    border-left: 4px solid #2563eb;
+}
+
+#dataGridContainer .tabulator-row.grid-row-milestone {
+    border-left: 4px solid #7c3aed;
+}
+
+#dataGridContainer .tabulator-cell.grid-read-only {
+    background: #f8fafc;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+#dataGridContainer .tabulator-cell.grid-live-editing {
+    background: #fff7ed;
+    box-shadow: inset 0 0 0 1px #fb923c;
+}
+
+.grid-live-editor {
+    width: 100%;
+    height: 100%;
+    min-height: 28px;
+    box-sizing: border-box;
+    border: 1px solid #2563eb;
+    border-radius: 3px;
+    padding: 3px 6px;
+    background: #ffffff;
+    color: #0f172a;
+    font: inherit;
+}
+
+.grid-live-editor[type="color"] {
+    padding: 1px;
+    cursor: pointer;
+}
+
+.grid-live-checkbox-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.grid-live-checkbox-wrap input {
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+}
+
     </style>
 </head>
 <body>
@@ -974,11 +1070,26 @@ let gridTableInstance = null;
 
 function switchMainView(mode) {
     currentMainView = mode;
-    document.getElementById("svgViewWrapper").style.display = (mode === "timeline") ? "block" : "none";
-    document.getElementById("dataGridContainer").style.display = (mode === "grid") ? "block" : "none";
-    document.getElementById("timelineViewBtn").classList.toggle("active", mode === "timeline");
-    document.getElementById("gridViewBtn").classList.toggle("active", mode === "grid");
-    if (mode === "grid") { initDataGrid(); }
+
+    document.getElementById("svgViewWrapper").style.display =
+        (mode === "timeline") ? "block" : "none";
+
+    document.getElementById("dataGridContainer").style.display =
+        (mode === "grid") ? "block" : "none";
+
+    document.getElementById("timelineViewBtn").classList.toggle(
+        "active",
+        mode === "timeline"
+    );
+
+    document.getElementById("gridViewBtn").classList.toggle(
+        "active",
+        mode === "grid"
+    );
+
+    if (mode === "grid") {
+        initDataGrid();
+    }
 }
 
     let actionUndoStack = [];
@@ -1978,162 +2089,1194 @@ document.querySelectorAll('.zoom-pill-btn').forEach(b => {
 
     function importConfigurationArchive(event) {
     const file = event.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-                    try {
-                const parsedArchive = JSON.parse(e.target.result);
-                if (parsedArchive.workspace) {
-    const migratedWorkspace = migrateSnapshotIfNeeded(parsedArchive.workspace);
-    actionUndoStack = []; actionRedoStack = [];
-    actionUndoStack.push(JSON.stringify(migratedWorkspace));
-    restoreStateFromSnapshot(migratedWorkspace);
-                    const titleEl = document.getElementById('projectTitleInput');
-                    if (titleEl) titleEl.value = extractTitleFromFilename(file.name);
-                    showToast(`Loaded "${file.name}"`, "success");
-                }
-            } catch (err) { 
-                showToast("That file looks corrupted or isn't a valid project backup.", "error", 4500);
+  const reader = new FileReader();
+
+reader.onload = function(e) {
+    try {
+        const parsedArchive = JSON.parse(e.target.result);
+
+        if (parsedArchive.workspace) {
+            const migratedWorkspace = migrateSnapshotIfNeeded(
+                parsedArchive.workspace
+            );
+
+            actionUndoStack = [];
+            actionRedoStack = [];
+
+            actionUndoStack.push(
+                JSON.stringify(migratedWorkspace)
+            );
+
+            restoreStateFromSnapshot(migratedWorkspace);
+
+            const titleEl = document.getElementById("projectTitleInput");
+
+            if (titleEl) {
+                titleEl.value = extractTitleFromFilename(file.name);
             }
-    };
-    reader.readAsText(file);
+
+            showToast(`Loaded "${file.name}"`, "success");
+        }
+    } catch (err) {
+        showToast(
+            "That file looks corrupted or isn't a valid project backup.",
+            "error",
+            4500
+        );
+    }
+};
+
+reader.readAsText(file);
 }
+
 // Converts missing values to a safe blank string before CSV export.
 function csvText(value) {
-    return String(value ?? '')
-        .replace(/"/g, '""')   // Keeps quotation marks valid in CSV
-        .replace(/\r?\n/g, ' ') // Keeps each item on one Excel row
-        .replace(/,/g, ' ');   // Matches your current comma-removal approach
+    return String(value ?? "")
+        .replace(/"/g, '""')
+        .replace(/\r?\n/g, " ")
+        .replace(/,/g, " ");
 }
-    // =========================================================================
-    // LIVE DATA GRID (edits go straight into projectData — no file needed)
-    // =========================================================================
-           function flattenProjectDataForGrid() {
-        let gridRows = [];
-        projectData.forEach((lane, laneIdx) => {
-            (lane.rows || []).forEach((row, rowIdx) => {
-                (row.bars || []).forEach((bar, barIdx) => {
-                    gridRows.push({
-                        _laneIdx: laneIdx, _rowIdx: rowIdx, _barIdx: barIdx, _msIdx: null,
-                        type: "Bar", swimlane: lane.title, task: row.label,
-                        labelName: "",
-                        predecessor: row.predecessor || "",
-                        p6IdStart: bar.p6IdStart || "", p6IdFinish: bar.p6IdFinish || "",
-                        start: bar.start, end: bar.end,
-                        progress: bar.progress ?? 0,
-                        color: bar.color || "", bgColor: bar.bgColor || "",
-                        pattern: bar.pattern || "solid", symbol: ""
-                    });
+
+// =========================================================================
+// LIVE DATA GRID
+// Every grid row uses stable IDs, not array positions.
+// This makes edits safer after row moves, imports, deletes, or re-sorting.
+// =========================================================================
+
+let gridLiveEditTimer = null;
+
+/*
+    Return a date in YYYY-MM-DD format for Tabulator's date editor.
+
+    Your project data uses DDMMMYYYY, for example 01May2026.
+    The grid's browser calendar editor requires YYYY-MM-DD.
+*/
+function gridDateForInput(value) {
+    return convertDDMMMYYYYToYYYYMMDD(value) || "";
+}
+
+/*
+    Convert a value safely to a number.
+
+    If the field is empty, this returns the supplied fallback value.
+*/
+function gridNumber(value, fallback = 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+/*
+    Force checkbox-style values to become real booleans.
+
+    This prevents strings such as "false" from behaving as true.
+*/
+function gridBoolean(value) {
+    return value === true ||
+        value === 1 ||
+        value === "1" ||
+        String(value).toLowerCase() === "true" ||
+        String(value).toLowerCase() === "yes";
+}
+
+/*
+    Finds the ACTUAL source object in projectData.
+
+    Important:
+    We search by stable IDs rather than using _laneIdx / _rowIdx / _barIdx.
+    Array indexes can change after a sort, import, drag-and-drop, or delete.
+*/
+function findGridSourceObjects(gridRow) {
+    const lane = projectData.find(item => String(item.id) === String(gridRow._laneId));
+
+    if (!lane) {
+        return { lane: null, row: null, element: null };
+    }
+
+    const row = (lane.rows || []).find(item => String(item.id) === String(gridRow._rowId));
+
+    if (!row) {
+        return { lane, row: null, element: null };
+    }
+
+    let element = null;
+
+    if (gridRow.type === "Bar") {
+        element = (row.bars || []).find(item => String(item.id) === String(gridRow._elementId));
+    }
+
+    if (gridRow.type === "Milestone") {
+        element = (row.milestones || []).find(item => String(item.id) === String(gridRow._elementId));
+    }
+
+    return { lane, row, element };
+}
+
+/*
+    Creates one flat Tabulator row for every bar and milestone.
+
+    Shared fields appear on both element types:
+    - Swimlane settings
+    - Task/row settings
+    - P6 IDs
+    - Element styling
+
+    Bar-only and milestone-only fields are also included.
+    The grid automatically prevents editing a field that does not apply
+    to that element type.
+*/
+function flattenProjectDataForGrid() {
+    const gridRows = [];
+
+    projectData.forEach(lane => {
+        (lane.rows || []).forEach(row => {
+            (row.bars || []).forEach(bar => {
+                gridRows.push({
+                    _laneId: lane.id,
+                    _rowId: row.id,
+                    _elementId: bar.id,
+
+                    type: "Bar",
+
+                    // Swimlane fields
+                    swimlane: lane.title || "",
+                    swimlaneColor: lane.color || "#f8fafc",
+                    showSummary: lane.showSummary !== false,
+                    titleAlign: lane.titleAlign || "left",
+                    titleFontSize: lane.titleFontSize ?? "",
+                    titleColor: lane.titleColor || "",
+                    titleBold: lane.titleBold !== false,
+                    laneCollapsed: lane.collapsed === true,
+
+                    // Shared row/task fields
+                    task: row.label || "",
+                    predecessor: row.predecessor || "",
+                    showDateRange: row.showDateRange === true,
+
+                    // Shared element fields
+                    elementId: bar.id,
+                    p6IdStart: bar.p6IdStart || bar.p6Id || "",
+                    p6IdFinish: bar.p6IdFinish || bar.p6Id || "",
+
+                    // Bar fields
+                    start: gridDateForInput(bar.start),
+                    end: gridDateForInput(bar.end),
+                    progress: bar.progress ?? 0,
+                    fillColor: bar.color || "",
+                    barBgColor: bar.bgColor || "",
+                    pattern: bar.pattern || "solid",
+
+                    // Milestone-only fields
+                    labelName: "",
+                    milestoneDate: "",
+                    symbol: "",
+                    milestoneColor: "",
+                    showDate: "",
+                    labelOffsetX: "",
+                    labelOffsetY: "",
+                    dateOffsetX: "",
+                    dateOffsetY: "",
+                    leaderEnabledText: "",
+                    leaderEnabledDate: "",
+                    leaderAnchorText: "",
+                    leaderWeight: "",
+                    leaderPattern: ""
                 });
-                (row.milestones || []).forEach((ms, msIdx) => {
-                    gridRows.push({
-                        _laneIdx: laneIdx, _rowIdx: rowIdx, _barIdx: null, _msIdx: msIdx,
-                        type: "Milestone", swimlane: lane.title, task: row.label,
-                        labelName: ms.label || "",
-                        predecessor: row.predecessor || "",
-                        p6IdStart: ms.p6IdStart || "", p6IdFinish: ms.p6IdFinish || "",
-                        start: ms.date, end: ms.date, progress: "",
-                        color: ms.color || "", bgColor: "",
-                        pattern: "", symbol: ms.symbol || "diamond"
-                    });
+            });
+
+            (row.milestones || []).forEach(ms => {
+                gridRows.push({
+                    _laneId: lane.id,
+                    _rowId: row.id,
+                    _elementId: ms.id,
+
+                    type: "Milestone",
+
+                    // Swimlane fields
+                    swimlane: lane.title || "",
+                    swimlaneColor: lane.color || "#f8fafc",
+                    showSummary: lane.showSummary !== false,
+                    titleAlign: lane.titleAlign || "left",
+                    titleFontSize: lane.titleFontSize ?? "",
+                    titleColor: lane.titleColor || "",
+                    titleBold: lane.titleBold !== false,
+                    laneCollapsed: lane.collapsed === true,
+
+                    // Shared row/task fields
+                    task: row.label || "",
+                    predecessor: row.predecessor || "",
+                    showDateRange: row.showDateRange === true,
+
+                    // Shared element fields
+                    elementId: ms.id,
+                    p6IdStart: ms.p6IdStart || ms.p6Id || "",
+                    p6IdFinish: ms.p6IdFinish || ms.p6Id || "",
+
+                    // Bar-only fields
+                    start: "",
+                    end: "",
+                    progress: "",
+                    fillColor: "",
+                    barBgColor: "",
+                    pattern: "",
+
+                    // Milestone fields
+                    labelName: ms.label || "",
+                    milestoneDate: gridDateForInput(ms.date),
+                    symbol: ms.symbol || "diamond",
+                    milestoneColor: ms.color || "",
+                    showDate: ms.showDate !== false,
+                    labelOffsetX: ms.labelOffsetX ?? 0,
+                    labelOffsetY: ms.labelOffsetY ?? 0,
+                    dateOffsetX: ms.dateOffsetX ?? 0,
+                    dateOffsetY: ms.dateOffsetY ?? 0,
+                    leaderEnabledText: ms.leaderEnabledText === true,
+                    leaderEnabledDate: ms.leaderEnabledDate === true,
+                    leaderAnchorText: ms.leaderAnchorText || "center",
+                    leaderWeight: ms.leaderWeight ?? 1,
+                    leaderPattern: ms.leaderPattern || "solid"
                 });
             });
         });
-        return gridRows;
+    });
+
+    return gridRows;
+}
+
+/*
+    Decides whether a particular cell applies to the current element type.
+
+    This prevents users from accidentally editing "Progress %" on milestones
+    or "Milestone Symbol" on activity bars.
+*/
+function canEditGridField(cell) {
+    const rowData = cell.getRow().getData();
+    const field = cell.getField();
+
+    const barOnlyFields = [
+        "start",
+        "end",
+        "progress",
+        "fillColor",
+        "barBgColor",
+        "pattern"
+    ];
+
+    const milestoneOnlyFields = [
+        "labelName",
+        "milestoneDate",
+        "symbol",
+        "milestoneColor",
+        "showDate",
+        "labelOffsetX",
+        "labelOffsetY",
+        "dateOffsetX",
+        "dateOffsetY",
+        "leaderEnabledText",
+        "leaderEnabledDate",
+        "leaderAnchorText",
+        "leaderWeight",
+        "leaderPattern"
+    ];
+
+    if (barOnlyFields.includes(field) && rowData.type !== "Bar") {
+        return false;
     }
 
-           function applyGridEditToProjectData(rowData, field, value) {
-        const lane = projectData[rowData._laneIdx];
-        if (!lane) return;
-        const row = lane.rows[rowData._rowIdx];
-        if (!row) return;
+    if (milestoneOnlyFields.includes(field) && rowData.type !== "Milestone") {
+        return false;
+    }
 
-        if (field === "predecessor") {
-            row.predecessor = value;
-            recordStateChange();
-            renderInputRows();
-            updateChart();
-            return;
+    return true;
+}
+
+/*
+    Apply an edit immediately to projectData.
+
+    This function does NOT create an Undo entry.
+    That is deliberate: it may run many times while you type.
+*/
+function applyGridEditLive(rowData, field, value) {
+    const { lane, row, element } = findGridSourceObjects(rowData);
+
+    if (!lane || !row) {
+        return false;
+    }
+
+    // ---------------------------------------------------------
+    // Swimlane-level fields
+    // ---------------------------------------------------------
+    if (field === "swimlane") {
+        lane.title = String(value ?? "");
+        return true;
+    }
+
+    if (field === "swimlaneColor") {
+        lane.color = String(value || "#f8fafc");
+        return true;
+    }
+
+    if (field === "showSummary") {
+        lane.showSummary = gridBoolean(value);
+        return true;
+    }
+
+    if (field === "titleAlign") {
+        lane.titleAlign = ["left", "center", "right"].includes(value) ? value : "left";
+        return true;
+    }
+
+    if (field === "titleFontSize") {
+        lane.titleFontSize = value === "" ? null : Math.max(6, Math.min(72, gridNumber(value, 10)));
+        return true;
+    }
+
+    if (field === "titleColor") {
+        lane.titleColor = String(value || "");
+        return true;
+    }
+
+    if (field === "titleBold") {
+        lane.titleBold = gridBoolean(value);
+        return true;
+    }
+
+    if (field === "laneCollapsed") {
+        lane.collapsed = gridBoolean(value);
+        return true;
+    }
+
+    // ---------------------------------------------------------
+    // Task/row-level fields
+    // ---------------------------------------------------------
+    if (field === "task") {
+        row.label = String(value ?? "");
+        return true;
+    }
+
+    if (field === "predecessor") {
+        row.predecessor = String(value ?? "");
+        return true;
+    }
+
+    if (field === "showDateRange") {
+        row.showDateRange = gridBoolean(value);
+        return true;
+    }
+
+    // No element means there is nothing else to edit.
+    if (!element) {
+        return false;
+    }
+
+    // ---------------------------------------------------------
+    // Fields shared by bars and milestones
+    // ---------------------------------------------------------
+    if (field === "p6IdStart") {
+        element.p6IdStart = String(value ?? "");
+        return true;
+    }
+
+    if (field === "p6IdFinish") {
+        element.p6IdFinish = String(value ?? "");
+        return true;
+    }
+
+    // ---------------------------------------------------------
+    // Activity bar fields
+    // ---------------------------------------------------------
+    if (rowData.type === "Bar") {
+        if (field === "start") {
+            const normalized = normalizeDateString(value);
+            if (normalized) element.start = normalized;
+            return true;
         }
 
-        if (field === "labelName" && rowData._msIdx !== null) {
-            const ms = row.milestones[rowData._msIdx];
-            if (ms) {
-                ms.label = value;
-                recordStateChange();
-                renderInputRows();
-                updateChart();
-            }
-            return;
+        if (field === "end") {
+            const normalized = normalizeDateString(value);
+            if (normalized) element.end = normalized;
+            return true;
         }
 
-        if (rowData._barIdx !== null) {
-            const bar = row.bars[rowData._barIdx];
-            if (!bar) return;
-            if (field === "start") bar.start = normalizeDateString(value);
-            else if (field === "end") bar.end = normalizeDateString(value);
-            else if (field === "progress") bar.progress = Math.max(0, Math.min(100, parseInt(value, 10) || 0));
-            else if (field === "color") bar.color = value;
-            else if (field === "bgColor") bar.bgColor = value;
-            else if (field === "pattern") bar.pattern = value;
-            else if (field === "p6IdStart") bar.p6IdStart = value;
-            else if (field === "p6IdFinish") bar.p6IdFinish = value;
-        } else if (rowData._msIdx !== null) {
-            const ms = row.milestones[rowData._msIdx];
-            if (!ms) return;
-            if (field === "start" || field === "end") ms.date = normalizeDateString(value);
-            else if (field === "color") ms.color = value;
-            else if (field === "symbol") ms.symbol = value;
-            else if (field === "p6IdStart") ms.p6IdStart = value;
-            else if (field === "p6IdFinish") ms.p6IdFinish = value;
+        if (field === "progress") {
+            element.progress = Math.max(0, Math.min(100, gridNumber(value, 0)));
+            return true;
         }
 
+        if (field === "fillColor") {
+            element.color = String(value || "");
+            return true;
+        }
+
+        if (field === "barBgColor") {
+            element.bgColor = String(value || "");
+            return true;
+        }
+
+        if (field === "pattern") {
+            element.pattern = String(value || "solid");
+            return true;
+        }
+    }
+
+    // ---------------------------------------------------------
+    // Milestone fields
+    // ---------------------------------------------------------
+    if (rowData.type === "Milestone") {
+        if (field === "labelName") {
+            element.label = String(value ?? "");
+            return true;
+        }
+
+        if (field === "milestoneDate") {
+            const normalized = normalizeDateString(value);
+            if (normalized) element.date = normalized;
+            return true;
+        }
+
+        if (field === "symbol") {
+            element.symbol = String(value || "diamond");
+            return true;
+        }
+
+        if (field === "milestoneColor") {
+            element.color = String(value || "");
+            return true;
+        }
+
+        if (field === "showDate") {
+            element.showDate = gridBoolean(value);
+            return true;
+        }
+
+        if (field === "labelOffsetX") {
+            element.labelOffsetX = gridNumber(value, 0);
+            element.manualLabel = true;
+            return true;
+        }
+
+        if (field === "labelOffsetY") {
+            element.labelOffsetY = gridNumber(value, 0);
+            element.manualLabel = true;
+            return true;
+        }
+
+        if (field === "dateOffsetX") {
+            element.dateOffsetX = gridNumber(value, 0);
+            element.manualDateLabel = true;
+            return true;
+        }
+
+        if (field === "dateOffsetY") {
+            element.dateOffsetY = gridNumber(value, 0);
+            element.manualDateLabel = true;
+            return true;
+        }
+
+        if (field === "leaderEnabledText") {
+            element.leaderEnabledText = gridBoolean(value);
+            return true;
+        }
+
+        if (field === "leaderEnabledDate") {
+            element.leaderEnabledDate = gridBoolean(value);
+            return true;
+        }
+
+        if (field === "leaderAnchorText") {
+            element.leaderAnchorText = ["left", "center", "right"].includes(value) ? value : "center";
+            return true;
+        }
+
+        if (field === "leaderWeight") {
+            element.leaderWeight = Math.max(1, Math.min(10, gridNumber(value, 1)));
+            return true;
+        }
+
+        if (field === "leaderPattern") {
+            element.leaderPattern = String(value || "solid");
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*
+    Run during typing / clicking / selecting.
+
+    It changes projectData and redraws the SVG timeline immediately,
+    but it does not call recordStateChange yet.
+*/
+function updateGridCellLive(cell, value) {
+    const rowData = cell.getRow().getData();
+    const field = cell.getField();
+
+    const wasApplied = applyGridEditLive(rowData, field, value);
+
+    if (!wasApplied) {
+        return;
+    }
+
+    cell.getElement().classList.add("grid-live-editing");
+    markUnsavedState();
+    updateChart();
+}
+
+/*
+    Run once when the user completes a cell edit.
+
+    This adds exactly one Undo snapshot, syncs the sidebar cards,
+    stores the project locally, and removes the orange active-edit style.
+*/
+function finishGridCellEdit(cell) {
+    const rowData = cell.getRow().getData();
+    const field = cell.getField();
+    const value = cell.getValue();
+
+    applyGridEditLive(rowData, field, value);
+
+    clearTimeout(gridLiveEditTimer);
+
+    gridLiveEditTimer = setTimeout(() => {
         recordStateChange();
-        updateChart();
-    }
+        renderInputRows();
 
-    function initDataGrid() {
-        const rows = flattenProjectDataForGrid();
-        if (gridTableInstance) { gridTableInstance.setData(rows); return; }
-
-               function colorPickerEditor(cell, onRendered, success, cancel) {
-            const input = document.createElement("input");
-            input.type = "color";
-            input.style.width = "100%";
-            input.style.height = "100%";
-            input.value = cell.getValue() || "#000000";
-            onRendered(() => input.focus());
-            input.addEventListener("change", () => success(input.value));
-            input.addEventListener("blur", () => success(input.value));
-            return input;
+        if (currentMainView === "grid") {
+            populateTrackerDashboardMatrix();
         }
 
-                     gridTableInstance = new Tabulator("#dataGridContainer", {
-            data: rows,
-            layout: "fitColumns",
-            height: "calc(100vh - 220px)",
-            columns: [
-                { title: "Type", field: "type", editable: false, headerFilter: "input", width: 100 },
-                { title: "Swimlane", field: "swimlane", editable: false, headerFilter: "input" },
-                { title: "Task", field: "task", editable: false, headerFilter: "input" },
-                { title: "Label Name", field: "labelName", editor: "input", headerFilter: "input" },
-                { title: "Predecessor", field: "predecessor", editor: "input", headerFilter: "input" },
-                { title: "P6 ID Start", field: "p6IdStart", editor: "input", headerFilter: "input" },
-                { title: "P6 ID Finish", field: "p6IdFinish", editor: "input", headerFilter: "input" },
-                { title: "Start / Date", field: "start", editor: "input", headerFilter: "input" },
-                { title: "End", field: "end", editor: "input", headerFilter: "input" },
-                { title: "Progress %", field: "progress", editor: "number",
-                  editorParams: { min: 0, max: 100 } },
-                { title: "Fill Color", field: "color", editor: "input" },
-                { title: "BG Color", field: "bgColor", editor: "input" },
-                { title: "Pattern", field: "pattern", editor: "input" },
-                { title: "Symbol", field: "symbol", editor: "input" }
-            ]
+        cell.getElement().classList.remove("grid-live-editing");
+    }, 150);
+}
+
+/*
+    A text / number / date editor that sends updates live while typing.
+
+    Tabulator's default input editor generally waits until the user exits
+    the cell. This custom editor makes the timeline react immediately.
+*/
+function createLiveInputEditor(inputType = "text", extraAttributes = {}) {
+    return function(cell, onRendered, success, cancel) {
+        const input = document.createElement("input");
+
+        input.type = inputType;
+        input.className = "grid-live-editor";
+        input.value = cell.getValue() ?? "";
+
+        Object.entries(extraAttributes).forEach(([key, value]) => {
+            input.setAttribute(key, value);
         });
 
-        gridTableInstance.on("cellEdited", function (cell) {
-            applyGridEditToProjectData(cell.getRow().getData(), cell.getField(), cell.getValue());
+        onRendered(() => {
+            input.focus();
+
+            if (inputType === "text" || inputType === "number") {
+                input.select();
+            }
         });
+
+        input.addEventListener("input", () => {
+            updateGridCellLive(cell, input.value);
+        });
+
+        input.addEventListener("change", () => {
+            updateGridCellLive(cell, input.value);
+        });
+
+        input.addEventListener("blur", () => {
+            success(input.value);
+        });
+
+        input.addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                success(input.value);
+            }
+
+            if (event.key === "Escape") {
+                event.preventDefault();
+                cancel();
+            }
+        });
+
+        return input;
+    };
+}
+
+/*
+    Dropdown editor with immediate timeline updates.
+*/
+function createLiveSelectEditor(options) {
+    return function(cell, onRendered, success, cancel) {
+        const select = document.createElement("select");
+
+        select.className = "grid-live-editor";
+
+        options.forEach(option => {
+            const optionEl = document.createElement("option");
+            optionEl.value = option.value;
+            optionEl.textContent = option.label;
+            select.appendChild(optionEl);
+        });
+
+        select.value = cell.getValue() ?? "";
+
+        onRendered(() => {
+            select.focus();
+        });
+
+        select.addEventListener("change", () => {
+            updateGridCellLive(cell, select.value);
+            success(select.value);
+        });
+
+        select.addEventListener("blur", () => {
+            success(select.value);
+        });
+
+        select.addEventListener("keydown", event => {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                cancel();
+            }
+        });
+
+        return select;
+    };
+}
+
+/*
+    Color editor with immediate SVG redraw.
+*/
+function createLiveColorEditor(cell, onRendered, success, cancel) {
+    const input = document.createElement("input");
+
+    input.type = "color";
+    input.className = "grid-live-editor";
+    input.value = cell.getValue() || "#000000";
+
+    onRendered(() => {
+        input.focus();
+    });
+
+    input.addEventListener("input", () => {
+        updateGridCellLive(cell, input.value);
+    });
+
+    input.addEventListener("change", () => {
+        updateGridCellLive(cell, input.value);
+        success(input.value);
+    });
+
+    input.addEventListener("blur", () => {
+        success(input.value);
+    });
+
+    return input;
+}
+
+/*
+    Checkbox editor with immediate SVG redraw.
+*/
+function createLiveCheckboxEditor(cell, onRendered, success, cancel) {
+    const wrap = document.createElement("label");
+    wrap.className = "grid-live-checkbox-wrap";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = gridBoolean(cell.getValue());
+
+    wrap.appendChild(input);
+
+    onRendered(() => {
+        input.focus();
+    });
+
+    input.addEventListener("change", () => {
+        updateGridCellLive(cell, input.checked);
+        success(input.checked);
+    });
+
+    input.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+            event.preventDefault();
+            cancel();
+        }
+    });
+
+    return wrap;
+}
+
+/*
+    Adds gray non-editable styling to Bar-only / Milestone-only cells
+    that do not apply to the current record type.
+*/
+function gridCellFormatter(cell) {
+    const cellElement = cell.getElement();
+
+    cellElement.classList.remove("grid-read-only");
+
+    if (!canEditGridField(cell)) {
+        cellElement.classList.add("grid-read-only");
+        return "";
     }
+
+    return cell.getValue() ?? "";
+}
+
+/*
+    Rebuild or refresh the Tabulator grid.
+
+    Call this after importing a CSV / JSON file if the grid is visible.
+*/
+function initDataGrid() {
+    const rows = flattenProjectDataForGrid();
+
+    if (gridTableInstance) {
+        gridTableInstance.replaceData(rows);
+        return;
+    }
+
+    const textEditor = createLiveInputEditor("text");
+    const dateEditor = createLiveInputEditor("date");
+    const progressEditor = createLiveInputEditor("number", {
+        min: "0",
+        max: "100",
+        step: "1"
+    });
+    const offsetEditor = createLiveInputEditor("number", {
+        step: "1"
+    });
+    const fontSizeEditor = createLiveInputEditor("number", {
+        min: "6",
+        max: "72",
+        step: "1"
+    });
+    const leaderWeightEditor = createLiveInputEditor("number", {
+        min: "1",
+        max: "10",
+        step: "1"
+    });
+
+    const alignmentEditor = createLiveSelectEditor([
+        { value: "left", label: "Left" },
+        { value: "center", label: "Center" },
+        { value: "right", label: "Right" }
+    ]);
+
+    const barPatternEditor = createLiveSelectEditor([
+        { value: "solid", label: "Solid" },
+        { value: "crosshatch", label: "Cross Hatch" },
+        { value: "grid", label: "Grid" },
+        { value: "dashed", label: "Dashed" },
+        { value: "gingham", label: "Gingham" }
+    ]);
+
+    const milestoneSymbolEditor = createLiveSelectEditor([
+        { value: "diamond", label: "Diamond" },
+        { value: "circle", label: "Circle" },
+        { value: "square", label: "Square" },
+        { value: "triangle", label: "Triangle" }
+    ]);
+
+    const leaderPatternEditor = createLiveSelectEditor([
+        { value: "solid", label: "Solid" },
+        { value: "dashed", label: "Dashed" },
+        { value: "dotted", label: "Dotted" }
+    ]);
+
+    gridTableInstance = new Tabulator("#dataGridContainer", {
+        data: rows,
+
+        layout: "fitDataStretch",
+        height: "calc(100vh - 230px)",
+        pagination: true,
+        paginationMode: "local",
+        paginationSize: 100,
+        paginationSizeSelector: [25, 50, 100, 250],
+        movableColumns: true,
+        resizableRows: false,
+        clipboard: true,
+        clipboardCopyStyled: false,
+        placeholder: "No activity bars or milestones exist yet. Add them from the Swimlanes & Data panel.",
+
+        rowFormatter: function(row) {
+            const rowElement = row.getElement();
+            const rowData = row.getData();
+
+            rowElement.classList.remove("grid-row-bar", "grid-row-milestone");
+
+            if (rowData.type === "Bar") {
+                rowElement.classList.add("grid-row-bar");
+            }
+
+            if (rowData.type === "Milestone") {
+                rowElement.classList.add("grid-row-milestone");
+            }
+        },
+
+        columns: [
+            {
+                title: "Element",
+                field: "type",
+                width: 105,
+                frozen: true,
+                headerFilter: "list",
+                headerFilterParams: {
+                    values: {
+                        "": "All",
+                        "Bar": "Bars",
+                        "Milestone": "Milestones"
+                    }
+                },
+                editable: false
+            },
+
+            {
+                title: "Swimlane",
+                columns: [
+                    {
+                        title: "Name",
+                        field: "swimlane",
+                        width: 180,
+                        frozen: true,
+                        headerFilter: "input",
+                        editor: textEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Lane Color",
+                        field: "swimlaneColor",
+                        width: 110,
+                        editor: createLiveColorEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Summary",
+                        field: "showSummary",
+                        width: 90,
+                        hozAlign: "center",
+                        editor: createLiveCheckboxEditor,
+                        formatter: "tickCross",
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Title Align",
+                        field: "titleAlign",
+                        width: 115,
+                        editor: alignmentEditor,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Title Font",
+                        field: "titleFontSize",
+                        width: 105,
+                        editor: fontSizeEditor,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Title Color",
+                        field: "titleColor",
+                        width: 110,
+                        editor: createLiveColorEditor,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Title Bold",
+                        field: "titleBold",
+                        width: 100,
+                        hozAlign: "center",
+                        editor: createLiveCheckboxEditor,
+                        formatter: "tickCross",
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Collapsed",
+                        field: "laneCollapsed",
+                        width: 105,
+                        hozAlign: "center",
+                        editor: createLiveCheckboxEditor,
+                        formatter: "tickCross",
+                        editable: canEditGridField
+                    }
+                ]
+            },
+
+            {
+                title: "Task Row",
+                columns: [
+                    {
+                        title: "Task Name",
+                        field: "task",
+                        width: 220,
+                        headerFilter: "input",
+                        editor: textEditor,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Predecessor",
+                        field: "predecessor",
+                        width: 115,
+                        headerFilter: "input",
+                        editor: textEditor,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Show Dates",
+                        field: "showDateRange",
+                        width: 105,
+                        hozAlign: "center",
+                        editor: createLiveCheckboxEditor,
+                        formatter: "tickCross",
+                        editable: canEditGridField
+                    }
+                ]
+            },
+
+            {
+                title: "Shared IDs",
+                columns: [
+                    {
+                        title: "Element ID",
+                        field: "elementId",
+                        width: 100,
+                        editable: false
+                    },
+                    {
+                        title: "P6 Start ID",
+                        field: "p6IdStart",
+                        width: 130,
+                        headerFilter: "input",
+                        editor: textEditor,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "P6 Finish ID",
+                        field: "p6IdFinish",
+                        width: 130,
+                        headerFilter: "input",
+                        editor: textEditor,
+                        editable: canEditGridField
+                    }
+                ]
+            },
+
+            {
+                title: "Activity Bar",
+                columns: [
+                    {
+                        title: "Start",
+                        field: "start",
+                        width: 120,
+                        sorter: "date",
+                        headerFilter: "input",
+                        editor: dateEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Finish",
+                        field: "end",
+                        width: 120,
+                        sorter: "date",
+                        headerFilter: "input",
+                        editor: dateEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Progress %",
+                        field: "progress",
+                        width: 110,
+                        hozAlign: "right",
+                        editor: progressEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Fill Color",
+                        field: "fillColor",
+                        width: 105,
+                        editor: createLiveColorEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Bar Background",
+                        field: "barBgColor",
+                        width: 125,
+                        editor: createLiveColorEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Pattern",
+                        field: "pattern",
+                        width: 125,
+                        editor: barPatternEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    }
+                ]
+            },
+
+            {
+                title: "Milestone",
+                columns: [
+                    {
+                        title: "Label",
+                        field: "labelName",
+                        width: 190,
+                        headerFilter: "input",
+                        editor: textEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Date",
+                        field: "milestoneDate",
+                        width: 120,
+                        sorter: "date",
+                        headerFilter: "input",
+                        editor: dateEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Symbol",
+                        field: "symbol",
+                        width: 110,
+                        editor: milestoneSymbolEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Color",
+                        field: "milestoneColor",
+                        width: 105,
+                        editor: createLiveColorEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Show Date",
+                        field: "showDate",
+                        width: 105,
+                        hozAlign: "center",
+                        editor: createLiveCheckboxEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    }
+                ]
+            },
+
+            {
+                title: "Milestone Label Position",
+                columns: [
+                    {
+                        title: "Label X",
+                        field: "labelOffsetX",
+                        width: 95,
+                        hozAlign: "right",
+                        editor: offsetEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Label Y",
+                        field: "labelOffsetY",
+                        width: 95,
+                        hozAlign: "right",
+                        editor: offsetEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Date X",
+                        field: "dateOffsetX",
+                        width: 95,
+                        hozAlign: "right",
+                        editor: offsetEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Date Y",
+                        field: "dateOffsetY",
+                        width: 95,
+                        hozAlign: "right",
+                        editor: offsetEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    }
+                ]
+            },
+
+            {
+                title: "Milestone Leader Lines",
+                columns: [
+                    {
+                        title: "Text Leader",
+                        field: "leaderEnabledText",
+                        width: 110,
+                        hozAlign: "center",
+                        editor: createLiveCheckboxEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Date Leader",
+                        field: "leaderEnabledDate",
+                        width: 110,
+                        hozAlign: "center",
+                        editor: createLiveCheckboxEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Text Anchor",
+                        field: "leaderAnchorText",
+                        width: 115,
+                        editor: alignmentEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Weight",
+                        field: "leaderWeight",
+                        width: 90,
+                        hozAlign: "right",
+                        editor: leaderWeightEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Pattern",
+                        field: "leaderPattern",
+                        width: 105,
+                        editor: leaderPatternEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    }
+                ]
+            }
+        ]
+    });
+
+    /*
+        Runs after the grid editor has been committed.
+
+        The actual SVG changed during typing. This final step:
+        - Saves state
+        - Adds a single Undo snapshot
+        - Refreshes the sidebar editor cards
+    */
+    gridTableInstance.on("cellEdited", function(cell) {
+        finishGridCellEdit(cell);
+    });
+}
 
     // =========================================================================
     // OVERHAULED ARCHITECTURE: FLATTENED EXCEL CSV AUTOMATION ENGINE
