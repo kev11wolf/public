@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#173f35">
+  <meta name="description" content="A family-friendly, dog-aware map of waterfalls and worthwhile outdoor stops in Western North Carolina.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WNC Explore">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="app-icon.svg">
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <title>WNC Explore Map</title>
+  <style>
+    :root{--ink:#10231e;--pine:#173f35;--moss:#2f6b56;--cream:#f7f5ef;--card:#fff;--line:#d9e1dc;--muted:#587067;--accent:#e87536;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
+    *{box-sizing:border-box} html,body,#map{height:100%;margin:0;font-family:ui-rounded,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)} button,input{font:inherit} button{cursor:pointer} #map{background:#d7e5e1}.leaflet-control-attribution{font-size:10px!important}.leaflet-popup-content-wrapper{border-radius:16px}.leaflet-popup-content{margin:14px;min-width:220px}.leaflet-container a{color:#155743;font-weight:700}
+    .marker{width:34px;height:34px;border:3px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px #163b3266;background:var(--moss);display:grid;place-items:center}.marker span{transform:rotate(45deg);font-size:16px}.marker.waterfall{background:#23729d}.marker.view{background:#a35f20}.marker.family{background:#5a7d28}.marker.camp{background:#7656a6}.marker.town{background:#b65344}
+    .app{position:fixed;inset:0;pointer-events:none;z-index:500}.topbar,.sheet,.locate{pointer-events:auto}.topbar{position:absolute;top:calc(var(--safe-top) + 12px);left:12px;right:12px;display:flex;gap:8px;align-items:center}.brand{background:var(--pine);color:white;border-radius:16px;padding:10px 12px;box-shadow:0 3px 12px #10231e45;min-width:0}.brand strong{display:block;font-size:15px;letter-spacing:.1px}.brand small{display:block;font-size:11px;opacity:.82;margin-top:1px}.search{flex:1;min-width:0;position:relative}.search input{width:100%;border:0;border-radius:16px;padding:13px 42px 13px 14px;box-shadow:0 3px 12px #10231e45;outline:none;background:#fff;font-size:16px}.search button{position:absolute;right:7px;top:6px;border:0;border-radius:10px;width:34px;height:34px;background:#eef4f0;color:var(--pine);font-size:18px}.locate{position:absolute;right:12px;bottom:calc(272px + var(--safe-bottom));border:0;background:#fff;width:46px;height:46px;border-radius:50%;box-shadow:0 3px 12px #10231e45;color:var(--pine);font-size:21px}.sheet{position:absolute;bottom:0;left:0;right:0;background:var(--cream);border-radius:24px 24px 0 0;box-shadow:0 -5px 24px #10231e2b;padding:10px 14px calc(14px + var(--safe-bottom));max-height:39vh;overflow:auto}.grab{width:42px;height:4px;background:#bac7c0;border-radius:3px;margin:0 auto 10px}.filters{display:flex;gap:7px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none}.filters::-webkit-scrollbar{display:none}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 11px;color:var(--ink);font-size:13px;font-weight:650}.chip.active{background:var(--pine);color:#fff;border-color:var(--pine)}.summary{font-size:13px;color:var(--muted);margin:0 0 8px}.poi-list{display:grid;gap:8px}.poi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;display:grid;grid-template-columns:38px 1fr auto;gap:9px;align-items:center;text-align:left;width:100%;color:inherit}.poi:focus-visible,.chip:focus-visible,.locate:focus-visible,.search input:focus-visible{outline:3px solid #f5a87d;outline-offset:2px}.poi-icon{height:34px;width:34px;border-radius:10px;display:grid;place-items:center;background:#edf4f1;font-size:17px}.poi b{display:block;font-size:14px}.poi span{display:block;color:var(--muted);font-size:12px;margin-top:2px;line-height:1.25}.chev{color:var(--moss);font-size:20px}.empty{padding:20px;text-align:center;color:var(--muted)}.popup-title{margin:0 0 4px;font-size:16px}.popup-meta{font-size:12px;color:#587067;margin-bottom:9px}.popup-note{font-size:13px;line-height:1.35;margin:0 0 11px}.popup-actions{display:flex;gap:7px}.popup-actions a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:9px;padding:8px 10px;background:#eaf2ee;font-size:12px}.popup-actions a.primary{background:var(--pine);color:#fff}.status{position:absolute;left:50%;top:calc(var(--safe-top) + 76px);transform:translateX(-50%);background:#10231ee8;color:#fff;border-radius:999px;padding:8px 12px;font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}.status.show{opacity:1}
+    @media(min-width:800px){.topbar{left:22px;right:auto;width:560px}.sheet{left:22px;bottom:22px;width:400px;border-radius:24px;max-height:min(570px,72vh);padding-bottom:14px}.locate{right:24px;bottom:30px}.brand{min-width:140px}.status{top:90px}.poi-list{max-height:360px;overflow:auto;padding-right:3px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main id="map" aria-label="Interactive map of Western North Carolina points of interest"></main>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><strong>WNC Explore</strong><small>Waterfalls, views & easy stops</small></div>
+      <label class="search"><span class="sr-only" style="position:absolute;left:-9999px">Search places</span><input id="search" type="search" placeholder="Search waterfalls, towns, camps…" autocomplete="off"><button id="clearSearch" aria-label="Clear search" title="Clear search">×</button></label>
+    </header>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+    <button id="locate" class="locate" aria-label="Find my location" title="Find my location">◎</button>
+    <section class="sheet" aria-label="Places and map filters"><div class="grab" aria-hidden="true"></div><div id="filters" class="filters"></div><p id="summary" class="summary"></p><div id="poiList" class="poi-list"></div></section>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+  (() => {
+    'use strict';
+    const POIS = [
+      {n:'Looking Glass Falls',c:'waterfall',e:'💧',lat:35.2965,lng:-82.7647,r:'Pisgah Forest',kid:'Roadside view + optional stairs',dog:true,note:'A high-payoff roadside waterfall on US 276. The overlook makes this a great short first stop.'},
+      {n:'Moore Cove Falls',c:'waterfall',e:'💧',lat:35.3168,lng:-82.7738,r:'Pisgah Forest',kid:'1.4 mi round trip; carrier-friendly',dog:true,note:'Shaded, gentle waterfall walk with a cave-like recess behind the falls.'},
+      {n:'Sliding Rock',c:'waterfall',e:'💧',lat:35.2956,lng:-82.7660,r:'Pisgah Forest',kid:'Roadside viewing; seasonal swim area',dog:false,note:'A famous natural waterslide. Best treated as a quick scenic stop outside the summer swim season.'},
+      {n:'Pink Beds',c:'family',e:'🌿',lat:35.3002,lng:-82.8080,r:'Pisgah Forest',kid:'Flat, flexible forest stroll',dog:true,note:'Picnic area and flat valley trails. Walk only as far as feels good, then return.'},
+      {n:'Cradle of Forestry',c:'family',e:'🏛️',lat:35.3327,lng:-82.7885,r:'Pisgah Forest',kid:'Historic site + short walks',dog:false,note:'Historic forest-school site near Pink Beds. Check operating season and pet rules before visiting.'},
+      {n:'Devil’s Courthouse',c:'view',e:'⛰️',lat:35.3480,lng:-82.9248,r:'Blue Ridge Parkway',kid:'0.9 mi steep paved trail',dog:true,note:'Big Blue Ridge views from a short but steep summit walk. Use the child carrier.'},
+      {n:'Graveyard Fields',c:'waterfall',e:'💧',lat:35.3002,lng:-82.8790,r:'Blue Ridge Parkway',kid:'Choose a short section only',dog:true,note:'High-elevation valley, boardwalk sections and waterfall access. Can be muddy and crowded.'},
+      {n:'Black Balsam Knob',c:'view',e:'⛰️',lat:35.3367,lng:-82.8784,r:'Blue Ridge Parkway',kid:'Exposed mountain walk',dog:true,note:'Open balds and huge views. Better for dry, calm weather than for a relaxed toddler day.'},
+      {n:'Davidson River Campground',c:'camp',e:'⛺',lat:35.2786,lng:-82.7565,r:'Pisgah Forest',kid:'Developed campground',dog:true,note:'A practical base for Pisgah waterfall sightseeing, with river access and developed facilities.'},
+      {n:'Brevard',c:'town',e:'🍂',lat:35.2334,lng:-82.7343,r:'Transylvania County',kid:'Coffee, food, shops and parks',dog:true,note:'An easy food-and-stroll town base after a forest day. Look for dog-friendly patios.'},
+      {n:'Hooker Falls',c:'waterfall',e:'💧',lat:35.1832,lng:-82.6238,r:'DuPont Forest',kid:'0.8 mi round trip',dog:true,note:'A straightforward waterfall payoff in DuPont. Keep dogs leashed and stay out of slick areas.'},
+      {n:'Triple Falls',c:'waterfall',e:'💧',lat:35.1791,lng:-82.6249,r:'DuPont Forest',kid:'About 2.2 mi round trip',dog:true,note:'Three cascades reached via a forest trail. Check current trail and stair conditions before going.'},
+      {n:'High Falls',c:'waterfall',e:'💧',lat:35.1874,lng:-82.6208,r:'DuPont Forest',kid:'About 2.2 mi round trip',dog:true,note:'Big waterfall views from overlooks. Combine only if your family wants a longer walk.'},
+      {n:'Lake Julia',c:'family',e:'🛶',lat:35.1937,lng:-82.6190,r:'DuPont Forest',kid:'Short lake stroll',dog:true,note:'A calm lake stop and picnic-friendly reset between waterfall walks.'},
+      {n:'NC Arboretum',c:'family',e:'🌳',lat:35.4858,lng:-82.6118,r:'Asheville',kid:'Easy, flexible trails',dog:true,note:'Managed gardens and woods with multiple easy trail choices. Leashed dogs are welcome on trails.'},
+      {n:'Bent Creek River Park',c:'family',e:'🌊',lat:35.4821,lng:-82.6170,r:'Asheville',kid:'Easy river-side outing',dog:true,note:'A useful low-stakes outdoor stop near the Arboretum when everyone needs room to move.'},
+      {n:'Mills River Brewery',c:'town',e:'🍺',lat:35.3912,lng:-82.5682,r:'Mills River',kid:'Outdoor meal stop',dog:true,note:'A possible outdoor-food stop after an easy day. Confirm current hours and dog policy before going.'},
+      {n:'Jump Off Rock',c:'view',e:'🌄',lat:35.3121,lng:-82.4659,r:'Hendersonville',kid:'Drive-up overlook',dog:true,note:'A low-effort overlook with broad views near Hendersonville.'},
+      {n:'Chimney Rock State Park',c:'view',e:'🪨',lat:35.4328,lng:-82.2509,r:'Hickory Nut Gorge',kid:'Scenic attraction; check access',dog:false,note:'Iconic rock-and-gorge scenery. Verify current reopening status, ticketing, and pet policy before departure.'},
+      {n:'Catawba Falls',c:'waterfall',e:'💧',lat:35.6923,lng:-82.2924,r:'Old Fort',kid:'About 2.5 mi round trip',dog:true,note:'A forest waterfall hike with a substantial payoff. Use a carrier, watch footing, and confirm trail status.'},
+      {n:'Mount Mitchell State Park',c:'view',e:'🏔️',lat:35.7649,lng:-82.2651,r:'Black Mountain',kid:'Drive-up summit area',dog:true,note:'Highest-elevation scenery in the East. Check road and park access before planning around it.'},
+      {n:'Linville Falls',c:'waterfall',e:'💧',lat:35.9590,lng:-81.9366,r:'Blue Ridge Parkway',kid:'Several overlook options',dog:true,note:'Classic multi-tier waterfall with different overlook lengths. Verify Parkway and trail access first.'},
+      {n:'Linville Caverns',c:'family',e:'🦇',lat:35.8209,lng:-81.9077,r:'Linville',kid:'Guided cave tour',dog:false,note:'A weather-proof family option near Linville. Check age, carrier, and pet rules directly.'},
+      {n:'Grandfather Mountain',c:'view',e:'🌉',lat:36.0959,lng:-81.8126,r:'Linville',kid:'Drive-up mountain attraction',dog:true,note:'Mile-high views and the Swinging Bridge. Advance entry reservations are often needed.'},
+      {n:'Moses H. Cone Manor',c:'view',e:'🏡',lat:36.1526,lng:-81.7030,r:'Blowing Rock',kid:'Carriage-road strolls',dog:true,note:'Gentle carriage roads and a historic estate landscape; check Parkway access before visiting.'},
+      {n:'Gorges State Park',c:'waterfall',e:'💧',lat:35.0691,lng:-82.9516,r:'Sapphire',kid:'Waterfalls + overlooks',dog:true,note:'Wild southern-mountain scenery. Choose shorter overlooks rather than committing to the longest routes.'},
+      {n:'Whitewater Falls',c:'waterfall',e:'💧',lat:35.0218,lng:-82.9936,r:'Sapphire',kid:'Short paved overlook path',dog:true,note:'A very large waterfall with a relatively short overlook walk. Bring the carrier for any stairs.'},
+      {n:'Cashiers',c:'town',e:'🍁',lat:35.1068,lng:-83.1004,r:'Jackson County',kid:'Restaurants, shops and scenic drives',dog:true,note:'A scenic small-town base for the Highlands–Cashiers waterfall country.'},
+      {n:'Dry Falls',c:'waterfall',e:'💧',lat:35.0687,lng:-83.2368,r:'Highlands',kid:'Short paved trail + stairs',dog:true,note:'A dramatic roadside waterfall where visitors can walk behind the falling water. Surfaces can be slick.'},
+      {n:'Bridal Veil Falls',c:'waterfall',e:'💧',lat:35.0844,lng:-83.2424,r:'Highlands',kid:'Roadside viewing',dog:true,note:'Easy roadside waterfall stop on the Highlands scenic route.'},
+      {n:'Highlands',c:'town',e:'🍂',lat:35.0526,lng:-83.1968,r:'Macon County',kid:'Food, strolling and fall color',dog:true,note:'Compact mountain town suited to a slow lunch and scenic waterfall loop.'}
+    ];
+    const categories = {all:{label:'All',e:'✦'},waterfall:{label:'Waterfalls',e:'💧'},view:{label:'Views',e:'⛰️'},family:{label:'Easy & family',e:'🌿'},camp:{label:'Campgrounds',e:'⛺'},town:{label:'Towns & food',e:'🍂'}};
+    const state = {filter:'all',query:'',markers:[],activeId:null};
+    const map = L.map('map',{zoomControl:false,preferCanvas:true}).setView([35.43,-82.35],8);
+    L.control.zoom({position:'bottomright'}).addTo(map);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+    const layer = L.layerGroup().addTo(map); const search = document.querySelector('#search'); const list = document.querySelector('#poiList'); const filters = document.querySelector('#filters'); const summary = document.querySelector('#summary'); const status = document.querySelector('#status');
+    const esc = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    const matches = p => (state.filter==='all'||p.c===state.filter) && `${p.n} ${p.r} ${p.kid} ${p.note}`.toLowerCase().includes(state.query.toLowerCase());
+    function toast(msg){status.textContent=msg;status.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>status.classList.remove('show'),2600)}
+    function icon(p){return L.divIcon({className:'',html:`<div class="marker ${p.c}" aria-hidden="true"><span>${p.e}</span></div>`,iconSize:[34,34],iconAnchor:[17,34],popupAnchor:[0,-35]})}
+    function popup(p){const directions=`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;return `<h2 class="popup-title">${esc(p.n)}</h2><div class="popup-meta">${esc(p.r)} · ${p.dog?'🐕 Leashed dogs: likely allowed':'🐕 Check pet policy'}</div><p class="popup-note">${esc(p.note)}</p><div class="popup-actions"><a class="primary" target="_blank" rel="noopener" href="${directions}">Directions</a><a target="_blank" rel="noopener" href="https://www.google.com/search?q=${encodeURIComponent(p.n+' current conditions')}">Check status</a></div>`}
+    function focusPoi(p){map.flyTo([p.lat,p.lng],14,{duration:typeof window.matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches?0:0.7});setTimeout(()=>state.markers.find(x=>x.p===p)?.m.openPopup(),350)}
+    function render(){const items=POIS.filter(matches);layer.clearLayers();state.markers=[];items.forEach(p=>{const m=L.marker([p.lat,p.lng],{icon:icon(p),title:p.n,keyboard:true}).bindPopup(popup(p),{maxWidth:290});m.on('click',()=>{state.activeId=p.n});m.addTo(layer);state.markers.push({p,m})});summary.textContent=`${items.length} place${items.length===1?'':'s'} shown · tap a card for the map`;list.innerHTML=items.length?items.map(p=>`<button class="poi" data-name="${esc(p.n)}"><span class="poi-icon">${p.e}</span><span><b>${esc(p.n)}</b><span>${esc(p.r)} · ${esc(p.kid)}</span></span><span class="chev">›</span></button>`).join(''):'<div class="empty">No places match that search. Try “falls,” “Pisgah,” or clear the filters.</div>';list.querySelectorAll('.poi').forEach(b=>b.addEventListener('click',()=>focusPoi(POIS.find(p=>p.n===b.dataset.name))));}
+    function renderFilters(){filters.innerHTML=Object.entries(categories).map(([k,v])=>`<button class="chip ${state.filter===k?'active':''}" data-filter="${k}">${v.e} ${v.label}</button>`).join('');filters.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{state.filter=b.dataset.filter;renderFilters();render()}))}
+    search.addEventListener('input',()=>{state.query=search.value.trim();render()});document.querySelector('#clearSearch').addEventListener('click',()=>{search.value='';state.query='';search.focus();render()});
+    document.querySelector('#locate').addEventListener('click',()=>{if(!navigator.geolocation){toast('Location is not available in this browser.');return}toast('Finding your location…');navigator.geolocation.getCurrentPosition(pos=>{const ll=[pos.coords.latitude,pos.coords.longitude];L.circleMarker(ll,{radius:9,color:'#fff',weight:3,fillColor:'#e87536',fillOpacity:1}).addTo(map).bindPopup('Your location');map.flyTo(ll,12);toast('Location found.');},()=>toast('Location permission was not granted.'),{enableHighAccuracy:true,timeout:9000,maximumAge:60000})});
+    renderFilters();render();
+    if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  })();
+  </script>
+</body>
+</html>

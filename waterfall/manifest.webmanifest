@@ -1,0 +1,19 @@
+{
+  "name": "WNC Explore Map",
+  "short_name": "WNC Explore",
+  "description": "A family-friendly map of waterfalls, overlooks, campgrounds, and worthwhile stops in Western North Carolina.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f5ef",
+  "theme_color": "#173f35",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
