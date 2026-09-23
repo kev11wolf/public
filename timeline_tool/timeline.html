@@ -1962,6 +1962,7 @@ function stopGlobalDragAction(e) {
         syncUndoRedoButtonsState();
         saveApplicationState();
         checkBackupReminder();
+        requestGridSync();
     }
 
     let changeCounterSinceBackup = 0;
@@ -2051,6 +2052,7 @@ document.querySelectorAll('.zoom-pill-btn').forEach(b => {
         renderInputRows();
         populateTrackerDashboardMatrix();
         updateChart();
+        requestGridSync();
     }
 
     function syncUndoRedoButtonsState() {
@@ -2144,6 +2146,28 @@ function csvText(value) {
 // =========================================================================
 
 let gridLiveEditTimer = null;
+let gridSyncTimer = null;
+let gridSyncRunning = false;
+let gridSyncPending = false;
+
+// projectData is authoritative; redraw only after a committed edit.
+function requestGridSync() {
+    if (currentMainView !== "grid" || !gridTableInstance) return;
+    clearTimeout(gridSyncTimer);
+    gridSyncTimer = setTimeout(async () => {
+        if (gridSyncRunning) { gridSyncPending = true; return; }
+        gridSyncRunning = true;
+        try {
+            await gridTableInstance.replaceData(flattenProjectDataForGrid());
+            gridTableInstance.redraw(true);
+        } catch (err) {
+            console.error("Data grid refresh failed:", err);
+        } finally {
+            gridSyncRunning = false;
+            if (gridSyncPending) { gridSyncPending = false; requestGridSync(); }
+        }
+    }, 30);
+}
 
 /*
     Return a date in YYYY-MM-DD format for Tabulator's date editor.
@@ -2635,18 +2659,10 @@ function finishGridCellEdit(cell) {
 
     applyGridEditLive(rowData, field, value);
 
-    clearTimeout(gridLiveEditTimer);
-
-    gridLiveEditTimer = setTimeout(() => {
-        recordStateChange();
-        renderInputRows();
-
-        if (currentMainView === "grid") {
-            populateTrackerDashboardMatrix();
-        }
-
-        cell.getElement().classList.remove("grid-live-editing");
-    }, 150);
+    cell.getElement().classList.remove("grid-live-editing");
+    recordStateChange(); // Syncs other rows sharing the lane or task.
+    renderInputRows();
+    updateChart();
 }
 
 /*
@@ -2833,7 +2849,7 @@ function initDataGrid() {
     const rows = flattenProjectDataForGrid();
 
     if (gridTableInstance) {
-        gridTableInstance.replaceData(rows);
+        requestGridSync();
         return;
     }
 
@@ -3909,7 +3925,21 @@ function migrateSnapshotIfNeeded(state) {
 }
 
 function loadApplicationState() {
-    localStorage.removeItem('gantt_v8_master_snapshot');
+    const saved = localStorage.getItem('gantt_v8_master_snapshot');
+    if (saved) {
+        try {
+            const state = migrateSnapshotIfNeeded(JSON.parse(saved));
+            if (!Array.isArray(state.data)) throw new Error('Invalid saved data');
+            actionUndoStack = [JSON.stringify(state)];
+            actionRedoStack = [];
+            restoreStateFromSnapshot(state);
+            markSavedState();
+            return;
+        } catch (err) {
+            console.error('Saved project could not be restored:', err);
+            showToast('Local save could not be restored. Import a JSON backup if available.', 'error');
+        }
+    }
 
     projectData = [
         { id: 0, title: 'Site Preparation', color: '#eff6ff', showSummary: true, rows: [
@@ -3971,7 +4001,8 @@ function loadApplicationState() {
         showHeaderYear: true, showHeaderQuarter: true, showHeaderMonth: true, showHeaderDay: false
     };
 
-    actionUndoStack.push(JSON.stringify(seedSnapshot));
+    actionUndoStack = [JSON.stringify(seedSnapshot)];
+    actionRedoStack = [];
     restoreStateFromSnapshot(seedSnapshot);
 }
 
@@ -6385,6 +6416,11 @@ function toggleRowCardDetails(btn) {
         originalUpdateChart();
         applyCalloutLeaderVisibility();
     };
+
+// Initialize after all functions and the updateChart wrapper are defined.
+loadApplicationState();
+populateRecentFilesDropdown();
+
 // NEW: Handles pill button clicks and keeps hidden input + visual state in sync
 function setZoomPill(btnEl) {
     document.querySelectorAll('.zoom-pill-btn').forEach(b => b.classList.remove('active'));
