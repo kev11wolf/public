@@ -5,11 +5,11 @@
   <title>Enterprise Presentation Gantt Workspace Suite</title>
 
   <!-- Browser-tab favicon -->
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%232563eb'/%3E%3Crect x='18' y='30' width='45' height='12' rx='3' fill='white'/%3E%3Crect x='18' y='50' width='30' height='12' rx='3' fill='white'/%3E%3Ccircle cx='75' cy='68' r='8' fill='white'/%3E%3C/svg%3E">
 
   <!-- SheetJS Library for reading Excel files -->
-  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2563eb">
+  <!-- manifest attached conditionally below, http(s) only -->
        <script src="xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.1/dist/css/tabulator.min.css">
@@ -36,22 +36,30 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: var(--bg-main); color: var(--text-dark); height: 100vh; overflow: hidden;}
         .app-wrapper { display: flex; height: 100vh; width: 100vw; }
         
-/* Sidebar Configuration Deck (750px Wide) */
-        .sidebar { 
-            flex: 0 0 750px; 
-            background: var(--bg-panel); 
+:root { --sidebar-width: 750px; }
+        .sidebar {
+            flex: 0 0 var(--sidebar-width);
+            background: var(--bg-panel);
             border-right: 1px solid var(--border-color);
             display: flex; flex-direction: column;
             overflow: hidden;
             transition: flex-basis 0.3s ease, min-width 0.3s ease, width 0.3s ease;
+            position: relative;
         }
-        /* Style rule to animate sidebar down to 0 width */
         .sidebar.collapsed {
             flex: 0 0 0px;
             min-width: 0px;
             width: 0px;
             border-right: none;
         }
+        .sidebar.resizing { transition: none; }
+        .sidebar-resize-handle {
+            position: absolute; top: 0; right: -4px; width: 8px; height: 100%;
+            cursor: col-resize; z-index: 500; background: transparent; display: block;
+        }
+        .sidebar-resize-handle::after { content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 2px; background: #cbd5e1; }
+        .sidebar-resize-handle:hover::after, .sidebar-resize-handle.active::after { background: var(--primary); }
+        .sidebar.collapsed .sidebar-resize-handle { display: none; }
         .sidebar-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: #f8fafc; display: flex; justify-content: space-between; align-items: center;}
         .sidebar-header h1 { margin: 0; font-size: 18px; color: #1e3a8a; }
         
@@ -658,6 +666,7 @@ input[type="color"] {
 <div class="app-wrapper">
     
   <div class="sidebar" id="appSidebar">
+    <div class="sidebar-resize-handle" id="sidebarResizeHandle" title="Drag to resize"></div>
             <!-- Modified Header to stack title/actions and file matrix -->
             <div class="sidebar-header" style="flex-direction: column; align-items: stretch; gap: 12px; padding-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -995,7 +1004,7 @@ input[type="color"] {
 
 <div id="svgViewWrapper">
 <div class="zoom-viewport-mask">
-                <div class="canvas-holder" id="svgContainer" onmousemove="handleGlobalDragMove(event); updateTimelineCrosshair(event)" onmouseup="stopGlobalDragAction(event)" onmouseleave="stopGlobalDragAction(event); hideTimelineCrosshair()">
+                <div class="canvas-holder" id="svgContainer" onmousemove="updateTimelineCrosshair(event)" onmouseleave="if (!activeDragState) hideTimelineCrosshair();">
                 </div>
             </div>
 
@@ -1088,7 +1097,17 @@ function switchMainView(mode) {
     );
 
     if (mode === "grid") {
-        initDataGrid();
+        if (!gridTableInstance) {
+            initDataGrid();
+        }
+        // The table may have been built while the container was hidden (display:none),
+        // which is exactly what caused the "blank on first open" bug -- Tabulator measured
+        // a 0-width box. Forcing a full redraw *after* the container is visible fixes it
+        // every time, not just the first time.
+        requestAnimationFrame(() => {
+            requestGridSync();
+            if (gridTableInstance) gridTableInstance.redraw(true);
+        });
     }
 }
 
@@ -1259,6 +1278,21 @@ function markSavedState() {
     return isNaN(timestamp) ? NaN : timestamp;
 }
 
+    function addCalendarMonths(d, months) {
+        let year = d.getFullYear();
+        let month = d.getMonth() + months;
+        let day = d.getDate();
+        let result = new Date(year, month, 1);
+        let daysInTargetMonth = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+        result.setDate(Math.min(day, daysInTargetMonth));
+        return result;
+    }
+    function getTodayDDMMMYYYY() { return formatDateToDDMMMYYYY(new Date()); }
+    function getOneMonthFromTodayDDMMMYYYY() { return formatDateToDDMMMYYYY(addCalendarMonths(new Date(), 1)); }
+    function escapeForMarkup(str) {
+        return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
     function convertDDMMMYYYYToYYYYMMDD(str) {
     if (!str) return "";
     let ts = parseAnyDateToTimestamp(str);
@@ -1334,7 +1368,19 @@ function hydrateRowDefaults() {
             if (!Array.isArray(row.milestones)) {
                 row.milestones = [];
             }
+
+            row.bars.forEach(bar => {
+                if (typeof bar.showLabelInBar !== 'boolean') bar.showLabelInBar = false;
+                if (!Number.isFinite(Number(bar.labelFontSize))) bar.labelFontSize = 10;
+            });
+            row.milestones.forEach(ms => {
+                if (!Number.isFinite(Number(ms.labelFontSize))) ms.labelFontSize = 9;
+            });
         });
+    });
+
+    (calloutData || []).forEach(c => {
+        if (typeof c.text !== 'string') c.text = String(c.text ?? '');
     });
 }
 
@@ -1502,6 +1548,11 @@ function normalizeDateString(val) {
     function initiateDragInteraction(e, mode, rowId, subId = null) {
     e.preventDefault();
     e.stopPropagation();
+
+    if (mode === 'timeline-pan' || mode === 'timeline-resize-start' || mode === 'timeline-resize-end') {
+        activeDragState = { mode: mode, startX: e.clientX, startY: e.clientY, origMinTime: scaleMinTime, origMaxTime: scaleMaxTime };
+        return;
+    }
 
     // NEW: Callout box + leader-line dragging
     if (mode === 'callout-move' || mode === 'callout-leader-move') {
@@ -1904,15 +1955,12 @@ function hideTimelineCrosshair() {
 
 function stopGlobalDragAction(e) {
         if (!activeDragState) return;
-        recordStateChange();
-        renderInputRows(); 
-        populateTrackerDashboardMatrix();
-        
         const dragMovementOccurred = activeDragState.hasMoved;
         activeDragState = null;
-        
-        // Only tear down the DOM if an object actually changed positions
         if (dragMovementOccurred) {
+            recordStateChange();
+            renderInputRows();
+            populateTrackerDashboardMatrix();
             updateChart();
         }
     }
@@ -2064,6 +2112,8 @@ document.querySelectorAll('.zoom-pill-btn').forEach(b => {
         if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); executeUndoAction(); }
         if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); executeRedoAction(); }
     });
+    window.addEventListener('mousemove', (e) => { if (activeDragState) handleGlobalDragMove(e); });
+    window.addEventListener('mouseup', (e) => { if (activeDragState) stopGlobalDragAction(e); });
 
     window.addEventListener('resize', () => {
         if (document.querySelector('input[name="sizingMode"]:checked')?.value === 'ticker-tape') {
@@ -2288,6 +2338,8 @@ function flattenProjectDataForGrid() {
                     fillColor: bar.color || "",
                     barBgColor: bar.bgColor || "",
                     pattern: bar.pattern || "solid",
+                    showLabelInBar: bar.showLabelInBar === true,
+                    labelFontSize: bar.labelFontSize ?? 10,
 
                     // Milestone-only fields
                     labelName: "",
@@ -2342,6 +2394,7 @@ function flattenProjectDataForGrid() {
                     fillColor: "",
                     barBgColor: "",
                     pattern: "",
+                    showLabelInBar: "",
 
                     // Milestone fields
                     labelName: ms.label || "",
@@ -2357,7 +2410,8 @@ function flattenProjectDataForGrid() {
                     leaderEnabledDate: ms.leaderEnabledDate === true,
                     leaderAnchorText: ms.leaderAnchorText || "center",
                     leaderWeight: ms.leaderWeight ?? 1,
-                    leaderPattern: ms.leaderPattern || "solid"
+                    leaderPattern: ms.leaderPattern || "solid",
+                    labelFontSize: ms.labelFontSize ?? 9
                 });
             });
         });
@@ -2382,7 +2436,8 @@ function canEditGridField(cell) {
         "progress",
         "fillColor",
         "barBgColor",
-        "pattern"
+        "pattern",
+        "showLabelInBar"
     ];
 
     const milestoneOnlyFields = [
@@ -2540,12 +2595,27 @@ function applyGridEditLive(rowData, field, value) {
             element.pattern = String(value || "solid");
             return true;
         }
+
+        if (field === "showLabelInBar") {
+            element.showLabelInBar = gridBoolean(value);
+            return true;
+        }
+
+        if (field === "labelFontSize") {
+            element.labelFontSize = Math.max(6, Math.min(72, gridNumber(value, 10)));
+            return true;
+        }
     }
 
     // ---------------------------------------------------------
     // Milestone fields
     // ---------------------------------------------------------
     if (rowData.type === "Milestone") {
+        if (field === "labelFontSize") {
+            element.labelFontSize = Math.max(6, Math.min(72, gridNumber(value, 9)));
+            return true;
+        }
+
         if (field === "labelName") {
             element.label = String(value ?? "");
             return true;
@@ -2915,6 +2985,9 @@ function initDataGrid() {
         clipboard: true,
         clipboardCopyStyled: false,
         placeholder: "No activity bars or milestones exist yet. Add them from the Swimlanes & Data panel.",
+        tableBuilt: function () {
+            requestAnimationFrame(() => { if (gridTableInstance) gridTableInstance.redraw(true); });
+        },
 
         rowFormatter: function(row) {
             const rowElement = row.getElement();
@@ -2955,7 +3028,6 @@ function initDataGrid() {
                         title: "Name",
                         field: "swimlane",
                         width: 180,
-                        frozen: true,
                         headerFilter: "input",
                         editor: textEditor,
                         formatter: gridCellFormatter,
@@ -3134,6 +3206,23 @@ function initDataGrid() {
                         editor: barPatternEditor,
                         formatter: gridCellFormatter,
                         editable: canEditGridField
+                    },
+                    {
+                        title: "Show Name In Bar",
+                        field: "showLabelInBar",
+                        width: 130,
+                        hozAlign: "center",
+                        editor: createLiveCheckboxEditor,
+                        formatter: "tickCross",
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Bar Label Font",
+                        field: "labelFontSize",
+                        width: 115,
+                        editor: fontSizeEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
                     }
                 ]
             },
@@ -3182,6 +3271,14 @@ function initDataGrid() {
                         width: 105,
                         hozAlign: "center",
                         editor: createLiveCheckboxEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Milestone Label Font",
+                        field: "labelFontSize",
+                        width: 130,
+                        editor: fontSizeEditor,
                         formatter: gridCellFormatter,
                         editable: canEditGridField
                     }
@@ -4397,12 +4494,12 @@ function escapeHtmlAttribute(value) {
             symbol: "diamond",
             leaderEnabledText: false,
             leaderEnabledDate: false,
-            leaderAnchorText: "center"
+            leaderAnchorText: "center",
+            labelFontSize: 9
         });
     } else if (type === 'bar') {
-        let startTime = parseAnyDateToTimestamp(activeContextState.targetDate);
-        let endTime = startTime + (60 * 24 * 60 * 60 * 1000);
-        let calculatedEndStr = formatDateToDDMMMYYYY(new Date(endTime));
+        let clickedDate = new Date(parseAnyDateToTimestamp(activeContextState.targetDate));
+        let calculatedEndStr = formatDateToDDMMMYYYY(addCalendarMonths(clickedDate, 1));
 
                 row.bars.push({
             id: nextBarId++,
@@ -4411,7 +4508,9 @@ function escapeHtmlAttribute(value) {
             progress: 0,
             bgColor: "",
             color: "",
-            pattern: "solid"
+            pattern: "solid",
+            showLabelInBar: false,
+            labelFontSize: 10
         });
     } else if (type === 'callout') {
         // Drop exactly where the right-click occurred
@@ -4551,6 +4650,11 @@ function escapeHtmlAttribute(value) {
             <option value="false" ${ms.showDate === false ? "selected" : ""}>No</option>
         </select>
     </div>
+
+    <div class="modal-field">
+        <label for="modalMsFontSize">Label Font Size</label>
+        <input type="number" id="modalMsFontSize" min="6" max="72" value="${ms.labelFontSize ?? 9}">
+    </div>
 `;
 
 let buttonsHTML = `
@@ -4627,6 +4731,7 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
             ms.leaderPattern = document.getElementById('modalMsLdrPattern').value;
 
            ms.showDate = document.getElementById("modalMsShowDate").value === "true";
+            ms.labelFontSize = Math.max(6, Math.min(72, parseInt(document.getElementById("modalMsFontSize").value, 10) || 9));
 
             recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
         });
@@ -4681,6 +4786,16 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
         <label for="modalBarColor">Progress Fill</label>
         <input type="color" id="modalBarColor"
             value="${bar.color || document.getElementById('barColor').value}">
+    </div>
+
+    <label class="modal-field checkbox-field">
+        <input type="checkbox" id="modalBarShowLabel" ${bar.showLabelInBar === true ? "checked" : ""}>
+        Show task name inside bar
+    </label>
+
+    <div class="modal-field">
+        <label for="modalBarLabelFontSize">Bar Label Font Size</label>
+        <input type="number" id="modalBarLabelFontSize" min="6" max="72" value="${bar.labelFontSize ?? 10}">
     </div>
 `;
 
@@ -4745,6 +4860,8 @@ bar.progress = Number.isFinite(enteredProgress)
 bar.bgColor = document.getElementById('modalBarBgColor').value;
 bar.color = document.getElementById('modalBarColor').value;
 bar.pattern = document.getElementById('modalBarPattern').value;
+bar.showLabelInBar = document.getElementById('modalBarShowLabel').checked;
+bar.labelFontSize = Math.max(6, Math.min(72, parseInt(document.getElementById('modalBarLabelFontSize').value, 10) || 10));
 
 recordStateChange();
 renderInputRows();
@@ -4873,7 +4990,7 @@ function renderCalloutControls() {
     container.innerHTML = calloutData.map(c => `
         <div style="border: 1px solid var(--border-color); padding: 6px; margin-top: 6px; border-radius: 4px; background: #f8fafc;">
             <div style="display: flex; gap: 4px; margin-bottom: 4px;">
-                <input type="text" value="${c.text}" oninput="updateCalloutProperty('${c.id}', 'text', this.value)" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                <textarea oninput="updateCalloutProperty('${c.id}', 'text', this.value)" rows="2" style="flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font: inherit; resize: vertical;">${escapeForMarkup(c.text)}</textarea>
                 <button onclick="removeCallout('${c.id}')" style="background: var(--danger); color: white; border: none; border-radius: 3px; cursor: pointer; padding: 2px 8px;">X</button>
                 <label style="font-size:10px; display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
     <input type="checkbox"
@@ -4934,8 +5051,13 @@ document.addEventListener('mousedown', (e) => {
 // Double Click Popup Logic
 // Double Click Popup Logic
 document.addEventListener('dblclick', (e) => {
-    const target = e.target;
-    if (target.classList && target.classList.contains('draggable-callout')) {
+    // Multiline callout text is now rendered as <tspan> children inside the <text> node.
+    // A double-click can land on a <tspan> (no class/data-id of its own), so walk up
+    // with closest() to find the actual .draggable-callout element instead of checking
+    // e.target directly -- this is what silently broke the callout edit popup.
+    const calloutHit = e.target.closest ? e.target.closest('.draggable-callout') : null;
+    if (calloutHit) {
+        const target = calloutHit;
         const id = target.getAttribute('data-id');
         const callout = calloutData.find(c => c.id === id);
         if (!callout) return;
@@ -4951,7 +5073,7 @@ document.addEventListener('dblclick', (e) => {
             <h4>Callout Configuration</h4>
             <div class="dialog-row">
                 <label>Text Label:</label>
-                <input type="text" value="${callout.text}" oninput="updateCalloutProperty('${id}', 'text', this.value); renderCalloutControls();" style="width: 140px; box-sizing: border-box;">
+                <textarea rows="3" oninput="updateCalloutProperty('${id}', 'text', this.value); renderCalloutControls();" style="width: 140px; box-sizing: border-box; font: inherit; resize: vertical;">${escapeForMarkup(callout.text)}</textarea>
             </div>
             <div class="dialog-row">
                 <label>Font Size:</label>
@@ -5030,7 +5152,8 @@ document.addEventListener('dblclick', (e) => {
     }
     function addBarNew(laneIdx, rowIdx) {
         projectData[laneIdx].rows[rowIdx].bars.push({
-            id: nextBarId++, start: "01Mar2026", end: "01Jun2026", progress: 0, bgColor: "", color: "", pattern: "solid"
+            id: nextBarId++, start: getTodayDDMMMYYYY(), end: getOneMonthFromTodayDDMMMYYYY(), progress: 0, bgColor: "", color: "", pattern: "solid",
+            showLabelInBar: false, labelFontSize: 10
         });
         recordStateChange(); renderInputRows(); updateChart();
     }
@@ -5042,7 +5165,7 @@ document.addEventListener('dblclick', (e) => {
     projectData[laneIdx].rows[rowIdx].milestones.push({
         id: nextMsId++,
         label: "",
-        date: "01Jun2026",
+        date: getOneMonthFromTodayDDMMMYYYY(),
         showDate: true,
         manualLabel: false,
         labelOffsetX: 0,
@@ -5054,7 +5177,8 @@ document.addEventListener('dblclick', (e) => {
         symbol: "diamond",
         leaderEnabledText: false,
         leaderEnabledDate: false,
-        leaderAnchorText: "center"
+        leaderAnchorText: "center",
+        labelFontSize: 9
     });
     sortMilestonesChronologically(laneIdx, rowIdx);
     recordStateChange();
@@ -5305,12 +5429,14 @@ document.addEventListener('dblclick', (e) => {
     showDateRange: true,
     bars: [{
         id: nextBarId++,
-        start: '01Mar2026',
-        end: '01Jun2026',
+        start: getTodayDDMMMYYYY(),
+        end: getOneMonthFromTodayDDMMMYYYY(),
         progress: 0,
         bgColor: '',
         color: '',
-        pattern: 'solid'
+        pattern: 'solid',
+        showLabelInBar: false,
+        labelFontSize: 10
     }],
     milestones: []
 });
@@ -5769,6 +5895,22 @@ svg += `
                                 layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="url(#pat-${activePattern})" style="pointer-events:none;"/>`;
                             }
 
+                            if (bar.showLabelInBar === true) {
+                                const barLabelFontSize = Number.isFinite(Number(bar.labelFontSize)) ? Number(bar.labelFontSize) : 10;
+                                const barLabelMinWidth = barLabelFontSize * 3;
+                                if (visibleBarWidth >= barLabelMinWidth) {
+                                    const approxCharWidth = barLabelFontSize * 0.6;
+                                    const availableChars = Math.max(0, Math.floor((visibleBarWidth - 10) / approxCharWidth));
+                                    let barLabelText = String(item.label || "");
+                                    if (barLabelText.length > availableChars) {
+                                        barLabelText = availableChars > 1 ? barLabelText.slice(0, availableChars - 1) + "\u2026" : "";
+                                    }
+                                    if (barLabelText) {
+                                        layerBarsBuffer += `<text x="${xStart + visibleBarWidth / 2}" y="${y + rowHeight / 2}" text-anchor="middle" dominant-baseline="middle" font-size="${barLabelFontSize}" fill="#ffffff" style="pointer-events:none;">${escapeForMarkup(barLabelText)}</text>`;
+                                    }
+                                }
+                            }
+
                             layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:w-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-start', ${item.id}, ${bar.id})"/>`;
                             if (visibleBarWidth > 12) layerBarsBuffer += `<rect x="${xStart + 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth - 12}" height="${barThickness}" fill="transparent" style="cursor:move;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-move', ${item.id}, ${bar.id})" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"/>`;
                             layerBarsBuffer += `<rect x="${xEnd - 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:e-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-end', ${item.id}, ${bar.id})"/>`;
@@ -5793,7 +5935,7 @@ svg += `
                 if (ms.manualLabel) {
                     finalComputedTextX += (ms.labelOffsetX || 0); finalComputedTextY += (ms.labelOffsetY || 0); textAnchorStyle = "start";
                 } else {
-                    let estimatedTextWidthPixelSpan = Math.max(50, ms.label.trim().length * 5.2); 
+                    let estimatedTextWidthPixelSpan = Math.max(50, ms.label.trim().length * (msLabelFontSize * 0.58)); 
                     let footprintLeftBound = textXPositionCoordinate;
                     let footprintRightBound = textXPositionCoordinate + estimatedTextWidthPixelSpan;
 
@@ -5810,9 +5952,10 @@ svg += `
                         }
                     }
                     trackPlacedTextFootprints.push({ xMin: footprintLeftBound, xMax: footprintRightBound, staggerLevel: targetedCascadeStaggerOffsetLevel });
-                    finalComputedTextY = defaultTextYBaseline + (targetedCascadeStaggerOffsetLevel * 12);
+                    finalComputedTextY = defaultTextYBaseline + (targetedCascadeStaggerOffsetLevel * (msLabelFontSize + 3));
                 }
 
+                let msLabelFontSize = Number.isFinite(Number(ms.labelFontSize)) ? Number(ms.labelFontSize) : 9;
                 let activeMsColor = ms.color || msColor;
                 let activeSymbol = ms.symbol || 'diamond';
                 let msCommonAttr = `fill="${activeMsColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})"`;
@@ -5830,7 +5973,7 @@ svg += `
                 if (ms.leaderEnabledText) {
                     let targetTextLeaderX = finalComputedTextX;
                     let targetTextLeaderY = finalComputedTextY - 3;
-                    let estTextLenWidth = ms.label.trim().length * 4.8;
+                    let estTextLenWidth = ms.label.trim().length * (msLabelFontSize * 0.53);
 
                     if (leaderAnchor === 'custom') {
                         targetTextLeaderX = finalComputedTextX + (ms.leaderTextEndX || 0);
@@ -5869,7 +6012,7 @@ svg += `
                     layerSymbolsBuffer += `<polygon points="${dPoints}" ${msCommonAttr} />`;
                 }
 
-                layerTextsBuffer += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="9" font-weight="600" fill="${activeMsColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${ms.label}</text>`;
+                layerTextsBuffer += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="${msLabelFontSize}" font-weight="600" fill="${activeMsColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${escapeForMarkup(ms.label)}</text>`;
 
                 if (isLabelDragging) {
                     let boxW = ms.label.trim().length * 4.8 + 4; // Optimized tight typography bounds
@@ -5964,9 +6107,11 @@ svg += allLayerBarsBuffer
                    // --- DRAW CUSTOM CALLOUTS ---
         calloutData.forEach(callout => {
             const fontWeight = callout.isBold ? 'bold' : 'normal';
-            // Reduced padding significantly (from 20 to 8 width, 16 to 4 height)
-            const estWidth = callout.text.length * (callout.fontSize * 0.6) + 8; 
-            const boxHeight = callout.fontSize + 4;
+            const calloutLines = String(callout.text ?? "").split(/\r?\n/);
+            const calloutLongestLineLen = calloutLines.reduce((max, line) => Math.max(max, line.length), 1);
+            const calloutLineHeight = callout.fontSize * 1.25;
+            const estWidth = calloutLongestLineLen * (callout.fontSize * 0.6) + 8;
+            const boxHeight = (calloutLines.length * calloutLineHeight) + 4;
             const halfBoxWidth = estWidth / 2;
             const fillStyle = callout.bgTransparent ? "transparent" : callout.bgColor;
             const strokeColor = callout.leaderColor || callout.textColor; 
@@ -6019,11 +6164,13 @@ svg += allLayerBarsBuffer
             
             // Draw Callout Text
             // Note: We use ${fontFamily} from the main visual settings engine instead of sans-serif
+          const calloutFirstLineY = callout.y + calloutLineHeight * 0.75;
+          const calloutTspans = calloutLines.map((line, lineIdx) =>
+              `<tspan x="${callout.x}" y="${calloutFirstLineY + (lineIdx * calloutLineHeight)}">${escapeForMarkup(line)}</tspan>`
+          ).join("");
           svg += `<text
     class="draggable-callout"
     data-id="${callout.id}"
-    x="${callout.x}"
-    y="${callout.y + (boxHeight / 2) + (callout.fontSize / 3)}"
     text-anchor="middle"
     font-family="${fontFamily}"
     font-size="${callout.fontSize}px"
@@ -6031,7 +6178,7 @@ svg += allLayerBarsBuffer
     fill="${callout.textColor}"
     cursor="move"
     onmousedown="initiateDragInteraction(event, 'callout-move', '${callout.id}')"
-    >${callout.text}</text>`;
+    >${calloutTspans}</text>`;
         });
         // ---------------------------
 
@@ -6261,10 +6408,49 @@ function toggleWorkspaceHelpModal(e) {
 function toggleSidebarLayout() {
         const sidebar = document.getElementById('appSidebar');
         sidebar.classList.toggle('collapsed');
-        // Let structural animations finish executing before telling canvas viewport loop to dynamically auto-scale
-        setTimeout(() => {
-            updateChart();
-        }, 320);
+        setTimeout(() => { updateChart(); }, 320);
+    }
+
+    const SIDEBAR_WIDTH_STORAGE_KEY = 'gantt_sidebar_width_px';
+    const SIDEBAR_MIN_WIDTH = 280;
+    const SIDEBAR_MAX_WIDTH = 1100;
+
+    function applySidebarWidth(px) {
+        const clamped = Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, px));
+        document.documentElement.style.setProperty('--sidebar-width', clamped + 'px');
+        return clamped;
+    }
+
+    function restoreSidebarWidthFromStorage() {
+        const saved = parseInt(localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY), 10);
+        if (Number.isFinite(saved) && saved > 0) applySidebarWidth(saved);
+    }
+
+    function initSidebarResizeHandle() {
+        const handle = document.getElementById('sidebarResizeHandle');
+        const sidebar = document.getElementById('appSidebar');
+        if (!handle || !sidebar) return;
+        let dragging = false, startX = 0, startWidth = 0;
+        handle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            dragging = true;
+            startX = e.clientX;
+            startWidth = sidebar.getBoundingClientRect().width;
+            sidebar.classList.add('resizing');
+            handle.classList.add('active');
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!dragging) return;
+            const newWidth = applySidebarWidth(startWidth + (e.clientX - startX));
+            localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(newWidth));
+        });
+        window.addEventListener('mouseup', () => {
+            if (!dragging) return;
+            dragging = false;
+            sidebar.classList.remove('resizing');
+            handle.classList.remove('active');
+            if (document.querySelector('input[name="sizingMode"]:checked')?.value === 'ticker-tape') updateChart();
+        });
     }
         function sortMilestonesChronologically(laneIdx, rowIdx) {
         projectData[laneIdx].rows[rowIdx].milestones.sort((a, b) => {
@@ -6420,6 +6606,11 @@ function toggleRowCardDetails(btn) {
 // Initialize after all functions and the updateChart wrapper are defined.
 loadApplicationState();
 populateRecentFilesDropdown();
+restoreSidebarWidthFromStorage();
+initSidebarResizeHandle();
+// Build the Data Grid once at startup (even though it's hidden) so opening it later
+// only ever needs a redraw+sync, never a from-scratch build against a 0-width container.
+initDataGrid();
 
 // NEW: Handles pill button clicks and keeps hidden input + visual state in sync
 function setZoomPill(btnEl) {
@@ -6442,13 +6633,24 @@ function setZoomPill(btnEl) {
 </script>
 
 <script>
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(() => {
-            console.log('Service worker registered — app now works offline.');
-        }).catch(err => console.warn('Service worker registration failed:', err));
-    });
-}
+(function () {
+    const isHttpHosted = (location.protocol === 'http:' || location.protocol === 'https:');
+    if (isHttpHosted) {
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = 'manifest.json';
+        document.head.appendChild(manifestLink);
+    }
+    if (isHttpHosted && 'serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').then(() => {
+                console.log('Service worker registered — app now works offline.');
+            }).catch(err => console.warn('Service worker registration failed:', err));
+        });
+    } else {
+        console.log('Standalone/file:// mode -- manifest and service worker skipped.');
+    }
+})();
 </script>
 
 </body>
