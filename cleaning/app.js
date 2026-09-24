@@ -1,11 +1,11 @@
 /* Nightly Cleaning Schedule — date-driven, runs forever off a 28-day rotation */
 
 const STORAGE_KEYS = {
-  names: "clean_names_v1",
   progress: "clean_progress_v1",
 };
 
 let DATA = null;
+const NAMES = { a: "Kevin", b: "Daisy" };
 
 function fmtDateKey(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -38,16 +38,9 @@ function getSeasonalForDate(date) {
   return DATA.seasonalTasks[idx];
 }
 
-function getNames() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.names);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return { a: DATA.meta.personA, b: DATA.meta.personB };
-}
-
-function saveNames(a, b) {
-  localStorage.setItem(STORAGE_KEYS.names, JSON.stringify({ a, b }));
+function getWeeklyTasksForDate(date) {
+  const dow = date.getDay();
+  return DATA.weeklyTasks.filter(t => t.dayOfWeek === dow);
 }
 
 function getProgress() {
@@ -63,16 +56,6 @@ function setProgress(dateKey, field, value) {
   if (!p[dateKey]) p[dateKey] = {};
   p[dateKey][field] = value;
   localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(p));
-}
-
-function getSeasonalProgress() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.progress);
-    const p = raw ? JSON.parse(raw) : {};
-    return p.__seasonal || {};
-  } catch (e) {
-    return {};
-  }
 }
 
 function setSeasonalDone(mKey, value) {
@@ -96,7 +79,7 @@ function renderToday() {
   const mKey = monthKey(now);
   const rotation = getRotationForDate(now);
   const seasonal = getSeasonalForDate(now);
-  const names = getNames();
+  const weekly = getWeeklyTasksForDate(now);
   const progress = getProgress();
   const dayProgress = progress[dateKey] || {};
   const seasonalDone = !!(progress.__seasonal && progress.__seasonal[mKey]);
@@ -110,13 +93,21 @@ function renderToday() {
     <div class="room-name">${rotation.room}</div>
   </div>`;
 
-  html += taskCard("A", names.a, rotation.taskA, dayProgress.taskA, dateKey);
-  html += taskCard("B", names.b, rotation.taskB, dayProgress.taskB, dateKey);
+  html += taskCard(NAMES.a, rotation.taskA, dayProgress.taskA, "taskA");
+  html += taskCard(NAMES.b, rotation.taskB, dayProgress.taskB, "taskB");
+
+  if (weekly.length) {
+    html += `<div class="section-title">This Week</div>`;
+    weekly.forEach((t, i) => {
+      const key = "weekly" + i;
+      html += taskCard(null, t, dayProgress[key], key);
+    });
+  }
 
   html += `<div class="section-title">Every Night</div>`;
   DATA.dailyTasks.forEach((t, i) => {
     const key = "daily" + i;
-    html += taskCard(null, null, t, dayProgress[key], dateKey, key);
+    html += taskCard(null, t, dayProgress[key], key);
   });
 
   html += `<div class="section-title">This Month's Seasonal Project</div>`;
@@ -131,7 +122,8 @@ function renderToday() {
 
   el.innerHTML = html;
 
-  ["taskA", "taskB", ...DATA.dailyTasks.map((_, i) => "daily" + i)].forEach((field) => {
+  const fields = ["taskA", "taskB", ...weekly.map((_, i) => "weekly" + i), ...DATA.dailyTasks.map((_, i) => "daily" + i)];
+  fields.forEach((field) => {
     const cb = document.getElementById("check-" + field);
     if (cb) {
       cb.addEventListener("change", () => {
@@ -150,12 +142,11 @@ function renderToday() {
   }
 }
 
-function taskCard(personLetter, personName, task, isDone, dateKey, fieldOverride) {
-  const field = fieldOverride || "task" + personLetter;
+function taskCard(personName, task, isDone, field) {
   const chip = toolLabel(task.tool);
   return `<div class="card ${isDone ? "done" : ""}">
     <div class="card-header">
-      ${personName ? `<span class="person-name">${personName}</span>` : `<span class="person-name">Daily reminder</span>`}
+      <span class="person-name">${personName ? personName : "Reminder"}</span>
     </div>
     <p class="task-title">${task.title}</p>
     ${chip ? `<span class="tool-chip">${chip}</span>` : ""}
@@ -174,7 +165,6 @@ function renderWeek() {
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday start
 
-  const names = getNames();
   let html = `<div class="date-heading">Week of ${startOfWeek.toLocaleDateString(undefined, { month: "long", day: "numeric" })}</div>`;
   html += `<div class="week-strip">`;
 
@@ -182,14 +172,16 @@ function renderWeek() {
     const d = new Date(startOfWeek);
     d.setDate(startOfWeek.getDate() + i);
     const rotation = getRotationForDate(d);
+    const weekly = getWeeklyTasksForDate(d);
     const isToday = fmtDateKey(d) === fmtDateKey(now);
     const weekdayStr = d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 
     html += `<div class="week-day ${isToday ? "today" : ""}">
       <div class="week-day-head"><span>${weekdayStr}</span>${isToday ? "<span>Today</span>" : ""}</div>
       <div class="week-day-room">${rotation.room}</div>
-      <div class="week-day-tasks">${names.a}: ${rotation.taskA.title}</div>
-      <div class="week-day-tasks">${names.b}: ${rotation.taskB.title}</div>
+      <div class="week-day-tasks">${NAMES.a}: ${rotation.taskA.title}</div>
+      <div class="week-day-tasks">${NAMES.b}: ${rotation.taskB.title}</div>
+      ${weekly.map(t => `<div class="week-day-tasks">🗓️ ${t.title}</div>`).join("")}
     </div>`;
   }
 
@@ -229,10 +221,12 @@ function renderMonth() {
   for (let day = 1; day <= daysInMonth; day++) {
     const d = new Date(year, month, day);
     const rotation = getRotationForDate(d);
+    const weekly = getWeeklyTasksForDate(d);
     const isToday = fmtDateKey(d) === fmtDateKey(now);
     html += `<div class="month-cell ${isToday ? "today" : ""}">
       <div class="day-num">${day}</div>
       <div class="room-tag">${rotation.room}</div>
+      ${weekly.length ? `<div class="room-tag">🗓️ ${weekly.length} weekly</div>` : ""}
     </div>`;
   }
 
@@ -262,42 +256,12 @@ function switchView(view) {
   if (view === "month") renderMonth();
 }
 
-/* ---------- Names Modal ---------- */
-
-function setupNamesModal() {
-  const modal = document.getElementById("namesModal");
-  const btn = document.getElementById("namesBtn");
-  const cancel = document.getElementById("namesCancel");
-  const save = document.getElementById("namesSave");
-  const inputA = document.getElementById("input-personA");
-  const inputB = document.getElementById("input-personB");
-
-  btn.addEventListener("click", () => {
-    const names = getNames();
-    inputA.value = names.a;
-    inputB.value = names.b;
-    modal.classList.remove("hidden");
-  });
-
-  cancel.addEventListener("click", () => modal.classList.add("hidden"));
-
-  save.addEventListener("click", () => {
-    const a = inputA.value.trim() || DATA.meta.personA;
-    const b = inputB.value.trim() || DATA.meta.personB;
-    saveNames(a, b);
-    modal.classList.add("hidden");
-    renderToday();
-    renderWeek();
-  });
-}
-
 /* ---------- Init ---------- */
 
 function init() {
   document.querySelectorAll(".tab-btn").forEach(b => {
     b.addEventListener("click", () => switchView(b.dataset.view));
   });
-  setupNamesModal();
   renderToday();
 }
 
