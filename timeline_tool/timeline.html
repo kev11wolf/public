@@ -210,7 +210,13 @@ input[type="color"] {
             opacity: 1;
         }
 
-        .bars-section, .milestones-section { margin-top: 4px; border-top: 1px dashed #e2e8f0; padding-top: 4px; }
+        .bars-section, .milestones-section {
+    margin-top: 4px;
+    border-top: 1px dashed #cbd5e1;
+    padding: 6px;
+    background: #e2e8f0; /* darker gray than the swimlane wrapper's #f8fafc, so each row's bar/milestone editors visually separate from the next line item */
+    border-radius: 4px;
+}
         .bars-list, .milestones-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
         .milestone-input-row { display: grid; grid-template-columns: 1.5fr 1fr 60px auto; gap: 4px; align-items: center; background: #f8fafc; padding: 4px; border-radius: 4px; border: 1px solid #e2e8f0; }
         .ms-checkbox-wrap { display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: var(--text-muted); cursor: pointer;}
@@ -562,6 +568,30 @@ input[type="color"] {
 }
 .view-toggle-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
 #dataGridContainer { display: none; background: #ffffff; border-radius: 8px; padding: 5px; }
+
+/* NEW: side-by-side layout for Split View (Grid + Timeline live together) */
+#mainViewSplitRow.split-view-active {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: flex-start;
+    width: 100%;
+}
+#mainViewSplitRow.split-view-active #svgViewWrapper,
+#mainViewSplitRow.split-view-active #dataGridContainer {
+    flex: 1 1 50%;
+    min-width: 0;
+    max-width: 50%;
+}
+#mainViewSplitRow.split-view-active #svgViewWrapper { overflow-x: auto; }
+
+/* Default split arrangement: Data Grid on the LEFT, Canvas on the RIGHT */
+#mainViewSplitRow.split-view-active #dataGridContainer { order: 1; }
+#mainViewSplitRow.split-view-active #svgViewWrapper { order: 2; }
+
+/* Swapped arrangement: Canvas on the LEFT, Data Grid on the RIGHT */
+#mainViewSplitRow.split-view-active.split-swapped #dataGridContainer { order: 2; }
+#mainViewSplitRow.split-view-active.split-swapped #svgViewWrapper { order: 1; }
 
 /* =========================================================
    LIVE DATA GRID: EDITING AND READ-ONLY STATES
@@ -961,6 +991,8 @@ input[type="color"] {
 <div class="view-toggle-group">
     <button type="button" id="timelineViewBtn" class="view-toggle-btn active" onclick="switchMainView('timeline')">📊 Timeline View</button>
     <button type="button" id="gridViewBtn" class="view-toggle-btn" onclick="switchMainView('grid')">📋 Data Grid View</button>
+    <button type="button" id="splitViewBtn" class="view-toggle-btn" onclick="switchMainView('split')">🔀 Split View (Grid + Timeline)</button>
+    <button type="button" id="splitSwapBtn" class="view-toggle-btn" style="display:none;" onclick="toggleSplitViewSides()" title="Swap which side the grid and canvas are on">⇄ Swap Sides</button>
 </div>
 
 <!-- LIVE PROJECT DASHBOARD -->
@@ -1002,6 +1034,7 @@ input[type="color"] {
     </div>
 </div>
 
+<div id="mainViewSplitRow">
 <div id="svgViewWrapper">
 <div class="zoom-viewport-mask">
                 <div class="canvas-holder" id="svgContainer" onmousemove="updateTimelineCrosshair(event)" onmouseleave="if (!activeDragState) hideTimelineCrosshair();">
@@ -1050,6 +1083,7 @@ input[type="color"] {
 </div> <!-- closes svgViewWrapper -->
 
 <div id="dataGridContainer"></div>
+</div> <!-- closes mainViewSplitRow -->
         </div>
     </div>
 
@@ -1080,35 +1114,44 @@ let gridTableInstance = null;
 function switchMainView(mode) {
     currentMainView = mode;
 
-    document.getElementById("svgViewWrapper").style.display =
-        (mode === "timeline") ? "block" : "none";
+    const splitRow = document.getElementById("mainViewSplitRow");
+    const showTimeline = (mode === "timeline" || mode === "split");
+    const showGrid = (mode === "grid" || mode === "split");
 
-    document.getElementById("dataGridContainer").style.display =
-        (mode === "grid") ? "block" : "none";
+    document.getElementById("svgViewWrapper").style.display = showTimeline ? "block" : "none";
+    document.getElementById("dataGridContainer").style.display = showGrid ? "block" : "none";
+    if (splitRow) splitRow.classList.toggle("split-view-active", mode === "split");
 
-    document.getElementById("timelineViewBtn").classList.toggle(
-        "active",
-        mode === "timeline"
-    );
+    document.getElementById("timelineViewBtn").classList.toggle("active", mode === "timeline");
+    document.getElementById("gridViewBtn").classList.toggle("active", mode === "grid");
+    const splitBtn = document.getElementById("splitViewBtn");
+    if (splitBtn) splitBtn.classList.toggle("active", mode === "split");
 
-    document.getElementById("gridViewBtn").classList.toggle(
-        "active",
-        mode === "grid"
-    );
+    // The "Swap Sides" button only makes sense while Split View is active.
+    const splitSwapBtn = document.getElementById("splitSwapBtn");
+    if (splitSwapBtn) splitSwapBtn.style.display = (mode === "split") ? "inline-flex" : "none";
 
-    if (mode === "grid") {
+    if (showGrid) {
         if (!gridTableInstance) {
             initDataGrid();
         }
-        // The table may have been built while the container was hidden (display:none),
-        // which is exactly what caused the "blank on first open" bug -- Tabulator measured
-        // a 0-width box. Forcing a full redraw *after* the container is visible fixes it
-        // every time, not just the first time.
         requestAnimationFrame(() => {
             requestGridSync();
             if (gridTableInstance) gridTableInstance.redraw(true);
         });
     }
+
+    if (showTimeline) {
+        requestAnimationFrame(() => { updateChart(); });
+    }
+}
+
+// NEW: flips which side the Data Grid vs. the Timeline canvas sit on while Split View is active.
+function toggleSplitViewSides() {
+    const splitRow = document.getElementById("mainViewSplitRow");
+    if (!splitRow) return;
+    splitRow.classList.toggle("split-swapped");
+    localStorage.setItem("gantt_split_swapped", splitRow.classList.contains("split-swapped") ? "1" : "0");
 }
 
     let actionUndoStack = [];
@@ -5051,10 +5094,6 @@ document.addEventListener('mousedown', (e) => {
 // Double Click Popup Logic
 // Double Click Popup Logic
 document.addEventListener('dblclick', (e) => {
-    // Multiline callout text is now rendered as <tspan> children inside the <text> node.
-    // A double-click can land on a <tspan> (no class/data-id of its own), so walk up
-    // with closest() to find the actual .draggable-callout element instead of checking
-    // e.target directly -- this is what silently broke the callout edit popup.
     const calloutHit = e.target.closest ? e.target.closest('.draggable-callout') : null;
     if (calloutHit) {
         const target = calloutHit;
@@ -6608,9 +6647,11 @@ loadApplicationState();
 populateRecentFilesDropdown();
 restoreSidebarWidthFromStorage();
 initSidebarResizeHandle();
-// Build the Data Grid once at startup (even though it's hidden) so opening it later
-// only ever needs a redraw+sync, never a from-scratch build against a 0-width container.
 initDataGrid();
+if (localStorage.getItem("gantt_split_swapped") === "1") {
+    const splitRow = document.getElementById("mainViewSplitRow");
+    if (splitRow) splitRow.classList.add("split-swapped");
+}
 
 // NEW: Handles pill button clicks and keeps hidden input + visual state in sync
 function setZoomPill(btnEl) {
