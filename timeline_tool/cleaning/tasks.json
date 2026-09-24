@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "cycleLengthDays": 28,
+    "anchorDate": "2026-09-24",
+    "personA": "Person 1",
+    "personB": "Person 2",
+    "tools": {
+      "vacuum": "Vacuum",
+      "tineco": "Tineco hard-floor mopper",
+      "bissell": "Bissell Big Green Machine",
+      "none": null
+    }
+  },
+  "dailyTasks": [
+    { "title": "Do the dishes / load & run dishwasher", "tool": "none" },
+    { "title": "Tidy the living room (surfaces, cushions, floor clutter)", "tool": "none" }
+  ],
+  "nightlyRotation": [
+    { "night": 0, "room": "Living Room", "taskA": { "title": "Vacuum carpet thoroughly, including edges and under furniture", "tool": "vacuum" }, "taskB": { "title": "Dust all surfaces, shelves, electronics, and TV stand", "tool": "none" } },
+    { "night": 1, "room": "Living Room", "taskA": { "title": "Clean windows, window sills, and blinds", "tool": "none" }, "taskB": { "title": "Fluff/rotate cushions, wipe down furniture, spot-clean carpet stains", "tool": "bissell" } },
+    { "night": 2, "room": "Dining Room", "taskA": { "title": "Sweep and mop hardwood floor", "tool": "tineco" }, "taskB": { "title": "Dust table, chairs, and light fixture", "tool": "none" } },
+    { "night": 3, "room": "Dining Room", "taskA": { "title": "Wipe down baseboards and windowsills", "tool": "none" }, "taskB": { "title": "Wipe down chair seats/upholstery and table legs", "tool": "none" } },
+    { "night": 4, "room": "Kitchen", "taskA": { "title": "Deep clean countertops and backsplash", "tool": "none" }, "taskB": { "title": "Clean inside microwave and wipe down large appliance exteriors", "tool": "none" } },
+    { "night": 5, "room": "Kitchen", "taskA": { "title": "Mop tile floor and spot-treat grout", "tool": "tineco" }, "taskB": { "title": "Clean out one fridge shelf/drawer and wipe cabinet fronts", "tool": "none" } },
+    { "night": 6, "room": "Kitchen", "taskA": { "title": "Deep scrub sink and clean disposal", "tool": "none" }, "taskB": { "title": "Wipe down all light switches and door handles", "tool": "none" } },
+    { "night": 7, "room": "Bathroom 1 (Primary)", "taskA": { "title": "Scrub tub/shower and tile grout", "tool": "bissell" }, "taskB": { "title": "Clean toilet thoroughly, inside/outside/base", "tool": "none" } },
+    { "night": 8, "room": "Bathroom 1 (Primary)", "taskA": { "title": "Clean mirror, counter, sink, and faucet", "tool": "none" }, "taskB": { "title": "Mop tile floor", "tool": "tineco" } },
+    { "night": 9, "room": "Bathroom 2", "taskA": { "title": "Scrub tub/shower and tile grout", "tool": "bissell" }, "taskB": { "title": "Clean toilet thoroughly, inside/outside/base", "tool": "none" } },
+    { "night": 10, "room": "Bathroom 2", "taskA": { "title": "Clean mirror, counter, sink, and faucet", "tool": "none" }, "taskB": { "title": "Mop tile floor", "tool": "tineco" } },
+    { "night": 11, "room": "Bedroom 1 (Primary)", "taskA": { "title": "Vacuum carpet, including under the bed", "tool": "vacuum" }, "taskB": { "title": "Dust surfaces, nightstands, and dresser tops", "tool": "none" } },
+    { "night": 12, "room": "Bedroom 1 (Primary)", "taskA": { "title": "Rotate/check mattress, freshen sheets, tidy one closet shelf", "tool": "none" }, "taskB": { "title": "Wipe windowsills and baseboards", "tool": "none" } },
+    { "night": 13, "room": "Bedroom 2", "taskA": { "title": "Vacuum carpet thoroughly", "tool": "vacuum" }, "taskB": { "title": "Dust and organize shelves/toys", "tool": "none" } },
+    { "night": 14, "room": "Bedroom 2", "taskA": { "title": "Wipe down surfaces and baseboards", "tool": "none" }, "taskB": { "title": "Declutter under bed and one closet section", "tool": "none" } },
+    { "night": 15, "room": "Bedroom 3", "taskA": { "title": "Vacuum carpet thoroughly", "tool": "vacuum" }, "taskB": { "title": "Dust and wipe down all surfaces", "tool": "none" } },
+    { "night": 16, "room": "Bedroom 3", "taskA": { "title": "Organize closet/storage area", "tool": "none" }, "taskB": { "title": "Wipe windowsills and baseboards", "tool": "none" } },
+    { "night": 17, "room": "Hallway", "taskA": { "title": "Vacuum hallway carpet", "tool": "vacuum" }, "taskB": { "title": "Dust wall art, light fixtures, and air vents", "tool": "none" } },
+    { "night": 18, "room": "Hallway", "taskA": { "title": "Wipe down doors, handles, and light switches", "tool": "none" }, "taskB": { "title": "Dust ceiling fans and air vents", "tool": "none" } },
+    { "night": 19, "room": "Entryway / Foyer", "taskA": { "title": "Sweep and mop foyer floor", "tool": "tineco" }, "taskB": { "title": "Wipe entry table, mirror, and light switches", "tool": "none" } },
+    { "night": 20, "room": "Entryway / Foyer", "taskA": { "title": "Clean front door glass/handle and shake out welcome mat", "tool": "none" }, "taskB": { "title": "Clean interior windows (one full pass)", "tool": "none" } },
+    { "night": 21, "room": "Whole House", "taskA": { "title": "Vacuum and wipe down all baseboards", "tool": "vacuum" }, "taskB": { "title": "Empty and wipe out all trash cans, replace liners", "tool": "none" } },
+    { "night": 22, "room": "Laundry Area & Kitchen", "taskA": { "title": "Wipe down washer/dryer exterior and clean lint trap", "tool": "none" }, "taskB": { "title": "Wipe kitchen cabinet handles and tidy pantry shelf", "tool": "none" } },
+    { "night": 23, "room": "Entryway & Hallway", "taskA": { "title": "Organize entry closet / coat closet", "tool": "none" }, "taskB": { "title": "Clean light fixtures and lamp shades", "tool": "none" } },
+    { "night": 24, "room": "Living Room & Whole House", "taskA": { "title": "Vacuum and spot-clean couch/furniture upholstery", "tool": "bissell" }, "taskB": { "title": "Wipe down walls for scuffs and marks", "tool": "none" } },
+    { "night": 25, "room": "Garage", "taskA": { "title": "Quick vacuum of car interior + wipe dash/console", "tool": "vacuum" }, "taskB": { "title": "Organize one garage shelf/corner", "tool": "none" } },
+    { "night": 26, "room": "Whole House", "taskA": { "title": "Declutter mail/paperwork station", "tool": "none" }, "taskB": { "title": "Wipe down remote controls, light switches, and electronics", "tool": "none" } },
+    { "night": 27, "room": "Kitchen & Bedrooms", "taskA": { "title": "Deep wipe pantry shelves and check expirations", "tool": "none" }, "taskB": { "title": "Deep clean one closet shelf/drawer (rotate room each cycle)", "tool": "none" } }
+  ],
+  "seasonalTasks": [
+    { "title": "Deep clean oven interior", "tool": "none" },
+    { "title": "Wash all windows inside and out", "tool": "none" },
+    { "title": "Deep clean refrigerator: empty and wipe every shelf/drawer", "tool": "none" },
+    { "title": "Flip/rotate mattresses and wash mattress protectors", "tool": "none" },
+    { "title": "Clean dryer vent and deep-clean lint trap", "tool": "none" },
+    { "title": "Deep clean and organize the garage", "tool": "vacuum" },
+    { "title": "Wash all bedding, comforters, and pillows", "tool": "none" },
+    { "title": "Vacuum and check/replace HVAC filter", "tool": "vacuum" },
+    { "title": "Fill a donate box: declutter clothes/toys/household items", "tool": "none" },
+    { "title": "Deep clean bathroom grout with the Bissell Big Green Machine", "tool": "bissell" },
+    { "title": "Whole-house baseboard and door-frame deep wipe pass", "tool": "none" },
+    { "title": "Wash or vacuum curtains and blinds", "tool": "none" }
+  ]
+}
