@@ -5967,6 +5967,7 @@ svg += `
                 if (msX < scaleMarginLeft || msX > endBoundaryXCoordinate) continue;
 
                 let msYCenterLocked = y + (rowHeight / 2); let msSize = 5;
+                let msLabelFontSize = Number.isFinite(Number(ms.labelFontSize)) ? Number(ms.labelFontSize) : 9;
                 
                 let textAnchorStyle = "start"; let textXPositionCoordinate = msX + msSize + 4; let defaultTextYBaseline = msYCenterLocked + 3;
                 let finalComputedTextX = textXPositionCoordinate; let finalComputedTextY = defaultTextYBaseline;
@@ -5994,7 +5995,6 @@ svg += `
                     finalComputedTextY = defaultTextYBaseline + (targetedCascadeStaggerOffsetLevel * (msLabelFontSize + 3));
                 }
 
-                let msLabelFontSize = Number.isFinite(Number(ms.labelFontSize)) ? Number(ms.labelFontSize) : 9;
                 let activeMsColor = ms.color || msColor;
                 let activeSymbol = ms.symbol || 'diamond';
                 let msCommonAttr = `fill="${activeMsColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})"`;
