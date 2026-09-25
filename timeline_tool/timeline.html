@@ -1675,11 +1675,20 @@ function normalizeDateString(val) {
         };
     }
 
-    function handleGlobalDragMove(e) {
+    function getCanvasRenderScale() {
+    const svgEl = document.querySelector('#svgContainer svg');
+    if (!svgEl) return parseFloat(document.getElementById('workspaceZoom').value) || 1.0;
+    const rect = svgEl.getBoundingClientRect();
+    const attrWidth = Number(svgEl.getAttribute('width')) || rect.width;
+    if (!attrWidth) return 1.0;
+    return rect.width / attrWidth;
+}
+
+function handleGlobalDragMove(e) {
         if (!activeDragState) return;
 
         // Proportional Velocity Tracking Resolution
-        const activeScaleFactor = parseFloat(document.getElementById('workspaceZoom').value) || 1.0;
+        const activeScaleFactor = getCanvasRenderScale();
         const deltaX = (e.clientX - activeDragState.startX) / activeScaleFactor;
         const deltaY = (e.clientY - activeDragState.startY) / activeScaleFactor;
         
@@ -2245,14 +2254,32 @@ let gridSyncPending = false;
 
 // projectData is authoritative; redraw only after a committed edit.
 function requestGridSync() {
-    if (currentMainView !== "grid" || !gridTableInstance) return;
+    if ((currentMainView !== "grid" && currentMainView !== "split") || !gridTableInstance) return;
     clearTimeout(gridSyncTimer);
     gridSyncTimer = setTimeout(async () => {
         if (gridSyncRunning) { gridSyncPending = true; return; }
         gridSyncRunning = true;
         try {
+            const holderEl = document.querySelector('#dataGridContainer .tabulator-tableholder');
+            const savedScrollLeft = holderEl ? holderEl.scrollLeft : 0;
+            const savedScrollTop = holderEl ? holderEl.scrollTop : 0;
+            const savedPage = (typeof gridTableInstance.getPage === "function") ? gridTableInstance.getPage() : null;
+
             await gridTableInstance.replaceData(flattenProjectDataForGrid());
+
+            if (savedPage && typeof gridTableInstance.setPage === "function") {
+                try { await gridTableInstance.setPage(savedPage); } catch (pageErr) { /* page may no longer exist; ignore */ }
+            }
+
             gridTableInstance.redraw(true);
+
+            requestAnimationFrame(() => {
+                const holderElAfter = document.querySelector('#dataGridContainer .tabulator-tableholder');
+                if (holderElAfter) {
+                    holderElAfter.scrollLeft = savedScrollLeft;
+                    holderElAfter.scrollTop = savedScrollTop;
+                }
+            });
         } catch (err) {
             console.error("Data grid refresh failed:", err);
         } finally {
@@ -2269,7 +2296,13 @@ function requestGridSync() {
     The grid's browser calendar editor requires YYYY-MM-DD.
 */
 function gridDateForInput(value) {
-    return convertDDMMMYYYYToYYYYMMDD(value) || "";
+    const converted = convertDDMMMYYYYToYYYYMMDD(value);
+    if (converted) return converted;
+    // NEW: if a date genuinely can't be parsed into ISO format for the <input type="date">
+    // editor, fall back to showing the RAW stored value instead of silently blanking the
+    // cell -- this is what caused milestone dates to disappear from the grid while still
+    // exporting correctly to CSV (CSV always prints the raw string, unconverted).
+    return value ? String(value) : "";
 }
 
 /*
@@ -3202,6 +3235,7 @@ function initDataGrid() {
                         field: "start",
                         width: 120,
                         sorter: "date",
+                        sorterParams: { format: "yyyy-MM-dd" },
                         headerFilter: "input",
                         editor: dateEditor,
                         formatter: gridCellFormatter,
@@ -3212,6 +3246,7 @@ function initDataGrid() {
                         field: "end",
                         width: 120,
                         sorter: "date",
+                        sorterParams: { format: "yyyy-MM-dd" },
                         headerFilter: "input",
                         editor: dateEditor,
                         formatter: gridCellFormatter,
@@ -3287,6 +3322,7 @@ function initDataGrid() {
                         field: "milestoneDate",
                         width: 120,
                         sorter: "date",
+                        sorterParams: { format: "yyyy-MM-dd" },
                         headerFilter: "input",
                         editor: dateEditor,
                         formatter: gridCellFormatter,
@@ -4491,17 +4527,19 @@ function escapeHtmlAttribute(value) {
     function handleWorkspaceRowContextMenu(e, rowId) {
         e.preventDefault();
         e.stopPropagation();
-        
-        let container = document.getElementById('svgContainer');
-        let rect = container.getBoundingClientRect();
-        const activeScaleFactor = parseFloat(document.getElementById('workspaceZoom').value) || 1.0;
+
+        const svgEl = document.querySelector('#svgContainer svg');
+        if (!svgEl) return;
+        let rect = svgEl.getBoundingClientRect();
+        const svgAttrWidth = Number(svgEl.getAttribute('width')) || rect.width;
+        const activeScaleFactor = svgAttrWidth ? (rect.width / svgAttrWidth) : 1.0;
         let mouseX = (e.clientX - rect.left) / activeScaleFactor;
-        
+
                 let totalDuration = scaleMaxTime - scaleMinTime;
         let evaluatedTime = scaleMinTime + ((mouseX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
         evaluatedTime = Math.max(scaleMinTime, Math.min(scaleMaxTime, evaluatedTime));
         let computedTargetDateStr = formatDateToDDMMMYYYY(new Date(evaluatedTime));
-        
+
         let mouseY = (e.clientY - rect.top) / activeScaleFactor;
         activeContextState = { rowId: rowId, targetDate: computedTargetDateStr, mouseX: mouseX, mouseY: mouseY };
         
