@@ -608,67 +608,84 @@ input[type="color"] {
 }
 
 #dataGridContainer .tabulator {
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 12px;
+    border: none;
+    border-radius: 0;
+    font-size: 12.5px;
+    background: #ffffff;
+    font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
 }
 
 #dataGridContainer .tabulator-header {
-    background: #1e3a8a;
-    color: #ffffff;
-    border-bottom: 1px solid #1e40af;
+    background: #f3f4f6;
+    color: #1f2937;
+    border-bottom: 2px solid #94a3b8;
 }
 
 #dataGridContainer .tabulator-col {
-    background: #1e3a8a;
-    color: #ffffff;
-    border-right-color: rgba(255, 255, 255, 0.18);
+    background: #f3f4f6;
+    color: #1f2937;
+    border-right: 1px solid #d7dae0;
 }
 
 #dataGridContainer .tabulator-col-title {
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+#dataGridContainer .tabulator-col.tabulator-sortable:hover {
+    background: #e5e7eb;
 }
 
 #dataGridContainer .tabulator-cell {
-    border-right-color: #e2e8f0;
-    border-bottom-color: #e2e8f0;
+    border-right: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 3px 6px;
+}
+
+#dataGridContainer .tabulator-row {
+    background: #ffffff;
+}
+
+#dataGridContainer .tabulator-row.tabulator-row-even {
+    background: #f8fafc;
 }
 
 #dataGridContainer .tabulator-row:hover {
-    background: #eff6ff;
+    background: #eaf2ff;
 }
 
 #dataGridContainer .tabulator-row.grid-row-bar {
-    border-left: 4px solid #2563eb;
+    border-left: 3px solid #2563eb;
 }
 
 #dataGridContainer .tabulator-row.grid-row-milestone {
-    border-left: 4px solid #7c3aed;
+    border-left: 3px solid #7c3aed;
 }
 
 #dataGridContainer .tabulator-cell.grid-read-only {
-    background: #f8fafc;
-    color: #64748b;
+    background: #f1f2f4;
+    color: #9aa1ac;
     cursor: not-allowed;
 }
 
 #dataGridContainer .tabulator-cell.grid-live-editing {
-    background: #fff7ed;
-    box-shadow: inset 0 0 0 1px #fb923c;
+    background: #eef4ff;
+    box-shadow: inset 0 0 0 2px #2563eb;
 }
 
 .grid-live-editor {
     width: 100%;
     height: 100%;
-    min-height: 28px;
+    min-height: 26px;
     box-sizing: border-box;
-    border: 1px solid #2563eb;
-    border-radius: 3px;
+    border: none;
+    border-radius: 0;
     padding: 3px 6px;
-    background: #ffffff;
+    background: transparent;
     color: #0f172a;
     font: inherit;
+    outline: 2px solid #2563eb;
+    outline-offset: -1px;
 }
 
 .grid-live-editor[type="color"] {
@@ -684,9 +701,15 @@ input[type="color"] {
 }
 
 .grid-live-checkbox-wrap input {
-    width: 17px;
-    height: 17px;
+    width: 16px;
+    height: 16px;
     cursor: pointer;
+}
+
+#dataGridContainer .tabulator-footer {
+    background: #f3f4f6;
+    border-top: 1px solid #d7dae0;
+    font-size: 11px;
 }
 
     </style>
@@ -1418,6 +1441,7 @@ function hydrateRowDefaults() {
             });
             row.milestones.forEach(ms => {
                 if (!Number.isFinite(Number(ms.labelFontSize))) ms.labelFontSize = 9;
+                if (typeof ms.labelHidden !== 'boolean') ms.labelHidden = false;
             });
         });
     });
@@ -2247,12 +2271,16 @@ function csvText(value) {
 // This makes edits safer after row moves, imports, deletes, or re-sorting.
 // =========================================================================
 
-let gridLiveEditTimer = null;
 let gridSyncTimer = null;
 let gridSyncRunning = false;
 let gridSyncPending = false;
+let gridLastRowCount = 0;
+let gridLastRowIds = new Set();
 
 // projectData is authoritative; redraw only after a committed edit.
+// Structural changes (add/delete a bar/milestone/row/lane) still rebuild the
+// table, but a normal field edit only patches the changed row's cells --
+// no scroll jump, no column reflow, no visible "shift".
 function requestGridSync() {
     if ((currentMainView !== "grid" && currentMainView !== "split") || !gridTableInstance) return;
     clearTimeout(gridSyncTimer);
@@ -2260,34 +2288,42 @@ function requestGridSync() {
         if (gridSyncRunning) { gridSyncPending = true; return; }
         gridSyncRunning = true;
         try {
-            const holderEl = document.querySelector('#dataGridContainer .tabulator-tableholder');
-            const savedScrollLeft = holderEl ? holderEl.scrollLeft : 0;
-            const savedScrollTop = holderEl ? holderEl.scrollTop : 0;
-            const savedPage = (typeof gridTableInstance.getPage === "function") ? gridTableInstance.getPage() : null;
+            const freshRows = flattenProjectDataForGrid();
+            const freshIds = new Set(freshRows.map(r => r.id));
+            const structuralChange =
+                freshRows.length !== gridLastRowCount ||
+                freshIds.size !== gridLastRowIds.size ||
+                [...freshIds].some(id => !gridLastRowIds.has(id));
 
-            await gridTableInstance.replaceData(flattenProjectDataForGrid());
+            if (structuralChange || !gridLastRowCount) {
+                const holderEl = document.querySelector('#dataGridContainer .tabulator-tableholder');
+                const savedScrollLeft = holderEl ? holderEl.scrollLeft : 0;
+                const savedScrollTop = holderEl ? holderEl.scrollTop : 0;
 
-            if (savedPage && typeof gridTableInstance.setPage === "function") {
-                try { await gridTableInstance.setPage(savedPage); } catch (pageErr) { /* page may no longer exist; ignore */ }
+                await gridTableInstance.setData(freshRows);
+
+                requestAnimationFrame(() => {
+                    const holderElAfter = document.querySelector('#dataGridContainer .tabulator-tableholder');
+                    if (holderElAfter) {
+                        holderElAfter.scrollLeft = savedScrollLeft;
+                        holderElAfter.scrollTop = savedScrollTop;
+                    }
+                });
+            } else {
+                await gridTableInstance.updateData(freshRows);
             }
 
-            gridTableInstance.redraw(true);
-
-            requestAnimationFrame(() => {
-                const holderElAfter = document.querySelector('#dataGridContainer .tabulator-tableholder');
-                if (holderElAfter) {
-                    holderElAfter.scrollLeft = savedScrollLeft;
-                    holderElAfter.scrollTop = savedScrollTop;
-                }
-            });
+            gridLastRowCount = freshRows.length;
+            gridLastRowIds = freshIds;
         } catch (err) {
             console.error("Data grid refresh failed:", err);
         } finally {
             gridSyncRunning = false;
             if (gridSyncPending) { gridSyncPending = false; requestGridSync(); }
         }
-    }, 30);
+    }, 15);
 }
+
 
 /*
     Return a date in YYYY-MM-DD format for Tabulator's date editor.
@@ -2381,6 +2417,7 @@ function flattenProjectDataForGrid() {
         (lane.rows || []).forEach(row => {
             (row.bars || []).forEach(bar => {
                 gridRows.push({
+                    id: `${lane.id}-${row.id}-${bar.id}`,
                     _laneId: lane.id,
                     _rowId: row.id,
                     _elementId: bar.id,
@@ -2437,6 +2474,7 @@ function flattenProjectDataForGrid() {
 
             (row.milestones || []).forEach(ms => {
                 gridRows.push({
+                    id: `${lane.id}-${row.id}-${ms.id}`,
                     _laneId: lane.id,
                     _rowId: row.id,
                     _elementId: ms.id,
@@ -2478,6 +2516,7 @@ function flattenProjectDataForGrid() {
                     symbol: ms.symbol || "diamond",
                     milestoneColor: ms.color || "",
                     showDate: ms.showDate !== false,
+                    showLabel: !ms.labelHidden,
                     labelOffsetX: ms.labelOffsetX ?? 0,
                     labelOffsetY: ms.labelOffsetY ?? 0,
                     dateOffsetX: ms.dateOffsetX ?? 0,
@@ -2522,6 +2561,7 @@ function canEditGridField(cell) {
         "symbol",
         "milestoneColor",
         "showDate",
+        "showLabel",
         "labelOffsetX",
         "labelOffsetY",
         "dateOffsetX",
@@ -2715,6 +2755,11 @@ function applyGridEditLive(rowData, field, value) {
 
         if (field === "showDate") {
             element.showDate = gridBoolean(value);
+            return true;
+        }
+
+        if (field === "showLabel") {
+            element.labelHidden = !gridBoolean(value);
             return true;
         }
 
@@ -3047,10 +3092,14 @@ function initDataGrid() {
         { value: "dotted", label: "Dotted" }
     ]);
 
+    gridLastRowCount = rows.length;
+    gridLastRowIds = new Set(rows.map(r => r.id));
+
     gridTableInstance = new Tabulator("#dataGridContainer", {
         data: rows,
+        index: "id",
 
-        layout: "fitDataStretch",
+        layout: "fitData",
         height: "calc(100vh - 230px)",
         pagination: true,
         paginationMode: "local",
@@ -3347,6 +3396,15 @@ function initDataGrid() {
                     {
                         title: "Show Date",
                         field: "showDate",
+                        width: 105,
+                        hozAlign: "center",
+                        editor: createLiveCheckboxEditor,
+                        formatter: gridCellFormatter,
+                        editable: canEditGridField
+                    },
+                    {
+                        title: "Show Label",
+                        field: "showLabel",
                         width: 105,
                         hozAlign: "center",
                         editor: createLiveCheckboxEditor,
@@ -4736,6 +4794,11 @@ function escapeHtmlAttribute(value) {
         <label for="modalMsFontSize">Label Font Size</label>
         <input type="number" id="modalMsFontSize" min="6" max="72" value="${ms.labelFontSize ?? 9}">
     </div>
+
+    <label class="modal-field checkbox-field full-width">
+        <input type="checkbox" id="modalMsShowLabel" ${ms.labelHidden ? "" : "checked"}>
+        Show milestone label (toggle off to hide text without deleting it)
+    </label>
 `;
 
 let buttonsHTML = `
@@ -4743,6 +4806,10 @@ let buttonsHTML = `
         <button id="modalMsDeleteBtn"
             style="background:#fff1f2; color:#e11d48; border-color:#fca5a5">
             Delete
+        </button>
+        <button id="modalMsToggleLabelBtn"
+            style="background:#f0f9ff; color:#0369a1; border-color:#7dd3fc">
+            ${ms.labelHidden ? "Show Label" : "Hide Label"}
         </button>
         <button id="modalMsResetPosBtn"
             style="background:#f1f5f9; color:#475569">
@@ -4772,6 +4839,10 @@ let buttonsHTML = `
             ms.leaderTextEndX = 0; ms.leaderTextEndY = 0; ms.leaderDateEndX = 0; ms.leaderDateEndY = 0;
             ms.manualLabel = false; ms.manualDateLabel = false;
             recordStateChange(); updateChart(); dialog.remove();
+        });
+        document.getElementById('modalMsToggleLabelBtn').addEventListener('click', function() {
+            ms.labelHidden = !ms.labelHidden;
+            recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
         });
 document.getElementById('modalMsDeleteBtn').addEventListener('click', function() {
             if (confirm("Are you sure you want to permanently delete this milestone from the track row?")) {
@@ -4813,6 +4884,7 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
 
            ms.showDate = document.getElementById("modalMsShowDate").value === "true";
             ms.labelFontSize = Math.max(6, Math.min(72, parseInt(document.getElementById("modalMsFontSize").value, 10) || 9));
+            ms.labelHidden = !document.getElementById("modalMsShowLabel").checked;
 
             recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
         });
@@ -6047,7 +6119,7 @@ svg += `
                 let isDateDragging = (activeDragState && activeDragState.mode === 'date-label-drag' && activeDragState.milestone && activeDragState.milestone.id === ms.id);
 
                 // --- Text Leader Calculation ---
-                if (ms.leaderEnabledText) {
+                if (ms.leaderEnabledText && !ms.labelHidden) {
                     let targetTextLeaderX = finalComputedTextX;
                     let targetTextLeaderY = finalComputedTextY - 3;
                     let estTextLenWidth = ms.label.trim().length * (msLabelFontSize * 0.53);
@@ -6089,11 +6161,13 @@ svg += `
                     layerSymbolsBuffer += `<polygon points="${dPoints}" ${msCommonAttr} />`;
                 }
 
-                layerTextsBuffer += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="${msLabelFontSize}" font-weight="600" fill="${activeMsColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${escapeForMarkup(ms.label)}</text>`;
+                if (!ms.labelHidden) {
+                    layerTextsBuffer += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="${msLabelFontSize}" font-weight="600" fill="${activeMsColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${escapeForMarkup(ms.label)}</text>`;
 
-                if (isLabelDragging) {
-                    let boxW = ms.label.trim().length * 4.8 + 4; // Optimized tight typography bounds
-                    layerTextsBuffer += `<rect x="${finalComputedTextX - 2}" y="${finalComputedTextY - 8}" width="${boxW}" height="10" fill="none" stroke="${activeMsColor}" stroke-width="1" stroke-dasharray="2 2" style="pointer-events:none;" />`;
+                    if (isLabelDragging) {
+                        let boxW = ms.label.trim().length * 4.8 + 4; // Optimized tight typography bounds
+                        layerTextsBuffer += `<rect x="${finalComputedTextX - 2}" y="${finalComputedTextY - 8}" width="${boxW}" height="10" fill="none" stroke="${activeMsColor}" stroke-width="1" stroke-dasharray="2 2" style="pointer-events:none;" />`;
+                    }
                 }
 
                 // --- Date Leader & Label Calculation ---
