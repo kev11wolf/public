@@ -712,7 +712,26 @@ input[type="color"] {
     font-size: 11px;
 }
 
-    </style>
+    
+/* =========================================================
+   MATRIX GRID: type switcher, cell renderers, record-type colours
+   ========================================================= */
+#gridTypeBar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 8px 8px 8px; background: #f8fafc; border-bottom: 1px solid #d7dae0; }
+.grid-type-btn { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 4px 12px; font-size: 12px; font-weight: 700; border-radius: 999px; cursor: pointer; }
+.grid-type-btn:hover { border-color: #2563eb; color: #2563eb; }
+.grid-type-btn.active { background: #2563eb; border-color: #2563eb; color: #ffffff; }
+.grid-type-hint { font-size: 11px; color: #64748b; margin-left: 6px; }
+.grid-check.on { color: #059669; font-weight: 800; font-size: 14px; }
+.grid-check.off { color: #cbd5e1; font-size: 14px; }
+.grid-swatch { display: inline-block; width: 12px; height: 12px; border: 1px solid #94a3b8; border-radius: 2px; vertical-align: -2px; margin-right: 6px; }
+.grid-inherit { color: #94a3b8; font-style: italic; }
+#dataGridContainer .tabulator-cell.grid-context-cell { background: #f8fafc; color: #64748b; font-style: italic; }
+#dataGridContainer .tabulator-row.grid-row-lane { border-left: 3px solid #0f766e; font-weight: 700; }
+#dataGridContainer .tabulator-row.grid-row-row { border-left: 3px solid #64748b; }
+#dataGridContainer .tabulator-row.grid-row-tracker { border-left: 3px solid #e11d48; }
+#dataGridContainer .tabulator-row.grid-row-callout { border-left: 3px solid #d97706; }
+#dataGridContainer .tabulator-row.grid-row-setting { border-left: 3px solid #0369a1; }
+</style>
 </head>
 <body>
 
@@ -756,6 +775,7 @@ input[type="color"] {
                         <button class="utility-btn" onclick="document.getElementById('archiveFileInput').click()" style="padding: 4px 8px;">↑ Load JSON</button>
                         <div style="width: 1px; background: #cbd5e1; margin: 0 2px;"></div>
                         <button class="utility-btn" style="color:var(--success); border-color:var(--success-border); padding: 4px 8px;" onclick="exportExcelCSV()">↓ Export CSV</button>
+                        <button class="utility-btn" style="color:#166534; border-color:#bbf7d0; padding: 4px 8px;" onclick="exportExcelXLSX()" title="Excel workbook with the full matrix plus a Column Guide sheet">↓ Export XLSX</button>
                         <button class="utility-btn" style="color:#166534; border-color:#bbf7d0; padding: 4px 8px;" onclick="document.getElementById('csvFileInput').click()">↑ Import CSV</button>
                     </div>
                 </div>
@@ -1105,7 +1125,7 @@ input[type="color"] {
 </div>
 </div> <!-- closes svgViewWrapper -->
 
-<div id="dataGridContainer"></div>
+<div id="dataGridContainer"><div id="gridTypeBar"></div><div id="dataGridMount"></div></div>
 </div> <!-- closes mainViewSplitRow -->
         </div>
     </div>
@@ -2364,456 +2384,338 @@ function gridBoolean(value) {
         String(value).toLowerCase() === "yes";
 }
 
-/*
-    Finds the ACTUAL source object in projectData.
+/* =========================================================================
+   MATRIX ENGINE  (one schema drives the Data Grid, the CSV and the XLSX)
+   -------------------------------------------------------------------------
+   Every editable attribute of every object lives in MX_FIELDS below.
+   - Data Grid columns   = MX_FIELDS
+   - CSV / XLSX export   = MX_FIELDS  (same titles, same order)
+   - CSV / XLSX import   = MX_FIELDS  (matched by column title)
+   To add a new attribute later: add ONE mxDef(...) line. Grid, CSV and
+   import all pick it up automatically.
+   ========================================================================= */
+const MX_TYPES = ["Lane", "Row", "Bar", "Milestone", "Tracker", "Callout", "Setting"];
 
-    Important:
-    We search by stable IDs rather than using _laneIdx / _rowIdx / _barIdx.
-    Array indexes can change after a sort, import, drag-and-drop, or delete.
-*/
-function findGridSourceObjects(gridRow) {
-    const lane = projectData.find(item => String(item.id) === String(gridRow._laneId));
+const MX_OPTS = {
+    align: [["left", "Left"], ["center", "Center"], ["right", "Right"]],
+    barPattern: [["solid", "Solid"], ["crosshatch", "Cross Hatch"], ["grid", "Grid"], ["dashed", "Dashed"], ["gingham", "Gingham"]],
+    symbol: [["diamond", "Diamond"], ["circle", "Circle"], ["square", "Square"], ["triangle", "Triangle"], ["star", "Star"], ["vertical-bar", "Vertical Bar"]],
+    leaderAnchor: [["center", "Center"], ["top", "Top"], ["bottom", "Bottom"], ["left", "Left"], ["right", "Right"], ["custom", "Custom (drag handles)"]],
+    linePattern: [["solid", "Solid"], ["dashed", "Dashed"], ["dotted", "Dotted"]],
+    calloutAttach: [["bottom", "Bottom Center"], ["top", "Top Center"], ["left", "Left Center"], ["right", "Right Center"]]
+};
 
-    if (!lane) {
-        return { lane: null, row: null, element: null };
+const MX_FIELDS = [];
+const MX_BY_KEY = {};
+
+function mxDef(key, title, group, types, kind, o = {}) {
+    const d = Object.assign({ key, title, group, types, ctxTypes: [], kind, width: 110 }, o);
+    if (d.prop) {
+        const [target, prop] = d.prop;
+        if (!d.get) d.get = c => c[target][prop];
+        if (!d.set) d.set = (c, v) => { c[target][prop] = v; };
     }
-
-    const row = (lane.rows || []).find(item => String(item.id) === String(gridRow._rowId));
-
-    if (!row) {
-        return { lane, row: null, element: null };
-    }
-
-    let element = null;
-
-    if (gridRow.type === "Bar") {
-        element = (row.bars || []).find(item => String(item.id) === String(gridRow._elementId));
-    }
-
-    if (gridRow.type === "Milestone") {
-        element = (row.milestones || []).find(item => String(item.id) === String(gridRow._elementId));
-    }
-
-    return { lane, row, element };
+    MX_FIELDS.push(d);
+    MX_BY_KEY[key] = d;
 }
 
-/*
-    Creates one flat Tabulator row for every bar and milestone.
+/* ---- Record identity (read-only in the grid; used to link rows in CSV) ---- */
+mxDef("type", "Record Type", "Record", MX_TYPES, "text", { readonly: true, width: 105, get: c => c.type, set: () => {} });
+mxDef("laneId", "Swimlane ID", "Record IDs", ["Lane", "Row", "Bar", "Milestone"], "text", { readonly: true, width: 90, get: c => c.lane.id, set: () => {} });
+mxDef("rowId", "Task Row ID", "Record IDs", ["Row", "Bar", "Milestone"], "text", { readonly: true, width: 90, get: c => c.row.id, set: () => {} });
+mxDef("elementId", "Element ID", "Record IDs", ["Bar", "Milestone", "Tracker", "Callout"], "text", { readonly: true, width: 100, get: c => c.el.id, set: () => {} });
 
-    Shared fields appear on both element types:
-    - Swimlane settings
-    - Task/row settings
-    - P6 IDs
-    - Element styling
+/* ---- Visibility master switch for every drawable object ---- */
+mxDef("visible", "Visible On Timeline", "Visibility", ["Bar", "Milestone", "Tracker", "Callout"], "bool", {
+    width: 110, def: true, get: c => c.el.hidden !== true, set: (c, v) => { c.el.hidden = !v; }
+});
 
-    Bar-only and milestone-only fields are also included.
-    The grid automatically prevents editing a field that does not apply
-    to that element type.
-*/
-function flattenProjectDataForGrid() {
-    const gridRows = [];
+/* ---- Swimlane (double-click lane title / summary bar) ---- */
+mxDef("laneTitle", "Swimlane Name", "Swimlane", ["Lane"], "text", { ctxTypes: ["Row", "Bar", "Milestone"], width: 180, filter: true, prop: ["lane", "title"], get: c => c.lane.title ?? "" });
+mxDef("laneColor", "Swimlane Background", "Swimlane", ["Lane"], "color", { def: "#f8fafc", get: c => c.lane.color || "#f8fafc", set: (c, v) => { c.lane.color = v || "#f8fafc"; } });
+mxDef("laneShowSummary", "Show Summary Bar", "Swimlane", ["Lane"], "bool", { def: true, get: c => c.lane.showSummary !== false, set: (c, v) => { c.lane.showSummary = v; } });
+mxDef("laneSummaryColor", "Summary Bar Color", "Swimlane", ["Lane"], "color", { def: "", get: c => c.lane.summaryColor || "", set: (c, v) => { c.lane.summaryColor = v; } });
+mxDef("laneTitleAlign", "Title Alignment", "Swimlane", ["Lane"], "select", { options: MX_OPTS.align, def: "left", get: c => c.lane.titleAlign || "left", set: (c, v) => { c.lane.titleAlign = v; } });
+mxDef("laneTitleFont", "Title Font Size", "Swimlane", ["Lane"], "int", { min: 8, max: 30, nullable: true, def: null, get: c => c.lane.titleFontSize ?? "", set: (c, v) => { c.lane.titleFontSize = v; } });
+mxDef("laneTitleColor", "Title Color", "Swimlane", ["Lane"], "color", { def: "", get: c => c.lane.titleColor || "", set: (c, v) => { c.lane.titleColor = v; } });
+mxDef("laneTitleBold", "Title Bold", "Swimlane", ["Lane"], "bool", { def: true, get: c => c.lane.titleBold !== false, set: (c, v) => { c.lane.titleBold = v; } });
+mxDef("laneCollapsed", "Collapsed In Sidebar", "Swimlane", ["Lane"], "bool", { def: false, get: c => c.lane.collapsed === true, set: (c, v) => { c.lane.collapsed = v; } });
 
-    projectData.forEach(lane => {
+/* ---- Task row (double-click row label) ---- */
+mxDef("rowLabel", "Task Name", "Task Row", ["Row"], "text", { ctxTypes: ["Bar", "Milestone"], width: 220, filter: true, prop: ["row", "label"], get: c => c.row.label ?? "" });
+mxDef("rowPredecessor", "Predecessor Row ID", "Task Row", ["Row"], "text", {
+    width: 120, get: c => c.row.predecessor ?? "",
+    set: (c, v) => { c.row.predecessor = (String(v).trim().toUpperCase() === "NONE") ? "" : String(v).trim(); }
+});
+mxDef("rowShowDates", "Append Bar Dates To Task Name", "Task Row", ["Row"], "bool", { width: 130, def: false, get: c => c.row.showDateRange === true, set: (c, v) => { c.row.showDateRange = v; } });
+
+/* ---- Shared by bars and milestones ---- */
+mxDef("p6Start", "P6 ID Start", "Identifiers", ["Bar", "Milestone"], "text", { width: 120, filter: true, get: c => c.el.p6IdStart ?? c.el.p6Id ?? "", set: (c, v) => { c.el.p6IdStart = v; } });
+mxDef("p6Finish", "P6 ID Finish", "Identifiers", ["Bar", "Milestone"], "text", { width: 120, filter: true, get: c => c.el.p6IdFinish ?? c.el.p6Id ?? "", set: (c, v) => { c.el.p6IdFinish = v; } });
+
+/* ---- Activity bar (double-click bar) ---- */
+mxDef("barStart", "Bar Start", "Activity Bar", ["Bar"], "date", { width: 120, prop: ["el", "start"], get: c => c.el.start ?? "" });
+mxDef("barEnd", "Bar Finish", "Activity Bar", ["Bar"], "date", { width: 120, prop: ["el", "end"], get: c => c.el.end ?? "" });
+mxDef("barProgress", "Progress %", "Activity Bar", ["Bar"], "int", { min: 0, max: 100, def: 0, width: 95, get: c => c.el.progress ?? 0, set: (c, v) => { c.el.progress = v; } });
+mxDef("barPattern", "Bar Pattern", "Activity Bar", ["Bar"], "select", { options: MX_OPTS.barPattern, def: "solid", get: c => c.el.pattern || "solid", set: (c, v) => { c.el.pattern = v; } });
+mxDef("barFillColor", "Progress Fill Color", "Activity Bar", ["Bar"], "color", { def: "", get: c => c.el.color || "", set: (c, v) => { c.el.color = v; } });
+mxDef("barBgColor", "Unfilled Bar Color", "Activity Bar", ["Bar"], "color", { def: "", get: c => c.el.bgColor || "", set: (c, v) => { c.el.bgColor = v; } });
+mxDef("barShowName", "Show Task Name In Bar", "Activity Bar", ["Bar"], "bool", { width: 120, def: false, get: c => c.el.showLabelInBar === true, set: (c, v) => { c.el.showLabelInBar = v; } });
+mxDef("barLabelFont", "Bar Label Font Size", "Activity Bar", ["Bar"], "int", { min: 6, max: 72, def: 10, get: c => c.el.labelFontSize ?? 10, set: (c, v) => { c.el.labelFontSize = v; } });
+
+/* ---- Milestone (double-click milestone) ---- */
+mxDef("msLabel", "Milestone Label", "Milestone", ["Milestone"], "text", { width: 190, filter: true, prop: ["el", "label"], get: c => c.el.label ?? "" });
+mxDef("msShowLabel", "Show Label", "Milestone", ["Milestone"], "bool", { def: true, get: c => c.el.labelHidden !== true, set: (c, v) => { c.el.labelHidden = !v; } });
+mxDef("msDate", "Milestone Date", "Milestone", ["Milestone"], "date", { width: 120, prop: ["el", "date"], get: c => c.el.date ?? "" });
+mxDef("msSymbol", "Symbol", "Milestone", ["Milestone"], "select", { options: MX_OPTS.symbol, def: "diamond", get: c => c.el.symbol || "diamond", set: (c, v) => { c.el.symbol = v; } });
+mxDef("msColor", "Milestone Color", "Milestone", ["Milestone"], "color", { def: "", get: c => c.el.color || "", set: (c, v) => { c.el.color = v; } });
+mxDef("msLabelFont", "Milestone Label Font Size", "Milestone", ["Milestone"], "int", { min: 6, max: 72, def: 9, width: 120, get: c => c.el.labelFontSize ?? 9, set: (c, v) => { c.el.labelFontSize = v; } });
+mxDef("msShowDate", "Show Date", "Milestone", ["Milestone"], "bool", { def: true, get: c => c.el.showDate !== false, set: (c, v) => { c.el.showDate = v; } });
+
+/* ---- Milestone label / date positions ---- */
+mxDef("msLabelX", "Label Offset X", "Milestone Positions", ["Milestone"], "float", { def: 0, width: 95, get: c => c.el.labelOffsetX ?? 0, set: (c, v) => { c.el.labelOffsetX = v; if (v !== 0) c.el.manualLabel = true; } });
+mxDef("msLabelY", "Label Offset Y", "Milestone Positions", ["Milestone"], "float", { def: 0, width: 95, get: c => c.el.labelOffsetY ?? 0, set: (c, v) => { c.el.labelOffsetY = v; if (v !== 0) c.el.manualLabel = true; } });
+mxDef("msDateX", "Date Offset X", "Milestone Positions", ["Milestone"], "float", { def: 0, width: 95, get: c => c.el.dateOffsetX ?? 0, set: (c, v) => { c.el.dateOffsetX = v; if (v !== 0) c.el.manualDateLabel = true; } });
+mxDef("msDateY", "Date Offset Y", "Milestone Positions", ["Milestone"], "float", { def: 0, width: 95, get: c => c.el.dateOffsetY ?? 0, set: (c, v) => { c.el.dateOffsetY = v; if (v !== 0) c.el.manualDateLabel = true; } });
+mxDef("msManualLabel", "Use Manual Label Position", "Milestone Positions", ["Milestone"], "bool", { late: true, width: 125, get: c => c.el.manualLabel === true, set: (c, v) => { c.el.manualLabel = v; } });
+mxDef("msManualDate", "Use Manual Date Position", "Milestone Positions", ["Milestone"], "bool", { late: true, width: 125, get: c => c.el.manualDateLabel === true, set: (c, v) => { c.el.manualDateLabel = v; } });
+
+/* ---- Milestone leader lines ---- */
+mxDef("msLeaderText", "Leader To Label", "Milestone Leaders", ["Milestone"], "bool", { def: false, get: c => c.el.leaderEnabledText === true, set: (c, v) => { c.el.leaderEnabledText = v; } });
+mxDef("msLeaderDate", "Leader To Date", "Milestone Leaders", ["Milestone"], "bool", { def: false, get: c => c.el.leaderEnabledDate === true, set: (c, v) => { c.el.leaderEnabledDate = v; } });
+mxDef("msLeaderAnchor", "Leader Anchor", "Milestone Leaders", ["Milestone"], "select", { options: MX_OPTS.leaderAnchor, def: "center", width: 135, get: c => c.el.leaderAnchorText || "center", set: (c, v) => { c.el.leaderAnchorText = v; } });
+mxDef("msLeaderWeight", "Leader Weight", "Milestone Leaders", ["Milestone"], "int", { min: 1, max: 10, def: 1, width: 95, get: c => c.el.leaderWeight || 1, set: (c, v) => { c.el.leaderWeight = v; } });
+mxDef("msLeaderPattern", "Leader Pattern", "Milestone Leaders", ["Milestone"], "select", { options: MX_OPTS.linePattern, def: "solid", get: c => c.el.leaderPattern || "solid", set: (c, v) => { c.el.leaderPattern = v; } });
+mxDef("msLeaderTextEndX", "Custom Label Leader End X", "Milestone Leaders", ["Milestone"], "float", { def: 0, width: 130, get: c => c.el.leaderTextEndX ?? 0, set: (c, v) => { c.el.leaderTextEndX = v; } });
+mxDef("msLeaderTextEndY", "Custom Label Leader End Y", "Milestone Leaders", ["Milestone"], "float", { def: 0, width: 130, get: c => c.el.leaderTextEndY ?? 0, set: (c, v) => { c.el.leaderTextEndY = v; } });
+mxDef("msLeaderDateEndX", "Custom Date Leader End X", "Milestone Leaders", ["Milestone"], "float", { def: 0, width: 130, get: c => c.el.leaderDateEndX ?? 0, set: (c, v) => { c.el.leaderDateEndX = v; } });
+mxDef("msLeaderDateEndY", "Custom Date Leader End Y", "Milestone Leaders", ["Milestone"], "float", { def: 0, width: 130, get: c => c.el.leaderDateEndY ?? 0, set: (c, v) => { c.el.leaderDateEndY = v; } });
+
+/* ---- Vertical tracker lines ---- */
+mxDef("trkLabel", "Tracker Label", "Tracker Line", ["Tracker"], "text", { width: 180, prop: ["el", "label"], get: c => c.el.label ?? "" });
+mxDef("trkDate", "Tracker Date", "Tracker Line", ["Tracker"], "date", { width: 120, prop: ["el", "date"], get: c => c.el.date ?? "" });
+mxDef("trkColor", "Tracker Color", "Tracker Line", ["Tracker"], "color", { def: "#10b981", get: c => c.el.color || "#10b981", set: (c, v) => { c.el.color = v || "#10b981"; } });
+mxDef("trkPattern", "Tracker Pattern", "Tracker Line", ["Tracker"], "select", { options: MX_OPTS.linePattern, def: "solid", get: c => c.el.pattern || "solid", set: (c, v) => { c.el.pattern = v; } });
+mxDef("trkThickness", "Tracker Thickness", "Tracker Line", ["Tracker"], "int", { min: 1, max: 10, def: 2, get: c => c.el.thickness || 2, set: (c, v) => { c.el.thickness = v; } });
+mxDef("trkLabelX", "Tracker Label Offset X", "Tracker Line", ["Tracker"], "float", { def: 0, width: 120, get: c => c.el.labelOffsetX ?? 0, set: (c, v) => { c.el.labelOffsetX = v; } });
+mxDef("trkLabelY", "Tracker Label Offset Y", "Tracker Line", ["Tracker"], "float", { def: 0, width: 120, get: c => c.el.labelOffsetY ?? 0, set: (c, v) => { c.el.labelOffsetY = v; } });
+
+/* ---- Text callouts ---- */
+mxDef("coText", "Callout Text", "Callout", ["Callout"], "text", { width: 220, prop: ["el", "text"], get: c => c.el.text ?? "" });
+mxDef("coX", "Callout X", "Callout", ["Callout"], "float", { def: 350, width: 85, get: c => c.el.x ?? 350, set: (c, v) => { c.el.x = v; } });
+mxDef("coY", "Callout Y", "Callout", ["Callout"], "float", { def: 100, width: 85, get: c => c.el.y ?? 100, set: (c, v) => { c.el.y = v; } });
+mxDef("coShowLeader", "Callout Show Leader", "Callout", ["Callout"], "bool", { def: true, get: c => c.el.showLeader !== false, set: (c, v) => { c.el.showLeader = v; } });
+mxDef("coLeaderX", "Leader End X", "Callout", ["Callout"], "float", { def: 350, width: 95, get: c => c.el.leaderX ?? 350, set: (c, v) => { c.el.leaderX = v; } });
+mxDef("coLeaderY", "Leader End Y", "Callout", ["Callout"], "float", { def: 150, width: 95, get: c => c.el.leaderY ?? 150, set: (c, v) => { c.el.leaderY = v; } });
+mxDef("coLeaderAttach", "Leader Attachment", "Callout", ["Callout"], "select", { options: MX_OPTS.calloutAttach, def: "bottom", width: 130, get: c => c.el.leaderAttachment || "bottom", set: (c, v) => { c.el.leaderAttachment = v; } });
+mxDef("coLeaderThickness", "Leader Thickness", "Callout", ["Callout"], "int", { min: 1, max: 10, def: 2, get: c => c.el.leaderThickness || 2, set: (c, v) => { c.el.leaderThickness = v; } });
+mxDef("coLeaderColor", "Leader Color", "Callout", ["Callout"], "color", { def: "", get: c => c.el.leaderColor || "", set: (c, v) => { c.el.leaderColor = v; } });
+mxDef("coFontSize", "Callout Font Size", "Callout", ["Callout"], "int", { min: 8, max: 72, def: 14, get: c => c.el.fontSize ?? 14, set: (c, v) => { c.el.fontSize = v; } });
+mxDef("coBold", "Callout Bold", "Callout", ["Callout"], "bool", { def: false, get: c => c.el.isBold === true, set: (c, v) => { c.el.isBold = v; } });
+mxDef("coTextColor", "Callout Text Color", "Callout", ["Callout"], "color", { def: "#000000", get: c => c.el.textColor || "#000000", set: (c, v) => { c.el.textColor = v || "#000000"; } });
+mxDef("coBgColor", "Callout Background", "Callout", ["Callout"], "color", { def: "#ffffff", get: c => c.el.bgColor || "#ffffff", set: (c, v) => { c.el.bgColor = v || "#ffffff"; } });
+mxDef("coBgTransparent", "Callout Transparent Background", "Callout", ["Callout"], "bool", { def: false, width: 130, get: c => c.el.bgTransparent === true, set: (c, v) => { c.el.bgTransparent = v; } });
+
+/* ---- Global look-and-feel settings (Layout / Timeline / Graphic tabs) ---- */
+mxDef("settingKey", "Setting Name", "Workspace Setting", ["Setting"], "text", { readonly: true, width: 210, get: c => c.setting.label, set: () => {} });
+mxDef("settingValue", "Setting Value", "Workspace Setting", ["Setting"], "text", { width: 190, get: c => c.setting.get(), set: (c, v) => c.setting.set(v) });
+
+const MX_SETTINGS = [];
+function mxSetting(label, kind, get, set, o = {}) { MX_SETTINGS.push(Object.assign({ label, kind, get, set }, o)); }
+const mxEl = id => document.getElementById(id);
+function mxSetInput(id) { return v => { mxEl(id).value = String(v); }; }
+function mxSetSelect(id) { return v => { const el = mxEl(id); if ([...el.options].some(o => o.value === String(v))) el.value = String(v); }; }
+function mxSetCheck(id) { return v => { mxEl(id).checked = !!v; }; }
+function mxSetColor(id) { return v => { if (/^#[0-9a-f]{6}$/i.test(String(v))) mxEl(id).value = String(v).toLowerCase(); }; }
+function mxSetRadio(name, after) {
+    return v => {
+        const r = document.querySelector('input[name="' + name + '"][value="' + v + '"]');
+        if (r) { r.checked = true; if (after) after(v); }
+    };
+}
+
+mxSetting("Font Family", "select", () => mxEl("fontFamily").value, mxSetSelect("fontFamily"), { options: () => [...mxEl("fontFamily").options].map(o => [o.value, o.textContent]) });
+mxSetting("Base Font Size", "int", () => mxEl("fontSize").value, mxSetInput("fontSize"), { min: 8, max: 20, def: 10 });
+mxSetting("Swimlane Header Height", "int", () => mxEl("swimlaneHeight").value, mxSetInput("swimlaneHeight"), { min: 20, max: 100, def: 30 });
+mxSetting("Task Row Height", "int", () => mxEl("rowHeight").value, mxSetInput("rowHeight"), { min: 40, max: 155, def: 50 });
+mxSetting("Row Label Width", "int", () => mxEl("rowLabelWidth").value, mxSetInput("rowLabelWidth"), { min: 50, max: 800, def: 240 });
+mxSetting("Canvas Width", "int", () => mxEl("canvasWidth").value, mxSetInput("canvasWidth"), { min: 400, max: 2500, def: 900 });
+mxSetting("Scope Range Mode", "select", () => document.querySelector('input[name="rangeMode"]:checked')?.value ?? "manual", mxSetRadio("rangeMode", v => toggleRangeScopeFieldsVisibility(v)), { options: () => [["auto", "Auto"], ["manual", "Manual Custom"]] });
+mxSetting("Sizing Mode", "select", () => document.querySelector('input[name="sizingMode"]:checked')?.value ?? "fixed", mxSetRadio("sizingMode"), { options: () => [["fixed", "Fixed Pixel Width"], ["ticker-tape", "Ticker-Tape Screen Fit"]] });
+mxSetting("Timeline Start Boundary", "date", () => manualBoundaryMin, v => { manualBoundaryMin = v; syncBoundaryFields(); });
+mxSetting("Timeline End Boundary", "date", () => manualBoundaryMax, v => { manualBoundaryMax = v; syncBoundaryFields(); });
+mxSetting("Show Year Header", "bool", () => mxEl("showHeaderYear").checked, mxSetCheck("showHeaderYear"));
+mxSetting("Show Quarter Header", "bool", () => mxEl("showHeaderQuarter").checked, mxSetCheck("showHeaderQuarter"));
+mxSetting("Show Month Header", "bool", () => mxEl("showHeaderMonth").checked, mxSetCheck("showHeaderMonth"));
+mxSetting("Show Day Header", "bool", () => mxEl("showHeaderDay").checked, mxSetCheck("showHeaderDay"));
+mxSetting("Show Time Gridlines", "bool", () => mxEl("showVGrid").checked, mxSetCheck("showVGrid"));
+mxSetting("Show Backdrop Mesh", "bool", () => mxEl("showAlignGrid").checked, mxSetCheck("showAlignGrid"));
+mxSetting("Drag Snap Resolution", "select", () => mxEl("snapResolution").value, mxSetSelect("snapResolution"), { options: () => [["0", "None (Free Drag)"], ["1", "1px"], ["2", "2px"], ["5", "5px"], ["10", "10px"], ["25", "25px"]] });
+mxSetting("Workspace Zoom", "select", () => mxEl("workspaceZoom").value, v => {
+    mxEl("workspaceZoom").value = String(v);
+    document.querySelectorAll(".zoom-pill-btn").forEach(b => b.classList.toggle("active", Number(b.getAttribute("data-zoom")) === Number(v)));
+    handleZoomFactorChange(v, false);
+}, { options: () => [["1.0", "100%"], ["1.25", "125%"], ["1.5", "150%"], ["2.0", "200%"], ["2.5", "250%"], ["3.0", "300%"]] });
+mxSetting("Today Line", "select", () => document.querySelector('input[name="todayLineToggle"]:checked')?.value ?? "show", mxSetRadio("todayLineToggle"), { options: () => [["show", "Visible"], ["hide", "Hidden"]] });
+mxSetting("Default Unfilled Bar Color", "color", () => mxEl("barBgColor").value, mxSetColor("barBgColor"));
+mxSetting("Default Progress Fill Color", "color", () => mxEl("barColor").value, mxSetColor("barColor"));
+mxSetting("Default Summary Bar Color", "color", () => mxEl("summaryColor").value, mxSetColor("summaryColor"));
+mxSetting("Default Milestone Color", "color", () => mxEl("msColor").value, mxSetColor("msColor"));
+mxSetting("Today Line Color", "color", () => mxEl("todayColor").value, mxSetColor("todayColor"));
+mxSetting("Master Leader Color", "color", () => mxEl("masterLeaderColor").value, mxSetColor("masterLeaderColor"));
+mxSetting("Date Header Color", "color", () => mxEl("headerColor").value, mxSetColor("headerColor"));
+const MX_SETTINGS_BY_LABEL = {};
+MX_SETTINGS.forEach(s => { MX_SETTINGS_BY_LABEL[s.label.toLowerCase()] = s; });
+
+/* ---- Small helpers -------------------------------------------------------- */
+function mxApplies(d, type) { return d.types.includes(type) || d.ctxTypes.includes(type); }
+
+function mxCellMode(d, type) {
+    if (d.types.includes(type)) return d.readonly ? "context" : "edit";
+    if (d.ctxTypes.includes(type)) return "context";
+    return "na";
+}
+
+function mxSettingForRow(rd) { return MX_SETTINGS_BY_LABEL[String(rd.settingKey || "").toLowerCase()] || null; }
+
+function mxTargetForRow(d, rd) {
+    if (d.key === "settingValue") {
+        const s = mxSettingForRow(rd);
+        return s ? s : d;
+    }
+    return d;
+}
+
+function mxOptionsOf(target) {
+    const o = typeof target.options === "function" ? target.options() : target.options;
+    return o || [];
+}
+
+/* Convert a raw typed/pasted value to the correct type for a field. */
+function mxCoerce(kind, raw, target) {
+    switch (kind) {
+        case "bool":
+            return gridBoolean(raw);
+        case "int":
+        case "float": {
+            const blank = raw === "" || raw === null || raw === undefined;
+            const n = blank ? NaN : Number(raw);
+            if (!Number.isFinite(n)) return target.nullable ? null : (typeof target.def === "number" ? target.def : 0);
+            let out = kind === "int" ? Math.round(n) : n;
+            if (target.min !== undefined) out = Math.max(target.min, out);
+            if (target.max !== undefined) out = Math.min(target.max, out);
+            return out;
+        }
+        case "date": {
+            const s = String(raw ?? "").trim();
+            if (!s) return null;
+            const ts = parseAnyDateToTimestamp(s);
+            if (isNaN(ts)) return null;
+            return formatDateToDDMMMYYYY(new Date(ts));
+        }
+        case "select": {
+            const v = String(raw ?? "").trim();
+            const opts = mxOptionsOf(target);
+            let hit = opts.find(o => String(o[0]) === v);
+            if (!hit && v !== "" && !isNaN(Number(v))) hit = opts.find(o => !isNaN(Number(o[0])) && Number(o[0]) === Number(v));
+            if (!hit) {
+                const lower = v.toLowerCase();
+                hit = opts.find(o => String(o[0]).toLowerCase() === lower || String(o[1]).toLowerCase() === lower);
+            }
+            return hit ? hit[0] : null;
+        }
+        default:
+            return String(raw ?? "");
+    }
+}
+
+/* ---- Records: one per lane, row, bar, milestone, tracker, callout, setting ---- */
+function mxCollectRecords() {
+    const recs = [];
+    (projectData || []).forEach(lane => {
+        recs.push({ type: "Lane", id: "L-" + lane.id, lane });
         (lane.rows || []).forEach(row => {
-            (row.bars || []).forEach(bar => {
-                gridRows.push({
-                    id: `${lane.id}-${row.id}-${bar.id}`,
-                    _laneId: lane.id,
-                    _rowId: row.id,
-                    _elementId: bar.id,
-
-                    type: "Bar",
-
-                    // Swimlane fields
-                    swimlane: lane.title || "",
-                    swimlaneColor: lane.color || "#f8fafc",
-                    showSummary: lane.showSummary !== false,
-                    titleAlign: lane.titleAlign || "left",
-                    titleFontSize: lane.titleFontSize ?? "",
-                    titleColor: lane.titleColor || "",
-                    titleBold: lane.titleBold !== false,
-                    laneCollapsed: lane.collapsed === true,
-
-                    // Shared row/task fields
-                    task: row.label || "",
-                    predecessor: row.predecessor || "",
-                    showDateRange: row.showDateRange === true,
-
-                    // Shared element fields
-                    elementId: bar.id,
-                    p6IdStart: bar.p6IdStart || bar.p6Id || "",
-                    p6IdFinish: bar.p6IdFinish || bar.p6Id || "",
-
-                    // Bar fields
-                    start: gridDateForInput(bar.start),
-                    end: gridDateForInput(bar.end),
-                    progress: bar.progress ?? 0,
-                    fillColor: bar.color || "",
-                    barBgColor: bar.bgColor || "",
-                    pattern: bar.pattern || "solid",
-                    showLabelInBar: bar.showLabelInBar === true,
-                    labelFontSize: bar.labelFontSize ?? 10,
-
-                    // Milestone-only fields
-                    labelName: "",
-                    milestoneDate: "",
-                    symbol: "",
-                    milestoneColor: "",
-                    showDate: "",
-                    labelOffsetX: "",
-                    labelOffsetY: "",
-                    dateOffsetX: "",
-                    dateOffsetY: "",
-                    leaderEnabledText: "",
-                    leaderEnabledDate: "",
-                    leaderAnchorText: "",
-                    leaderWeight: "",
-                    leaderPattern: ""
-                });
-            });
-
-            (row.milestones || []).forEach(ms => {
-                gridRows.push({
-                    id: `${lane.id}-${row.id}-${ms.id}`,
-                    _laneId: lane.id,
-                    _rowId: row.id,
-                    _elementId: ms.id,
-
-                    type: "Milestone",
-
-                    // Swimlane fields
-                    swimlane: lane.title || "",
-                    swimlaneColor: lane.color || "#f8fafc",
-                    showSummary: lane.showSummary !== false,
-                    titleAlign: lane.titleAlign || "left",
-                    titleFontSize: lane.titleFontSize ?? "",
-                    titleColor: lane.titleColor || "",
-                    titleBold: lane.titleBold !== false,
-                    laneCollapsed: lane.collapsed === true,
-
-                    // Shared row/task fields
-                    task: row.label || "",
-                    predecessor: row.predecessor || "",
-                    showDateRange: row.showDateRange === true,
-
-                    // Shared element fields
-                    elementId: ms.id,
-                    p6IdStart: ms.p6IdStart || ms.p6Id || "",
-                    p6IdFinish: ms.p6IdFinish || ms.p6Id || "",
-
-                    // Bar-only fields
-                    start: "",
-                    end: "",
-                    progress: "",
-                    fillColor: "",
-                    barBgColor: "",
-                    pattern: "",
-                    showLabelInBar: "",
-
-                    // Milestone fields
-                    labelName: ms.label || "",
-                    milestoneDate: gridDateForInput(ms.date),
-                    symbol: ms.symbol || "diamond",
-                    milestoneColor: ms.color || "",
-                    showDate: ms.showDate !== false,
-                    showLabel: !ms.labelHidden,
-                    labelOffsetX: ms.labelOffsetX ?? 0,
-                    labelOffsetY: ms.labelOffsetY ?? 0,
-                    dateOffsetX: ms.dateOffsetX ?? 0,
-                    dateOffsetY: ms.dateOffsetY ?? 0,
-                    leaderEnabledText: ms.leaderEnabledText === true,
-                    leaderEnabledDate: ms.leaderEnabledDate === true,
-                    leaderAnchorText: ms.leaderAnchorText || "center",
-                    leaderWeight: ms.leaderWeight ?? 1,
-                    leaderPattern: ms.leaderPattern || "solid",
-                    labelFontSize: ms.labelFontSize ?? 9
-                });
-            });
+            recs.push({ type: "Row", id: "R-" + lane.id + "-" + row.id, lane, row });
+            (row.bars || []).forEach(el => recs.push({ type: "Bar", id: "B-" + lane.id + "-" + row.id + "-" + el.id, lane, row, el }));
+            (row.milestones || []).forEach(el => recs.push({ type: "Milestone", id: "M-" + lane.id + "-" + row.id + "-" + el.id, lane, row, el }));
         });
     });
-
-    return gridRows;
+    (customTrackers || []).forEach(el => recs.push({ type: "Tracker", id: "T-" + el.id, el }));
+    (calloutData || []).forEach(el => recs.push({ type: "Callout", id: "C-" + el.id, el }));
+    MX_SETTINGS.forEach(setting => recs.push({ type: "Setting", id: "S-" + setting.label, setting }));
+    return recs;
 }
 
-/*
-    Decides whether a particular cell applies to the current element type.
+function mxKindOf(d, rec) { return d.key === "settingValue" ? rec.setting.kind : d.kind; }
 
-    This prevents users from accidentally editing "Progress %" on milestones
-    or "Milestone Symbol" on activity bars.
-*/
+function mxGridValue(d, rec) {
+    let raw = d.get(rec);
+    const kind = mxKindOf(d, rec);
+    if (raw === undefined || raw === null) raw = "";
+    if (kind === "bool") return raw === true || gridBoolean(raw);
+    if (kind === "date") return gridDateForInput(raw);
+    if (kind === "int" || kind === "float") return raw === "" ? "" : Number(raw);
+    return String(raw);
+}
+
+function mxGridRow(rec) {
+    const row = { id: rec.id };
+    MX_FIELDS.forEach(d => { row[d.key] = mxApplies(d, rec.type) ? mxGridValue(d, rec) : ""; });
+    return row;
+}
+
+/* Creates one flat Tabulator row per record (same rows the CSV exports). */
+function flattenProjectDataForGrid() {
+    return mxCollectRecords().map(mxGridRow);
+}
+
+/* Finds the live object a Tabulator row represents (by stable IDs, never by index). */
+function mxFindRecord(rd) {
+    const same = (a, b) => String(a) === String(b);
+    if (rd.type === "Setting") {
+        const setting = mxSettingForRow(rd);
+        return setting ? { type: "Setting", setting } : null;
+    }
+    if (rd.type === "Tracker") {
+        const el = (customTrackers || []).find(t => same(t.id, rd.elementId));
+        return el ? { type: "Tracker", el } : null;
+    }
+    if (rd.type === "Callout") {
+        const el = (calloutData || []).find(t => same(t.id, rd.elementId));
+        return el ? { type: "Callout", el } : null;
+    }
+    const lane = (projectData || []).find(l => same(l.id, rd.laneId));
+    if (!lane) return null;
+    if (rd.type === "Lane") return { type: "Lane", lane };
+    const row = (lane.rows || []).find(r => same(r.id, rd.rowId));
+    if (!row) return null;
+    if (rd.type === "Row") return { type: "Row", lane, row };
+    const list = rd.type === "Bar" ? row.bars : row.milestones;
+    const el = (list || []).find(x => same(x.id, rd.elementId));
+    return el ? { type: rd.type, lane, row, el } : null;
+}
+
+/* Decides whether a particular cell applies to / may be edited on this record type. */
 function canEditGridField(cell) {
-    const rowData = cell.getRow().getData();
-    const field = cell.getField();
-
-    const barOnlyFields = [
-        "start",
-        "end",
-        "progress",
-        "fillColor",
-        "barBgColor",
-        "pattern",
-        "showLabelInBar"
-    ];
-
-    const milestoneOnlyFields = [
-        "labelName",
-        "milestoneDate",
-        "symbol",
-        "milestoneColor",
-        "showDate",
-        "showLabel",
-        "labelOffsetX",
-        "labelOffsetY",
-        "dateOffsetX",
-        "dateOffsetY",
-        "leaderEnabledText",
-        "leaderEnabledDate",
-        "leaderAnchorText",
-        "leaderWeight",
-        "leaderPattern"
-    ];
-
-    if (barOnlyFields.includes(field) && rowData.type !== "Bar") {
-        return false;
-    }
-
-    if (milestoneOnlyFields.includes(field) && rowData.type !== "Milestone") {
-        return false;
-    }
-
-    return true;
+    const d = MX_BY_KEY[cell.getField()];
+    if (!d) return false;
+    return mxCellMode(d, cell.getRow().getData().type) === "edit";
 }
 
 /*
-    Apply an edit immediately to projectData.
-
-    This function does NOT create an Undo entry.
-    That is deliberate: it may run many times while you type.
+    Apply an edit immediately to projectData (no Undo entry; may run on every keystroke).
 */
 function applyGridEditLive(rowData, field, value) {
-    const { lane, row, element } = findGridSourceObjects(rowData);
-
-    if (!lane || !row) {
-        return false;
-    }
-
-    // ---------------------------------------------------------
-    // Swimlane-level fields
-    // ---------------------------------------------------------
-    if (field === "swimlane") {
-        lane.title = String(value ?? "");
-        return true;
-    }
-
-    if (field === "swimlaneColor") {
-        lane.color = String(value || "#f8fafc");
-        return true;
-    }
-
-    if (field === "showSummary") {
-        lane.showSummary = gridBoolean(value);
-        return true;
-    }
-
-    if (field === "titleAlign") {
-        lane.titleAlign = ["left", "center", "right"].includes(value) ? value : "left";
-        return true;
-    }
-
-    if (field === "titleFontSize") {
-        lane.titleFontSize = value === "" ? null : Math.max(6, Math.min(72, gridNumber(value, 10)));
-        return true;
-    }
-
-    if (field === "titleColor") {
-        lane.titleColor = String(value || "");
-        return true;
-    }
-
-    if (field === "titleBold") {
-        lane.titleBold = gridBoolean(value);
-        return true;
-    }
-
-    if (field === "laneCollapsed") {
-        lane.collapsed = gridBoolean(value);
-        return true;
-    }
-
-    // ---------------------------------------------------------
-    // Task/row-level fields
-    // ---------------------------------------------------------
-    if (field === "task") {
-        row.label = String(value ?? "");
-        return true;
-    }
-
-    if (field === "predecessor") {
-        row.predecessor = String(value ?? "");
-        return true;
-    }
-
-    if (field === "showDateRange") {
-        row.showDateRange = gridBoolean(value);
-        return true;
-    }
-
-    // No element means there is nothing else to edit.
-    if (!element) {
-        return false;
-    }
-
-    // ---------------------------------------------------------
-    // Fields shared by bars and milestones
-    // ---------------------------------------------------------
-    if (field === "p6IdStart") {
-        element.p6IdStart = String(value ?? "");
-        return true;
-    }
-
-    if (field === "p6IdFinish") {
-        element.p6IdFinish = String(value ?? "");
-        return true;
-    }
-
-    // ---------------------------------------------------------
-    // Activity bar fields
-    // ---------------------------------------------------------
-    if (rowData.type === "Bar") {
-        if (field === "start") {
-            const normalized = normalizeDateString(value);
-            if (normalized) element.start = normalized;
-            return true;
-        }
-
-        if (field === "end") {
-            const normalized = normalizeDateString(value);
-            if (normalized) element.end = normalized;
-            return true;
-        }
-
-        if (field === "progress") {
-            element.progress = Math.max(0, Math.min(100, gridNumber(value, 0)));
-            return true;
-        }
-
-        if (field === "fillColor") {
-            element.color = String(value || "");
-            return true;
-        }
-
-        if (field === "barBgColor") {
-            element.bgColor = String(value || "");
-            return true;
-        }
-
-        if (field === "pattern") {
-            element.pattern = String(value || "solid");
-            return true;
-        }
-
-        if (field === "showLabelInBar") {
-            element.showLabelInBar = gridBoolean(value);
-            return true;
-        }
-
-        if (field === "labelFontSize") {
-            element.labelFontSize = Math.max(6, Math.min(72, gridNumber(value, 10)));
-            return true;
-        }
-    }
-
-    // ---------------------------------------------------------
-    // Milestone fields
-    // ---------------------------------------------------------
-    if (rowData.type === "Milestone") {
-        if (field === "labelFontSize") {
-            element.labelFontSize = Math.max(6, Math.min(72, gridNumber(value, 9)));
-            return true;
-        }
-
-        if (field === "labelName") {
-            element.label = String(value ?? "");
-            return true;
-        }
-
-        if (field === "milestoneDate") {
-            const normalized = normalizeDateString(value);
-            if (normalized) element.date = normalized;
-            return true;
-        }
-
-        if (field === "symbol") {
-            element.symbol = String(value || "diamond");
-            return true;
-        }
-
-        if (field === "milestoneColor") {
-            element.color = String(value || "");
-            return true;
-        }
-
-        if (field === "showDate") {
-            element.showDate = gridBoolean(value);
-            return true;
-        }
-
-        if (field === "showLabel") {
-            element.labelHidden = !gridBoolean(value);
-            return true;
-        }
-
-        if (field === "labelOffsetX") {
-            element.labelOffsetX = gridNumber(value, 0);
-            element.manualLabel = true;
-            return true;
-        }
-
-        if (field === "labelOffsetY") {
-            element.labelOffsetY = gridNumber(value, 0);
-            element.manualLabel = true;
-            return true;
-        }
-
-        if (field === "dateOffsetX") {
-            element.dateOffsetX = gridNumber(value, 0);
-            element.manualDateLabel = true;
-            return true;
-        }
-
-        if (field === "dateOffsetY") {
-            element.dateOffsetY = gridNumber(value, 0);
-            element.manualDateLabel = true;
-            return true;
-        }
-
-        if (field === "leaderEnabledText") {
-            element.leaderEnabledText = gridBoolean(value);
-            return true;
-        }
-
-        if (field === "leaderEnabledDate") {
-            element.leaderEnabledDate = gridBoolean(value);
-            return true;
-        }
-
-        if (field === "leaderAnchorText") {
-            element.leaderAnchorText = ["left", "center", "right"].includes(value) ? value : "center";
-            return true;
-        }
-
-        if (field === "leaderWeight") {
-            element.leaderWeight = Math.max(1, Math.min(10, gridNumber(value, 1)));
-            return true;
-        }
-
-        if (field === "leaderPattern") {
-            element.leaderPattern = String(value || "solid");
-            return true;
-        }
-    }
-
-    return false;
+    const d = MX_BY_KEY[field];
+    if (!d || mxCellMode(d, rowData.type) !== "edit") return false;
+    const rec = mxFindRecord(rowData);
+    if (!rec) return false;
+    const kind = mxKindOf(d, rec);
+    const target = mxTargetForRow(d, rowData);
+    const v = mxCoerce(kind, value, target);
+    if ((kind === "date" || kind === "select") && v === null) return false;
+    d.set(rec, v);
+    return true;
 }
 
 /*
@@ -2954,29 +2856,76 @@ function createLiveSelectEditor(options) {
 
 /*
     Color editor with immediate SVG redraw.
+
+    - Opening and leaving the picker WITHOUT touching it changes nothing
+      (previously a blank "use global colour" cell silently became black).
+    - Press Delete or Backspace inside the picker to clear the cell, which
+      means "inherit the global colour".
 */
+function mxColorFallback(field) {
+    const globalIds = {
+        laneSummaryColor: "summaryColor",
+        laneTitleColor: "headerColor",
+        barFillColor: "barColor",
+        barBgColor: "barBgColor",
+        msColor: "msColor"
+    };
+    const id = globalIds[field];
+    const el = id ? document.getElementById(id) : null;
+    if (el && /^#[0-9a-f]{6}$/i.test(el.value)) return el.value;
+    return field === "coLeaderColor" ? "#ef4444" : "#000000";
+}
+
 function createLiveColorEditor(cell, onRendered, success, cancel) {
+    const original = cell.getValue() || "";
     const input = document.createElement("input");
+    let touched = false;
+    let finished = false;
 
     input.type = "color";
     input.className = "grid-live-editor";
-    input.value = cell.getValue() || "#000000";
+    input.title = "Press Delete to clear (inherit the global colour)";
+    input.value = /^#[0-9a-f]{6}$/i.test(original) ? original : mxColorFallback(cell.getField());
 
-    onRendered(() => {
-        input.focus();
-    });
+    const finish = (value) => {
+        if (finished) return;
+        finished = true;
+        success(value);
+    };
+    const abort = () => {
+        if (finished) return;
+        finished = true;
+        cancel();
+    };
+
+    onRendered(() => { input.focus(); });
 
     input.addEventListener("input", () => {
+        touched = true;
         updateGridCellLive(cell, input.value);
     });
 
     input.addEventListener("change", () => {
+        touched = true;
         updateGridCellLive(cell, input.value);
-        success(input.value);
+        finish(input.value);
     });
 
     input.addEventListener("blur", () => {
-        success(input.value);
+        if (touched) finish(input.value);
+        else abort();
+    });
+
+    input.addEventListener("keydown", event => {
+        if (event.key === "Delete" || event.key === "Backspace") {
+            event.preventDefault();
+            updateGridCellLive(cell, "");
+            finish("");
+        }
+        if (event.key === "Escape") {
+            event.preventDefault();
+            abort();
+        }
     });
 
     return input;
@@ -3015,20 +2964,58 @@ function createLiveCheckboxEditor(cell, onRendered, success, cancel) {
 }
 
 /*
-    Adds gray non-editable styling to Bar-only / Milestone-only cells
-    that do not apply to the current record type.
+    Cell renderer.
+
+    - Cells that do not apply to the record type are greyed out and empty.
+    - Context cells (parent swimlane / task names, IDs) are read-only.
+    - Checkboxes, colours and dropdowns are shown as ticks, swatches and labels.
 */
+function mxFormatCellValue(kind, val, target) {
+    if (kind === "bool") {
+        return (val === true || gridBoolean(val))
+            ? '<span class="grid-check on">&#10003;</span>'
+            : '<span class="grid-check off">&#9744;</span>';
+    }
+    if (val === "" || val === null || val === undefined) {
+        return kind === "color" ? '<span class="grid-inherit">auto</span>' : "";
+    }
+    if (kind === "color") {
+        return '<span class="grid-swatch" style="background:' + escapeForMarkup(val) + '"></span>' + escapeForMarkup(val);
+    }
+    if (kind === "select") {
+        const hit = mxOptionsOf(target).find(o => String(o[0]) === String(val));
+        return escapeForMarkup(hit ? hit[1] : val);
+    }
+    if (kind === "date") {
+        return escapeForMarkup(normalizeDateString(val));
+    }
+    return escapeForMarkup(val);
+}
+
 function gridCellFormatter(cell) {
     const cellElement = cell.getElement();
+    const rowData = cell.getRow().getData();
+    const d = MX_BY_KEY[cell.getField()];
+    const value = cell.getValue();
 
-    cellElement.classList.remove("grid-read-only");
+    cellElement.classList.remove("grid-read-only", "grid-context-cell");
 
-    if (!canEditGridField(cell)) {
+    if (!d) return value ?? "";
+
+    const mode = mxCellMode(d, rowData.type);
+
+    if (mode === "na") {
         cellElement.classList.add("grid-read-only");
         return "";
     }
 
-    return cell.getValue() ?? "";
+    if (mode === "context") {
+        cellElement.classList.add("grid-context-cell");
+    }
+
+    const target = mxTargetForRow(d, rowData);
+    const kind = d.key === "settingValue" ? (target.kind || "text") : d.kind;
+    return mxFormatCellValue(kind, value, target);
 }
 
 /*
@@ -3036,6 +3023,117 @@ function gridCellFormatter(cell) {
 
     Call this after importing a CSV / JSON file if the grid is visible.
 */
+function mxEditorFor(d) {
+    if (d.readonly) return false;
+    switch (d.kind) {
+        case "bool":   return createLiveCheckboxEditor;
+        case "color":  return createLiveColorEditor;
+        case "date":   return createLiveInputEditor("date");
+        case "int": {
+            const attrs = { step: "1" };
+            if (d.min !== undefined) attrs.min = String(d.min);
+            if (d.max !== undefined) attrs.max = String(d.max);
+            return createLiveInputEditor("number", attrs);
+        }
+        case "float":  return createLiveInputEditor("number", { step: "any" });
+        case "select": return createLiveSelectEditor(mxOptionsOf(d).map(o => ({ value: o[0], label: o[1] })));
+        default:       return createLiveInputEditor("text");
+    }
+}
+
+/* The Setting Value column changes editor type per row (checkbox, colour, dropdown...). */
+function createSettingValueEditor(cell, onRendered, success, cancel) {
+    const setting = mxSettingForRow(cell.getRow().getData());
+    const kind = setting ? setting.kind : "text";
+    let editor;
+    if (kind === "bool") editor = createLiveCheckboxEditor;
+    else if (kind === "color") editor = createLiveColorEditor;
+    else if (kind === "date") editor = createLiveInputEditor("date");
+    else if (kind === "select") editor = createLiveSelectEditor(mxOptionsOf(setting).map(o => ({ value: o[0], label: o[1] })));
+    else if (kind === "int") {
+        const attrs = { step: "1" };
+        if (setting.min !== undefined) attrs.min = String(setting.min);
+        if (setting.max !== undefined) attrs.max = String(setting.max);
+        editor = createLiveInputEditor("number", attrs);
+    } else editor = createLiveInputEditor("text");
+    return editor(cell, onRendered, success, cancel);
+}
+
+function mxBuildGridColumns() {
+    const out = [];
+    const groups = new Map();
+
+    MX_FIELDS.forEach(d => {
+        const col = {
+            title: d.title,
+            field: d.key,
+            width: d.width,
+            formatter: gridCellFormatter,
+            editable: canEditGridField,
+            editor: d.key === "settingValue" ? createSettingValueEditor : mxEditorFor(d),
+            sorter: (d.kind === "int" || d.kind === "float") ? "number" : "string",
+            headerTooltip: d.title
+        };
+
+        if (d.kind === "bool") col.hozAlign = "center";
+        else if (d.kind === "int" || d.kind === "float") col.hozAlign = "right";
+        if (d.filter) col.headerFilter = "input";
+
+        if (d.key === "type") {
+            col.frozen = true;
+            out.push(col);
+            return;
+        }
+
+        if (!groups.has(d.group)) {
+            const g = { title: d.group, columns: [] };
+            groups.set(d.group, g);
+            out.push(g);
+        }
+        groups.get(d.group).columns.push(col);
+    });
+
+    return out;
+}
+
+let gridTypeFilter = localStorage.getItem("gantt_grid_type_filter") || "All";
+
+function mxBuildGridToolbar() {
+    const bar = document.getElementById("gridTypeBar");
+    if (!bar) return;
+    const labels = { All: "All Records", Lane: "Swimlanes", Row: "Task Rows", Bar: "Bars", Milestone: "Milestones", Tracker: "Trackers", Callout: "Callouts", Setting: "Settings" };
+    bar.innerHTML = ["All"].concat(MX_TYPES).map(t =>
+        '<button type="button" class="grid-type-btn" data-type="' + t + '" onclick="setGridTypeFilter(\'' + t + '\')">' + labels[t] + '</button>'
+    ).join("") + '<span class="grid-type-hint">Pick a record type to see only the columns that apply to it. The CSV / XLSX export always contains every column.</span>';
+}
+
+function setGridTypeFilter(type) {
+    gridTypeFilter = (type === "All" || MX_TYPES.includes(type)) ? type : "All";
+    localStorage.setItem("gantt_grid_type_filter", gridTypeFilter);
+
+    document.querySelectorAll("#gridTypeBar .grid-type-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-type") === gridTypeFilter);
+    });
+
+    if (!gridTableInstance) return;
+
+    gridTableInstance.blockRedraw();
+    try {
+        if (gridTypeFilter === "All") gridTableInstance.clearFilter();
+        else gridTableInstance.setFilter("type", "=", gridTypeFilter);
+
+        MX_FIELDS.forEach(d => {
+            if (d.key === "type") return;
+            const col = gridTableInstance.getColumn(d.key);
+            if (!col) return;
+            if (gridTypeFilter === "All" || mxApplies(d, gridTypeFilter)) col.show();
+            else col.hide();
+        });
+    } finally {
+        gridTableInstance.restoreRedraw();
+    }
+}
+
 function initDataGrid() {
     const rows = flattenProjectDataForGrid();
 
@@ -3044,484 +3142,43 @@ function initDataGrid() {
         return;
     }
 
-    const textEditor = createLiveInputEditor("text");
-    const dateEditor = createLiveInputEditor("date");
-    const progressEditor = createLiveInputEditor("number", {
-        min: "0",
-        max: "100",
-        step: "1"
-    });
-    const offsetEditor = createLiveInputEditor("number", {
-        step: "1"
-    });
-    const fontSizeEditor = createLiveInputEditor("number", {
-        min: "6",
-        max: "72",
-        step: "1"
-    });
-    const leaderWeightEditor = createLiveInputEditor("number", {
-        min: "1",
-        max: "10",
-        step: "1"
-    });
-
-    const alignmentEditor = createLiveSelectEditor([
-        { value: "left", label: "Left" },
-        { value: "center", label: "Center" },
-        { value: "right", label: "Right" }
-    ]);
-
-    const barPatternEditor = createLiveSelectEditor([
-        { value: "solid", label: "Solid" },
-        { value: "crosshatch", label: "Cross Hatch" },
-        { value: "grid", label: "Grid" },
-        { value: "dashed", label: "Dashed" },
-        { value: "gingham", label: "Gingham" }
-    ]);
-
-    const milestoneSymbolEditor = createLiveSelectEditor([
-        { value: "diamond", label: "Diamond" },
-        { value: "circle", label: "Circle" },
-        { value: "square", label: "Square" },
-        { value: "triangle", label: "Triangle" }
-    ]);
-
-    const leaderPatternEditor = createLiveSelectEditor([
-        { value: "solid", label: "Solid" },
-        { value: "dashed", label: "Dashed" },
-        { value: "dotted", label: "Dotted" }
-    ]);
+    mxBuildGridToolbar();
 
     gridLastRowCount = rows.length;
     gridLastRowIds = new Set(rows.map(r => r.id));
 
-    gridTableInstance = new Tabulator("#dataGridContainer", {
+    gridTableInstance = new Tabulator("#dataGridMount", {
         data: rows,
         index: "id",
 
         layout: "fitData",
-        height: "calc(100vh - 230px)",
-        pagination: true,
-        paginationMode: "local",
-        paginationSize: 100,
-        paginationSizeSelector: [25, 50, 100, 250],
+        height: "calc(100vh - 280px)",
         movableColumns: true,
         resizableRows: false,
-        clipboard: true,
+        clipboard: "copy",
         clipboardCopyStyled: false,
-        placeholder: "No activity bars or milestones exist yet. Add them from the Swimlanes & Data panel.",
-        tableBuilt: function () {
-            requestAnimationFrame(() => { if (gridTableInstance) gridTableInstance.redraw(true); });
-        },
+        columnDefaults: { headerWordWrap: true },
+        placeholder: "Nothing to show. Add swimlanes, bars and milestones from the Swimlanes & Data panel.",
 
         rowFormatter: function(row) {
             const rowElement = row.getElement();
             const rowData = row.getData();
 
-            rowElement.classList.remove("grid-row-bar", "grid-row-milestone");
-
-            if (rowData.type === "Bar") {
-                rowElement.classList.add("grid-row-bar");
-            }
-
-            if (rowData.type === "Milestone") {
-                rowElement.classList.add("grid-row-milestone");
-            }
+            MX_TYPES.forEach(t => rowElement.classList.remove("grid-row-" + t.toLowerCase()));
+            rowElement.classList.add("grid-row-" + String(rowData.type || "").toLowerCase());
         },
 
-        columns: [
-            {
-                title: "Element",
-                field: "type",
-                width: 105,
-                frozen: true,
-                headerFilter: "list",
-                headerFilterParams: {
-                    values: {
-                        "": "All",
-                        "Bar": "Bars",
-                        "Milestone": "Milestones"
-                    }
-                },
-                editable: false
-            },
+        columns: mxBuildGridColumns()
+    });
 
-            {
-                title: "Swimlane",
-                columns: [
-                    {
-                        title: "Name",
-                        field: "swimlane",
-                        width: 180,
-                        headerFilter: "input",
-                        editor: textEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Lane Color",
-                        field: "swimlaneColor",
-                        width: 110,
-                        editor: createLiveColorEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Summary",
-                        field: "showSummary",
-                        width: 90,
-                        hozAlign: "center",
-                        editor: createLiveCheckboxEditor,
-                        formatter: "tickCross",
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Title Align",
-                        field: "titleAlign",
-                        width: 115,
-                        editor: alignmentEditor,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Title Font",
-                        field: "titleFontSize",
-                        width: 105,
-                        editor: fontSizeEditor,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Title Color",
-                        field: "titleColor",
-                        width: 110,
-                        editor: createLiveColorEditor,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Title Bold",
-                        field: "titleBold",
-                        width: 100,
-                        hozAlign: "center",
-                        editor: createLiveCheckboxEditor,
-                        formatter: "tickCross",
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Collapsed",
-                        field: "laneCollapsed",
-                        width: 105,
-                        hozAlign: "center",
-                        editor: createLiveCheckboxEditor,
-                        formatter: "tickCross",
-                        editable: canEditGridField
-                    }
-                ]
-            },
-
-            {
-                title: "Task Row",
-                columns: [
-                    {
-                        title: "Task Name",
-                        field: "task",
-                        width: 220,
-                        headerFilter: "input",
-                        editor: textEditor,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Predecessor",
-                        field: "predecessor",
-                        width: 115,
-                        headerFilter: "input",
-                        editor: textEditor,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Show Dates",
-                        field: "showDateRange",
-                        width: 105,
-                        hozAlign: "center",
-                        editor: createLiveCheckboxEditor,
-                        formatter: "tickCross",
-                        editable: canEditGridField
-                    }
-                ]
-            },
-
-            {
-                title: "Shared IDs",
-                columns: [
-                    {
-                        title: "Element ID",
-                        field: "elementId",
-                        width: 100,
-                        editable: false
-                    },
-                    {
-                        title: "P6 Start ID",
-                        field: "p6IdStart",
-                        width: 130,
-                        headerFilter: "input",
-                        editor: textEditor,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "P6 Finish ID",
-                        field: "p6IdFinish",
-                        width: 130,
-                        headerFilter: "input",
-                        editor: textEditor,
-                        editable: canEditGridField
-                    }
-                ]
-            },
-
-            {
-                title: "Activity Bar",
-                columns: [
-                    {
-                        title: "Start",
-                        field: "start",
-                        width: 120,
-                        sorter: "date",
-                        sorterParams: { format: "yyyy-MM-dd" },
-                        headerFilter: "input",
-                        editor: dateEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Finish",
-                        field: "end",
-                        width: 120,
-                        sorter: "date",
-                        sorterParams: { format: "yyyy-MM-dd" },
-                        headerFilter: "input",
-                        editor: dateEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Progress %",
-                        field: "progress",
-                        width: 110,
-                        hozAlign: "right",
-                        editor: progressEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Fill Color",
-                        field: "fillColor",
-                        width: 105,
-                        editor: createLiveColorEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Bar Background",
-                        field: "barBgColor",
-                        width: 125,
-                        editor: createLiveColorEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Pattern",
-                        field: "pattern",
-                        width: 125,
-                        editor: barPatternEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Show Name In Bar",
-                        field: "showLabelInBar",
-                        width: 130,
-                        hozAlign: "center",
-                        editor: createLiveCheckboxEditor,
-                        formatter: "tickCross",
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Bar Label Font",
-                        field: "labelFontSize",
-                        width: 115,
-                        editor: fontSizeEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    }
-                ]
-            },
-
-            {
-                title: "Milestone",
-                columns: [
-                    {
-                        title: "Label",
-                        field: "labelName",
-                        width: 190,
-                        headerFilter: "input",
-                        editor: textEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Date",
-                        field: "milestoneDate",
-                        width: 120,
-                        sorter: "date",
-                        sorterParams: { format: "yyyy-MM-dd" },
-                        headerFilter: "input",
-                        editor: dateEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Symbol",
-                        field: "symbol",
-                        width: 110,
-                        editor: milestoneSymbolEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Color",
-                        field: "milestoneColor",
-                        width: 105,
-                        editor: createLiveColorEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Show Date",
-                        field: "showDate",
-                        width: 105,
-                        hozAlign: "center",
-                        editor: createLiveCheckboxEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Show Label",
-                        field: "showLabel",
-                        width: 105,
-                        hozAlign: "center",
-                        editor: createLiveCheckboxEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Milestone Label Font",
-                        field: "labelFontSize",
-                        width: 130,
-                        editor: fontSizeEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    }
-                ]
-            },
-
-            {
-                title: "Milestone Label Position",
-                columns: [
-                    {
-                        title: "Label X",
-                        field: "labelOffsetX",
-                        width: 95,
-                        hozAlign: "right",
-                        editor: offsetEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Label Y",
-                        field: "labelOffsetY",
-                        width: 95,
-                        hozAlign: "right",
-                        editor: offsetEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Date X",
-                        field: "dateOffsetX",
-                        width: 95,
-                        hozAlign: "right",
-                        editor: offsetEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Date Y",
-                        field: "dateOffsetY",
-                        width: 95,
-                        hozAlign: "right",
-                        editor: offsetEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    }
-                ]
-            },
-
-            {
-                title: "Milestone Leader Lines",
-                columns: [
-                    {
-                        title: "Text Leader",
-                        field: "leaderEnabledText",
-                        width: 110,
-                        hozAlign: "center",
-                        editor: createLiveCheckboxEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Date Leader",
-                        field: "leaderEnabledDate",
-                        width: 110,
-                        hozAlign: "center",
-                        editor: createLiveCheckboxEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Text Anchor",
-                        field: "leaderAnchorText",
-                        width: 115,
-                        editor: alignmentEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Weight",
-                        field: "leaderWeight",
-                        width: 90,
-                        hozAlign: "right",
-                        editor: leaderWeightEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    },
-                    {
-                        title: "Pattern",
-                        field: "leaderPattern",
-                        width: 105,
-                        editor: leaderPatternEditor,
-                        formatter: gridCellFormatter,
-                        editable: canEditGridField
-                    }
-                ]
-            }
-        ]
+    gridTableInstance.on("tableBuilt", function() {
+        setGridTypeFilter(gridTypeFilter);
+        requestAnimationFrame(() => { if (gridTableInstance) gridTableInstance.redraw(true); });
     });
 
     /*
-        Runs after the grid editor has been committed.
-
-        The actual SVG changed during typing. This final step:
-        - Saves state
-        - Adds a single Undo snapshot
-        - Refreshes the sidebar editor cards
+        Runs after a grid editor has been committed:
+        saves state, adds ONE Undo snapshot and refreshes the sidebar cards.
     */
     gridTableInstance.on("cellEdited", function(cell) {
         finishGridCellEdit(cell);
@@ -3531,254 +3188,368 @@ function initDataGrid() {
     // =========================================================================
     // OVERHAULED ARCHITECTURE: FLATTENED EXCEL CSV AUTOMATION ENGINE
     // =========================================================================
-    function exportExcelCSV() {
-    // Makes every exported value safe:
-    // undefined, null, numbers, and text all become valid CSV cells.
-    function csvCell(value) {
-        const safeValue = String(value ?? '');
-
-        // CSV uses two double-quotes to represent one literal double-quote.
-        return `"${safeValue.replace(/"/g, '""')}"`;
+    /* =========================================================================
+   MATRIX TABLE  (shared by CSV export, XLSX export and the Data Grid)
+   ========================================================================= */
+function mxCsvValue(d, rec, typed) {
+    if (!mxApplies(d, rec.type)) return typed ? null : "";
+    const kind = mxKindOf(d, rec);
+    let raw = d.get(rec);
+    if (raw === undefined || raw === null) raw = "";
+    if (kind === "bool") {
+        const b = raw === true || gridBoolean(raw);
+        return typed ? b : (b ? "TRUE" : "FALSE");
     }
+    if (kind === "int" || kind === "float") {
+        if (raw === "") return typed ? null : "";
+        return typed ? Number(raw) : String(raw);
+    }
+    return String(raw);
+}
 
-    const headers = [
-        'Record Type',
-        'Swimlane Title',
-        'Swimlane Color',
-        'Swimlane Summary',
-        'Row ID',
-        'Row Display Title',
-        'Predecessor ID',
-        'Element ID',
-        'P6 ID Start',
-        'P6 ID Finish',
-        'Label Name',
-        'Start Target Date',
-        'Finish Date',
-        'Progress Thickness',
-        'Pattern Shape',
-        'Color Hex Code',
-        'OffsetX1',
-        'OffsetY1',
-        'OffsetX2',
-        'OffsetY2',
-        'Rules Matrix',
-        'Show Date Range',
-        'Graphic Setting 1',
-        'Graphic Setting 2',
-        'Graphic Setting 3',
-        'Graphic Setting 4',
-        'Graphic Setting 5'
-    ];
+function mxBuildTable(typed) {
+    const headers = MX_FIELDS.map(d => d.title);
+    const rows = mxCollectRecords().map(rec => MX_FIELDS.map(d => mxCsvValue(d, rec, typed)));
+    return { headers, rows };
+}
 
-    const csvRows = [headers.map(csvCell).join(',')];
-
-    // Export application-level settings as the first data row.
-    const workspaceSettingsFields = [
-        'SETTINGS',
-        document.getElementById('fontFamily').value,
-        document.getElementById('fontSize').value,
-        document.getElementById('swimlaneHeight').value,
-        document.getElementById('rowHeight').value,
-        document.getElementById('rowLabelWidth').value,
-        document.getElementById('canvasWidth').value,
-        document.querySelector('input[name="rangeMode"]:checked')?.value ?? 'manual',
-        document.querySelector('input[name="sizingMode"]:checked')?.value ?? 'fixed',
-        manualBoundaryMin,
-        manualBoundaryMax,
-        document.getElementById('showHeaderYear').checked ? 'TRUE' : 'FALSE',
-        document.getElementById('showHeaderQuarter').checked ? 'TRUE' : 'FALSE',
-        document.getElementById('showHeaderMonth').checked ? 'TRUE' : 'FALSE',
-        document.getElementById('showHeaderDay').checked ? 'TRUE' : 'FALSE',
-        document.getElementById('showVGrid').checked ? 'TRUE' : 'FALSE',
-        document.getElementById('showAlignGrid').checked ? 'TRUE' : 'FALSE',
-        document.getElementById('snapResolution').value,
-        document.getElementById('workspaceZoom').value,
-        document.querySelector('input[name="todayLineToggle"]:checked')?.value ?? 'show',
-        document.getElementById('barBgColor').value,
-        document.getElementById('barColor').value,
-        document.getElementById('summaryColor').value,
-        document.getElementById('msColor').value,
-        document.getElementById('todayColor').value,
-        document.getElementById('masterLeaderColor').value,
-        document.getElementById('headerColor').value
-    ];
-
-    csvRows.push(workspaceSettingsFields.map(csvCell).join(','));
-
-    // Export every bar and milestone in every row of every swimlane.
-    projectData.forEach(lane => {
-        (lane.rows ?? []).forEach(row => {
-            (row.bars ?? []).forEach(bar => {
-                const barFields = [
-                    'BAR',
-                    lane.title,
-                    lane.color,
-                    lane.showSummary ? 'TRUE' : 'FALSE',
-                    row.id,
-                    row.label,
-                    row.predecessor,
-                    bar.id,
-
-                    // Supports old data using p6Id and newer data using p6IdStart.
-                    bar.p6IdStart ?? bar.p6Id ?? '',
-                    bar.p6IdFinish ?? bar.p6Id ?? '',
-
-                    '',
-                    bar.start,
-                    bar.end,
-                    bar.progress ?? 0,
-                    bar.pattern ?? 'solid',
-                    bar.color,
-                    '',
-                    '',
-                    '',
-                    '',
-                    bar.bgColor,
-                    row.showDateRange === true ? 'TRUE' : 'FALSE',
-                    '',
-                    '',
-                    '',
-                    '',
-                    ''
-                ];
-
-                csvRows.push(barFields.map(csvCell).join(','));
-            });
-
-            (row.milestones ?? []).forEach(milestone => {
-                const rulesMatrix = [
-                    milestone.showDate !== false ? 'PinDate' : 'NoPinDate',
-                    milestone.leaderEnabledText ? 'LdrTxt' : 'NoLdrTxt',
-                    milestone.leaderEnabledDate ? 'LdrDt' : 'NoLdrDt',
-                    milestone.leaderAnchorText ?? 'center'
-                ].join('|');
-
-                const milestoneFields = [
-                    'MILESTONE',
-                    lane.title,
-                    lane.color,
-                    lane.showSummary ? 'TRUE' : 'FALSE',
-                    row.id,
-                    row.label,
-                    row.predecessor,
-                    milestone.id,
-
-                    // Supports old data using p6Id and newer data using two P6 fields.
-                    milestone.p6IdStart ?? milestone.p6Id ?? '',
-                    milestone.p6IdFinish ?? milestone.p6Id ?? '',
-
-                    milestone.label,
-                    milestone.date,
-                    milestone.date,
-                    '',
-                    milestone.symbol ?? 'diamond',
-                    milestone.color,
-                    milestone.labelOffsetX ?? 0,
-                    milestone.labelOffsetY ?? 0,
-                    milestone.dateOffsetX ?? 0,
-                    milestone.dateOffsetY ?? 0,
-                    rulesMatrix,
-                    row.showDateRange === true ? 'TRUE' : 'FALSE',
-                    '',
-                    '',
-                    '',
-                    '',
-                    ''
-                ];
-
-                csvRows.push(milestoneFields.map(csvCell).join(','));
-            });
-        });
-    });
-
-    // Export custom vertical tracker lines.
-    (customTrackers ?? []).forEach(tracker => {
-        const trackerFields = [
-            'TRACKER',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            tracker.id,
-            '',
-            '',
-            tracker.label,
-            tracker.date,
-            '',
-            tracker.thickness ?? 2,
-            tracker.pattern ?? 'solid',
-            tracker.color,
-            tracker.labelOffsetX ?? 0,
-            tracker.labelOffsetY ?? 0,
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            ''
-        ];
-
-        csvRows.push(trackerFields.map(csvCell).join(','));
-    });
-
-    // Export custom text callouts.
-    (calloutData ?? []).forEach(callout => {
-        const calloutFields = [
-            'CALLOUT',
-            callout.text,
-            callout.x ?? 0,
-            callout.y ?? 0,
-            callout.leaderX ?? 0,
-            callout.leaderY ?? 0,
-            callout.bgColor,
-            callout.textColor,
-            callout.fontSize ?? 14,
-            callout.isBold ? 'TRUE' : 'FALSE',
-            callout.bgTransparent ? 'TRUE' : 'FALSE',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            ''
-        ];
-
-        csvRows.push(calloutFields.map(csvCell).join(','));
-    });
-
-    const blob = new Blob(
-        [csvRows.join('\n')],
-        { type: 'text/csv;charset=utf-8;' }
-    );
-
-    const link = document.createElement('a');
+function mxDownloadBlob(blob, fileName) {
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.csv`;
-
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    URL.revokeObjectURL(link.href);
-
-    showToast('CSV export created successfully.', 'success');
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
+
+function exportExcelCSV() {
+    const { headers, rows } = mxBuildTable(false);
+    const esc = value => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+    const lines = [headers.map(esc).join(",")].concat(rows.map(r => r.map(esc).join(",")));
+
+    // The BOM makes Excel read accents / symbols correctly.
+    const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+    mxDownloadBlob(blob, sanitizeFilenamePart(getProjectTitle()) + "_" + getDateStamp() + ".csv");
+    showToast("CSV export created (" + rows.length + " records, " + headers.length + " columns).", "success");
+}
+
+function mxColumnGuideRows() {
+    const out = [["Column", "Editable On", "Read-Only Context On", "Value Type", "Allowed Values / Notes"]];
+    MX_FIELDS.forEach(d => {
+        let notes = "";
+        if (d.key === "type") notes = MX_TYPES.join(", ");
+        else if (d.key === "settingValue") notes = "Depends on the Setting Name row: TRUE/FALSE, colour (#rrggbb), number, date (DDMMMYYYY) or one of the listed choices.";
+        else if (d.kind === "bool") notes = "TRUE or FALSE";
+        else if (d.kind === "color") notes = "#rrggbb" + (d.def === "" ? " (blank = use the global default colour)" : "");
+        else if (d.kind === "date") notes = "DDMMMYYYY, e.g. 05Jan2026 (other common date formats are accepted)";
+        else if (d.kind === "select") notes = mxOptionsOf(d).map(o => o[0]).join(", ");
+        else if (d.kind === "int" || d.kind === "float") notes = (d.kind === "int" ? "Whole number" : "Number") + (d.min !== undefined ? " " + d.min + " to " + d.max : "") + (d.nullable ? " (blank = automatic)" : "");
+        else if (d.readonly) notes = "Links rows together. Leave the ID blank on a new line to have one assigned.";
+        out.push([d.title, d.readonly ? "(link / identifier)" : d.types.join(", "), d.ctxTypes.join(", "), d.kind, notes]);
+    });
+    return out;
+}
+
+/* Uses the local xlsx.full.min.js when present; otherwise loads the same library from a CDN. */
+async function mxEnsureXLSX() {
+    if (typeof XLSX !== "undefined") return true;
+    return new Promise(resolve => {
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+        s.onload = () => resolve(typeof XLSX !== "undefined");
+        s.onerror = () => resolve(false);
+        document.head.appendChild(s);
+    });
+}
+
+async function exportExcelXLSX() {
+    if (!(await mxEnsureXLSX())) {
+        showToast("Could not load the Excel library. Use CSV export, or keep xlsx.full.min.js in the same folder as timeline.html.", "error", 6000);
+        return;
+    }
+    const { headers, rows } = mxBuildTable(true);
+    const sheet = XLSX.utils.aoa_to_sheet([headers].concat(rows));
+    sheet["!cols"] = MX_FIELDS.map(d => ({ wch: Math.max(10, Math.min(40, Math.round(d.width / 7))) }));
+    sheet["!freeze"] = { xSplit: 1, ySplit: 1 };
+
+    const guide = XLSX.utils.aoa_to_sheet(mxColumnGuideRows());
+    guide["!cols"] = [{ wch: 34 }, { wch: 34 }, { wch: 26 }, { wch: 10 }, { wch: 90 }];
+
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, sheet, "Timeline Matrix");
+    XLSX.utils.book_append_sheet(book, guide, "Column Guide");
+    XLSX.writeFile(book, sanitizeFilenamePart(getProjectTitle()) + "_" + getDateStamp() + ".xlsx");
+    showToast("Excel export created (" + rows.length + " records, " + headers.length + " columns).", "success");
+}
+
+/* =========================================================================
+   MATRIX IMPORT  (CSV or the first sheet of an XLSX)
+   ========================================================================= */
+function mxParseCSV(text) {
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    const rows = [];
+    let row = [];
+    let cell = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (inQuotes) {
+            if (ch === '"') {
+                if (text[i + 1] === '"') { cell += '"'; i++; }
+                else inQuotes = false;
+            } else cell += ch;
+        } else if (ch === '"') {
+            inQuotes = true;
+        } else if (ch === ",") {
+            row.push(cell); cell = "";
+        } else if (ch === "\n" || ch === "\r") {
+            if (ch === "\r" && text[i + 1] === "\n") i++;
+            row.push(cell); cell = "";
+            rows.push(row); row = [];
+        } else cell += ch;
+    }
+    if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+}
+
+/* Turns matrix rows into projectData / trackers / callouts / settings WITHOUT touching the app. */
+function mxParseMatrix(rows) {
+    if (!rows || rows.length < 2) return null;
+
+    const header = rows[0].map(h => String(h ?? "").trim());
+    if (header.some(h => h.toLowerCase() === "rules matrix")) return null;   // old 27-column format
+
+    const titleToKey = {};
+    MX_FIELDS.forEach(d => { titleToKey[d.title.toLowerCase()] = d.key; titleToKey[d.key.toLowerCase()] = d.key; });
+    const colIndex = {};
+    header.forEach((h, i) => {
+        const key = titleToKey[h.toLowerCase()];
+        if (key && colIndex[key] === undefined) colIndex[key] = i;
+    });
+    if (colIndex.type === undefined) return null;
+
+    const warnings = [];
+    const lanes = [];
+    const trackers = [];
+    const callouts = [];
+    const settings = [];
+
+    const laneById = new Map();
+    const usedBarIds = new Set();
+    const usedMsIds = new Set();
+    const usedTrackerIds = new Set();
+    const usedCalloutIds = new Set();
+    let maxLaneId = -1, maxRowId = 0, maxBarId = 5000, maxMsId = 1000, maxTrackerId = 7000;
+
+    const toId = s => { const n = parseInt(s, 10); return Number.isFinite(n) ? n : null; };
+    const typeOf = s => MX_TYPES.find(t => t.toLowerCase() === String(s || "").trim().toLowerCase()) || null;
+
+    const newLane = id => ({ id, title: "", color: "#f8fafc", showSummary: true, rows: [] });
+    const newRow = id => ({ id, label: "", predecessor: "", showDateRange: false, bars: [], milestones: [] });
+    const newBar = id => ({ id, p6IdStart: "", p6IdFinish: "", start: "", end: "", progress: 0, bgColor: "", color: "", pattern: "solid", showLabelInBar: false, labelFontSize: 10 });
+    const newMs = id => ({
+        id, p6IdStart: "", p6IdFinish: "", label: "", date: "", showDate: true, manualLabel: false, labelOffsetX: 0, labelOffsetY: 0,
+        manualDateLabel: false, dateOffsetX: 0, dateOffsetY: 0, symbol: "diamond", color: "", leaderEnabledText: false,
+        leaderEnabledDate: false, leaderAnchorText: "center", labelFontSize: 9
+    });
+    const newTracker = id => ({ id, label: "", date: "", thickness: 2, pattern: "solid", color: "#10b981", labelOffsetX: 0, labelOffsetY: 0 });
+    const newCallout = id => ({
+        id, text: "", x: 350, y: 100, leaderX: 350, leaderY: 150, showLeader: true, leaderAttachment: "bottom",
+        bgColor: "#ffffff", textColor: "#000000", fontSize: 14, isBold: false, bgTransparent: false, leaderThickness: 2
+    });
+
+    function ensureLane(idText, titleHint) {
+        let id = toId(idText);
+        let lane = id !== null ? laneById.get(id) : undefined;
+        if (!lane && id === null && titleHint) lane = lanes.find(l => l.title === titleHint);
+        if (!lane) {
+            if (id === null) {
+                if (!titleHint) return null;
+                id = maxLaneId + 1;
+            }
+            lane = newLane(id);
+            lane.title = titleHint || "";
+            lanes.push(lane);
+            laneById.set(id, lane);
+            if (id > maxLaneId) maxLaneId = id;
+        }
+        return lane;
+    }
+
+    function findRow(id) {
+        for (const l of lanes) for (const r of l.rows) if (r.id === id) return { lane: l, row: r };
+        return null;
+    }
+
+    function ensureRow(rowIdText, laneIdText, laneTitleHint, rowLabelHint) {
+        let id = toId(rowIdText);
+        if (id !== null) {
+            const hit = findRow(id);
+            if (hit) return hit;
+        }
+        const lane = ensureLane(laneIdText, laneTitleHint);
+        if (!lane) return null;
+        if (id === null && rowLabelHint) {
+            const sameRow = lane.rows.find(r => r.label === rowLabelHint);
+            if (sameRow) return { lane, row: sameRow };
+        }
+        if (id === null) id = maxRowId + 1;
+        const row = newRow(id);
+        row.label = rowLabelHint || "";
+        lane.rows.push(row);
+        if (id > maxRowId) maxRowId = id;
+        return { lane, row };
+    }
+
+    function applyFields(rec, getRaw, lineNo) {
+        const fields = MX_FIELDS.filter(d => d.types.includes(rec.type) && !d.readonly && d.key !== "settingValue");
+        fields.filter(d => !d.late).concat(fields.filter(d => d.late)).forEach(d => {
+            const raw = getRaw(d.key);
+            if (raw === undefined) return;
+            let v;
+            if (raw === "") {
+                if (d.def !== undefined) v = d.def;
+                else if (d.kind === "text" || d.kind === "color") v = "";
+                else return;
+            } else {
+                v = mxCoerce(d.kind, raw, d);
+                if ((d.kind === "date" || d.kind === "select") && v === null) {
+                    warnings.push("Line " + lineNo + ": \"" + raw + "\" is not valid for \"" + d.title + "\" and was skipped.");
+                    return;
+                }
+            }
+            d.set(rec, v);
+        });
+    }
+
+    for (let r = 1; r < rows.length; r++) {
+        const line = rows[r];
+        if (!line || line.every(v => String(v ?? "").trim() === "")) continue;
+
+        const lineNo = r + 1;
+        const raw = key => {
+            if (colIndex[key] === undefined) return undefined;
+            const v = line[colIndex[key]];
+            return v === undefined || v === null ? "" : String(v).trim();
+        };
+
+        const type = typeOf(raw("type"));
+        if (!type) {
+            warnings.push("Line " + lineNo + ": unknown Record Type \"" + raw("type") + "\" was skipped.");
+            continue;
+        }
+
+        if (type === "Lane") {
+            const lane = ensureLane(raw("laneId") ?? "", raw("laneTitle") ?? "");
+            if (!lane) { warnings.push("Line " + lineNo + ": swimlane needs a Swimlane ID or Swimlane Name."); continue; }
+            applyFields({ type: "Lane", lane }, raw, lineNo);
+            continue;
+        }
+
+        if (type === "Row") {
+            const hit = ensureRow(raw("rowId") ?? "", raw("laneId") ?? "", raw("laneTitle") ?? "", raw("rowLabel") ?? "");
+            if (!hit) { warnings.push("Line " + lineNo + ": task row has no swimlane (fill in Swimlane ID or Swimlane Name)."); continue; }
+            applyFields({ type: "Row", lane: hit.lane, row: hit.row }, raw, lineNo);
+            continue;
+        }
+
+        if (type === "Bar" || type === "Milestone") {
+            const hit = ensureRow(raw("rowId") ?? "", raw("laneId") ?? "", raw("laneTitle") ?? "", raw("rowLabel") ?? "");
+            if (!hit) { warnings.push("Line " + lineNo + ": " + type + " has no Task Row ID / swimlane and was skipped."); continue; }
+
+            const used = type === "Bar" ? usedBarIds : usedMsIds;
+            let id = toId(raw("elementId") ?? "");
+            if (id === null || used.has(id)) id = (type === "Bar" ? maxBarId : maxMsId) + 1;
+            used.add(id);
+            if (type === "Bar" && id > maxBarId) maxBarId = id;
+            if (type === "Milestone" && id > maxMsId) maxMsId = id;
+
+            const el = type === "Bar" ? newBar(id) : newMs(id);
+            applyFields({ type, lane: hit.lane, row: hit.row, el }, raw, lineNo);
+            (type === "Bar" ? hit.row.bars : hit.row.milestones).push(el);
+            continue;
+        }
+
+        if (type === "Tracker") {
+            let id = toId(raw("elementId") ?? "");
+            if (id === null || usedTrackerIds.has(id)) id = maxTrackerId + 1;
+            usedTrackerIds.add(id);
+            if (id > maxTrackerId) maxTrackerId = id;
+            const el = newTracker(id);
+            applyFields({ type, el }, raw, lineNo);
+            trackers.push(el);
+            continue;
+        }
+
+        if (type === "Callout") {
+            let id = raw("elementId") ?? "";
+            if (id === "" || usedCalloutIds.has(id)) id = generateUUID();
+            usedCalloutIds.add(id);
+            const el = newCallout(id);
+            applyFields({ type, el }, raw, lineNo);
+            callouts.push(el);
+            continue;
+        }
+
+        if (type === "Setting") {
+            const name = raw("settingKey") ?? "";
+            const setting = MX_SETTINGS_BY_LABEL[name.toLowerCase()];
+            if (!setting) { warnings.push("Line " + lineNo + ": unknown Setting Name \"" + name + "\" was skipped."); continue; }
+            const value = raw("settingValue");
+            if (value === undefined || value === "") continue;
+            const v = mxCoerce(setting.kind, value, setting);
+            if ((setting.kind === "date" || setting.kind === "select") && v === null) {
+                warnings.push("Line " + lineNo + ": \"" + value + "\" is not valid for setting \"" + setting.label + "\" and was skipped.");
+                continue;
+            }
+            settings.push({ setting, value: v });
+        }
+    }
+
+    return {
+        lanes, trackers, callouts, settings, warnings,
+        counters: { row: maxRowId + 1, ms: maxMsId + 1, bar: maxBarId + 1, tracker: maxTrackerId + 1 }
+    };
+}
+
+function mxImportParsed(parsed, fileName) {
+    if (!parsed.lanes.length && !parsed.trackers.length && !parsed.callouts.length && !parsed.settings.length) {
+        showToast("No usable records were found in that file.", "error", 4500);
+        return;
+    }
+
+    projectData = parsed.lanes;
+    customTrackers = parsed.trackers;
+    calloutData = parsed.callouts;
+    hydrateRowDefaults();
+
+    nextRowId = parsed.counters.row;
+    nextMsId = parsed.counters.ms;
+    nextBarId = parsed.counters.bar;
+    nextTrackerId = parsed.counters.tracker;
+
+    parsed.settings.forEach(item => item.setting.set(item.value));
+    syncBoundaryFields();
+
+    const titleEl = document.getElementById("projectTitleInput");
+    if (titleEl && fileName) titleEl.value = extractTitleFromFilename(fileName);
+
+    renderCalloutControls();
+    recordStateChange();
+    renderInputRows();
+    populateTrackerDashboardMatrix();
+    updateChart();
+
+    if (parsed.warnings.length) {
+        console.warn("CSV import warnings:\n" + parsed.warnings.join("\n"));
+        showToast("Imported with " + parsed.warnings.length + " warning(s). First: " + parsed.warnings[0], "info", 8000);
+    } else {
+        showToast("Imported " + parsed.lanes.length + " swimlane(s), " + parsed.trackers.length + " tracker(s), " + parsed.callouts.length + " callout(s).", "success");
+    }
+}
+
 
    function exportConfigurationArchive() {
     recordStateChange();
@@ -3829,7 +3600,7 @@ function initDataGrid() {
     if (!file) return;
 
     // Helper function to process the extracted text payload
-    const processDataPayload = function(csvText) {
+    const processLegacyPayload = function(csvText) {
         const lines = csvText.split(/\r?\n/); if(lines.length <= 1) return;
         let newImportData = []; let newTrackers = []; let newCallouts = [];
 let importedWorkspaceSettings = null;
@@ -4104,11 +3875,26 @@ nextRowId = rIdCounter; nextMsId = mIdCounter; nextBarId = bIdCounter; nextTrack
         }
     };
 
+    // New matrix format (one row per lane / task row / bar / milestone / tracker / callout / setting)
+    // is detected by its header row. Anything else falls back to the original 27-column importer.
+    const processDataPayload = function(csvText) {
+        const parsed = mxParseMatrix(mxParseCSV(csvText));
+        if (parsed) {
+            mxImportParsed(parsed, file.name);
+            return;
+        }
+        processLegacyPayload(csvText);
+    };
+
     const fileName = file.name.toLowerCase();
-    
+
     if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = async function(e) {
+            if (!(await mxEnsureXLSX())) {
+                showToast("Could not load the Excel library, so .xlsx import is unavailable. Save the sheet as CSV and import that.", "error", 6000);
+                return;
+            }
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
             const firstSheetName = workbook.SheetNames[0];
@@ -4560,6 +4346,7 @@ function escapeHtmlAttribute(value) {
             </div>
             <div class="modal-row">
                 <div class="modal-field"><label>Thickness Weight (px)</label><input type="number" min="1" max="10" id="modTrkThickness" value="${trk.thickness || 2}"></div>
+                <div class="modal-field"><label>Visible</label><label style="font-weight:600; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="modTrkVisible" ${trk.hidden === true ? '' : 'checked'} style="width:auto;"> Show on timeline</label></div>
             </div>
             <div class="modal-actions">
                 <button id="modTrkCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
@@ -4575,6 +4362,7 @@ function escapeHtmlAttribute(value) {
             trk.color = document.getElementById('modTrkColor').value;
             trk.pattern = document.getElementById('modTrkPattern').value;
             trk.thickness = parseInt(document.getElementById('modTrkThickness').value) || 2;
+            trk.hidden = !document.getElementById('modTrkVisible').checked;
             recordStateChange(); populateTrackerDashboardMatrix(); updateChart(); dialog.remove();
         });
     }
@@ -4732,6 +4520,8 @@ function escapeHtmlAttribute(value) {
             <option value="circle" ${ms.symbol === "circle" ? "selected" : ""}>Circle</option>
             <option value="triangle" ${ms.symbol === "triangle" ? "selected" : ""}>Triangle</option>
             <option value="star" ${ms.symbol === "star" ? "selected" : ""}>Star</option>
+            <option value="square" ${ms.symbol === "square" ? "selected" : ""}>Square</option>
+            <option value="vertical-bar" ${ms.symbol === "vertical-bar" ? "selected" : ""}>Vertical Bar</option>
         </select>
     </div>
 
@@ -4764,6 +4554,7 @@ function escapeHtmlAttribute(value) {
             <option value="bottom" ${ms.leaderAnchorText === "bottom" ? "selected" : ""}>Bottom</option>
             <option value="left" ${ms.leaderAnchorText === "left" ? "selected" : ""}>Left</option>
             <option value="right" ${ms.leaderAnchorText === "right" ? "selected" : ""}>Right</option>
+            <option value="custom" ${ms.leaderAnchorText === "custom" ? "selected" : ""}>Custom (drag handles)</option>
         </select>
     </div>
 
@@ -4798,6 +4589,11 @@ function escapeHtmlAttribute(value) {
     <label class="modal-field checkbox-field full-width">
         <input type="checkbox" id="modalMsShowLabel" ${ms.labelHidden ? "" : "checked"}>
         Show milestone label (toggle off to hide text without deleting it)
+    </label>
+
+    <label class="modal-field checkbox-field full-width">
+        <input type="checkbox" id="modalMsVisible" ${ms.hidden === true ? "" : "checked"}>
+        Visible on timeline (uncheck to hide the whole milestone; re-enable in the Data Grid)
     </label>
 `;
 
@@ -4885,6 +4681,8 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
            ms.showDate = document.getElementById("modalMsShowDate").value === "true";
             ms.labelFontSize = Math.max(6, Math.min(72, parseInt(document.getElementById("modalMsFontSize").value, 10) || 9));
             ms.labelHidden = !document.getElementById("modalMsShowLabel").checked;
+            ms.hidden = !document.getElementById("modalMsVisible").checked;
+            if (ms.hidden) showToast("Milestone hidden. Turn it back on in the Data Grid (Visible On Timeline).", "info", 4500);
 
             recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
         });
@@ -4944,6 +4742,11 @@ if (!dateVal) { alert("Milestone date fields require input criteria."); return; 
     <label class="modal-field checkbox-field">
         <input type="checkbox" id="modalBarShowLabel" ${bar.showLabelInBar === true ? "checked" : ""}>
         Show task name inside bar
+    </label>
+
+    <label class="modal-field checkbox-field">
+        <input type="checkbox" id="modalBarVisible" ${bar.hidden === true ? "" : "checked"}>
+        Visible on timeline
     </label>
 
     <div class="modal-field">
@@ -5014,6 +4817,8 @@ bar.bgColor = document.getElementById('modalBarBgColor').value;
 bar.color = document.getElementById('modalBarColor').value;
 bar.pattern = document.getElementById('modalBarPattern').value;
 bar.showLabelInBar = document.getElementById('modalBarShowLabel').checked;
+bar.hidden = !document.getElementById('modalBarVisible').checked;
+if (bar.hidden) showToast('Bar hidden. Turn it back on in the Data Grid (Visible On Timeline).', 'info', 4500);
 bar.labelFontSize = Math.max(6, Math.min(72, parseInt(document.getElementById('modalBarLabelFontSize').value, 10) || 10));
 
 recordStateChange();
@@ -5150,6 +4955,11 @@ function renderCalloutControls() {
            ${c.showLeader !== false ? 'checked' : ''}
            onchange="setCalloutLeaderVisibility('${c.id}', this.checked);">
     Show Leader
+</label>
+                <label style="font-size:10px; display:inline-flex; align-items:center; gap:3px; margin-left:6px;">
+    <input type="checkbox" ${c.hidden === true ? '' : 'checked'}
+           onchange="updateCalloutProperty('${c.id}', 'hidden', !this.checked);">
+    Visible
 </label>
             </div>
             <div style="display: flex; gap: 6px; align-items: center; font-size: 11px; flex-wrap: wrap;">
@@ -6020,6 +5830,7 @@ svg += `
                 let layerHandlesBuffer = ""; // Prioritized foreground interaction tier
 
                 item.bars.forEach((bar) => {
+                    if (bar.hidden === true) return;
                     let sObj = new Date(parseAnyDateToTimestamp(bar.start)); 
                     let eObj = new Date(parseAnyDateToTimestamp(bar.end));
 
@@ -6073,6 +5884,7 @@ svg += `
 
                 for (let idx = validMilestones.length - 1; idx >= 0; idx--) {
                     let ms = validMilestones[idx];
+                if (ms.hidden === true) continue;
                 let mObj = new Date(parseAnyDateToTimestamp(ms.date)); let msX = getX(mObj);
                 if (msX < scaleMarginLeft || msX > endBoundaryXCoordinate) continue;
 
@@ -6154,6 +5966,15 @@ svg += `
                 } else if (activeSymbol === 'triangle') {
                     let tPoints = `${msX},${msYCenterLocked - msSize - 1} ${msX + msSize + 1},${msYCenterLocked + msSize + 1} ${msX - msSize - 1},${msYCenterLocked + msSize + 1}`;
                     layerSymbolsBuffer += `<polygon points="${tPoints}" ${msCommonAttr} />`;
+                } else if (activeSymbol === 'square') {
+                    layerSymbolsBuffer += `<rect x="${msX - msSize}" y="${msYCenterLocked - msSize}" width="${msSize * 2}" height="${msSize * 2}" ${msCommonAttr} />`;
+                } else if (activeSymbol === 'star') {
+                    let starOuter = msSize + 2; let starInner = starOuter * 0.45; let starPts = [];
+                    for (let sp = 0; sp < 10; sp++) {
+                        let spAng = -Math.PI / 2 + sp * Math.PI / 5; let spRad = (sp % 2 === 0) ? starOuter : starInner;
+                        starPts.push(`${(msX + Math.cos(spAng) * spRad).toFixed(2)},${(msYCenterLocked + Math.sin(spAng) * spRad).toFixed(2)}`);
+                    }
+                    layerSymbolsBuffer += `<polygon points="${starPts.join(' ')}" ${msCommonAttr} />`;
                 } else if (activeSymbol === 'vertical-bar') {
                     layerSymbolsBuffer += `<rect x="${msX - 2}" y="${msYCenterLocked - msSize - 3}" width="4" height="${(msSize * 2) + 6}" rx="1" ${msCommonAttr} />`;
                 } else {
@@ -6228,6 +6049,7 @@ svg += allLayerBarsBuffer
     + allLayerTextsBuffer
     + allLayerHandlesBuffer;
         customTrackers.forEach(tracker => {
+            if (tracker.hidden === true) return;
             let trkTime = parseAnyDateToTimestamp(tracker.date);
             if (!isNaN(trkTime) && trkTime >= scaleMinTime && trkTime <= scaleMaxTime) {
                 let xTracker = getX(new Date(trkTime));
@@ -6257,6 +6079,7 @@ svg += allLayerBarsBuffer
                 // --- DRAW CUSTOM CALLOUTS ---
                    // --- DRAW CUSTOM CALLOUTS ---
         calloutData.forEach(callout => {
+            if (callout.hidden === true) return;
             const fontWeight = callout.isBold ? 'bold' : 'normal';
             const calloutLines = String(callout.text ?? "").split(/\r?\n/);
             const calloutLongestLineLen = calloutLines.reduce((max, line) => Math.max(max, line.length), 1);
