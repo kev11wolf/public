@@ -731,6 +731,17 @@ input[type="color"] {
 #dataGridContainer .tabulator-row.grid-row-tracker { border-left: 3px solid #e11d48; }
 #dataGridContainer .tabulator-row.grid-row-callout { border-left: 3px solid #d97706; }
 #dataGridContainer .tabulator-row.grid-row-setting { border-left: 3px solid #0369a1; }
+.grid-tab-count { display: inline-block; min-width: 18px; margin-left: 4px; padding: 0 5px; border-radius: 999px; background: rgba(100,116,139,0.18); font-size: 10px; text-align: center; }
+.grid-type-btn.active .grid-tab-count { background: rgba(255,255,255,0.28); }
+
+/* File menu (Export dropdown) */
+.file-menu-wrap { position: relative; display: inline-block; }
+.file-menu { display: none; position: absolute; right: 0; top: calc(100% + 4px); min-width: 290px; background: #ffffff; border: 1px solid #94a3b8; border-radius: 8px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18); padding: 4px; z-index: 30000; }
+.file-menu.open { display: block; }
+.file-menu button { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 6px; padding: 8px 10px; cursor: pointer; color: #1e293b; }
+.file-menu button:hover { background: #eff6ff; }
+.file-menu button b { display: block; font-size: 12px; }
+.file-menu button span { display: block; font-size: 11px; color: #64748b; margin-top: 2px; font-weight: 400; }
 </style>
 </head>
 <body>
@@ -746,10 +757,10 @@ input[type="color"] {
                                         <div class="action-bar">
                         <button class="utility-btn" onclick="toggleWorkspaceHelpModal(event)" style="background: #f0fdf4; color: #166534; border-color: #bbf7d0;">💡 Tips</button>
                                                 <button class="utility-btn" id="undoBtn" onclick="executeUndoAction()" title="Undo Step (Ctrl+Z)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg> Undo
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg> Undo
                         </button>
                         <button class="utility-btn" id="redoBtn" onclick="executeRedoAction()" title="Redo Step (Ctrl+Y)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/></svg> Redo
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13"/></svg> Redo
                         </button>
                         <button class="reset-btn" onclick="clearAllStoredData()">Reset</button>
                     </div>
@@ -769,21 +780,39 @@ input[type="color"] {
 </div>
 
 <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
-    <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">File Matrix</span>
-                    <div style="display: flex; gap: 6px;">
-                        <button class="utility-btn" onclick="exportConfigurationArchive()" style="padding: 4px 8px;">↓ Save JSON</button>
-                        <button class="utility-btn" onclick="document.getElementById('archiveFileInput').click()" style="padding: 4px 8px;">↑ Load JSON</button>
-                        <div style="width: 1px; background: #cbd5e1; margin: 0 2px;"></div>
-                        <button class="utility-btn" style="color:var(--success); border-color:var(--success-border); padding: 4px 8px;" onclick="exportExcelCSV()">↓ Export CSV</button>
-                        <button class="utility-btn" style="color:#166534; border-color:#bbf7d0; padding: 4px 8px;" onclick="exportExcelXLSX()" title="Excel workbook with the full matrix plus a Column Guide sheet">↓ Export XLSX</button>
-                        <button class="utility-btn" style="color:#166534; border-color:#bbf7d0; padding: 4px 8px;" onclick="document.getElementById('csvFileInput').click()">↑ Import CSV</button>
-                    </div>
-                </div>
+    <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">File</span>
+    <div style="display: flex; gap: 6px; align-items: center;">
+        <div class="file-menu-wrap">
+            <button type="button" class="utility-btn" id="exportMenuBtn" onclick="toggleExportMenu(event)" aria-haspopup="true" aria-expanded="false" style="padding: 4px 10px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg>
+                Export
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="file-menu" id="exportMenu" role="menu">
+                <button type="button" role="menuitem" onclick="runExport('xlsx')">
+                    <b>Excel workbook (.xlsx)</b>
+                    <span>One sheet per type, plus a Column Guide</span>
+                </button>
+                <button type="button" role="menuitem" onclick="runExport('csv')">
+                    <b>CSV (.csv)</b>
+                    <span>One flat file with a Record Type column</span>
+                </button>
+                <button type="button" role="menuitem" onclick="runExport('json')">
+                    <b>JSON backup (.json)</b>
+                    <span>Complete project, exactly as the app stores it</span>
+                </button>
             </div>
+        </div>
+        <button type="button" class="utility-btn" id="importBtn" onclick="document.getElementById('importAnyFileInput').click()" title="Supported files: .xlsx, .xls, .csv, .json" style="padding: 4px 10px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg>
+            Import
+        </button>
+    </div>
+</div>
+</div>
 
-            <!-- Hidden File Inputs Moved Here -->
-            <input type="file" id="archiveFileInput" accept=".json" style="display:none;" onchange="importConfigurationArchive(event)">
-            <input type="file" id="csvFileInput" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display:none;" onchange="importCSVFile(event)">
+<!-- Hidden File Inputs Moved Here -->
+            <input type="file" id="importAnyFileInput" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="display:none;" onchange="importAnyFile(event)">
 
             <div class="sidebar-tabs">
                 <button class="sidebar-tab-btn active" onclick="openSidebarTab('tab-swimlanes')">Swimlanes & Data</button>
@@ -2264,6 +2293,8 @@ reader.onload = function(e) {
             }
 
             showToast(`Loaded "${file.name}"`, "success");
+        } else {
+            showToast("That JSON file isn't a project backup (no workspace data found).", "error", 4500);
         }
     } catch (err) {
         showToast(
@@ -2309,6 +2340,7 @@ function requestGridSync() {
         gridSyncRunning = true;
         try {
             const freshRows = flattenProjectDataForGrid();
+            mxUpdateGridTabs();
             const freshIds = new Set(freshRows.map(r => r.id));
             const structuralChange =
                 freshRows.length !== gridLastRowCount ||
@@ -2501,7 +2533,7 @@ mxDef("trkLabelX", "Tracker Label Offset X", "Tracker Line", ["Tracker"], "float
 mxDef("trkLabelY", "Tracker Label Offset Y", "Tracker Line", ["Tracker"], "float", { def: 0, width: 120, get: c => c.el.labelOffsetY ?? 0, set: (c, v) => { c.el.labelOffsetY = v; } });
 
 /* ---- Text callouts ---- */
-mxDef("coText", "Callout Text", "Callout", ["Callout"], "text", { width: 220, prop: ["el", "text"], get: c => c.el.text ?? "" });
+mxDef("coText", "Callout Text", "Callout", ["Callout"], "text", { multiline: true, width: 220, prop: ["el", "text"], get: c => c.el.text ?? "" });
 mxDef("coX", "Callout X", "Callout", ["Callout"], "float", { def: 350, width: 85, get: c => c.el.x ?? 350, set: (c, v) => { c.el.x = v; } });
 mxDef("coY", "Callout Y", "Callout", ["Callout"], "float", { def: 100, width: 85, get: c => c.el.y ?? 100, set: (c, v) => { c.el.y = v; } });
 mxDef("coShowLeader", "Callout Show Leader", "Callout", ["Callout"], "bool", { def: true, get: c => c.el.showLeader !== false, set: (c, v) => { c.el.showLeader = v; } });
@@ -2519,6 +2551,20 @@ mxDef("coBgTransparent", "Callout Transparent Background", "Callout", ["Callout"
 /* ---- Global look-and-feel settings (Layout / Timeline / Graphic tabs) ---- */
 mxDef("settingKey", "Setting Name", "Workspace Setting", ["Setting"], "text", { readonly: true, width: 210, get: c => c.setting.label, set: () => {} });
 mxDef("settingValue", "Setting Value", "Workspace Setting", ["Setting"], "text", { width: 190, get: c => c.setting.get(), set: (c, v) => c.setting.set(v) });
+
+/* ---- Canvas-position fields: set by dragging on the canvas, so they always sit at the far right ---- */
+const MX_POSITION_KEYS = ["msLabelX", "msLabelY", "msDateX", "msDateY", "msManualLabel", "msManualDate",
+    "msLeaderTextEndX", "msLeaderTextEndY", "msLeaderDateEndX", "msLeaderDateEndY",
+    "trkLabelX", "trkLabelY", "coX", "coY", "coLeaderX", "coLeaderY"];
+MX_POSITION_KEYS.forEach(k => {
+    MX_BY_KEY[k].position = true;
+    MX_BY_KEY[k].group = "Canvas Position (set by dragging on the canvas)";
+});
+(function () {
+    const ordered = MX_FIELDS.filter(d => !d.position).concat(MX_FIELDS.filter(d => d.position));
+    MX_FIELDS.length = 0;
+    ordered.forEach(d => MX_FIELDS.push(d));
+})();
 
 const MX_SETTINGS = [];
 function mxSetting(label, kind, get, set, o = {}) { MX_SETTINGS.push(Object.assign({ label, kind, get, set }, o)); }
@@ -2566,6 +2612,63 @@ mxSetting("Master Leader Color", "color", () => mxEl("masterLeaderColor").value,
 mxSetting("Date Header Color", "color", () => mxEl("headerColor").value, mxSetColor("headerColor"));
 const MX_SETTINGS_BY_LABEL = {};
 MX_SETTINGS.forEach(s => { MX_SETTINGS_BY_LABEL[s.label.toLowerCase()] = s; });
+
+/* Settings are grouped the same way the sidebar tabs are (one sheet / one grid tab per group). */
+const MX_SETTING_GROUPS = {
+    "Timeline Settings": ["Scope Range Mode", "Sizing Mode", "Timeline Start Boundary", "Timeline End Boundary", "Canvas Width", "Workspace Zoom"],
+    "Layout Settings": ["Font Family", "Base Font Size", "Swimlane Header Height", "Task Row Height", "Row Label Width",
+        "Show Year Header", "Show Quarter Header", "Show Month Header", "Show Day Header", "Drag Snap Resolution"],
+    "Graphic Settings": ["Show Time Gridlines", "Show Backdrop Mesh", "Today Line", "Default Unfilled Bar Color",
+        "Default Progress Fill Color", "Default Summary Bar Color", "Default Milestone Color", "Today Line Color",
+        "Master Leader Color", "Date Header Color"]
+};
+MX_SETTINGS.forEach(s => { s.group = "Graphic Settings"; });
+Object.keys(MX_SETTING_GROUPS).forEach(g => {
+    MX_SETTING_GROUPS[g].forEach(label => {
+        const s = MX_SETTINGS_BY_LABEL[label.toLowerCase()];
+        if (s) s.group = g;
+        else console.warn("Unknown setting in group map:", label);
+    });
+});
+
+/* ---- One table (grid tab / Excel sheet) per record type; settings split by sidebar tab ---- */
+const MX_TABS = [
+    { id: "Lane", label: "Swimlanes", type: "Lane" },
+    { id: "Row", label: "Task Rows", type: "Row" },
+    { id: "Bar", label: "Bars", type: "Bar" },
+    { id: "Milestone", label: "Milestones", type: "Milestone" },
+    { id: "Tracker", label: "Trackers", type: "Tracker" },
+    { id: "Callout", label: "Callouts", type: "Callout" },
+    { id: "SettingTimeline", label: "Timeline Settings", type: "Setting", group: "Timeline Settings" },
+    { id: "SettingLayout", label: "Layout Settings", type: "Setting", group: "Layout Settings" },
+    { id: "SettingGraphic", label: "Graphic Settings", type: "Setting", group: "Graphic Settings" }
+];
+const MX_TAB_BY_ID = {};
+const MX_TAB_BY_SHEET = {};
+MX_TABS.forEach(t => { MX_TAB_BY_ID[t.id] = t; MX_TAB_BY_SHEET[t.label.toLowerCase()] = t; });
+
+let gridActiveTabId = localStorage.getItem("gantt_grid_tab") || "Bar";
+function mxActiveTab() { return MX_TAB_BY_ID[gridActiveTabId] || MX_TAB_BY_ID.Bar; }
+function mxRecordInTab(rec, tab) {
+    if (rec.type !== tab.type) return false;
+    return !tab.group || rec.setting.group === tab.group;
+}
+
+/*
+    Column order for one table: main label, parent names, IDs, editable fields,
+    and finally the canvas-position fields (MX_FIELDS already keeps those last).
+*/
+function mxFieldsForType(type) {
+    const ids = ["laneId", "rowId", "elementId"];
+    const primaryKey = { Lane: "laneTitle", Row: "rowLabel", Bar: "rowLabel", Milestone: "rowLabel", Tracker: "trkLabel", Callout: "coText", Setting: "settingKey" }[type];
+    const applicable = MX_FIELDS.filter(d => d.key !== "type" && mxApplies(d, type));
+    const primary = applicable.find(d => d.key === primaryKey);
+    const rest = applicable.filter(d => d !== primary);
+    const ctx = rest.filter(d => d.ctxTypes.includes(type) && !ids.includes(d.key));
+    const idf = rest.filter(d => ids.includes(d.key));
+    const others = rest.filter(d => !ctx.includes(d) && !idf.includes(d));
+    return [primary].concat(ctx, idf, others.filter(d => !d.position), others.filter(d => d.position)).filter(Boolean);
+}
 
 /* ---- Small helpers -------------------------------------------------------- */
 function mxApplies(d, type) { return d.types.includes(type) || d.ctxTypes.includes(type); }
@@ -2666,7 +2769,8 @@ function mxGridRow(rec) {
 
 /* Creates one flat Tabulator row per record (same rows the CSV exports). */
 function flattenProjectDataForGrid() {
-    return mxCollectRecords().map(mxGridRow);
+    const tab = mxActiveTab();
+    return mxCollectRecords().filter(rec => mxRecordInTab(rec, tab)).map(mxGridRow);
 }
 
 /* Finds the live object a Tabulator row represents (by stable IDs, never by index). */
@@ -2989,7 +3093,7 @@ function mxFormatCellValue(kind, val, target) {
     if (kind === "date") {
         return escapeForMarkup(normalizeDateString(val));
     }
-    return escapeForMarkup(val);
+    return escapeForMarkup(val).replace(/\r?\n/g, ' \u21B5 ');
 }
 
 function gridCellFormatter(cell) {
@@ -3037,8 +3141,42 @@ function mxEditorFor(d) {
         }
         case "float":  return createLiveInputEditor("number", { step: "any" });
         case "select": return createLiveSelectEditor(mxOptionsOf(d).map(o => ({ value: o[0], label: o[1] })));
-        default:       return createLiveInputEditor("text");
+        default:       return d.multiline ? createLiveTextareaEditor : createLiveInputEditor("text");
     }
+}
+
+/*
+    Multi-line text editor (callout text).
+    Enter saves, Shift+Enter inserts a new line, Escape cancels.
+*/
+function createLiveTextareaEditor(cell, onRendered, success, cancel) {
+    const area = document.createElement("textarea");
+    let finished = false;
+
+    area.className = "grid-live-editor";
+    area.rows = 1;
+    area.style.resize = "none";
+    area.title = "Enter = save, Shift+Enter = new line";
+    area.value = cell.getValue() ?? "";
+
+    const finish = value => { if (finished) return; finished = true; success(value); };
+
+    onRendered(() => { area.focus(); area.select(); });
+
+    area.addEventListener("input", () => updateGridCellLive(cell, area.value));
+    area.addEventListener("blur", () => finish(area.value));
+    area.addEventListener("keydown", event => {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            finish(area.value);
+        }
+        if (event.key === "Escape") {
+            event.preventDefault();
+            if (!finished) { finished = true; cancel(); }
+        }
+    });
+
+    return area;
 }
 
 /* The Setting Value column changes editor type per row (checkbox, colour, dropdown...). */
@@ -3059,11 +3197,12 @@ function createSettingValueEditor(cell, onRendered, success, cancel) {
     return editor(cell, onRendered, success, cancel);
 }
 
-function mxBuildGridColumns() {
+/* Columns for ONE table. The first column (the item's name) is frozen like an Excel frozen pane. */
+function mxBuildGridColumns(tab) {
     const out = [];
     const groups = new Map();
 
-    MX_FIELDS.forEach(d => {
+    mxFieldsForType(tab.type).forEach((d, index) => {
         const col = {
             title: d.title,
             field: d.key,
@@ -3077,9 +3216,9 @@ function mxBuildGridColumns() {
 
         if (d.kind === "bool") col.hozAlign = "center";
         else if (d.kind === "int" || d.kind === "float") col.hozAlign = "right";
-        if (d.filter) col.headerFilter = "input";
+        if (d.filter || index === 0) col.headerFilter = "input";
 
-        if (d.key === "type") {
+        if (index === 0) {
             col.frozen = true;
             out.push(col);
             return;
@@ -3096,54 +3235,45 @@ function mxBuildGridColumns() {
     return out;
 }
 
-let gridTypeFilter = localStorage.getItem("gantt_grid_type_filter") || "All";
-
 function mxBuildGridToolbar() {
     const bar = document.getElementById("gridTypeBar");
     if (!bar) return;
-    const labels = { All: "All Records", Lane: "Swimlanes", Row: "Task Rows", Bar: "Bars", Milestone: "Milestones", Tracker: "Trackers", Callout: "Callouts", Setting: "Settings" };
-    bar.innerHTML = ["All"].concat(MX_TYPES).map(t =>
-        '<button type="button" class="grid-type-btn" data-type="' + t + '" onclick="setGridTypeFilter(\'' + t + '\')">' + labels[t] + '</button>'
-    ).join("") + '<span class="grid-type-hint">Pick a record type to see only the columns that apply to it. The CSV / XLSX export always contains every column.</span>';
+    bar.innerHTML = MX_TABS.map(t =>
+        '<button type="button" class="grid-type-btn" data-tab="' + t.id + '" onclick="switchGridTab(\'' + t.id + '\')">' +
+        t.label + ' <span class="grid-tab-count" data-tab-count="' + t.id + '">0</span></button>'
+    ).join("") + '<span class="grid-type-hint">Each tab is its own table and its own sheet in the Excel export.</span>';
+    mxUpdateGridTabs();
 }
 
-function setGridTypeFilter(type) {
-    gridTypeFilter = (type === "All" || MX_TYPES.includes(type)) ? type : "All";
-    localStorage.setItem("gantt_grid_type_filter", gridTypeFilter);
-
-    document.querySelectorAll("#gridTypeBar .grid-type-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.getAttribute("data-type") === gridTypeFilter);
+function mxUpdateGridTabs() {
+    const recs = mxCollectRecords();
+    MX_TABS.forEach(t => {
+        const badge = document.querySelector('[data-tab-count="' + t.id + '"]');
+        if (badge) badge.textContent = String(recs.filter(r => mxRecordInTab(r, t)).length);
     });
-
-    if (!gridTableInstance) return;
-
-    gridTableInstance.blockRedraw();
-    try {
-        if (gridTypeFilter === "All") gridTableInstance.clearFilter();
-        else gridTableInstance.setFilter("type", "=", gridTypeFilter);
-
-        MX_FIELDS.forEach(d => {
-            if (d.key === "type") return;
-            const col = gridTableInstance.getColumn(d.key);
-            if (!col) return;
-            if (gridTypeFilter === "All" || mxApplies(d, gridTypeFilter)) col.show();
-            else col.hide();
-        });
-    } finally {
-        gridTableInstance.restoreRedraw();
-    }
+    document.querySelectorAll("#gridTypeBar .grid-type-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-tab") === gridActiveTabId);
+    });
 }
 
-function initDataGrid() {
-    const rows = flattenProjectDataForGrid();
+function switchGridTab(tabId) {
+    if (!MX_TAB_BY_ID[tabId]) return;
+    gridActiveTabId = tabId;
+    localStorage.setItem("gantt_grid_tab", tabId);
+    mxUpdateGridTabs();
+    mxMountGrid();
+}
+
+/* Builds (or rebuilds) the Tabulator table for the active tab. */
+function mxMountGrid() {
+    const tab = mxActiveTab();
 
     if (gridTableInstance) {
-        requestGridSync();
-        return;
+        try { gridTableInstance.destroy(); } catch (err) { console.warn("Grid destroy failed:", err); }
+        gridTableInstance = null;
     }
 
-    mxBuildGridToolbar();
-
+    const rows = flattenProjectDataForGrid();
     gridLastRowCount = rows.length;
     gridLastRowIds = new Set(rows.map(r => r.id));
 
@@ -3158,7 +3288,7 @@ function initDataGrid() {
         clipboard: "copy",
         clipboardCopyStyled: false,
         columnDefaults: { headerWordWrap: true },
-        placeholder: "Nothing to show. Add swimlanes, bars and milestones from the Swimlanes & Data panel.",
+        placeholder: "No " + tab.label.toLowerCase() + " yet.",
 
         rowFormatter: function(row) {
             const rowElement = row.getElement();
@@ -3168,11 +3298,10 @@ function initDataGrid() {
             rowElement.classList.add("grid-row-" + String(rowData.type || "").toLowerCase());
         },
 
-        columns: mxBuildGridColumns()
+        columns: mxBuildGridColumns(tab)
     });
 
     gridTableInstance.on("tableBuilt", function() {
-        setGridTypeFilter(gridTypeFilter);
         requestAnimationFrame(() => { if (gridTableInstance) gridTableInstance.redraw(true); });
     });
 
@@ -3185,13 +3314,28 @@ function initDataGrid() {
     });
 }
 
+function initDataGrid() {
+    if (gridTableInstance) {
+        requestGridSync();
+        return;
+    }
+
+    mxBuildGridToolbar();
+    mxMountGrid();
+}
+
     // =========================================================================
     // OVERHAULED ARCHITECTURE: FLATTENED EXCEL CSV AUTOMATION ENGINE
     // =========================================================================
     /* =========================================================================
-   MATRIX TABLE  (shared by CSV export, XLSX export and the Data Grid)
+   MATRIX TABLES  (Data Grid tabs, Excel sheets and the single-file CSV)
    ========================================================================= */
-function mxCsvValue(d, rec, typed) {
+function mxCsvSafeText(text) {
+    // Stops Excel treating a label such as "=A1" or "-5 days" as a formula when a CSV is opened.
+    return /^'*[=+\-@\t\r]/.test(text) ? "'" + text : text;
+}
+
+function mxCsvValue(d, rec, typed, csvSafe) {
     if (!mxApplies(d, rec.type)) return typed ? null : "";
     const kind = mxKindOf(d, rec);
     let raw = d.get(rec);
@@ -3204,12 +3348,14 @@ function mxCsvValue(d, rec, typed) {
         if (raw === "") return typed ? null : "";
         return typed ? Number(raw) : String(raw);
     }
-    return String(raw);
+    const text = String(raw);
+    return (csvSafe && kind === "text") ? mxCsvSafeText(text) : text;
 }
 
-function mxBuildTable(typed) {
+/* Single-file layout: every column, one row per record, with a Record Type column. */
+function mxBuildTable(typed, csvSafe) {
     const headers = MX_FIELDS.map(d => d.title);
-    const rows = mxCollectRecords().map(rec => MX_FIELDS.map(d => mxCsvValue(d, rec, typed)));
+    const rows = mxCollectRecords().map(rec => MX_FIELDS.map(d => mxCsvValue(d, rec, typed, csvSafe)));
     return { headers, rows };
 }
 
@@ -3224,34 +3370,62 @@ function mxDownloadBlob(blob, fileName) {
 }
 
 function exportExcelCSV() {
-    const { headers, rows } = mxBuildTable(false);
+    const { headers, rows } = mxBuildTable(false, true);
     const esc = value => '"' + String(value ?? "").replace(/"/g, '""') + '"';
     const lines = [headers.map(esc).join(",")].concat(rows.map(r => r.map(esc).join(",")));
 
-    // The BOM makes Excel read accents / symbols correctly.
+    // UTF-8 with a BOM so Excel shows accents, symbols and emoji correctly.
     const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
     mxDownloadBlob(blob, sanitizeFilenamePart(getProjectTitle()) + "_" + getDateStamp() + ".csv");
-    showToast("CSV export created (" + rows.length + " records, " + headers.length + " columns).", "success");
+    showToast("CSV export created (single file, " + rows.length + " records). For separate sheets use the XLSX export.", "success", 5000);
 }
 
-function mxColumnGuideRows() {
-    const out = [["Column", "Editable On", "Read-Only Context On", "Value Type", "Allowed Values / Notes"]];
-    MX_FIELDS.forEach(d => {
-        let notes = "";
-        if (d.key === "type") notes = MX_TYPES.join(", ");
-        else if (d.key === "settingValue") notes = "Depends on the Setting Name row: TRUE/FALSE, colour (#rrggbb), number, date (DDMMMYYYY) or one of the listed choices.";
-        else if (d.kind === "bool") notes = "TRUE or FALSE";
-        else if (d.kind === "color") notes = "#rrggbb" + (d.def === "" ? " (blank = use the global default colour)" : "");
-        else if (d.kind === "date") notes = "DDMMMYYYY, e.g. 05Jan2026 (other common date formats are accepted)";
-        else if (d.kind === "select") notes = mxOptionsOf(d).map(o => o[0]).join(", ");
-        else if (d.kind === "int" || d.kind === "float") notes = (d.kind === "int" ? "Whole number" : "Number") + (d.min !== undefined ? " " + d.min + " to " + d.max : "") + (d.nullable ? " (blank = automatic)" : "");
-        else if (d.readonly) notes = "Links rows together. Leave the ID blank on a new line to have one assigned.";
-        out.push([d.title, d.readonly ? "(link / identifier)" : d.types.join(", "), d.ctxTypes.join(", "), d.kind, notes]);
+function mxFieldNotes(target) {
+    const kind = target.kind;
+    if (target.key === "type") return MX_TYPES.join(", ");
+    if (target.readonly) return "Links rows together. Leave the ID blank on a new line to have one assigned.";
+    if (kind === "bool") return "TRUE or FALSE";
+    if (kind === "color") return "#rrggbb" + (target.def === "" ? " (blank = use the global default colour)" : "");
+    if (kind === "date") return "DDMMMYYYY, e.g. 05Jan2026 (other common date formats are accepted)";
+    if (kind === "select") return mxOptionsOf(target).map(o => o[0]).join(", ");
+    if (kind === "int" || kind === "float") {
+        return (kind === "int" ? "Whole number" : "Number") +
+            (target.min !== undefined ? " " + target.min + " to " + target.max : "") +
+            (target.nullable ? " (blank = automatic)" : "");
+    }
+    if (target.multiline) return "Text. Line breaks are kept (Alt+Enter in Excel).";
+    return "Text. Any language, symbols and emoji are kept.";
+}
+
+function mxGuideRows() {
+    const out = [
+        ["HOW THIS WORKBOOK WORKS"],
+        ["Each sheet is one kind of object on the timeline. Edit any cell, save, then use Import in the app's File menu and choose this .xlsx file."],
+        ["Rows are linked by the ID columns. To add an item, add a line and leave its Element ID blank; a new ID is assigned. A new bar or milestone needs a Task Row ID, or a Swimlane Name plus Task Name."],
+        ["Columns labelled (parent) are context for reading only. Rename a swimlane on the Swimlanes sheet and a task on the Task Rows sheet."],
+        ["Visible On Timeline = FALSE hides an item without deleting it. Colour cells left blank use the global default colour."],
+        ["The last columns on each sheet (Canvas Position) are normally set by dragging on the canvas. You rarely need to edit them here."],
+        ["Symbols, accents, emoji and line breaks are kept. Import reads UTF-8 (and Windows-1252 as a fallback)."],
+        [],
+        ["Sheet", "Column", "Access", "Value Type", "Allowed Values / Notes"]
+    ];
+
+    MX_TABS.forEach(tab => {
+        if (tab.type === "Setting") {
+            MX_SETTINGS.filter(s => s.group === tab.group).forEach(s => {
+                out.push([tab.label, s.label, "Edit the Setting Value column", s.kind, mxFieldNotes(s)]);
+            });
+            return;
+        }
+        mxFieldsForType(tab.type).forEach(d => {
+            const access = d.readonly ? "Link / identifier" : (d.types.includes(tab.type) ? "Editable" : "(parent) read-only");
+            out.push([tab.label, d.title, access, d.kind, mxFieldNotes(d)]);
+        });
     });
     return out;
 }
 
-/* Uses the local xlsx.full.min.js when present; otherwise loads the same library from a CDN. */
+/* Loads the library from the local file when present, otherwise from a CDN. */
 async function mxEnsureXLSX() {
     if (typeof XLSX !== "undefined") return true;
     return new Promise(resolve => {
@@ -3263,29 +3437,64 @@ async function mxEnsureXLSX() {
     });
 }
 
+/* One sheet per object type (settings split like the sidebar tabs) plus a Column Guide sheet. */
 async function exportExcelXLSX() {
     if (!(await mxEnsureXLSX())) {
         showToast("Could not load the Excel library. Use CSV export, or keep xlsx.full.min.js in the same folder as timeline.html.", "error", 6000);
         return;
     }
-    const { headers, rows } = mxBuildTable(true);
-    const sheet = XLSX.utils.aoa_to_sheet([headers].concat(rows));
-    sheet["!cols"] = MX_FIELDS.map(d => ({ wch: Math.max(10, Math.min(40, Math.round(d.width / 7))) }));
-    sheet["!freeze"] = { xSplit: 1, ySplit: 1 };
 
-    const guide = XLSX.utils.aoa_to_sheet(mxColumnGuideRows());
-    guide["!cols"] = [{ wch: 34 }, { wch: 34 }, { wch: 26 }, { wch: 10 }, { wch: 90 }];
-
+    const recs = mxCollectRecords();
     const book = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(book, sheet, "Timeline Matrix");
+    let total = 0;
+
+    MX_TABS.forEach(tab => {
+        const fields = mxFieldsForType(tab.type);
+        const rows = recs.filter(r => mxRecordInTab(r, tab)).map(rec => fields.map(d => mxCsvValue(d, rec, true, false)));
+        const sheet = XLSX.utils.aoa_to_sheet([fields.map(d => d.title)].concat(rows));
+
+        sheet["!cols"] = fields.map(d => ({ wch: Math.max(10, Math.min(48, Math.round(d.width / 6.5))) }));
+        sheet["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(rows.length, 1), c: fields.length - 1 } }) };
+
+        XLSX.utils.book_append_sheet(book, sheet, tab.label);
+        total += rows.length;
+    });
+
+    const guide = XLSX.utils.aoa_to_sheet(mxGuideRows());
+    guide["!cols"] = [{ wch: 20 }, { wch: 34 }, { wch: 26 }, { wch: 10 }, { wch: 100 }];
     XLSX.utils.book_append_sheet(book, guide, "Column Guide");
+
     XLSX.writeFile(book, sanitizeFilenamePart(getProjectTitle()) + "_" + getDateStamp() + ".xlsx");
-    showToast("Excel export created (" + rows.length + " records, " + headers.length + " columns).", "success");
+    showToast("Excel export created: " + MX_TABS.length + " sheets, " + total + " records.", "success");
 }
 
 /* =========================================================================
-   MATRIX IMPORT  (CSV or the first sheet of an XLSX)
+   MATRIX IMPORT  (CSV, or every recognised sheet of an XLSX)
    ========================================================================= */
+const MX_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/* Reads a file as text: UTF-8 first (with or without BOM), UTF-16 if marked, else Windows-1252. */
+function mxDecodeText(buffer) {
+    const bytes = new Uint8Array(buffer);
+    if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) return new TextDecoder("utf-16le").decode(bytes.subarray(2));
+    if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) return new TextDecoder("utf-16be").decode(bytes.subarray(2));
+    try {
+        return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch (err) {
+        return new TextDecoder("windows-1252").decode(bytes);
+    }
+}
+
+/* One cell -> clean text: no control characters, accents in one canonical form, no stray spaces. */
+function mxCleanCell(value, stripCsvGuard) {
+    let s = String(value ?? "");
+    s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u200B\uFEFF]/g, "");
+    if (s.normalize) s = s.normalize("NFC");
+    s = s.trim();
+    if (stripCsvGuard && /^'+[=+\-@]/.test(s)) s = s.slice(1);   // undo the CSV formula guard added on export
+    return s;
+}
+
 function mxParseCSV(text) {
     if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
     const rows = [];
@@ -3314,27 +3523,75 @@ function mxParseCSV(text) {
     return rows;
 }
 
-/* Turns matrix rows into projectData / trackers / callouts / settings WITHOUT touching the app. */
-function mxParseMatrix(rows) {
-    if (!rows || rows.length < 2) return null;
+/* A worksheet cell -> text. Real Excel dates become DDMMMYYYY; TRUE/FALSE cells stay TRUE/FALSE. */
+function mxCellToText(cell) {
+    if (!cell || cell.v === undefined || cell.v === null) return "";
+    if (cell.t === "b") return cell.v ? "TRUE" : "FALSE";
+    if (cell.t === "e") return "";
+    if (cell.t === "d" && cell.v instanceof Date) return formatDateToDDMMMYYYY(cell.v);
+    if (cell.t === "n") {
+        try {
+            if (cell.z && XLSX.SSF.is_date(cell.z)) {
+                const p = XLSX.SSF.parse_date_code(cell.v);
+                if (p) return String(p.d).padStart(2, "0") + MX_MONTHS[p.m - 1] + p.y;
+            }
+        } catch (err) { /* fall through to plain number */ }
+        return String(cell.v);
+    }
+    return String(cell.v);
+}
 
+function mxSheetToRows(sheet) {
+    if (!sheet || !sheet["!ref"]) return [];
+    const range = XLSX.utils.decode_range(sheet["!ref"]);
+    const out = [];
+    for (let r = range.s.r; r <= range.e.r; r++) {
+        const row = [];
+        for (let c = range.s.c; c <= range.e.c; c++) {
+            row.push(mxCellToText(sheet[XLSX.utils.encode_cell({ r, c })]));
+        }
+        out.push(row);
+    }
+    return out;
+}
+
+/* Reads an XLSX workbook: one table per recognised sheet name. Returns null if none match. */
+function mxParseWorkbook(workbook) {
+    const tables = [];
+    workbook.SheetNames.forEach(name => {
+        const tab = MX_TAB_BY_SHEET[String(name).trim().toLowerCase()];
+        if (tab) tables.push({ tab, rows: mxSheetToRows(workbook.Sheets[name]) });
+    });
+    if (tables.length) {
+        tables.sort((a, b) => MX_TABS.indexOf(a.tab) - MX_TABS.indexOf(b.tab));
+        return mxParseTables(tables);
+    }
+    // Older single-sheet exports (with a Record Type column).
+    return mxParseMatrix(mxSheetToRows(workbook.Sheets[workbook.SheetNames[0]]), false);
+}
+
+/* Single table with a Record Type column (CSV, or an older one-sheet XLSX). */
+function mxParseMatrix(rows, fromCsv = true) {
+    if (!rows || rows.length < 2) return null;
     const header = rows[0].map(h => String(h ?? "").trim());
     if (header.some(h => h.toLowerCase() === "rules matrix")) return null;   // old 27-column format
+    if (!header.some(h => h.toLowerCase() === "record type")) return null;
+    return mxParseTables([{ tab: null, rows, csv: fromCsv }]);
+}
 
-    const titleToKey = {};
-    MX_FIELDS.forEach(d => { titleToKey[d.title.toLowerCase()] = d.key; titleToKey[d.key.toLowerCase()] = d.key; });
-    const colIndex = {};
-    header.forEach((h, i) => {
-        const key = titleToKey[h.toLowerCase()];
-        if (key && colIndex[key] === undefined) colIndex[key] = i;
-    });
-    if (colIndex.type === undefined) return null;
-
+/*
+    Turns tables into projectData / trackers / callouts / settings WITHOUT touching the app.
+    A table is { tab, rows } (fixed record type, one Excel sheet) or { tab: null, rows } (Record Type column).
+*/
+function mxParseTables(tables) {
     const warnings = [];
     const lanes = [];
     const trackers = [];
     const callouts = [];
     const settings = [];
+
+    const titleToKey = {};
+    MX_FIELDS.forEach(d => { titleToKey[d.title.toLowerCase()] = d.key; titleToKey[d.key.toLowerCase()] = d.key; });
 
     const laneById = new Map();
     const usedBarIds = new Set();
@@ -3403,7 +3660,7 @@ function mxParseMatrix(rows) {
         return { lane, row };
     }
 
-    function applyFields(rec, getRaw, lineNo) {
+    function applyFields(rec, getRaw, where) {
         const fields = MX_FIELDS.filter(d => d.types.includes(rec.type) && !d.readonly && d.key !== "settingValue");
         fields.filter(d => !d.late).concat(fields.filter(d => d.late)).forEach(d => {
             const raw = getRaw(d.key);
@@ -3416,7 +3673,7 @@ function mxParseMatrix(rows) {
             } else {
                 v = mxCoerce(d.kind, raw, d);
                 if ((d.kind === "date" || d.kind === "select") && v === null) {
-                    warnings.push("Line " + lineNo + ": \"" + raw + "\" is not valid for \"" + d.title + "\" and was skipped.");
+                    warnings.push(where + ": \"" + raw + "\" is not valid for \"" + d.title + "\" and was skipped.");
                     return;
                 }
             }
@@ -3424,89 +3681,107 @@ function mxParseMatrix(rows) {
         });
     }
 
-    for (let r = 1; r < rows.length; r++) {
-        const line = rows[r];
-        if (!line || line.every(v => String(v ?? "").trim() === "")) continue;
+    tables.forEach(table => {
+        const rows = table.rows || [];
+        if (rows.length < 1) return;
+        const sheetName = table.tab ? table.tab.label : "File";
 
-        const lineNo = r + 1;
-        const raw = key => {
-            if (colIndex[key] === undefined) return undefined;
-            const v = line[colIndex[key]];
-            return v === undefined || v === null ? "" : String(v).trim();
-        };
-
-        const type = typeOf(raw("type"));
-        if (!type) {
-            warnings.push("Line " + lineNo + ": unknown Record Type \"" + raw("type") + "\" was skipped.");
-            continue;
+        const header = rows[0].map(h => String(h ?? "").trim());
+        const colIndex = {};
+        header.forEach((h, i) => {
+            const key = titleToKey[h.toLowerCase()];
+            if (key && colIndex[key] === undefined) colIndex[key] = i;
+        });
+        if (!table.tab && colIndex.type === undefined) return;
+        if (table.tab && Object.keys(colIndex).length === 0) {
+            warnings.push("Sheet \"" + sheetName + "\": no recognised column headings, so it was skipped.");
+            return;
         }
 
-        if (type === "Lane") {
-            const lane = ensureLane(raw("laneId") ?? "", raw("laneTitle") ?? "");
-            if (!lane) { warnings.push("Line " + lineNo + ": swimlane needs a Swimlane ID or Swimlane Name."); continue; }
-            applyFields({ type: "Lane", lane }, raw, lineNo);
-            continue;
-        }
+        for (let r = 1; r < rows.length; r++) {
+            const line = rows[r];
+            if (!line || line.every(v => String(v ?? "").trim() === "")) continue;
 
-        if (type === "Row") {
-            const hit = ensureRow(raw("rowId") ?? "", raw("laneId") ?? "", raw("laneTitle") ?? "", raw("rowLabel") ?? "");
-            if (!hit) { warnings.push("Line " + lineNo + ": task row has no swimlane (fill in Swimlane ID or Swimlane Name)."); continue; }
-            applyFields({ type: "Row", lane: hit.lane, row: hit.row }, raw, lineNo);
-            continue;
-        }
+            const where = sheetName + " line " + (r + 1);
+            const raw = key => {
+                if (colIndex[key] === undefined) return undefined;
+                const v = line[colIndex[key]];
+                return v === undefined || v === null ? "" : mxCleanCell(v, table.csv === true);
+            };
 
-        if (type === "Bar" || type === "Milestone") {
-            const hit = ensureRow(raw("rowId") ?? "", raw("laneId") ?? "", raw("laneTitle") ?? "", raw("rowLabel") ?? "");
-            if (!hit) { warnings.push("Line " + lineNo + ": " + type + " has no Task Row ID / swimlane and was skipped."); continue; }
-
-            const used = type === "Bar" ? usedBarIds : usedMsIds;
-            let id = toId(raw("elementId") ?? "");
-            if (id === null || used.has(id)) id = (type === "Bar" ? maxBarId : maxMsId) + 1;
-            used.add(id);
-            if (type === "Bar" && id > maxBarId) maxBarId = id;
-            if (type === "Milestone" && id > maxMsId) maxMsId = id;
-
-            const el = type === "Bar" ? newBar(id) : newMs(id);
-            applyFields({ type, lane: hit.lane, row: hit.row, el }, raw, lineNo);
-            (type === "Bar" ? hit.row.bars : hit.row.milestones).push(el);
-            continue;
-        }
-
-        if (type === "Tracker") {
-            let id = toId(raw("elementId") ?? "");
-            if (id === null || usedTrackerIds.has(id)) id = maxTrackerId + 1;
-            usedTrackerIds.add(id);
-            if (id > maxTrackerId) maxTrackerId = id;
-            const el = newTracker(id);
-            applyFields({ type, el }, raw, lineNo);
-            trackers.push(el);
-            continue;
-        }
-
-        if (type === "Callout") {
-            let id = raw("elementId") ?? "";
-            if (id === "" || usedCalloutIds.has(id)) id = generateUUID();
-            usedCalloutIds.add(id);
-            const el = newCallout(id);
-            applyFields({ type, el }, raw, lineNo);
-            callouts.push(el);
-            continue;
-        }
-
-        if (type === "Setting") {
-            const name = raw("settingKey") ?? "";
-            const setting = MX_SETTINGS_BY_LABEL[name.toLowerCase()];
-            if (!setting) { warnings.push("Line " + lineNo + ": unknown Setting Name \"" + name + "\" was skipped."); continue; }
-            const value = raw("settingValue");
-            if (value === undefined || value === "") continue;
-            const v = mxCoerce(setting.kind, value, setting);
-            if ((setting.kind === "date" || setting.kind === "select") && v === null) {
-                warnings.push("Line " + lineNo + ": \"" + value + "\" is not valid for setting \"" + setting.label + "\" and was skipped.");
+            const type = table.tab ? table.tab.type : typeOf(raw("type"));
+            if (!type) {
+                warnings.push(where + ": unknown Record Type \"" + raw("type") + "\" was skipped.");
                 continue;
             }
-            settings.push({ setting, value: v });
+
+            if (type === "Lane") {
+                const lane = ensureLane(raw("laneId") ?? "", raw("laneTitle") ?? "");
+                if (!lane) { warnings.push(where + ": swimlane needs a Swimlane ID or Swimlane Name."); continue; }
+                applyFields({ type: "Lane", lane }, raw, where);
+                continue;
+            }
+
+            if (type === "Row") {
+                const hit = ensureRow(raw("rowId") ?? "", raw("laneId") ?? "", raw("laneTitle") ?? "", raw("rowLabel") ?? "");
+                if (!hit) { warnings.push(where + ": task row has no swimlane (fill in Swimlane ID or Swimlane Name)."); continue; }
+                applyFields({ type: "Row", lane: hit.lane, row: hit.row }, raw, where);
+                continue;
+            }
+
+            if (type === "Bar" || type === "Milestone") {
+                const hit = ensureRow(raw("rowId") ?? "", raw("laneId") ?? "", raw("laneTitle") ?? "", raw("rowLabel") ?? "");
+                if (!hit) { warnings.push(where + ": " + type + " has no Task Row ID / swimlane and was skipped."); continue; }
+
+                const used = type === "Bar" ? usedBarIds : usedMsIds;
+                let id = toId(raw("elementId") ?? "");
+                if (id === null || used.has(id)) id = (type === "Bar" ? maxBarId : maxMsId) + 1;
+                used.add(id);
+                if (type === "Bar" && id > maxBarId) maxBarId = id;
+                if (type === "Milestone" && id > maxMsId) maxMsId = id;
+
+                const el = type === "Bar" ? newBar(id) : newMs(id);
+                applyFields({ type, lane: hit.lane, row: hit.row, el }, raw, where);
+                (type === "Bar" ? hit.row.bars : hit.row.milestones).push(el);
+                continue;
+            }
+
+            if (type === "Tracker") {
+                let id = toId(raw("elementId") ?? "");
+                if (id === null || usedTrackerIds.has(id)) id = maxTrackerId + 1;
+                usedTrackerIds.add(id);
+                if (id > maxTrackerId) maxTrackerId = id;
+                const el = newTracker(id);
+                applyFields({ type, el }, raw, where);
+                trackers.push(el);
+                continue;
+            }
+
+            if (type === "Callout") {
+                let id = raw("elementId") ?? "";
+                if (id === "" || usedCalloutIds.has(id)) id = generateUUID();
+                usedCalloutIds.add(id);
+                const el = newCallout(id);
+                applyFields({ type, el }, raw, where);
+                callouts.push(el);
+                continue;
+            }
+
+            if (type === "Setting") {
+                const name = raw("settingKey") ?? "";
+                const setting = MX_SETTINGS_BY_LABEL[name.toLowerCase()];
+                if (!setting) { warnings.push(where + ": unknown Setting Name \"" + name + "\" was skipped."); continue; }
+                const value = raw("settingValue");
+                if (value === undefined || value === "") continue;
+                const v = mxCoerce(setting.kind, value, setting);
+                if ((setting.kind === "date" || setting.kind === "select") && v === null) {
+                    warnings.push(where + ": \"" + value + "\" is not valid for setting \"" + setting.label + "\" and was skipped.");
+                    continue;
+                }
+                settings.push({ setting, value: v });
+            }
         }
-    }
+    });
 
     return {
         lanes, trackers, callouts, settings, warnings,
@@ -3543,13 +3818,61 @@ function mxImportParsed(parsed, fileName) {
     updateChart();
 
     if (parsed.warnings.length) {
-        console.warn("CSV import warnings:\n" + parsed.warnings.join("\n"));
+        console.warn("Import warnings:\n" + parsed.warnings.join("\n"));
         showToast("Imported with " + parsed.warnings.length + " warning(s). First: " + parsed.warnings[0], "info", 8000);
     } else {
         showToast("Imported " + parsed.lanes.length + " swimlane(s), " + parsed.trackers.length + " tracker(s), " + parsed.callouts.length + " callout(s).", "success");
     }
 }
 
+   /* ---- File menu: one Export dropdown (xlsx / csv / json) and one Import button for every supported type ---- */
+function closeFileMenus() {
+    const menu = document.getElementById("exportMenu");
+    const btn = document.getElementById("exportMenuBtn");
+    if (menu) menu.classList.remove("open");
+    if (btn) btn.setAttribute("aria-expanded", "false");
+}
+
+function toggleExportMenu(event) {
+    event.stopPropagation();
+    const menu = document.getElementById("exportMenu");
+    const btn = document.getElementById("exportMenuBtn");
+    if (!menu) return;
+    const willOpen = !menu.classList.contains("open");
+    closeFileMenus();
+    if (willOpen) {
+        menu.classList.add("open");
+        if (btn) btn.setAttribute("aria-expanded", "true");
+    }
+}
+
+function runExport(kind) {
+    closeFileMenus();
+    if (kind === "xlsx") exportExcelXLSX();
+    else if (kind === "csv") exportExcelCSV();
+    else exportConfigurationArchive();
+}
+
+function importAnyFile(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const name = file.name.toLowerCase();
+
+    if (name.endsWith(".json")) {
+        importConfigurationArchive(event);
+        event.target.value = "";
+        return;
+    }
+    if (/\.(xlsx|xls|csv)$/.test(name)) {
+        importCSVFile(event);      // resets the input itself
+        return;
+    }
+    event.target.value = "";
+    showToast("Unsupported file type. Choose .xlsx, .xls, .csv or .json.", "error", 5000);
+}
+
+document.addEventListener("click", e => { if (!e.target.closest(".file-menu-wrap")) closeFileMenus(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeFileMenus(); });
 
    function exportConfigurationArchive() {
     recordStateChange();
@@ -3896,19 +4219,26 @@ nextRowId = rIdCounter; nextMsId = mIdCounter; nextBarId = bIdCounter; nextTrack
                 return;
             }
             const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
+            const workbook = XLSX.read(data, {type: 'array', cellNF: true});
+
+            // New workbooks: one sheet per object type. Older single-sheet files fall through.
+            const parsedWorkbook = mxParseWorkbook(workbook);
+            if (parsedWorkbook) {
+                mxImportParsed(parsedWorkbook, file.name);
+                return;
+            }
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
             const csvText = XLSX.utils.sheet_to_csv(worksheet);
-            processDataPayload(csvText);
+            processLegacyPayload(csvText);
         };
         reader.readAsArrayBuffer(file);
     } else {
         const reader = new FileReader();
         reader.onload = function(e) {
-            processDataPayload(e.target.result);
+            processDataPayload(mxDecodeText(e.target.result));
         };
-        reader.readAsText(file);
+        reader.readAsArrayBuffer(file);
     }
     
     event.target.value = '';
@@ -4052,7 +4382,7 @@ function loadApplicationState() {
             <h4>Row Label Settings</h4>
             <div class="dialog-row">
                 <label>Row Title:</label>
-                <input type="text" id="tempRowLabelInput" value="${row.label}" style="width: 150px; padding: 2px;">
+                <input type="text" id="tempRowLabelInput" value="${escapeForMarkup(row.label)}" style="width: 150px; padding: 2px;">
             </div>
             <div class="dialog-row" style="margin-top: 10px;">
                 <label style="cursor: pointer; font-size: 11px;">
@@ -4298,7 +4628,7 @@ function escapeHtmlAttribute(value) {
             return `
                 <tr>
                     <td><b>${t.id}</b></td>
-                    <td><input type="text" value="${t.label}" style="padding:4px; font-size:11px;" onchange="updateTrackerFieldDirect(${t.id}, 'label', this.value)"></td>
+                    <td><input type="text" value="${escapeForMarkup(t.label)}" style="padding:4px; font-size:11px;" onchange="updateTrackerFieldDirect(${t.id}, 'label', this.value)"></td>
                     <td><input type="date" value="${convertDDMMMYYYYToYYYYMMDD(t.date)}" style="padding:3px; font-size:11px; width:120px;" onchange="updateTrackerFieldDirect(${t.id}, 'date', this.value)"></td>
                     <td>
                         <select style="padding:3px; font-size:11px;" onchange="updateTrackerFieldDirect(${t.id}, 'pattern', this.value)">
@@ -4328,7 +4658,7 @@ function escapeHtmlAttribute(value) {
         dialog.innerHTML = `
             <h4>Customize Tracker Line Properties</h4>
             <div class="modal-row">
-                <div class="modal-field"><label>Description Name</label><input type="text" id="modTrkLabel" value="${trk.label}"></div>
+                <div class="modal-field"><label>Description Name</label><input type="text" id="modTrkLabel" value="${escapeForMarkup(trk.label)}"></div>
             </div>
             <div class="modal-row">
                 <div class="modal-field"><label>Target Date Vector</label><input type="date" id="modTrkDate" value="${convertDDMMMYYYYToYYYYMMDD(trk.date)}"></div>
@@ -4504,7 +4834,7 @@ function escapeHtmlAttribute(value) {
    let bodyHTML = `
     <div class="modal-field full-width">
         <label for="modalMsLabel">Milestone Label</label>
-        <input type="text" id="modalMsLabel" value="${ms.label || ""}">
+        <input type="text" id="modalMsLabel" value="${escapeForMarkup(ms.label || "")}">
     </div>
 
     <div class="modal-field">
@@ -5176,7 +5506,7 @@ document.addEventListener('dblclick', (e) => {
                         <button type="button" style="background:none; border:none; cursor:pointer; font-size:14px; color:#1e3a8a; padding:0 4px; font-weight:bold;" onclick="toggleSwimlaneCollapseState(${laneIdx})">
                             ${lane.collapsed ? '►' : '▼'}
                         </button>
-                        <input type="text" value="${lane.title}" style="font-weight:bold; color:#1e3a8a; font-size:13px; padding:4px;" onchange="updateLaneTitle(${laneIdx}, this.value)">
+                        <input type="text" value="${escapeForMarkup(lane.title)}" style="font-weight:bold; color:#1e3a8a; font-size:13px; padding:4px;" onchange="updateLaneTitle(${laneIdx}, this.value)">
                         <input type="color" value="${lane.color || '#f8fafc'}" style="width:34px; height:28px; padding:0; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer; flex-shrink:0;" onchange="updateLaneColor(${laneIdx}, this.value)">
                        
                     </div>
@@ -5243,7 +5573,7 @@ document.addEventListener('dblclick', (e) => {
                     l.rows.forEach(r => {
                         if (r.id !== row.id) {
                             let isSelected = (row.predecessor !== "" && row.predecessor != null && row.predecessor == r.id) ? 'selected' : '';
-                            predecessorOptions += `<option value="${r.id}" ${isSelected}>${l.title} &gt; ${r.label || 'Untitled'}</option>`;
+                            predecessorOptions += `<option value="${r.id}" ${isSelected}>${escapeForMarkup(l.title)} &gt; ${escapeForMarkup(r.label || 'Untitled')}</option>`;
                         }
                     });
                 });
@@ -5252,7 +5582,7 @@ document.addEventListener('dblclick', (e) => {
                     <!-- Row 1: Core Row Details -->
                     <div style="display:flex; align-items:center; gap:6px; margin-bottom: 6px;">
                         <span class="row-drag-handle" style="margin:0; font-size:14px; cursor:grab;">☰</span>
-                        <input type="text" style="flex:1; font-weight:bold; font-size:11px; padding:4px; margin:0;" value="${row.label}" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'label', this.value)" placeholder="Row Label">
+                        <input type="text" style="flex:1; font-weight:bold; font-size:11px; padding:4px; margin:0;" value="${escapeForMarkup(row.label)}" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'label', this.value)" placeholder="Row Label">
                         <select style="width:120px; font-size:10px; padding:4px; margin:0;" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'predecessor', this.value)">
                             ${predecessorOptions}
                         </select>
@@ -5298,7 +5628,7 @@ document.addEventListener('dblclick', (e) => {
                         <div class="milestones-list">
                             ${row.milestones.map((ms, msIdx) => `
                                 <div class="milestone-input-row" style="margin-bottom:2px; padding:2px;">
-                                    <input type="text" style="height:28px; font-size:10px; padding:2px;" value="${ms.label}" onblur="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'label', this.value)">
+                                    <input type="text" style="height:28px; font-size:10px; padding:2px;" value="${escapeForMarkup(ms.label)}" onblur="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'label', this.value)">
                                     
                                     <div class="date-input-wrapper">
                                         <span class="date-display-badge">${ms.date}</span>
@@ -5788,7 +6118,7 @@ svg += `
         style="cursor:pointer"
         ondblclick="editLaneLabelDirectly(event, ${laneIdx})"
     >
-        ${lane.title}
+        ${escapeForMarkup(lane.title)}
     </text>
 `;
             
@@ -5821,7 +6151,7 @@ svg += `
                 svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1" style="pointer-events:none;"/>`;
                 
                 // Note: We pass 'event' here to the updated function so the modal knows where the mouse is
-                svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(event, ${laneIdx}, ${rowIdx})">${displayLabel}</text>`;
+                svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(event, ${laneIdx}, ${rowIdx})">${escapeForMarkup(displayLabel)}</text>`;
                 
                 let layerBarsBuffer = "";
                 let layerLeadersBuffer = "";
@@ -5844,7 +6174,7 @@ svg += `
                             let activeBarColor = bar.color || barColor;
                             let activePattern = bar.pattern || 'solid';
 
-                            let hoverText = `${item.label}\nStart: ${bar.start}\nFinish: ${bar.end}\nProgress: ${bar.progress || 0}%`;
+                            let hoverText = `${escapeForMarkup(item.label)}\nStart: ${bar.start}\nFinish: ${bar.end}\nProgress: ${bar.progress || 0}%`;
 
                             layerBarsBuffer += `<rect x="${xStart}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="${visibleBarWidth}" height="${barThickness}" rx="4" fill="${activeBarBgColor}" ondblclick="editBarDatesDirectlyGlobal(event, ${item.id}, ${bar.id})"><title>${hoverText}</title></rect>`;
                             
@@ -6062,7 +6392,7 @@ svg += allLayerBarsBuffer
                 let lblY = bottomOfLastRow + 24 + (tracker.labelOffsetY || 0);
                 
                 svg += `<g fill="${tracker.color}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'tracker-label-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})">
-                    <text x="${lblX}" y="${lblY}" font-size="8" font-weight="bold" fill="${tracker.color}" text-anchor="middle">${tracker.label.toUpperCase()}</text>
+                    <text x="${lblX}" y="${lblY}" font-size="8" font-weight="bold" fill="${tracker.color}" text-anchor="middle">${escapeForMarkup(String(tracker.label ?? '').toUpperCase())}</text>
                 </g>`;
             }
         });
@@ -6172,7 +6502,8 @@ function downloadSVG() {
             if (cleanedStyle) node.setAttribute('style', cleanedStyle); else node.removeAttribute('style');
         }
     });
-    const blob = new Blob([clone.outerHTML], {type: 'image/svg+xml;charset=utf-8'});
+    const svgText = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
+    const blob = new Blob([svgText], {type: 'image/svg+xml;charset=utf-8'});
     const fileName = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.svg`;
     const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = fileName; link.click();
     showToast(`Downloaded "${fileName}"`, "success");
