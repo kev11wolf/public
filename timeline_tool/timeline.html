@@ -805,6 +805,17 @@ input[type="color"] {
 .hud-toggle-btn.active kbd { color: #e2e8f0; background: #1e293b; border-color: #475569; }
 @media (prefers-reduced-motion: reduce) { .controls-hud, .hint-bar, .app-modal, .app-modal-backdrop, .hud-section { transition: none; } }
 @media print { .controls-hud, .hint-bar, .app-modal-backdrop { display: none !important; } }
+
+/* Popups: always fully inside the window; tall ones scroll */
+.floating-date-dialog { max-width: calc(100vw - 24px); }
+.floating-date-dialog::-webkit-scrollbar { width: 8px; }
+.floating-date-dialog::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+
+/* Tracker lines table (Graphic Settings tab) */
+.tracker-dashboard-table .trk-input { padding: 3px 4px; font-size: 11px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 4px; background: #ffffff; }
+.tracker-dashboard-table .trk-color { width: 34px; height: 24px; padding: 0; border: 1px solid #94a3b8; border-radius: 4px; cursor: pointer; }
+.tracker-dashboard-table td { vertical-align: middle; }
+.trk-offcanvas { color: #d97706; cursor: help; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -1086,8 +1097,11 @@ input[type="color"] {
                                         <tr>
                                             <th>Label</th>
                                             <th>Date</th>
+                                            <th>Pattern</th>
+                                            <th>Width</th>
                                             <th>Color</th>
-                                            <th>Controls</th>
+                                            <th>Show</th>
+                                            <th></th>
                                         </tr>
                                     </thead>
                                     <tbody id="trackerTableBody">
@@ -1327,30 +1341,6 @@ function toggleSplitViewSides() {
         let activeContextState = null;
 
 // === NEW: Smart Popup Positioner (prevents all popups from clipping off screen) ===
-function positionFloatingDialogSmart(dialog, e) {
-  dialog.style.visibility = 'hidden';
-  document.body.appendChild(dialog);
-
-  const rect = dialog.getBoundingClientRect();
-  const padding = 12;
-  let left = e.clientX;
-  let top = e.clientY;
-
-  if (left + rect.width + padding > window.innerWidth) {
-    left = window.innerWidth - rect.width - padding;
-  }
-  if (left < padding) left = padding;
-
-  if (top + rect.height + padding > window.innerHeight) {
-    top = e.clientY - rect.height - padding;
-    if (top < padding) top = padding;
-  }
-
-  dialog.style.left = left + 'px';
-  dialog.style.top = top + 'px';
-  dialog.style.visibility = 'visible';
-}
-
 // === NEW: Shared Modal Shell (makes Milestone and Bar editors look identical) ===
 function buildStandardModal(dialogId, titleText, bodyHTML, buttonsHTML) {
     const existing = document.getElementById(dialogId);
@@ -2215,6 +2205,7 @@ function stopGlobalDragAction(e) {
     // TRANSACTIONS CONTROL HISTORY (UNDO / REDO)
     // ==========================================
         function recordStateChange() {
+        if (mxLiveDepth > 0) { mxScheduleLiveCommit(); return; }
                 const stateSnapshot = {
             schemaVersion: CURRENT_SCHEMA_VERSION,
             data: JSON.parse(JSON.stringify(projectData)),
@@ -2251,13 +2242,18 @@ function stopGlobalDragAction(e) {
             showHeaderMonth: document.getElementById('showHeaderMonth').checked,
             showHeaderDay: document.getElementById('showHeaderDay').checked
         };
-                actionUndoStack.push(JSON.stringify(stateSnapshot));
-        if (actionUndoStack.length > MAX_UNDO_STEPS) actionUndoStack.splice(0, actionUndoStack.length - MAX_UNDO_STEPS);
-        actionRedoStack = []; 
-        unexportedChangeCount++;
+        const snapshotText = JSON.stringify(stateSnapshot);
+        // Identical to the last step (for example the final "change" event after live edits)? Don't add a duplicate undo step.
+        const isDuplicateStep = actionUndoStack.length > 0 && actionUndoStack[actionUndoStack.length - 1] === snapshotText;
+        if (!isDuplicateStep) {
+            actionUndoStack.push(snapshotText);
+            if (actionUndoStack.length > MAX_UNDO_STEPS) actionUndoStack.splice(0, actionUndoStack.length - MAX_UNDO_STEPS);
+            actionRedoStack = [];
+            unexportedChangeCount++;
+        }
         syncUndoRedoButtonsState();
         saveApplicationState();
-        checkBackupReminder();
+        if (!isDuplicateStep) checkBackupReminder();
         requestGridSync();
     }
 
@@ -4698,7 +4694,8 @@ const MX_CONTROLS = [
         [["Ctrl", "Y"], "Redo (also Ctrl+Shift+Z)"],
         [["Ctrl", "S"], "Save a JSON backup"],
         [["?"], "Show or hide this panel"],
-        [["Esc"], "Close a dialog or this panel"]
+        [["Esc"], "Close a popup, dialog or this panel"],
+        [["Click", "outside"], "Close a popup (its edits are already live)"]
     ]}
 ];
 
@@ -4766,7 +4763,8 @@ const MX_STATIC_HINTS = [
     ["[onclick=\"openSidebarTab('tab-layout')\"]", "Fonts, row heights, date header levels and snapping"],
     ["[onclick=\"openSidebarTab('tab-colors')\"]", "Default colours, grid lines and tracker lines"],
     ["[onclick=\"openSidebarTab('tab-files')\"]", "Text callouts with leader lines"],
-    ["[onclick^='toggleWorkspaceHelpModal']", "Show the controls and shortcuts cheat sheet \u2022 [[?]]"]
+    ["[onclick^='toggleWorkspaceHelpModal']", "Show the controls and shortcuts cheat sheet \u2022 [[?]]"],
+    ["[onclick^='addNewCustomTrackerLine']", "Add a vertical date line. Edit it here, or double-click it on the canvas."]
 ];
 
 function mxKeyLabel(k) { return (MX_IS_MAC && k === "Ctrl") ? "\u2318" : k; }
@@ -4974,6 +4972,330 @@ if (!localStorage.getItem("gantt_hud_seen")) {
         showToast("Tip: press ? any time to see the controls and shortcuts.", "info", 6500);
         localStorage.setItem("gantt_hud_seen", "1");
     }, 2200);
+}
+
+/* =========================================================================
+   LIVE EDITING + POPUP MANAGER
+   - Every edit in the left-hand editor or in a popup is applied to the canvas immediately.
+   - A burst of edits becomes ONE undo step (committed shortly after you pause, or when a popup closes).
+   - Clicking outside a popup, or pressing Esc, closes it and keeps the edits (they are already live).
+     Cancel reverts the popup to how it looked when it opened.
+   ========================================================================= */
+var mxLiveDepth = 0;          // >0 while a sidebar field is being edited "live": no undo step, no sidebar rebuild
+var mxLiveDirty = false;
+var mxLiveTimer = null;
+
+function mxScheduleLiveCommit() {
+    mxLiveDirty = true;
+    clearTimeout(mxLiveTimer);
+    mxLiveTimer = setTimeout(mxFlushLiveCommit, 600);
+}
+
+function mxFlushLiveCommit() {
+    clearTimeout(mxLiveTimer);
+    if (!mxLiveDirty) return;
+    mxLiveDirty = false;
+    const savedDepth = mxLiveDepth;
+    mxLiveDepth = 0;
+    try { recordStateChange(); } finally { mxLiveDepth = savedDepth; }
+}
+
+/*
+    Sidebar fields keep their normal "onchange" handlers. While you type, drag a colour or step a number, the same
+    handler is run "live": the canvas redraws at once, but the undo step is committed once you pause and the sidebar
+    is rebuilt only when you leave the field (so the cursor never jumps).
+*/
+document.addEventListener("input", e => {
+    const el = e.target;
+    if (!el || !el.closest) return;
+    if (!el.closest("#dataRowsContainer, #trackerTableBody, #tab-viewport, #tab-layout, #tab-colors")) return;
+    const type = (el.getAttribute("type") || "").toLowerCase();
+    if (el.tagName === "INPUT" && ["checkbox", "radio", "file", "button"].includes(type)) return;
+    if (typeof el.onchange !== "function") return;
+    const source = el.getAttribute("onchange") || "";
+    if (/applyGlobalColorChange|applyThemePalettePreset/.test(source)) return;   // these ask for confirmation first
+
+    mxLiveDepth++;
+    try { el.onchange.call(el, e); }
+    catch (err) { console.warn("Live edit skipped:", err); }
+    finally { mxLiveDepth--; }
+});
+
+/* ---- Popup placement: always completely inside the window ---- */
+function mxComputeDialogPosition(anchor, size, viewport, pad = 12, gap = 8) {
+    let left = anchor.x + gap;
+    let top = anchor.y + gap;
+
+    if (left + size.width + pad > viewport.width) left = anchor.x - size.width - gap;      // flip to the left of the pointer
+    if (left + size.width + pad > viewport.width) left = viewport.width - size.width - pad;
+    if (left < pad) left = pad;
+
+    if (top + size.height + pad > viewport.height) top = anchor.y - size.height - gap;     // flip above the pointer
+    if (top + size.height + pad > viewport.height) top = viewport.height - size.height - pad;
+    if (top < pad) top = pad;
+
+    return { left, top };
+}
+
+function positionFloatingDialogSmart(dialog, e) {
+    const pad = 12;
+    dialog.style.position = "fixed";
+    dialog.style.maxHeight = "calc(100vh - " + (pad * 2) + "px)";
+    dialog.style.maxWidth = "calc(100vw - " + (pad * 2) + "px)";
+    dialog.style.overflowY = "auto";
+    dialog.style.boxSizing = "border-box";
+    dialog.style.visibility = "hidden";
+    document.body.appendChild(dialog);
+
+    const anchor = {
+        x: (e && Number.isFinite(e.clientX)) ? e.clientX : window.innerWidth / 2,
+        y: (e && Number.isFinite(e.clientY)) ? e.clientY : window.innerHeight / 3
+    };
+
+    const place = () => {
+        const rect = dialog.getBoundingClientRect();
+        const pos = mxComputeDialogPosition(anchor, { width: rect.width, height: rect.height }, { width: window.innerWidth, height: window.innerHeight }, pad);
+        dialog.style.left = pos.left + "px";
+        dialog.style.top = pos.top + "px";
+    };
+
+    dialog.__mxPlace = place;
+    place();
+    dialog.style.visibility = "visible";
+
+    // Content is often filled in AFTER positioning; keep the popup inside the window whenever its size changes.
+    if (typeof ResizeObserver !== "undefined") {
+        const observer = new ResizeObserver(place);
+        observer.observe(dialog);
+        dialog.__mxResizeObserver = observer;
+    }
+}
+
+window.addEventListener("resize", () => {
+    document.querySelectorAll(".floating-date-dialog").forEach(d => { if (d.__mxPlace) d.__mxPlace(); });
+});
+
+/* ---- Popup manager ---- */
+function mxFloatingDialogs() { return Array.from(document.querySelectorAll(".floating-date-dialog")); }
+
+function mxCloseFloatingDialog(dialog, keepChanges = true) {
+    if (!dialog || !dialog.parentNode) return;
+    if (keepChanges) { if (dialog.__mxFlush) dialog.__mxFlush(); }
+    else if (dialog.__mxRevert) dialog.__mxRevert();
+    if (dialog.__mxResizeObserver) dialog.__mxResizeObserver.disconnect();
+    dialog.remove();
+}
+
+function mxCloseAllFloatingDialogs(except) {
+    mxFloatingDialogs().forEach(d => { if (d !== except) mxCloseFloatingDialog(d, true); });
+}
+
+/* Click anywhere outside a popup closes it (its edits are already live). */
+document.addEventListener("mousedown", e => {
+    if (mxModalOpen()) return;
+    const inside = e.target && e.target.closest ? e.target.closest(".floating-date-dialog") : null;
+    mxFloatingDialogs().forEach(d => { if (d !== inside) mxCloseFloatingDialog(d, true); });
+}, true);
+
+document.addEventListener("keydown", e => {
+    if (e.key !== "Escape" || mxModalOpen()) return;
+    const open = mxFloatingDialogs();
+    if (!open.length) return;
+    e.preventDefault();
+    e.stopPropagation();
+    open.forEach(d => mxCloseFloatingDialog(d, true));
+}, true);
+
+/*
+    Makes a popup "live". applyFn(true) must read the popup's fields and write them to the data, returning false
+    if the current values are not valid yet (for example a half-typed date). keys limits what Cancel restores.
+*/
+function mxMakeDialogLive(dialog, target, applyFn, keys) {
+    const snapshot = {};
+    const hadKey = {};
+    if (target) (keys || Object.keys(target)).forEach(k => {
+        hadKey[k] = Object.prototype.hasOwnProperty.call(target, k);
+        snapshot[k] = JSON.parse(JSON.stringify(target[k] === undefined ? null : target[k]));
+    });
+
+    dialog.__mxDirty = false;
+
+    const live = () => {
+        if (!applyFn(true)) return;
+        dialog.__mxDirty = true;
+        markUnsavedState();
+        updateChart();
+        mxScheduleLiveCommit();
+    };
+    dialog.addEventListener("input", live);
+    dialog.addEventListener("change", live);
+
+    dialog.__mxFlush = () => {
+        if (!dialog.__mxDirty) return;
+        dialog.__mxDirty = false;
+        mxLiveDirty = true;
+        mxFlushLiveCommit();
+        renderInputRows();
+        populateTrackerDashboardMatrix();
+        renderCalloutControls();
+        updateChart();
+    };
+
+    dialog.__mxRevert = () => {
+        if (target) {
+            Object.keys(snapshot).forEach(k => {
+                if (hadKey[k]) target[k] = snapshot[k]; else delete target[k];
+            });
+            // Without an explicit key list, also remove any property the popup added while it was open.
+            if (!keys) Object.keys(target).forEach(k => { if (!(k in snapshot)) delete target[k]; });
+        }
+        dialog.__mxDirty = false;
+        mxLiveDirty = false;
+        clearTimeout(mxLiveTimer);
+        recordStateChange();
+        renderInputRows();
+        populateTrackerDashboardMatrix();
+        renderCalloutControls();
+        updateChart();
+    };
+}
+
+/* =========================================================================
+   TRACKER LINES  (vertical date lines)
+   ========================================================================= */
+function mxTrackerById(id) { return customTrackers.find(t => String(t.id) === String(id)); }
+
+function addNewCustomTrackerLine() {
+    const trk = {
+        id: nextTrackerId++, label: "New Tracker Line", date: getOneMonthFromTodayDDMMMYYYY(),
+        thickness: 2, pattern: "solid", color: "#10b981", labelOffsetX: 0, labelOffsetY: 0
+    };
+    customTrackers.push(trk);
+    recordStateChange();
+    populateTrackerDashboardMatrix();
+    updateChart();
+    showToast("Tracker line added for " + trk.date + ". Edit it in the Tracker Lines table, or double-click it on the canvas.", "success", 4500);
+}
+
+/* key: label | date (YYYY-MM-DD) | pattern | thickness | color | visible (boolean) */
+function updateTrackerFieldDirect(id, key, val) {
+    const trk = mxTrackerById(id);
+    if (!trk) return;
+
+    if (key === "thickness") trk.thickness = Math.max(1, Math.min(10, parseInt(val, 10) || 2));
+    else if (key === "date") {
+        if (!val) return;
+        trk.date = formatDateToDDMMMYYYY(new Date(val + "T00:00:00"));
+    }
+    else if (key === "visible") trk.hidden = !val;
+    else trk[key] = val;
+
+    recordStateChange();
+    updateChart();
+}
+
+async function removeTrackerLine(id) {
+    const trk = mxTrackerById(id);
+    if (!trk) return;
+    const ok = await appConfirm("Delete the tracker line \u201C" + (trk.label || "Untitled") + "\u201D?\n\nYou can bring it back with Ctrl+Z.", {
+        title: "Delete tracker line", confirmText: "Delete", danger: true
+    });
+    if (!ok) return;
+
+    customTrackers = customTrackers.filter(t => String(t.id) !== String(id));
+    mxFloatingDialogs().filter(d => d.id === "floatingTrackerDialog").forEach(d => d.remove());
+    recordStateChange();
+    populateTrackerDashboardMatrix();
+    updateChart();
+    showToast("Tracker line deleted. Press Ctrl+Z to undo.", "info", 4000);
+}
+
+function mxTrackerIsOffCanvas(trk) {
+    const ts = parseAnyDateToTimestamp(trk.date);
+    if (isNaN(ts)) return true;
+    if (!Number.isFinite(scaleMinTime) || !Number.isFinite(scaleMaxTime)) return false;
+    return ts < scaleMinTime || ts > scaleMaxTime;
+}
+
+/* Fills the Tracker Lines table in the Graphic Settings tab. */
+function populateTrackerDashboardMatrix() {
+    if (mxLiveDepth > 0) return;
+    const body = document.getElementById("trackerTableBody");
+    if (!body) return;
+
+    if (customTrackers.length === 0) {
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:12px;">No tracker lines yet. Use \u201C+ Deploy New Tracker Line\u201D above.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = customTrackers.map(t => {
+        const off = mxTrackerIsOffCanvas(t);
+        return '<tr>' +
+            '<td><input type="text" class="trk-input" style="width:130px;" value="' + escapeForMarkup(t.label) + '" onchange="updateTrackerFieldDirect(' + t.id + ', \'label\', this.value)"></td>' +
+            '<td style="white-space:nowrap;"><input type="date" class="trk-input" value="' + convertDDMMMYYYYToYYYYMMDD(t.date) + '" onchange="updateTrackerFieldDirect(' + t.id + ', \'date\', this.value)">' +
+                (off ? ' <span class="trk-offcanvas" data-hint="This date is outside the timeline range currently shown, so the line is not drawn">\u26A0</span>' : '') + '</td>' +
+            '<td><select class="trk-input" onchange="updateTrackerFieldDirect(' + t.id + ', \'pattern\', this.value)">' +
+                ['solid', 'dashed', 'dotted'].map(p => '<option value="' + p + '"' + ((t.pattern || 'solid') === p ? ' selected' : '') + '>' + p.charAt(0).toUpperCase() + p.slice(1) + '</option>').join('') +
+            '</select></td>' +
+            '<td><input type="number" class="trk-input" style="width:48px;" min="1" max="10" value="' + (t.thickness || 2) + '" onchange="updateTrackerFieldDirect(' + t.id + ', \'thickness\', this.value)"></td>' +
+            '<td><input type="color" class="trk-color" value="' + (t.color || '#10b981') + '" onchange="updateTrackerFieldDirect(' + t.id + ', \'color\', this.value)"></td>' +
+            '<td style="text-align:center;"><input type="checkbox"' + (t.hidden === true ? '' : ' checked') + ' onchange="updateTrackerFieldDirect(' + t.id + ', \'visible\', this.checked)"></td>' +
+            '<td><button type="button" class="delete-btn" style="padding:2px 8px;" onclick="removeTrackerLine(' + t.id + ')">Delete</button></td>' +
+        '</tr>';
+    }).join("");
+}
+
+/* Double-click a tracker line (or its label) on the canvas. */
+function editTrackerPropertiesModalDirect(e, id) {
+    e.stopPropagation();
+    const trk = mxTrackerById(id);
+    if (!trk) return;
+
+    mxCloseAllFloatingDialogs();
+
+    const dialog = document.createElement("div");
+    dialog.id = "floatingTrackerDialog";
+    dialog.className = "floating-date-dialog compact-editor";
+    dialog.innerHTML =
+        '<h4>Tracker Line</h4>' +
+        '<div class="compact-modal-grid">' +
+            '<div class="modal-field full-width"><label for="modTrkLabel">Label</label><input type="text" id="modTrkLabel" value="' + escapeForMarkup(trk.label) + '"></div>' +
+            '<div class="modal-field"><label for="modTrkDate">Date</label><input type="date" id="modTrkDate" value="' + convertDDMMMYYYYToYYYYMMDD(trk.date) + '"></div>' +
+            '<div class="modal-field"><label for="modTrkColor">Line Color</label><input type="color" id="modTrkColor" value="' + (trk.color || '#10b981') + '"></div>' +
+            '<div class="modal-field"><label for="modTrkPattern">Stroke Pattern</label><select id="modTrkPattern">' +
+                ['solid', 'dashed', 'dotted'].map(p => '<option value="' + p + '"' + ((trk.pattern || 'solid') === p ? ' selected' : '') + '>' + p.charAt(0).toUpperCase() + p.slice(1) + '</option>').join('') +
+            '</select></div>' +
+            '<div class="modal-field"><label for="modTrkThickness">Thickness (px)</label><input type="number" min="1" max="10" id="modTrkThickness" value="' + (trk.thickness || 2) + '"></div>' +
+            '<label class="modal-field checkbox-field full-width"><input type="checkbox" id="modTrkVisible"' + (trk.hidden === true ? '' : ' checked') + '> Visible on timeline (turn back on in the Tracker Lines table)</label>' +
+        '</div>' +
+        '<div class="standard-modal-actions">' +
+            '<div class="action-group"><button type="button" id="modTrkDeleteBtn" style="background:#fff1f2; color:#e11d48; border-color:#fca5a5;">Delete</button></div>' +
+            '<div class="action-group">' +
+                '<button type="button" id="modTrkCancelBtn" style="background:#f1f5f9; color:#475569;" data-hint="Undo the edits made in this popup">Cancel</button>' +
+                '<button type="button" id="modTrkSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);" data-hint="Edits are already live. Close this popup.">Done</button>' +
+            '</div>' +
+        '</div>';
+
+    positionFloatingDialogSmart(dialog, e);
+
+    const applyTrackerFields = function (live) {
+        const dateVal = document.getElementById("modTrkDate").value;
+        if (!dateVal) return false;
+        trk.label = document.getElementById("modTrkLabel").value;
+        trk.date = formatDateToDDMMMYYYY(new Date(dateVal + "T00:00:00"));
+        trk.color = document.getElementById("modTrkColor").value;
+        trk.pattern = document.getElementById("modTrkPattern").value;
+        trk.thickness = Math.max(1, Math.min(10, parseInt(document.getElementById("modTrkThickness").value, 10) || 2));
+        trk.hidden = !document.getElementById("modTrkVisible").checked;
+        return true;
+    };
+
+    mxMakeDialogLive(dialog, trk, applyTrackerFields);
+
+    document.getElementById("modTrkSaveBtn").addEventListener("click", () => mxCloseFloatingDialog(dialog, true));
+    document.getElementById("modTrkCancelBtn").addEventListener("click", () => mxCloseFloatingDialog(dialog, false));
+    document.getElementById("modTrkDeleteBtn").addEventListener("click", () => removeTrackerLine(trk.id));
+    document.getElementById("modTrkLabel").focus();
 }
 
    /* ---- File menu: one Export dropdown (xlsx / csv / json) and one Import button for every supported type ---- */
@@ -5545,21 +5867,25 @@ function loadApplicationState() {
                 </label>
             </div>
             <div class="dialog-actions" style="margin-top: 15px;">
-                <button class="primary-btn" id="saveRowLabelBtn">Save</button>
-                <button class="utility-btn" onclick="document.getElementById('floatingRowLabelDialog').remove()">Cancel</button>
+                <button class="primary-btn" id="saveRowLabelBtn">Done</button>
+                <button class="utility-btn" onclick="mxCloseFloatingDialog(document.getElementById('floatingRowLabelDialog'), false)">Cancel</button>
             </div>
         `;
         document.body.appendChild(dialog);
 
-        document.getElementById('saveRowLabelBtn').onclick = function() {
-            let newLabel = document.getElementById('tempRowLabelInput').value.trim();
+        const applyRowFields = function(live) {
+            const newLabel = document.getElementById('tempRowLabelInput').value.trim();
             if (newLabel !== "") row.label = newLabel;
             row.showDateRange = document.getElementById('tempRowDateToggle').checked;
-            
-            recordStateChange(); 
-            renderInputRows(); 
-            updateChart();
-            dialog.remove();
+            return true;
+        };
+
+        mxMakeDialogLive(dialog, row, applyRowFields, ['label', 'showDateRange']);
+
+        document.getElementById('saveRowLabelBtn').onclick = function() {
+            applyRowFields(false);
+            dialog.__mxDirty = true;
+            mxCloseFloatingDialog(dialog, true);
         };
     }
 function escapeHtmlAttribute(value) {
@@ -5665,11 +5991,11 @@ function escapeHtmlAttribute(value) {
         </div>
 
         <div class="modal-actions">
-            <button class="primary-btn" id="saveSwimlaneSettingsBtn">Save</button>
+            <button class="primary-btn" id="saveSwimlaneSettingsBtn">Done</button>
             <button
                 class="utility-btn"
                 type="button"
-                onclick="document.getElementById('floatingSwimlaneDialog').remove()"
+                onclick="mxCloseFloatingDialog(document.getElementById('floatingSwimlaneDialog'), false)"
             >
                 Cancel
             </button>
@@ -5682,16 +6008,16 @@ function escapeHtmlAttribute(value) {
     document.getElementById('modalLaneTitle').focus();
     document.getElementById('modalLaneTitle').select();
 
-    document.getElementById('saveSwimlaneSettingsBtn').onclick = function () {
+    const applyLaneFields = function (live) {
         const newTitle = document.getElementById('modalLaneTitle').value.trim();
-        const enteredFontSize = Number(
-            document.getElementById('modalLaneTitleFontSize').value
-        );
+        const enteredFontSize = Number(document.getElementById('modalLaneTitleFontSize').value);
 
         if (!newTitle) {
-            showToast('A swimlane name is required.', 'error');
-            document.getElementById('modalLaneTitle').focus();
-            return;
+            if (!live) {
+                showToast('A swimlane name is required.', 'error');
+                document.getElementById('modalLaneTitle').focus();
+            }
+            return false;
         }
 
         lane.title = newTitle;
@@ -5701,15 +6027,18 @@ function escapeHtmlAttribute(value) {
         lane.titleFontSize = Number.isFinite(enteredFontSize)
             ? Math.max(8, Math.min(30, Math.round(enteredFontSize)))
             : 12;
-        lane.titleBold =
-            document.getElementById('modalLaneTitleBold').value === 'true';
-        lane.showSummary =
-            document.getElementById('modalLaneShowSummary').value === 'true';
+        lane.titleBold = document.getElementById('modalLaneTitleBold').value === 'true';
+        lane.showSummary = document.getElementById('modalLaneShowSummary').value === 'true';
+        return true;
+    };
 
-        recordStateChange();
-        renderInputRows();
-        updateChart();
-        dialog.remove();
+    mxMakeDialogLive(dialog, lane, applyLaneFields,
+        ['title', 'color', 'titleColor', 'titleAlign', 'titleFontSize', 'titleBold', 'showSummary']);
+
+    document.getElementById('saveSwimlaneSettingsBtn').onclick = function () {
+        if (!applyLaneFields(false)) return;
+        dialog.__mxDirty = true;
+        mxCloseFloatingDialog(dialog, true);
     };
 }
 
@@ -5736,121 +6065,6 @@ function escapeHtmlAttribute(value) {
     // ==========================================================
     // INTERACTIVE DRILL DOWN MANAGEMENT: CUSTOM VERTICAL TRACKERS
     // ==========================================================
-    function addNewCustomTrackerLine() {
-        let targetSeedDate = "01Jan2027";
-        customTrackers.push({
-            id: nextTrackerId++,
-            label: "Custom Project Line Track",
-            date: targetSeedDate,
-            thickness: 2,
-            pattern: "solid",
-            color: "#10b981",
-            labelOffsetX: 0,
-            labelOffsetY: 0
-        });
-        recordStateChange();
-        populateTrackerDashboardMatrix();
-        updateChart();
-    }
-
-    function updateTrackerFieldDirect(id, key, val) {
-        let trk = customTrackers.find(t => t.id === id);
-        if (trk) {
-            if (key === 'thickness') trk[key] = parseInt(val) || 2;
-            else if (key === 'date') trk[key] = formatDateToDDMMMYYYY(new Date(val + "T00:00:00"));
-            else trk[key] = val;
-            recordStateChange();
-            updateChart();
-        }
-    }
-
-    function removeTrackerLine(id) {
-        customTrackers = customTrackers.filter(t => t.id !== id);
-        recordStateChange();
-        populateTrackerDashboardMatrix();
-        updateChart();
-    }
-
-    function populateTrackerDashboardMatrix() {
-        let body = document.getElementById('trackerDashboardBody');
-        if (!body) return;
-        if (customTrackers.length === 0) {
-            body.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No custom vertical tracker vectors initialized.</td></tr>`;
-            return;
-        }
-        body.innerHTML = customTrackers.map(t => {
-            return `
-                <tr>
-                    <td><b>${t.id}</b></td>
-                    <td><input type="text" value="${escapeForMarkup(t.label)}" style="padding:4px; font-size:11px;" onchange="updateTrackerFieldDirect(${t.id}, 'label', this.value)"></td>
-                    <td><input type="date" value="${convertDDMMMYYYYToYYYYMMDD(t.date)}" style="padding:3px; font-size:11px; width:120px;" onchange="updateTrackerFieldDirect(${t.id}, 'date', this.value)"></td>
-                    <td>
-                        <select style="padding:3px; font-size:11px;" onchange="updateTrackerFieldDirect(${t.id}, 'pattern', this.value)">
-                            <option value="solid" ${t.pattern === 'solid' ? 'selected' : ''}>Solid</option>
-                            <option value="dashed" ${t.pattern === 'dashed' ? 'selected' : ''}>Dashed</option>
-                            <option value="dotted" ${t.pattern === 'dotted' ? 'selected' : ''}>Dotted</option>
-                        </select>
-                    </td>
-                    <td><input type="number" min="1" max="10" value="${t.thickness || 2}" style="padding:3px; font-size:11px; width:50px;" onchange="updateTrackerFieldDirect(${t.id}, 'thickness', this.value)"></td>
-                    <td><input type="color" value="${t.color || '#10b981'}" style="width:40px; height:22px; padding:0;" onchange="updateTrackerFieldDirect(${t.id}, 'color', this.value)"></td>
-                    <td><button class="delete-btn" style="padding:2px 6px;" onclick="removeTrackerLine(${t.id})">Delete</button></td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    function editTrackerPropertiesModalDirect(e, id) {
-        e.stopPropagation();
-        let trk = customTrackers.find(t => t.id === id); if(!trk) return;
-
-        let existing = document.getElementById('floatingTrackerDialog'); if(existing) existing.remove();
-        let dialog = document.createElement('div');
-        dialog.id = 'floatingTrackerDialog'; dialog.className = 'floating-date-dialog';
-        
-        positionFloatingDialogSmart(dialog, e);
-
-        dialog.innerHTML = `
-            <h4>Customize Tracker Line Properties</h4>
-            <div class="modal-row">
-                <div class="modal-field"><label>Description Name</label><input type="text" id="modTrkLabel" value="${escapeForMarkup(trk.label)}"></div>
-            </div>
-            <div class="modal-row">
-                <div class="modal-field"><label>Target Date Vector</label><input type="date" id="modTrkDate" value="${convertDDMMMYYYYToYYYYMMDD(trk.date)}"></div>
-            </div>
-            <div class="modal-row">
-                <div class="modal-field"><label>Line Color</label><input type="color" id="modTrkColor" value="${trk.color || '#10b981'}"></div>
-                <div class="modal-field">
-                    <label>Stroke Pattern</label>
-                    <select id="modTrkPattern">
-                        <option value="solid" ${trk.pattern === 'solid' ? 'selected' : ''}>Solid</option>
-                        <option value="dashed" ${trk.pattern === 'dashed' ? 'selected' : ''}>Dashed</option>
-                        <option value="dotted" ${trk.pattern === 'dotted' ? 'selected' : ''}>Dotted</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-row">
-                <div class="modal-field"><label>Thickness Weight (px)</label><input type="number" min="1" max="10" id="modTrkThickness" value="${trk.thickness || 2}"></div>
-                <div class="modal-field"><label>Visible</label><label style="font-weight:600; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="modTrkVisible" ${trk.hidden === true ? '' : 'checked'} style="width:auto;"> Show on timeline</label></div>
-            </div>
-            <div class="modal-actions">
-                <button id="modTrkCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
-                <button id="modTrkSaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply Style</button>
-            </div>
-        `;
-        document.body.appendChild(dialog);
-        document.getElementById('modTrkCancelBtn').addEventListener('click', () => dialog.remove());
-        document.getElementById('modTrkSaveBtn').addEventListener('click', function() {
-            trk.label = document.getElementById('modTrkLabel').value;
-            let dVal = document.getElementById('modTrkDate').value;
-            if(dVal) trk.date = formatDateToDDMMMYYYY(new Date(dVal + "T00:00:00"));
-            trk.color = document.getElementById('modTrkColor').value;
-            trk.pattern = document.getElementById('modTrkPattern').value;
-            trk.thickness = parseInt(document.getElementById('modTrkThickness').value) || 2;
-            trk.hidden = !document.getElementById('modTrkVisible').checked;
-            recordStateChange(); populateTrackerDashboardMatrix(); updateChart(); dialog.remove();
-        });
-    }
-
     // ==========================================
     // INTERACTIVE WORKSPACE CONTEXT MENU HANDLERS
     // ==========================================
@@ -5966,14 +6180,22 @@ function escapeHtmlAttribute(value) {
             </div>
             <div class="modal-actions">
                 <button id="modalSummaryCancelBtn" style="background:#f1f5f9; color:#475569;">Cancel</button>
-                <button id="modalSummarySaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Apply</button>
+                <button id="modalSummarySaveBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);">Done</button>
             </div>
         `;
         document.body.appendChild(dialog);
-        document.getElementById('modalSummaryCancelBtn').addEventListener('click', () => dialog.remove());
-        document.getElementById('modalSummarySaveBtn').addEventListener('click', function() {
+        document.getElementById('modalSummaryCancelBtn').addEventListener('click', () => mxCloseFloatingDialog(dialog, false));
+        const applySummaryFields = function(live) {
             lane.summaryColor = document.getElementById('modalSummaryColor').value;
-            recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
+            return true;
+        };
+
+        mxMakeDialogLive(dialog, lane, applySummaryFields, ['summaryColor']);
+
+        document.getElementById('modalSummarySaveBtn').addEventListener('click', function() {
+            applySummaryFields(false);
+            dialog.__mxDirty = true;
+            mxCloseFloatingDialog(dialog, true);
         });
     }
 
@@ -6104,7 +6326,7 @@ let buttonsHTML = `
         </button>
         <button id="modalMsSaveBtn"
             style="background:var(--primary); color:#ffffff; border-color:var(--primary)">
-            Apply
+            Done
         </button>
     </div>
 `;
@@ -6112,13 +6334,13 @@ let buttonsHTML = `
     let dialog = buildStandardModal('floatingMilestoneDialog', 'Milestone Settings', bodyHTML, buttonsHTML);
     positionFloatingDialogSmart(dialog, e);
         document.body.appendChild(dialog);
-        document.getElementById('modalMsCancelBtn').addEventListener('click', () => dialog.remove());
+        document.getElementById('modalMsCancelBtn').addEventListener('click', () => mxCloseFloatingDialog(dialog, false));
         
         document.getElementById('modalMsResetPosBtn').addEventListener('click', function() {
             ms.labelOffsetX = 0; ms.labelOffsetY = 0; ms.dateOffsetX = 0; ms.dateOffsetY = 0;
             ms.leaderTextEndX = 0; ms.leaderTextEndY = 0; ms.leaderDateEndX = 0; ms.leaderDateEndY = 0;
             ms.manualLabel = false; ms.manualDateLabel = false;
-            recordStateChange(); updateChart(); dialog.remove();
+            recordStateChange(); renderInputRows(); updateChart(); dialog.__mxDirty = false; mxCloseFloatingDialog(dialog, true);
         });
         document.getElementById('modalMsToggleLabelBtn').addEventListener('click', function() {
             ms.labelHidden = !ms.labelHidden;
@@ -6139,36 +6361,45 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', async func
                 }
             }
         });
-        document.getElementById('modalMsSaveBtn').addEventListener('click', function() {
-            let nameVal = document.getElementById('modalMsLabel').value.trim();
-let dateVal = document.getElementById('modalMsDatePicker').value;
+        const applyMilestoneFields = function(live) {
+            const nameVal = document.getElementById('modalMsLabel').value.trim();
+            const dateVal = document.getElementById('modalMsDatePicker').value;
 
-if (!dateVal) { showToast("Choose a date for the milestone.", "error", 4000); return; }
-            
+            if (!dateVal) {
+                if (!live) showToast("Choose a date for the milestone.", "error", 4000);
+                return false;
+            }
+
             ms.label = nameVal;
-            if (!ms.label) ms.leaderEnabledText = false;
             ms.date = formatDateToDDMMMYYYY(new Date(dateVal + "T00:00:00"));
             ms.symbol = document.getElementById('modalMsSymbol').value;
-            
+
             if (document.getElementById('modalMsOverrideColor').checked) {
                 ms.color = document.getElementById('modalMsColor').value;
             } else {
                 ms.color = "";
             }
-            
+
             ms.leaderEnabledText = document.getElementById('modalMsLdrText').checked;
             ms.leaderEnabledDate = document.getElementById('modalMsLdrDate').checked;
             ms.leaderAnchorText = document.getElementById('modalMsLdrAnchor').value;
             ms.leaderWeight = parseInt(document.getElementById('modalMsLdrWeight').value) || 1;
             ms.leaderPattern = document.getElementById('modalMsLdrPattern').value;
 
-           ms.showDate = document.getElementById("modalMsShowDate").value === "true";
+            ms.showDate = document.getElementById("modalMsShowDate").value === "true";
             ms.labelFontSize = Math.max(6, Math.min(72, parseInt(document.getElementById("modalMsFontSize").value, 10) || 9));
             ms.labelHidden = !document.getElementById("modalMsShowLabel").checked;
             ms.hidden = !document.getElementById("modalMsVisible").checked;
-            if (ms.hidden) showToast("Milestone hidden. Turn it back on in the Data Grid (Visible On Timeline).", "info", 4500);
+            return true;
+        };
 
-            recordStateChange(); renderInputRows(); updateChart(); dialog.remove();
+        mxMakeDialogLive(dialog, ms, applyMilestoneFields);
+
+        document.getElementById('modalMsSaveBtn').addEventListener('click', function() {
+            if (!applyMilestoneFields(false)) return;
+            if (ms.hidden) showToast("Milestone hidden. Turn it back on in the Data Grid (Visible On Timeline).", "info", 4500);
+            dialog.__mxDirty = true;
+            mxCloseFloatingDialog(dialog, true);
         });
     }
 
@@ -6254,7 +6485,7 @@ let buttonsHTML = `
         </button>
         <button id="modalSaveBtn"
             style="background:var(--primary); color:#ffffff; border-color:var(--primary)">
-            Apply
+            Done
         </button>
     </div>
 `;
@@ -6279,39 +6510,44 @@ positionFloatingDialogSmart(dialog, e);
                 }
             }
         });
-        document.getElementById('modalCancelBtn').addEventListener('click', () => dialog.remove());
-        document.getElementById('modalSaveBtn').addEventListener('click', function() {
-            let startVal = document.getElementById('modalStartPicker').value;
-            let endVal = document.getElementById('modalEndPicker').value;
-            if (!startVal || !endVal) { showToast("Choose both a start and a finish date.", "error", 4000); return; }
-
-            let startTimestamp = new Date(startVal + "T00:00:00").getTime();
-            let endTimestamp = new Date(endVal + "T00:00:00").getTime();
-
-            if (startTimestamp <= endTimestamp) {
-                bar.start = formatDateToDDMMMYYYY(new Date(startTimestamp));
-bar.end = formatDateToDDMMMYYYY(new Date(endTimestamp));
-
-const enteredProgress = Number(document.getElementById('modalBarProgress').value);
-bar.progress = Number.isFinite(enteredProgress)
-    ? Math.max(0, Math.min(100, Math.round(enteredProgress)))
-    : 0;
-
-bar.bgColor = document.getElementById('modalBarBgColor').value;
-bar.color = document.getElementById('modalBarColor').value;
-bar.pattern = document.getElementById('modalBarPattern').value;
-bar.showLabelInBar = document.getElementById('modalBarShowLabel').checked;
-bar.hidden = !document.getElementById('modalBarVisible').checked;
-if (bar.hidden) showToast('Bar hidden. Turn it back on in the Data Grid (Visible On Timeline).', 'info', 4500);
-bar.labelFontSize = Math.max(6, Math.min(72, parseInt(document.getElementById('modalBarLabelFontSize').value, 10) || 10));
-
-recordStateChange();
-renderInputRows();
-updateChart();
-dialog.remove();
-            } else {
-                showToast("The start date cannot be after the finish date.", "error", 4500);
+        const applyBarFields = function(live) {
+            const startVal = document.getElementById('modalStartPicker').value;
+            const endVal = document.getElementById('modalEndPicker').value;
+            if (!startVal || !endVal) {
+                if (!live) showToast("Choose both a start and a finish date.", "error", 4000);
+                return false;
             }
+
+            const startTimestamp = new Date(startVal + "T00:00:00").getTime();
+            const endTimestamp = new Date(endVal + "T00:00:00").getTime();
+            if (startTimestamp > endTimestamp) {
+                if (!live) showToast("The start date cannot be after the finish date.", "error", 4500);
+                return false;
+            }
+
+            bar.start = formatDateToDDMMMYYYY(new Date(startTimestamp));
+            bar.end = formatDateToDDMMMYYYY(new Date(endTimestamp));
+
+            const enteredProgress = Number(document.getElementById('modalBarProgress').value);
+            bar.progress = Number.isFinite(enteredProgress) ? Math.max(0, Math.min(100, Math.round(enteredProgress))) : 0;
+
+            bar.bgColor = document.getElementById('modalBarBgColor').value;
+            bar.color = document.getElementById('modalBarColor').value;
+            bar.pattern = document.getElementById('modalBarPattern').value;
+            bar.showLabelInBar = document.getElementById('modalBarShowLabel').checked;
+            bar.hidden = !document.getElementById('modalBarVisible').checked;
+            bar.labelFontSize = Math.max(6, Math.min(72, parseInt(document.getElementById('modalBarLabelFontSize').value, 10) || 10));
+            return true;
+        };
+
+        mxMakeDialogLive(dialog, bar, applyBarFields);
+
+        document.getElementById('modalCancelBtn').addEventListener('click', () => mxCloseFloatingDialog(dialog, false));
+        document.getElementById('modalSaveBtn').addEventListener('click', function() {
+            if (!applyBarFields(false)) return;
+            if (bar.hidden) showToast('Bar hidden. Turn it back on in the Data Grid (Visible On Timeline).', 'info', 4500);
+            dialog.__mxDirty = true;
+            mxCloseFloatingDialog(dialog, true);
         });
     }
 
@@ -6347,11 +6583,15 @@ function addNewCallout(targetX = 350, targetY = 100) {
     updateChart();
 }
 
-function removeCallout(id) {
+async function removeCallout(id) {
+    const ok = await appConfirm("Delete this callout?\n\nYou can bring it back with Ctrl+Z.", { title: "Delete callout", confirmText: "Delete", danger: true });
+    if (!ok) return;
     calloutData = calloutData.filter(c => c.id !== id);
-    renderCalloutControls(); updateChart();
-    let dlg = document.getElementById('floatingCalloutDialog');
-    if (dlg) dlg.remove();
+    mxFloatingDialogs().filter(d => d.id === 'floatingCalloutDialog').forEach(d => d.remove());
+    recordStateChange();
+    renderCalloutControls();
+    updateChart();
+    showToast("Callout deleted. Press Ctrl+Z to undo.", "info", 4000);
 }
 
 function setCalloutLeaderVisibility(id, shouldShowLeader) {
@@ -6421,12 +6661,14 @@ function updateCalloutProperty(id, propertyName, newValue) {
         callout[propertyName] = newValue;
     }
 
-    // Save state for autosave and Undo/Redo, then redraw the SVG.
-    recordStateChange();
+    // Live: redraw now; the undo step is committed once you pause typing.
+    markUnsavedState();
+    mxScheduleLiveCommit();
     updateChart();
 }
 
 function renderCalloutControls() {
+    if (mxLiveDepth > 0) return;
     const container = document.getElementById('calloutListContainer');
     if (!container) return;
     container.innerHTML = calloutData.map(c => `
@@ -6510,6 +6752,7 @@ document.addEventListener('dblclick', (e) => {
 
         let dialog = document.createElement('div');
         dialog.id = 'floatingCalloutDialog'; dialog.className = 'floating-date-dialog';
+        dialog.__mxFlush = () => { mxFlushLiveCommit(); renderCalloutControls(); };
         positionFloatingDialogSmart(dialog, e);
         
         dialog.innerHTML = `
@@ -6536,8 +6779,8 @@ document.addEventListener('dblclick', (e) => {
                 </select>
             </div>
                         <div class="dialog-row" style="margin-top:5px;">
-    <label><input type="checkbox" ${callout.isBold ? 'checked' : ''} onchange="updateCalloutProperty(id, 'isBold', this.checked); renderCalloutControls();">Bold Text</label>
-    <label><input type="checkbox" ${callout.bgTransparent ? 'checked' : ''} onchange="updateCalloutProperty(id, 'bgTransparent', this.checked); renderCalloutControls();">Clear BG</label>
+    <label><input type="checkbox" ${callout.isBold ? 'checked' : ''} onchange="updateCalloutProperty('${id}', 'isBold', this.checked); renderCalloutControls();">Bold Text</label>
+    <label><input type="checkbox" ${callout.bgTransparent ? 'checked' : ''} onchange="updateCalloutProperty('${id}', 'bgTransparent', this.checked); renderCalloutControls();">Clear BG</label>
    <label>
     <input type="checkbox"
            ${callout.showLeader !== false ? 'checked' : ''}
@@ -6550,7 +6793,7 @@ document.addEventListener('dblclick', (e) => {
 <div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Leader</span><input type="color" value="${callout.leaderColor || callout.textColor}" onchange="updateCalloutProperty('${id}', 'leaderColor', this.value); renderCalloutControls();" style="cursor:pointer;"></div>
 <div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Back</span><input type="color" value="${callout.bgColor}" onchange="updateCalloutProperty('${id}', 'bgColor', this.value); renderCalloutControls();" ${callout.bgTransparent ? 'disabled' : ''} style="cursor:pointer;"></div>
             <div class="dialog-actions" style="margin-top: 15px;">
-                <button class="primary-btn" onclick="document.getElementById('floatingCalloutDialog').remove()">Done</button>
+                <button class="primary-btn" onclick="mxCloseFloatingDialog(document.getElementById('floatingCalloutDialog'), true)">Done</button>
                 <button class="utility-btn" onclick="removeCallout('${id}')" style="color: var(--danger); border-color: #fca5a5;">Delete</button>
             </div>
         `;
@@ -6643,6 +6886,7 @@ document.addEventListener('dblclick', (e) => {
     // SIDEBAR DATA ELEMENT FORM GENERATOR (NESTED SWIMLANES)
     // =========================================================
  function renderInputRows() {
+        if (mxLiveDepth > 0) return;
         const container = document.getElementById('dataRowsContainer'); container.innerHTML = ''; 
         const searchKeyword = document.getElementById('sidebarSearchInput')?.value.toLowerCase() || '';
 
@@ -7540,12 +7784,17 @@ svg += allLayerBarsBuffer
                 let stylePattern = tracker.pattern || "solid";
                 let strokeDash = (stylePattern === 'dashed') ? "4 4" : (stylePattern === 'dotted') ? "1 3" : "";
                 
+                // Wide invisible grab area so a thin line is easy to drag and double-click (removed from exports).
+                svg += `<line class="drag-hotspot" x1="${xTracker}" y1="${axisLineY}" x2="${xTracker}" y2="${bottomOfLastRow}" stroke="transparent" stroke-width="16" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'tracker-line-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})"/>`;
+
                 svg += `<line x1="${xTracker}" y1="${axisLineY}" x2="${xTracker}" y2="${bottomOfLastRow}" stroke="${tracker.color}" stroke-width="${tracker.thickness || 2}" stroke-dasharray="${strokeDash}" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'tracker-line-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})"/>`;
                 
                 let lblX = xTracker + (tracker.labelOffsetX || 0);
                 let lblY = bottomOfLastRow + 24 + (tracker.labelOffsetY || 0);
                 
+                const trackerLabelWidth = Math.max(36, String(tracker.label ?? '').length * 5.4 + 12);
                 svg += `<g fill="${tracker.color}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'tracker-label-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})">
+                    <rect class="drag-hotspot" x="${lblX - trackerLabelWidth / 2}" y="${lblY - 11}" width="${trackerLabelWidth}" height="16" fill="transparent"/>
                     <text x="${lblX}" y="${lblY}" font-size="8" font-weight="bold" fill="${tracker.color}" text-anchor="middle">${escapeForMarkup(String(tracker.label ?? '').toUpperCase())}</text>
                 </g>`;
             }
