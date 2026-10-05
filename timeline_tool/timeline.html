@@ -2204,44 +2204,48 @@ function stopGlobalDragAction(e) {
     // ==========================================
     // TRANSACTIONS CONTROL HISTORY (UNDO / REDO)
     // ==========================================
-        function recordStateChange() {
+        function mxBuildSnapshot() {
+    return {
+        schemaVersion: CURRENT_SCHEMA_VERSION,
+        data: JSON.parse(JSON.stringify(projectData)),
+        trackers: JSON.parse(JSON.stringify(customTrackers)),
+        callouts: JSON.parse(JSON.stringify(calloutData)),
+        nextRowId: nextRowId,
+        nextMsId: nextMsId,
+        nextBarId: nextBarId,
+        nextTrackerId: nextTrackerId,
+        rangeMode: document.querySelector('input[name="rangeMode"]:checked').value,
+        sizingMode: document.querySelector('input[name="sizingMode"]:checked')?.value || 'fixed',
+        customBoundaryMin: manualBoundaryMin,
+        customBoundaryMax: manualBoundaryMax,
+        fontFamily: document.getElementById('fontFamily').value,
+        fontSize: document.getElementById('fontSize').value,
+        swimlaneHeight: document.getElementById('swimlaneHeight').value,
+        canvasWidth: document.getElementById('canvasWidth').value,
+        rowLabelWidth: document.getElementById('rowLabelWidth').value,
+        rowHeight: document.getElementById('rowHeight').value,
+        barBgColor: document.getElementById('barBgColor').value,
+        barColor: document.getElementById('barColor').value,
+        summaryColor: document.getElementById('summaryColor').value,
+        msColor: document.getElementById('msColor').value,
+        todayColor: document.getElementById('todayColor').value,
+        masterLeaderColor: document.getElementById('masterLeaderColor').value,
+        headerColor: document.getElementById('headerColor').value,
+        showVGrid: document.getElementById('showVGrid').checked,
+        showAlignGrid: document.getElementById('showAlignGrid').checked,
+        snapResolution: document.getElementById('snapResolution').value,
+        workspaceZoom: document.getElementById('workspaceZoom').value,
+        todayLineToggle: document.querySelector('input[name="todayLineToggle"]:checked').value,
+        showHeaderYear: document.getElementById('showHeaderYear').checked,
+        showHeaderQuarter: document.getElementById('showHeaderQuarter').checked,
+        showHeaderMonth: document.getElementById('showHeaderMonth').checked,
+        showHeaderDay: document.getElementById('showHeaderDay').checked
+    };
+}
+
+function recordStateChange() {
         if (mxLiveDepth > 0) { mxScheduleLiveCommit(); return; }
-                const stateSnapshot = {
-            schemaVersion: CURRENT_SCHEMA_VERSION,
-            data: JSON.parse(JSON.stringify(projectData)),
-            trackers: JSON.parse(JSON.stringify(customTrackers)),
-            callouts: JSON.parse(JSON.stringify(calloutData)),
-            nextRowId: nextRowId,
-            nextMsId: nextMsId,
-            nextBarId: nextBarId,
-            nextTrackerId: nextTrackerId,
-            rangeMode: document.querySelector('input[name="rangeMode"]:checked').value,
-            sizingMode: document.querySelector('input[name="sizingMode"]:checked')?.value || 'fixed',
-            customBoundaryMin: manualBoundaryMin,
-            customBoundaryMax: manualBoundaryMax,
-            fontFamily: document.getElementById('fontFamily').value,
-            fontSize: document.getElementById('fontSize').value,
-            swimlaneHeight: document.getElementById('swimlaneHeight').value,
-                        canvasWidth: document.getElementById('canvasWidth').value,
-            rowLabelWidth: document.getElementById('rowLabelWidth').value,
-            rowHeight: document.getElementById('rowHeight').value,
-            barBgColor: document.getElementById('barBgColor').value,
-            barColor: document.getElementById('barColor').value,
-            summaryColor: document.getElementById('summaryColor').value,
-            msColor: document.getElementById('msColor').value,
-            todayColor: document.getElementById('todayColor').value,
-            masterLeaderColor: document.getElementById('masterLeaderColor').value,
-            headerColor: document.getElementById('headerColor').value,
-            showVGrid: document.getElementById('showVGrid').checked,
-            showAlignGrid: document.getElementById('showAlignGrid').checked,
-            snapResolution: document.getElementById('snapResolution').value,
-            workspaceZoom: document.getElementById('workspaceZoom').value,
-            todayLineToggle: document.querySelector('input[name="todayLineToggle"]:checked').value,
-            showHeaderYear: document.getElementById('showHeaderYear').checked,
-            showHeaderQuarter: document.getElementById('showHeaderQuarter').checked,
-            showHeaderMonth: document.getElementById('showHeaderMonth').checked,
-            showHeaderDay: document.getElementById('showHeaderDay').checked
-        };
+                const stateSnapshot = mxBuildSnapshot();
         const snapshotText = JSON.stringify(stateSnapshot);
         // Identical to the last step (for example the final "change" event after live edits)? Don't add a duplicate undo step.
         const isDuplicateStep = actionUndoStack.length > 0 && actionUndoStack[actionUndoStack.length - 1] === snapshotText;
@@ -2421,10 +2425,9 @@ reader.onload = function(e) {
     try {
         const parsedArchive = JSON.parse(e.target.result);
 
-        if (parsedArchive.workspace) {
-            const migratedWorkspace = migrateSnapshotIfNeeded(
-                parsedArchive.workspace
-            );
+        const ws = parsedArchive.workspace || (Array.isArray(parsedArchive.data) ? parsedArchive : null);
+        if (ws) {
+            const migratedWorkspace = migrateSnapshotIfNeeded(ws);
 
             actionUndoStack = [];
             actionRedoStack = [];
@@ -2875,6 +2878,7 @@ function mxCoerce(kind, raw, target) {
                 const lower = v.toLowerCase();
                 hit = opts.find(o => String(o[0]).toLowerCase() === lower || String(o[1]).toLowerCase() === lower);
             }
+            if (!hit && target.key === "msSymbol") return mxNormalizeSymbol(v);
             return hit ? hit[0] : null;
         }
         default:
@@ -3489,6 +3493,56 @@ function initDataGrid() {
     /* =========================================================================
    MATRIX TABLES  (Data Grid tabs, Excel sheets and the single-file CSV)
    ========================================================================= */
+/* ---- Header + symbol normalisation (handles older CSV layouts) ---- */
+const MX_SYMBOL_ALIASES = {
+    diamond: "diamond", circle: "circle", dot: "circle", round: "circle",
+    square: "square", box: "square", triangle: "triangle", star: "star",
+    verticalbar: "vertical-bar", vertical: "vertical-bar", bar: "vertical-bar", line: "vertical-bar", pipe: "vertical-bar"
+};
+function mxNormalizeSymbol(v) {
+    const k = String(v ?? "").toLowerCase().replace(/[^a-z]/g, "");
+    return MX_SYMBOL_ALIASES[k] || null;
+}
+function mxHeaderKey(h) {
+    return String(h ?? "").replace(/\ufeff/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+const MX_HEADER_ALIASES = {
+    type: "type", recordtype: "type",
+    swimlane: "laneTitle", lane: "laneTitle", lanename: "laneTitle", lanetitle: "laneTitle",
+    task: "rowLabel", taskrow: "rowLabel", row: "rowLabel", rowname: "rowLabel", rowlabel: "rowLabel",
+    milestonesymbol: "msSymbol", symbol: "msSymbol", symboltype: "msSymbol", symbolshape: "msSymbol",
+    shape: "msSymbol", milestoneshape: "msSymbol", marker: "msSymbol", milestonemarker: "msSymbol", icon: "msSymbol",
+    progress: "barProgress", percentcomplete: "barProgress", start: "barStart", barstartdate: "barStart",
+    finish: "barEnd", end: "barEnd", barend: "barEnd", barenddate: "barEnd"
+};
+function mxBuildHeaderMap() {
+    const map = {};
+    Object.keys(MX_HEADER_ALIASES).forEach(a => { map[a] = MX_HEADER_ALIASES[a]; });
+    MX_FIELDS.forEach(d => { map[mxHeaderKey(d.title)] = d.key; map[mxHeaderKey(d.key)] = d.key; });
+    return map;
+}
+function mxSniffDelimiter(text) {
+    let inQ = false, c = 0, s = 0, t = 0;
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '"') inQ = !inQ;
+        else if (!inQ) {
+            if (ch === "\n" || ch === "\r") break;
+            if (ch === ",") c++; else if (ch === ";") s++; else if (ch === "\t") t++;
+        }
+    }
+    return (t > c && t >= s) ? "\t" : (s > c ? ";" : ",");
+}
+function mxLegacySymbol(columns) {
+    const first = mxNormalizeSymbol(columns[14]);
+    if (first) return first;
+    for (const i of [13, 15, 16, 12]) {
+        const s = mxNormalizeSymbol(columns[i]);
+        if (s) return s;
+    }
+    return "diamond";
+}
+
 function mxCsvSafeText(text) {
     // Stops Excel treating a label such as "=A1" or "-5 days" as a formula when a CSV is opened.
     return /^'*[=+\-@\t\r]/.test(text) ? "'" + text : text;
@@ -3652,12 +3706,13 @@ function mxCleanCell(value, stripCsvGuard) {
     s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u200B\uFEFF]/g, "");
     if (s.normalize) s = s.normalize("NFC");
     s = s.trim();
-    if (stripCsvGuard && /^'+[=+\-@]/.test(s)) s = s.slice(1);   // undo the CSV formula guard added on export
+    if (stripCsvGuard && /^'+[=+\-@\t\r]/.test(s)) s = s.slice(1);   // undo the CSV formula guard added on export
     return s;
 }
 
 function mxParseCSV(text) {
     if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    const DELIM = mxSniffDelimiter(text);
     const rows = [];
     let row = [];
     let cell = "";
@@ -3672,7 +3727,7 @@ function mxParseCSV(text) {
             } else cell += ch;
         } else if (ch === '"') {
             inQuotes = true;
-        } else if (ch === ",") {
+        } else if (ch === DELIM) {
             row.push(cell); cell = "";
         } else if (ch === "\n" || ch === "\r") {
             if (ch === "\r" && text[i + 1] === "\n") i++;
@@ -3735,8 +3790,8 @@ function mxParseWorkbook(workbook) {
 function mxParseMatrix(rows, fromCsv = true) {
     if (!rows || rows.length < 2) return null;
     const header = rows[0].map(h => String(h ?? "").trim());
-    if (header.some(h => h.toLowerCase() === "rules matrix")) return null;   // old 27-column format
-    if (!header.some(h => h.toLowerCase() === "record type")) return null;
+    if (header.some(h => mxHeaderKey(h) === "rulesmatrix")) return null;   // old 27-column format
+    if (!header.some(h => mxHeaderKey(h) === "recordtype")) return null;
     return mxParseTables([{ tab: null, rows, csv: fromCsv }]);
 }
 
@@ -3751,8 +3806,7 @@ function mxParseTables(tables) {
     const callouts = [];
     const settings = [];
 
-    const titleToKey = {};
-    MX_FIELDS.forEach(d => { titleToKey[d.title.toLowerCase()] = d.key; titleToKey[d.key.toLowerCase()] = d.key; });
+    const titleToKey = mxBuildHeaderMap();
 
     const laneById = new Map();
     const usedBarIds = new Set();
@@ -3850,13 +3904,16 @@ function mxParseTables(tables) {
         const header = rows[0].map(h => String(h ?? "").trim());
         const colIndex = {};
         header.forEach((h, i) => {
-            const key = titleToKey[h.toLowerCase()];
+            const key = titleToKey[mxHeaderKey(h)];
             if (key && colIndex[key] === undefined) colIndex[key] = i;
         });
         if (!table.tab && colIndex.type === undefined) return;
         if (table.tab && Object.keys(colIndex).length === 0) {
             warnings.push("Sheet \"" + sheetName + "\": no recognised column headings, so it was skipped.");
             return;
+        }
+        if (colIndex.msSymbol === undefined && (!table.tab || table.tab.type === "Milestone")) {
+            warnings.push(sheetName + ": no Symbol column found, so milestones default to Diamond.");
         }
 
         for (let r = 1; r < rows.length; r++) {
@@ -5350,36 +5407,26 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeFileMen
    function exportConfigurationArchive() {
     recordStateChange();
 
-    if (actionUndoStack.length === 0) {
-        showToast('Nothing to export yet.', 'error');
+    if (actionUndoStack.function exportConfigurationArchive() {
+    let workspace;
+    try {
+        workspace = mxBuildSnapshot();
+    } catch (err) {
+        console.error('JSON export failed:', err);
+        showToast('JSON export failed: ' + err.message, 'error', 6000);
         return;
     }
-
     const archivePayload = {
         version: '2026.MultiBarPresentationState',
-        schemaVersion: CURRENTSCHEMAVERSION,
-        workspace: JSON.parse(actionUndoStack[actionUndoStack.length - 1])
+        schemaVersion: CURRENT_SCHEMA_VERSION,
+        workspace
     };
-
-    const blob = new Blob(
-        [JSON.stringify(archivePayload, null, 2)],
-        { type: 'application/json' }
-    );
-
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-
     const fileName = `${sanitizeFilenamePart(getProjectTitle())}_${getDateStamp()}.json`;
-    link.download = fileName;
-    link.click();
-
+    mxDownloadBlob(new Blob([JSON.stringify(archivePayload, null, 2)], { type: 'application/json' }), fileName);
     saveRecentFileName(getProjectTitle());
     unexportedChangeCount = 0;
     showToast(`Saved ${fileName}`, 'success');
-}
-
-    function parseRobustCSVLine(text) {
-        let fields = []; let current = ''; let inQuotes = false;
+}nQuotes = false;
         for (let i = 0; i < text.length; i++) {
             let char = text[i];
             if (char === '"') {
@@ -5398,15 +5445,16 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeFileMen
 
     // Helper function to process the extracted text payload
     const processLegacyPayload = function(csvText) {
-        const lines = csvText.split(/\r?\n/); if(lines.length <= 1) return;
+        const csvRows = mxParseCSV(csvText); if (csvRows.length <= 1) return;
         let newImportData = []; let newTrackers = []; let newCallouts = [];
 let importedWorkspaceSettings = null;
         let rIdCounter = 1; let mIdCounter = 1001; let bIdCounter = 5001; let tIdCounter = 7001;
 
-        for(let i = 1; i < lines.length; i++) {
-            let line = lines[i].trim(); if(line === "") continue;
-            let columns = parseRobustCSVLine(line); if(columns.length < 8) continue;
-let recordType = columns[0].trim();
+        for(let i = 1; i < csvRows.length; i++) {
+            const columns = csvRows[i].map(c => String(c ?? ""));
+            if (columns.every(c => c.trim() === "")) continue;
+            if (columns.length < 8) continue;
+let recordType = columns[0].trim().toUpperCase();
 
 if (recordType === 'SETTINGS') {
     importedWorkspaceSettings = {
@@ -5478,6 +5526,7 @@ if (recordType === 'CALLOUT') {
                 lane = { id: newImportData.length, title: laneTitle, color: laneColor, showSummary: laneSummary, rows: [] };
                 newImportData.push(lane);
             }
+            if (!lane) continue;
 
             let rowIdStr = columns[4] ? columns[4].trim() : ""; if(rowIdStr === "") continue;
             let explicitRowId = parseInt(rowIdStr, 10);
@@ -5549,7 +5598,7 @@ if (!rowObject) {
                     manualDateLabel: true,
                     dateOffsetX: parseFloat(columns[18]) || 0,
                     dateOffsetY: parseFloat(columns[19]) || 0,
-                    symbol: columns[14] ? columns[14].trim() : "diamond",
+                    symbol: mxLegacySymbol(columns),
                     color: columns[15] ? columns[15].trim() : "",
                     leaderEnabledText: ldrTxt,
                     leaderEnabledDate: ldrDt,
@@ -5745,17 +5794,28 @@ function migrateSnapshotIfNeeded(state) {
     if (!state.schemaVersion) { state.schemaVersion = 1; }
     if (state.schemaVersion < 2) {
         state.showAlignGrid = state.showAlignGrid ?? false;
+        sfunction migrateSnapshotIfNeeded(state) {
+    if (!state.schemaVersion) { state.schemaVersion = 1; }
+    if (state.schemaVersion < 2) {
+        state.showAlignGrid = state.showAlignGrid ?? false;
         state.schemaVersion = 2;
     }
+    state.data = Array.isArray(state.data) ? state.data : [];
+    state.rangeMode = state.rangeMode || 'manual';
+    state.todayLineToggle = state.todayLineToggle || 'show';
+    const rows = state.data.flatMap(l => l.rows || []);
+    state.nextRowId = state.nextRowId ?? (rows.reduce((m, r) => Math.max(m, Number(r.id) || 0), 0) + 1);
+    state.nextBarId = state.nextBarId ?? (Math.max(5000, ...rows.flatMap(r => (r.bars || []).map(b => Number(b.id) || 0))) + 1);
+    state.nextMsId = state.nextMsId ?? (Math.max(1000, ...rows.flatMap(r => (r.milestones || []).map(m => Number(m.id) || 0))) + 1);
+    ['fontFamily', 'fontSize', 'swimlaneHeight', 'canvasWidth', 'rowHeight', 'barBgColor', 'barColor', 'msColor'].forEach(k => {
+        if (state[k] === undefined || state[k] === null) {
+            const el = document.getElementById(k);
+            if (el) state[k] = el.value;
+        }
+    });
+    if (state.showVGrid === undefined) state.showVGrid = true;
     return state;
-}
-
-function loadApplicationState() {
-    const saved = localStorage.getItem('gantt_v8_master_snapshot');
-    if (saved) {
-        try {
-            const state = migrateSnapshotIfNeeded(JSON.parse(saved));
-            if (!Array.isArray(state.data)) throw new Error('Invalid saved data');
+}            if (!Array.isArray(state.data)) throw new Error('Invalid saved data');
             actionUndoStack = [JSON.stringify(state)];
             actionRedoStack = [];
             restoreStateFromSnapshot(state);
