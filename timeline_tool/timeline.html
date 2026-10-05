@@ -4007,6 +4007,186 @@ function mxParseTables(tables) {
     };
 }
 
+/* =========================================================================
+   LEGACY (27-column) IMPORT  ->  converted to the matrix format, then imported by the normal path.
+   Columns: 0 type, 1 lane title, 2 lane colour, 3 summary, 4 row id, 5 row title, 6 predecessor, 7 element id,
+   8 P6 start, 9 P6 finish, 10 label, 11 start/date, 12 finish, 13 progress/thickness, 14 pattern/symbol,
+   15 colour, 16-19 offsets, 20 bar bg colour / milestone rules, 21 show date range, 22+ unused.
+   ========================================================================= */
+const MX_LEGACY_SETTING_LABELS = [
+    null, "Font Family", "Base Font Size", "Swimlane Header Height", "Task Row Height", "Row Label Width", "Canvas Width",
+    "Scope Range Mode", "Sizing Mode", "Timeline Start Boundary", "Timeline End Boundary",
+    "Show Year Header", "Show Quarter Header", "Show Month Header", "Show Day Header",
+    "Show Time Gridlines", "Show Backdrop Mesh", "Drag Snap Resolution", "Workspace Zoom", "Today Line",
+    "Default Unfilled Bar Color", "Default Progress Fill Color", "Default Summary Bar Color", "Default Milestone Color",
+    "Today Line Color", "Master Leader Color", "Date Header Color"
+];
+const MX_LEGACY_BOOL_SETTINGS = ["Show Year Header", "Show Quarter Header", "Show Month Header", "Show Day Header", "Show Time Gridlines", "Show Backdrop Mesh"];
+const MX_LEGACY_KEYS = [
+    "type", "laneId", "laneTitle", "laneColor", "laneShowSummary", "rowId", "rowLabel", "rowPredecessor", "rowShowDates", "elementId",
+    "p6Start", "p6Finish", "barStart", "barEnd", "barProgress", "barPattern", "barFillColor", "barBgColor",
+    "msLabel", "msDate", "msShowDate", "msSymbol", "msColor", "msLabelX", "msLabelY", "msDateX", "msDateY",
+    "msManualLabel", "msManualDate", "msLeaderText", "msLeaderDate", "msLeaderAnchor",
+    "trkLabel", "trkDate", "trkThickness", "trkPattern", "trkColor", "trkLabelX", "trkLabelY",
+    "coText", "coX", "coY", "coLeaderX", "coLeaderY", "coBgColor", "coTextColor", "coFontSize", "coBold", "coBgTransparent",
+    "settingKey", "settingValue"
+];
+
+function mxLegacyRowsToTables(rows) {
+    if (!rows || rows.length < 2) return null;
+    const warnings = [];
+    const out = [];
+    const cellOf = (cols, i) => String(cols[i] ?? "").replace(/\ufeff/g, "").trim();
+    const isHex = s => /^#[0-9a-f]{6}$/i.test(s);
+    const bool = (s, d) => normalizeImportedBoolean(s, d) ? "TRUE" : "FALSE";
+    const num = s => (s !== "" && Number.isFinite(Number(s))) ? s : "";
+
+    let badDates = 0, shiftedSymbols = 0, unreadableSymbols = 0;
+    const cleanDate = s => {
+        if (!s) return "";
+        const ts = parseAnyDateToTimestamp(s);
+        if (isNaN(ts)) { badDates++; return ""; }
+        return formatDateToDDMMMYYYY(new Date(ts));
+    };
+
+    let globalMsColor = "";
+    rows.forEach((r, i) => { if (i > 0 && cellOf(r, 0).toUpperCase() === "SETTINGS") globalMsColor = cellOf(r, 23).toLowerCase(); });
+
+    const laneIds = new Map();
+    const rowIds = new Map();
+    const usedRowIds = new Set();
+    let nextLane = 0, nextRowFree = 1;
+    const emit = obj => out.push(MX_LEGACY_KEYS.map(k => obj[k] === undefined ? "" : String(obj[k])));
+
+    function laneFor(cols) {
+        const title = cellOf(cols, 1);
+        if (!title) return null;
+        if (!laneIds.has(title)) {
+            const id = nextLane++;
+            laneIds.set(title, id);
+            emit({ type: "Lane", laneId: id, laneTitle: title, laneColor: cellOf(cols, 2) || "#f8fafc", laneShowSummary: bool(cols[3], true) });
+        }
+        return laneIds.get(title);
+    }
+
+    function rowFor(cols, laneId) {
+        const rawId = cellOf(cols, 4);
+        if (rawId === "") return null;
+        const parsed = parseInt(rawId, 10);
+        if (!Number.isFinite(parsed)) return null;
+        const key = laneId + "|" + parsed;
+        if (!rowIds.has(key)) {
+            let id = parsed;
+            if (usedRowIds.has(id)) {            // same Row ID reused in another swimlane: give it a fresh one
+                while (usedRowIds.has(nextRowFree)) nextRowFree++;
+                id = nextRowFree;
+                warnings.push("Row ID " + parsed + " was used in more than one swimlane; one copy was renumbered to " + id + ".");
+            }
+            usedRowIds.add(id);
+            rowIds.set(key, id);
+            let pred = cellOf(cols, 6);
+            if (pred.toUpperCase() === "NONE") pred = "";
+            emit({ type: "Row", laneId, rowId: id, rowLabel: cellOf(cols, 5), rowPredecessor: pred, rowShowDates: bool(cols[21], false) });
+        }
+        return rowIds.get(key);
+    }
+
+    for (let i = 1; i < rows.length; i++) {
+        const cols = rows[i];
+        if (!cols || cols.every(c => String(c ?? "").trim() === "")) continue;
+        const type = cellOf(cols, 0).toUpperCase();
+
+        if (type === "SETTINGS") {
+            for (let k = 1; k < MX_LEGACY_SETTING_LABELS.length; k++) {
+                const label = MX_LEGACY_SETTING_LABELS[k];
+                let val = cellOf(cols, k);
+                if (val === "") continue;
+                if (label === "Font Family") val = val.replace(/\|/g, ",");
+                if (MX_LEGACY_BOOL_SETTINGS.indexOf(label) >= 0) val = bool(val, true);
+                if (label === "Timeline Start Boundary" || label === "Timeline End Boundary") val = cleanDate(val);
+                if (val === "") continue;
+                emit({ type: "Setting", settingKey: label, settingValue: val });
+            }
+            continue;
+        }
+
+        if (type === "CALLOUT") {
+            emit({
+                type: "Callout", coText: cellOf(cols, 1) || "Callout", coX: num(cellOf(cols, 2)), coY: num(cellOf(cols, 3)),
+                coLeaderX: num(cellOf(cols, 4)), coLeaderY: num(cellOf(cols, 5)),
+                coBgColor: cellOf(cols, 6), coTextColor: cellOf(cols, 7), coFontSize: num(cellOf(cols, 8)),
+                coBold: bool(cols[9], false), coBgTransparent: bool(cols[10], false)
+            });
+            continue;
+        }
+
+        if (type === "TRACKER") {
+            emit({
+                type: "Tracker", elementId: num(cellOf(cols, 7)), trkLabel: cellOf(cols, 10), trkDate: cleanDate(cellOf(cols, 11)),
+                trkThickness: num(cellOf(cols, 13)), trkPattern: cellOf(cols, 14), trkColor: cellOf(cols, 15),
+                trkLabelX: num(cellOf(cols, 16)), trkLabelY: num(cellOf(cols, 17))
+            });
+            continue;
+        }
+
+        if (type !== "BAR" && type !== "MILESTONE") continue;
+
+        const laneId = laneFor(cols);
+        if (laneId === null) { warnings.push("Line " + (i + 1) + ": " + type + " has no swimlane title and was skipped."); continue; }
+        const rowId = rowFor(cols, laneId);
+        if (rowId === null) { warnings.push("Line " + (i + 1) + ": " + type + " has no Row ID and was skipped."); continue; }
+
+        if (type === "BAR") {
+            emit({
+                type: "Bar", laneId, rowId, elementId: num(cellOf(cols, 7)),
+                p6Start: cellOf(cols, 8), p6Finish: cellOf(cols, 9),
+                barStart: cleanDate(cellOf(cols, 11)), barEnd: cleanDate(cellOf(cols, 12)),
+                barProgress: num(cellOf(cols, 13)), barPattern: cellOf(cols, 14), barFillColor: cellOf(cols, 15),
+                barBgColor: isHex(cellOf(cols, 20)) ? cellOf(cols, 20) : ""
+            });
+            continue;
+        }
+
+        // ---- Milestone ----
+        const c14 = cellOf(cols, 14), c15 = cellOf(cols, 15);
+        let symbol = mxNormalizeSymbol(c14), color = isHex(c15) ? c15 : "";
+        if (!symbol) {
+            if (isHex(c14)) {                    // a colour sitting in the symbol column (shifted cell)
+                if (!color && c14.toLowerCase() !== globalMsColor) color = c14;
+                shiftedSymbols++;
+            } else if (c14 !== "") {
+                unreadableSymbols++;
+            }
+            symbol = mxLegacySymbol(cols);
+        }
+
+        let pin = true, ldrTxt = false, ldrDt = false, anchor = "center";
+        const rule = cellOf(cols, 20);
+        if (rule) {
+            const p = rule.split("|");
+            pin = p[0] === "PinDate";
+            ldrTxt = p[1] === "LdrTxt";
+            ldrDt = p[2] === "LdrDt";
+            if (p[3]) anchor = p[3];
+        }
+        emit({
+            type: "Milestone", laneId, rowId, elementId: num(cellOf(cols, 7)),
+            p6Start: cellOf(cols, 8), p6Finish: cellOf(cols, 9),
+            msLabel: cellOf(cols, 10), msDate: cleanDate(cellOf(cols, 11) || cellOf(cols, 12)),
+            msShowDate: pin ? "TRUE" : "FALSE", msSymbol: symbol, msColor: color,
+            msLabelX: num(cellOf(cols, 16)), msLabelY: num(cellOf(cols, 17)), msDateX: num(cellOf(cols, 18)), msDateY: num(cellOf(cols, 19)),
+            msManualLabel: "TRUE", msManualDate: "TRUE",
+            msLeaderText: ldrTxt ? "TRUE" : "FALSE", msLeaderDate: ldrDt ? "TRUE" : "FALSE", msLeaderAnchor: anchor
+        });
+    }
+
+    if (badDates) warnings.unshift(badDates + " date cell(s) held errors or text (for example \"ERROR - CHECK\" from a broken P6 lookup) and were left blank. Re-link the schedule or type the dates in the Data Grid.");
+    if (shiftedSymbols) warnings.push(shiftedSymbols + " milestone(s) had a colour instead of a symbol in the Pattern/Symbol column; they were set to Diamond.");
+    if (unreadableSymbols) warnings.push(unreadableSymbols + " milestone(s) had an unreadable symbol and were set to Diamond.");
+
+    return { tables: [{ tab: null, rows: [MX_LEGACY_KEYS.slice()].concat(out), csv: false }], warnings };
+}
+
 function mxImportParsed(parsed, fileName) {
     if (!parsed.lanes.length && !parsed.trackers.length && !parsed.callouts.length && !parsed.settings.length) {
         showToast("No usable records were found in that file.", "error", 4500);
@@ -5405,9 +5585,6 @@ document.addEventListener("click", e => { if (!e.target.closest(".file-menu-wrap
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeFileMenus(); });
 
    function exportConfigurationArchive() {
-    recordStateChange();
-
-    if (actionUndoStack.function exportConfigurationArchive() {
     let workspace;
     try {
         workspace = mxBuildSnapshot();
@@ -5426,7 +5603,10 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeFileMen
     saveRecentFileName(getProjectTitle());
     unexportedChangeCount = 0;
     showToast(`Saved ${fileName}`, 'success');
-}nQuotes = false;
+}
+
+    function parseRobustCSVLine(text) {
+        let fields = []; let current = ''; let inQuotes = false;
         for (let i = 0; i < text.length; i++) {
             let char = text[i];
             if (char === '"') {
@@ -5443,293 +5623,24 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeFileMen
     const file = event.target.files[0]; 
     if (!file) return;
 
-    // Helper function to process the extracted text payload
-    const processLegacyPayload = function(csvText) {
-        const csvRows = mxParseCSV(csvText); if (csvRows.length <= 1) return;
-        let newImportData = []; let newTrackers = []; let newCallouts = [];
-let importedWorkspaceSettings = null;
-        let rIdCounter = 1; let mIdCounter = 1001; let bIdCounter = 5001; let tIdCounter = 7001;
-
-        for(let i = 1; i < csvRows.length; i++) {
-            const columns = csvRows[i].map(c => String(c ?? ""));
-            if (columns.every(c => c.trim() === "")) continue;
-            if (columns.length < 8) continue;
-let recordType = columns[0].trim().toUpperCase();
-
-if (recordType === 'SETTINGS') {
-    importedWorkspaceSettings = {
-        fontFamily: columns[1] ? columns[1].trim().replace(/\|/g, ',') : null,
-        fontSize: columns[2] ? columns[2].trim() : null,
-        swimlaneHeight: columns[3] ? columns[3].trim() : null,
-        rowHeight: columns[4] ? columns[4].trim() : null,
-        rowLabelWidth: columns[5] ? columns[5].trim() : null,
-        canvasWidth: columns[6] ? columns[6].trim() : null,
-        rangeMode: columns[7] ? columns[7].trim() : null,
-        sizingMode: columns[8] ? columns[8].trim() : null,
-        customBoundaryMin: columns[9] ? columns[9].trim() : null,
-        customBoundaryMax: columns[10] ? columns[10].trim() : null,
-        showHeaderYear: normalizeImportedBoolean(columns[11], true),
-        showHeaderQuarter: normalizeImportedBoolean(columns[12], true),
-        showHeaderMonth: normalizeImportedBoolean(columns[13], false),
-        showHeaderDay: normalizeImportedBoolean(columns[14], false),
-        showVGrid: normalizeImportedBoolean(columns[15], true),
-        showAlignGrid: normalizeImportedBoolean(columns[16], false),
-        snapResolution: columns[17] ? columns[17].trim() : '0',
-        workspaceZoom: columns[18] ? columns[18].trim() : '1.0',
-        todayLineToggle: columns[19] ? columns[19].trim() : 'show',
-        barBgColor: columns[20] ? columns[20].trim() : null,
-        barColor: columns[21] ? columns[21].trim() : null,
-        summaryColor: columns[22] ? columns[22].trim() : null,
-        msColor: columns[23] ? columns[23].trim() : null,
-        todayColor: columns[24] ? columns[24].trim() : null,
-        masterLeaderColor: columns[25] ? columns[25].trim() : null,
-        headerColor: columns[26] ? columns[26].trim() : null
+    // Old 27-column files are converted to the matrix format and imported through the same path as new files.
+    const processLegacyRows = function(rows) {
+        const converted = mxLegacyRowsToTables(rows);
+        if (!converted) { showToast("That file has no usable rows.", "error", 4500); return; }
+        const parsed = mxParseTables(converted.tables);
+        parsed.warnings = converted.warnings.concat(parsed.warnings);
+        mxImportParsed(parsed, file.name);
     };
 
-    continue;
-}
-
-if (recordType === 'CALLOUT') {
-                newCallouts.push({
-                    id: generateUUID(), 
-                    text: columns[1] ? columns[1].replace(/""/g, '"').trim() : "Callout", 
-                    x: parseFloat(columns[2]) || 350, 
-                    y: parseFloat(columns[3]) || 100, 
-                    leaderX: parseFloat(columns[4]) || 350, 
-                    leaderY: parseFloat(columns[5]) || 150,
-                    bgColor: columns[6] ? columns[6].trim() : "#ffffff", 
-                    textColor: columns[7] ? columns[7].trim() : "#000000", 
-                    fontSize: parseInt(columns[8]) || 14, 
-                    isBold: columns[9] ? columns[9].trim() === "TRUE" : false, 
-                    bgTransparent: columns[10] ? columns[10].trim() === "TRUE" : false
-                });
-                continue;
-            }
-
-            let laneTitle = columns[1].trim();
-            let laneColor = columns[2].trim();
-            let laneSummary = columns[3].trim() === "TRUE";
-            
-            if (recordType === "TRACKER") {
-                let tId = parseInt(columns[7].trim()) || tIdCounter++;
-                if(tId >= tIdCounter) tIdCounter = tId + 1;
-                newTrackers.push({
-                    id: tId, label: columns[10] ? columns[10].trim() : "", date: normalizeDateString(columns[11] ? columns[11].trim() : ""),
-                    thickness: parseInt(columns[13] ? columns[13].trim() : "") || 2, pattern: columns[14] ? columns[14].trim() : "solid",
-                    color: columns[15] ? columns[15].trim() : "", labelOffsetX: parseFloat(columns[16]) || 0, labelOffsetY: parseFloat(columns[17]) || 0
-                });
-                continue;
-            }
-
-            let lane = newImportData.find(l => l.title === laneTitle);
-            if(!lane && laneTitle !== "") {
-                lane = { id: newImportData.length, title: laneTitle, color: laneColor, showSummary: laneSummary, rows: [] };
-                newImportData.push(lane);
-            }
-            if (!lane) continue;
-
-            let rowIdStr = columns[4] ? columns[4].trim() : ""; if(rowIdStr === "") continue;
-            let explicitRowId = parseInt(rowIdStr, 10);
-            if (explicitRowId >= rIdCounter) rIdCounter = explicitRowId + 1;
-
-            let rowLabel = columns[5] ? columns[5].trim() : "";
-            let rowPred = columns[6] ? columns[6].trim() : ""; if (rowPred.toUpperCase() === "NONE") rowPred = "";
-
-            // ---> NEW: Read Show Date Range flag from column 21 (index 21)
-           const rowShowDateRange = normalizeImportedBoolean(columns[21], false);
-
-let rowObject = lane.rows.find(r => r.id === explicitRowId);
-
-if (!rowObject) {
-    rowObject = {
-        id: explicitRowId,
-        label: rowLabel,
-        predecessor: rowPred,
-        showDateRange: rowShowDateRange,
-        bars: [],
-        milestones: []
-    };
-
-    lane.rows.push(rowObject);
-} else {
-    rowObject.showDateRange = rowShowDateRange;
-}
-
-            if (recordType === "BAR") {
-                let bId = parseInt(columns[7].trim()) || bIdCounter++;
-                if (bId >= bIdCounter) bIdCounter = bId + 1;
-                rowObject.bars.push({
-                    id: bId,
-                    p6IdStart: columns[8] ? columns[8].trim() : "",
-                    p6IdFinish: columns[9] ? columns[9].trim() : "",
-                    start: normalizeDateString(columns[11] ? columns[11].trim() : ""),
-                    end: normalizeDateString(columns[12] ? columns[12].trim() : ""),
-                    progress: parseInt(columns[13] ? columns[13].trim() : "") || 0,
-                    pattern: columns[14] ? columns[14].trim() : "solid",
-                    color: columns[15] ? columns[15].trim() : "",
-                    bgColor: columns[20] ? columns[20].trim() : ""
-                });
-            } else if (recordType === "MILESTONE") {
-                let mId = parseInt(columns[7].trim()) || mIdCounter++;
-                if (mId >= mIdCounter) mIdCounter = mId + 1;
-                let ruleStr = columns[20] ? columns[20].trim() : "";
-                let pinDt = true, ldrTxt = false, ldrDt = false, anchorText = "center";
-                if (ruleStr) {
-                    let rPieces = ruleStr.split('|');
-                    pinDt = rPieces[0] === "PinDate";
-                    ldrTxt = rPieces[1] === "LdrTxt";
-                    ldrDt = rPieces[2] === "LdrDt";
-                    if(rPieces[3]) anchorText = rPieces[3];
-                }
-                rowObject.milestones.push({
-                    id: mId,
-                    p6IdStart: columns[8] ? columns[8].trim() : "",
-                    p6IdFinish: columns[9] ? columns[9].trim() : "",
-                    label: columns[10] ? columns[10].trim() : "",
-                    date: normalizeDateString(
-    columns[11] && columns[11].trim()
-        ? columns[11].trim()
-        : (columns[12] && columns[12].trim() ? columns[12].trim() : '')
-),
-                    showDate: pinDt,
-                    manualLabel: true,
-                    labelOffsetX: parseFloat(columns[16]) || 0,
-                    labelOffsetY: parseFloat(columns[17]) || 0,
-                    manualDateLabel: true,
-                    dateOffsetX: parseFloat(columns[18]) || 0,
-                    dateOffsetY: parseFloat(columns[19]) || 0,
-                    symbol: mxLegacySymbol(columns),
-                    color: columns[15] ? columns[15].trim() : "",
-                    leaderEnabledText: ldrTxt,
-                    leaderEnabledDate: ldrDt,
-                    leaderAnchorText: anchorText
-                });
-            }
-        }
-
-                if(newImportData.length > 0 || newTrackers.length > 0 || newCallouts.length > 0) {
-            projectData = newImportData;
-customTrackers = newTrackers;
-calloutData = newCallouts;
-
-if (importedWorkspaceSettings) {
-    if (importedWorkspaceSettings.fontFamily) {
-        document.getElementById('fontFamily').value = importedWorkspaceSettings.fontFamily;
-    }
-
-    if (importedWorkspaceSettings.fontSize) {
-        document.getElementById('fontSize').value = importedWorkspaceSettings.fontSize;
-    }
-
-    if (importedWorkspaceSettings.swimlaneHeight) {
-        document.getElementById('swimlaneHeight').value = importedWorkspaceSettings.swimlaneHeight;
-    }
-
-    if (importedWorkspaceSettings.rowHeight) {
-        document.getElementById('rowHeight').value = importedWorkspaceSettings.rowHeight;
-    }
-
-    if (importedWorkspaceSettings.rowLabelWidth) {
-        document.getElementById('rowLabelWidth').value = importedWorkspaceSettings.rowLabelWidth;
-    }
-
-    if (importedWorkspaceSettings.canvasWidth) {
-        document.getElementById('canvasWidth').value = importedWorkspaceSettings.canvasWidth;
-    }
-
-    if (importedWorkspaceSettings.customBoundaryMin) {
-        manualBoundaryMin = importedWorkspaceSettings.customBoundaryMin;
-    }
-
-    if (importedWorkspaceSettings.customBoundaryMax) {
-        manualBoundaryMax = importedWorkspaceSettings.customBoundaryMax;
-    }
-
-    const importedRangeRadio = document.querySelector(
-        'input[name="rangeMode"][value="' + importedWorkspaceSettings.rangeMode + '"]'
-    );
-
-    if (importedRangeRadio) {
-        importedRangeRadio.checked = true;
-    }
-
-    const importedSizingRadio = document.querySelector(
-        'input[name="sizingMode"][value="' + importedWorkspaceSettings.sizingMode + '"]'
-    );
-
-    if (importedSizingRadio) {
-        importedSizingRadio.checked = true;
-    }
-
-    document.getElementById('showHeaderYear').checked = importedWorkspaceSettings.showHeaderYear;
-    document.getElementById('showHeaderQuarter').checked = importedWorkspaceSettings.showHeaderQuarter;
-    document.getElementById('showHeaderMonth').checked = importedWorkspaceSettings.showHeaderMonth;
-    document.getElementById('showHeaderDay').checked = importedWorkspaceSettings.showHeaderDay;
-    document.getElementById('showVGrid').checked = importedWorkspaceSettings.showVGrid;
-    document.getElementById('showAlignGrid').checked = importedWorkspaceSettings.showAlignGrid;
-    document.getElementById('snapResolution').value = importedWorkspaceSettings.snapResolution;
-
-    const importedTodayLineRadio = document.querySelector(
-        'input[name="todayLineToggle"][value="' + importedWorkspaceSettings.todayLineToggle + '"]'
-    );
-
-    if (importedTodayLineRadio) {
-        importedTodayLineRadio.checked = true;
-    }
-
-    if (importedWorkspaceSettings.barBgColor) {
-        document.getElementById('barBgColor').value = importedWorkspaceSettings.barBgColor;
-    }
-
-    if (importedWorkspaceSettings.barColor) {
-        document.getElementById('barColor').value = importedWorkspaceSettings.barColor;
-    }
-
-    if (importedWorkspaceSettings.summaryColor) {
-        document.getElementById('summaryColor').value = importedWorkspaceSettings.summaryColor;
-    }
-
-    if (importedWorkspaceSettings.msColor) {
-        document.getElementById('msColor').value = importedWorkspaceSettings.msColor;
-    }
-
-    if (importedWorkspaceSettings.todayColor) {
-        document.getElementById('todayColor').value = importedWorkspaceSettings.todayColor;
-    }
-
-    if (importedWorkspaceSettings.masterLeaderColor) {
-        document.getElementById('masterLeaderColor').value = importedWorkspaceSettings.masterLeaderColor;
-    }
-
-    if (importedWorkspaceSettings.headerColor) {
-        document.getElementById('headerColor').value = importedWorkspaceSettings.headerColor;
-    }
-
-    document.getElementById('workspaceZoom').value = importedWorkspaceSettings.workspaceZoom;
-    syncBoundaryFields();
-    toggleRangeScopeFieldsVisibility(importedWorkspaceSettings.rangeMode);
-    handleZoomFactorChange(importedWorkspaceSettings.workspaceZoom, false);
-}
-
-nextRowId = rIdCounter; nextMsId = mIdCounter; nextBarId = bIdCounter; nextTrackerId = tIdCounter;
-
-            const titleEl = document.getElementById('projectTitleInput');
-            if (titleEl) titleEl.value = extractTitleFromFilename(file.name);
-
-            renderCalloutControls();
-            recordStateChange(); renderInputRows(); populateTrackerDashboardMatrix(); updateChart();
-        }
-    };
-
-    // New matrix format (one row per lane / task row / bar / milestone / tracker / callout / setting)
-    // is detected by its header row. Anything else falls back to the original 27-column importer.
+    // New matrix format is detected by its header row. Anything else is treated as the legacy 27-column layout.
     const processDataPayload = function(csvText) {
-        const parsed = mxParseMatrix(mxParseCSV(csvText));
+        const rows = mxParseCSV(csvText);
+        const parsed = mxParseMatrix(rows);
         if (parsed) {
             mxImportParsed(parsed, file.name);
             return;
         }
-        processLegacyPayload(csvText);
+        processLegacyRows(rows);
     };
 
     const fileName = file.name.toLowerCase();
@@ -5750,10 +5661,7 @@ nextRowId = rIdCounter; nextMsId = mIdCounter; nextBarId = bIdCounter; nextTrack
                 mxImportParsed(parsedWorkbook, file.name);
                 return;
             }
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const csvText = XLSX.utils.sheet_to_csv(worksheet);
-            processLegacyPayload(csvText);
+            processLegacyRows(mxSheetToRows(workbook.Sheets[workbook.SheetNames[0]]));
         };
         reader.readAsArrayBuffer(file);
     } else {
@@ -5763,7 +5671,7 @@ nextRowId = rIdCounter; nextMsId = mIdCounter; nextBarId = bIdCounter; nextTrack
         };
         reader.readAsArrayBuffer(file);
     }
-    
+
     event.target.value = '';
 }
 
@@ -5794,10 +5702,6 @@ function migrateSnapshotIfNeeded(state) {
     if (!state.schemaVersion) { state.schemaVersion = 1; }
     if (state.schemaVersion < 2) {
         state.showAlignGrid = state.showAlignGrid ?? false;
-        sfunction migrateSnapshotIfNeeded(state) {
-    if (!state.schemaVersion) { state.schemaVersion = 1; }
-    if (state.schemaVersion < 2) {
-        state.showAlignGrid = state.showAlignGrid ?? false;
         state.schemaVersion = 2;
     }
     state.data = Array.isArray(state.data) ? state.data : [];
@@ -5815,7 +5719,14 @@ function migrateSnapshotIfNeeded(state) {
     });
     if (state.showVGrid === undefined) state.showVGrid = true;
     return state;
-}            if (!Array.isArray(state.data)) throw new Error('Invalid saved data');
+}
+
+function loadApplicationState() {
+    const saved = localStorage.getItem('gantt_v8_master_snapshot');
+    if (saved) {
+        try {
+            const state = migrateSnapshotIfNeeded(JSON.parse(saved));
+            if (!Array.isArray(state.data)) throw new Error('Invalid saved data');
             actionUndoStack = [JSON.stringify(state)];
             actionRedoStack = [];
             restoreStateFromSnapshot(state);
