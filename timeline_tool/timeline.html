@@ -851,6 +851,94 @@ input[type="color"] {
 .floating-date-dialog::-webkit-scrollbar { width: 8px; }
 .floating-date-dialog::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: var(--radius-md); }
 
+/* Multi-select bulk editor popup */
+.floating-date-dialog.compact-editor.bulk-editor { width: min(780px, calc(100vw - 24px)); }
+.bulk-editor .bulk-summary { font-size: var(--fs-caption); color: var(--slate-600); margin: -2px 0 10px; line-height: 1.4; }
+.bulk-editor .bulk-group { margin-bottom: 12px; border: 1px solid var(--slate-300); border-left: 5px solid var(--primary); border-radius: var(--radius-sm); padding: 8px 10px 10px; background: var(--bg-panel); }
+.bulk-editor .bulk-group.bulk-bar { border-left-color: #2563eb; }
+.bulk-editor .bulk-group.bulk-ms { border-left-color: #d97706; }
+.bulk-editor .bulk-group.bulk-trk { border-left-color: #10b981; }
+.bulk-editor .bulk-group.bulk-all { border-left-color: #64748b; }
+.bulk-editor .bulk-group-title { display: flex; justify-content: space-between; align-items: baseline; font-size: var(--fs-label); font-weight: 800; color: var(--navy-900); margin-bottom: 2px; }
+.bulk-editor .bulk-group-title span { font-size: var(--fs-caption); font-weight: 600; color: var(--slate-600); }
+.bulk-editor .bulk-section-title { margin: 10px 0 6px; padding-bottom: 3px; border-bottom: 1px solid var(--border-color); font-size: var(--fs-micro); font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--slate-600); }
+.bulk-editor .bulk-color-row { display: flex; align-items: center; gap: 6px; }
+.bulk-editor .bulk-color-row input[type="color"] { width: 44px; flex: 0 0 44px; }
+.bulk-editor .bulk-chip { font-size: var(--fs-micro); font-weight: 700; padding: 2px 6px; border-radius: 10px; background: var(--slate-100); color: var(--slate-600); white-space: nowrap; }
+.bulk-editor .bulk-chip.mixed { background: #fef3c7; color: #92400e; }
+.bulk-editor .bulk-reset { padding: 2px 8px !important; font-size: var(--fs-micro) !important; background: #f1f5f9; color: #475569; }
+.bulk-editor .bulk-inline { display: flex; gap: 14px; flex-wrap: wrap; }
+.bulk-editor .bulk-check { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-caption); font-weight: 700; color: var(--slate-700); cursor: pointer; }
+.bulk-editor .bulk-check input { width: 15px; min-height: 15px; margin: 0; }
+.bulk-editor .bulk-note { grid-column: 1 / -1; font-size: var(--fs-micro); color: var(--slate-600); font-style: italic; }
+/* ---- Compact popups: small type, tight padding, 3-column grid, section headers ---- */
+.floating-date-dialog.compact-editor { width: min(540px, calc(100vw - 24px)); padding: 7px 10px 8px; }
+.floating-date-dialog h4 { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.floating-date-dialog.compact-editor h4 { margin: 0 0 5px; padding-bottom: 4px; font-size: 12.5px; }
+.mx-t-type { flex: 0 0 auto; font-weight: 800; color: var(--navy-900); white-space: nowrap; }
+.mx-t-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--slate-600); }
+.mx-t-name::before { content: "\2022"; margin-right: 6px; color: var(--slate-400); }
+.floating-date-dialog.compact-editor .compact-modal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 8px; align-items: end; }
+.floating-date-dialog.compact-editor .compact-modal-grid .modal-field { gap: 1px; font-size: 10px; }
+.floating-date-dialog.compact-editor .compact-modal-grid .modal-field.span2 { grid-column: span 2; }
+.floating-date-dialog.compact-editor .compact-modal-grid .modal-field.full-width { grid-column: 1 / -1; }
+.floating-date-dialog.compact-editor .compact-modal-grid input,
+.floating-date-dialog.compact-editor .compact-modal-grid select,
+.floating-date-dialog.compact-editor .compact-modal-grid textarea { min-height: 23px; padding: 1px 6px; font-size: 11.5px; }
+.floating-date-dialog.compact-editor .compact-modal-grid input[type="color"] { padding: 1px; min-height: 23px; }
+.floating-date-dialog.compact-editor .compact-modal-grid .checkbox-field { min-height: 23px; padding: 0 2px; font-size: 11px; }
+.floating-date-dialog.compact-editor .compact-modal-grid .checkbox-field input { width: 13px; min-height: 13px; }
+.floating-date-dialog.compact-editor .standard-modal-actions { margin-top: 6px; padding-top: 6px; }
+.floating-date-dialog.compact-editor .standard-modal-actions button { min-height: 23px; padding: 2px 9px; font-size: 11px; }
+.mx-sec { grid-column: 1 / -1; margin-top: 4px; padding-bottom: 1px; border-bottom: 1px solid var(--border-color); font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--slate-600); }
+.mx-sec:first-child { margin-top: 0; }
+.mx-opt-row { display: flex; gap: 4px; align-items: center; }
+.mx-opt-row input[type="color"] { flex: 1 1 auto; min-width: 0; }
+.mx-opt-reset { padding: 1px 6px !important; font-size: 9.5px !important; background: #f1f5f9; color: #475569; }
+.mx-inline { display: flex; gap: 10px; align-items: center; min-height: 23px; }
+.mx-check { display: inline-flex; align-items: center; gap: 3px; font-size: 11.5px; font-weight: 700; color: var(--slate-700); cursor: pointer; }
+.mx-check input { width: 13px; min-height: 13px; margin: 0; }
+.mx-cb-label { display: inline-flex; align-items: center; gap: 4px; margin: 0; cursor: pointer; }
+.mx-cb-label input { width: 13px !important; min-height: 13px !important; margin: 0; }
+.floating-date-dialog:not(.compact-editor) { padding: 8px 11px; width: 330px; }
+.floating-date-dialog:not(.compact-editor) h4 { font-size: 12.5px; margin-bottom: 5px; padding-bottom: 3px; }
+.floating-date-dialog:not(.compact-editor) .modal-row { margin-bottom: 5px; gap: 8px; }
+.floating-date-dialog:not(.compact-editor) .modal-field { font-size: 10px; }
+.floating-date-dialog:not(.compact-editor) .modal-field input,
+.floating-date-dialog:not(.compact-editor) .modal-field select { padding: 2px 6px; font-size: 11.5px; }
+.floating-date-dialog:not(.compact-editor) button { padding: 3px 9px; font-size: 11px; }
+@media (max-width: 560px) { .floating-date-dialog.compact-editor .compact-modal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Multi-select bulk editor popup */
+.bulk-editor .bulk-summary { font-size: 10.5px; color: var(--slate-600); margin: -1px 0 6px; line-height: 1.35; }
+.bulk-editor .bulk-group { margin-bottom: 6px; border: 1px solid var(--slate-300); border-left: 4px solid var(--primary); border-radius: var(--radius-sm); padding: 5px 8px 7px; background: var(--bg-panel); }
+.bulk-editor .bulk-group.bulk-bar { border-left-color: #2563eb; }
+.bulk-editor .bulk-group.bulk-ms { border-left-color: #d97706; }
+.bulk-editor .bulk-group.bulk-trk { border-left-color: #10b981; }
+.bulk-editor .bulk-group.bulk-co { border-left-color: #8b5cf6; }
+.bulk-editor .bulk-group.bulk-all { border-left-color: #64748b; }
+.bulk-editor .bulk-group-title { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; font-weight: 800; color: var(--navy-900); margin-bottom: 1px; }
+.bulk-editor .bulk-group-title span { font-size: 10px; font-weight: 600; color: var(--slate-600); }
+.bulk-editor .bulk-section-title { margin: 5px 0 3px; padding-bottom: 1px; border-bottom: 1px solid var(--border-color); font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--slate-600); }
+.bulk-editor .bulk-color-row { display: flex; align-items: center; gap: 5px; }
+.bulk-editor .bulk-color-row input[type="color"] { width: 40px; flex: 0 0 40px; }
+.bulk-editor .bulk-chip { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: var(--slate-100); color: var(--slate-600); white-space: nowrap; }
+.bulk-editor .bulk-chip.mixed { background: #fef3c7; color: #92400e; }
+.bulk-editor .bulk-reset { padding: 1px 7px !important; font-size: 9.5px !important; background: #f1f5f9; color: #475569; }
+/* Format painter banner + item right-click menu */
+.mx-item-menu { position: fixed; z-index: 26000; width: 244px; padding: 3px 0; background: var(--bg-panel); border: 1px solid var(--slate-400); border-radius: 6px; box-shadow: 0 6px 18px rgba(0,0,0,.18); font-size: 11px; }
+.mx-item-menu .mx-im-title { display: flex; align-items: baseline; gap: 6px; min-width: 0; padding: 4px 10px 5px; border-bottom: 1px solid var(--border-color); font-size: 11.5px; }
+.mx-item-menu button { display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 4px 10px; border: 0; background: none; text-align: left; font-size: 11px; font-weight: 600; color: var(--slate-800); cursor: pointer; }
+.mx-item-menu button:hover:not(:disabled) { background: var(--slate-100); }
+.mx-item-menu button:disabled { color: var(--slate-400); cursor: default; }
+.mx-item-menu .mx-im-key { color: var(--slate-500); font-weight: 500; white-space: nowrap; }
+.mx-item-menu .mx-im-sec { margin-top: 3px; padding: 5px 10px 2px; border-top: 1px solid var(--border-color); font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--slate-600); }
+#mxPainterBanner { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 25000; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; max-width: min(940px, calc(100vw - 24px)); box-sizing: border-box; padding: 6px 12px; background: #fef3c7; border: 2px solid #d97706; border-radius: 8px; color: #78350f; box-shadow: 0 4px 14px rgba(0,0,0,.22); font-size: 11.5px; font-weight: 600; }
+#mxPainterBanner .mx-pb-title { font-weight: 800; letter-spacing: .06em; }
+#mxPainterBanner .mx-pb-groups { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+#mxPainterBanner label { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; cursor: pointer; }
+#mxPainterBanner button { padding: 3px 9px; font-size: 11px; font-weight: 700; border: 1px solid #d97706; border-radius: 4px; background: #ffffff; color: #78350f; cursor: pointer; }
+#mxPainterBanner .mx-pb-hint { flex: 1 0 100%; font-size: 10.5px; font-weight: 600; }
+body.mx-painting #svgContainer [data-sel], body.mx-painting #svgContainer .draggable-callout { cursor: copy !important; }
 /* Tracker lines table (Graphic Settings tab) */
 .tracker-dashboard-table .trk-input { padding: 3px 4px; font-size: var(--fs-caption); box-sizing: border-box; border: 1px solid var(--slate-300); border-radius: var(--radius-sm); background: var(--bg-panel); }
 .tracker-dashboard-table .trk-color { width: 34px; height: 24px; padding: 0; border: 1px solid var(--slate-400); border-radius: var(--radius-sm); cursor: pointer; }
@@ -1200,9 +1288,11 @@ input[type="color"] {
                                         <tr>
                                             <th>Label</th>
                                             <th>Date</th>
+                                            <th data-hint="Tick to make the line follow today's date. Enter days from today (negative = in the past).">Dynamic / Days</th>
                                             <th>Pattern</th>
                                             <th>Width</th>
                                             <th>Color</th>
+                                            <th data-hint="Line opacity: 100 = solid, lower = fainter">Opacity %</th>
                                             <th>Show</th>
                                             <th></th>
                                         </tr>
@@ -1344,6 +1434,9 @@ input[type="color"] {
             <button type="button" class="utility-btn" onclick="mxDuplicateSelection()" data-hint="Duplicate the selection • [[Ctrl]]+[[D]]">Duplicate</button>
             <button type="button" class="utility-btn grid-delete-btn" onclick="mxDeleteSelection()" data-hint="Delete the selection • [[Del]] • undo with [[Ctrl]]+[[Z]]">Delete</button>
             <button type="button" class="utility-btn" onclick="mxSetSelection([])" data-hint="Clear the selection • [[Esc]]">Clear</button>
+            <button type="button" class="utility-btn" onclick="mxCopyStyleFromSelection()" data-hint="Copy the style of the one selected item and turn on the Format Painter &bull; [[Alt]]+[[Shift]]+[[C]]">Copy Style</button>
+            <button type="button" class="utility-btn" onclick="mxPasteStyleToSelection()" data-hint="Paste the copied style onto every selected item of the same type &bull; [[Alt]]+[[Shift]]+[[V]]">Paste Style</button>
+            <button type="button" class="utility-btn" onclick="mxOpenBulkEditorFromButton(event)" data-hint="Change fonts, colors and styles for every selected item at once • or double-click any selected item">Edit Attributes</button>
             <span class="selection-hint">Arrow keys move 1 day (Shift = 7). Shift-click or drag a box to select several.</span>
 </div>
 
@@ -1606,6 +1699,46 @@ function markSavedState() {
     }
     function getTodayDDMMMYYYY() { return formatDateToDDMMMYYYY(new Date()); }
     function getOneMonthFromTodayDDMMMYYYY() { return formatDateToDDMMMYYYY(addCalendarMonths(new Date(), 1)); }
+
+    /* Per-item label text styling (font family, bold, italic, underline). defWeight is the item's built-in weight. */
+    function mxLabelStyleAttrs(o, defWeight) {
+        let w = defWeight;
+        if (o.labelBold === true) w = "bold"; else if (o.labelBold === false) w = "normal";
+        let a = ' font-weight="' + w + '"';
+        if (o.labelFontFamily) a += ' font-family="' + escapeForMarkup(o.labelFontFamily) + '"';
+        if (o.labelItalic === true) a += ' font-style="italic"';
+        if (o.labelUnderline === true) a += ' text-decoration="underline"';
+        return a;
+    }
+
+    /* ---- Dynamic tracker lines (days from today) + tracker opacity helpers ---- */
+    function mxStartOfToday() { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+    function mxDateFromTodayOffset(days) { const t0 = mxStartOfToday(); return new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + Math.round(days)); }
+    function mxDaysFromToday(str) {
+        const ts = parseAnyDateToTimestamp(str);
+        if (isNaN(ts)) return null;
+        const d = new Date(ts), t0 = mxStartOfToday();
+        return Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(t0.getFullYear(), t0.getMonth(), t0.getDate())) / 86400000);
+    }
+    function mxClampTrackerDays(n) { return Math.max(-36500, Math.min(36500, Math.round(n))); }
+    function mxTrackerOpacityPct(trk) {
+        const n = Number(trk && trk.opacity);
+        return Number.isFinite(n) ? Math.max(5, Math.min(100, Math.round(n))) : 100;
+    }
+    /* Recomputes the date of every dynamic tracker from today's date. Returns true if any date changed. */
+    function mxSyncDynamicTrackers() {
+        let changed = false;
+        (customTrackers || []).forEach(trk => {
+            if (!trk || trk.dynamic !== true) return;
+            if (!Number.isFinite(Number(trk.offsetDays))) {
+                const d0 = mxDaysFromToday(trk.date);
+                trk.offsetDays = d0 === null ? 30 : d0;
+            }
+            const next = formatDateToDDMMMYYYY(mxDateFromTodayOffset(Number(trk.offsetDays)));
+            if (next && trk.date !== next) { trk.date = next; changed = true; }
+        });
+        return changed;
+    }
     function escapeForMarkup(str) {
         return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
@@ -1858,6 +1991,9 @@ function normalizeDateString(val) {
     e.preventDefault();
     e.stopPropagation();
 
+    // Format painter (sticky): a click paints the item instead of selecting or dragging it.
+    if (mxPainter.active && mxPainterMouseDown(e, mode, rowId, subId)) return;
+
     // Selection: Shift/Ctrl/Cmd-click toggles an item; a plain click selects it (unless it is already part of a selection).
     if (mode === 'bar-move' || mode === 'bar-resize-start' || mode === 'bar-resize-end' || mode === 'ms') {
         const selKind = (mode === 'ms') ? 'ms' : 'bar';
@@ -1866,6 +2002,24 @@ function normalizeDateString(val) {
             return;
         }
         if (!mxIsSelected(selKind, rowId, subId)) mxSetSelection([{ kind: selKind, rowId: rowId, id: subId }]);
+    }
+
+    // Tracker lines join the selection the same way (rowId carries the tracker id here).
+    if (mode === 'tracker-line-move' || mode === 'tracker-label-move') {
+        if (e.shiftKey || e.ctrlKey || e.metaKey) {
+            mxToggleSelection('trk', 0, rowId);
+            return;
+        }
+        if (!mxIsSelected('trk', 0, rowId)) mxSetSelection([{ kind: 'trk', rowId: 0, id: rowId }]);
+    }
+
+    // Callouts join the selection too (rowId carries the callout id here).
+    if (mode === 'callout-move') {
+        if (e.shiftKey || e.ctrlKey || e.metaKey) {
+            mxToggleSelection('co', 0, rowId);
+            return;
+        }
+        if (!mxIsSelected('co', 0, rowId)) mxSetSelection([{ kind: 'co', rowId: 0, id: rowId }]);
     }
 
     if (mode === 'timeline-pan' || mode === 'timeline-resize-start' || mode === 'timeline-resize-end') {
@@ -2082,6 +2236,10 @@ function handleGlobalDragMove(e) {
                 let evaluatedTime = scaleMinTime + ((cursorCanvasX - scaleMarginLeft) / scaleChartWidth) * totalDuration;
                 evaluatedTime = Math.max(scaleMinTime, Math.min(scaleMaxTime, evaluatedTime));
                 activeDragState.tracker.date = formatDateToDDMMMYYYY(new Date(evaluatedTime));
+                if (activeDragState.tracker.dynamic === true) {
+                    const dd = mxDaysFromToday(activeDragState.tracker.date);
+                    if (dd !== null) activeDragState.tracker.offsetDays = mxClampTrackerDays(dd);
+                }
                 needsUpdate = true;
             }
         }
@@ -2797,10 +2955,15 @@ mxDef("msLeaderDateEndY", "Custom Date Leader End Y", "Milestone Leaders", ["Mil
 
 /* ---- Vertical tracker lines ---- */
 mxDef("trkLabel", "Tracker Label", "Tracker Line", ["Tracker"], "text", { width: 180, prop: ["el", "label"], get: c => c.el.label ?? "" });
-mxDef("trkDate", "Tracker Date", "Tracker Line", ["Tracker"], "date", { width: 120, prop: ["el", "date"], get: c => c.el.date ?? "" });
+mxDef("trkDate", "Tracker Date", "Tracker Line", ["Tracker"], "date", { width: 120, prop: ["el", "date"], get: c => c.el.date ?? "",
+    set: (c, v) => { c.el.date = v; if (c.el.dynamic === true && v) { const dd = mxDaysFromToday(v); if (dd !== null) c.el.offsetDays = mxClampTrackerDays(dd); } } });
 mxDef("trkColor", "Tracker Color", "Tracker Line", ["Tracker"], "color", { def: "#10b981", get: c => c.el.color || "#10b981", set: (c, v) => { c.el.color = v || "#10b981"; } });
 mxDef("trkPattern", "Tracker Pattern", "Tracker Line", ["Tracker"], "select", { options: MX_OPTS.linePattern, def: "solid", get: c => c.el.pattern || "solid", set: (c, v) => { c.el.pattern = v; } });
 mxDef("trkThickness", "Tracker Thickness", "Tracker Line", ["Tracker"], "int", { min: 1, max: 10, def: 2, get: c => c.el.thickness || 2, set: (c, v) => { c.el.thickness = v; } });
+mxDef("trkOpacity", "Tracker Opacity %", "Tracker Line", ["Tracker"], "int", { min: 5, max: 100, def: 100, get: c => mxTrackerOpacityPct(c.el), set: (c, v) => { c.el.opacity = v; } });
+mxDef("trkDynamic", "Tracker Dynamic (Days From Today)", "Tracker Line", ["Tracker"], "bool", { width: 130, def: false, get: c => c.el.dynamic === true,
+    set: (c, v) => { if (v && c.el.dynamic !== true) { const dd = mxDaysFromToday(c.el.date); if (dd !== null) c.el.offsetDays = mxClampTrackerDays(dd); } c.el.dynamic = !!v; } });
+mxDef("trkOffsetDays", "Tracker Days From Today", "Tracker Line", ["Tracker"], "int", { min: -36500, max: 36500, def: 0, width: 120, get: c => (c.el.dynamic === true && Number.isFinite(Number(c.el.offsetDays))) ? c.el.offsetDays : "", set: (c, v) => { c.el.offsetDays = v; } });
 mxDef("trkLabelX", "Tracker Label Offset X", "Tracker Line", ["Tracker"], "float", { def: 0, width: 120, get: c => c.el.labelOffsetX ?? 0, set: (c, v) => { c.el.labelOffsetX = v; } });
 mxDef("trkLabelY", "Tracker Label Offset Y", "Tracker Line", ["Tracker"], "float", { def: 0, width: 120, get: c => c.el.labelOffsetY ?? 0, set: (c, v) => { c.el.labelOffsetY = v; } });
 
@@ -2819,6 +2982,29 @@ mxDef("coBold", "Callout Bold", "Callout", ["Callout"], "bool", { def: false, ge
 mxDef("coTextColor", "Callout Text Color", "Callout", ["Callout"], "color", { def: "#000000", get: c => c.el.textColor || "#000000", set: (c, v) => { c.el.textColor = v || "#000000"; } });
 mxDef("coBgColor", "Callout Background", "Callout", ["Callout"], "color", { def: "#ffffff", get: c => c.el.bgColor || "#ffffff", set: (c, v) => { c.el.bgColor = v || "#ffffff"; } });
 mxDef("coBgTransparent", "Callout Transparent Background", "Callout", ["Callout"], "bool", { def: false, width: 130, get: c => c.el.bgTransparent === true, set: (c, v) => { c.el.bgTransparent = v; } });
+
+/* ---- Label styling + extra colours (added with the multi-select bulk editor) ---- */
+function mxFontFamilyOptions() {
+    const el = document.getElementById("fontFamily");
+    return [["", "Chart default"]].concat(el ? Array.from(el.options).map(o => [o.value, o.textContent.trim()]) : []);
+}
+mxDef("barLabelColor", "Bar Label Color", "Activity Bar", ["Bar"], "color", { def: "", get: c => c.el.labelColor || "", set: (c, v) => { c.el.labelColor = v; } });
+mxDef("barLabelFamily", "Bar Label Font", "Activity Bar", ["Bar"], "select", { options: mxFontFamilyOptions, def: "", width: 130, get: c => c.el.labelFontFamily || "", set: (c, v) => { c.el.labelFontFamily = v; } });
+mxDef("barLabelBold", "Bar Label Bold", "Activity Bar", ["Bar"], "bool", { def: false, get: c => c.el.labelBold === true, set: (c, v) => { c.el.labelBold = v; } });
+mxDef("barLabelItalic", "Bar Label Italic", "Activity Bar", ["Bar"], "bool", { def: false, get: c => c.el.labelItalic === true, set: (c, v) => { c.el.labelItalic = v; } });
+mxDef("barLabelUnderline", "Bar Label Underline", "Activity Bar", ["Bar"], "bool", { def: false, get: c => c.el.labelUnderline === true, set: (c, v) => { c.el.labelUnderline = v; } });
+mxDef("msLabelColor", "Milestone Label Color", "Milestone", ["Milestone"], "color", { def: "", get: c => c.el.labelColor || "", set: (c, v) => { c.el.labelColor = v; } });
+mxDef("msLeaderColor", "Milestone Leader Color", "Milestone Leaders", ["Milestone"], "color", { def: "", get: c => c.el.leaderColor || "", set: (c, v) => { c.el.leaderColor = v; } });
+mxDef("msLabelFamily", "Milestone Label Font", "Milestone", ["Milestone"], "select", { options: mxFontFamilyOptions, def: "", width: 130, get: c => c.el.labelFontFamily || "", set: (c, v) => { c.el.labelFontFamily = v; } });
+mxDef("msLabelBold", "Milestone Label Bold", "Milestone", ["Milestone"], "bool", { def: true, get: c => c.el.labelBold !== false, set: (c, v) => { c.el.labelBold = v; } });
+mxDef("msLabelItalic", "Milestone Label Italic", "Milestone", ["Milestone"], "bool", { def: false, get: c => c.el.labelItalic === true, set: (c, v) => { c.el.labelItalic = v; } });
+mxDef("msLabelUnderline", "Milestone Label Underline", "Milestone", ["Milestone"], "bool", { def: false, get: c => c.el.labelUnderline === true, set: (c, v) => { c.el.labelUnderline = v; } });
+mxDef("trkLabelColor", "Tracker Label Color", "Tracker Line", ["Tracker"], "color", { def: "", get: c => c.el.labelColor || "", set: (c, v) => { c.el.labelColor = v; } });
+mxDef("trkLabelSize", "Tracker Label Font Size", "Tracker Line", ["Tracker"], "int", { min: 6, max: 72, def: 8, width: 120, get: c => c.el.labelFontSize ?? 8, set: (c, v) => { c.el.labelFontSize = v; } });
+mxDef("trkLabelFamily", "Tracker Label Font", "Tracker Line", ["Tracker"], "select", { options: mxFontFamilyOptions, def: "", width: 130, get: c => c.el.labelFontFamily || "", set: (c, v) => { c.el.labelFontFamily = v; } });
+mxDef("trkLabelBold", "Tracker Label Bold", "Tracker Line", ["Tracker"], "bool", { def: true, get: c => c.el.labelBold !== false, set: (c, v) => { c.el.labelBold = v; } });
+mxDef("trkLabelItalic", "Tracker Label Italic", "Tracker Line", ["Tracker"], "bool", { def: false, get: c => c.el.labelItalic === true, set: (c, v) => { c.el.labelItalic = v; } });
+mxDef("trkLabelUnderline", "Tracker Label Underline", "Tracker Line", ["Tracker"], "bool", { def: false, get: c => c.el.labelUnderline === true, set: (c, v) => { c.el.labelUnderline = v; } });
 
 /* ---- Global look-and-feel settings (Layout / Timeline / Graphic tabs) ---- */
 mxDef("settingKey", "Setting Name", "Workspace Setting", ["Setting"], "text", { readonly: true, width: 210, get: c => c.setting.label, set: () => {} });
@@ -3007,6 +3193,7 @@ function mxCoerce(kind, raw, target) {
 
 /* ---- Records: one per lane, row, bar, milestone, tracker, callout, setting ---- */
 function mxCollectRecords() {
+    mxSyncDynamicTrackers();
     const recs = [];
     (projectData || []).forEach(lane => {
         recs.push({ type: "Lane", id: "L-" + lane.id, lane });
@@ -4405,7 +4592,7 @@ function mxAddMilestone(row) {
 }
 
 function mxAddTracker() {
-    const trk = { id: nextTrackerId++, label: "New Tracker Line", date: getOneMonthFromTodayDDMMMYYYY(), thickness: 2, pattern: "solid", color: "#10b981", labelOffsetX: 0, labelOffsetY: 0 };
+    const trk = { id: nextTrackerId++, label: "New Tracker Line", date: getOneMonthFromTodayDDMMMYYYY(), thickness: 2, pattern: "solid", color: "#10b981", opacity: 100, dynamic: false, offsetDays: 30, labelOffsetX: 0, labelOffsetY: 0 };
     customTrackers.push(trk);
     return trk;
 }
@@ -4469,6 +4656,7 @@ function mxCloneTracker(trk) {
     c.id = nextTrackerId++;
     c.label = (trk.label || "") + " (copy)";
     c.date = mxShiftDate(trk.date, 7);
+    if (c.dynamic === true && Number.isFinite(Number(c.offsetDays))) c.offsetDays = mxClampTrackerDays(Number(c.offsetDays) + 7);
     customTrackers.push(c);
     return c;
 }
@@ -4544,9 +4732,24 @@ function mxIsSelected(kind, rowId, id) {
 }
 
 /* Live objects for the selection. Items that no longer exist (deleted, undone) are dropped. */
+/* Bars and milestones only (trackers can be selected for bulk styling but never move, duplicate or delete with the group). */
+function mxSelectionBM() { return mxSelectionObjects().filter(it => it.kind === "bar" || it.kind === "ms"); }
+
 function mxSelectionObjects() {
     const out = [];
     mxSelection = mxSelection.filter(s => {
+        if (s.kind === "co") {
+            const coObj = (calloutData || []).find(x => String(x.id) === String(s.id));
+            if (!coObj) return false;
+            out.push({ kind: "co", rowId: 0, id: s.id, row: null, obj: coObj });
+            return true;
+        }
+        if (s.kind === "trk") {
+            const trkObj = (customTrackers || []).find(x => String(x.id) === String(s.id));
+            if (!trkObj) return false;
+            out.push({ kind: "trk", rowId: 0, id: s.id, row: null, obj: trkObj });
+            return true;
+        }
         const row = findRowGlobally(s.rowId);
         if (!row) return false;
         const list = s.kind === "bar" ? row.bars : row.milestones;
@@ -4611,14 +4814,14 @@ function moveSelectionGroup(timeDelta) {
 }
 
 function mxBuildDragGroup() {
-    return mxSelectionObjects().map(it => it.kind === "bar"
+    return mxSelectionBM().map(it => it.kind === "bar"
         ? { kind: "bar", obj: it.obj, origStart: parseAnyDateToTimestamp(it.obj.start), origEnd: parseAnyDateToTimestamp(it.obj.end) }
         : { kind: "ms", obj: it.obj, origDate: parseAnyDateToTimestamp(it.obj.date) });
 }
 
 /* ---- Actions on the canvas selection ---- */
 function mxDuplicateSelection() {
-    const items = mxSelectionObjects();
+    const items = mxSelectionBM();
     if (!items.length) return;
     const fresh = items.map(it => {
         if (it.kind === "bar") return { kind: "bar", rowId: it.rowId, id: mxCloneBar(it.obj, it.row).id };
@@ -4632,7 +4835,7 @@ function mxDuplicateSelection() {
 }
 
 function mxDeleteSelection() {
-    const items = mxSelectionObjects();
+    const items = mxSelectionBM();
     if (!items.length) return;
     items.forEach(it => {
         const list = it.kind === "bar" ? it.row.bars : it.row.milestones;
@@ -4649,7 +4852,7 @@ function mxDeleteSelection() {
 /* Arrow keys: move the selection by whole days. Quick repeats become ONE undo step. */
 let mxNudgeTimer = null;
 function mxNudgeSelection(days) {
-    const items = mxSelectionObjects();
+    const items = mxSelectionBM();
     if (!items.length) return;
     items.forEach(it => {
         if (it.kind === "bar") {
@@ -4686,7 +4889,7 @@ window.addEventListener("keydown", e => {
         return;
     }
 
-    if (!mxSelectionObjects().length) return;
+    if (!mxSelectionBM().length) return;
 
     if (mod && key.toLowerCase() === "d" && !e.altKey) { e.preventDefault(); mxDuplicateSelection(); return; }
     if (key === "Delete" || key === "Backspace") { e.preventDefault(); mxDeleteSelection(); return; }
@@ -4742,7 +4945,7 @@ window.addEventListener("keydown", e => {
             const r = el.getBoundingClientRect();
             if (r.right < rect.l || r.left > rect.r || r.bottom < rect.t || r.top > rect.b) return;
             const [kind, rowId, id] = el.getAttribute("data-sel").split(":");
-            hits.push({ kind, rowId: Number(rowId), id: Number(id) });
+            hits.push({ kind, rowId: Number(rowId), id: kind === "co" ? id : Number(id) });
         });
 
         const merged = additive ? mxSelection.slice() : [];
@@ -5524,7 +5727,7 @@ function mxTrackerById(id) { return customTrackers.find(t => String(t.id) === St
 function addNewCustomTrackerLine() {
     const trk = {
         id: nextTrackerId++, label: "New Tracker Line", date: getOneMonthFromTodayDDMMMYYYY(),
-        thickness: 2, pattern: "solid", color: "#10b981", labelOffsetX: 0, labelOffsetY: 0
+        thickness: 2, pattern: "solid", color: "#10b981", opacity: 100, dynamic: false, offsetDays: 30, labelOffsetX: 0, labelOffsetY: 0
     };
     customTrackers.push(trk);
     recordStateChange();
@@ -5542,11 +5745,23 @@ function updateTrackerFieldDirect(id, key, val) {
     else if (key === "date") {
         if (!val) return;
         trk.date = formatDateToDDMMMYYYY(new Date(val + "T00:00:00"));
+        if (trk.dynamic === true) { const dd = mxDaysFromToday(trk.date); if (dd !== null) trk.offsetDays = mxClampTrackerDays(dd); }
     }
     else if (key === "visible") trk.hidden = !val;
+    else if (key === "opacity") { const n = parseInt(val, 10); trk.opacity = Number.isFinite(n) ? Math.max(5, Math.min(100, n)) : 100; }
+    else if (key === "dynamic") {
+        trk.dynamic = !!val;
+        if (trk.dynamic) { const dd = mxDaysFromToday(trk.date); trk.offsetDays = dd !== null ? mxClampTrackerDays(dd) : (Number.isFinite(Number(trk.offsetDays)) ? trk.offsetDays : 30); }
+        mxSyncDynamicTrackers();
+    }
+    else if (key === "offsetDays") {
+        const n = parseInt(val, 10);
+        if (Number.isFinite(n)) { trk.offsetDays = mxClampTrackerDays(n); mxSyncDynamicTrackers(); }
+    }
     else trk[key] = val;
 
     recordStateChange();
+    if (key === "dynamic" || key === "offsetDays") populateTrackerDashboardMatrix();
     updateChart();
 }
 
@@ -5576,25 +5791,30 @@ function mxTrackerIsOffCanvas(trk) {
 /* Fills the Tracker Lines table in the Graphic Settings tab. */
 function populateTrackerDashboardMatrix() {
     if (mxLiveDepth > 0) return;
+    mxSyncDynamicTrackers();
     const body = document.getElementById("trackerTableBody");
     if (!body) return;
 
     if (customTrackers.length === 0) {
-        body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:12px;">No tracker lines yet. Use \u201C+ Deploy New Tracker Line\u201D above.</td></tr>';
+        body.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:12px;">No tracker lines yet. Use \u201C+ Deploy New Tracker Line\u201D above.</td></tr>';
         return;
     }
 
     body.innerHTML = customTrackers.map(t => {
         const off = mxTrackerIsOffCanvas(t);
+        const dyn = t.dynamic === true;
         return '<tr>' +
             '<td><input type="text" class="trk-input" style="width:130px;" value="' + escapeForMarkup(t.label) + '" onchange="updateTrackerFieldDirect(' + t.id + ', \'label\', this.value)"></td>' +
-            '<td style="white-space:nowrap;"><input type="date" class="trk-input" value="' + convertDDMMMYYYYToYYYYMMDD(t.date) + '" onchange="updateTrackerFieldDirect(' + t.id + ', \'date\', this.value)">' +
+            '<td style="white-space:nowrap;"><input type="date" class="trk-input"' + (dyn ? ' disabled' : '') + ' value="' + convertDDMMMYYYYToYYYYMMDD(t.date) + '" onchange="updateTrackerFieldDirect(' + t.id + ', \'date\', this.value)">' +
                 (off ? ' <span class="trk-offcanvas" data-hint="This date is outside the timeline range currently shown, so the line is not drawn">\u26A0</span>' : '') + '</td>' +
+            '<td style="white-space:nowrap;"><input type="checkbox"' + (dyn ? ' checked' : '') + ' title="Dynamic: follow today\'s date" onchange="updateTrackerFieldDirect(' + t.id + ', \'dynamic\', this.checked)"> ' +
+                '<input type="number" class="trk-input" style="width:56px;" step="1" min="-36500" max="36500" title="Days from today (negative = past)"' + (dyn ? '' : ' disabled') + ' value="' + (dyn && Number.isFinite(Number(t.offsetDays)) ? t.offsetDays : '') + '" onchange="updateTrackerFieldDirect(' + t.id + ', \'offsetDays\', this.value)"></td>' +
             '<td><select class="trk-input" onchange="updateTrackerFieldDirect(' + t.id + ', \'pattern\', this.value)">' +
                 ['solid', 'dashed', 'dotted'].map(p => '<option value="' + p + '"' + ((t.pattern || 'solid') === p ? ' selected' : '') + '>' + p.charAt(0).toUpperCase() + p.slice(1) + '</option>').join('') +
             '</select></td>' +
             '<td><input type="number" class="trk-input" style="width:48px;" min="1" max="10" value="' + (t.thickness || 2) + '" onchange="updateTrackerFieldDirect(' + t.id + ', \'thickness\', this.value)"></td>' +
             '<td><input type="color" class="trk-color" value="' + (t.color || '#10b981') + '" onchange="updateTrackerFieldDirect(' + t.id + ', \'color\', this.value)"></td>' +
+            '<td><input type="number" class="trk-input" style="width:52px;" min="5" max="100" step="5" value="' + mxTrackerOpacityPct(t) + '" onchange="updateTrackerFieldDirect(' + t.id + ', \'opacity\', this.value)"></td>' +
             '<td style="text-align:center;"><input type="checkbox"' + (t.hidden === true ? '' : ' checked') + ' onchange="updateTrackerFieldDirect(' + t.id + ', \'visible\', this.checked)"></td>' +
             '<td><button type="button" class="delete-btn" style="padding:2px 8px;" onclick="removeTrackerLine(' + t.id + ')">Delete</button></td>' +
         '</tr>';
@@ -5604,25 +5824,45 @@ function populateTrackerDashboardMatrix() {
 /* Double-click a tracker line (or its label) on the canvas. */
 function editTrackerPropertiesModalDirect(e, id) {
     e.stopPropagation();
+    if (mxBulkEditIfMultiSelected(e, 'trk', 0, id)) return;
     const trk = mxTrackerById(id);
     if (!trk) return;
 
     mxCloseAllFloatingDialogs();
 
+    const trkIsDyn = trk.dynamic === true;
+    const trkDaysInit = Number.isFinite(Number(trk.offsetDays)) ? Number(trk.offsetDays) : (mxDaysFromToday(trk.date) ?? 30);
+    const trkPresets = [-90, -60, -30, -14, -7, 7, 14, 30, 60, 90, 180, 365];
+
     const dialog = document.createElement("div");
     dialog.id = "floatingTrackerDialog";
     dialog.className = "floating-date-dialog compact-editor";
     dialog.innerHTML =
-        '<h4>Tracker Line</h4>' +
+        '<h4>' + mxTitleHTML('Tracker Line', trk.label) + '</h4>' +
         '<div class="compact-modal-grid">' +
-            '<div class="modal-field full-width"><label for="modTrkLabel">Label</label><input type="text" id="modTrkLabel" value="' + escapeForMarkup(trk.label) + '"></div>' +
-            '<div class="modal-field"><label for="modTrkDate">Date</label><input type="date" id="modTrkDate" value="' + convertDDMMMYYYYToYYYYMMDD(trk.date) + '"></div>' +
-            '<div class="modal-field"><label for="modTrkColor">Line Color</label><input type="color" id="modTrkColor" value="' + (trk.color || '#10b981') + '"></div>' +
-            '<div class="modal-field"><label for="modTrkPattern">Stroke Pattern</label><select id="modTrkPattern">' +
+            '<div class="mx-sec">Details</div>' +
+            '<div class="modal-field span2"><label for="modTrkLabel">Line label</label><input type="text" id="modTrkLabel" value="' + escapeForMarkup(trk.label) + '"></div>' +
+            '<div class="modal-field"><label for="modTrkDate">Date</label><input type="date" id="modTrkDate"' + (trkIsDyn ? ' disabled' : '') + ' value="' + convertDDMMMYYYYToYYYYMMDD(trk.date) + '"></div>' +
+            '<div class="mx-sec">Dynamic date (follows today)</div>' +
+            '<label class="modal-field checkbox-field"><input type="checkbox" id="modTrkDynamic"' + (trkIsDyn ? ' checked' : '') + '> Dynamic line</label>' +
+            '<div class="modal-field"><label for="modTrkDays">Days from today</label><input type="number" step="1" min="-36500" max="36500" id="modTrkDays"' + (trkIsDyn ? '' : ' disabled') + ' value="' + trkDaysInit + '" title="Negative numbers are in the past"></div>' +
+            '<div class="modal-field"><label for="modTrkPreset">Quick interval</label><select id="modTrkPreset"' + (trkIsDyn ? '' : ' disabled') + '>' +
+                '<option value="">Custom</option>' +
+                trkPresets.map(n => '<option value="' + n + '"' + (trkIsDyn && n === trkDaysInit ? ' selected' : '') + '>' + (n > 0 ? '+' : '') + n + ' days</option>').join('') +
+            '</select></div>' +
+            '<div class="mx-sec">Line</div>' +
+            '<div class="modal-field"><label for="modTrkColor">Line color</label><input type="color" id="modTrkColor" value="' + (trk.color || '#10b981') + '"></div>' +
+            '<div class="modal-field"><label for="modTrkPattern">Stroke pattern</label><select id="modTrkPattern">' +
                 ['solid', 'dashed', 'dotted'].map(p => '<option value="' + p + '"' + ((trk.pattern || 'solid') === p ? ' selected' : '') + '>' + p.charAt(0).toUpperCase() + p.slice(1) + '</option>').join('') +
             '</select></div>' +
             '<div class="modal-field"><label for="modTrkThickness">Thickness (px)</label><input type="number" min="1" max="10" id="modTrkThickness" value="' + (trk.thickness || 2) + '"></div>' +
-            '<label class="modal-field checkbox-field full-width"><input type="checkbox" id="modTrkVisible"' + (trk.hidden === true ? '' : ' checked') + '> Visible on timeline (turn back on in the Tracker Lines table)</label>' +
+            '<div class="modal-field span2"><label for="modTrkOpacity">Opacity: <span id="modTrkOpacityVal">' + mxTrackerOpacityPct(trk) + '%</span></label><input type="range" min="5" max="100" step="1" id="modTrkOpacity" value="' + mxTrackerOpacityPct(trk) + '"></div>' +
+            '<label class="modal-field checkbox-field"><input type="checkbox" id="modTrkVisible"' + (trk.hidden === true ? '' : ' checked') + '> Visible on timeline</label>' +
+            '<div class="mx-sec">Label text</div>' +
+            mxOptColorHTML('modTrkLblColor', 'Label color', 'labelColor', trk.labelColor, trk.color || '#10b981') +
+            mxOptFontHTML('modTrkFont', 'Font', 'labelFontFamily', trk.labelFontFamily, '') +
+            mxOptNumberHTML('modTrkLblSize', 'Font size', 'labelFontSize', Number.isFinite(Number(trk.labelFontSize)) ? trk.labelFontSize : 8, 6, 72) +
+            mxOptStyleHTML('modTrkTxt', trk, true) +
         '</div>' +
         '<div class="standard-modal-actions">' +
             '<div class="action-group"><button type="button" id="modTrkDeleteBtn" style="background:#fff1f2; color:#e11d48; border-color:#fca5a5;">Delete</button></div>' +
@@ -5635,23 +5875,894 @@ function editTrackerPropertiesModalDirect(e, id) {
     positionFloatingDialogSmart(dialog, e);
 
     const applyTrackerFields = function (live) {
-        const dateVal = document.getElementById("modTrkDate").value;
-        if (!dateVal) return false;
+        const dynOn = document.getElementById("modTrkDynamic").checked;
+        const dateEl = document.getElementById("modTrkDate");
+        let newDate, newDays = null;
+        if (dynOn) {
+            const n = parseInt(document.getElementById("modTrkDays").value, 10);
+            if (!Number.isFinite(n)) return false;
+            newDays = mxClampTrackerDays(n);
+            newDate = formatDateToDDMMMYYYY(mxDateFromTodayOffset(newDays));
+        } else {
+            const dateVal = dateEl.value;
+            if (!dateVal) return false;
+            newDate = formatDateToDDMMMYYYY(new Date(dateVal + "T00:00:00"));
+        }
         trk.label = document.getElementById("modTrkLabel").value;
-        trk.date = formatDateToDDMMMYYYY(new Date(dateVal + "T00:00:00"));
+        trk.date = newDate;
+        trk.dynamic = dynOn;
+        if (dynOn) { trk.offsetDays = newDays; dateEl.value = convertDDMMMYYYYToYYYYMMDD(newDate); }
+        trk.opacity = Math.max(5, Math.min(100, parseInt(document.getElementById("modTrkOpacity").value, 10) || 100));
         trk.color = document.getElementById("modTrkColor").value;
         trk.pattern = document.getElementById("modTrkPattern").value;
         trk.thickness = Math.max(1, Math.min(10, parseInt(document.getElementById("modTrkThickness").value, 10) || 2));
         trk.hidden = !document.getElementById("modTrkVisible").checked;
+        mxApplyOptionalFields(dialog, trk);
         return true;
     };
 
+    /* Keeps the dynamic / days / preset / opacity controls in step. Registered before mxMakeDialogLive so it runs first. */
+    (function () {
+        const elDyn = document.getElementById("modTrkDynamic"), elDays = document.getElementById("modTrkDays");
+        const elPreset = document.getElementById("modTrkPreset"), elDate = document.getElementById("modTrkDate");
+        const elOp = document.getElementById("modTrkOpacity"), elOpVal = document.getElementById("modTrkOpacityVal");
+        const refresh = () => {
+            const dyn = elDyn.checked;
+            elDays.disabled = !dyn; elPreset.disabled = !dyn; elDate.disabled = dyn;
+            elOpVal.textContent = elOp.value + "%";
+        };
+        const onEdit = ev => {
+            if (ev.target === elDyn && elDyn.checked) {
+                const dd = mxDaysFromToday(trk.date);
+                if (dd !== null) elDays.value = dd;
+                elPreset.value = trkPresets.includes(parseInt(elDays.value, 10)) ? String(parseInt(elDays.value, 10)) : "";
+            } else if (ev.target === elPreset && elPreset.value !== "") {
+                elDays.value = elPreset.value;
+            } else if (ev.target === elDays) {
+                const n = parseInt(elDays.value, 10);
+                elPreset.value = trkPresets.includes(n) ? String(n) : "";
+            }
+            refresh();
+        };
+        dialog.addEventListener("input", onEdit);
+        dialog.addEventListener("change", onEdit);
+        refresh();
+    })();
+
+    mxWireOptionalFields(dialog);
     mxMakeDialogLive(dialog, trk, applyTrackerFields);
 
     document.getElementById("modTrkSaveBtn").addEventListener("click", () => mxCloseFloatingDialog(dialog, true));
     document.getElementById("modTrkCancelBtn").addEventListener("click", () => mxCloseFloatingDialog(dialog, false));
     document.getElementById("modTrkDeleteBtn").addEventListener("click", () => removeTrackerLine(trk.id));
     document.getElementById("modTrkLabel").focus();
+}
+
+
+/* =========================================================================
+   FORMAT PAINTER + RIGHT-CLICK ITEM MENU + SELECT SIMILAR
+   Copy Style turns on sticky painting: click any matching item to paint it, press Esc when finished.
+   Dates, text, IDs, positions and show/hide switches are never copied.
+   ========================================================================= */
+const MX_STYLE_SPEC = {
+    bar: { noun: "bar", title: "Bar", groups: [
+        { id: "colors", label: "Colors", props: ["color", "bgColor", "labelColor"] },
+        { id: "pattern", label: "Pattern", props: ["pattern"] },
+        { id: "text", label: "Label text", props: ["labelFontFamily", "labelFontSize", "labelBold", "labelItalic", "labelUnderline"] }
+    ] },
+    ms: { noun: "milestone", title: "Milestone", groups: [
+        { id: "colors", label: "Colors", props: ["color", "labelColor", "leaderColor"] },
+        { id: "symbol", label: "Symbol", props: ["symbol"] },
+        { id: "text", label: "Label text", props: ["labelFontFamily", "labelFontSize", "labelBold", "labelItalic", "labelUnderline"] },
+        { id: "leader", label: "Leader lines", props: ["leaderWeight", "leaderPattern", "leaderAnchorText"] }
+    ] },
+    trk: { noun: "tracker line", title: "Tracker line", groups: [
+        { id: "line", label: "Line style", props: ["color", "opacity", "thickness", "pattern"] },
+        { id: "text", label: "Label text", props: ["labelColor", "labelFontFamily", "labelFontSize", "labelBold", "labelItalic", "labelUnderline"] }
+    ] },
+    co: { noun: "callout", title: "Callout", groups: [
+        { id: "colors", label: "Colors", props: ["textColor", "bgColor", "bgTransparent", "leaderColor"] },
+        { id: "text", label: "Text", props: ["fontSize", "isBold"] },
+        { id: "leader", label: "Leader line", props: ["leaderThickness"] }
+    ] }
+};
+const MX_STYLE_DEFAULTS = { trk: { color: "#10b981" }, co: { textColor: "#000000", bgColor: "#ffffff" } };
+const mxPainter = { active: false, clip: null, groups: {}, lastWarn: 0 };
+
+function mxPlural(noun, n) { return n === 1 ? noun : noun + "s"; }
+
+function mxItemName(it) {
+    if (it.kind === "bar") return (it.row && it.row.label) || "";
+    if (it.kind === "co") return String(it.obj.text || "").replace(/\s+/g, " ").trim().slice(0, 60);
+    return it.obj.label || "";
+}
+
+/* Resolves the item behind a canvas mousedown (mode + ids as passed to initiateDragInteraction). */
+function mxItemFromMouse(mode, rowId, subId) {
+    if (mode === "bar-move" || mode === "bar-resize-start" || mode === "bar-resize-end") {
+        const row = findRowGlobally(rowId); if (!row) return null;
+        const obj = (row.bars || []).find(b => String(b.id) === String(subId)); if (!obj) return null;
+        return { kind: "bar", rowId: row.id, id: obj.id, row, obj };
+    }
+    if (["ms", "label-drag", "date-label-drag", "leader-text-end-drag", "leader-date-end-drag"].includes(mode)) {
+        const row = findRowGlobally(rowId); if (!row) return null;
+        const obj = (row.milestones || []).find(m => String(m.id) === String(subId)); if (!obj) return null;
+        return { kind: "ms", rowId: row.id, id: obj.id, row, obj };
+    }
+    if (mode === "tracker-line-move" || mode === "tracker-label-move") {
+        const obj = (customTrackers || []).find(t => String(t.id) === String(rowId)); if (!obj) return null;
+        return { kind: "trk", rowId: 0, id: obj.id, row: null, obj };
+    }
+    if (mode === "callout-move" || mode === "callout-leader-move") {
+        const obj = (calloutData || []).find(c => String(c.id) === String(rowId)); if (!obj) return null;
+        return { kind: "co", rowId: 0, id: obj.id, row: null, obj };
+    }
+    return null;
+}
+
+function mxItemFromElement(el) {
+    if (!el || !el.closest) return null;
+    const co = el.closest(".draggable-callout");
+    if (co) return mxItemFromMouse("callout-move", co.getAttribute("data-id"), null);
+    const holder = el.closest("[onmousedown],[ondblclick]");
+    if (!holder) return null;
+    const md = holder.getAttribute("onmousedown") || "";
+    let m = md.match(/initiateDragInteraction\(event,\s*'([\w-]+)',\s*('?)([^',)]+)\2(?:,\s*([^)]+))?\)/);
+    if (m) {
+        const num = s => (s !== undefined && /^\d+$/.test(String(s).trim())) ? Number(String(s).trim()) : (s === undefined ? null : String(s).trim().replace(/'/g, ""));
+        const it = mxItemFromMouse(m[1], num(m[3]), num(m[4]));
+        if (it) return it;
+    }
+    const dbl = holder.getAttribute("ondblclick") || "";
+    if ((m = dbl.match(/editBarDatesDirectlyGlobal\(event,\s*(\d+),\s*(\d+)\)/))) return mxItemFromMouse("bar-move", Number(m[1]), Number(m[2]));
+    if ((m = dbl.match(/editMilestoneDateDirectlyGlobal\(event,\s*(\d+),\s*(\d+)\)/))) return mxItemFromMouse("ms", Number(m[1]), Number(m[2]));
+    if ((m = dbl.match(/editTrackerPropertiesModalDirect\(event,\s*(\d+)\)/))) return mxItemFromMouse("tracker-line-move", Number(m[1]), null);
+    return null;
+}
+
+/* ---- Copy / paste style ---- */
+function mxStyleCopy(it) {
+    const spec = MX_STYLE_SPEC[it.kind];
+    const props = {};
+    spec.groups.forEach(g => g.props.forEach(p => { props[p] = it.obj[p] === undefined ? undefined : JSON.parse(JSON.stringify(it.obj[p])); }));
+    mxPainter.clip = { kind: it.kind, name: mxItemName(it), props };
+    mxPainter.groups = {};
+    spec.groups.forEach(g => { mxPainter.groups[g.id] = true; });
+    mxPainter.active = true;
+    document.body.classList.add("mx-painting");
+    mxPainterRenderBanner();
+    showToast("Format painter ON \u2014 style copied from " + spec.title.toLowerCase() + (mxPainter.clip.name ? " \u201C" + mxPainter.clip.name + "\u201D" : "") + ". Click " + spec.noun + "s to paint them. Press Esc when finished.", "success", 6000);
+}
+
+function mxPainterApply(list) {
+    const clip = mxPainter.clip;
+    if (!clip) { showToast("Nothing copied yet. Right-click an item and choose Copy Style.", "info", 3500); return 0; }
+    const spec = MX_STYLE_SPEC[clip.kind];
+    const match = list.filter(it => it.kind === clip.kind);
+    const skipped = list.length - match.length;
+    if (!match.length) { showToast("That style came from a " + spec.noun + " and can only be pasted onto " + spec.noun + "s.", "info", 3500); return 0; }
+    const props = [];
+    spec.groups.forEach(g => { if (mxPainter.groups[g.id]) g.props.forEach(p => props.push(p)); });
+    if (!props.length) { showToast("Tick at least one style group in the Format Painter bar.", "info", 3500); return 0; }
+    match.forEach(it => props.forEach(p => {
+        let v = clip.props[p];
+        if (v === undefined && MX_STYLE_DEFAULTS[clip.kind] && MX_STYLE_DEFAULTS[clip.kind][p] !== undefined) v = MX_STYLE_DEFAULTS[clip.kind][p];
+        if (v === undefined) delete it.obj[p]; else it.obj[p] = JSON.parse(JSON.stringify(v));
+    }));
+    markUnsavedState();
+    recordStateChange();
+    renderInputRows();
+    populateTrackerDashboardMatrix();
+    renderCalloutControls();
+    updateChart();
+    showToast("Style pasted to " + match.length + " " + mxPlural(spec.noun, match.length) + (skipped ? " (" + skipped + " other item" + (skipped === 1 ? "" : "s") + " skipped)" : "") + ".", "success", 2500);
+    return match.length;
+}
+
+function mxPainterMouseDown(e, mode, rowId, subId) {
+    const it = mxItemFromMouse(mode, rowId, subId);
+    if (!it) return false;
+    if (it.kind !== mxPainter.clip.kind) {
+        if (Date.now() - mxPainter.lastWarn > 1500) {
+            mxPainter.lastWarn = Date.now();
+            const spec = MX_STYLE_SPEC[mxPainter.clip.kind];
+            showToast("Painter is carrying a " + spec.noun + " style \u2014 it only paints " + spec.noun + "s. Press Esc to finish.", "info", 3000);
+        }
+        return true;
+    }
+    mxPainterApply([it]);
+    return true;
+}
+
+function mxPainterStop(silent) {
+    if (!mxPainter.active) return;
+    mxPainter.active = false;
+    document.body.classList.remove("mx-painting");
+    const b = document.getElementById("mxPainterBanner");
+    if (b) b.remove();
+    if (!silent) showToast("Format painter off. Your copied style is kept \u2014 use Paste Style to apply it again.", "info", 3500);
+}
+
+function mxPainterRenderBanner() {
+    let b = document.getElementById("mxPainterBanner");
+    if (!b) { b = document.createElement("div"); b.id = "mxPainterBanner"; document.body.appendChild(b); }
+    const clip = mxPainter.clip, spec = MX_STYLE_SPEC[clip.kind];
+    b.innerHTML =
+        '<span class="mx-pb-title">FORMAT PAINTER ON</span>' +
+        '<span>Painting ' + spec.noun + 's with the style from <b>' + escapeForMarkup(clip.name || spec.title) + '</b></span>' +
+        '<span class="mx-pb-groups">Paste: ' + spec.groups.map(g => '<label><input type="checkbox" data-pb-group="' + g.id + '"' + (mxPainter.groups[g.id] ? ' checked' : '') + '> ' + g.label + '</label>').join('') + '</span>' +
+        '<button type="button" id="mxPbPaste">Paste to selection</button>' +
+        '<button type="button" id="mxPbDone">Done (Esc)</button>' +
+        '<span class="mx-pb-hint">Click items to paint them \u2022 press <b>Esc</b> when you are finished copying formats</span>';
+    b.querySelectorAll("[data-pb-group]").forEach(cb => cb.addEventListener("change", () => { mxPainter.groups[cb.getAttribute("data-pb-group")] = cb.checked; }));
+    b.querySelector("#mxPbPaste").addEventListener("click", () => mxPainterApply(mxSelectionObjects()));
+    b.querySelector("#mxPbDone").addEventListener("click", () => mxPainterStop());
+}
+
+function mxCopyStyleFromSelection() {
+    const sel = mxSelectionObjects();
+    if (sel.length !== 1) { showToast("Select exactly one item to copy its style (or right-click an item and choose Copy Style).", "info", 4000); return; }
+    mxStyleCopy(sel[0]);
+}
+function mxPasteStyleToSelection() {
+    const sel = mxSelectionObjects();
+    if (!sel.length) { showToast("Select the items to paint first.", "info", 3000); return; }
+    mxPainterApply(sel);
+}
+
+window.addEventListener("keydown", e => {
+    if (e.key === "Escape" && mxPainter.active) { e.preventDefault(); e.stopPropagation(); mxPainterStop(); }
+}, true);
+window.addEventListener("keydown", e => {
+    if (!(e.altKey && e.shiftKey) || e.ctrlKey || e.metaKey) return;
+    if (mxModalOpen() || isTypingTarget(e.target) || currentMainView === "grid") return;
+    if (e.code === "KeyC") { e.preventDefault(); mxCopyStyleFromSelection(); }
+    else if (e.code === "KeyV") { e.preventDefault(); mxPasteStyleToSelection(); }
+});
+
+/* ---- Select similar ---- */
+function mxSimilarOptions(it) {
+    const n = MX_STYLE_SPEC[it.kind].noun, P = n + "s";
+    const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+    if (it.kind === "bar") {
+        const p = it.obj.progress ?? 0, st = p <= 0 ? "not started" : p >= 100 ? "complete" : "in progress";
+        return [["type", "All " + P], ["lane", cap(P) + " in this swimlane"], ["row", cap(P) + " in this task row"], ["color", cap(P) + " with the same fill color"],
+                ["pattern", cap(P) + " with the same pattern"], ["progress", cap(P) + " that are " + st], ["text", cap(P) + " whose task name contains\u2026"]];
+    }
+    if (it.kind === "ms") {
+        return [["type", "All " + P], ["lane", cap(P) + " in this swimlane"], ["row", cap(P) + " in this task row"], ["color", cap(P) + " with the same color"],
+                ["symbol", cap(P) + " with the same symbol"], ["text", cap(P) + " whose label contains\u2026"]];
+    }
+    if (it.kind === "trk") return [["type", "All tracker lines"], ["color", "Lines with the same color"], ["pattern", "Lines with the same pattern"], ["text", "Lines whose label contains\u2026"]];
+    return [["type", "All callouts"], ["color", "Callouts with the same text color"], ["bg", "Callouts with the same background"], ["text", "Callouts whose text contains\u2026"]];
+}
+
+async function mxSelectSimilar(it, crit) {
+    const spec = MX_STYLE_SPEC[it.kind];
+    let needle = null;
+    if (crit === "text") {
+        needle = await appPrompt("Select every " + spec.noun + " whose " + (it.kind === "bar" ? "task name" : it.kind === "co" ? "text" : "label") + " contains:", { title: "Select similar", confirmText: "Select" });
+        if (needle === null || !String(needle).trim()) return;
+        needle = String(needle).trim().toLowerCase();
+    }
+    const low = v => String(v ?? "").toLowerCase();
+    const out = [];
+    if (it.kind === "bar" || it.kind === "ms") {
+        const laneOf = row => projectData.find(l => (l.rows || []).includes(row));
+        const srcLane = laneOf(it.row);
+        const fill = o => low(o.color || mxBulkGlobalColor(it.kind === "bar" ? "barColor" : "msColor", ""));
+        const state = o => { const p = o.progress ?? 0; return p <= 0 ? 0 : p >= 100 ? 2 : 1; };
+        projectData.forEach(lane => (lane.rows || []).forEach(row => {
+            if (crit === "lane" && lane !== srcLane) return;
+            if (crit === "row" && row !== it.row) return;
+            (it.kind === "bar" ? row.bars : row.milestones || []).forEach(o => {
+                if (o.hidden === true) return;
+                if (crit === "color" && fill(o) !== fill(it.obj)) return;
+                if (crit === "pattern" && (o.pattern || "solid") !== (it.obj.pattern || "solid")) return;
+                if (crit === "symbol" && (o.symbol || "diamond") !== (it.obj.symbol || "diamond")) return;
+                if (crit === "progress" && state(o) !== state(it.obj)) return;
+                if (crit === "text" && !low(it.kind === "bar" ? row.label : o.label).includes(needle)) return;
+                out.push({ kind: it.kind, rowId: row.id, id: o.id });
+            });
+        }));
+    } else if (it.kind === "trk") {
+        (customTrackers || []).forEach(o => {
+            if (o.hidden === true) return;
+            if (crit === "color" && low(o.color || "#10b981") !== low(it.obj.color || "#10b981")) return;
+            if (crit === "pattern" && (o.pattern || "solid") !== (it.obj.pattern || "solid")) return;
+            if (crit === "text" && !low(o.label).includes(needle)) return;
+            out.push({ kind: "trk", rowId: 0, id: o.id });
+        });
+    } else {
+        (calloutData || []).forEach(o => {
+            if (o.hidden === true) return;
+            if (crit === "color" && low(o.textColor) !== low(it.obj.textColor)) return;
+            if (crit === "bg" && (low(o.bgColor) !== low(it.obj.bgColor) || (o.bgTransparent === true) !== (it.obj.bgTransparent === true))) return;
+            if (crit === "text" && !low(o.text).includes(needle)) return;
+            out.push({ kind: "co", rowId: 0, id: o.id });
+        });
+    }
+    mxSetSelection(out);
+    showToast("Selected " + out.length + " " + mxPlural(spec.noun, out.length) + ".", "success", 2500);
+}
+
+/* ---- Right-click menu on canvas items ---- */
+function mxCloseItemMenu() { const m = document.getElementById("mxItemMenu"); if (m) m.remove(); }
+
+function mxShowItemMenu(e, it) {
+    mxCloseItemMenu();
+    const spec = MX_STYLE_SPEC[it.kind];
+    const sel = mxSelectionObjects();
+    const multi = sel.length > 1;
+    const clip = mxPainter.clip;
+    const pasteCount = clip ? sel.filter(s => s.kind === clip.kind).length : 0;
+    const keyHint = (MX_IS_MAC ? "\u2325\u21E7" : "Alt+Shift+");
+    const menu = document.createElement("div");
+    menu.id = "mxItemMenu";
+    menu.className = "mx-item-menu";
+    menu.innerHTML =
+        '<div class="mx-im-title">' + mxTitleHTML(spec.title, mxItemName(it)) + '</div>' +
+        '<button type="button" data-act="edit">' + (multi ? 'Edit ' + sel.length + ' selected items\u2026' : 'Edit attributes\u2026') + '</button>' +
+        '<button type="button" data-act="copy">Copy style<span class="mx-im-key">' + keyHint + 'C</span></button>' +
+        '<button type="button" data-act="paste"' + (pasteCount ? '' : ' disabled') + '>' +
+            (clip ? (pasteCount ? 'Paste style to ' + pasteCount + ' selected ' + mxPlural(MX_STYLE_SPEC[clip.kind].noun, pasteCount) : 'Paste style (copied from a ' + MX_STYLE_SPEC[clip.kind].noun + ')') : 'Paste style (nothing copied)') +
+            '<span class="mx-im-key">' + keyHint + 'V</span></button>' +
+        '<div class="mx-im-sec">Select similar</div>' +
+        mxSimilarOptions(it).map(o => '<button type="button" data-sim="' + o[0] + '">' + escapeForMarkup(o[1]) + '</button>').join("");
+    document.body.appendChild(menu);
+
+    const r = menu.getBoundingClientRect();
+    menu.style.left = Math.max(6, Math.min(e.clientX, window.innerWidth - r.width - 6)) + "px";
+    menu.style.top = Math.max(6, Math.min(e.clientY, window.innerHeight - r.height - 6)) + "px";
+
+    const srcEl = e.target;
+    menu.addEventListener("click", ev => {
+        const btn = ev.target.closest("button");
+        if (!btn || btn.disabled) return;
+        const act = btn.getAttribute("data-act"), sim = btn.getAttribute("data-sim");
+        mxCloseItemMenu();
+        if (act === "edit") {
+            srcEl.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true, clientX: e.clientX, clientY: e.clientY }));
+        } else if (act === "copy") mxStyleCopy(it);
+        else if (act === "paste") mxPainterApply(mxSelectionObjects());
+        else if (sim) mxSelectSimilar(it, sim);
+    });
+}
+
+document.addEventListener("contextmenu", e => {
+    if (mxModalOpen()) return;
+    if (!(e.target && e.target.closest && e.target.closest("#svgContainer"))) return;
+    const it = mxItemFromElement(e.target);
+    if (!it) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof dismissContextMenus === "function") dismissContextMenus();
+        mxShowCanvasMenu(e);
+        return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof dismissContextMenus === "function") dismissContextMenus();
+    if (!mxIsSelected(it.kind, it.rowId, it.id)) mxSetSelection([{ kind: it.kind, rowId: it.rowId, id: it.id }]);
+    mxShowItemMenu(e, it);
+}, true);
+document.addEventListener("mousedown", e => {
+    const m = document.getElementById("mxItemMenu");
+    if (m && !m.contains(e.target)) m.remove();
+}, true);
+window.addEventListener("keydown", e => {
+    if (e.key === "Escape" && document.getElementById("mxItemMenu")) { e.preventDefault(); e.stopPropagation(); mxCloseItemMenu(); }
+}, true);
+window.addEventListener("blur", mxCloseItemMenu);
+window.addEventListener("resize", mxCloseItemMenu);
+document.addEventListener("scroll", mxCloseItemMenu, true);
+
+/* =========================================================================
+   RIGHT-CLICK ON BLANK CANVAS: every item that can be added at that spot
+   ========================================================================= */
+function mxCanvasContextAt(e) {
+    const svgEl = document.querySelector("#svgContainer svg");
+    const ctx = { rowId: null, row: null, laneIdx: null, lane: null, dateStr: getTodayDDMMMYYYY(), inChart: false, mouseX: 350, mouseY: 100 };
+    if (!svgEl) return ctx;
+    const rect = svgEl.getBoundingClientRect();
+    const attrW = Number(svgEl.getAttribute("width")) || rect.width;
+    const scale = attrW ? rect.width / attrW : 1;
+    ctx.mouseX = (e.clientX - rect.left) / scale;
+    ctx.mouseY = (e.clientY - rect.top) / scale;
+    ctx.inChart = ctx.mouseX >= scaleMarginLeft && ctx.mouseX <= scaleMarginLeft + scaleChartWidth;
+    const t = Math.max(scaleMinTime, Math.min(scaleMaxTime, scaleMinTime + ((ctx.mouseX - scaleMarginLeft) / scaleChartWidth) * (scaleMaxTime - scaleMinTime)));
+    ctx.dateStr = formatDateToDDMMMYYYY(new Date(t));
+
+    document.elementsFromPoint(e.clientX, e.clientY).forEach(el => {
+        if (!el.getAttribute) return;
+        let m = (el.getAttribute("oncontextmenu") || "").match(/handleWorkspaceRowContextMenu\(event,\s*(\d+)\)/);
+        if (m && ctx.rowId === null) ctx.rowId = Number(m[1]);
+        const dc = el.getAttribute("ondblclick") || "";
+        if ((m = dc.match(/editRowLabelDirectly\(event,\s*(\d+),\s*(\d+)\)/)) && ctx.rowId === null) {
+            const r = projectData[Number(m[1])] && projectData[Number(m[1])].rows[Number(m[2])];
+            if (r) ctx.rowId = r.id;
+        }
+        if ((m = dc.match(/edit(?:LaneLabelDirectly|LaneSummaryDirectlyGlobal)\(event,\s*(\d+)\)/)) && ctx.laneIdx === null) ctx.laneIdx = Number(m[1]);
+    });
+    if (ctx.rowId !== null) {
+        ctx.row = findRowGlobally(ctx.rowId);
+        const li = projectData.findIndex(l => (l.rows || []).includes(ctx.row));
+        if (li >= 0) ctx.laneIdx = li;
+    }
+    if (ctx.laneIdx !== null) ctx.lane = projectData[ctx.laneIdx] || null;
+    if (!ctx.lane) ctx.laneIdx = null;
+    return ctx;
+}
+
+function mxMakeTaskRow(startDateStr) {
+    const start = parseAnyDateToTimestamp(startDateStr);
+    const startStr = isNaN(start) ? getTodayDDMMMYYYY() : startDateStr;
+    const endStr = isNaN(start) ? getOneMonthFromTodayDDMMMYYYY() : formatDateToDDMMMYYYY(addCalendarMonths(new Date(start), 1));
+    return {
+        id: nextRowId++, label: "New Task Activity Track", predecessor: "", showDateRange: true,
+        bars: [{ id: nextBarId++, start: startStr, end: endStr, progress: 0, bgColor: "", color: "", pattern: "solid", showLabelInBar: false, labelFontSize: 10 }],
+        milestones: []
+    };
+}
+
+function mxCanvasCommit(message, selectItem) {
+    recordStateChange();
+    renderInputRows();
+    populateTrackerDashboardMatrix();
+    renderCalloutControls();
+    updateChart();
+    if (selectItem) mxSetSelection([selectItem]);
+    if (message) showToast(message, "success", 3500);
+}
+
+function mxCanvasAdd(kind, ctx) {
+    const date = ctx.dateStr;
+    if (kind === "milestone" || kind === "bar") {
+        activeContextState = { rowId: ctx.rowId, targetDate: date, mouseX: ctx.mouseX, mouseY: ctx.mouseY };
+        executeContextInsertion(kind);
+        const list = kind === "bar" ? ctx.row.bars : ctx.row.milestones;
+        const added = list[list.length - 1];
+        mxSetSelection([{ kind: kind === "bar" ? "bar" : "ms", rowId: ctx.row.id, id: added.id }]);
+        showToast((kind === "bar" ? "Activity bar" : "Milestone") + " added at " + date + ". Double-click it to edit.", "success", 3500);
+        return;
+    }
+    if (kind === "callout") {
+        addNewCallout(ctx.mouseX, ctx.mouseY);
+        const c = calloutData[calloutData.length - 1];
+        mxSetSelection([{ kind: "co", rowId: 0, id: c.id }]);
+        showToast("Callout added. Double-click it to edit the text.", "success", 3500);
+        return;
+    }
+    if (kind === "tracker" || kind === "dynamic") {
+        const dyn = kind === "dynamic";
+        const off = dyn ? (mxDaysFromToday(date) ?? 0) : 30;
+        const trk = {
+            id: nextTrackerId++, label: dyn ? "Today " + (off >= 0 ? "+" : "") + off + "d" : "New Tracker Line", date,
+            thickness: 2, pattern: "solid", color: "#10b981", opacity: 100, dynamic: dyn, offsetDays: off, labelOffsetX: 0, labelOffsetY: 0
+        };
+        customTrackers.push(trk);
+        mxCanvasCommit((dyn ? "Dynamic tracker line added (" + off + " days from today)." : "Tracker line added at " + date + ".") + " Double-click it to edit.", { kind: "trk", rowId: 0, id: trk.id });
+        return;
+    }
+    if (kind === "row-above" || kind === "row-below") {
+        const row = mxMakeTaskRow(ctx.dateStr);
+        const idx = ctx.lane.rows.indexOf(ctx.row) + (kind === "row-below" ? 1 : 0);
+        ctx.lane.rows.splice(idx, 0, row);
+        mxCanvasCommit("New task row added " + (kind === "row-below" ? "below" : "above") + " \u201C" + (ctx.row.label || "this row") + "\u201D.", { kind: "bar", rowId: row.id, id: row.bars[0].id });
+        return;
+    }
+    if (kind === "row-end") {
+        const row = mxMakeTaskRow(ctx.dateStr);
+        ctx.lane.rows.push(row);
+        mxCanvasCommit("New task row added at the end of \u201C" + (ctx.lane.title || "this swimlane") + "\u201D.", { kind: "bar", rowId: row.id, id: row.bars[0].id });
+        return;
+    }
+    if (kind === "row-dup") {
+        mxCloneRow(ctx.row, ctx.lane);
+        mxCanvasCommit("Task row duplicated below the original.");
+        return;
+    }
+    if (kind === "lane-above" || kind === "lane-below" || kind === "lane-end") {
+        const row = mxMakeTaskRow(ctx.dateStr);
+        const lane = { id: mxNextLaneId(), title: "New Building Workstream", color: "#f8fafc", showSummary: true, collapsed: false, rows: [row] };
+        const idx = kind === "lane-end" || ctx.laneIdx === null ? projectData.length : ctx.laneIdx + (kind === "lane-below" ? 1 : 0);
+        projectData.splice(idx, 0, lane);
+        mxCanvasCommit("New swimlane added" + (kind === "lane-end" ? " at the bottom" : kind === "lane-below" ? " below \u201C" + (ctx.lane.title || "this swimlane") + "\u201D" : " above \u201C" + (ctx.lane.title || "this swimlane") + "\u201D") + " with one starter task row.", { kind: "bar", rowId: row.id, id: row.bars[0].id });
+        return;
+    }
+    if (kind === "lane-dup") {
+        mxCloneLane(ctx.lane);
+        mxCanvasCommit("Swimlane duplicated below the original.");
+    }
+}
+
+function mxShowCanvasMenu(e) {
+    mxCloseItemMenu();
+    const ctx = mxCanvasContextAt(e);
+    const hasRow = !!ctx.row, hasLane = !!ctx.lane;
+    const needRow = "Right-click inside a task row to use this";
+    const needLane = "Right-click inside a swimlane to use this";
+    const sec = name => '<div class="mx-im-sec">' + name + '</div>';
+    const btn = (act, label, enabled, tip) => '<button type="button" data-cadd="' + act + '"' + (enabled ? '' : ' disabled title="' + escapeForMarkup(tip) + '"') + '>' + label + '</button>';
+    const where = hasRow ? (ctx.row.label || "task row") : (hasLane ? (ctx.lane.title || "swimlane") : "empty area");
+    const menu = document.createElement("div");
+    menu.id = "mxItemMenu";
+    menu.className = "mx-item-menu";
+    menu.innerHTML =
+        '<div class="mx-im-title">' + mxTitleHTML("Add", ctx.dateStr + " \u2022 " + where) + '</div>' +
+        sec("At this spot") +
+        btn("milestone", "Milestone here", hasRow, needRow) +
+        btn("bar", "Activity bar here (1 month)", hasRow, needRow) +
+        btn("callout", "Text callout here", true) +
+        btn("tracker", "Vertical tracker line at " + ctx.dateStr, true) +
+        btn("dynamic", "Dynamic tracker line (follows today)", true) +
+        sec("Task rows") +
+        btn("row-above", "New task row above", hasRow, needRow) +
+        btn("row-below", "New task row below", hasRow, needRow) +
+        btn("row-end", "New task row at end of swimlane", hasLane, needLane) +
+        btn("row-dup", "Duplicate this task row", hasRow, needRow) +
+        sec("Swimlanes") +
+        btn("lane-above", "New swimlane above", hasLane, needLane) +
+        btn("lane-below", "New swimlane below", hasLane, needLane) +
+        btn("lane-end", "New swimlane at the bottom", true) +
+        btn("lane-dup", "Duplicate this swimlane", hasLane, needLane);
+    document.body.appendChild(menu);
+    const r = menu.getBoundingClientRect();
+    menu.style.left = Math.max(6, Math.min(e.clientX, window.innerWidth - r.width - 6)) + "px";
+    menu.style.top = Math.max(6, Math.min(e.clientY, window.innerHeight - r.height - 6)) + "px";
+    menu.addEventListener("click", ev => {
+        const b = ev.target.closest("button");
+        if (!b || b.disabled) return;
+        mxCloseItemMenu();
+        mxCanvasAdd(b.getAttribute("data-cadd"), ctx);
+    });
+}
+
+/* =========================================================================
+   SHARED POPUP HELPERS  (titles, optional style fields that are only written when touched)
+   ========================================================================= */
+function mxTitleHTML(type, name) {
+    const n = String(name ?? "").trim();
+    return '<span class="mx-t-type">' + escapeForMarkup(type) + '</span>' +
+        (n ? '<span class="mx-t-name" title="' + escapeForMarkup(n) + '">' + escapeForMarkup(n) + '</span>' : '');
+}
+function mxOptColorHTML(id, label, prop, value, fallback) {
+    return '<div class="modal-field"><label for="' + id + '">' + label + '</label><div class="mx-opt-row">' +
+        '<input type="color" id="' + id + '" data-opt-prop="' + prop + '" data-opt-fb="' + fallback + '" value="' + (/^#[0-9a-f]{6}$/i.test(value || "") ? value : fallback) + '">' +
+        '<button type="button" class="mx-opt-reset" data-opt-reset="' + id + '" data-hint="Return to the default color">Reset</button></div></div>';
+}
+function mxOptFontHTML(id, label, prop, value, cls) {
+    return '<div class="modal-field ' + (cls || "") + '"><label for="' + id + '">' + label + '</label><select id="' + id + '" data-opt-prop="' + prop + '">' +
+        mxFontFamilyOptions().map(o => '<option value="' + escapeForMarkup(o[0]) + '"' + (String(o[0]) === String(value || "") ? ' selected' : '') + '>' + escapeForMarkup(o[1]) + '</option>').join('') +
+        '</select></div>';
+}
+function mxOptNumberHTML(id, label, prop, value, min, max) {
+    return '<div class="modal-field"><label for="' + id + '">' + label + '</label><input type="number" id="' + id + '" step="1" min="' + min + '" max="' + max + '" data-opt-prop="' + prop + '" data-min="' + min + '" data-max="' + max + '" value="' + value + '"></div>';
+}
+function mxOptStyleHTML(idPrefix, o, defBold) {
+    const chk = (suffix, prop, checked, html, tip) => '<label class="mx-check" title="' + tip + '"><input type="checkbox" id="' + idPrefix + suffix + '" data-opt-prop="' + prop + '"' + (checked ? ' checked' : '') + '> ' + html + '</label>';
+    return '<div class="modal-field"><label>Text style</label><div class="mx-inline">' +
+        chk("Bold", "labelBold", defBold ? o.labelBold !== false : o.labelBold === true, "<b>B</b>", "Bold") +
+        chk("Italic", "labelItalic", o.labelItalic === true, "<i>I</i>", "Italic") +
+        chk("Underline", "labelUnderline", o.labelUnderline === true, "<u>U</u>", "Underline") +
+        '</div></div>';
+}
+/* Optional fields are written only after the user touches them, so opening a popup never overrides a default. */
+function mxWireOptionalFields(dialog) {
+    const mark = ev => {
+        const el = ev.target;
+        if (ev.mxResetEvent || !el || !el.dataset || !("optProp" in el.dataset)) return;
+        el.dataset.optSet = "1";
+    };
+    dialog.addEventListener("input", mark, true);
+    dialog.addEventListener("change", mark, true);
+    dialog.addEventListener("click", ev => {
+        const btn = ev.target && ev.target.closest ? ev.target.closest("[data-opt-reset]") : null;
+        if (!btn) return;
+        const el = dialog.querySelector("#" + btn.getAttribute("data-opt-reset"));
+        if (!el) return;
+        el.dataset.optSet = "clear";
+        if (el.type === "color") el.value = el.dataset.optFb;
+        const evt = new Event("change", { bubbles: true });
+        evt.mxResetEvent = true;
+        el.dispatchEvent(evt);
+    });
+}
+function mxApplyOptionalFields(dialog, obj) {
+    dialog.querySelectorAll("[data-opt-prop]").forEach(el => {
+        const st = el.dataset.optSet;
+        if (!st) return;
+        const p = el.dataset.optProp;
+        if (st === "clear") { delete obj[p]; return; }
+        if (el.type === "checkbox") obj[p] = el.checked;
+        else if (el.type === "number") {
+            const n = parseInt(el.value, 10);
+            if (Number.isFinite(n)) obj[p] = Math.max(Number(el.dataset.min), Math.min(Number(el.dataset.max), n));
+        }
+        else if (el.tagName === "SELECT" && el.value === "") delete obj[p];
+        else obj[p] = el.value;
+    });
+}
+
+/* =========================================================================
+   MULTI-SELECT BULK EDITOR
+   Double-click any item that is part of a selection of 2+ items (bars, milestones, tracker lines).
+   Every control starts "Mixed" or at the shared value; only controls you touch are written, live,
+   to the selected items of the matching type. Dates are intentionally not editable here.
+   ========================================================================= */
+function mxBulkEditIfMultiSelected(e, kind, rowId, id) {
+    if (mxPainter.active) return true;   // painting: double-clicks never open popups
+    if (mxSelectionObjects().length < 2) return false;
+    if (!mxIsSelected(kind, rowId, id)) return false;
+    mxOpenBulkEditor(e);
+    return true;
+}
+
+function mxOpenBulkEditorFromButton(e) {
+    if (mxSelectionObjects().length < 2) { showToast("Select two or more items (Shift-click or drag a box), then edit them together.", "info", 4000); return; }
+    mxOpenBulkEditor(e);
+}
+
+function mxBulkGlobalColor(id, fallback) {
+    const el = document.getElementById(id);
+    return (el && /^#[0-9a-f]{6}$/i.test(el.value)) ? el.value : fallback;
+}
+
+function mxBulkSpec() {
+    const fonts = mxFontFamilyOptions();
+    const col = (key, label, get, set, fb, reset, note) => ({ key, label, kind: "color", get: o => get(o) || "", set, fb, reset, note });
+    const num = (key, label, min, max, get, set) => ({ key, label, kind: "number", min, max, get, set });
+    const sel = (key, label, options, get, set) => ({ key, label, kind: "select", options, get, set });
+    const chk = (key, label, get, set, extra) => Object.assign({ key, label, kind: "bool", get, set }, extra || {});
+    const style = (p, defBold) => [
+        chk(p + "Bold", "<b>B</b>", o => defBold ? o.labelBold !== false : o.labelBold === true, (o, v) => { o.labelBold = v; }, { inline: true, tip: "Bold" }),
+        chk(p + "Italic", "<i>I</i>", o => o.labelItalic === true, (o, v) => { o.labelItalic = v; }, { inline: true, tip: "Italic" }),
+        chk(p + "Underline", "<u>U</u>", o => o.labelUnderline === true, (o, v) => { o.labelUnderline = v; }, { inline: true, tip: "Underline" })
+    ];
+    return [
+        { group: "bar", cls: "bulk-bar", title: "Bars", sections: [
+            { name: "Colors", fields: [
+                col("barFill", "Progress fill color", o => o.color, (o, v) => { o.color = v; }, () => mxBulkGlobalColor("barColor", "#2563eb"), ""),
+                col("barBg", "Unfilled bar color", o => o.bgColor, (o, v) => { o.bgColor = v; }, () => mxBulkGlobalColor("barBgColor", "#e2e8f0"), ""),
+                col("barLblColor", "Task-name label color", o => o.labelColor, (o, v) => { o.labelColor = v; }, () => "#ffffff", "", "Default = white")
+            ] },
+            { name: "Bar style", fields: [
+                sel("barPattern", "Fill pattern", MX_OPTS.barPattern, o => o.pattern || "solid", (o, v) => { o.pattern = v; }),
+                num("barProgress", "Progress (%)", 0, 100, o => o.progress ?? 0, (o, v) => { o.progress = v; }),
+                chk("barShowName", "Show name in bar", o => o.showLabelInBar === true, (o, v) => { o.showLabelInBar = v; })
+            ] },
+            { name: "Task-name label text", fields: [
+                sel("barFamily", "Font", fonts, o => o.labelFontFamily || "", (o, v) => { o.labelFontFamily = v; }),
+                num("barSize", "Font size", 6, 72, o => o.labelFontSize ?? 10, (o, v) => { o.labelFontSize = v; })
+            ].concat(style("bar", false)) }
+        ] },
+        { group: "ms", cls: "bulk-ms", title: "Milestones", sections: [
+            { name: "Colors", fields: [
+                col("msColor", "Milestone color", o => o.color, (o, v) => { o.color = v; }, () => mxBulkGlobalColor("msColor", "#d97706"), "",
+                    "Choosing a color automatically turns on the color override for every selected milestone."),
+                col("msLblColor", "Label text color", o => o.labelColor, (o, v) => { o.labelColor = v; }, () => mxBulkGlobalColor("msColor", "#d97706"), "",
+                    "Default = same as the milestone color."),
+                col("msLdrColor", "Leader line color", o => o.leaderColor, (o, v) => { o.leaderColor = v; }, () => mxBulkGlobalColor("masterLeaderColor", "#94a3b8"), "",
+                    "Default = milestone color if set, otherwise the master leader color.")
+            ] },
+            { name: "Symbol & label text", fields: [
+                sel("msSymbol", "Symbol", MX_OPTS.symbol, o => o.symbol || "diamond", (o, v) => { o.symbol = v; }),
+                sel("msFamily", "Font", fonts, o => o.labelFontFamily || "", (o, v) => { o.labelFontFamily = v; }),
+                num("msSize", "Font size", 6, 72, o => o.labelFontSize ?? 9, (o, v) => { o.labelFontSize = v; })
+            ].concat(style("ms", true)).concat([
+                chk("msShowLabel", "Show label", o => o.labelHidden !== true, (o, v) => { o.labelHidden = !v; }),
+                chk("msShowDate", "Show date", o => o.showDate !== false, (o, v) => { o.showDate = v; })
+            ]) },
+            { name: "Leader lines", fields: [
+                chk("msLdrText", "Leader to label", o => o.leaderEnabledText === true, (o, v) => { o.leaderEnabledText = v; }),
+                chk("msLdrDate", "Leader to date", o => o.leaderEnabledDate === true, (o, v) => { o.leaderEnabledDate = v; }),
+                sel("msLdrAnchor", "Anchor point", MX_OPTS.leaderAnchor, o => o.leaderAnchorText || "center", (o, v) => { o.leaderAnchorText = v; }),
+                num("msLdrWeight", "Line weight", 1, 10, o => o.leaderWeight || 1, (o, v) => { o.leaderWeight = v; }),
+                sel("msLdrPattern", "Line pattern", MX_OPTS.linePattern, o => o.leaderPattern || "solid", (o, v) => { o.leaderPattern = v; })
+            ] }
+        ] },
+        { group: "trk", cls: "bulk-trk", title: "Tracker lines", sections: [
+            { name: "Line", fields: [
+                col("trkColor", "Line color", o => o.color, (o, v) => { o.color = v || "#10b981"; }, () => "#10b981", "#10b981"),
+                num("trkOpacity", "Opacity (%)", 5, 100, o => mxTrackerOpacityPct(o), (o, v) => { o.opacity = v; }),
+                num("trkThickness", "Thickness (px)", 1, 10, o => o.thickness || 2, (o, v) => { o.thickness = v; }),
+                sel("trkPattern", "Stroke pattern", MX_OPTS.linePattern, o => o.pattern || "solid", (o, v) => { o.pattern = v; })
+            ] },
+            { name: "Label text", fields: [
+                col("trkLblColor", "Label color", o => o.labelColor, (o, v) => { o.labelColor = v; }, () => "#10b981", "", "Default = same as the line color."),
+                sel("trkFamily", "Font", fonts, o => o.labelFontFamily || "", (o, v) => { o.labelFontFamily = v; }),
+                num("trkSize", "Font size", 6, 72, o => o.labelFontSize ?? 8, (o, v) => { o.labelFontSize = v; })
+            ].concat(style("trk", true)) }
+        ] },
+        { group: "co", cls: "bulk-co", title: "Callouts", sections: [
+            { name: "Colors", fields: [
+                col("coText", "Text color", o => o.textColor, (o, v) => { o.textColor = v; }, () => "#000000"),
+                col("coBg", "Background color", o => o.bgColor, (o, v) => { o.bgColor = v; }, () => "#ffffff"),
+                col("coLdr", "Leader line color", o => o.leaderColor, (o, v) => { o.leaderColor = v; }, o => o.textColor || "#000000", "", "Default = same as the text color."),
+                chk("coClear", "Transparent background", o => o.bgTransparent === true, (o, v) => { o.bgTransparent = v; })
+            ] },
+            { name: "Text", fields: [
+                num("coSize", "Font size", 8, 72, o => o.fontSize ?? 14, (o, v) => { o.fontSize = v; }),
+                chk("coBold", "Bold text", o => o.isBold === true, (o, v) => { o.isBold = v; })
+            ] },
+            { name: "Leader line", fields: [
+                chk("coShowLdr", "Show leader", o => o.showLeader !== false, (o, v) => { o.showLeader = v; }),
+                num("coLdrW", "Line weight", 1, 10, o => o.leaderThickness || 2, (o, v) => { o.leaderThickness = v; }),
+                sel("coAttach", "Attach to box", MX_OPTS.calloutAttach, o => o.leaderAttachment || "bottom", (o, v) => { o.leaderAttachment = v; })
+            ] }
+        ] },
+        { group: "all", cls: "bulk-all", title: "All selected items", sections: [
+            { name: "Visibility", fields: [
+                chk("allVisible", "Visible on timeline", o => o.hidden !== true, (o, v) => { o.hidden = !v; })
+            ] }
+        ] }
+    ];
+}
+
+function mxOpenBulkEditor(e) {
+    const items = mxSelectionObjects();
+    if (items.length < 2) return;
+
+    mxCloseAllFloatingDialogs();
+
+    const spec = mxBulkSpec();
+    const itemsFor = g => g === "all" ? items : items.filter(it => it.kind === g);
+    const byKey = {};
+    const snapshots = items.map(it => ({ obj: it.obj, snap: JSON.parse(JSON.stringify(it.obj)) }));
+
+    const hexOr = (v, d) => /^#[0-9a-f]{6}$/i.test(v || "") ? v : d;
+    const fieldHTML = (f, list) => {
+        const vals = list.map(it => f.get(it.obj));
+        const first = vals[0];
+        const same = vals.every(v => String(v).toLowerCase() === String(first).toLowerCase());
+        const k = 'data-bkey="' + f.key + '"';
+        if (f.kind === "color") {
+            const shown = hexOr(first || f.fb(list[0].obj), "#000000");
+            const chip = !same ? "Mixed" : (first ? "Custom" : "Default");
+            return '<div class="modal-field"' + (f.note ? ' title="' + escapeForMarkup(f.note) + '"' : '') + '><label>' + f.label + '</label><div class="bulk-color-row">' +
+                '<input type="color" ' + k + ' value="' + shown + '">' +
+                '<span class="bulk-chip' + (same ? '' : ' mixed') + '" id="bulkchip_' + f.key + '">' + chip + '</span>' +
+                (f.reset !== undefined ? '<button type="button" class="bulk-reset" data-breset="' + f.key + '" data-hint="Return the selected items to the default color">Reset</button>' : '') +
+                '</div></div>';
+        }
+        if (f.kind === "number") {
+            return '<div class="modal-field"><label>' + f.label + '</label><input type="number" ' + k + ' step="1" min="' + f.min + '" max="' + f.max + '" value="' + (same ? first : '') + '" placeholder="' + (same ? '' : 'Mixed') + '"></div>';
+        }
+        if (f.kind === "select") {
+            const opts = (typeof f.options === "function" ? f.options() : f.options);
+            return '<div class="modal-field"><label>' + f.label + '</label><select ' + k + '>' +
+                (same ? '' : '<option value="__mixed__" selected disabled>\u2014 Mixed \u2014</option>') +
+                opts.map(o => '<option value="' + escapeForMarkup(o[0]) + '"' + (same && String(o[0]) === String(first) ? ' selected' : '') + '>' + escapeForMarkup(o[1]) + '</option>').join('') +
+                '</select></div>';
+        }
+        const box = '<input type="checkbox" ' + k + (same && first === true ? ' checked' : '') + (same ? '' : ' data-mixed="1"') + '> ' + f.label;
+        if (f.inline) return '<label class="mx-check" title="' + f.tip + '"><input type="checkbox" ' + k + (same && first === true ? ' checked' : '') + (same ? '' : ' data-mixed="1"') + '> ' + f.label + '</label>';
+        return '<label class="modal-field checkbox-field' + (f.full ? ' full-width' : '') + '">' + box + (same ? '' : ' <span class="bulk-chip mixed">Mixed</span>') + '</label>';
+    };
+
+    let body = "";
+    const present = [];
+    spec.forEach(g => {
+        const list = itemsFor(g.group);
+        if (!list.length) return;
+        present.push(g.title + ": " + list.length);
+        const nounMap = { bar: "bar", ms: "milestone", trk: "tracker line", co: "callout" };
+        const noun = g.group === "all" ? "items" : mxPlural(nounMap[g.group], list.length);
+        body += '<div class="bulk-group ' + g.cls + '"><div class="bulk-group-title">' + g.title +
+            '<span>' + (g.group === "all" ? "applies to all " + list.length + " selected" : "applies to the " + list.length + " selected " + noun) + '</span></div>';
+        g.sections.forEach(sec => {
+            body += '<div class="bulk-section-title">' + sec.name + '</div><div class="compact-modal-grid">';
+            let inlineOpen = false;
+            sec.fields.forEach(f => {
+                f.group = g.group;
+                byKey[f.key] = f;
+                if (f.inline && !inlineOpen) { body += '<div class="modal-field"><label>Text style</label><div class="mx-inline">'; inlineOpen = true; }
+                if (!f.inline && inlineOpen) { body += '</div></div>'; inlineOpen = false; }
+                body += fieldHTML(f, list);
+            });
+            if (inlineOpen) body += '</div></div>';
+            body += '</div>';
+        });
+        body += '</div>';
+    });
+
+    const dialog = document.createElement("div");
+    dialog.id = "floatingBulkDialog";
+    dialog.className = "floating-date-dialog compact-editor bulk-editor";
+    dialog.innerHTML =
+        '<h4>Edit ' + items.length + ' Selected Items</h4>' +
+        '<div class="bulk-summary">' + present.join(" \u2022 ") + '. Only the settings you change are applied, and they apply live. Dates are not edited here. Amber \u201CMixed\u201D means the selected items differ.</div>' +
+        body +
+        '<div class="standard-modal-actions"><div class="action-group"></div><div class="action-group">' +
+            '<button type="button" id="bulkCancelBtn" style="background:#f1f5f9; color:#475569;" data-hint="Undo every change made in this popup">Cancel</button>' +
+            '<button type="button" id="bulkDoneBtn" style="background:var(--primary); color:#ffffff; border-color:var(--primary);" data-hint="Edits are already live. Close this popup.">Done</button>' +
+        '</div></div>';
+
+    positionFloatingDialogSmart(dialog, e);
+    dialog.querySelectorAll('input[data-mixed="1"]').forEach(el => { el.indeterminate = true; });
+    dialog.__mxDirty = false;
+
+    const touch = () => {
+        dialog.__mxDirty = true;
+        markUnsavedState();
+        updateChart();
+        mxScheduleLiveCommit();
+    };
+
+    const applyField = (f, v) => {
+        itemsFor(f.group).forEach(it => f.set(it.obj, v));
+        touch();
+    };
+
+    const onEdit = ev => {
+        const el = ev.target;
+        const key = el && el.getAttribute ? el.getAttribute("data-bkey") : null;
+        const f = key ? byKey[key] : null;
+        if (!f) return;
+        let v;
+        if (f.kind === "color") {
+            v = el.value;
+            const chip = document.getElementById("bulkchip_" + f.key);
+            if (chip) { chip.textContent = "Custom"; chip.classList.remove("mixed"); }
+        } else if (f.kind === "number") {
+            if (el.value === "") return;
+            const n = parseInt(el.value, 10);
+            if (!Number.isFinite(n)) return;
+            v = Math.max(f.min, Math.min(f.max, n));
+        } else if (f.kind === "select") {
+            if (el.value === "__mixed__") return;
+            v = el.value;
+        } else {
+            el.indeterminate = false;
+            v = el.checked;
+            const mixedChip = el.parentNode && el.parentNode.querySelector(".bulk-chip.mixed");
+            if (mixedChip) mixedChip.remove();
+        }
+        applyField(f, v);
+    };
+    dialog.addEventListener("input", onEdit);
+    dialog.addEventListener("change", onEdit);
+
+    dialog.addEventListener("click", ev => {
+        const btn = ev.target && ev.target.closest ? ev.target.closest("[data-breset]") : null;
+        if (!btn) return;
+        const f = byKey[btn.getAttribute("data-breset")];
+        if (!f) return;
+        applyField(f, f.reset);
+        const input = dialog.querySelector('input[data-bkey="' + f.key + '"]');
+        if (input) input.value = hexOr(f.fb(itemsFor(f.group)[0].obj), "#000000");
+        const chip = document.getElementById("bulkchip_" + f.key);
+        if (chip) { chip.textContent = "Default"; chip.classList.remove("mixed"); }
+    });
+
+    dialog.__mxFlush = () => {
+        if (!dialog.__mxDirty) return;
+        dialog.__mxDirty = false;
+        mxLiveDirty = true;
+        mxFlushLiveCommit();
+        renderInputRows();
+        populateTrackerDashboardMatrix();
+        renderCalloutControls();
+        updateChart();
+    };
+
+    dialog.__mxRevert = () => {
+        snapshots.forEach(s => {
+            Object.keys(s.obj).forEach(k => { if (!(k in s.snap)) delete s.obj[k]; });
+            Object.keys(s.snap).forEach(k => { s.obj[k] = JSON.parse(JSON.stringify(s.snap[k])); });
+        });
+        dialog.__mxDirty = false;
+        mxLiveDirty = false;
+        clearTimeout(mxLiveTimer);
+        recordStateChange();
+        renderInputRows();
+        populateTrackerDashboardMatrix();
+        renderCalloutControls();
+        updateChart();
+    };
+
+    document.getElementById("bulkDoneBtn").addEventListener("click", () => mxCloseFloatingDialog(dialog, true));
+    document.getElementById("bulkCancelBtn").addEventListener("click", () => mxCloseFloatingDialog(dialog, false));
 }
 
    /* ---- File menu: one Export dropdown (xlsx / csv / json) and one Import button for every supported type ---- */
@@ -6005,7 +7116,7 @@ function escapeHtmlAttribute(value) {
     const laneTitleBold = lane.titleBold !== false;
 
     dialog.innerHTML = `
-        <h4>Swimlane Settings</h4>
+        <h4>${mxTitleHTML('Swimlane', lane.title)}</h4>
 
         <div class="modal-row">
             <div class="modal-field">
@@ -6264,7 +7375,7 @@ function escapeHtmlAttribute(value) {
         let currentSummaryColor = lane.summaryColor || globalSummaryColor;
 
         dialog.innerHTML = `
-            <h4>Modify Summary Bar Style</h4>
+            <h4>${mxTitleHTML('Summary Bar', lane.title)}</h4>
             <div class="modal-row">
                 <div class="modal-field"><label>Individual Summary Color</label><input type="color" id="modalSummaryColor" value="${currentSummaryColor}"></div>
             </div>
@@ -6291,6 +7402,7 @@ function escapeHtmlAttribute(value) {
 
     function editMilestoneDateDirectlyGlobal(e, rowId, msId) {
     e.stopPropagation();
+    if (mxBulkEditIfMultiSelected(e, 'ms', rowId, msId)) return;
     let row = findRowGlobally(rowId); if (!row) return;
     let ms = row.milestones.find(m => m.id === msId); if (!ms) return;
 
@@ -6298,99 +7410,80 @@ function escapeHtmlAttribute(value) {
     if (existingDialog) existingDialog.remove();
 
    let bodyHTML = `
-    <div class="modal-field full-width">
-        <label for="modalMsLabel">Milestone Label</label>
+    <div class="mx-sec">Details</div>
+    <div class="modal-field span2">
+        <label for="modalMsLabel">Milestone label</label>
         <input type="text" id="modalMsLabel" value="${escapeForMarkup(ms.label || "")}">
     </div>
-
     <div class="modal-field">
         <label for="modalMsDatePicker">Date</label>
-        <input type="date" id="modalMsDatePicker"
-            value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}">
+        <input type="date" id="modalMsDatePicker" value="${convertDDMMMYYYYToYYYYMMDD(ms.date)}">
     </div>
-
     <div class="modal-field">
         <label for="modalMsSymbol">Symbol</label>
         <select id="modalMsSymbol">
-            <option value="diamond" ${ms.symbol === "diamond" ? "selected" : ""}>Diamond</option>
-            <option value="circle" ${ms.symbol === "circle" ? "selected" : ""}>Circle</option>
-            <option value="triangle" ${ms.symbol === "triangle" ? "selected" : ""}>Triangle</option>
-            <option value="star" ${ms.symbol === "star" ? "selected" : ""}>Star</option>
-            <option value="square" ${ms.symbol === "square" ? "selected" : ""}>Square</option>
-            <option value="vertical-bar" ${ms.symbol === "vertical-bar" ? "selected" : ""}>Vertical Bar</option>
+            ${MX_OPTS.symbol.map(o => `<option value="${o[0]}" ${ms.symbol === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}
         </select>
     </div>
-
+    <div class="modal-field">
+        <label for="modalMsShowDate">Date under label</label>
+        <select id="modalMsShowDate">
+            <option value="true" ${ms.showDate !== false ? "selected" : ""}>Show</option>
+            <option value="false" ${ms.showDate === false ? "selected" : ""}>Hide</option>
+        </select>
+    </div>
     <label class="modal-field checkbox-field">
-        <input type="checkbox" id="modalMsOverrideColor" ${ms.color ? "checked" : ""}>
-        Override color
+        <input type="checkbox" id="modalMsVisible" ${ms.hidden === true ? "" : "checked"}>
+        Visible on timeline
     </label>
 
+    <div class="mx-sec">Colors</div>
     <div class="modal-field">
-        <label for="modalMsColor">Milestone Color</label>
-        <input type="color" id="modalMsColor"
-            value="${ms.color || document.getElementById('msColor').value}">
+        <label class="mx-cb-label" for="modalMsOverrideColor" title="Turns on automatically when you pick a color">
+            <input type="checkbox" id="modalMsOverrideColor" ${ms.color ? "checked" : ""}> Custom milestone color
+        </label>
+        <input type="color" id="modalMsColor" value="${ms.color || document.getElementById('msColor').value}">
     </div>
+    ${mxOptColorHTML("modalMsLblColor", "Label text color", "labelColor", ms.labelColor, ms.color || document.getElementById('msColor').value)}
+    ${mxOptColorHTML("modalMsLdrColor", "Leader line color", "leaderColor", ms.leaderColor, ms.color || document.getElementById('masterLeaderColor').value)}
 
+    <div class="mx-sec">Label text</div>
+    ${mxOptFontHTML("modalMsFont", "Font", "labelFontFamily", ms.labelFontFamily, "span2")}
+    <div class="modal-field">
+        <label for="modalMsFontSize">Font size</label>
+        <input type="number" id="modalMsFontSize" min="6" max="72" value="${ms.labelFontSize ?? 9}">
+    </div>
+    ${mxOptStyleHTML("modalMsTxt", ms, true)}
+    <label class="modal-field checkbox-field span2">
+        <input type="checkbox" id="modalMsShowLabel" ${ms.labelHidden ? "" : "checked"}>
+        Show milestone label (off hides the text, keeps it saved)
+    </label>
+
+    <div class="mx-sec">Leader lines</div>
     <label class="modal-field checkbox-field">
         <input type="checkbox" id="modalMsLdrText" ${ms.leaderEnabledText ? "checked" : ""}>
-        Leader to text
+        Leader to label
     </label>
-
     <label class="modal-field checkbox-field">
         <input type="checkbox" id="modalMsLdrDate" ${ms.leaderEnabledDate ? "checked" : ""}>
         Leader to date
     </label>
-
     <div class="modal-field">
-        <label for="modalMsLdrAnchor">Leader Anchor</label>
+        <label for="modalMsLdrAnchor">Anchor point</label>
         <select id="modalMsLdrAnchor">
-            <option value="center" ${ms.leaderAnchorText === "center" ? "selected" : ""}>Center</option>
-            <option value="top" ${ms.leaderAnchorText === "top" ? "selected" : ""}>Top</option>
-            <option value="bottom" ${ms.leaderAnchorText === "bottom" ? "selected" : ""}>Bottom</option>
-            <option value="left" ${ms.leaderAnchorText === "left" ? "selected" : ""}>Left</option>
-            <option value="right" ${ms.leaderAnchorText === "right" ? "selected" : ""}>Right</option>
-            <option value="custom" ${ms.leaderAnchorText === "custom" ? "selected" : ""}>Custom (drag handles)</option>
+            ${MX_OPTS.leaderAnchor.map(o => `<option value="${o[0]}" ${ms.leaderAnchorText === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}
         </select>
     </div>
-
     <div class="modal-field">
-        <label for="modalMsLdrWeight">Leader Weight</label>
-        <input type="number" id="modalMsLdrWeight"
-            min="1" max="10" value="${ms.leaderWeight || 1}">
+        <label for="modalMsLdrWeight">Line weight</label>
+        <input type="number" id="modalMsLdrWeight" min="1" max="10" value="${ms.leaderWeight || 1}">
     </div>
-
     <div class="modal-field">
-        <label for="modalMsLdrPattern">Leader Pattern</label>
+        <label for="modalMsLdrPattern">Line pattern</label>
         <select id="modalMsLdrPattern">
-            <option value="solid" ${ms.leaderPattern === "solid" ? "selected" : ""}>Solid</option>
-            <option value="dashed" ${ms.leaderPattern === "dashed" ? "selected" : ""}>Dashed</option>
-            <option value="dotted" ${ms.leaderPattern === "dotted" ? "selected" : ""}>Dotted</option>
+            ${MX_OPTS.linePattern.map(o => `<option value="${o[0]}" ${ms.leaderPattern === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}
         </select>
     </div>
-
-    <div class="modal-field">
-        <label>Show Date</label>
-        <select id="modalMsShowDate">
-            <option value="true" ${ms.showDate !== false ? "selected" : ""}>Yes</option>
-            <option value="false" ${ms.showDate === false ? "selected" : ""}>No</option>
-        </select>
-    </div>
-
-    <div class="modal-field">
-        <label for="modalMsFontSize">Label Font Size</label>
-        <input type="number" id="modalMsFontSize" min="6" max="72" value="${ms.labelFontSize ?? 9}">
-    </div>
-
-    <label class="modal-field checkbox-field full-width">
-        <input type="checkbox" id="modalMsShowLabel" ${ms.labelHidden ? "" : "checked"}>
-        Show milestone label (toggle off to hide text without deleting it)
-    </label>
-
-    <label class="modal-field checkbox-field full-width">
-        <input type="checkbox" id="modalMsVisible" ${ms.hidden === true ? "" : "checked"}>
-        Visible on timeline (uncheck to hide the whole milestone; re-enable in the Data Grid)
-    </label>
 `;
 
 let buttonsHTML = `
@@ -6421,7 +7514,7 @@ let buttonsHTML = `
     </div>
 `;
 
-    let dialog = buildStandardModal('floatingMilestoneDialog', 'Milestone Settings', bodyHTML, buttonsHTML);
+    let dialog = buildStandardModal('floatingMilestoneDialog', mxTitleHTML('Milestone', ms.label), bodyHTML, buttonsHTML);
     positionFloatingDialogSmart(dialog, e);
         document.body.appendChild(dialog);
         document.getElementById('modalMsCancelBtn').addEventListener('click', () => mxCloseFloatingDialog(dialog, false));
@@ -6480,8 +7573,15 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', async func
             ms.labelFontSize = Math.max(6, Math.min(72, parseInt(document.getElementById("modalMsFontSize").value, 10) || 9));
             ms.labelHidden = !document.getElementById("modalMsShowLabel").checked;
             ms.hidden = !document.getElementById("modalMsVisible").checked;
+            mxApplyOptionalFields(dialog, ms);
             return true;
         };
+
+        mxWireOptionalFields(dialog);
+        // Picking a milestone color always counts: turn the override on automatically.
+        ['input', 'change'].forEach(evt => document.getElementById('modalMsColor').addEventListener(evt, function() {
+            document.getElementById('modalMsOverrideColor').checked = true;
+        }));
 
         mxMakeDialogLive(dialog, ms, applyMilestoneFields);
 
@@ -6495,6 +7595,7 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', async func
 
     function editBarDatesDirectlyGlobal(e, rowId, barId) {
         e.stopPropagation();
+        if (mxBulkEditIfMultiSelected(e, 'bar', rowId, barId)) return;
         let row = findRowGlobally(rowId); if (!row) return;
         let bar = row.bars.find(b => b.id === barId); if (!bar) return;
 
@@ -6502,62 +7603,54 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', async func
         if (existingDialog) existingDialog.remove();
 
        let bodyHTML = `
+    <div class="mx-sec">Schedule</div>
     <div class="modal-field">
-        <label for="modalStartPicker">Start</label>
-        <input type="date" id="modalStartPicker"
-            value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}">
+        <label for="modalStartPicker">Start date</label>
+        <input type="date" id="modalStartPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.start)}">
     </div>
-
     <div class="modal-field">
-        <label for="modalEndPicker">Finish</label>
-        <input type="date" id="modalEndPicker"
-            value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}">
+        <label for="modalEndPicker">Finish date</label>
+        <input type="date" id="modalEndPicker" value="${convertDDMMMYYYYToYYYYMMDD(bar.end)}">
     </div>
-
     <div class="modal-field">
         <label for="modalBarProgress">Progress (%)</label>
-        <input type="number" id="modalBarProgress"
-            value="${Number.isFinite(bar.progress) ? bar.progress : 0}"
-            min="0" max="100" step="1">
+        <input type="number" id="modalBarProgress" value="${Number.isFinite(bar.progress) ? bar.progress : 0}" min="0" max="100" step="1">
     </div>
 
+    <div class="mx-sec">Bar appearance</div>
     <div class="modal-field">
-        <label for="modalBarPattern">Pattern</label>
+        <label for="modalBarPattern">Fill pattern</label>
         <select id="modalBarPattern">
-            <option value="solid" ${bar.pattern === "solid" ? "selected" : ""}>Solid</option>
-            <option value="crosshatch" ${bar.pattern === "crosshatch" ? "selected" : ""}>Cross Hatch</option>
-            <option value="grid" ${bar.pattern === "grid" ? "selected" : ""}>Grid</option>
-            <option value="dashed" ${bar.pattern === "dashed" ? "selected" : ""}>Dashed</option>
-            <option value="gingham" ${bar.pattern === "gingham" ? "selected" : ""}>Gingham</option>
+            ${MX_OPTS.barPattern.map(o => `<option value="${o[0]}" ${bar.pattern === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}
         </select>
     </div>
-
     <div class="modal-field">
-        <label for="modalBarBgColor">Bar Background</label>
-        <input type="color" id="modalBarBgColor"
-            value="${bar.bgColor || document.getElementById('barBgColor').value}">
+        <label for="modalBarColor">Progress fill color</label>
+        <input type="color" id="modalBarColor" value="${bar.color || document.getElementById('barColor').value}">
+    </div>
+    <div class="modal-field">
+        <label for="modalBarBgColor">Unfilled bar color</label>
+        <input type="color" id="modalBarBgColor" value="${bar.bgColor || document.getElementById('barBgColor').value}">
     </div>
 
+    <div class="mx-sec">Task-name label</div>
+    ${mxOptFontHTML("modalBarFont", "Font", "labelFontFamily", bar.labelFontFamily, "span2")}
     <div class="modal-field">
-        <label for="modalBarColor">Progress Fill</label>
-        <input type="color" id="modalBarColor"
-            value="${bar.color || document.getElementById('barColor').value}">
+        <label for="modalBarLabelFontSize">Font size</label>
+        <input type="number" id="modalBarLabelFontSize" min="6" max="72" value="${bar.labelFontSize ?? 10}">
     </div>
-
+    ${mxOptColorHTML("modalBarLblColor", "Label color", "labelColor", bar.labelColor, "#ffffff")}
+    ${mxOptStyleHTML("modalBarTxt", bar, false)}
     <label class="modal-field checkbox-field">
         <input type="checkbox" id="modalBarShowLabel" ${bar.showLabelInBar === true ? "checked" : ""}>
-        Show task name inside bar
+        Show name in bar
     </label>
 
-    <label class="modal-field checkbox-field">
+    <div class="mx-sec">Visibility</div>
+    <label class="modal-field checkbox-field full-width">
         <input type="checkbox" id="modalBarVisible" ${bar.hidden === true ? "" : "checked"}>
         Visible on timeline
     </label>
-
-    <div class="modal-field">
-        <label for="modalBarLabelFontSize">Bar Label Font Size</label>
-        <input type="number" id="modalBarLabelFontSize" min="6" max="72" value="${bar.labelFontSize ?? 10}">
-    </div>
 `;
 
 let buttonsHTML = `
@@ -6580,7 +7673,7 @@ let buttonsHTML = `
     </div>
 `;
 
-let dialog = buildStandardModal('floatingBarDateDialog', 'Activity Bar Settings', bodyHTML, buttonsHTML);
+let dialog = buildStandardModal('floatingBarDateDialog', mxTitleHTML('Activity Bar', row.label), bodyHTML, buttonsHTML);
 positionFloatingDialogSmart(dialog, e);
 
 
@@ -6627,9 +7720,11 @@ positionFloatingDialogSmart(dialog, e);
             bar.showLabelInBar = document.getElementById('modalBarShowLabel').checked;
             bar.hidden = !document.getElementById('modalBarVisible').checked;
             bar.labelFontSize = Math.max(6, Math.min(72, parseInt(document.getElementById('modalBarLabelFontSize').value, 10) || 10));
+            mxApplyOptionalFields(dialog, bar);
             return true;
         };
 
+        mxWireOptionalFields(dialog);
         mxMakeDialogLive(dialog, bar, applyBarFields);
 
         document.getElementById('modalCancelBtn').addEventListener('click', () => mxCloseFloatingDialog(dialog, false));
@@ -6836,55 +7931,78 @@ document.addEventListener('dblclick', (e) => {
         const id = target.getAttribute('data-id');
         const callout = calloutData.find(c => c.id === id);
         if (!callout) return;
+        if (mxPainter.active) return;
+        if (mxSelectionObjects().length >= 2 && mxIsSelected('co', 0, id)) { mxOpenBulkEditor(e); return; }
 
         let existingDialog = document.getElementById('floatingCalloutDialog');
         if (existingDialog) existingDialog.remove();
 
         let dialog = document.createElement('div');
-        dialog.id = 'floatingCalloutDialog'; dialog.className = 'floating-date-dialog';
+        dialog.id = 'floatingCalloutDialog'; dialog.className = 'floating-date-dialog compact-editor';
         dialog.__mxFlush = () => { mxFlushLiveCommit(); renderCalloutControls(); };
         positionFloatingDialogSmart(dialog, e);
         
         dialog.innerHTML = `
-            <h4>Callout Configuration</h4>
-            <div class="dialog-row">
-                <label>Text Label:</label>
-                <textarea rows="3" oninput="updateCalloutProperty('${id}', 'text', this.value); renderCalloutControls();" style="width: 140px; box-sizing: border-box; font: inherit; resize: vertical;">${escapeForMarkup(callout.text)}</textarea>
+            <h4>${mxTitleHTML('Callout', String(callout.text || '').replace(/\s+/g, ' ').trim().slice(0, 60))}</h4>
+            <div class="compact-modal-grid">
+                <div class="mx-sec">Text</div>
+                <div class="modal-field full-width">
+                    <label>Callout text</label>
+                    <textarea rows="2" oninput="updateCalloutProperty('${id}', 'text', this.value); renderCalloutControls();" style="width:100%; box-sizing:border-box; font:inherit; resize:vertical;">${escapeForMarkup(callout.text)}</textarea>
+                </div>
+                <div class="modal-field">
+                    <label>Font size</label>
+                    <input type="number" min="8" max="72" value="${callout.fontSize}" oninput="updateCalloutProperty('${id}', 'fontSize', this.value); renderCalloutControls();">
+                </div>
+                <label class="modal-field checkbox-field">
+                    <input type="checkbox" ${callout.isBold ? 'checked' : ''} onchange="updateCalloutProperty('${id}', 'isBold', this.checked); renderCalloutControls();">
+                    Bold text
+                </label>
+                <label class="modal-field checkbox-field">
+                    <input type="checkbox" ${callout.bgTransparent ? 'checked' : ''} onchange="updateCalloutProperty('${id}', 'bgTransparent', this.checked); renderCalloutControls(); document.getElementById('coBgColorInput').disabled = this.checked;">
+                    Transparent background
+                </label>
+
+                <div class="mx-sec">Colors</div>
+                <div class="modal-field">
+                    <label>Text color</label>
+                    <input type="color" value="${callout.textColor}" oninput="updateCalloutProperty('${id}', 'textColor', this.value); renderCalloutControls();">
+                </div>
+                <div class="modal-field">
+                    <label>Background color</label>
+                    <input type="color" id="coBgColorInput" value="${callout.bgColor}" oninput="updateCalloutProperty('${id}', 'bgColor', this.value); renderCalloutControls();" ${callout.bgTransparent ? 'disabled' : ''}>
+                </div>
+                <div class="modal-field">
+                    <label>Leader line color</label>
+                    <input type="color" value="${callout.leaderColor || callout.textColor}" oninput="updateCalloutProperty('${id}', 'leaderColor', this.value); renderCalloutControls();">
+                </div>
+
+                <div class="mx-sec">Leader line</div>
+                <label class="modal-field checkbox-field">
+                    <input type="checkbox" ${callout.showLeader !== false ? 'checked' : ''} onchange="setCalloutLeaderVisibility('${id}', this.checked);">
+                    Show leader
+                </label>
+                <div class="modal-field">
+                    <label>Line weight</label>
+                    <input type="number" min="1" max="10" value="${callout.leaderThickness || 2}" oninput="updateCalloutProperty('${id}', 'leaderThickness', this.value); renderCalloutControls();">
+                </div>
+                <div class="modal-field">
+                    <label>Attach to box</label>
+                    <select onchange="updateCalloutProperty('${id}', 'leaderAttachment', this.value); renderCalloutControls();">
+                        <option value="left" ${callout.leaderAttachment === 'left' ? 'selected' : ''}>Left center</option>
+                        <option value="right" ${callout.leaderAttachment === 'right' ? 'selected' : ''}>Right center</option>
+                        <option value="top" ${callout.leaderAttachment === 'top' ? 'selected' : ''}>Top center</option>
+                        <option value="bottom" ${callout.leaderAttachment === 'bottom' || !callout.leaderAttachment ? 'selected' : ''}>Bottom center</option>
+                    </select>
+                </div>
             </div>
-            <div class="dialog-row">
-                <label>Font Size:</label>
-                <input type="number" value="${callout.fontSize}" oninput="updateCalloutProperty('${id}', 'fontSize', this.value); renderCalloutControls();" style="width: 60px; box-sizing: border-box;">
-            </div>
-            <div class="dialog-row">
-                <label>Line Weight:</label>
-                <input type="number" value="${callout.leaderThickness || 2}" oninput="updateCalloutProperty('${id}', 'leaderThickness', this.value); renderCalloutControls();" style="width: 60px; box-sizing: border-box;">
-            </div>
-            <div class="dialog-row">
-                <label>Attachment:</label>
-                <select onchange="updateCalloutProperty('${id}', 'leaderAttachment', this.value); renderCalloutControls();" style="width: 105px;">
-                    <option value="left" ${callout.leaderAttachment === 'left' ? 'selected' : ''}>Left Center</option>
-                    <option value="right" ${callout.leaderAttachment === 'right' ? 'selected' : ''}>Right Center</option>
-                    <option value="top" ${callout.leaderAttachment === 'top' ? 'selected' : ''}>Top Center</option>
-                    <option value="bottom" ${callout.leaderAttachment === 'bottom' || !callout.leaderAttachment ? 'selected' : ''}>Bottom Center</option>
-                </select>
-            </div>
-                        <div class="dialog-row" style="margin-top:5px;">
-    <label><input type="checkbox" ${callout.isBold ? 'checked' : ''} onchange="updateCalloutProperty('${id}', 'isBold', this.checked); renderCalloutControls();">Bold Text</label>
-    <label><input type="checkbox" ${callout.bgTransparent ? 'checked' : ''} onchange="updateCalloutProperty('${id}', 'bgTransparent', this.checked); renderCalloutControls();">Clear BG</label>
-   <label>
-    <input type="checkbox"
-           ${callout.showLeader !== false ? 'checked' : ''}
-           onchange="setCalloutLeaderVisibility('${id}', this.checked);">
-    Show Leader
-</label>
-</div>
-           <div class="dialog-row" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-color); justify-content:flex-start; gap:16px;">
-   <div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Text</span><input type="color" value="${callout.textColor}" onchange="updateCalloutProperty('${id}', 'textColor', this.value); renderCalloutControls();" style="cursor:pointer;"></div>
-<div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Leader</span><input type="color" value="${callout.leaderColor || callout.textColor}" onchange="updateCalloutProperty('${id}', 'leaderColor', this.value); renderCalloutControls();" style="cursor:pointer;"></div>
-<div style="display:flex; flex-direction:column; align-items:flex-start;"><span style="font-size:10px;">Back</span><input type="color" value="${callout.bgColor}" onchange="updateCalloutProperty('${id}', 'bgColor', this.value); renderCalloutControls();" ${callout.bgTransparent ? 'disabled' : ''} style="cursor:pointer;"></div>
-            <div class="dialog-actions" style="margin-top: 15px;">
-                <button class="primary-btn" onclick="mxCloseFloatingDialog(document.getElementById('floatingCalloutDialog'), true)">Done</button>
-                <button class="utility-btn" onclick="removeCallout('${id}')" style="color: var(--danger); border-color: #fca5a5;">Delete</button>
+            <div class="standard-modal-actions">
+                <div class="action-group">
+                    <button type="button" onclick="removeCallout('${id}')" style="background:#fff1f2; color:#e11d48; border-color:#fca5a5;">Delete</button>
+                </div>
+                <div class="action-group">
+                    <button type="button" style="background:var(--primary); color:#ffffff; border-color:var(--primary);" onclick="mxCloseFloatingDialog(document.getElementById('floatingCalloutDialog'), true)">Done</button>
+                </div>
             </div>
         `;
      
@@ -7684,7 +8802,7 @@ svg += `
                                         barLabelText = availableChars > 1 ? barLabelText.slice(0, availableChars - 1) + "\u2026" : "";
                                     }
                                     if (barLabelText) {
-                                        layerBarsBuffer += `<text x="${xStart + visibleBarWidth / 2}" y="${y + rowHeight / 2}" text-anchor="middle" dominant-baseline="middle" font-size="${barLabelFontSize}" fill="#ffffff" style="pointer-events:none;">${escapeForMarkup(barLabelText)}</text>`;
+                                        layerBarsBuffer += `<text x="${xStart + visibleBarWidth / 2}" y="${y + rowHeight / 2}" text-anchor="middle" dominant-baseline="middle" font-size="${barLabelFontSize}" fill="${bar.labelColor || '#ffffff'}"${mxLabelStyleAttrs(bar, 'normal')} style="pointer-events:none;">${escapeForMarkup(barLabelText)}</text>`;
                                     }
                                 }
                             }
@@ -7742,7 +8860,7 @@ svg += `
                 let lineStrokeWeight = ms.leaderWeight || 1;
                 let linePatternStyle = ms.leaderPattern || 'solid';
                 let lineDashArray = (linePatternStyle === 'dashed') ? "3 3" : (linePatternStyle === 'dotted') ? "1 2" : "";
-                let finalLeaderColor = ms.color || masterLeaderColor;
+                let finalLeaderColor = ms.leaderColor || ms.color || masterLeaderColor;
                 let leaderAnchor = ms.leaderAnchorText || 'center'; 
 
                 let isLabelDragging = (activeDragState && activeDragState.mode === 'label-drag' && activeDragState.milestone && activeDragState.milestone.id === ms.id);
@@ -7801,7 +8919,7 @@ svg += `
                 }
 
                 if (!ms.labelHidden) {
-                    layerTextsBuffer += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="${msLabelFontSize}" font-weight="600" fill="${activeMsColor}" text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${escapeForMarkup(ms.label)}</text>`;
+                    layerTextsBuffer += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="${msLabelFontSize}" fill="${ms.labelColor || activeMsColor}"${mxLabelStyleAttrs(ms, '600')} text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${escapeForMarkup(ms.label)}</text>`;
 
                     if (isLabelDragging) {
                         let boxW = ms.label.trim().length * 4.8 + 4; // Optimized tight typography bounds
@@ -7866,6 +8984,7 @@ svg += allLayerBarsBuffer
     + allLayerSymbolsBuffer
     + allLayerTextsBuffer
     + allLayerHandlesBuffer;
+        mxSyncDynamicTrackers();
         customTrackers.forEach(tracker => {
             if (tracker.hidden === true) return;
             let trkTime = parseAnyDateToTimestamp(tracker.date);
@@ -7877,15 +8996,15 @@ svg += allLayerBarsBuffer
                 // Wide invisible grab area so a thin line is easy to drag and double-click (removed from exports).
                 svg += `<line class="drag-hotspot" x1="${xTracker}" y1="${axisLineY}" x2="${xTracker}" y2="${bottomOfLastRow}" stroke="transparent" stroke-width="16" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'tracker-line-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})"/>`;
 
-                svg += `<line x1="${xTracker}" y1="${axisLineY}" x2="${xTracker}" y2="${bottomOfLastRow}" stroke="${tracker.color}" stroke-width="${tracker.thickness || 2}" stroke-dasharray="${strokeDash}" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'tracker-line-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})"/>`;
+                svg += `<line data-sel="trk:0:${tracker.id}" x1="${xTracker}" y1="${axisLineY}" x2="${xTracker}" y2="${bottomOfLastRow}" stroke="${tracker.color}" stroke-opacity="${mxTrackerOpacityPct(tracker) / 100}" stroke-width="${tracker.thickness || 2}" stroke-dasharray="${strokeDash}" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'tracker-line-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})"/>`;
                 
                 let lblX = xTracker + (tracker.labelOffsetX || 0);
                 let lblY = bottomOfLastRow + 24 + (tracker.labelOffsetY || 0);
                 
-                const trackerLabelWidth = Math.max(36, String(tracker.label ?? '').length * 5.4 + 12);
+                const trackerLabelWidth = Math.max(36, (String(tracker.label ?? '').length * 5.4 + 12) * ((Number.isFinite(Number(tracker.labelFontSize)) ? Number(tracker.labelFontSize) : 8) / 8));
                 svg += `<g fill="${tracker.color}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'tracker-label-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})">
                     <rect class="drag-hotspot" x="${lblX - trackerLabelWidth / 2}" y="${lblY - 11}" width="${trackerLabelWidth}" height="16" fill="transparent"/>
-                    <text x="${lblX}" y="${lblY}" font-size="8" font-weight="bold" fill="${tracker.color}" text-anchor="middle">${escapeForMarkup(String(tracker.label ?? '').toUpperCase())}</text>
+                    <text x="${lblX}" y="${lblY}" font-size="${Number.isFinite(Number(tracker.labelFontSize)) ? Number(tracker.labelFontSize) : 8}" fill="${tracker.labelColor || tracker.color}"${mxLabelStyleAttrs(tracker, 'bold')} text-anchor="middle">${escapeForMarkup(String(tracker.label ?? '').toUpperCase())}</text>
                 </g>`;
             }
         });
@@ -7948,6 +9067,7 @@ svg += allLayerBarsBuffer
             // Draw Callout Box
             svg += `<rect
     class="draggable-callout"
+    data-sel="co:0:${callout.id}"
     data-id="${callout.id}"
     x="${callout.x - halfBoxWidth}"
     y="${callout.y}"
