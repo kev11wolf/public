@@ -924,6 +924,17 @@ input[type="color"] {
 .bulk-editor .bulk-chip { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: var(--slate-100); color: var(--slate-600); white-space: nowrap; }
 .bulk-editor .bulk-chip.mixed { background: #fef3c7; color: #92400e; }
 .bulk-editor .bulk-reset { padding: 1px 7px !important; font-size: 9.5px !important; background: #f1f5f9; color: #475569; }
+.bulk-editor .bulk-scope { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 0 0 8px; padding: 5px 8px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 4px; font-size: 11px; color: #1e3a8a; }
+.bulk-editor .bulk-scope label { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; cursor: pointer; }
+.bulk-editor .bulk-scope #bulkScopeCount { flex: 1 0 100%; font-size: 10px; color: #475569; }
+.bulk-editor .bulk-action { width: 100%; padding: 2px 8px; font-size: 11px; font-weight: 700; background: #f1f5f9; color: #334155; border: 1px solid var(--slate-300); border-radius: 4px; cursor: pointer; min-height: 23px; }
+.bulk-editor details.bulk-det > summary { cursor: pointer; list-style: none; }
+.bulk-editor details.bulk-det > summary::-webkit-details-marker { display: none; }
+.bulk-editor details.bulk-det[open] > summary { margin-bottom: 4px; }
+.mx-item-menu .mx-im-det > summary { padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--slate-800); cursor: pointer; list-style: none; }
+.mx-item-menu .mx-im-det > summary:hover { background: var(--slate-100); }
+.mx-item-menu .mx-im-scroll { max-height: 150px; overflow-y: auto; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); background: #f8fafc; }
+.mx-item-menu .mx-im-scroll button { padding-left: 18px; font-size: 10.5px; }
 /* Format painter banner + item right-click menu */
 .mx-item-menu { position: fixed; z-index: 26000; width: 244px; padding: 3px 0; background: var(--bg-panel); border: 1px solid var(--slate-400); border-radius: 6px; box-shadow: 0 6px 18px rgba(0,0,0,.18); font-size: 11px; }
 .mx-item-menu .mx-im-title { display: flex; align-items: baseline; gap: 6px; min-width: 0; padding: 4px 10px 5px; border-bottom: 1px solid var(--border-color); font-size: 11.5px; }
@@ -1191,6 +1202,17 @@ body.mx-painting #svgContainer [data-sel], body.mx-painting #svgContainer .dragg
 
                            
                             
+                            <div class="control-item">
+                                <label>Milestone Label &amp; Date Placement (defaults)</label>
+                                <div class="row-inline-4">
+                                    <div><span class="field-sublabel">Label side</span><select id="msLabelSide" onchange="recordStateChange(); updateChart();" class="input-fill"><option value="below" selected>Below</option><option value="above">Above</option><option value="right">Right</option><option value="left">Left</option></select></div>
+                                    <div><span class="field-sublabel">Label gap</span><input type="number" id="msLabelGap" value="4" min="0" max="80" onchange="recordStateChange(); updateChart();" class="input-fill"></div>
+                                    <div><span class="field-sublabel">Date side</span><select id="msDateSide" onchange="recordStateChange(); updateChart();" class="input-fill"><option value="above" selected>Above</option><option value="below">Below</option><option value="right">Right</option><option value="left">Left</option></select></div>
+                                    <div><span class="field-sublabel">Date gap</span><input type="number" id="msDateGap" value="2" min="0" max="80" onchange="recordStateChange(); updateChart();" class="input-fill"></div>
+                                </div>
+                                <button type="button" class="inner-action-btn" style="margin-top:6px; width:100%;" onclick="mxResetAllMilestonePlacement()" data-hint="Clears every milestone's own side, gap and dragged position so all labels and dates follow these defaults">Apply defaults to ALL milestones</button>
+                            </div>
+
                             <div class="control-item">
                                 <label>Layout Snapping Steps</label>
                                                                 <select id="snapResolution" title="Rounds dragged elements to the nearest pixel step for cleaner alignment" onchange="recordStateChange(); updateChart();">
@@ -2058,6 +2080,13 @@ function normalizeDateString(val) {
             return;
         }
 
+        if (mode === 'lane-title-move') {
+            const laneObj = projectData[rowId];
+            if (!laneObj) return;
+            activeDragState = { mode: mode, lane: laneObj, laneIdx: rowId, startX: e.clientX, startY: e.clientY, origOffset: Number(laneObj.titleOffsetX) || 0 };
+            return;
+        }
+
         if (mode === 'leader-text-end-drag' || mode === 'leader-date-end-drag') {
             const row = findRowGlobally(rowId);
             if (!row) return;
@@ -2088,6 +2117,8 @@ function normalizeDateString(val) {
             targetBar = row.bars.find(b => b.id === subId);
         }
 
+        if (milestone && mode === 'label-drag') mxPromoteMsPlacement(milestone, 'label');
+        if (milestone && mode === 'date-label-drag') mxPromoteMsPlacement(milestone, 'date');
         activeDragState = {
             mode: mode,
             row: row,
@@ -2108,6 +2139,7 @@ function normalizeDateString(val) {
         if ((mode === 'bar-move' || mode === 'ms') && mxSelection.length > 1) {
             activeDragState.group = mxBuildDragGroup();
         }
+        if (mode === 'bar-move' || mode === 'ms') activeDragState.altCopy = e.altKey === true;
     }
 
     function getCanvasRenderScale() {
@@ -2132,6 +2164,16 @@ function handleGlobalDragMove(e) {
         const alignmentSnapResolution = parseInt(document.getElementById('snapResolution').value) || 0;
 
         let needsUpdate = false;
+
+        // Bars and milestones: the first clear movement decides the axis (left/right = dates, up/down = rows).
+        if (activeDragState.mode === 'bar-move' || activeDragState.mode === 'ms') {
+            if (!activeDragState.axis) {
+                if (Math.hypot(deltaX, deltaY) < 5) return;
+                activeDragState.axis = Math.abs(deltaX) >= Math.abs(deltaY) ? 'x' : 'y';
+                if (activeDragState.altCopy) mxBeginCopyDrag();
+            }
+            if (activeDragState.axis === 'y') { mxRowDragMove(e); return; }
+        }
 
         if (activeDragState.mode === 'timeline-pan') {
             const panDuration = activeDragState.origMaxTime - activeDragState.origMinTime;
@@ -2254,6 +2296,13 @@ function handleGlobalDragMove(e) {
             activeDragState.tracker.labelOffsetY = targetRawY;
             needsUpdate = true;
         }
+        else if (activeDragState.mode === 'lane-title-move' && activeDragState.lane) {
+            const bounds = mxLaneTitleBounds[activeDragState.laneIdx] || { min: -9999, max: 9999 };
+            let off = activeDragState.origOffset + deltaX;
+            if (alignmentSnapResolution > 0) off = Math.round(off / alignmentSnapResolution) * alignmentSnapResolution;
+            activeDragState.lane.titleOffsetX = Math.round(Math.max(bounds.min, Math.min(bounds.max, off)));
+            needsUpdate = true;
+        }
         // NEW: Move the callout text box itself
         else if (activeDragState.mode === 'callout-move' && activeDragState.callout) {
             let targetX = activeDragState.origX + deltaX;
@@ -2293,6 +2342,7 @@ function scheduleDragRedraw(e) {
         updateChart();
         // Re-add the date helper after updateChart rebuilds the SVG.
         updateTimelineCrosshair(dragRedrawEvent);
+        mxDrawRowDropHint();
     });
 }
 
@@ -2430,14 +2480,28 @@ function updateTimelineCrosshair(e) {
        Places the badge near the bottom of the SVG.
        The text y-coordinate is the vertical center of the rectangle.
     */
-    const badgeTopY = Math.max(4, svgHeight - badgeHeight - 6);
+    // Keep the badge (and the line) away from tracker labels and the TODAY label so they stay easy to see and drag.
+    const obstacles = [];
+    svgEl.querySelectorAll('g[onmousedown*="tracker-label-move"], text[data-today-label]').forEach(el => {
+        try { const b = el.getBBox(); obstacles.push({ x1: b.x - 4, x2: b.x + b.width + 4, y1: b.y - 4, y2: b.y + b.height + 4 }); } catch (err) { /* not measurable */ }
+    });
+    const bx1 = badgeX - badgeWidth / 2, bx2 = badgeX + badgeWidth / 2;
+    const candidates = [svgHeight - badgeHeight - 6, 4, svgHeight - badgeHeight * 2 - 12, 30];
+    let badgeTopY = candidates[0];
+    for (const cand of candidates) {
+        const clash = obstacles.some(o => bx1 < o.x2 && bx2 > o.x1 && cand < o.y2 && cand + badgeHeight > o.y1);
+        if (!clash) { badgeTopY = Math.max(4, cand); break; }
+    }
     const badgeTextY = badgeTopY + badgeHeight / 2;
+
+    const overTrackerLabel = (activeDragState && activeDragState.mode === "tracker-label-move") ||
+        (e && e.target && e.target.closest && e.target.closest('g[onmousedown*="tracker-label-move"]'));
 
     line.setAttribute("x1", pointerDate.canvasX);
     line.setAttribute("x2", pointerDate.canvasX);
     line.setAttribute("y1", "0");
     line.setAttribute("y2", svgHeight);
-    line.style.display = "block";
+    line.style.display = overTrackerLabel ? "none" : "block";
 
     badgeBackground.setAttribute("x", badgeX - badgeWidth / 2);
     badgeBackground.setAttribute("y", badgeTopY);
@@ -2467,6 +2531,7 @@ function hideTimelineCrosshair() {
 
 function stopGlobalDragAction(e) {
         if (!activeDragState) return;
+        if (activeDragState.axis === 'y' && e && Number.isFinite(e.clientX) && (activeDragState.mode === 'bar-move' || activeDragState.mode === 'ms')) mxCommitRowDrag(e);
         const dragMovementOccurred = activeDragState.hasMoved;
         activeDragState = null;
         if (dragMovementOccurred) {
@@ -2506,6 +2571,8 @@ function stopGlobalDragAction(e) {
         msColor: document.getElementById('msColor').value,
         todayColor: document.getElementById('todayColor').value,
         masterLeaderColor: document.getElementById('masterLeaderColor').value,
+        msLabelSide: document.getElementById('msLabelSide').value, msLabelGap: document.getElementById('msLabelGap').value,
+        msDateSide: document.getElementById('msDateSide').value, msDateGap: document.getElementById('msDateGap').value,
         headerColor: document.getElementById('headerColor').value,
         showVGrid: document.getElementById('showVGrid').checked,
         showAlignGrid: document.getElementById('showAlignGrid').checked,
@@ -2520,6 +2587,7 @@ function stopGlobalDragAction(e) {
 }
 
 function recordStateChange() {
+    setTimeout(() => { try { mxWarnTextOverflow(); } catch (err) { /* advisory only */ } }, 0);
         if (mxLiveDepth > 0) { mxScheduleLiveCommit(); return; }
                 const stateSnapshot = mxBuildSnapshot();
         const snapshotText = JSON.stringify(stateSnapshot);
@@ -2607,6 +2675,8 @@ function recordStateChange() {
         document.getElementById('msColor').value = state.msColor;
         document.getElementById('todayColor').value = state.todayColor || '#b71010';
         document.getElementById('masterLeaderColor').value = state.masterLeaderColor || '#94a3b8';
+        document.getElementById('msLabelSide').value = state.msLabelSide || 'below'; document.getElementById('msLabelGap').value = state.msLabelGap ?? 4;
+        document.getElementById('msDateSide').value = state.msDateSide || 'above'; document.getElementById('msDateGap').value = state.msDateGap ?? 2;
         document.getElementById('headerColor').value = state.headerColor || '#000000';
         document.getElementById('showVGrid').checked = state.showVGrid;
         document.getElementById('showAlignGrid').checked = state.showAlignGrid || false;
@@ -2893,18 +2963,19 @@ mxDef("visible", "Visible On Timeline", "Visibility", ["Bar", "Milestone", "Trac
 });
 
 /* ---- Swimlane (double-click lane title / summary bar) ---- */
-mxDef("laneTitle", "Swimlane Name", "Swimlane", ["Lane"], "text", { ctxTypes: ["Row", "Bar", "Milestone"], width: 180, filter: true, prop: ["lane", "title"], get: c => c.lane.title ?? "" });
+mxDef("laneTitle", "Swimlane Name", "Swimlane", ["Lane"], "text", { ctxTypes: ["Row", "Bar", "Milestone"], width: 180, multiline: true, filter: true, prop: ["lane", "title"], get: c => c.lane.title ?? "" });
 mxDef("laneColor", "Swimlane Background", "Swimlane", ["Lane"], "color", { def: "#f8fafc", get: c => c.lane.color || "#f8fafc", set: (c, v) => { c.lane.color = v || "#f8fafc"; } });
 mxDef("laneShowSummary", "Show Summary Bar", "Swimlane", ["Lane"], "bool", { def: true, get: c => c.lane.showSummary !== false, set: (c, v) => { c.lane.showSummary = v; } });
 mxDef("laneSummaryColor", "Summary Bar Color", "Swimlane", ["Lane"], "color", { def: "", get: c => c.lane.summaryColor || "", set: (c, v) => { c.lane.summaryColor = v; } });
-mxDef("laneTitleAlign", "Title Alignment", "Swimlane", ["Lane"], "select", { options: MX_OPTS.align, def: "left", get: c => c.lane.titleAlign || "left", set: (c, v) => { c.lane.titleAlign = v; } });
+mxDef("laneTitleAlign", "Title Alignment", "Swimlane", ["Lane"], "select", { options: MX_OPTS.align, def: "left", get: c => c.lane.titleAlign || "left", set: (c, v) => { if (v !== (c.lane.titleAlign || "left")) delete c.lane.titleOffsetX; c.lane.titleAlign = v; } });
+mxDef("laneTitleOffsetX", "Title Drag Offset X", "Swimlane", ["Lane"], "float", { def: 0, width: 105, get: c => c.lane.titleOffsetX ?? 0, set: (c, v) => { if (v) c.lane.titleOffsetX = v; else delete c.lane.titleOffsetX; } });
 mxDef("laneTitleFont", "Title Font Size", "Swimlane", ["Lane"], "int", { min: 8, max: 30, nullable: true, def: null, get: c => c.lane.titleFontSize ?? "", set: (c, v) => { c.lane.titleFontSize = v; } });
 mxDef("laneTitleColor", "Title Color", "Swimlane", ["Lane"], "color", { def: "", get: c => c.lane.titleColor || "", set: (c, v) => { c.lane.titleColor = v; } });
 mxDef("laneTitleBold", "Title Bold", "Swimlane", ["Lane"], "bool", { def: true, get: c => c.lane.titleBold !== false, set: (c, v) => { c.lane.titleBold = v; } });
 mxDef("laneCollapsed", "Collapsed In Sidebar", "Swimlane", ["Lane"], "bool", { def: false, get: c => c.lane.collapsed === true, set: (c, v) => { c.lane.collapsed = v; } });
 
 /* ---- Task row (double-click row label) ---- */
-mxDef("rowLabel", "Task Name", "Task Row", ["Row"], "text", { ctxTypes: ["Bar", "Milestone"], width: 220, filter: true, prop: ["row", "label"], get: c => c.row.label ?? "" });
+mxDef("rowLabel", "Task Name", "Task Row", ["Row"], "text", { ctxTypes: ["Bar", "Milestone"], width: 220, multiline: true, filter: true, prop: ["row", "label"], get: c => c.row.label ?? "" });
 mxDef("rowPredecessor", "Predecessor Row ID", "Task Row", ["Row"], "text", {
     width: 120, get: c => c.row.predecessor ?? "",
     set: (c, v) => { c.row.predecessor = (String(v).trim().toUpperCase() === "NONE") ? "" : String(v).trim(); }
@@ -2926,7 +2997,7 @@ mxDef("barShowName", "Show Task Name In Bar", "Activity Bar", ["Bar"], "bool", {
 mxDef("barLabelFont", "Bar Label Font Size", "Activity Bar", ["Bar"], "int", { min: 6, max: 72, def: 10, get: c => c.el.labelFontSize ?? 10, set: (c, v) => { c.el.labelFontSize = v; } });
 
 /* ---- Milestone (double-click milestone) ---- */
-mxDef("msLabel", "Milestone Label", "Milestone", ["Milestone"], "text", { width: 190, filter: true, prop: ["el", "label"], get: c => c.el.label ?? "" });
+mxDef("msLabel", "Milestone Label", "Milestone", ["Milestone"], "text", { width: 190, multiline: true, filter: true, prop: ["el", "label"], get: c => c.el.label ?? "" });
 mxDef("msShowLabel", "Show Label", "Milestone", ["Milestone"], "bool", { def: true, get: c => c.el.labelHidden !== true, set: (c, v) => { c.el.labelHidden = !v; } });
 mxDef("msDate", "Milestone Date", "Milestone", ["Milestone"], "date", { width: 120, prop: ["el", "date"], get: c => c.el.date ?? "" });
 mxDef("msSymbol", "Symbol", "Milestone", ["Milestone"], "select", { options: MX_OPTS.symbol, def: "diamond", get: c => c.el.symbol || "diamond", set: (c, v) => { c.el.symbol = v; } });
@@ -2935,6 +3006,16 @@ mxDef("msLabelFont", "Milestone Label Font Size", "Milestone", ["Milestone"], "i
 mxDef("msShowDate", "Show Date", "Milestone", ["Milestone"], "bool", { def: true, get: c => c.el.showDate !== false, set: (c, v) => { c.el.showDate = v; } });
 
 /* ---- Milestone label / date positions ---- */
+mxDef("barLayer", "Bar Layer (z-order)", "Layers", ["Bar"], "float", { nullable: true, def: null, width: 105, get: c => c.el.z ?? "", set: (c, v) => { if (v === null || v === "" || !Number.isFinite(Number(v))) delete c.el.z; else c.el.z = Number(v); } });
+mxDef("msLayer", "Milestone Layer (z-order)", "Layers", ["Milestone"], "float", { nullable: true, def: null, width: 115, get: c => c.el.z ?? "", set: (c, v) => { if (v === null || v === "" || !Number.isFinite(Number(v))) delete c.el.z; else c.el.z = Number(v); } });
+mxDef("trkLayer", "Tracker Layer (z-order)", "Layers", ["Tracker"], "float", { nullable: true, def: null, width: 115, get: c => c.el.z ?? "", set: (c, v) => { if (v === null || v === "" || !Number.isFinite(Number(v))) delete c.el.z; else c.el.z = Number(v); } });
+mxDef("coLayer", "Callout Layer (z-order)", "Layers", ["Callout"], "float", { nullable: true, def: null, width: 115, get: c => c.el.z ?? "", set: (c, v) => { if (v === null || v === "" || !Number.isFinite(Number(v))) delete c.el.z; else c.el.z = Number(v); } });
+mxDef("msLabelSide", "Label Placement", "Milestone Positions", ["Milestone"], "select", { options: [["", "Default"], ["below", "Below"], ["above", "Above"], ["right", "Right"], ["left", "Left"]], def: "", get: c => c.el.labelSide || "", set: (c, v) => { if (v) c.el.labelSide = v; else delete c.el.labelSide; } });
+mxDef("msLabelGap", "Label Gap (px)", "Milestone Positions", ["Milestone"], "int", { min: 0, max: 80, nullable: true, def: null, width: 95, get: c => c.el.labelGap ?? "", set: (c, v) => { if (v === null || v === "") delete c.el.labelGap; else c.el.labelGap = v; } });
+mxDef("msDateSide", "Date Placement", "Milestone Positions", ["Milestone"], "select", { options: [["", "Default"], ["above", "Above"], ["below", "Below"], ["right", "Right"], ["left", "Left"]], def: "", get: c => c.el.dateSide || "", set: (c, v) => { if (v) c.el.dateSide = v; else delete c.el.dateSide; } });
+mxDef("msDateGap", "Date Gap (px)", "Milestone Positions", ["Milestone"], "int", { min: 0, max: 80, nullable: true, def: null, width: 95, get: c => c.el.dateGap ?? "", set: (c, v) => { if (v === null || v === "") delete c.el.dateGap; else c.el.dateGap = v; } });
+mxDef("msLabelAnchorDef", "Manual Label Anchor", "Milestone Positions", ["Milestone"], "select", { options: [["", "Start"], ["middle", "Middle"], ["end", "End"]], def: "", get: c => c.el.labelAnchor || "", set: (c, v) => { if (v) c.el.labelAnchor = v; else delete c.el.labelAnchor; } });
+mxDef("msDateAnchorDef", "Manual Date Anchor", "Milestone Positions", ["Milestone"], "select", { options: [["", "Middle"], ["start", "Start"], ["end", "End"]], def: "", get: c => c.el.dateAnchor || "", set: (c, v) => { if (v) c.el.dateAnchor = v; else delete c.el.dateAnchor; } });
 mxDef("msLabelX", "Label Offset X", "Milestone Positions", ["Milestone"], "float", { def: 0, width: 95, get: c => c.el.labelOffsetX ?? 0, set: (c, v) => { c.el.labelOffsetX = v; if (v !== 0) c.el.manualLabel = true; } });
 mxDef("msLabelY", "Label Offset Y", "Milestone Positions", ["Milestone"], "float", { def: 0, width: 95, get: c => c.el.labelOffsetY ?? 0, set: (c, v) => { c.el.labelOffsetY = v; if (v !== 0) c.el.manualLabel = true; } });
 mxDef("msDateX", "Date Offset X", "Milestone Positions", ["Milestone"], "float", { def: 0, width: 95, get: c => c.el.dateOffsetX ?? 0, set: (c, v) => { c.el.dateOffsetX = v; if (v !== 0) c.el.manualDateLabel = true; } });
@@ -2954,7 +3035,7 @@ mxDef("msLeaderDateEndX", "Custom Date Leader End X", "Milestone Leaders", ["Mil
 mxDef("msLeaderDateEndY", "Custom Date Leader End Y", "Milestone Leaders", ["Milestone"], "float", { def: 0, width: 130, get: c => c.el.leaderDateEndY ?? 0, set: (c, v) => { c.el.leaderDateEndY = v; } });
 
 /* ---- Vertical tracker lines ---- */
-mxDef("trkLabel", "Tracker Label", "Tracker Line", ["Tracker"], "text", { width: 180, prop: ["el", "label"], get: c => c.el.label ?? "" });
+mxDef("trkLabel", "Tracker Label", "Tracker Line", ["Tracker"], "text", { width: 180, multiline: true, prop: ["el", "label"], get: c => c.el.label ?? "" });
 mxDef("trkDate", "Tracker Date", "Tracker Line", ["Tracker"], "date", { width: 120, prop: ["el", "date"], get: c => c.el.date ?? "",
     set: (c, v) => { c.el.date = v; if (c.el.dynamic === true && v) { const dd = mxDaysFromToday(v); if (dd !== null) c.el.offsetDays = mxClampTrackerDays(dd); } } });
 mxDef("trkColor", "Tracker Color", "Tracker Line", ["Tracker"], "color", { def: "#10b981", get: c => c.el.color || "#10b981", set: (c, v) => { c.el.color = v || "#10b981"; } });
@@ -5841,7 +5922,7 @@ function editTrackerPropertiesModalDirect(e, id) {
         '<h4>' + mxTitleHTML('Tracker Line', trk.label) + '</h4>' +
         '<div class="compact-modal-grid">' +
             '<div class="mx-sec">Details</div>' +
-            '<div class="modal-field span2"><label for="modTrkLabel">Line label</label><input type="text" id="modTrkLabel" value="' + escapeForMarkup(trk.label) + '"></div>' +
+            '<div class="modal-field span2"><label for="modTrkLabel">Line label</label><textarea class="mx-ml" rows="1" id="modTrkLabel" style="resize:vertical;">' + escapeForMarkup(trk.label) + '</textarea></div>' +
             '<div class="modal-field"><label for="modTrkDate">Date</label><input type="date" id="modTrkDate"' + (trkIsDyn ? ' disabled' : '') + ' value="' + convertDDMMMYYYYToYYYYMMDD(trk.date) + '"></div>' +
             '<div class="mx-sec">Dynamic date (follows today)</div>' +
             '<label class="modal-field checkbox-field"><input type="checkbox" id="modTrkDynamic"' + (trkIsDyn ? ' checked' : '') + '> Dynamic line</label>' +
@@ -5863,6 +5944,8 @@ function editTrackerPropertiesModalDirect(e, id) {
             mxOptFontHTML('modTrkFont', 'Font', 'labelFontFamily', trk.labelFontFamily, '') +
             mxOptNumberHTML('modTrkLblSize', 'Font size', 'labelFontSize', Number.isFinite(Number(trk.labelFontSize)) ? trk.labelFontSize : 8, 6, 72) +
             mxOptStyleHTML('modTrkTxt', trk, true) +
+            '<div class="mx-sec">Layer</div>' +
+            mxOptNumberBlankHTML('modTrkZ', 'Layer (z-order)', 'z', trk.z, -100000, 100000, true, 'Default (200)') +
         '</div>' +
         '<div class="standard-modal-actions">' +
             '<div class="action-group"><button type="button" id="modTrkDeleteBtn" style="background:#fff1f2; color:#e11d48; border-color:#fca5a5;">Delete</button></div>' +
@@ -5944,6 +6027,265 @@ function editTrackerPropertiesModalDirect(e, id) {
    Copy Style turns on sticky painting: click any matching item to paint it, press Esc when finished.
    Dates, text, IDs, positions and show/hide switches are never copied.
    ========================================================================= */
+function mxFlatRows() { return projectData.flatMap(l => (l.rows || []).map(r => ({ lane: l, row: r }))); }
+function mxRowIdAtPoint(x, y) {
+    for (const el of document.elementsFromPoint(x, y)) {
+        const m = el.getAttribute && (el.getAttribute("oncontextmenu") || "").match(/handleWorkspaceRowContextMenu\(event,\s*(\d+)\)/);
+        if (m) return Number(m[1]);
+    }
+    return null;
+}
+function mxRowOfObject(obj) { return projectData.flatMap(l => l.rows || []).find(r => (r.bars || []).includes(obj) || (r.milestones || []).includes(obj)) || null; }
+function mxCloneItemInto(kind, obj, row) {
+    const c = JSON.parse(JSON.stringify(obj));
+    if (kind === "bar") { c.id = nextBarId++; (row.bars = row.bars || []).push(c); }
+    else { c.id = nextMsId++; (row.milestones = row.milestones || []).push(c); }
+    return c;
+}
+function mxBeginCopyDrag() {
+    const st = activeDragState;
+    const subjects = (st.group && st.group.length > 1) ? st.group.map(g => ({ kind: g.kind, obj: g.obj })) : [{ kind: st.bar ? "bar" : "ms", obj: st.bar || st.milestone }];
+    const newSel = [], copies = new Map();
+    subjects.forEach(s => {
+        const row = mxRowOfObject(s.obj); if (!row) return;
+        const c = mxCloneItemInto(s.kind, s.obj, row);
+        copies.set(s.obj, c);
+        newSel.push({ kind: s.kind, rowId: row.id, id: c.id });
+    });
+    if (st.bar && copies.has(st.bar)) st.bar = copies.get(st.bar);
+    if (st.milestone && copies.has(st.milestone)) st.milestone = copies.get(st.milestone);
+    if (st.group) st.group.forEach(g => { if (copies.has(g.obj)) g.obj = copies.get(g.obj); });
+    st.copies = Array.from(copies.values());
+    mxSetSelection(newSel);
+    st.hasMoved = true;
+}
+function mxRowDragMove(e) { const st = activeDragState; st.targetRowId = mxRowIdAtPoint(e.clientX, e.clientY); scheduleDragRedraw(e); }
+function mxDrawRowDropHint() {
+    const st = activeDragState;
+    const svgEl = document.querySelector("#svgContainer svg");
+    if (!st || st.axis !== "y" || !svgEl || st.targetRowId == null) return;
+    const rowRect = Array.from(svgEl.querySelectorAll("rect[oncontextmenu]")).find(r => (r.getAttribute("oncontextmenu") || "").includes("handleWorkspaceRowContextMenu(event, " + st.targetRowId + ")"));
+    if (!rowRect) return;
+    const hint = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    ["x", "y", "width", "height"].forEach(a => hint.setAttribute(a, rowRect.getAttribute(a)));
+    hint.setAttribute("fill", "rgba(37,99,235,0.12)"); hint.setAttribute("stroke", "#2563eb"); hint.setAttribute("stroke-width", "1.5"); hint.setAttribute("stroke-dasharray", "5 3");
+    hint.style.pointerEvents = "none"; hint.setAttribute("data-row-drop-hint", "1");
+    svgEl.appendChild(hint);
+    const target = findRowGlobally(st.targetRowId);
+    const lab = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    lab.setAttribute("x", Number(rowRect.getAttribute("x")) + Number(rowRect.getAttribute("width")) - 8);
+    lab.setAttribute("y", Number(rowRect.getAttribute("y")) + 12);
+    lab.setAttribute("text-anchor", "end"); lab.setAttribute("font-size", "10"); lab.setAttribute("font-weight", "700"); lab.setAttribute("fill", "#1d4ed8");
+    lab.style.pointerEvents = "none";
+    lab.textContent = (st.copies ? "Copy to: " : "Move to: ") + String((target && target.label) || "row").split(/\r?\n/)[0];
+    svgEl.appendChild(lab);
+}
+function mxCommitRowDrag(e) {
+    const st = activeDragState;
+    const targetId = mxRowIdAtPoint(e.clientX, e.clientY);
+    const flat = mxFlatRows();
+    const primaryObj = st.bar || st.milestone;
+    const srcRow = mxRowOfObject(primaryObj);
+    const fromIdx = flat.findIndex(f => f.row === srcRow);
+    const toIdx = flat.findIndex(f => f.row.id === targetId);
+    const subjects = (st.group && st.group.length > 1) ? st.group.map(g => ({ kind: g.kind, obj: g.obj })) : [{ kind: st.bar ? "bar" : "ms", obj: primaryObj }];
+    if (toIdx < 0 || fromIdx < 0 || toIdx === fromIdx) {
+        if (st.copies) st.copies.forEach(c => { const r = mxRowOfObject(c); if (r) { const i = (r.bars || []).indexOf(c); if (i >= 0) r.bars.splice(i, 1); const j = (r.milestones || []).indexOf(c); if (j >= 0) r.milestones.splice(j, 1); } });
+        else mxSetSelection(subjects.map(s => { const r = mxRowOfObject(s.obj); return { kind: s.kind, rowId: r.id, id: s.obj.id }; }));
+        if (st.copies) mxSetSelection([]);
+        st.hasMoved = false;
+        return;
+    }
+    const delta = toIdx - fromIdx, newSel = [];
+    subjects.forEach(s => {
+        const row = mxRowOfObject(s.obj); if (!row) return;
+        const idx = flat.findIndex(f => f.row === row);
+        const dest = flat[Math.max(0, Math.min(flat.length - 1, idx + delta))].row;
+        if (dest !== row) {
+            const list = s.kind === "bar" ? row.bars : row.milestones;
+            list.splice(list.indexOf(s.obj), 1);
+            (s.kind === "bar" ? (dest.bars = dest.bars || []) : (dest.milestones = dest.milestones || [])).push(s.obj);
+        }
+        newSel.push({ kind: s.kind, rowId: dest.id, id: s.obj.id });
+    });
+    mxSetSelection(newSel);
+    st.hasMoved = true;
+    showToast((st.copies ? "Copied " : "Moved ") + subjects.length + " item" + (subjects.length === 1 ? "" : "s") + " to \u201C" + String(flat[toIdx].row.label || "row").split(/\r?\n/)[0] + "\u201D.", "success", 2800);
+}
+let mxItemClip = null;
+let mxLastPointer = { x: -1, y: -1 };
+document.addEventListener("mousemove", e => { mxLastPointer = { x: e.clientX, y: e.clientY }; }, true);
+function mxCopyItems() {
+    const sel = mxSelectionBM();
+    if (!sel.length) return false;
+    const flat = mxFlatRows();
+    const base = flat.findIndex(f => f.row === sel[0].row);
+    mxItemClip = sel.map(s => ({ kind: s.kind, data: JSON.parse(JSON.stringify(s.obj)), rowOffset: flat.findIndex(f => f.row === s.row) - base }));
+    showToast("Copied " + sel.length + " item" + (sel.length === 1 ? "" : "s") + ". Ctrl+V pastes onto the row under your pointer, or right-click a row and choose Paste here.", "success", 3500);
+    return true;
+}
+function mxPasteItems(targetRowId) {
+    if (!mxItemClip || !mxItemClip.length) { showToast("Nothing copied yet. Select bars or milestones and press Ctrl+C.", "info", 3000); return; }
+    const flat = mxFlatRows();
+    const tIdx = flat.findIndex(f => f.row.id === targetRowId);
+    if (tIdx < 0) { showToast("Point at the destination row first (or right-click it and choose Paste here).", "info", 3500); return; }
+    const newSel = [];
+    mxItemClip.forEach(it => {
+        const dest = flat[Math.max(0, Math.min(flat.length - 1, tIdx + it.rowOffset))].row;
+        const c = JSON.parse(JSON.stringify(it.data));
+        if (it.kind === "bar") { c.id = nextBarId++; (dest.bars = dest.bars || []).push(c); }
+        else { c.id = nextMsId++; (dest.milestones = dest.milestones || []).push(c); }
+        newSel.push({ kind: it.kind, rowId: dest.id, id: c.id });
+    });
+    mxSetSelection(newSel);
+    recordStateChange(); renderInputRows(); updateChart();
+    showToast("Pasted " + newSel.length + " item" + (newSel.length === 1 ? "" : "s") + " (dates and settings kept).", "success", 3000);
+}
+function mxMoveSelectionToRow(rowId, copy) {
+    const sel = mxSelectionBM();
+    if (!sel.length) return;
+    const flat = mxFlatRows();
+    const tIdx = flat.findIndex(f => f.row.id === rowId);
+    const base = flat.findIndex(f => f.row === sel[0].row);
+    if (tIdx < 0 || base < 0) return;
+    const newSel = [];
+    sel.forEach(s => {
+        const idx = flat.findIndex(f => f.row === s.row);
+        const dest = flat[Math.max(0, Math.min(flat.length - 1, tIdx + (idx - base)))].row;
+        let obj = s.obj;
+        if (copy) obj = mxCloneItemInto(s.kind, s.obj, dest);
+        else if (dest !== s.row) {
+            const list = s.kind === "bar" ? s.row.bars : s.row.milestones;
+            list.splice(list.indexOf(s.obj), 1);
+            (s.kind === "bar" ? (dest.bars = dest.bars || []) : (dest.milestones = dest.milestones || [])).push(s.obj);
+        }
+        newSel.push({ kind: s.kind, rowId: dest.id, id: obj.id });
+    });
+    mxSetSelection(newSel);
+    recordStateChange(); renderInputRows(); updateChart();
+    showToast((copy ? "Copied " : "Moved ") + newSel.length + " item" + (newSel.length === 1 ? "" : "s") + ".", "success", 2500);
+}
+window.addEventListener("keydown", e => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+    if (mxModalOpen() || isTypingTarget(e.target) || currentMainView === "grid") return;
+    if (e.target && e.target.closest && e.target.closest("#dataGridContainer, .floating-date-dialog")) return;
+    const k = e.key.toLowerCase();
+    if (k === "c" && mxSelectionBM().length) { e.preventDefault(); mxCopyItems(); }
+    else if (k === "v" && mxItemClip) { e.preventDefault(); mxPasteItems(mxRowIdAtPoint(mxLastPointer.x, mxLastPointer.y)); }
+});
+function mxRowChoiceButtons(mode) {
+    return projectData.map(l => (l.rows || []).map(r => '<button type="button" data-' + mode + 'row="' + r.id + '">' + escapeForMarkup(String(l.title || "Swimlane").split(/\r?\n/)[0]) + ' \u203A ' + escapeForMarkup(String(r.label || "Row").split(/\r?\n/)[0]) + '</button>').join("")).join("");
+}
+
+const MX_Z_DEFAULT = { bar: 100, trk: 200, today: 250, ms: 300, co: 1000000 };
+let mxZChunks = [], mxZSeq = 0, mxZIndex = [];
+function mxZTier(kind, obj) {
+    const z = Number(obj && obj.z);
+    if (kind === "co") return MX_Z_DEFAULT.co + (Number.isFinite(z) ? z : 0);
+    return Number.isFinite(z) ? Math.min(z, MX_Z_DEFAULT.co - 1) : MX_Z_DEFAULT[kind];
+}
+function mxZPush(kind, obj, key, sub, html) { if (!html) return; mxZChunks.push({ tier: mxZTier(kind, obj), sub, seq: mxZSeq++, key, kind, html }); }
+function mxZFlush() {
+    mxZChunks.sort((a, b) => a.tier - b.tier || a.sub - b.sub || a.seq - b.seq);
+    const firstSeen = {};
+    mxZChunks.forEach((c, i) => { if (c.key !== "today" && firstSeen[c.key] === undefined) firstSeen[c.key] = { key: c.key, kind: c.kind, tier: c.tier, order: i }; });
+    mxZIndex = Object.values(firstSeen);
+    const html = mxZChunks.map(c => '<g data-zk="' + c.key + '">' + c.html + '</g>').join("");
+    mxZChunks = []; mxZSeq = 0;
+    return html;
+}
+function mxZKeyFor(it) { return (it.kind === "trk" ? "trk:" : it.kind === "co" ? "co:" : it.kind + ":" + it.rowId + ":") + it.id; }
+function mxZOrder(op) {
+    const sel = mxSelectionObjects();
+    if (!sel.length) return;
+    const stackable = sel.filter(s => s.kind !== "co"), callouts = sel.filter(s => s.kind === "co");
+    const idx = mxZIndex.slice().sort((a, b) => a.tier - b.tier || a.order - b.order);
+    const maxT = Math.max(...idx.filter(i => i.kind !== "co").map(i => i.tier), 0);
+    const minT = Math.min(...idx.filter(i => i.kind !== "co").map(i => i.tier), 0);
+    const selKeys = new Set(stackable.map(mxZKeyFor));
+    const rectOf = key => { let r = null; document.querySelectorAll('#svgContainer [data-zk="' + key + '"]').forEach(el => { const b = el.getBoundingClientRect(); if (!b.width && !b.height) return; r = r ? { left: Math.min(r.left, b.left), top: Math.min(r.top, b.top), right: Math.max(r.right, b.right), bottom: Math.max(r.bottom, b.bottom) } : { left: b.left, top: b.top, right: b.right, bottom: b.bottom }; }); return r; };
+    const hit = (a, b) => a && b && a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+    const setZ = (it, z) => { it.obj.z = Math.round(z * 1000) / 1000; };
+    const ordered = stackable.slice().sort((a, b) => ((idx.find(i => i.key === mxZKeyFor(a)) || {}).order || 0) - ((idx.find(i => i.key === mxZKeyFor(b)) || {}).order || 0));
+    if (op === "front") ordered.forEach((it, n) => setZ(it, maxT + 1 + n));
+    else if (op === "back") ordered.slice().reverse().forEach((it, n) => setZ(it, minT - 1 - n));
+    else {
+        ordered.forEach(it => {
+            const key = mxZKeyFor(it), me = rectOf(key), myPos = idx.findIndex(i => i.key === key);
+            if (myPos < 0) return;
+            const others = op === "forward" ? idx.slice(myPos + 1) : idx.slice(0, myPos).reverse();
+            const nb = others.find(o => o.kind !== "co" && !selKeys.has(o.key) && hit(me, rectOf(o.key)));
+            if (!nb) return;
+            setZ(it, op === "forward" ? nb.tier + 0.001 : nb.tier - 0.001);
+        });
+    }
+    callouts.forEach(c => { const all = (calloutData || []).map(x => Number(x.z) || 0); c.obj.z = op === "front" ? Math.max(...all, 0) + 1 : op === "back" ? Math.min(...all, 0) - 1 : (Number(c.obj.z) || 0) + (op === "forward" ? 1 : -1); });
+    markUnsavedState(); recordStateChange(); renderInputRows(); updateChart();
+    showToast({ front: "Brought to front.", back: "Sent to back.", forward: "Moved forward one step.", backward: "Moved backward one step." }[op] + (callouts.length ? " (Callouts always stay above other items.)" : ""), "success", 2500);
+}
+window.addEventListener("keydown", e => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+    if (mxModalOpen() || isTypingTarget(e.target) || currentMainView === "grid") return;
+    if (e.target && e.target.closest && e.target.closest("#dataGridContainer, .floating-date-dialog")) return;
+    if (!mxSelectionObjects().length) return;
+    const bracket = e.code === "BracketRight" ? "R" : e.code === "BracketLeft" ? "L" : null;
+    if (!bracket) return;
+    e.preventDefault();
+    mxZOrder(bracket === "R" ? (e.shiftKey ? "front" : "forward") : (e.shiftKey ? "back" : "backward"));
+});
+
+const mxMsRenderPos = {};
+function mxPromoteMsPlacement(ms, which) {
+    const p = mxMsRenderPos[ms.id];
+    if (!p) return;
+    if (which === "label" && !ms.manualLabel) { ms.labelOffsetX = Math.round(p.lx - p.lbx); ms.labelOffsetY = Math.round(p.ly - p.lby); ms.labelAnchor = p.la; ms.manualLabel = true; }
+    if (which === "date" && !ms.manualDateLabel && p.dx !== undefined) { ms.dateOffsetX = Math.round(p.dx - p.dbx); ms.dateOffsetY = Math.round(p.dy - p.dby); ms.dateAnchor = p.da; ms.manualDateLabel = true; }
+}
+const MX_PLACEMENT_PROPS = ["labelSide", "labelGap", "dateSide", "dateGap", "manualLabel", "labelOffsetX", "labelOffsetY", "labelAnchor", "manualDateLabel", "dateOffsetX", "dateOffsetY", "dateAnchor"];
+function mxResetMsPlacement(ms) {
+    ["labelSide", "labelGap", "dateSide", "dateGap", "labelAnchor", "dateAnchor"].forEach(k => delete ms[k]);
+    ms.manualLabel = false; ms.manualDateLabel = false;
+    ms.labelOffsetX = 0; ms.labelOffsetY = 0; ms.dateOffsetX = 0; ms.dateOffsetY = 0;
+}
+async function mxResetAllMilestonePlacement() {
+    const all = projectData.flatMap(l => (l.rows || []).flatMap(r => r.milestones || []));
+    if (!all.length) { showToast("There are no milestones yet.", "info", 2500); return; }
+    const ok = await appConfirm("Reset the label and date position of all " + all.length + " milestones to the placement defaults?\n\nManually dragged positions, per-milestone sides and gaps will be cleared. You can bring them back with Ctrl+Z.", { title: "Apply placement defaults", confirmText: "Apply to all" });
+    if (!ok) return;
+    all.forEach(mxResetMsPlacement);
+    recordStateChange(); renderInputRows(); updateChart();
+    showToast("All " + all.length + " milestones now follow the placement defaults.", "success", 3500);
+}
+const mxLaneTitleBounds = {};
+function mxSplitLines(s) { return String(s ?? "").split(/\r?\n/); }
+function mxMaxLineLen(s) { return mxSplitLines(s).reduce((m, l) => Math.max(m, l.length), 0); }
+function mxTspans(text, x, lineH, upper) {
+    const lines = mxSplitLines(text);
+    if (lines.length === 1) return escapeForMarkup(upper ? lines[0].toUpperCase() : lines[0]);
+    return lines.map((ln, i) => '<tspan x="' + x + '" dy="' + (i === 0 ? 0 : lineH) + '">' + escapeForMarkup(upper ? ln.toUpperCase() : ln) + '</tspan>').join("");
+}
+function mxCenterShift(text, lineH) { return -(mxSplitLines(text).length - 1) * lineH / 2; }
+function mxAutosizeTextarea(el) { el.style.height = "auto"; el.style.height = Math.min(160, Math.max(23, el.scrollHeight + 2)) + "px"; }
+document.addEventListener("input", e => { if (e.target && e.target.classList && e.target.classList.contains("mx-ml")) mxAutosizeTextarea(e.target); });
+new MutationObserver(() => { document.querySelectorAll("textarea.mx-ml").forEach(mxAutosizeTextarea); }).observe(document.body, { childList: true, subtree: true });
+document.addEventListener("keydown", e => {
+    if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey)) return;
+    const dlg = e.target && e.target.closest ? e.target.closest(".floating-date-dialog") : null;
+    if (!dlg) return;
+    const btn = Array.from(dlg.querySelectorAll("button")).find(b => /save|done/i.test(b.id) || /^done$/i.test(b.textContent.trim()));
+    if (btn) { e.preventDefault(); btn.click(); }
+}, true);
+let mxLastOverflowSignature = "";
+function mxWarnTextOverflow() {
+    const rh = Number(document.getElementById("rowHeight").value) || 30;
+    const fs = Number(document.getElementById("fontSize").value) || 10;
+    const bad = [];
+    (projectData || []).forEach(l => (l.rows || []).forEach(r => { if (mxSplitLines(r.label).length * fs * 1.2 > rh) bad.push(r.id); }));
+    const sig = bad.join(",");
+    if (sig && sig !== mxLastOverflowSignature) showToast(bad.length + " task row label" + (bad.length === 1 ? " is" : "s are") + " taller than the row height and will overlap. Increase Row Height or shorten the text.", "info", 5000);
+    mxLastOverflowSignature = sig;
+}
+
 const MX_STYLE_SPEC = {
     bar: { noun: "bar", title: "Bar", groups: [
         { id: "colors", label: "Colors", props: ["color", "bgColor", "labelColor"] },
@@ -5954,7 +6296,8 @@ const MX_STYLE_SPEC = {
         { id: "colors", label: "Colors", props: ["color", "labelColor", "leaderColor"] },
         { id: "symbol", label: "Symbol", props: ["symbol"] },
         { id: "text", label: "Label text", props: ["labelFontFamily", "labelFontSize", "labelBold", "labelItalic", "labelUnderline"] },
-        { id: "leader", label: "Leader lines", props: ["leaderWeight", "leaderPattern", "leaderAnchorText"] }
+        { id: "leader", label: "Leader lines", props: ["leaderWeight", "leaderPattern", "leaderAnchorText"] },
+        { id: "position", label: "Label & date position", props: ["labelSide", "labelGap", "dateSide", "dateGap", "manualLabel", "labelOffsetX", "labelOffsetY", "labelAnchor", "manualDateLabel", "dateOffsetX", "dateOffsetY", "dateAnchor"] }
     ] },
     trk: { noun: "tracker line", title: "Tracker line", groups: [
         { id: "line", label: "Line style", props: ["color", "opacity", "thickness", "pattern"] },
@@ -6207,6 +6550,16 @@ function mxShowItemMenu(e, it) {
         '<button type="button" data-act="paste"' + (pasteCount ? '' : ' disabled') + '>' +
             (clip ? (pasteCount ? 'Paste style to ' + pasteCount + ' selected ' + mxPlural(MX_STYLE_SPEC[clip.kind].noun, pasteCount) : 'Paste style (copied from a ' + MX_STYLE_SPEC[clip.kind].noun + ')') : 'Paste style (nothing copied)') +
             '<span class="mx-im-key">' + keyHint + 'V</span></button>' +
+        ((it.kind === "bar" || it.kind === "ms") ? (
+            '<div class="mx-im-sec">Copy & move between rows</div>' +
+            '<button type="button" data-act="copyitems">Copy ' + (multi ? sel.length + ' selected items' : (it.kind === "bar" ? 'bar' : 'milestone')) + '<span class="mx-im-key">Ctrl+C</span></button>' +
+            '<details class="mx-im-det"><summary>Move to row…</summary><div class="mx-im-scroll">' + mxRowChoiceButtons("move") + '</div></details>' +
+            '<details class="mx-im-det"><summary>Copy to row…</summary><div class="mx-im-scroll">' + mxRowChoiceButtons("copy") + '</div></details>') : '') +
+        '<div class="mx-im-sec">Arrange (layers)</div>' +
+        '<button type="button" data-z="front">Bring to front<span class="mx-im-key">Ctrl+Shift+]</span></button>' +
+        '<button type="button" data-z="forward">Bring forward<span class="mx-im-key">Ctrl+]</span></button>' +
+        '<button type="button" data-z="backward">Send backward<span class="mx-im-key">Ctrl+[</span></button>' +
+        '<button type="button" data-z="back">Send to back<span class="mx-im-key">Ctrl+Shift+[</span></button>' +
         '<div class="mx-im-sec">Select similar</div>' +
         mxSimilarOptions(it).map(o => '<button type="button" data-sim="' + o[0] + '">' + escapeForMarkup(o[1]) + '</button>').join("");
     document.body.appendChild(menu);
@@ -6220,7 +6573,12 @@ function mxShowItemMenu(e, it) {
         const btn = ev.target.closest("button");
         if (!btn || btn.disabled) return;
         const act = btn.getAttribute("data-act"), sim = btn.getAttribute("data-sim");
+        const mv = btn.getAttribute("data-moverow"), cp = btn.getAttribute("data-copyrow"), zop = btn.getAttribute("data-z");
         mxCloseItemMenu();
+        if (zop) { mxZOrder(zop); return; }
+        if (mv !== null) { mxMoveSelectionToRow(Number(mv), false); return; }
+        if (cp !== null) { mxMoveSelectionToRow(Number(cp), true); return; }
+        if (act === "copyitems") { mxCopyItems(); return; }
         if (act === "edit") {
             srcEl.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true, clientX: e.clientX, clientY: e.clientY }));
         } else if (act === "copy") mxStyleCopy(it);
@@ -6326,6 +6684,7 @@ function mxCanvasAdd(kind, ctx) {
         showToast((kind === "bar" ? "Activity bar" : "Milestone") + " added at " + date + ". Double-click it to edit.", "success", 3500);
         return;
     }
+    if (kind === "paste") { mxPasteItems(ctx.rowId); return; }
     if (kind === "callout") {
         addNewCallout(ctx.mouseX, ctx.mouseY);
         const c = calloutData[calloutData.length - 1];
@@ -6393,6 +6752,7 @@ function mxShowCanvasMenu(e) {
         sec("At this spot") +
         btn("milestone", "Milestone here", hasRow, needRow) +
         btn("bar", "Activity bar here (1 month)", hasRow, needRow) +
+        btn("paste", "Paste copied items here" + (mxItemClip ? " (" + mxItemClip.length + ")" : ""), hasRow && !!mxItemClip, mxItemClip ? needRow : "Copy bars or milestones first (Ctrl+C)") +
         btn("callout", "Text callout here", true) +
         btn("tracker", "Vertical tracker line at " + ctx.dateStr, true) +
         btn("dynamic", "Dynamic tracker line (follows today)", true) +
@@ -6439,6 +6799,13 @@ function mxOptFontHTML(id, label, prop, value, cls) {
 function mxOptNumberHTML(id, label, prop, value, min, max) {
     return '<div class="modal-field"><label for="' + id + '">' + label + '</label><input type="number" id="' + id + '" step="1" min="' + min + '" max="' + max + '" data-opt-prop="' + prop + '" data-min="' + min + '" data-max="' + max + '" value="' + value + '"></div>';
 }
+function mxOptSelectHTML(id, label, prop, value, options) {
+    return '<div class="modal-field"><label for="' + id + '">' + label + '</label><select id="' + id + '" data-opt-prop="' + prop + '">' +
+        options.map(o => '<option value="' + escapeForMarkup(o[0]) + '"' + (String(o[0]) === String(value || "") ? ' selected' : '') + '>' + escapeForMarkup(o[1]) + '</option>').join('') + '</select></div>';
+}
+function mxOptNumberBlankHTML(id, label, prop, value, min, max, isFloat, placeholder) {
+    return '<div class="modal-field"><label for="' + id + '">' + label + '</label><input type="number" id="' + id + '" step="' + (isFloat ? 'any' : '1') + '" min="' + min + '" max="' + max + '" data-opt-prop="' + prop + '" data-min="' + min + '" data-max="' + max + '"' + (isFloat ? ' data-float="1"' : '') + ' placeholder="' + (placeholder || 'Default') + '" value="' + (value === undefined || value === null ? '' : value) + '"></div>';
+}
 function mxOptStyleHTML(idPrefix, o, defBold) {
     const chk = (suffix, prop, checked, html, tip) => '<label class="mx-check" title="' + tip + '"><input type="checkbox" id="' + idPrefix + suffix + '" data-opt-prop="' + prop + '"' + (checked ? ' checked' : '') + '> ' + html + '</label>';
     return '<div class="modal-field"><label>Text style</label><div class="mx-inline">' +
@@ -6476,7 +6843,8 @@ function mxApplyOptionalFields(dialog, obj) {
         if (st === "clear") { delete obj[p]; return; }
         if (el.type === "checkbox") obj[p] = el.checked;
         else if (el.type === "number") {
-            const n = parseInt(el.value, 10);
+            if (el.value === "") { delete obj[p]; return; }
+            const n = el.dataset.float ? parseFloat(el.value) : parseInt(el.value, 10);
             if (Number.isFinite(n)) obj[p] = Math.max(Number(el.dataset.min), Math.min(Number(el.dataset.max), n));
         }
         else if (el.tagName === "SELECT" && el.value === "") delete obj[p];
@@ -6553,6 +6921,19 @@ function mxBulkSpec() {
                 chk("msShowLabel", "Show label", o => o.labelHidden !== true, (o, v) => { o.labelHidden = !v; }),
                 chk("msShowDate", "Show date", o => o.showDate !== false, (o, v) => { o.showDate = v; })
             ]) },
+            { name: "Label & date placement (spacing)", collapse: true, fields: [
+                sel("msLblSide", "Label side", [["", "Default"], ["below", "Below"], ["above", "Above"], ["right", "Right"], ["left", "Left"]], o => o.labelSide || "", (o, v) => { if (v) o.labelSide = v; else delete o.labelSide; }),
+                num("msLblGap", "Label gap (px)", 0, 80, o => o.labelGap ?? 4, (o, v) => { o.labelGap = v; }),
+                sel("msDtSide", "Date side", [["", "Default"], ["above", "Above"], ["below", "Below"], ["right", "Right"], ["left", "Left"]], o => o.dateSide || "", (o, v) => { if (v) o.dateSide = v; else delete o.dateSide; }),
+                num("msDtGap", "Date gap (px)", 0, 80, o => o.dateGap ?? 2, (o, v) => { o.dateGap = v; }),
+                num("msLblOffX", "Manual label X (px from symbol)", -800, 800, o => o.labelOffsetX ?? 0, (o, v) => { o.labelOffsetX = v; o.manualLabel = true; }),
+                num("msLblOffY", "Manual label Y (px from symbol)", -400, 400, o => o.labelOffsetY ?? 0, (o, v) => { o.labelOffsetY = v; o.manualLabel = true; }),
+                num("msDtOffX", "Manual date X (px from symbol)", -800, 800, o => o.dateOffsetX ?? 0, (o, v) => { o.dateOffsetX = v; o.manualDateLabel = true; }),
+                num("msDtOffY", "Manual date Y (px from symbol)", -400, 400, o => o.dateOffsetY ?? 0, (o, v) => { o.dateOffsetY = v; o.manualDateLabel = true; }),
+                { key: "msResetPlace", kind: "action", label: "Reset to default placement", tip: "Clears sides, gaps and dragged positions so labels and dates follow the Layout-tab defaults", done: "Placement reset to the defaults.", run: objs => objs.forEach(mxResetMsPlacement) },
+                { key: "msMatchPlace", kind: "action", label: "Match the first selected", tip: "Copies the first selected milestone's label/date position and spacing to the others", done: "Positions matched to the first selected milestone.",
+                  run: (objs, ref) => objs.forEach(o => { if (o === ref) return; MX_PLACEMENT_PROPS.forEach(p => { if (ref[p] === undefined) delete o[p]; else o[p] = ref[p]; }); }) }
+            ] },
             { name: "Leader lines", fields: [
                 chk("msLdrText", "Leader to label", o => o.leaderEnabledText === true, (o, v) => { o.leaderEnabledText = v; }),
                 chk("msLdrDate", "Leader to date", o => o.leaderEnabledDate === true, (o, v) => { o.leaderEnabledDate = v; }),
@@ -6594,6 +6975,12 @@ function mxBulkSpec() {
         { group: "all", cls: "bulk-all", title: "All selected items", sections: [
             { name: "Visibility", fields: [
                 chk("allVisible", "Visible on timeline", o => o.hidden !== true, (o, v) => { o.hidden = !v; })
+            ] },
+            { name: "Layer order (selected items only)", collapse: true, fields: [
+                { key: "zFront", kind: "action", label: "Bring to front", tip: "Draws the selected items in front of everything except callouts", done: "Brought to front.", run: () => mxZOrder("front") },
+                { key: "zForward", kind: "action", label: "Bring forward", tip: "One step in front of the next item it overlaps", done: "Moved forward.", run: () => mxZOrder("forward") },
+                { key: "zBackward", kind: "action", label: "Send backward", tip: "One step behind the next item it overlaps", done: "Moved backward.", run: () => mxZOrder("backward") },
+                { key: "zBack", kind: "action", label: "Send to back", tip: "Draws the selected items behind everything else on the chart", done: "Sent to back.", run: () => mxZOrder("back") }
             ] }
         ] }
     ];
@@ -6606,12 +6993,28 @@ function mxOpenBulkEditor(e) {
     mxCloseAllFloatingDialogs();
 
     const spec = mxBulkSpec();
-    const itemsFor = g => g === "all" ? items : items.filter(it => it.kind === g);
+    const itemsFor = g => g === "all" ? items : items.filter(it => it.kind === g);   // what the popup DISPLAYS (the selection)
     const byKey = {};
-    const snapshots = items.map(it => ({ obj: it.obj, snap: JSON.parse(JSON.stringify(it.obj)) }));
+    const allOfKind = k => k === "bar" ? projectData.flatMap(l => (l.rows || []).flatMap(r => (r.bars || []).map(o => ({ kind: "bar", obj: o }))))
+        : k === "ms" ? projectData.flatMap(l => (l.rows || []).flatMap(r => (r.milestones || []).map(o => ({ kind: "ms", obj: o }))))
+        : k === "trk" ? (customTrackers || []).map(o => ({ kind: "trk", obj: o })) : (calloutData || []).map(o => ({ kind: "co", obj: o }));
+    let scope = "selected";   // selected | lane | all : which objects the changes are written to
+    const scoped = g => {
+        if (g === "all") return ["bar", "ms", "trk", "co"].filter(k => items.some(i => i.kind === k)).flatMap(k => scoped(k));
+        const sel = items.filter(it => it.kind === g);
+        if (scope === "selected" || !sel.length) return sel;
+        if (scope === "all") return allOfKind(g);
+        if (g === "bar" || g === "ms") {
+            const lanes = new Set(items.filter(i => i.kind === "bar" || i.kind === "ms").map(i => projectData.find(l => (l.rows || []).includes(i.row))).filter(Boolean));
+            return allOfKind(g).filter(o => { const lane = projectData.find(l => (l.rows || []).some(r => (r.bars || []).includes(o.obj) || (r.milestones || []).includes(o.obj))); return lanes.has(lane); });
+        }
+        return sel;
+    };
+    const snapshots = ["bar", "ms", "trk", "co"].flatMap(allOfKind).map(it => ({ obj: it.obj, snap: JSON.parse(JSON.stringify(it.obj)) }));
 
     const hexOr = (v, d) => /^#[0-9a-f]{6}$/i.test(v || "") ? v : d;
     const fieldHTML = (f, list) => {
+        if (f.kind === "action") return '<div class="modal-field"><label>&nbsp;</label><button type="button" class="bulk-action" data-bact="' + f.key + '"' + (f.tip ? ' data-hint="' + escapeForMarkup(f.tip) + '"' : '') + '>' + f.label + '</button></div>';
         const vals = list.map(it => f.get(it.obj));
         const first = vals[0];
         const same = vals.every(v => String(v).toLowerCase() === String(first).toLowerCase());
@@ -6651,7 +7054,7 @@ function mxOpenBulkEditor(e) {
         body += '<div class="bulk-group ' + g.cls + '"><div class="bulk-group-title">' + g.title +
             '<span>' + (g.group === "all" ? "applies to all " + list.length + " selected" : "applies to the " + list.length + " selected " + noun) + '</span></div>';
         g.sections.forEach(sec => {
-            body += '<div class="bulk-section-title">' + sec.name + '</div><div class="compact-modal-grid">';
+            body += (sec.collapse ? '<details class="bulk-det"><summary class="bulk-section-title">' + sec.name + ' (click to expand)</summary>' : '<div class="bulk-section-title">' + sec.name + '</div>') + '<div class="compact-modal-grid">';
             let inlineOpen = false;
             sec.fields.forEach(f => {
                 f.group = g.group;
@@ -6662,6 +7065,7 @@ function mxOpenBulkEditor(e) {
             });
             if (inlineOpen) body += '</div></div>';
             body += '</div>';
+            if (sec.collapse) body += '</details>';
         });
         body += '</div>';
     });
@@ -6672,6 +7076,11 @@ function mxOpenBulkEditor(e) {
     dialog.innerHTML =
         '<h4>Edit ' + items.length + ' Selected Items</h4>' +
         '<div class="bulk-summary">' + present.join(" \u2022 ") + '. Only the settings you change are applied, and they apply live. Dates are not edited here. Amber \u201CMixed\u201D means the selected items differ.</div>' +
+        '<div class="bulk-scope"><b>Apply changes to:</b>' +
+            '<label><input type="radio" name="bulkScope" value="selected" checked> Selected items</label>' +
+            '<label><input type="radio" name="bulkScope" value="lane"> All bars &amp; milestones in the same swimlane(s)</label>' +
+            '<label><input type="radio" name="bulkScope" value="all"> Everything on the chart (all bars, milestones, trackers, callouts)</label>' +
+            '<span id="bulkScopeCount"></span></div>' +
         body +
         '<div class="standard-modal-actions"><div class="action-group"></div><div class="action-group">' +
             '<button type="button" id="bulkCancelBtn" style="background:#f1f5f9; color:#475569;" data-hint="Undo every change made in this popup">Cancel</button>' +
@@ -6690,7 +7099,7 @@ function mxOpenBulkEditor(e) {
     };
 
     const applyField = (f, v) => {
-        itemsFor(f.group).forEach(it => f.set(it.obj, v));
+        scoped(f.group).forEach(it => f.set(it.obj, v));
         touch();
     };
 
@@ -6723,7 +7132,21 @@ function mxOpenBulkEditor(e) {
     dialog.addEventListener("input", onEdit);
     dialog.addEventListener("change", onEdit);
 
+    const countText = () => ["bar", "ms", "trk", "co"].filter(k => items.some(i => i.kind === k)).map(k => { const n = scoped(k).length; return n + " " + mxPlural({ bar: "bar", ms: "milestone", trk: "tracker line", co: "callout" }[k], n); }).join(", ");
+    dialog.querySelectorAll('input[name="bulkScope"]').forEach(r => r.addEventListener("change", () => {
+        scope = dialog.querySelector('input[name="bulkScope"]:checked').value;
+        const c = dialog.querySelector("#bulkScopeCount"); if (c) c.textContent = "Will change: " + countText();
+    }));
+    { const c = dialog.querySelector("#bulkScopeCount"); if (c) c.textContent = "Will change: " + countText(); }
+
     dialog.addEventListener("click", ev => {
+        const act = ev.target && ev.target.closest ? ev.target.closest("[data-bact]") : null;
+        if (act) {
+            const af = byKey[act.getAttribute("data-bact")];
+            const ref = af && (af.group === "all" ? items[0] : items.find(i => i.kind === af.group));
+            if (af && ref) { af.run(scoped(af.group).map(o => o.obj), ref.obj); touch(); showToast(af.done || "Applied.", "success", 2500); }
+            return;
+        }
         const btn = ev.target && ev.target.closest ? ev.target.closest("[data-breset]") : null;
         if (!btn) return;
         const f = byKey[btn.getAttribute("data-breset")];
@@ -7059,7 +7482,7 @@ function loadApplicationState() {
             <h4>Row Label Settings</h4>
             <div class="dialog-row">
                 <label>Row Title:</label>
-                <input type="text" id="tempRowLabelInput" value="${escapeForMarkup(row.label)}" style="width: 150px; padding: 2px;">
+                <textarea class="mx-ml" rows="1" id="tempRowLabelInput" style="width: 200px; padding: 2px; font: inherit; resize: vertical;">${escapeForMarkup(row.label)}</textarea>
             </div>
             <div class="dialog-row" style="margin-top: 10px;">
                 <label style="cursor: pointer; font-size: 11px;">
@@ -7121,12 +7544,13 @@ function escapeHtmlAttribute(value) {
         <div class="modal-row">
             <div class="modal-field">
                 <label>Swimlane Name</label>
-                <input
-                    type="text"
+                <textarea
+                    class="mx-ml"
+                    rows="1"
                     id="modalLaneTitle"
-                    value="${escapeHtmlAttribute(lane.title || '')}"
-                    maxlength="100"
-                >
+                    maxlength="200"
+                    style="font: inherit; resize: vertical;"
+                >${escapeForMarkup(lane.title || '')}</textarea>
             </div>
         </div>
 
@@ -7224,7 +7648,9 @@ function escapeHtmlAttribute(value) {
         lane.title = newTitle;
         lane.color = document.getElementById('modalLaneColor').value;
         lane.titleColor = document.getElementById('modalLaneTitleColor').value;
-        lane.titleAlign = document.getElementById('modalLaneTitleAlign').value;
+        const pickedAlign = document.getElementById('modalLaneTitleAlign').value;
+        if (pickedAlign !== (lane.titleAlign || 'left')) delete lane.titleOffsetX;   // choosing an alignment resets any dragged position
+        lane.titleAlign = pickedAlign;
         lane.titleFontSize = Number.isFinite(enteredFontSize)
             ? Math.max(8, Math.min(30, Math.round(enteredFontSize)))
             : 12;
@@ -7234,7 +7660,7 @@ function escapeHtmlAttribute(value) {
     };
 
     mxMakeDialogLive(dialog, lane, applyLaneFields,
-        ['title', 'color', 'titleColor', 'titleAlign', 'titleFontSize', 'titleBold', 'showSummary']);
+        ['title', 'color', 'titleColor', 'titleAlign', 'titleOffsetX', 'titleFontSize', 'titleBold', 'showSummary']);
 
     document.getElementById('saveSwimlaneSettingsBtn').onclick = function () {
         if (!applyLaneFields(false)) return;
@@ -7413,7 +7839,7 @@ function escapeHtmlAttribute(value) {
     <div class="mx-sec">Details</div>
     <div class="modal-field span2">
         <label for="modalMsLabel">Milestone label</label>
-        <input type="text" id="modalMsLabel" value="${escapeForMarkup(ms.label || "")}">
+        <textarea class="mx-ml" rows="1" id="modalMsLabel" style="resize:vertical;">${escapeForMarkup(ms.label || "")}</textarea>
     </div>
     <div class="modal-field">
         <label for="modalMsDatePicker">Date</label>
@@ -7484,6 +7910,13 @@ function escapeHtmlAttribute(value) {
             ${MX_OPTS.linePattern.map(o => `<option value="${o[0]}" ${ms.leaderPattern === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}
         </select>
     </div>
+
+    <div class="mx-sec" title="A label or date you dragged by hand ignores the side and gap until you press Reset Position. A higher layer draws in front; callouts always stay on top.">Placement &amp; layer (blank = default)</div>
+    ${mxOptSelectHTML("modalMsLblSide", "Label side", "labelSide", ms.labelSide, [["", "Default"], ["below", "Below"], ["above", "Above"], ["right", "Right"], ["left", "Left"]])}
+    ${mxOptNumberBlankHTML("modalMsLblGap", "Label gap (px)", "labelGap", ms.labelGap, 0, 80)}
+    ${mxOptNumberBlankHTML("modalMsZ", "Layer (z-order)", "z", ms.z, -100000, 100000, true, "300")}
+    ${mxOptSelectHTML("modalMsDtSide", "Date side", "dateSide", ms.dateSide, [["", "Default"], ["above", "Above"], ["below", "Below"], ["right", "Right"], ["left", "Left"]])}
+    ${mxOptNumberBlankHTML("modalMsDtGap", "Date gap (px)", "dateGap", ms.dateGap, 0, 80)}
 `;
 
 let buttonsHTML = `
@@ -7522,7 +7955,7 @@ let buttonsHTML = `
         document.getElementById('modalMsResetPosBtn').addEventListener('click', function() {
             ms.labelOffsetX = 0; ms.labelOffsetY = 0; ms.dateOffsetX = 0; ms.dateOffsetY = 0;
             ms.leaderTextEndX = 0; ms.leaderTextEndY = 0; ms.leaderDateEndX = 0; ms.leaderDateEndY = 0;
-            ms.manualLabel = false; ms.manualDateLabel = false;
+            ms.manualLabel = false; ms.manualDateLabel = false; delete ms.labelAnchor; delete ms.dateAnchor;
             recordStateChange(); renderInputRows(); updateChart(); dialog.__mxDirty = false; mxCloseFloatingDialog(dialog, true);
         });
         document.getElementById('modalMsToggleLabelBtn').addEventListener('click', function() {
@@ -7646,11 +8079,12 @@ document.getElementById('modalMsDeleteBtn').addEventListener('click', async func
         Show name in bar
     </label>
 
-    <div class="mx-sec">Visibility</div>
-    <label class="modal-field checkbox-field full-width">
+    <div class="mx-sec">Visibility &amp; layer</div>
+    <label class="modal-field checkbox-field">
         <input type="checkbox" id="modalBarVisible" ${bar.hidden === true ? "" : "checked"}>
         Visible on timeline
     </label>
+    ${mxOptNumberBlankHTML("modalBarZ", "Layer (z-order)", "z", bar.z, -100000, 100000, true, "Default (100)")}
 `;
 
 let buttonsHTML = `
@@ -8112,7 +8546,7 @@ document.addEventListener('dblclick', (e) => {
                         <button type="button" style="background:none; border:none; cursor:pointer; font-size:14px; color:#1e3a8a; padding:0 4px; font-weight:bold;" onclick="toggleSwimlaneCollapseState(${laneIdx})">
                             ${lane.collapsed ? '►' : '▼'}
                         </button>
-                        <input type="text" value="${escapeForMarkup(lane.title)}" style="font-weight:bold; color:#1e3a8a; font-size:13px; padding:4px;" onchange="updateLaneTitle(${laneIdx}, this.value)">
+                        <textarea class="mx-ml" rows="1" style="font-weight:bold; color:#1e3a8a; font-size:13px; padding:4px; font-family:inherit; resize:vertical; flex:1; min-width:0;" onchange="updateLaneTitle(${laneIdx}, this.value)">${escapeForMarkup(lane.title)}</textarea>
                         <input type="color" value="${lane.color || '#f8fafc'}" style="width:34px; height:28px; padding:0; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer; flex-shrink:0;" onchange="updateLaneColor(${laneIdx}, this.value)">
                        
                     </div>
@@ -8188,7 +8622,7 @@ document.addEventListener('dblclick', (e) => {
                     <!-- Row 1: Core Row Details -->
                     <div style="display:flex; align-items:center; gap:6px; margin-bottom: 6px;">
                         <span class="row-drag-handle" style="margin:0; font-size:14px; cursor:grab;">☰</span>
-                        <input type="text" style="flex:1; font-weight:bold; font-size:11px; padding:4px; margin:0;" value="${escapeForMarkup(row.label)}" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'label', this.value)" placeholder="Row Label">
+                        <textarea class="mx-ml" rows="1" style="flex:1; min-width:0; font-weight:bold; font-size:11px; padding:4px; margin:0; font-family:inherit; resize:vertical;" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'label', this.value)" placeholder="Row Label">${escapeForMarkup(row.label)}</textarea>
                         <select style="width:120px; font-size:10px; padding:4px; margin:0;" onchange="updateRowFieldDirect(${laneIdx}, ${rowIdx}, 'predecessor', this.value)">
                             ${predecessorOptions}
                         </select>
@@ -8234,7 +8668,7 @@ document.addEventListener('dblclick', (e) => {
                         <div class="milestones-list">
                             ${row.milestones.map((ms, msIdx) => `
                                 <div class="milestone-input-row" style="margin-bottom:2px; padding:2px;">
-                                    <input type="text" style="height:28px; font-size:10px; padding:2px;" value="${escapeForMarkup(ms.label)}" onblur="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'label', this.value)">
+                                    <textarea class="mx-ml" rows="1" style="min-height:28px; font-size:10px; padding:2px; font-family:inherit; resize:vertical; width:100%; box-sizing:border-box;" onblur="updateMilestoneFieldNew(${laneIdx}, ${rowIdx}, ${msIdx}, 'label', this.value)">${escapeForMarkup(ms.label)}</textarea>
                                     
                                     <div class="date-input-wrapper">
                                         <span class="date-display-badge">${ms.date}</span>
@@ -8446,6 +8880,9 @@ function updateProjectDashboard() {
         const msColor = document.getElementById('msColor').value;
         const todayColor = document.getElementById('todayColor').value;
         const masterLeaderColor = document.getElementById('masterLeaderColor').value;
+        const msGlobalLabelSide = document.getElementById('msLabelSide').value || 'below';
+        const msGlobalLabelGap = Number(document.getElementById('msLabelGap').value); const msGlobalDateSide = document.getElementById('msDateSide').value || 'above';
+        const msGlobalDateGap = Number(document.getElementById('msDateGap').value);
         const headerColor = document.getElementById('headerColor').value;
         const showVGrid = document.getElementById('showVGrid').checked;
         const todayLineMode = document.querySelector('input[name="todayLineToggle"]:checked').value;
@@ -8690,7 +9127,7 @@ const laneTitleFontSize = Number.isFinite(Number(lane.titleFontSize))
 const laneTitleColor = lane.titleColor || headerColor;
 const laneTitleWeight = lane.titleBold === false ? 'normal' : 'bold';
 
-const laneTitleX =
+const laneTitleBaseX =
     laneTitleAlign === 'left'
         ? 20
         : laneTitleAlign === 'center'
@@ -8704,6 +9141,16 @@ const laneTitleAnchor =
             ? 'middle'
             : 'end';
 
+// Draggable title position: the saved offset moves the title left/right but never out of the swimlane band.
+const laneTitleEstW = Math.max(1, mxMaxLineLen(lane.title)) * laneTitleFontSize * 0.6;
+let laneTitleLo = 18, laneTitleHi = endBoundaryXCoordinate - 8;
+if (laneTitleAnchor === 'start') laneTitleHi -= laneTitleEstW;
+else if (laneTitleAnchor === 'middle') { laneTitleLo += laneTitleEstW / 2; laneTitleHi -= laneTitleEstW / 2; }
+else laneTitleLo += laneTitleEstW;
+if (laneTitleHi < laneTitleLo) laneTitleHi = laneTitleLo;
+mxLaneTitleBounds[laneIdx] = { min: laneTitleLo - laneTitleBaseX, max: laneTitleHi - laneTitleBaseX };
+const laneTitleX = Math.max(laneTitleLo, Math.min(laneTitleHi, laneTitleBaseX + (Number(lane.titleOffsetX) || 0)));
+
 svg += `
     <rect
         x="10"
@@ -8715,16 +9162,17 @@ svg += `
     />
     <text
         x="${laneTitleX}"
-        y="${currentDrawY + swimlaneHeight / 2}"
+        y="${currentDrawY + swimlaneHeight / 2 + mxCenterShift(lane.title, laneTitleFontSize * 1.2)}"
         font-size="${laneTitleFontSize}"
         font-weight="${laneTitleWeight}"
         fill="${laneTitleColor}"
         text-anchor="${laneTitleAnchor}"
         dominant-baseline="central"
-        style="cursor:pointer"
+        style="cursor:ew-resize"
+        onmousedown="initiateDragInteraction(event, 'lane-title-move', ${laneIdx})"
         ondblclick="editLaneLabelDirectly(event, ${laneIdx})"
     >
-        ${escapeForMarkup(lane.title)}
+        ${mxTspans(lane.title, laneTitleX, laneTitleFontSize * 1.2)}
     </text>
 `;
             
@@ -8757,7 +9205,7 @@ svg += `
                 svg += `<line x1="10" y1="${y + rowHeight}" x2="${endBoundaryXCoordinate}" y2="${y + rowHeight}" stroke="#f1f5f9" stroke-width="1" style="pointer-events:none;"/>`;
                 
                 // Note: We pass 'event' here to the updated function so the modal knows where the mouse is
-                svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(event, ${laneIdx}, ${rowIdx})">${escapeForMarkup(displayLabel)}</text>`;
+                svg += `<text x="${scaleMarginLeft - 10}" y="${y + (rowHeight / 2) + mxCenterShift(displayLabel, fontSize * 1.2)}" font-size="${fontSize}" font-weight="bold" fill="#1e293b" text-anchor="end" dominant-baseline="central" style="cursor:pointer;" ondblclick="editRowLabelDirectly(event, ${laneIdx}, ${rowIdx})">${mxTspans(displayLabel, scaleMarginLeft - 10, fontSize * 1.2)}</text>`;
                 
                 let layerBarsBuffer = "";
                 let layerLeadersBuffer = "";
@@ -8766,7 +9214,8 @@ svg += `
                 let layerHandlesBuffer = ""; // Prioritized foreground interaction tier
 
                 item.bars.forEach((bar) => {
-                    if (bar.hidden === true) return;
+ if (bar.hidden === true) return;
+                    const _zb0 = layerBarsBuffer.length;
                     let sObj = new Date(parseAnyDateToTimestamp(bar.start)); 
                     let eObj = new Date(parseAnyDateToTimestamp(bar.end));
 
@@ -8797,12 +9246,9 @@ svg += `
                                 if (visibleBarWidth >= barLabelMinWidth) {
                                     const approxCharWidth = barLabelFontSize * 0.6;
                                     const availableChars = Math.max(0, Math.floor((visibleBarWidth - 10) / approxCharWidth));
-                                    let barLabelText = String(item.label || "");
-                                    if (barLabelText.length > availableChars) {
-                                        barLabelText = availableChars > 1 ? barLabelText.slice(0, availableChars - 1) + "\u2026" : "";
-                                    }
+                                    let barLabelText = mxSplitLines(item.label || "").map(s => s.length > availableChars ? (availableChars > 1 ? s.slice(0, availableChars - 1) + "\u2026" : "") : s).join("\n");
                                     if (barLabelText) {
-                                        layerBarsBuffer += `<text x="${xStart + visibleBarWidth / 2}" y="${y + rowHeight / 2}" text-anchor="middle" dominant-baseline="middle" font-size="${barLabelFontSize}" fill="${bar.labelColor || '#ffffff'}"${mxLabelStyleAttrs(bar, 'normal')} style="pointer-events:none;">${escapeForMarkup(barLabelText)}</text>`;
+                                        layerBarsBuffer += `<text x="${xStart + visibleBarWidth / 2}" y="${y + rowHeight / 2 + mxCenterShift(barLabelText, barLabelFontSize * 1.2)}" text-anchor="middle" dominant-baseline="middle" font-size="${barLabelFontSize}" fill="${bar.labelColor || '#ffffff'}"${mxLabelStyleAttrs(bar, 'normal')} style="pointer-events:none;">${mxTspans(barLabelText, xStart + visibleBarWidth / 2, barLabelFontSize * 1.2)}</text>`;
                                     }
                                 }
                             }
@@ -8812,6 +9258,7 @@ svg += `
                             layerBarsBuffer += `<rect x="${xEnd - 6}" y="${y + (rowHeight / 2) - (barThickness / 2)}" width="6" height="${barThickness}" fill="transparent" style="cursor:e-resize;" class="drag-hotspot" onmousedown="initiateDragInteraction(event, 'bar-resize-end', ${item.id}, ${bar.id})"/>`;
                         }
                     }
+                    mxZPush('bar', bar, 'bar:' + item.id + ':' + bar.id, 0, layerBarsBuffer.slice(_zb0)); layerBarsBuffer = layerBarsBuffer.slice(0, _zb0);
                 });
 
                 let validMilestones = item.milestones.filter(m => !isNaN(parseAnyDateToTimestamp(m.date)));
@@ -8823,6 +9270,7 @@ svg += `
                 if (ms.hidden === true) continue;
                 let mObj = new Date(parseAnyDateToTimestamp(ms.date)); let msX = getX(mObj);
                 if (msX < scaleMarginLeft || msX > endBoundaryXCoordinate) continue;
+                const _zl0 = layerLeadersBuffer.length, _zs0 = layerSymbolsBuffer.length, _zt0 = layerTextsBuffer.length, _zh0 = layerHandlesBuffer.length;
 
                 let msYCenterLocked = y + (rowHeight / 2); let msSize = 5;
                 let msLabelFontSize = Number.isFinite(Number(ms.labelFontSize)) ? Number(ms.labelFontSize) : 9;
@@ -8831,11 +9279,28 @@ svg += `
                 let finalComputedTextX = textXPositionCoordinate; let finalComputedTextY = defaultTextYBaseline;
 
                 if (ms.manualLabel) {
-                    finalComputedTextX += (ms.labelOffsetX || 0); finalComputedTextY += (ms.labelOffsetY || 0); textAnchorStyle = "start";
+                    finalComputedTextX += (ms.labelOffsetX || 0); finalComputedTextY += (ms.labelOffsetY || 0); textAnchorStyle = ms.labelAnchor || "start";
                 } else {
-                    let estimatedTextWidthPixelSpan = Math.max(50, ms.label.trim().length * (msLabelFontSize * 0.58)); 
-                    let footprintLeftBound = textXPositionCoordinate;
-                    let footprintRightBound = textXPositionCoordinate + estimatedTextWidthPixelSpan;
+                    const lblSide = ms.labelSide || msGlobalLabelSide;
+                    const lblGap = Number.isFinite(Number(ms.labelGap)) ? Number(ms.labelGap) : (Number.isFinite(msGlobalLabelGap) ? msGlobalLabelGap : 4);
+                    const dtSideForLabel = ms.dateSide || msGlobalDateSide;
+                    const lblLines = mxSplitLines(ms.label).length, lblLH = msLabelFontSize * 1.15, symHalf = msSize + 2;
+                    const stackExtra = (ms.showDate && dtSideForLabel === lblSide && (lblSide === 'below' || lblSide === 'above')) ? 11 : 0;
+                    let estimatedTextWidthPixelSpan = Math.max(50, mxMaxLineLen(ms.label.trim()) * (msLabelFontSize * 0.58));
+                    let baseX, baseY, footprintLeftBound, footprintRightBound, staggerDir = 1;
+                    if (lblSide === 'below') {
+                        textAnchorStyle = "middle"; baseX = msX; baseY = msYCenterLocked + symHalf + lblGap + stackExtra + msLabelFontSize * 0.8;
+                        footprintLeftBound = msX - estimatedTextWidthPixelSpan / 2; footprintRightBound = msX + estimatedTextWidthPixelSpan / 2;
+                    } else if (lblSide === 'above') {
+                        textAnchorStyle = "middle"; baseX = msX; baseY = msYCenterLocked - symHalf - lblGap - stackExtra - (lblLines - 1) * lblLH; staggerDir = -1;
+                        footprintLeftBound = msX - estimatedTextWidthPixelSpan / 2; footprintRightBound = msX + estimatedTextWidthPixelSpan / 2;
+                    } else if (lblSide === 'left') {
+                        textAnchorStyle = "end"; baseX = msX - msSize - lblGap; baseY = defaultTextYBaseline;
+                        footprintLeftBound = baseX - estimatedTextWidthPixelSpan; footprintRightBound = baseX;
+                    } else {
+                        textAnchorStyle = "start"; baseX = msX + msSize + lblGap; baseY = defaultTextYBaseline;
+                        footprintLeftBound = baseX; footprintRightBound = baseX + estimatedTextWidthPixelSpan;
+                    }
 
                     let targetedCascadeStaggerOffsetLevel = 0; let collisionMatchFound = true;
                     while (collisionMatchFound) {
@@ -8850,9 +9315,11 @@ svg += `
                         }
                     }
                     trackPlacedTextFootprints.push({ xMin: footprintLeftBound, xMax: footprintRightBound, staggerLevel: targetedCascadeStaggerOffsetLevel });
-                    finalComputedTextY = defaultTextYBaseline + (targetedCascadeStaggerOffsetLevel * (msLabelFontSize + 3));
+                    finalComputedTextX = baseX;
+                    finalComputedTextY = baseY + staggerDir * targetedCascadeStaggerOffsetLevel * (lblLines * lblLH + 2);
                 }
 
+                mxMsRenderPos[ms.id] = { lx: finalComputedTextX, ly: finalComputedTextY, la: textAnchorStyle, lbx: textXPositionCoordinate, lby: defaultTextYBaseline, dbx: msX, dby: msYCenterLocked - msSize - 11 };
                 let activeMsColor = ms.color || msColor;
                 let activeSymbol = ms.symbol || 'diamond';
                 let msCommonAttr = `data-sel="ms:${item.id}:${ms.id}" fill="${activeMsColor}" stroke="#ffffff" stroke-width="1" style="cursor:ew-resize;" onmousedown="initiateDragInteraction(event, 'ms', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})"`;
@@ -8868,9 +9335,11 @@ svg += `
 
                 // --- Text Leader Calculation ---
                 if (ms.leaderEnabledText && !ms.labelHidden) {
-                    let targetTextLeaderX = finalComputedTextX;
+                    let estTextLenWidth = mxMaxLineLen(ms.label.trim()) * (msLabelFontSize * 0.53);
+                    let leaderLeftX = finalComputedTextX - (textAnchorStyle === 'middle' ? estTextLenWidth / 2 : textAnchorStyle === 'end' ? estTextLenWidth : 0);
+                    let lastLineY = finalComputedTextY + (mxSplitLines(ms.label).length - 1) * msLabelFontSize * 1.15;
+                    let targetTextLeaderX = leaderLeftX;
                     let targetTextLeaderY = finalComputedTextY - 3;
-                    let estTextLenWidth = ms.label.trim().length * (msLabelFontSize * 0.53);
 
                     if (leaderAnchor === 'custom') {
                         targetTextLeaderX = finalComputedTextX + (ms.leaderTextEndX || 0);
@@ -8880,12 +9349,12 @@ svg += `
                         else if (leaderAnchor === 'right') targetTextLeaderX += estTextLenWidth;
                         
                         if (finalComputedTextY < msYCenterLocked) {
-                            targetTextLeaderY = finalComputedTextY + 2;
+                            targetTextLeaderY = lastLineY + 2;
                         } else if (finalComputedTextY > msYCenterLocked + 5) {
                             targetTextLeaderY = finalComputedTextY - 9;
                         } else {
-                            if (leaderAnchor === 'left') targetTextLeaderX = finalComputedTextX - 4;
-                            else if (leaderAnchor === 'right') targetTextLeaderX = finalComputedTextX + estTextLenWidth + 4;
+                            if (leaderAnchor === 'left') targetTextLeaderX = leaderLeftX - 4;
+                            else if (leaderAnchor === 'right') targetTextLeaderX = leaderLeftX + estTextLenWidth + 4;
                         }
                     }
 
@@ -8919,10 +9388,10 @@ svg += `
                 }
 
                 if (!ms.labelHidden) {
-                    layerTextsBuffer += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="${msLabelFontSize}" fill="${ms.labelColor || activeMsColor}"${mxLabelStyleAttrs(ms, '600')} text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${escapeForMarkup(ms.label)}</text>`;
+                    layerTextsBuffer += `<text x="${finalComputedTextX}" y="${finalComputedTextY}" font-size="${msLabelFontSize}" fill="${ms.labelColor || activeMsColor}"${mxLabelStyleAttrs(ms, '600')} text-anchor="${textAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${mxTspans(ms.label, finalComputedTextX, msLabelFontSize * 1.15)}</text>`;
 
                     if (isLabelDragging) {
-                        let boxW = ms.label.trim().length * 4.8 + 4; // Optimized tight typography bounds
+                        let boxW = mxMaxLineLen(ms.label.trim()) * 4.8 + 4; // Optimized tight typography bounds
                         layerTextsBuffer += `<rect x="${finalComputedTextX - 2}" y="${finalComputedTextY - 8}" width="${boxW}" height="10" fill="none" stroke="${activeMsColor}" stroke-width="1" stroke-dasharray="2 2" style="pointer-events:none;" />`;
                     }
                 }
@@ -8932,9 +9401,19 @@ svg += `
                     let presentationDateLabel = ms.date; 
                     let finalComputedDateX = msX; 
                     let finalComputedDateY = msYCenterLocked - msSize - 11;
+                    let dateAnchorStyle = "middle";
                     if (ms.manualDateLabel) { 
                         finalComputedDateX += (ms.dateOffsetX || 0); 
                         finalComputedDateY += (ms.dateOffsetY || 0); 
+                        dateAnchorStyle = ms.dateAnchor || "middle";
+                    } else {
+                        const dtSide = ms.dateSide || msGlobalDateSide;
+                        const dtGap = Number.isFinite(Number(ms.dateGap)) ? Number(ms.dateGap) : (Number.isFinite(msGlobalDateGap) ? msGlobalDateGap : 2);
+                        const dtHalf = msSize + 2;
+                        if (dtSide === 'below') finalComputedDateY = msYCenterLocked + dtHalf + dtGap + 7;
+                        else if (dtSide === 'right') { dateAnchorStyle = "start"; finalComputedDateX = msX + msSize + dtGap + 4; finalComputedDateY = msYCenterLocked + 3; }
+                        else if (dtSide === 'left') { dateAnchorStyle = "end"; finalComputedDateX = msX - msSize - dtGap - 4; finalComputedDateY = msYCenterLocked + 3; }
+                        else finalComputedDateY = msYCenterLocked - dtHalf - dtGap - 1;
                     }
                     
                     if (ms.leaderEnabledDate) {
@@ -8959,16 +9438,24 @@ svg += `
                     }
                     
                     let dateHitBoxW = Math.max(24, presentationDateLabel.trim().length * 4.8 + 10);
+                    Object.assign(mxMsRenderPos[ms.id], { dx: finalComputedDateX, dy: finalComputedDateY, da: dateAnchorStyle });
 
-layerHandlesBuffer += `<rect x="${finalComputedDateX - (dateHitBoxW / 2)}" y="${finalComputedDateY - 10}" width="${dateHitBoxW}" height="14" fill="transparent" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})" />`;
+ layerHandlesBuffer += `<rect x="${finalComputedDateX - (dateAnchorStyle === 'start' ? 0 : dateAnchorStyle === 'end' ? dateHitBoxW : dateHitBoxW / 2)}" y="${finalComputedDateY - 10}" width="${dateHitBoxW}" height="14" fill="transparent" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})" />`;
 
-layerTextsBuffer += `<text x="${finalComputedDateX}" y="${finalComputedDateY}" font-size="8" font-weight="bold" fill="#64748b" text-anchor="middle" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${presentationDateLabel}</text>`;
+layerTextsBuffer += `<text x="${finalComputedDateX}" y="${finalComputedDateY}" font-size="8" font-weight="bold" fill="#64748b" text-anchor="${dateAnchorStyle}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'date-label-drag', ${item.id}, ${ms.id})" ondblclick="editMilestoneDateDirectlyGlobal(event, ${item.id}, ${ms.id})">${presentationDateLabel}</text>`;
 
                     if (isDateDragging) {
                         let boxDateW = presentationDateLabel.trim().length * 4.8 + 4; // Optimized tight typography bounds
                         layerTextsBuffer += `<rect x="${finalComputedDateX - (boxDateW / 2)}" y="${finalComputedDateY - 7}" width="${boxDateW}" height="9" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2 2" style="pointer-events:none;" />`;
                         }
                     }   
+                    {
+                        const _zk = 'ms:' + item.id + ':' + ms.id;
+                        mxZPush('ms', ms, _zk, 0, layerLeadersBuffer.slice(_zl0)); layerLeadersBuffer = layerLeadersBuffer.slice(0, _zl0);
+                        mxZPush('ms', ms, _zk, 1, layerSymbolsBuffer.slice(_zs0)); layerSymbolsBuffer = layerSymbolsBuffer.slice(0, _zs0);
+                        mxZPush('ms', ms, _zk, 2, layerTextsBuffer.slice(_zt0)); layerTextsBuffer = layerTextsBuffer.slice(0, _zt0);
+                        mxZPush('ms', ms, _zk, 3, layerHandlesBuffer.slice(_zh0)); layerHandlesBuffer = layerHandlesBuffer.slice(0, _zh0);
+                    }
                 }
 
                 allLayerBarsBuffer += layerBarsBuffer;
@@ -8987,6 +9474,7 @@ svg += allLayerBarsBuffer
         mxSyncDynamicTrackers();
         customTrackers.forEach(tracker => {
             if (tracker.hidden === true) return;
+            const _zt = svg.length;
             let trkTime = parseAnyDateToTimestamp(tracker.date);
             if (!isNaN(trkTime) && trkTime >= scaleMinTime && trkTime <= scaleMaxTime) {
                 let xTracker = getX(new Date(trkTime));
@@ -9001,27 +9489,31 @@ svg += allLayerBarsBuffer
                 let lblX = xTracker + (tracker.labelOffsetX || 0);
                 let lblY = bottomOfLastRow + 24 + (tracker.labelOffsetY || 0);
                 
-                const trackerLabelWidth = Math.max(36, (String(tracker.label ?? '').length * 5.4 + 12) * ((Number.isFinite(Number(tracker.labelFontSize)) ? Number(tracker.labelFontSize) : 8) / 8));
+                const trackerLabelWidth = Math.max(36, (mxMaxLineLen(tracker.label) * 5.4 + 12) * ((Number.isFinite(Number(tracker.labelFontSize)) ? Number(tracker.labelFontSize) : 8) / 8));
                 svg += `<g fill="${tracker.color}" style="cursor:move;" onmousedown="initiateDragInteraction(event, 'tracker-label-move', ${tracker.id})" ondblclick="editTrackerPropertiesModalDirect(event, ${tracker.id})">
                     <rect class="drag-hotspot" x="${lblX - trackerLabelWidth / 2}" y="${lblY - 11}" width="${trackerLabelWidth}" height="16" fill="transparent"/>
-                    <text x="${lblX}" y="${lblY}" font-size="${Number.isFinite(Number(tracker.labelFontSize)) ? Number(tracker.labelFontSize) : 8}" fill="${tracker.labelColor || tracker.color}"${mxLabelStyleAttrs(tracker, 'bold')} text-anchor="middle">${escapeForMarkup(String(tracker.label ?? '').toUpperCase())}</text>
+                    <text x="${lblX}" y="${lblY}" font-size="${Number.isFinite(Number(tracker.labelFontSize)) ? Number(tracker.labelFontSize) : 8}" fill="${tracker.labelColor || tracker.color}"${mxLabelStyleAttrs(tracker, 'bold')} text-anchor="middle">${mxTspans(tracker.label, lblX, (Number.isFinite(Number(tracker.labelFontSize)) ? Number(tracker.labelFontSize) : 8) * 1.2, true)}</text>
                 </g>`;
+                mxZPush('trk', tracker, 'trk:' + tracker.id, 0, svg.slice(_zt)); svg = svg.slice(0, _zt);
             }
         });
 
+        const _zToday0 = svg.length;
         if (todayLineMode === 'show') {
             let today = new Date();
             if (today.getTime() >= scaleMinTime && today.getTime() <= scaleMaxTime) {
                 let xToday = getX(today);
                 svg += `<line x1="${xToday}" y1="${axisLineY}" x2="${xToday}" y2="${bottomOfLastRow}" stroke="${todayColor}" stroke-width="1.5" stroke-dasharray="4 4" style="pointer-events:none;"/>`;
-                svg += `<text x="${xToday}" y="${bottomOfLastRow + 11}" font-size="8" font-weight="bold" fill="${todayColor}" text-anchor="middle" style="pointer-events:none;">TODAY</text>`;
+                svg += `<text x="${xToday}" y="${bottomOfLastRow + 11}" font-size="8" font-weight="bold" fill="${todayColor}" text-anchor="middle" data-today-label="1" style="pointer-events:none;">TODAY</text>`;
             }
         }
+        mxZPush('today', {}, 'today', 0, svg.slice(_zToday0)); svg = svg.slice(0, _zToday0);
 
                 // --- DRAW CUSTOM CALLOUTS ---
                    // --- DRAW CUSTOM CALLOUTS ---
         calloutData.forEach(callout => {
             if (callout.hidden === true) return;
+            const _zc = svg.length;
             const fontWeight = callout.isBold ? 'bold' : 'normal';
             const calloutLines = String(callout.text ?? "").split(/\r?\n/);
             const calloutLongestLineLen = calloutLines.reduce((max, line) => Math.max(max, line.length), 1);
@@ -9096,9 +9588,11 @@ svg += allLayerBarsBuffer
     cursor="move"
     onmousedown="initiateDragInteraction(event, 'callout-move', '${callout.id}')"
     >${calloutTspans}</text>`;
+            mxZPush('co', callout, 'co:' + callout.id, 0, svg.slice(_zc)); svg = svg.slice(0, _zc);
         });
         // ---------------------------
 
+        svg += mxZFlush();
         svg += `</svg>`; container.innerHTML = svg;
         mxApplySelectionHighlight();
     }
